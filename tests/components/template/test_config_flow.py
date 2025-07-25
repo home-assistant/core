@@ -209,16 +209,6 @@ BINARY_SENSOR_OPTIONS = {
             {},
             {},
         ),
-        (
-            "vacuum",
-            {"state": "{{ states('vacuum.one') }}"},
-            "docked",
-            {"one": "docked", "two": "cleaning"},
-            {},
-            {"start": []},
-            {"start": []},
-            {},
-        ),
     ],
 )
 @pytest.mark.freeze_time("2024-07-09 00:00:00+00:00")
@@ -375,12 +365,6 @@ async def test_config_flow(
             {"state": "{{ states('select.one') }}"},
             {"options": "{{ ['off', 'on', 'auto'] }}"},
             {"options": "{{ ['off', 'on', 'auto'] }}"},
-        ),
-        (
-            "vacuum",
-            {"state": "{{ states('vacuum.one') }}"},
-            {"start": []},
-            {"start": []},
         ),
     ],
 )
@@ -610,16 +594,6 @@ async def test_config_flow_device(
             {},
             {},
             "value_template",
-        ),
-        (
-            "vacuum",
-            {"state": "{{ states('vacuum.one') }}"},
-            {"state": "{{ states('vacuum.two') }}"},
-            ["docked", "cleaning"],
-            {"one": "docked", "two": "cleaning"},
-            {"start": []},
-            {"start": []},
-            "state",
         ),
     ],
 )
@@ -1441,12 +1415,6 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {"value_template": "{{ false }}"},
             {},
             {},
-        ),
-        (
-            "vacuum",
-            {"state": "{{ states('vacuum.one') }}"},
-            {"start": []},
-            {"start": []},
         ),
     ],
 )

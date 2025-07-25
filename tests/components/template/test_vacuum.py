@@ -3,7 +3,6 @@
 from typing import Any
 
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import template, vacuum
 from homeassistant.components.vacuum import (
@@ -19,11 +18,10 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 
-from .conftest import ConfigurationStyle, async_get_flow_preview_state
+from .conftest import ConfigurationStyle
 
-from tests.common import MockConfigEntry, assert_setup_component
+from tests.common import assert_setup_component
 from tests.components.vacuum import common
-from tests.typing import WebSocketGenerator
 
 TEST_OBJECT_ID = "test_vacuum"
 TEST_ENTITY_ID = f"vacuum.{TEST_OBJECT_ID}"
@@ -1155,56 +1153,3 @@ async def test_empty_action_config(
     assert state.attributes["supported_features"] == (
         VacuumEntityFeature.STATE | VacuumEntityFeature.START | supported_features
     )
-
-
-async def test_setup_config_entry(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test the config flow."""
-
-    hass.states.async_set(
-        "sensor.test_sensor",
-        "docked",
-        {},
-    )
-
-    template_config_entry = MockConfigEntry(
-        data={},
-        domain=template.DOMAIN,
-        options={
-            "name": "My template",
-            "state": "{{ states('sensor.test_sensor') }}",
-            "start": [],
-            "template_type": vacuum.DOMAIN,
-        },
-        title="My template",
-    )
-    template_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("vacuum.my_template")
-    assert state is not None
-    assert state == snapshot
-
-
-async def test_flow_preview(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-) -> None:
-    """Test the config flow preview."""
-
-    state = await async_get_flow_preview_state(
-        hass,
-        hass_ws_client,
-        vacuum.DOMAIN,
-        {
-            "name": "My template",
-            "state": "{{ 'cleaning' }}",
-            "start": [],
-        },
-    )
-
-    assert state["state"] == VacuumActivity.CLEANING

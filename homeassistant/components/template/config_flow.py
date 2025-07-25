@@ -88,19 +88,6 @@ from .select import CONF_OPTIONS, CONF_SELECT_OPTION, async_create_preview_selec
 from .sensor import async_create_preview_sensor
 from .switch import async_create_preview_switch
 from .template_entity import TemplateEntity
-from .vacuum import (
-    CONF_BATTERY_LEVEL,
-    CONF_FAN_SPEED,
-    CONF_FAN_SPEED_LIST,
-    SERVICE_CLEAN_SPOT,
-    SERVICE_LOCATE,
-    SERVICE_PAUSE,
-    SERVICE_RETURN_TO_BASE,
-    SERVICE_SET_FAN_SPEED,
-    SERVICE_START,
-    SERVICE_STOP,
-    async_create_preview_vacuum,
-)
 
 _SCHEMA_STATE: dict[vol.Marker, Any] = {
     vol.Required(CONF_STATE): selector.TemplateSelector(),
@@ -269,27 +256,6 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(CONF_TURN_OFF): selector.ActionSelector(),
         }
 
-    if domain == Platform.VACUUM:
-        schema |= _SCHEMA_STATE | {
-            vol.Required(SERVICE_START): selector.ActionSelector(),
-            vol.Optional(CONF_FAN_SPEED): selector.TemplateSelector(),
-            vol.Optional(CONF_FAN_SPEED_LIST): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[],
-                    multiple=True,
-                    custom_value=True,
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                )
-            ),
-            vol.Optional(SERVICE_SET_FAN_SPEED): selector.ActionSelector(),
-            vol.Optional(CONF_BATTERY_LEVEL): selector.TemplateSelector(),
-            vol.Optional(SERVICE_STOP): selector.ActionSelector(),
-            vol.Optional(SERVICE_PAUSE): selector.ActionSelector(),
-            vol.Optional(SERVICE_RETURN_TO_BASE): selector.ActionSelector(),
-            vol.Optional(SERVICE_CLEAN_SPOT): selector.ActionSelector(),
-            vol.Optional(SERVICE_LOCATE): selector.ActionSelector(),
-        }
-
     schema |= {
         vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
         vol.Optional(CONF_ADVANCED_OPTIONS): section(
@@ -401,7 +367,6 @@ TEMPLATE_TYPES = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
-    Platform.VACUUM,
 ]
 
 CONFIG_FLOW = {
@@ -449,11 +414,6 @@ CONFIG_FLOW = {
         config_schema(Platform.SWITCH),
         preview="template",
         validate_user_input=validate_user_input(Platform.SWITCH),
-    ),
-    Platform.VACUUM: SchemaFlowFormStep(
-        config_schema(Platform.VACUUM),
-        preview="template",
-        validate_user_input=validate_user_input(Platform.VACUUM),
     ),
 }
 
@@ -504,11 +464,6 @@ OPTIONS_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.SWITCH),
     ),
-    Platform.VACUUM: SchemaFlowFormStep(
-        options_schema(Platform.VACUUM),
-        preview="template",
-        validate_user_input=validate_user_input(Platform.VACUUM),
-    ),
 }
 
 CREATE_PREVIEW_ENTITY: dict[
@@ -522,7 +477,6 @@ CREATE_PREVIEW_ENTITY: dict[
     Platform.SELECT: async_create_preview_select,
     Platform.SENSOR: async_create_preview_sensor,
     Platform.SWITCH: async_create_preview_switch,
-    Platform.VACUUM: async_create_preview_vacuum,
 }
 
 
