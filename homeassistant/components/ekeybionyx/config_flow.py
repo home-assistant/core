@@ -104,7 +104,7 @@ class OAuth2FlowHandler(
             system.function_webhook_quotas["free"] == 0
             and system.function_webhook_quotas["used"] == 0
         ):
-            return self.async_abort(reason="no_availible_webhooks")
+            return self.async_abort(reason="no_available_webhooks")
         if system.function_webhook_quotas["used"] > 0:
             return await self.async_step_delete_webhooks()
         errors: dict[str, str] | None = None
