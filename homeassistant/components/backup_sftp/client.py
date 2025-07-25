@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, Self
 from asyncssh import (
     SFTPClient,
     SFTPClientFile,
-    SFTPError,
     SSHClientConnection,
     SSHClientConnectionOptions,
     connect,
@@ -39,6 +38,9 @@ class AsyncFileIterator:
     as context manager.
     """
 
+    _client: BackupAgentClient
+    _fileobj: SFTPClientFile
+
     def __init__(
         self,
         cfg: SFTPConfigEntry,
@@ -51,8 +53,6 @@ class AsyncFileIterator:
         self.hass: HomeAssistant = hass
         self.file_path: str = file_path
         self.buffer_size = buffer_size
-        self._client: BackupAgentClient | None = None
-        self._fileobj: SFTPClientFile | None = None
         self._initialized: bool = False
         LOGGER.debug("Opening file: %s in Async File Iterator", file_path)
 
@@ -136,17 +136,17 @@ class BackupAgentClient:
                 f"Attempted to access file outside of configured backup location: {file_path}"
             )
 
-    async def _load_metadata(self, backup: AgentBackup) -> BackupMetadata:
+    async def _load_metadata(self, backup_id: str) -> BackupMetadata:
         """Return `BackupMetadata` object`.
 
-        Raises
+        Raises:
         ------
         `FileNotFoundError` -- if metadata file is not found.
 
         """
 
         metadata_file = (
-            f"{self.cfg.runtime_data.backup_location}/.{backup.backup_id}.metadata.json"
+            f"{self.cfg.runtime_data.backup_location}/.{backup_id}.metadata.json"
         )
         if not await self.sftp.exists(metadata_file):
             raise FileNotFoundError(
@@ -158,16 +158,16 @@ class BackupAgentClient:
                 **json.loads(await f.read()), metadata_file=metadata_file
             )
 
-    async def async_delete_backup(self, backup: AgentBackup) -> None:
+    async def async_delete_backup(self, backup_id: str) -> None:
         """Delete backup archive.
 
-        Raises
+        Raises:
         ------
         `FileNotFoundError` -- if either metadata file or archive is not found.
 
         """
 
-        metadata: BackupMetadata = await self._load_metadata(backup)
+        metadata: BackupMetadata = await self._load_metadata(backup_id)
 
         # If for whatever reason, archive does not exist but metadata file does,
         # remove the metadata file.
@@ -206,10 +206,6 @@ class BackupAgentClient:
                     "Failed to load backup metadata from file: %s. %s", file, str(e)
                 )
                 continue
-            except SFTPError as e:
-                raise RuntimeError(
-                    f"SFTP Error occurred while attempting to extract list of backups. {e}"
-                ) from e
 
         return backups
 
@@ -242,19 +238,19 @@ class BackupAgentClient:
         """Close the `BackupAgentClient` context manager."""
         await self.__aexit__(None, None, None)
 
-    async def iter_file(self, backup: AgentBackup) -> AsyncFileIterator:
+    async def iter_file(self, backup_id: str) -> AsyncFileIterator:
         """Return Async File Iterator object.
 
         `SFTPClientFile` object (that would be returned with `sftp.open`) is not an iterator.
         So we return custom made class - `AsyncFileIterator` that would allow iteration on file object.
 
-        Raises
+        Raises:
         ------
         - `FileNotFoundError` -- if metadata or backup archive is not found.
 
         """
 
-        metadata: BackupMetadata = await self._load_metadata(backup)
+        metadata: BackupMetadata = await self._load_metadata(backup_id)
         if not await self.sftp.exists(metadata.file_path):
             raise FileNotFoundError("Backup archive not found on remote location.")
         return AsyncFileIterator(self.cfg, self.hass, metadata.file_path, BUF_SIZE)
@@ -303,7 +299,7 @@ class BackupAgentClient:
             )
         except (OSError, PermissionDenied) as e:
             raise BackupAgentError(
-                "Failure while attempting to establish SSH connection. Please check SSH credentials and if changed, re-add the integration"
+                "Failure while attempting to establish SSH connection. Please check SSH credentials and if changed, re-install the integration"
             ) from e
 
         # Configure SFTP Client Connection
@@ -311,7 +307,7 @@ class BackupAgentClient:
             self.sftp = await self._ssh.start_sftp_client()
         except (SFTPNoSuchFile, SFTPPermissionDenied) as e:
             raise BackupAgentError(
-                "Failed to create SFTP client. Re-configuring integration might be required"
+                "Failed to create SFTP client. Re-installing integration might be required"
             ) from e
 
         return self

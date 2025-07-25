@@ -66,7 +66,6 @@ class SFTPBackupAgent(BackupAgent):
     ) -> AsyncIterator[bytes]:
         """Download a backup file from SFTP."""
         LOGGER.debug("Received request to download backup id: %s", backup_id)
-        backup = await self.async_get_backup(backup_id)
 
         try:
             LOGGER.debug(
@@ -75,7 +74,7 @@ class SFTPBackupAgent(BackupAgent):
 
             # Will raise BackupAgentError if failure to authenticate or SFTP Permissions
             async with BackupAgentClient(self._entry, self._hass) as client:
-                return await client.iter_file(backup)
+                return await client.iter_file(backup_id)
         except FileNotFoundError as e:
             raise BackupNotFound(
                 f"Unable to initiate download of backup id: {backup_id}. {e}"
@@ -111,13 +110,12 @@ class SFTPBackupAgent(BackupAgent):
         LOGGER.debug("Received request to delete backup id: %s", backup_id)
 
         try:
-            backup = await self.async_get_backup(backup_id)
             LOGGER.debug(
                 "Establishing SFTP connection to remote host in order to delete backup"
             )
             # Will raise BackupAgentError if failure to authenticate or SFTP Permissions
             async with BackupAgentClient(self._entry, self._hass) as client:
-                await client.async_delete_backup(backup)
+                await client.async_delete_backup(backup_id)
         except FileNotFoundError as err:
             raise BackupNotFound(str(err)) from err
         except SFTPError as err:
@@ -132,7 +130,12 @@ class SFTPBackupAgent(BackupAgent):
 
         # Will raise BackupAgentError if failure to authenticate or SFTP Permissions
         async with BackupAgentClient(self._entry, self._hass) as client:
-            return await client.async_list_backups()
+            try:
+                return await client.async_list_backups()
+            except SFTPError as err:
+                raise BackupAgentError(
+                    f"Remote server error while attempting to list backups: {err}"
+                ) from err
 
     async def async_get_backup(
         self,

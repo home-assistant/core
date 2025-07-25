@@ -1,12 +1,15 @@
 """PyTest fixtures and test helpers."""
 
-from collections.abc import AsyncIterator, Generator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from io import BytesIO
 import tarfile
+from tempfile import NamedTemporaryFile
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN
+from homeassistant.components.backup_sftp import SFTPConfigEntryData
 from homeassistant.components.backup_sftp.const import (
     CONF_BACKUP_LOCATION,
     CONF_HOST,
@@ -16,9 +19,13 @@ from homeassistant.components.backup_sftp.const import (
     CONF_USERNAME,
     DOMAIN,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 from homeassistant.util import slugify
 
 from tests.common import MockConfigEntry
+
+type ComponentSetup = Callable[[], Awaitable[None]]
 
 CONFIG_ENTRY_TITLE = "testsshuser@127.0.0.1"
 USER_INPUT = {
@@ -76,6 +83,38 @@ def create_tar_bytes(files: dict) -> bytes:
     return buf.getvalue()
 
 
+@pytest.fixture(name="setup_integration")
+async def mock_setup_integration(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    ssh_objects: tuple[AsyncMock, AsyncMock],
+) -> Callable[[], Awaitable[None]]:
+    """Fixture for setting up the component manually."""
+    config_entry.add_to_hass(hass)
+
+    async def func() -> None:
+        with (
+            patch(
+                "homeassistant.components.backup_sftp.client.connect",
+                new_callable=AsyncMock,
+            ) as _mock_connect,
+            patch(
+                "homeassistant.components.backup_sftp.client.SSHClientConnectionOptions",
+                return_value=MagicMock(),
+            ),
+            NamedTemporaryFile() as tmpfile,
+        ):
+            user_input = USER_INPUT.copy()
+            user_input[CONF_PRIVATE_KEY_FILE] = tmpfile.name
+
+            _mock_connect.return_value = ssh_objects[0]
+            assert await async_setup_component(hass, BACKUP_DOMAIN, {})
+            await hass.config_entries.async_setup(config_entry.entry_id)
+            await hass.async_block_till_done()
+
+    return func
+
+
 @pytest.fixture
 def async_cm_mock() -> AsyncMock:
     """Test agent list backups."""
@@ -110,7 +149,8 @@ def fake_connect(async_cm_mock):
 @pytest.fixture(name="config_entry")
 def mock_config_entry() -> MockConfigEntry:
     """Fixture for MockConfigEntry."""
-    return MockConfigEntry(
+
+    config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_AGENT_ID,
         title=CONFIG_ENTRY_TITLE,
@@ -124,20 +164,19 @@ def mock_config_entry() -> MockConfigEntry:
         },
     )
 
+    config_entry.runtime_data = SFTPConfigEntryData(**config_entry.data)
+    return config_entry
+
 
 @pytest.fixture
-def mock_client() -> Generator[MagicMock]:
-    """Return a mocked Backup Agent Client."""
-    with patch(
-        "homeassistant.components.backup_sftp.client.BackupAgentClient"
-    ) as mocked_client_class:
-        # Use an AsyncMock for the client so its async context methods are awaitable
-        mocked_client = AsyncMock()
-        mocked_client_class.return_value = mocked_client
+def ssh_objects():
+    """Return mocked objects returned by `asyncssh.connect` and `SSHClient.start_sftp_client`.
 
-        # When entering the async context, return the client itself
-        mocked_client.__aenter__ = AsyncMock(return_value=mocked_client)
-        mocked_client.__aexit__ = AsyncMock(return_value=None)
+    Designed to remove warnings of non-awaited `close` and `exit` methods.
+    """
+    sshobject = AsyncMock()
+    sftpobject = AsyncMock()
 
-        mocked_client.list_backup_location = AsyncMock(return_value=[])
-        yield mocked_client
+    sshobject.start_sftp_client.return_value = sftpobject
+    sshobject.close = sftpobject.exit = MagicMock()
+    return sshobject, sftpobject

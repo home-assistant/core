@@ -17,8 +17,6 @@ from homeassistant.components.backup_sftp.client import (
 )
 from homeassistant.core import HomeAssistant
 
-from . import setup_backup_integration  # noqa: F401
-
 from tests.common import MockConfigEntry
 
 BACKUP_METADATA = {
@@ -248,7 +246,7 @@ async def test_load_metadata(
     ):
         async with BackupAgentClient(config_entry, hass) as client:
             backup = await client._load_metadata(
-                AgentBackup(**BACKUP_METADATA["metadata"])
+                BACKUP_METADATA["metadata"]["backup_id"]
             )
             assert isinstance(backup, BackupMetadata)
 
@@ -259,10 +257,10 @@ async def test_load_metadata(
     ):
         async with BackupAgentClient(config_entry, hass) as client:
             with pytest.raises(FileNotFoundError) as exc:
-                await client._load_metadata(AgentBackup(**BACKUP_METADATA["metadata"]))
+                await client._load_metadata(BACKUP_METADATA["metadata"]["backup_id"])
     assert "Metadata file not found at remote location" in str(exc.value)
     mock_connect.exists.assert_called_with(
-        f"backup_location/.{backup.metadata['backup_id']}.metadata.json"
+        f"backup_location/.{BACKUP_METADATA['metadata']['backup_id']}.metadata.json"
     )
 
 
@@ -279,7 +277,7 @@ async def test_async_delete_backup(
         patch("homeassistant.components.backup_sftp.client.connect", mock_connect()),
     ):
         async with BackupAgentClient(config_entry, hass) as client:
-            await client.async_delete_backup(AgentBackup(**BACKUP_METADATA["metadata"]))
+            await client.async_delete_backup(BACKUP_METADATA["metadata"]["backup_id"])
     assert mock_connect.unlink.call_count == 2
 
     mock_connect.exists = AsyncMock(return_value=False)
@@ -296,7 +294,7 @@ async def test_async_delete_backup(
         async with BackupAgentClient(config_entry, hass) as client:
             with pytest.raises(FileNotFoundError) as exc:
                 await client.async_delete_backup(
-                    AgentBackup(**BACKUP_METADATA["metadata"])
+                    BACKUP_METADATA["metadata"]["backup_id"]
                 )
     assert "does not exist" in str(exc.value)
 
@@ -352,7 +350,7 @@ async def test_iter_file(
     ):
         async with BackupAgentClient(config_entry, hass) as client:
             with pytest.raises(FileNotFoundError) as exc:
-                await client.iter_file(AgentBackup(**BACKUP_METADATA["metadata"]))
+                await client.iter_file(BACKUP_METADATA["metadata"]["backup_id"])
             assert "Backup archive not found on remote location" in str(exc.value)
 
     mock_connect.exists.return_value = True
@@ -364,7 +362,7 @@ async def test_iter_file(
         ),
     ):
         async with BackupAgentClient(config_entry, hass) as client:
-            res = await client.iter_file(AgentBackup(**BACKUP_METADATA["metadata"]))
+            res = await client.iter_file(BACKUP_METADATA["metadata"]["backup_id"])
 
         assert isinstance(res, AsyncFileIterator)
 

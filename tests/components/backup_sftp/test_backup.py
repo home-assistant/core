@@ -13,7 +13,6 @@ from homeassistant.components.backup_sftp.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from . import setup_backup_integration  # noqa: F401
 from .conftest import CONFIG_ENTRY_TITLE, TEST_AGENT_ID, AsyncFileIteratorMock
 
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -40,13 +39,23 @@ TEST_AGENT_BACKUP_RESULT = {
     "database_included": True,
     "date": "2025-01-01T01:23:45.678Z",
     "extra_metadata": {"with_automatic_settings": False},
+    "failed_addons": [],
+    "failed_agent_ids": [],
+    "failed_folders": [],
     "folders": [],
     "homeassistant_included": True,
     "homeassistant_version": "2024.12.0",
     "name": "Test",
-    "failed_agent_ids": [],
     "with_automatic_settings": None,
 }
+
+
+@pytest.fixture(autouse=True)
+async def mock_setup_integration(
+    setup_integration,
+) -> None:
+    """Set up the integration automatically for backup tests."""
+    await setup_integration()
 
 
 @pytest.fixture
@@ -188,7 +197,7 @@ async def test_agents_download_fail(
     )
     assert resp.status == 500
     content = await resp.content.read()
-    assert "Error message." in content.decode()
+    assert "Internal Server Error" in content.decode()
 
     backup_agent_client.iter_file = MagicMock(
         side_effect=FileNotFoundError("Error message.")
@@ -197,7 +206,6 @@ async def test_agents_download_fail(
         f"/api/backup/download/{TEST_AGENT_BACKUP.backup_id}?agent_id={DOMAIN}.{TEST_AGENT_ID}"
     )
     assert resp.status == 404
-    content = await resp.content.read()
 
 
 async def test_agents_download_metadata_not_found(
@@ -378,4 +386,4 @@ async def test_agents_delete_not_found(
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
 
-    backup_agent_client.async_delete_backup.assert_not_called()
+    backup_agent_client.async_delete_backup.assert_called_with(backup_id)
