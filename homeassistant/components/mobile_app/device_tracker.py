@@ -99,7 +99,13 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
     def location_name(self) -> str | None:
         """Return a location name for the current location of the device."""
         if location_name := self._data.get(ATTR_LOCATION_NAME):
-            return location_name
+            if location_name == "home":
+                return location_name
+            zone = self.hass.states.get("zone." + location_name)
+            if zone and "friendly_name" in zone.attributes:
+                return zone.attributes["friendly_name"]
+            else:
+                return location_name
         return None
 
     @property
