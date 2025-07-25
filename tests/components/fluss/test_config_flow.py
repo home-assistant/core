@@ -43,7 +43,7 @@ async def test_step_user_success(config_flow: FlussConfigFlow) -> None:
         mock_client.return_value = None
         result = await config_flow.async_step_user(user_input)
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "My Fluss+ Devices"
     assert result["data"] == user_input
 
