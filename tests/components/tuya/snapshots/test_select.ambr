@@ -420,3 +420,60 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_platform_setup_and_discovery[xnyjcn_micro_storage_inverter][select.cbe_pro_2_work_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'self_powered',
+        'time_of_use',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.cbe_pro_2_work_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Work mode',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'work_mode',
+    'unique_id': 'tuya.6cd9ce33d5275082e9inhvwork_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[xnyjcn_micro_storage_inverter][select.cbe_pro_2_work_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'CBE Pro 2 Work mode',
+      'options': list([
+        'self_powered',
+        'time_of_use',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.cbe_pro_2_work_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'self_powered',
+  })
+# ---
