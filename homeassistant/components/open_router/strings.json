@@ -25,7 +25,7 @@
           "description": "Configure the new conversation agent",
           "data": {
             "model": "Model",
-            "prompt": "Instructions",
+            "prompt": "[%key:common::config_flow::data::prompt%]",
             "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]"
           },
           "data_description": {

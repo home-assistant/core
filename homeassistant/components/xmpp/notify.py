@@ -48,6 +48,7 @@ ATTR_URL = "url"
 ATTR_URL_TEMPLATE = "url_template"
 ATTR_VERIFY = "verify"
 
+CONF_TITLE = "title"
 CONF_TLS = "tls"
 CONF_VERIFY = "verify"
 
@@ -64,6 +65,7 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_ROOM, default=""): cv.string,
         vol.Optional(CONF_TLS, default=True): cv.boolean,
         vol.Optional(CONF_VERIFY, default=True): cv.boolean,
+        vol.Optional(CONF_TITLE, default=ATTR_TITLE_DEFAULT): cv.string,
     }
 )
 
@@ -82,6 +84,7 @@ async def async_get_service(
         config.get(CONF_TLS),
         config.get(CONF_VERIFY),
         config.get(CONF_ROOM),
+        config.get(CONF_TITLE),
         hass,
     )
 
@@ -89,7 +92,9 @@ async def async_get_service(
 class XmppNotificationService(BaseNotificationService):
     """Implement the notification service for Jabber (XMPP)."""
 
-    def __init__(self, sender, resource, password, recipient, tls, verify, room, hass):
+    def __init__(
+        self, sender, resource, password, recipient, tls, verify, room, title, hass
+    ):
         """Initialize the service."""
         self._hass = hass
         self._sender = sender
@@ -99,10 +104,11 @@ class XmppNotificationService(BaseNotificationService):
         self._tls = tls
         self._verify = verify
         self._room = room
+        self._title = title
 
     async def async_send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
+        title = kwargs.get(ATTR_TITLE, self._title)
         text = f"{title}: {message}" if title else message
         data = kwargs.get(ATTR_DATA)
         timeout = data.get(ATTR_TIMEOUT, XEP_0363_TIMEOUT) if data else None
