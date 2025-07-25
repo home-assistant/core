@@ -69,22 +69,7 @@ class EsphomeMediaPlayer(
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
-        flags = (
-            MediaPlayerEntityFeature.PLAY_MEDIA
-            | MediaPlayerEntityFeature.BROWSE_MEDIA
-            | MediaPlayerEntityFeature.STOP
-            | MediaPlayerEntityFeature.VOLUME_SET
-            | MediaPlayerEntityFeature.VOLUME_MUTE
-            | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
-        )
-        if self._static_info.supports_pause:
-            flags |= MediaPlayerEntityFeature.PAUSE | MediaPlayerEntityFeature.PLAY
-
-        if self._static_info.supports_turn_off_on:
-            flags |= (
-                MediaPlayerEntityFeature.TURN_OFF | MediaPlayerEntityFeature.TURN_ON
-            )
-        self._attr_supported_features = flags
+        self._attr_supported_features = self._static_info.feature_flags_compat(self._api_version)
         self._entry_data.media_player_formats[self.unique_id] = cast(
             MediaPlayerInfo, static_info
         ).supported_formats
