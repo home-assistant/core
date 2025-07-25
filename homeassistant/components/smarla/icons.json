@@ -9,6 +9,20 @@
       "intensity": {
         "default": "mdi:sine-wave"
       }
+    },
+    "sensor": {
+      "amplitude": {
+        "default": "mdi:sine-wave"
+      },
+      "period": {
+        "default": "mdi:sine-wave"
+      },
+      "activity": {
+        "default": "mdi:baby-face"
+      },
+      "swing_count": {
+        "default": "mdi:counter"
+      }
     }
   }
 }
