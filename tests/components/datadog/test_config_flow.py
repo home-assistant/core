@@ -225,5 +225,5 @@ async def test_import_flow_abort_already_configured_service(
         data=MOCK_CONFIG,
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
