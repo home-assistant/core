@@ -10,6 +10,7 @@ from typing import Final, cast
 from pymiele import MieleDevice, MieleTemperature
 
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -18,6 +19,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
+    STATE_UNKNOWN,
     EntityCategory,
     UnitOfEnergy,
     UnitOfTemperature,
@@ -93,6 +95,7 @@ class MieleSensorDescription(SensorEntityDescription):
     """Class describing Miele sensor entities."""
 
     value_fn: Callable[[MieleDevice], StateType]
+    default_value: StateType = None
     zone: int | None = None
     unique_id_fn: Callable[[str, MieleSensorDescription], str] | None = None
 
@@ -362,6 +365,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             key="state_elapsed_time",
             translation_key="elapsed_time",
             value_fn=lambda value: _convert_duration(value.state_elapsed_time),
+            default_value=0,
             device_class=SensorDeviceClass.DURATION,
             native_unit_of_measurement=UnitOfTime.MINUTES,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -585,6 +589,7 @@ async def async_setup_entry(
             "state_program_id": MieleProgramIdSensor,
             "state_program_phase": MielePhaseSensor,
             "state_plate_step": MielePlateSensor,
+            "state_elapsed_time": MieleElapsedTimeSensor,
         }.get(definition.description.key, MieleSensor)
 
     def _is_entity_registered(unique_id: str) -> bool:
@@ -708,7 +713,33 @@ class MieleSensor(MieleEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.device)
+        value = self.entity_description.value_fn(self.device)
+        return self.entity_description.default_value if value is None else value
+
+
+class MieleRestorableSensor(MieleSensor, RestoreSensor):
+    """Representation of a Sensor whose internal state can be restored."""
+
+    _last_value: StateType
+
+    def __init__(
+        self,
+        coordinator: MieleDataUpdateCoordinator,
+        device_id: str,
+        description: MieleSensorDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, device_id, description)
+        self._last_value = None
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+
+        # recover last value from cache
+        last_value = await self.async_get_last_state()
+        if last_value and last_value.state != STATE_UNKNOWN:
+            self._last_value = last_value.state
 
 
 class MielePlateSensor(MieleSensor):
@@ -810,3 +841,26 @@ class MieleProgramIdSensor(MieleSensor):
     def options(self) -> list[str]:
         """Return the options list for the actual device type."""
         return sorted(set(STATE_PROGRAM_ID.get(self.device.device_type, {}).values()))
+
+
+class MieleElapsedTimeSensor(MieleRestorableSensor):
+    """Representation of the elapsed time sensor."""
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+
+        current_value = self.entity_description.value_fn(self.device)
+        current_status = StateStatus(self.device.state_status)
+
+        # keep value when program ends (some devices are immediately reporting 0...)
+        if current_status == StateStatus.PROGRAM_ENDED:
+            return self._last_value
+
+        # force default value when appliance is off (some devices are keeping last value until a new cycle starts)
+        if current_status == StateStatus.OFF:
+            return self.entity_description.default_value
+
+        # otherwise, cache value and return it
+        self._last_value = current_value
+        return current_value
