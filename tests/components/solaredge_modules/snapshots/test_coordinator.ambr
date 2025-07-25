@@ -1,0 +1,81 @@
+# serializer version: 1
+# name: test_coordinator_first_run
+  defaultdict({
+    'solaredge_modules:123456_1001': list([
+      dict({
+        'end': 1735786800.0,
+        'start': 1735783200.0,
+        'state': 11.5,
+        'sum': 11.5,
+      }),
+      dict({
+        'end': 1735790400.0,
+        'start': 1735786800.0,
+        'state': 15.5,
+        'sum': 27.0,
+      }),
+    ]),
+    'solaredge_modules:123456_1002': list([
+      dict({
+        'end': 1735786800.0,
+        'start': 1735783200.0,
+        'state': 21.5,
+        'sum': 21.5,
+      }),
+      dict({
+        'end': 1735790400.0,
+        'start': 1735786800.0,
+        'state': 25.5,
+        'sum': 47.0,
+      }),
+    ]),
+  })
+# ---
+# name: test_coordinator_subsequent_run
+  defaultdict({
+    'solaredge_modules:123456_1001': list([
+      dict({
+        'end': 1735786800.0,
+        'start': 1735783200.0,
+        'state': 11.5,
+        'sum': 11.5,
+      }),
+      dict({
+        'end': 1735790400.0,
+        'start': 1735786800.0,
+        'state': 25.5,
+        'sum': 37.0,
+      }),
+      dict({
+        'end': 1735794000.0,
+        'start': 1735790400.0,
+        'state': 29.5,
+        'sum': 66.5,
+      }),
+    ]),
+  })
+# ---
+# name: test_coordinator_subsequent_run_with_gap
+  defaultdict({
+    'solaredge_modules:123456_1001': list([
+      dict({
+        'end': 1735786800.0,
+        'start': 1735783200.0,
+        'state': 11.5,
+        'sum': 11.5,
+      }),
+      dict({
+        'end': 1735790400.0,
+        'start': 1735786800.0,
+        'state': 15.5,
+        'sum': 27.0,
+      }),
+      dict({
+        'end': 1738468800.0,
+        'start': 1738465200.0,
+        'state': 25.5,
+        'sum': 52.5,
+      }),
+    ]),
+  })
+# ---
