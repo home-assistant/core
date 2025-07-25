@@ -74,21 +74,20 @@ def _charging_power_value(field: VolvoCarsValue) -> int:
     )
 
 
-def _charging_power_status_value(field: VolvoCarsValue) -> str:
+def _charging_power_status_value(field: VolvoCarsValue) -> str | None:
     status = cast(str, field.value)
 
-    if status.lower() in _CHARGING_POWER_STATUS_API_VALUES:
+    if status.lower() in _CHARGING_POWER_STATUS_OPTIONS:
         return status
 
     _LOGGER.warning(
         "Unknown value '%s' for charging_power_status. Please report it at https://github.com/home-assistant/core/issues/new?template=bug_report.yml",
         status,
     )
-    return "unknown"
+    return None
 
 
-_CHARGING_POWER_STATUS_API_VALUES = ["providing_power", "no_power_available"]
-_CHARGING_POWER_STATUS_OPTIONS = [*_CHARGING_POWER_STATUS_API_VALUES, "unknown"]
+_CHARGING_POWER_STATUS_OPTIONS = ["providing_power", "no_power_available"]
 
 _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # command-accessibility endpoint
@@ -377,7 +376,7 @@ class VolvoSensor(VolvoEntity, SensorEntity):
             else self.entity_description.value_fn(api_field)
         )
 
-        if self.device_class == SensorDeviceClass.ENUM:
+        if self.device_class == SensorDeviceClass.ENUM and native_value:
             # Entities having an "unknown" value should report None as the state
             native_value = str(native_value)
             native_value = (

@@ -151,7 +151,12 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="api_key", data_schema=schema, errors=errors
+            step_id="api_key",
+            data_schema=schema,
+            errors=errors,
+            description_placeholders={
+                "volvo_dev_portal": "https://developer.volvocars.com/account/#your-api-applications"
+            },
         )
 
     async def async_step_vin(

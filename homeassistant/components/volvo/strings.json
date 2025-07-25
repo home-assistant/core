@@ -9,7 +9,7 @@
         "title": "[%key:common::config_flow::title::reauth%]"
       },
       "api_key": {
-        "description": "Get your API key from the Volvo developer portal (https://developer.volvocars.com/account/#your-api-applications).",
+        "description": "Get your API key from the [Volvo developer portal]({volvo_dev_portal}).",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
@@ -107,8 +107,7 @@
         "name": "Charging power status",
         "state": {
           "providing_power": "Providing power",
-          "no_power_available": "No power",
-          "unknown": "Unknown"
+          "no_power_available": "No power"
         }
       },
       "charging_status": {
