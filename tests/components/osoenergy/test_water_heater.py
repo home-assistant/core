@@ -7,8 +7,11 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.osoenergy.const import DOMAIN
 from homeassistant.components.osoenergy.water_heater import (
+    ATTR_DURATION_DAYS,
     ATTR_UNTIL_TEMP_LIMIT,
     ATTR_V40MIN,
+    SERVICE_DISABLE_HOLIDAY_MODE,
+    SERVICE_ENABLE_HOLIDAY_MODE,
     SERVICE_GET_PROFILE,
     SERVICE_SET_PROFILE,
     SERVICE_SET_V40MIN,
@@ -274,3 +277,61 @@ async def test_oso_turn_off(
     )
 
     mock_osoenergy_client().hotwater.turn_off.assert_called_once_with(ANY, False)
+
+
+async def test_enable_holiday_mode(
+    hass: HomeAssistant,
+    mock_osoenergy_client: MagicMock,
+    mock_config_entry: ConfigEntry,
+) -> None:
+    """Test enabling holiday mode."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ENABLE_HOLIDAY_MODE,
+        {
+            ATTR_ENTITY_ID: "water_heater.test_device",
+            ATTR_DURATION_DAYS: 10,
+        },
+        blocking=True,
+    )
+
+    mock_osoenergy_client().hotwater.enable_holiday_mode.assert_called_once_with(
+        ANY, 10
+    )
+
+
+async def test_enable_holiday_mode_without_duration(
+    hass: HomeAssistant,
+    mock_osoenergy_client: MagicMock,
+    mock_config_entry: ConfigEntry,
+) -> None:
+    """Test enabling holiday mode."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ENABLE_HOLIDAY_MODE,
+        {ATTR_ENTITY_ID: "water_heater.test_device"},
+        blocking=True,
+    )
+
+    mock_osoenergy_client().hotwater.enable_holiday_mode.assert_called_once_with(
+        ANY, 365
+    )
+
+
+async def test_disable_holiday_mode(
+    hass: HomeAssistant,
+    mock_osoenergy_client: MagicMock,
+    mock_config_entry: ConfigEntry,
+) -> None:
+    """Test disabling holiday mode."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_DISABLE_HOLIDAY_MODE,
+        {ATTR_ENTITY_ID: "water_heater.test_device"},
+        blocking=True,
+    )
+
+    mock_osoenergy_client().hotwater.disable_holiday_mode.assert_called_once_with(ANY)
