@@ -167,7 +167,7 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
         super().__init__(reolink_data, coordinator)
 
         self._channel = channel
-        if self._host.api.supported(channel, "UID"):
+        if self._host.api.is_nvr and self._host.api.supported(channel, "UID"):
             self._attr_unique_id = f"{self._host.unique_id}_{self._host.api.camera_uid(channel)}_{self.entity_description.key}"
         else:
             self._attr_unique_id = (

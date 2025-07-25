@@ -11,8 +11,8 @@
     },
     "step": {
       "auth": {
-        "description": "To link your TelldusLive account:\n1. Open the link below\n2. Log in to Telldus Live\n3. Authorize **{app_name}** (select **Yes**).\n4. Come back here and select **Submit**.\n\n [Link TelldusLive account]({auth_url})",
-        "title": "Authenticate with TelldusLive"
+        "description": "To link your Telldus Live account:\n1. Open the link below\n2. Log in to Telldus Live\n3. Authorize **{app_name}** (select **Yes**).\n4. Come back here and select **Submit**.\n\n[Link Telldus Live account]({auth_url})",
+        "title": "Authenticate with Telldus Live"
       },
       "user": {
         "data": {
