@@ -69,6 +69,33 @@
         },
         "title": "Template button"
       },
+      "cover": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "device_class": "[%key:component::template::config::step::sensor::data::device_class%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "open_cover": "Actions on open cover",
+          "close_cover": "Actions on close cover",
+          "stop_cover": "Actions on stop cover",
+          "position": "Position",
+          "set_cover_position": "Actions on set cover position",
+          "tilt": "Tilt position",
+          "set_cover_tilt_position": "Actions on set cover position"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "data": {
+              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+            }
+          }
+        },
+        "title": "Template cover"
+      },
       "image": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
@@ -259,6 +286,32 @@
         },
         "title": "[%key:component::template::config::step::button::title%]"
       },
+
+      "cover": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "open_cover": "[%key:component::template::config::step::cover::data::open_cover%]",
+          "close_cover": "[%key:component::template::config::step::cover::data::close_cover%]",
+          "stop_cover": "[%key:component::template::config::step::cover::data::stop_cover%]",
+          "position": "[%key:component::template::config::step::cover::data::position%]",
+          "set_cover_position": "[%key:component::template::config::step::cover::data::set_cover_position%]",
+          "tilt": "[%key:component::template::config::step::cover::data::tilt%]",
+          "set_cover_tilt_position": "[%key:component::template::config::step::cover::data::set_cover_tilt_position%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "data": {
+              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+            }
+          }
+        },
+        "title": "[%key:component::template::config::step::cover::title%]"
+      },
       "image": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
@@ -412,6 +465,20 @@
         "identify": "[%key:component::button::entity_component::identify::name%]",
         "restart": "[%key:common::action::restart%]",
         "update": "[%key:component::button::entity_component::update::name%]"
+      }
+    },
+    "cover_device_class": {
+      "options": {
+        "awning": "[%key:component::cover::entity_component::awning::name%]",
+        "blind": "[%key:component::cover::entity_component::blind::name%]",
+        "curtain": "[%key:component::cover::entity_component::curtain::name%]",
+        "damper": "[%key:component::cover::entity_component::damper::name%]",
+        "door": "[%key:component::cover::entity_component::door::name%]",
+        "garage": "[%key:component::cover::entity_component::garage::name%]",
+        "gate": "[%key:component::cover::entity_component::gate::name%]",
+        "shade": "[%key:component::cover::entity_component::shade::name%]",
+        "shutter": "[%key:component::cover::entity_component::shutter::name%]",
+        "window": "[%key:component::cover::entity_component::window::name%]"
       }
     },
     "sensor_device_class": {

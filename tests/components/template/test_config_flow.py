@@ -122,6 +122,34 @@ BINARY_SENSOR_OPTIONS = {
             {},
         ),
         (
+            "cover",
+            {"state": "{{ states('cover.one') }}"},
+            "open",
+            {"one": "open", "two": "closed"},
+            {},
+            {
+                "device_class": "garage",
+                "set_cover_position": [
+                    {
+                        "action": "input_number.set_value",
+                        "target": {"entity_id": "input_number.test"},
+                        "data": {"position": "{{ position }}"},
+                    }
+                ],
+            },
+            {
+                "device_class": "garage",
+                "set_cover_position": [
+                    {
+                        "action": "input_number.set_value",
+                        "target": {"entity_id": "input_number.test"},
+                        "data": {"position": "{{ position }}"},
+                    }
+                ],
+            },
+            {},
+        ),
+        (
             "image",
             {"url": "{{ states('sensor.one') }}"},
             "2024-07-09T00:00:00+00:00",
@@ -287,6 +315,12 @@ async def test_config_flow(
             {},
             {},
             {},
+        ),
+        (
+            "cover",
+            {"state": "{{ 'open' }}"},
+            {"set_cover_position": []},
+            {"set_cover_position": []},
         ),
         (
             "image",
@@ -472,6 +506,16 @@ async def test_config_flow_device(
                     }
                 ],
             },
+            "state",
+        ),
+        (
+            "cover",
+            {"state": "{{ states('cover.one') }}"},
+            {"state": "{{ states('cover.two') }}"},
+            ["open", "closed"],
+            {"one": "open", "two": "closed"},
+            {"set_cover_position": []},
+            {"set_cover_position": []},
             "state",
         ),
         (
@@ -1314,6 +1358,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {},
             {},
             {},
+        ),
+        (
+            "cover",
+            {"state": "{{ states('cover.one') }}"},
+            {"set_cover_position": []},
+            {"set_cover_position": []},
         ),
         (
             "image",
