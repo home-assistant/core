@@ -3,8 +3,9 @@
 from collections.abc import Generator
 import hashlib
 import io
+import json
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from b2sdk._internal.raw_simulator import BucketSimulator
 from b2sdk.v2 import FileVersion, RawSimulator
@@ -74,7 +75,9 @@ def b2_fixture():
         )
 
         application_key_id: str = key["applicationKeyId"]
-        application_key: str = key["applicationKey"]
+        application_key: str = key[
+            "applicationKey"
+        ]  # Corrected typo based on prev conversation
 
         bucket = sim.create_bucket(
             api_url=api_url,
@@ -84,54 +87,141 @@ def b2_fixture():
             bucket_type="allPrivate",
         )
 
-        # Create a test backup
-        test_backup_data = b"backup data"
         upload_url = sim.get_upload_url(api_url, auth_token, bucket["bucketId"])
-        stream = io.BytesIO(test_backup_data)
-        stream.seek(0)
 
-        filename = TEST_BACKUP.name
-        sha1 = hashlib.sha1(test_backup_data).hexdigest()
-        file = sim.upload_file(
+        # --- Upload the main backup file (e.g., .tar) ---
+        test_backup_data = b"This is the actual backup data for the tar file."
+        stream_backup = io.BytesIO(test_backup_data)
+        stream_backup.seek(0)
+
+        # The filename of the backup archive is based on TEST_BACKUP.backup_id
+        backup_filename = (
+            f"{TEST_BACKUP.backup_id}.tar"  # Ensure it starts with backup_id
+        )
+        sha1_backup = hashlib.sha1(test_backup_data).hexdigest()
+
+        file_backup_upload_result = sim.upload_file(
             upload_url["uploadUrl"],
             upload_url["authorizationToken"],
-            filename,
+            f"testprefix/{backup_filename}",
             len(test_backup_data),
             "application/octet-stream",
-            sha1,
-            BACKUP_METADATA,
-            stream,
+            sha1_backup,
+            {},  # Store the full BACKUP_METADATA dict as user_file_info on the tar file
+            stream_backup,
         )
 
+        # --- Upload the metadata JSON file ---
+        # The content of the metadata JSON file is BACKUP_METADATA["backup_metadata"]
+        # which is already a JSON string from TEST_BACKUP.as_dict()
+        metadata_json_content_bytes = json.dumps(BACKUP_METADATA).encode("utf-8")
+        stream_metadata = io.BytesIO(metadata_json_content_bytes)
+        stream_metadata.seek(0)
+
+        # The filename for the metadata JSON is based on TEST_BACKUP.backup_id
+        metadata_filename = f"{TEST_BACKUP.backup_id}.metadata.json"
+        sha1_metadata = hashlib.sha1(metadata_json_content_bytes).hexdigest()
+
+        file_metadata_upload_result = sim.upload_file(
+            upload_url["uploadUrl"],
+            upload_url["authorizationToken"],
+            f"testprefix/{metadata_filename}",
+            len(metadata_json_content_bytes),
+            "application/json",  # Explicitly set content type to JSON
+            sha1_metadata,
+            {},  # No custom user metadata for the metadata file itself
+            stream_metadata,
+        )
+
+        # Store all uploaded file results for the ls mock
+        uploaded_files_results = [
+            file_backup_upload_result,
+            file_metadata_upload_result,
+        ]
+
+        # Define a mock for DownloadedFile
+        class MockDownloadedFile:
+            def __init__(self, content: bytes) -> None:
+                self._content = content
+
+            @property
+            def text_content(self) -> str:
+                return self._content.decode("utf-8")
+
+            @property
+            def response(self):
+                # This is a simplified mock for the response object
+                # It should provide an iter_content method that yields the content
+                mock_response = Mock()
+                mock_response.iter_content.return_value = iter([self._content])
+                return mock_response
+
+        # Define a mock for download_file_by_id on RawSimulator
+        def mock_sim_download_file_by_id(
+            file_id,
+            file_name=None,
+            progress_listener=None,
+            range_=None,
+            encryption=None,
+        ):
+            for file_data in uploaded_files_results:
+                if file_data["fileId"] == file_id or (
+                    file_name and file_data["fileName"] == file_name
+                ):
+                    if file_data["fileName"].endswith(".metadata.json"):
+                        return MockDownloadedFile(metadata_json_content_bytes)
+                    return MockDownloadedFile(test_backup_data)
+            raise ValueError(
+                f"Mocked download_file_by_id: File with id {file_id} or name {file_name} not found."
+            )
+
+        # Assign the mock method to the RawSimulator instance
+        sim.download_file_by_id = mock_sim_download_file_by_id
+
+        # --- Modify the ls mock to return ALL uploaded files ---
         def ls(
             self,
             prefix: str = "",
         ) -> list[tuple[FileVersion, str]]:
             """List files in the bucket."""
-            return [
-                (
-                    FileVersion(
-                        sim,
-                        file["fileId"],
-                        file["fileName"],
-                        file["contentLength"],
-                        "application/octet-stream",
-                        sha1,
-                        BACKUP_METADATA,
-                        file["uploadTimestamp"],
-                        file["accountId"],
-                        file["bucketId"],
-                        "action",
-                        None,
-                        None,
-                    ),
-                    file["fileName"],
+            listed_files = []
+            for file_data in uploaded_files_results:
+                if prefix and not file_data["fileName"].startswith(prefix):
+                    continue
+
+                listed_files.append(
+                    (
+                        FileVersion(
+                            sim,
+                            file_data["fileId"],
+                            file_data["fileName"],
+                            file_data["contentLength"],
+                            file_data.get("contentType", "application/octet-stream"),
+                            file_data["fileInfo"].get("sha1", ""),
+                            file_data[
+                                "fileInfo"
+                            ],  # Use the fileInfo stored during upload
+                            file_data["uploadTimestamp"],
+                            file_data["accountId"],
+                            file_data["bucketId"],
+                            "upload",
+                            None,
+                            None,
+                        ),
+                        file_data["fileName"],
+                    )
                 )
-            ]
+            return listed_files
 
         BucketSimulator.ls = ls
 
         yield BackblazeFixture(application_key_id, application_key, bucket, sim, auth)
+
+
+@pytest.fixture
+def test_backup(request: pytest.FixtureRequest) -> None:
+    """Test backup fixture."""
+    return TEST_BACKUP
 
 
 @pytest.fixture

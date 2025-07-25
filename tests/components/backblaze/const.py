@@ -1,7 +1,5 @@
 """Consts for Backblaze tests."""
 
-from json import dumps
-
 from homeassistant.components.backblaze.const import CONF_BUCKET, CONF_PREFIX
 from homeassistant.components.backup import AgentBackup
 
@@ -22,11 +20,11 @@ TEST_BACKUP = AgentBackup(
     homeassistant_version="2024.12.0.dev0",
     name="Core 2024.12.0.dev0",
     protected=False,
-    size=11,
+    size=48,
 )
 
 BACKUP_METADATA = {
     "metadata_version": "1",
     "backup_id": "23e64aec",
-    "backup_metadata": dumps(TEST_BACKUP.as_dict()),
+    "backup_metadata": TEST_BACKUP.as_dict(),
 }
