@@ -27,7 +27,7 @@ from .const import (
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
 )
 from .coordinator import GuardianDataUpdateCoordinator
-from .services import setup_services
+from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -55,7 +55,7 @@ class GuardianData:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Elexa Guardian component."""
-    setup_services(hass)
+    async_setup_services(hass)
     return True
 
 

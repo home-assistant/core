@@ -10,6 +10,7 @@ from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
 from homeassistant.components.reolink.const import (
+    CONF_BC_ONLY,
     CONF_BC_PORT,
     CONF_SUPPORTS_PRIVACY_MODE,
     CONF_USE_HTTPS,
@@ -65,11 +66,26 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.get_host_data = AsyncMock(return_value=None)
     host_mock.get_states = AsyncMock(return_value=None)
+    host_mock.get_state = AsyncMock()
     host_mock.check_new_firmware = AsyncMock(return_value=False)
+    host_mock.subscribe = AsyncMock()
     host_mock.unsubscribe = AsyncMock(return_value=True)
     host_mock.logout = AsyncMock(return_value=True)
     host_mock.reboot = AsyncMock()
     host_mock.set_ptz_command = AsyncMock()
+    host_mock.get_motion_state_all_ch = AsyncMock(return_value=False)
+    host_mock.get_stream_source = AsyncMock()
+    host_mock.get_snapshot = AsyncMock()
+    host_mock.get_encoding = AsyncMock(return_value="h264")
+    host_mock.pull_point_request = AsyncMock()
+    host_mock.set_audio = AsyncMock()
+    host_mock.set_email = AsyncMock()
+    host_mock.ONVIF_event_callback = AsyncMock()
+    host_mock.set_whiteled = AsyncMock()
+    host_mock.set_state_light = AsyncMock()
+    host_mock.renew = AsyncMock()
+    host_mock.get_vod_source = AsyncMock()
+    host_mock.expire_session = AsyncMock()
     host_mock.is_nvr = True
     host_mock.is_hub = False
     host_mock.mac_address = TEST_MAC
@@ -102,14 +118,14 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.camera_uid.return_value = TEST_UID_CAM
     host_mock.camera_online.return_value = True
     host_mock.channel_for_uid.return_value = 0
-    host_mock.get_encoding.return_value = "h264"
     host_mock.firmware_update_available.return_value = False
     host_mock.session_active = True
     host_mock.timeout = 60
     host_mock.renewtimer.return_value = 600
     host_mock.wifi_connection = False
-    host_mock.wifi_signal = None
+    host_mock.wifi_signal.return_value = -45
     host_mock.whiteled_mode_list.return_value = []
+    host_mock.post_recording_time_list.return_value = []
     host_mock.zoom_range.return_value = {
         "zoom": {"pos": {"min": 0, "max": 100}},
         "focus": {"pos": {"min": 0, "max": 100}},
@@ -138,8 +154,10 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     # Disable tcp push by default for tests
     host_mock.baichuan.port = TEST_BC_PORT
     host_mock.baichuan.events_active = False
+    host_mock.baichuan.subscribe_events = AsyncMock()
     host_mock.baichuan.unsubscribe_events = AsyncMock()
     host_mock.baichuan.check_subscribe_events = AsyncMock()
+    host_mock.baichuan.get_privacy_mode = AsyncMock()
     host_mock.baichuan.mac_address.return_value = TEST_MAC_CAM
     host_mock.baichuan.privacy_mode.return_value = False
     host_mock.baichuan.day_night_state.return_value = "day"
@@ -211,6 +229,7 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_USE_HTTPS: TEST_USE_HTTPS,
             CONF_SUPPORTS_PRIVACY_MODE: TEST_PRIVACY,
             CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_ONLY: False,
         },
         options={
             CONF_PROTOCOL: DEFAULT_PROTOCOL,
@@ -241,4 +260,28 @@ def test_chime(reolink_connect: MagicMock) -> None:
 
     reolink_connect.chime_list = [TEST_CHIME]
     reolink_connect.chime.return_value = TEST_CHIME
+    return TEST_CHIME
+
+
+@pytest.fixture
+def reolink_chime(reolink_host: MagicMock) -> None:
+    """Mock a reolink chime."""
+    TEST_CHIME = Chime(
+        host=reolink_host,
+        dev_id=12345678,
+        channel=0,
+    )
+    TEST_CHIME.name = "Test chime"
+    TEST_CHIME.volume = 3
+    TEST_CHIME.connect_state = 2
+    TEST_CHIME.led_state = True
+    TEST_CHIME.event_info = {
+        "md": {"switch": 0, "musicId": 0},
+        "people": {"switch": 0, "musicId": 1},
+        "visitor": {"switch": 1, "musicId": 2},
+    }
+    TEST_CHIME.remove = AsyncMock()
+
+    reolink_host.chime_list = [TEST_CHIME]
+    reolink_host.chime.return_value = TEST_CHIME
     return TEST_CHIME

@@ -6,6 +6,8 @@ import time
 from meteofrance_api.model.forecast import Forecast as MeteoFranceForecast
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_SUNNY,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_HUMIDITY,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
@@ -49,9 +51,13 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def format_condition(condition: str):
+def format_condition(condition: str, force_day: bool = False) -> str:
     """Return condition from dict CONDITION_MAP."""
-    return CONDITION_MAP.get(condition, condition)
+    mapped_condition = CONDITION_MAP.get(condition, condition)
+    if force_day and mapped_condition == ATTR_CONDITION_CLEAR_NIGHT:
+        # Meteo-France can return clear night condition instead of sunny for daily weather, so we map it to sunny
+        return ATTR_CONDITION_SUNNY
+    return mapped_condition
 
 
 async def async_setup_entry(
@@ -212,7 +218,7 @@ class MeteoFranceWeather(
                             forecast["dt"]
                         ).isoformat(),
                         ATTR_FORECAST_CONDITION: format_condition(
-                            forecast["weather12H"]["desc"]
+                            forecast["weather12H"]["desc"], force_day=True
                         ),
                         ATTR_FORECAST_HUMIDITY: forecast["humidity"]["max"],
                         ATTR_FORECAST_NATIVE_TEMP: forecast["T"]["max"],

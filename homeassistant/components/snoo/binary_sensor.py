@@ -38,7 +38,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[SnooBinarySensorEntityDescription] = [
     SnooBinarySensorEntityDescription(
         key="right_clip",
         translation_key="right_clip",
-        value_fn=lambda data: data.left_safety_clip,
+        value_fn=lambda data: data.right_safety_clip,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),

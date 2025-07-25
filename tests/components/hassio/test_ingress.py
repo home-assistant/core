@@ -4,6 +4,7 @@ from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 from aiohttp.hdrs import X_FORWARDED_FOR, X_FORWARDED_HOST, X_FORWARDED_PROTO
+from multidict import CIMultiDict
 import pytest
 
 from homeassistant.components.hassio.const import X_AUTH_TOKEN
@@ -28,15 +29,22 @@ async def test_ingress_request_get(
     aioclient_mock.get(
         f"http://127.0.0.1/ingress/{build_type[0]}/{build_type[1]}",
         text="test",
+        headers=CIMultiDict(
+            [("Set-Cookie", "cookie1=value1"), ("Set-Cookie", "cookie2=value2")]
+        ),
     )
 
     resp = await hassio_noauth_client.get(
         f"/api/hassio_ingress/{build_type[0]}/{build_type[1]}",
-        headers={"X-Test-Header": "beer"},
+        headers=CIMultiDict(
+            [("X-Test-Header", "beer"), ("X-Test-Header", "more beer")]
+        ),
     )
 
     # Check we got right response
     assert resp.status == HTTPStatus.OK
+    assert resp.headers["Set-Cookie"] == "cookie1=value1"
+    assert resp.headers.getall("Set-Cookie") == ["cookie1=value1", "cookie2=value2"]
     body = await resp.text()
     assert body == "test"
 
@@ -49,6 +57,10 @@ async def test_ingress_request_get(
         == f"/api/hassio_ingress/{build_type[0]}"
     )
     assert aioclient_mock.mock_calls[-1][3]["X-Test-Header"] == "beer"
+    assert aioclient_mock.mock_calls[-1][3].getall("X-Test-Header") == [
+        "beer",
+        "more beer",
+    ]
     assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_FOR]
     assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_HOST]
     assert aioclient_mock.mock_calls[-1][3][X_FORWARDED_PROTO]

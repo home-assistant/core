@@ -94,7 +94,7 @@ class ShellyEntryData:
     rpc_poll: ShellyRpcPollingCoordinator | None = None
     rpc_script_events: dict[int, list[str]] | None = None
     rpc_supports_scripts: bool | None = None
-    rpc_zigbee_enabled: bool | None = None
+    rpc_zigbee_firmware: bool | None = None
 
 
 type ShellyConfigEntry = ConfigEntry[ShellyEntryData]
@@ -163,7 +163,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
     @property
     def sleep_period(self) -> int:
         """Sleep period of the device."""
-        return self.config_entry.data.get(CONF_SLEEP_PERIOD, 0)
+        return self.config_entry.data.get(CONF_SLEEP_PERIOD, 0)  # type: ignore[no-any-return]
 
     def async_setup(self, pending_platforms: list[Platform] | None = None) -> None:
         """Set up the coordinator."""
@@ -730,7 +730,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         if not self.sleep_period:
             if (
                 self.config_entry.runtime_data.rpc_supports_scripts
-                and not self.config_entry.runtime_data.rpc_zigbee_enabled
+                and not self.config_entry.runtime_data.rpc_zigbee_firmware
             ):
                 await self._async_connect_ble_scanner()
         else:
@@ -834,6 +834,15 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                 await super().shutdown()
             except InvalidAuthError:
                 self.config_entry.async_start_reauth(self.hass)
+                return
+            except RpcCallError as err:
+                # Ignore 404 (No handler for) error
+                if err.code != 404:
+                    LOGGER.debug(
+                        "Error during shutdown for device %s: %s",
+                        self.name,
+                        err.message,
+                    )
                 return
             except DeviceConnectionError as err:
                 # If the device is restarting or has gone offline before

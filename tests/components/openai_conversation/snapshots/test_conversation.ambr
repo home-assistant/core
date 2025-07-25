@@ -2,11 +2,12 @@
 # name: test_function_call
   list([
     dict({
+      'attachments': None,
       'content': 'Please call the test function',
       'role': 'user',
     }),
     dict({
-      'agent_id': 'conversation.openai',
+      'agent_id': 'conversation.openai_conversation',
       'content': None,
       'role': 'assistant',
       'tool_calls': list([
@@ -20,14 +21,14 @@
       ]),
     }),
     dict({
-      'agent_id': 'conversation.openai',
+      'agent_id': 'conversation.openai_conversation',
       'role': 'tool_result',
       'tool_call_id': 'call_call_1',
       'tool_name': 'test_tool',
       'tool_result': 'value1',
     }),
     dict({
-      'agent_id': 'conversation.openai',
+      'agent_id': 'conversation.openai_conversation',
       'content': None,
       'role': 'assistant',
       'tool_calls': list([
@@ -41,14 +42,14 @@
       ]),
     }),
     dict({
-      'agent_id': 'conversation.openai',
+      'agent_id': 'conversation.openai_conversation',
       'role': 'tool_result',
       'tool_call_id': 'call_call_2',
       'tool_name': 'test_tool',
       'tool_result': 'value2',
     }),
     dict({
-      'agent_id': 'conversation.openai',
+      'agent_id': 'conversation.openai_conversation',
       'content': 'Cool',
       'role': 'assistant',
       'tool_calls': None,
@@ -58,11 +59,12 @@
 # name: test_function_call_without_reasoning
   list([
     dict({
+      'attachments': None,
       'content': 'Please call the test function',
       'role': 'user',
     }),
     dict({
-      'agent_id': 'conversation.openai',
+      'agent_id': 'conversation.openai_conversation',
       'content': None,
       'role': 'assistant',
       'tool_calls': list([
@@ -76,14 +78,14 @@
       ]),
     }),
     dict({
-      'agent_id': 'conversation.openai',
+      'agent_id': 'conversation.openai_conversation',
       'role': 'tool_result',
       'tool_call_id': 'call_call_1',
       'tool_name': 'test_tool',
       'tool_result': 'value1',
     }),
     dict({
-      'agent_id': 'conversation.openai',
+      'agent_id': 'conversation.openai_conversation',
       'content': 'Cool',
       'role': 'assistant',
       'tool_calls': None,
