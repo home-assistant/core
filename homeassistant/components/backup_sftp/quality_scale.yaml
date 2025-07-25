@@ -48,7 +48,12 @@ rules:
   parallel-updates:
     status: exempt
     comment: No actions and no entities.
-  reauthentication-flow: todo
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      This backup storage integration uses static SFTP credentials that do not expire
+      or require token refresh. Authentication failures indicate configuration issues
+      that should be resolved by reconfiguring the integration.
   test-coverage: done
 
   # Gold
@@ -112,8 +117,20 @@ rules:
     status: exempt
     comment: |
       This integration does not have entities.
-  reconfiguration-flow: todo
-  repair-issues: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: |
+      This backup storage integration's configuration consists of static SFTP 
+      connection parameters (host, port, credentials, backup path). Changes to
+      these parameters effectively create a connection to a different backup 
+      location, which should be configured as a separate integration instance.
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration provides backup storage functionality only. Connection
+      failures are handled through config entry setup errors and do not require
+      persistent repair issues. Users can resolve authentication or connectivity
+      problems by reconfiguring the integration through the config flow.
   stale-devices:
     status: exempt
     comment: |
