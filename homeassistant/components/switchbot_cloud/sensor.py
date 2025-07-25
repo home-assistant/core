@@ -32,6 +32,8 @@ SENSOR_TYPE_CO2 = "CO2"
 SENSOR_TYPE_POWER = "power"
 SENSOR_TYPE_VOLTAGE = "voltage"
 SENSOR_TYPE_CURRENT = "electricCurrent"
+SENSOR_TYPE_LIGHTLEVEL = "lightLevel"
+
 
 TEMPERATURE_DESCRIPTION = SensorEntityDescription(
     key=SENSOR_TYPE_TEMPERATURE,
@@ -89,6 +91,14 @@ CO2_DESCRIPTION = SensorEntityDescription(
     native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
 )
 
+LIGHTLEVEL_DESCRIPTION = SensorEntityDescription(
+    key="lightLevel",
+    translation_key="light_level",
+    native_unit_of_measurement="Level",
+    state_class=SensorStateClass.MEASUREMENT,
+)
+
+
 SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Bot": (BATTERY_DESCRIPTION,),
     "Battery Circulator Fan": (BATTERY_DESCRIPTION,),
@@ -139,6 +149,14 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Smart Lock Lite": (BATTERY_DESCRIPTION,),
     "Smart Lock Pro": (BATTERY_DESCRIPTION,),
     "Smart Lock Ultra": (BATTERY_DESCRIPTION,),
+    "Hub 3": (
+        TEMPERATURE_DESCRIPTION,
+        HUMIDITY_DESCRIPTION,
+        LIGHTLEVEL_DESCRIPTION,
+    ),
+    "Motion Sensor": (BATTERY_DESCRIPTION,),
+    "Contact Sensor": (BATTERY_DESCRIPTION,),
+    "Water Detector": (BATTERY_DESCRIPTION,),
 }
 
 
@@ -177,3 +195,10 @@ class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
         if not self.coordinator.data:
             return
         self._attr_native_value = self.coordinator.data.get(self.entity_description.key)
+
+        value = self.coordinator.data.get(self.entity_description.key)
+
+        if self.entity_description.key == "lightLevel":
+            self._attr_native_value = str(value) if value is not None else None
+        else:
+            self._attr_native_value = value
