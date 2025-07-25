@@ -51,16 +51,18 @@ rules:
   docs-known-limitations: todo
   docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting: todo
+  docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices: todo
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: Amazon login name most likely won't change
   repair-issues:
     status: exempt
     comment: no known use cases for repair issues or flows, yet
