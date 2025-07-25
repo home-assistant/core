@@ -62,6 +62,19 @@ from .const import (
     CONF_TURN_ON,
     DOMAIN,
 )
+from .light import (
+    CONF_EFFECT,
+    CONF_EFFECT_ACTION,
+    CONF_EFFECT_LIST,
+    CONF_LEVEL,
+    CONF_LEVEL_ACTION,
+    CONF_RGBW,
+    CONF_RGBW_ACTION,
+    CONF_SUPPORTS_TRANSITION,
+    CONF_TEMPERATURE,
+    CONF_TEMPERATURE_ACTION,
+    async_create_preview_light,
+)
 from .number import (
     CONF_MAX,
     CONF_MIN,
@@ -147,6 +160,22 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
         schema |= {
             vol.Required(CONF_URL): selector.TemplateSelector(),
             vol.Optional(CONF_VERIFY_SSL, default=True): selector.BooleanSelector(),
+        }
+
+    if domain == Platform.LIGHT:
+        schema |= _SCHEMA_STATE | {
+            vol.Required(CONF_TURN_ON): selector.ActionSelector(),
+            vol.Required(CONF_TURN_OFF): selector.ActionSelector(),
+            vol.Optional(CONF_LEVEL): selector.TemplateSelector(),
+            vol.Optional(CONF_LEVEL_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_RGBW): selector.TemplateSelector(),
+            vol.Optional(CONF_RGBW_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_TEMPERATURE): selector.TemplateSelector(),
+            vol.Optional(CONF_TEMPERATURE_ACTION): selector.ActionSelector(),
+            vol.Inclusive(CONF_EFFECT, "effect"): selector.TemplateSelector(),
+            vol.Inclusive(CONF_EFFECT_LIST, "effect"): selector.TemplateSelector(),
+            vol.Inclusive(CONF_EFFECT_ACTION, "effect"): selector.ActionSelector(),
+            vol.Optional(CONF_SUPPORTS_TRANSITION): selector.BooleanSelector(),
         }
 
     if domain == Platform.NUMBER:
@@ -327,6 +356,7 @@ TEMPLATE_TYPES = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.LIGHT,
     Platform.IMAGE,
     Platform.NUMBER,
     Platform.SELECT,
@@ -349,6 +379,11 @@ CONFIG_FLOW = {
     Platform.BUTTON: SchemaFlowFormStep(
         config_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
+    ),
+    Platform.LIGHT: SchemaFlowFormStep(
+        config_schema(Platform.LIGHT),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.LIGHT),
     ),
     Platform.IMAGE: SchemaFlowFormStep(
         config_schema(Platform.IMAGE),
@@ -394,6 +429,11 @@ OPTIONS_FLOW = {
         options_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
     ),
+    Platform.LIGHT: SchemaFlowFormStep(
+        options_schema(Platform.LIGHT),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.LIGHT),
+    ),
     Platform.IMAGE: SchemaFlowFormStep(
         options_schema(Platform.IMAGE),
         preview="template",
@@ -427,6 +467,7 @@ CREATE_PREVIEW_ENTITY: dict[
 ] = {
     Platform.ALARM_CONTROL_PANEL: async_create_preview_alarm_control_panel,
     Platform.BINARY_SENSOR: async_create_preview_binary_sensor,
+    Platform.LIGHT: async_create_preview_light,
     Platform.NUMBER: async_create_preview_number,
     Platform.SELECT: async_create_preview_select,
     Platform.SENSOR: async_create_preview_sensor,
