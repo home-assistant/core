@@ -1,5 +1,7 @@
 """Tests for the SwitchBot Cloud integration."""
 
+from switchbot_api import Device
+
 from homeassistant.components.switchbot_cloud.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
@@ -21,3 +23,19 @@ async def configure_integration(hass: HomeAssistant) -> MockConfigEntry:
     await hass.async_block_till_done()
 
     return entry
+
+
+HUMIDIFIER_INFO = Device(
+    version="V1.0",
+    deviceId="humidifier-id-1",
+    deviceName="humidifier-1",
+    deviceType="Humidifier",
+    hubDeviceId="test-hub-id",
+)
+HUMIDIFIER2_INFO = Device(
+    version="V1.0",
+    deviceId="humidifier2-id-1",
+    deviceName="humidifier2-1",
+    deviceType="Humidifier2",
+    hubDeviceId="test-hub-id",
+)
