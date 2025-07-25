@@ -548,6 +548,7 @@ def _mock_rpc_device(version: str | None = None):
         ),
         xmod_info={},
         zigbee_enabled=False,
+        zigbee_firmware=False,
         ip_address="10.10.10.10",
     )
     type(device).name = PropertyMock(return_value="Test name")

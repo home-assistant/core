@@ -15,6 +15,7 @@ from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.config_entries import ConfigEntry
@@ -4901,6 +4902,7 @@ async def test_setup_raise_entry_error_from_first_coordinator_update(
             hass,
             logging.getLogger(__name__),
             name="any",
+            config_entry=entry,
             update_method=_async_update_data,
             update_interval=timedelta(seconds=1000),
         )
@@ -4941,6 +4943,7 @@ async def test_setup_not_raise_entry_error_from_future_coordinator_update(
             hass,
             logging.getLogger(__name__),
             name="any",
+            config_entry=entry,
             update_method=_async_update_data,
             update_interval=timedelta(seconds=1000),
         )
@@ -5020,6 +5023,7 @@ async def test_setup_raise_auth_failed_from_first_coordinator_update(
             hass,
             logging.getLogger(__name__),
             name="any",
+            config_entry=entry,
             update_method=_async_update_data,
             update_interval=timedelta(seconds=1000),
         )
@@ -5072,6 +5076,7 @@ async def test_setup_raise_auth_failed_from_future_coordinator_update(
             hass,
             logging.getLogger(__name__),
             name="any",
+            config_entry=entry,
             update_method=_async_update_data,
             update_interval=timedelta(seconds=1000),
         )
@@ -6497,9 +6502,7 @@ async def test_update_subentry_and_abort(
     err: Exception
     with mock_config_flow("comp", TestFlow):
         try:
-            result = await entry.start_subentry_reconfigure_flow(
-                hass, "test", subentry_id
-            )
+            result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
         except Exception as ex:  # noqa: BLE001
             err = ex
 
@@ -6556,7 +6559,7 @@ async def test_reconfigure_subentry_create_subentry(hass: HomeAssistant) -> None
         mock_config_flow("comp", TestFlow),
         pytest.raises(ValueError, match="Source is reconfigure, expected user"),
     ):
-        await entry.start_subentry_reconfigure_flow(hass, "test", subentry_id)
+        await entry.start_subentry_reconfigure_flow(hass, subentry_id)
 
     await hass.async_block_till_done()
 
@@ -8079,7 +8082,7 @@ async def test_subentry_get_entry(
 
     # A reconfigure flow finds the config entry and subentry
     with mock_config_flow("test", TestFlow):
-        result = await entry.start_subentry_reconfigure_flow(hass, "test", subentry_id)
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
         assert (
             result["reason"]
             == "Found entry entry_title: mock_entry_id/Found subentry Test: mock_subentry_id"
@@ -8654,6 +8657,95 @@ async def test_options_flow_config_entry(
     assert result["reason"] == "abort"
 
 
+@pytest.mark.parametrize(
+    (
+        "option_flow_base_class",
+        "number_of_update_listeners",
+        "expected_configure_result",
+        "expected_number_of_unloads",
+    ),
+    [
+        (config_entries.OptionsFlow, 0, does_not_raise(), 0),
+        (config_entries.OptionsFlowWithReload, 0, does_not_raise(), 1),
+        (config_entries.OptionsFlow, 1, does_not_raise(), 0),
+        (
+            config_entries.OptionsFlowWithReload,
+            1,
+            pytest.raises(
+                ValueError,
+                match="Config entry update listeners should not be used with OptionsFlowWithReload",
+            ),
+            0,
+        ),
+    ],
+)
+async def test_options_flow_automatic_reload(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    option_flow_base_class: type[config_entries.OptionsFlow],
+    number_of_update_listeners: int,
+    expected_configure_result: AbstractContextManager,
+    expected_number_of_unloads: int,
+) -> None:
+    """Test options flow with automatic reload when updated."""
+    original_entry = MockConfigEntry(
+        domain="test", title="Test", data={}, options={"test": "first"}
+    )
+    original_entry.add_to_hass(hass)
+
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+        """Mock setup entry."""
+        for _ in range(number_of_update_listeners):
+            entry.add_update_listener(Mock())
+        return True
+
+    unload_entry_mock = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=unload_entry_mock,
+        ),
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    await hass.config_entries.async_setup(original_entry.entry_id)
+    assert original_entry.state is config_entries.ConfigEntryState.LOADED
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            """Test options flow."""
+
+            class _OptionsFlow(option_flow_base_class):
+                """Test flow."""
+
+                async def async_step_init(self, user_input=None):
+                    """Test user step."""
+                    if user_input is not None:
+                        return self.async_create_entry(data=user_input)
+                    return self.async_show_form(
+                        step_id="init", data_schema=vol.Schema({"test": str})
+                    )
+
+            return _OptionsFlow()
+
+    with mock_config_flow("test", TestFlow):
+        result = await hass.config_entries.options.async_init(original_entry.entry_id)
+        with expected_configure_result:
+            await hass.config_entries.options.async_configure(
+                result["flow_id"], {"test": "updated"}
+            )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(unload_entry_mock.mock_calls) == expected_number_of_unloads
+
+
 @pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
 @pytest.mark.usefixtures("mock_integration_frame")
 async def test_options_flow_deprecated_config_entry_setter(
@@ -8825,7 +8917,7 @@ async def test_create_entry_existing_unique_id(
 
     log_text = (
         f"Detected that integration '{domain}' creates a config entry "
-        "when another entry with the same unique ID exists. Please "
-        "create a bug report at https:"
+        "when another entry with the same unique ID exists. This will stop "
+        "working in Home Assistant 2026.3, please create a bug report at https:"
     )
     assert (log_text in caplog.text) == expected_log

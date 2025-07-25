@@ -155,7 +155,10 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
     @property
     def available(self) -> bool:
         """Return true is device is available."""
-        if self.coordinator.dev_net_type is not None:
+        if (
+            self.coordinator.device.is_support_mode_switching()
+            and self.coordinator.dev_net_type is not None
+        ):
             # When the device operates in Class A mode, it cannot be controlled.
             return self.coordinator.dev_net_type != ATTR_DEVICE_MODEL_A
         return super().available
