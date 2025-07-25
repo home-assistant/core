@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 import datetime as dt
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from aiorussound import Controller
 from aiorussound.const import FeatureFlag
@@ -19,9 +20,11 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RussoundConfigEntry
+from .const import DOMAIN, RUSSOUND_MEDIA_TYPE_PRESET, SELECT_SOURCE_DELAY
 from .entity import RussoundBaseEntity, command
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,6 +48,17 @@ async def async_setup_entry(
     )
 
 
+def _parse_preset_source_id(media_id: str) -> tuple[int | None, int]:
+    source_id = None
+    if "," in media_id:
+        source_id_str, preset_id_str = media_id.split(",", maxsplit=1)
+        source_id = int(source_id_str.strip())
+        preset_id = int(preset_id_str.strip())
+    else:
+        preset_id = int(media_id)
+    return source_id, preset_id
+
+
 class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     """Representation of a Russound Zone."""
 
@@ -58,6 +72,7 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.SEEK
+        | MediaPlayerEntityFeature.PLAY_MEDIA
     )
     _attr_name = None
 
@@ -117,7 +132,7 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     @property
     def media_title(self) -> str | None:
         """Title of current playing media."""
-        return self._source.song_name
+        return self._source.song_name or self._source.channel
 
     @property
     def media_artist(self) -> str | None:
@@ -215,3 +230,37 @@ class RussoundZoneDevice(RussoundBaseEntity, MediaPlayerEntity):
     async def async_media_seek(self, position: float) -> None:
         """Seek to a position in the current media."""
         await self._zone.set_seek_time(int(position))
+
+    @command
+    async def async_play_media(
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+    ) -> None:
+        """Play media on the Russound zone."""
+
+        if media_type != RUSSOUND_MEDIA_TYPE_PRESET:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_media_type",
+                translation_placeholders={
+                    "media_type": media_type,
+                },
+            )
+
+        try:
+            source_id, preset_id = _parse_preset_source_id(media_id)
+        except ValueError as ve:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="preset_non_integer",
+                translation_placeholders={"preset_id": media_id},
+            ) from ve
+        if source_id:
+            await self._zone.select_source(source_id)
+            await asyncio.sleep(SELECT_SOURCE_DELAY)
+        if not self._source.presets or preset_id not in self._source.presets:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="missing_preset",
+                translation_placeholders={"preset_id": media_id},
+            )
+        await self._zone.restore_preset(preset_id)
