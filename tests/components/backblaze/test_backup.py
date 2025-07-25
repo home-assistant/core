@@ -3,12 +3,15 @@
 from collections.abc import AsyncGenerator
 import io
 import json
+import logging
 from unittest.mock import MagicMock, Mock, patch
 
 from b2sdk.v2.exception import B2Error
 import pytest
 
 from homeassistant.components.backblaze.backup import (
+    BackblazeBackupAgent,
+    async_get_backup_agents,
     async_register_backup_agents_listener,
     handle_b2_errors,
 )
@@ -17,6 +20,7 @@ from homeassistant.components.backup import (
     DOMAIN as BACKUP_DOMAIN,
     AgentBackup,
     BackupAgentError,
+    BackupNotFound,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -404,3 +408,101 @@ async def test_handle_b2_errors_decorator() -> None:
         BackupAgentError, match="Failed during mock_func_raises_b2_error"
     ):
         await mock_func_raises_b2_error()
+
+
+async def test_async_download_backup_not_found(
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test async_download_backup when backup is not found (line 106)."""
+    with patch(
+        "homeassistant.components.backblaze.backup.BackblazeBackupAgent._find_file_and_metadata_name_by_id",
+        return_value=(None, None),
+    ):
+        client = await hass_client()
+        backup_id = "non_existent_backup"
+
+        resp = await client.get(
+            f"/api/backup/download/{backup_id}?agent_id={DOMAIN}.{mock_config_entry.entry_id}"
+        )
+        assert resp.status == 404
+
+
+async def test_async_get_backup_metadata_not_found(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    test_backup: AgentBackup,
+) -> None:
+    """Test async_get_backup when metadata file is not found (line 298)."""
+    agents = await async_get_backup_agents(hass)
+    agent = None
+    for entry in agents:
+        if (
+            isinstance(entry, BackblazeBackupAgent)
+            and entry.unique_id == mock_config_entry.entry_id
+        ):
+            agent = entry
+            break
+
+    if agent is None:
+        pytest.fail("BackblazeBackupAgent not found")
+
+    with (
+        patch(
+            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._find_file_and_metadata_name_by_id",
+            return_value=(Mock(file_name="test.tar"), "test.tar.metadata.json"),
+        ),
+        patch(
+            "b2sdk.v2.FileVersion.download",
+            side_effect=BackupNotFound("Metadata file not found"),
+        ),
+        pytest.raises(BackupNotFound),
+    ):
+        await agent.async_get_backup(test_backup.backup_id)
+
+
+async def test_process_metadata_file_for_id_sync_b2_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test _process_metadata_file_for_id_sync with B2Error (lines 371-382)."""
+    agent = BackblazeBackupAgent(hass, mock_config_entry)
+    file_name = "test.metadata.json"
+    file_version = Mock()
+    file_version.download.side_effect = B2Error("test error")
+
+    with caplog.at_level(logging.WARNING):
+        result = await hass.async_add_executor_job(
+            agent._process_metadata_file_for_id_sync,
+            file_name,
+            file_version,
+            "backup_id",
+            {},
+        )
+
+        assert result == (None, None)
+        assert "Failed to parse metadata file" in caplog.text
+
+
+async def test_process_metadata_file_sync_b2_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test _process_metadata_file_sync with B2Error (lines 441-451)."""
+    agent = BackblazeBackupAgent(hass, mock_config_entry)
+    file_name = "test.metadata.json"
+    file_version = Mock()
+    file_version.download.side_effect = B2Error("test error")
+
+    with caplog.at_level(logging.WARNING):
+        result = await hass.async_add_executor_job(
+            agent._process_metadata_file_sync,
+            file_name,
+            file_version,
+            {},
+        )
+
+        assert result is None
+        assert "Failed to parse metadata file" in caplog.text
