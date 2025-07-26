@@ -32,7 +32,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_DEVICE = "device"
 ATTR_MODEL = "model"
 
-DEFAULT_HOST = "localhost"
 DEFAULT_PORT = 7634
 DEFAULT_NAME = "HD Temperature"
 DEFAULT_TIMEOUT = 5
@@ -42,7 +41,7 @@ SCAN_INTERVAL = timedelta(minutes=1)
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_DISKS, default=[]): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
@@ -57,7 +56,7 @@ def setup_platform(
 ) -> None:
     """Set up the HDDTemp sensor."""
     name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
+    host = config[CONF_HOST]
     port = config.get(CONF_PORT)
     disks = config.get(CONF_DISKS)
 
