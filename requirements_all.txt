@@ -2068,7 +2068,7 @@ pyisy==3.4.1
 pyitachip2ir==0.0.7
 
 # homeassistant.components.ituran
-pyituran==0.1.4
+pyituran==0.1.5
 
 # homeassistant.components.jvc_projector
 pyjvcprojector==1.1.2
