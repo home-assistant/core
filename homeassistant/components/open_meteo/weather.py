@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from datetime import datetime, time
 
-from open_meteo import Forecast as OpenMeteoForecast
-
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
@@ -25,7 +23,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, WMO_TO_HA_CONDITION_MAP
-from .coordinator import OpenMeteoConfigEntry
+from .coordinator import OpenMeteoConfigEntry, OpenMeteoData
 
 
 async def async_setup_entry(
@@ -39,7 +37,7 @@ async def async_setup_entry(
 
 
 class OpenMeteoWeatherEntity(
-    SingleCoordinatorWeatherEntity[DataUpdateCoordinator[OpenMeteoForecast]]
+    SingleCoordinatorWeatherEntity[DataUpdateCoordinator[OpenMeteoData]]
 ):
     """Defines an Open-Meteo weather entity."""
 
@@ -56,7 +54,7 @@ class OpenMeteoWeatherEntity(
         self,
         *,
         entry: OpenMeteoConfigEntry,
-        coordinator: DataUpdateCoordinator[OpenMeteoForecast],
+        coordinator: DataUpdateCoordinator[OpenMeteoData],
     ) -> None:
         """Initialize Open-Meteo weather entity."""
         super().__init__(coordinator=coordinator)
@@ -72,43 +70,57 @@ class OpenMeteoWeatherEntity(
     @property
     def condition(self) -> str | None:
         """Return the current condition."""
-        if not self.coordinator.data.current_weather:
+        if not self.coordinator.data.forecast.current_weather:
             return None
         return WMO_TO_HA_CONDITION_MAP.get(
-            self.coordinator.data.current_weather.weather_code
+            self.coordinator.data.forecast.current_weather.weather_code
         )
 
     @property
     def native_temperature(self) -> float | None:
         """Return the platform temperature."""
-        if not self.coordinator.data.current_weather:
+        if not self.coordinator.data.forecast.current_weather:
             return None
-        return self.coordinator.data.current_weather.temperature
+        return self.coordinator.data.forecast.current_weather.temperature
 
     @property
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
-        if not self.coordinator.data.current_weather:
+        if not self.coordinator.data.forecast.current_weather:
             return None
-        return self.coordinator.data.current_weather.wind_speed
+        return self.coordinator.data.forecast.current_weather.wind_speed
+
+    @property
+    def ozone(self) -> float | None:
+        """Return the ozone level."""
+        if not self.coordinator.data.air_quality.current:
+            return None
+        return self.coordinator.data.air_quality.current.ozone
+
+    @property
+    def uv_index(self) -> float | None:
+        """Return the UV index."""
+        if not self.coordinator.data.air_quality.current:
+            return None
+        return self.coordinator.data.air_quality.current.uv_index
 
     @property
     def wind_bearing(self) -> float | str | None:
         """Return the wind bearing."""
-        if not self.coordinator.data.current_weather:
+        if not self.coordinator.data.forecast.current_weather:
             return None
-        return self.coordinator.data.current_weather.wind_direction
+        return self.coordinator.data.forecast.current_weather.wind_direction
 
     @callback
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        if self.coordinator.data.daily is None:
+        if self.coordinator.data.forecast.daily is None:
             return None
 
         forecasts: list[Forecast] = []
 
-        daily = self.coordinator.data.daily
-        for index, date in enumerate(self.coordinator.data.daily.time):
+        daily = self.coordinator.data.forecast.daily
+        for index, date in enumerate(self.coordinator.data.forecast.daily.time):
             _datetime = datetime.combine(date=date, time=time(0), tzinfo=dt_util.UTC)
             forecast = Forecast(
                 datetime=_datetime.isoformat(),
@@ -149,7 +161,7 @@ class OpenMeteoWeatherEntity(
     @callback
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        if self.coordinator.data.hourly is None:
+        if self.coordinator.data.forecast.hourly is None:
             return None
 
         forecasts: list[Forecast] = []
@@ -157,8 +169,8 @@ class OpenMeteoWeatherEntity(
         # Can have data in the past: https://github.com/open-meteo/open-meteo/issues/699
         today = dt_util.utcnow()
 
-        hourly = self.coordinator.data.hourly
-        for index, _datetime in enumerate(self.coordinator.data.hourly.time):
+        hourly = self.coordinator.data.forecast.hourly
+        for index, _datetime in enumerate(self.coordinator.data.forecast.hourly.time):
             if _datetime.tzinfo is None:
                 _datetime = _datetime.replace(tzinfo=dt_util.UTC)
             if _datetime < today:
