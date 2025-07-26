@@ -93,19 +93,10 @@ class MatterLock(MatterEntity, LockEntity):
             )
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
-        if self._attr_supported_features & LockEntityFeature.OPEN:
-            # if the lock reports it has separate unbolt support,
-            # the unlock command should unbolt only on the unlock command
-            # and unlatch on the HA 'open' command.
-            await self.send_device_command(
-                command=clusters.DoorLock.Commands.UnboltDoor(code_bytes),
-                timed_request_timeout_ms=1000,
-            )
-        else:
-            await self.send_device_command(
-                command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
-                timed_request_timeout_ms=1000,
-            )
+        await self.send_device_command(
+            command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
+            timed_request_timeout_ms=1000,
+        )
 
     async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch."""
@@ -119,10 +110,20 @@ class MatterLock(MatterEntity, LockEntity):
         )
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
-        await self.send_device_command(
-            command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
-            timed_request_timeout_ms=1000,
-        )
+
+        if self._attr_supported_features & LockEntityFeature.OPEN:
+            # if the lock reports it has separate unbolt support,
+            # the unlock command should unbolt only on the unlock command
+            # and unlatch on the HA 'open' command.
+            await self.send_device_command(
+                command=clusters.DoorLock.Commands.UnboltDoor(code_bytes),
+                timed_request_timeout_ms=1000,
+            )
+        else:
+            await self.send_device_command(
+                command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
+                timed_request_timeout_ms=1000,
+            )
 
     @callback
     def _update_from_device(self) -> None:
