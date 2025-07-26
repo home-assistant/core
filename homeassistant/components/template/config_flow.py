@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.button import ButtonDeviceClass
+from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASS_STATE_CLASSES,
@@ -61,6 +62,17 @@ from .const import (
     CONF_TURN_OFF,
     CONF_TURN_ON,
     DOMAIN,
+)
+from .cover import (
+    CLOSE_ACTION,
+    CONF_OPEN_AND_CLOSE,
+    CONF_POSITION,
+    CONF_TILT,
+    OPEN_ACTION,
+    POSITION_ACTION,
+    STOP_ACTION,
+    TILT_ACTION,
+    async_create_preview_cover,
 )
 from .number import (
     CONF_MAX,
@@ -138,6 +150,28 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                         options=[cls.value for cls in ButtonDeviceClass],
                         mode=selector.SelectSelectorMode.DROPDOWN,
                         translation_key="button_device_class",
+                        sort=True,
+                    ),
+                )
+            }
+
+    if domain == Platform.COVER:
+        schema |= _SCHEMA_STATE | {
+            vol.Inclusive(OPEN_ACTION, CONF_OPEN_AND_CLOSE): selector.ActionSelector(),
+            vol.Inclusive(CLOSE_ACTION, CONF_OPEN_AND_CLOSE): selector.ActionSelector(),
+            vol.Optional(STOP_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_POSITION): selector.TemplateSelector(),
+            vol.Optional(POSITION_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_TILT): selector.TemplateSelector(),
+            vol.Optional(TILT_ACTION): selector.ActionSelector(),
+        }
+        if flow_type == "config":
+            schema |= {
+                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[cls.value for cls in CoverDeviceClass],
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                        translation_key="cover_device_class",
                         sort=True,
                     ),
                 )
@@ -327,6 +361,7 @@ TEMPLATE_TYPES = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.COVER,
     Platform.IMAGE,
     Platform.NUMBER,
     Platform.SELECT,
@@ -349,6 +384,11 @@ CONFIG_FLOW = {
     Platform.BUTTON: SchemaFlowFormStep(
         config_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
+    ),
+    Platform.COVER: SchemaFlowFormStep(
+        config_schema(Platform.COVER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.COVER),
     ),
     Platform.IMAGE: SchemaFlowFormStep(
         config_schema(Platform.IMAGE),
@@ -394,6 +434,11 @@ OPTIONS_FLOW = {
         options_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
     ),
+    Platform.COVER: SchemaFlowFormStep(
+        options_schema(Platform.COVER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.COVER),
+    ),
     Platform.IMAGE: SchemaFlowFormStep(
         options_schema(Platform.IMAGE),
         preview="template",
@@ -427,6 +472,7 @@ CREATE_PREVIEW_ENTITY: dict[
 ] = {
     Platform.ALARM_CONTROL_PANEL: async_create_preview_alarm_control_panel,
     Platform.BINARY_SENSOR: async_create_preview_binary_sensor,
+    Platform.COVER: async_create_preview_cover,
     Platform.NUMBER: async_create_preview_number,
     Platform.SELECT: async_create_preview_select,
     Platform.SENSOR: async_create_preview_sensor,
