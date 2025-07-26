@@ -1,10 +1,21 @@
 {
+  "common": {
+    "advanced_options": "Advanced options",
+    "availability": "Availability template",
+    "code_format": "Code format",
+    "device_class": "Device class",
+    "device_id_description": "Select a device to link to this entity.",
+    "state": "State",
+    "turn_off": "Actions on turn off",
+    "turn_on": "Actions on turn on",
+    "unit_of_measurement": "Unit of measurement"
+  },
   "config": {
     "step": {
       "alarm_control_panel": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
-          "value_template": "[%key:component::template::config::step::switch::data::value_template%]",
+          "value_template": "[%key:component::template::common::state%]",
           "name": "[%key:common::config_flow::data::name%]",
           "disarm": "Disarm action",
           "arm_away": "Arm away action",
@@ -14,16 +25,16 @@
           "arm_vacation": "Arm vacation action",
           "trigger": "Trigger action",
           "code_arm_required": "Code arm required",
-          "code_format": "Code format"
+          "code_format": "[%key:component::template::common::code_format%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::common::device_id_description%]"
         },
         "sections": {
           "advanced_options": {
-            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+              "availability": "[%key:component::template::common::availability%]"
             }
           }
         },
@@ -32,18 +43,18 @@
       "binary_sensor": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
-          "device_class": "[%key:component::template::config::step::sensor::data::device_class%]",
+          "device_class": "[%key:component::template::common::device_class%]",
           "name": "[%key:common::config_flow::data::name%]",
-          "state": "[%key:component::template::config::step::sensor::data::state%]"
+          "state": "[%key:component::template::common::state%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::common::device_id_description%]"
         },
         "sections": {
           "advanced_options": {
-            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+              "availability": "[%key:component::template::common::availability%]"
             }
           }
         },
@@ -52,18 +63,18 @@
       "button": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
-          "device_class": "[%key:component::template::config::step::sensor::data::device_class%]",
+          "device_class": "[%key:component::template::common::device_class%]",
           "name": "[%key:common::config_flow::data::name%]",
           "press": "Actions on press"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::common::device_id_description%]"
         },
         "sections": {
           "advanced_options": {
-            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+              "availability": "[%key:component::template::common::availability%]"
             }
           }
         },
@@ -77,13 +88,13 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::common::device_id_description%]"
         },
         "sections": {
           "advanced_options": {
-            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+              "availability": "[%key:component::template::common::availability%]"
             }
           }
         },
@@ -93,21 +104,21 @@
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
           "name": "[%key:common::config_flow::data::name%]",
-          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "state": "[%key:component::template::common::state%]",
           "step": "Step value",
           "set_value": "Actions on set value",
           "max": "Maximum value",
           "min": "Minimum value",
-          "unit_of_measurement": "[%key:component::template::config::step::sensor::data::unit_of_measurement%]"
+          "unit_of_measurement": "[%key:component::template::common::unit_of_measurement%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::common::device_id_description%]"
         },
         "sections": {
           "advanced_options": {
-            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+              "availability": "[%key:component::template::common::availability%]"
             }
           }
         },
@@ -117,18 +128,18 @@
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
           "name": "[%key:common::config_flow::data::name%]",
-          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "state": "[%key:component::template::common::state%]",
           "select_option": "Actions on select",
           "options": "Available options"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::common::device_id_description%]"
         },
         "sections": {
           "advanced_options": {
-            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+              "availability": "[%key:component::template::common::availability%]"
             }
           }
         },
@@ -137,20 +148,20 @@
       "sensor": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
-          "device_class": "Device class",
+          "device_class": "[%key:component::template::common::device_class%]",
           "name": "[%key:common::config_flow::data::name%]",
           "state_class": "[%key:component::sensor::entity_component::_::state_attributes::state_class::name%]",
-          "state": "State template",
-          "unit_of_measurement": "Unit of measurement"
+          "state": "[%key:component::template::common::state%]",
+          "unit_of_measurement": "[%key:component::template::common::unit_of_measurement%]"
         },
         "data_description": {
-          "device_id": "Select a device to link to this entity."
+          "device_id": "[%key:component::template::common::device_id_description%]"
         },
         "sections": {
           "advanced_options": {
-            "name": "Advanced options",
+            "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "Availability template"
+              "availability": "[%key:component::template::common::availability%]"
             }
           }
         },
@@ -174,19 +185,19 @@
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
           "name": "[%key:common::config_flow::data::name%]",
-          "turn_off": "Actions on turn off",
-          "turn_on": "Actions on turn on",
-          "value_template": "Value template"
+          "turn_off": "[%key:component::template::common::turn_off%]",
+          "turn_on": "[%key:component::template::common::turn_on%]",
+          "value_template": "[%key:component::template::common::state%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]",
+          "device_id": "[%key:component::template::common::device_id_description%]",
           "value_template": "Defines a template to set the state of the switch. If not defined, the switch will optimistically assume all commands are successful."
         },
         "sections": {
           "advanced_options": {
-            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+              "availability": "[%key:component::template::common::availability%]"
             }
           }
         },
@@ -199,7 +210,7 @@
       "alarm_control_panel": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
-          "value_template": "[%key:component::template::config::step::switch::data::value_template%]",
+          "value_template": "component::template::common::state",
           "disarm": "[%key:component::template::config::step::alarm_control_panel::data::disarm%]",
           "arm_away": "[%key:component::template::config::step::alarm_control_panel::data::arm_away%]",
           "arm_custom_bypass": "[%key:component::template::config::step::alarm_control_panel::data::arm_custom_bypass%]",
@@ -208,16 +219,16 @@
           "arm_vacation": "[%key:component::template::config::step::alarm_control_panel::data::arm_vacation%]",
           "trigger": "[%key:component::template::config::step::alarm_control_panel::data::trigger%]",
           "code_arm_required": "[%key:component::template::config::step::alarm_control_panel::data::code_arm_required%]",
-          "code_format": "[%key:component::template::config::step::alarm_control_panel::data::code_format%]"
+          "code_format": "[%key:component::template::common::code_format%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::common::device_id_description%]"
         },
         "sections": {
           "advanced_options": {
-            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+              "availability": "[%key:component::template::common::availability%]"
             }
           }
         },
@@ -226,16 +237,16 @@
       "binary_sensor": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
-          "state": "[%key:component::template::config::step::sensor::data::state%]"
+          "state": "[%key:component::template::common::state%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::common::device_id_description%]"
         },
         "sections": {
           "advanced_options": {
-            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+              "availability": "[%key:component::template::common::availability%]"
             }
           }
         },
@@ -247,13 +258,13 @@
           "press": "[%key:component::template::config::step::button::data::press%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::common::device_id_description%]"
         },
         "sections": {
           "advanced_options": {
-            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+              "availability": "[%key:component::template::common::availability%]"
             }
           }
         },
@@ -266,13 +277,13 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::common::device_id_description%]"
         },
         "sections": {
           "advanced_options": {
-            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+              "availability": "[%key:component::template::common::availability%]"
             }
           }
         },
@@ -282,20 +293,20 @@
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
           "name": "[%key:common::config_flow::data::name%]",
-          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "state": "[%key:component::template::common::state%]",
           "step": "[%key:component::template::config::step::number::data::step%]",
           "set_value": "[%key:component::template::config::step::number::data::set_value%]",
           "max": "[%key:component::template::config::step::number::data::max%]",
           "min": "[%key:component::template::config::step::number::data::min%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::common::device_id_description%]"
         },
         "sections": {
           "advanced_options": {
-            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+              "availability": "[%key:component::template::common::availability%]"
             }
           }
         },
@@ -305,18 +316,18 @@
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
           "name": "[%key:common::config_flow::data::name%]",
-          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "state": "[%key:component::template::common::state%]",
           "select_option": "[%key:component::template::config::step::select::data::select_option%]",
           "options": "[%key:component::template::config::step::select::data::options%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::common::device_id_description%]"
         },
         "sections": {
           "advanced_options": {
-            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+              "availability": "[%key:component::template::common::availability%]"
             }
           }
         },
@@ -325,19 +336,19 @@
       "sensor": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
-          "device_class": "[%key:component::template::config::step::sensor::data::device_class%]",
+          "device_class": "[%key:component::template::common::device_class%]",
           "state_class": "[%key:component::sensor::entity_component::_::state_attributes::state_class::name%]",
-          "state": "[%key:component::template::config::step::sensor::data::state%]",
-          "unit_of_measurement": "[%key:component::template::config::step::sensor::data::unit_of_measurement%]"
+          "state": "[%key:component::template::common::state%]",
+          "unit_of_measurement": "[%key:component::template::common::unit_of_measurement%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::common::device_id_description%]"
         },
         "sections": {
           "advanced_options": {
-            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+              "availability": "[%key:component::template::common::availability%]"
             }
           }
         },
@@ -347,19 +358,19 @@
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
           "name": "[%key:common::config_flow::data::name%]",
-          "value_template": "[%key:component::template::config::step::switch::data::value_template%]",
-          "turn_off": "[%key:component::template::config::step::switch::data::turn_off%]",
-          "turn_on": "[%key:component::template::config::step::switch::data::turn_on%]"
+          "value_template": "[%key:component::template::common::state%]",
+          "turn_off": "[%key:component::template::common::turn_off%]",
+          "turn_on": "[%key:component::template::common::turn_on%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]",
+          "device_id": "[%key:component::template::common::device_id_description%]",
           "value_template": "[%key:component::template::config::step::switch::data_description::value_template%]"
         },
         "sections": {
           "advanced_options": {
-            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+              "availability": "[%key:component::template::common::availability%]"
             }
           }
         },
