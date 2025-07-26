@@ -46,7 +46,7 @@ async def test_text_default(hass: HomeAssistant) -> None:
 
 async def test_text_new_min_max_pattern(hass: HomeAssistant) -> None:
     """Test text entity with new min, max, and pattern."""
-    text = MockTextEntity(native_min=-1, native_max=500, pattern=r"[a-z]")
+    text = MockTextEntity(native_min=-1, native_max=2048, pattern=r"[a-z]")
     text.hass = hass
 
     assert text.capability_attributes == {

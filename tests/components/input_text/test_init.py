@@ -88,7 +88,7 @@ async def async_set_value(hass: HomeAssistant, entity_id: str, value: str) -> No
         {"name with space": None},
         {"test_1": {"min": 51, "max": 50}},
         {"test_1": {"min": -1, "max": 100}},
-        {"test_1": {"min": 0, "max": 256}},
+        {"test_1": {"min": 0, "max": 2049}},
         {"test_1": {"min": 0, "max": 3, "initial": "aaaaa"}},
     ],
 )

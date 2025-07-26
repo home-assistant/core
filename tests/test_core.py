@@ -1457,16 +1457,16 @@ async def test_statemachine_async_set_invalid_state(hass: HomeAssistant) -> None
     """Test setting an invalid state with the async_set method."""
     with pytest.raises(
         InvalidStateError,
-        match="Invalid state with length 256. State max length is 255 characters.",
+        match="Invalid state with length 2049. State max length is 2048 characters.",
     ):
-        hass.states.async_set("light.bowl", "o" * 256, {})
+        hass.states.async_set("light.bowl", "o" * 2049, {})
 
 
 async def test_statemachine_async_set_internal_invalid_state(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test setting an invalid state with the async_set_internal method."""
-    long_state = "o" * 256
+    long_state = "o" * 2049
     hass.states.async_set_internal(
         "light.bowl",
         long_state,
@@ -1480,7 +1480,7 @@ async def test_statemachine_async_set_internal_invalid_state(
     assert (
         "homeassistant.core",
         logging.ERROR,
-        f"State {long_state} for light.bowl is longer than 255, "
+        f"State {long_state} for light.bowl is longer than 2048, "
         f"falling back to {STATE_UNKNOWN}",
     ) in caplog.record_tuples
 
@@ -2911,7 +2911,7 @@ async def test_validate_state(hass: HomeAssistant) -> None:
     """Test validate_state."""
     assert ha.validate_state("test") == "test"
     with pytest.raises(InvalidStateError):
-        ha.validate_state("t" * 256)
+        ha.validate_state("t" * 2049)
 
 
 @pytest.mark.parametrize(

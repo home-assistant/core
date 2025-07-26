@@ -235,11 +235,11 @@ def valid_entity_id(entity_id: str) -> bool:
 
 
 def validate_state(state: str) -> str:
-    """Validate a state, raise if it not valid."""
+    """Validate a state, raise if it is not valid."""
     if len(state) > MAX_LENGTH_STATE_STATE:
         raise InvalidStateError(
             f"Invalid state with length {len(state)}. "
-            "State max length is 255 characters."
+            f"State max length is {MAX_LENGTH_STATE_STATE} characters."
         )
     return state
 

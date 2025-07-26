@@ -1714,14 +1714,14 @@ async def test_invalid_state(
     assert hass.states.get("test.test").state == "x" * 255
 
     caplog.clear()
-    long_state = "x" * 256
+    long_state = "x" * 2049
     ent._attr_state = long_state
     ent.async_write_ha_state()
     assert hass.states.get("test.test").state == STATE_UNKNOWN
     assert (
         "homeassistant.core",
         logging.ERROR,
-        f"State {long_state} for test.test is longer than 255, "
+        f"State {long_state} for test.test is longer than 2048, "
         f"falling back to {STATE_UNKNOWN}",
     ) in caplog.record_tuples
 
