@@ -40,6 +40,12 @@
       "address": {
         "name": "Address"
       },
+      "battery_level": {
+        "name": "Battery level"
+      },
+      "battery_range": {
+        "name": "Remaining range"
+      },
       "battery_voltage": {
         "name": "Battery voltage"
       },
@@ -51,6 +57,9 @@
       },
       "mileage": {
         "name": "Mileage"
+      },
+      "speed": {
+        "name": "Speed"
       }
     }
   },

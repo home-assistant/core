@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
+from propcache.api import cached_property
 from pyituran import Vehicle
 
 from homeassistant.components.sensor import (
@@ -15,6 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     DEGREE,
+    PERCENTAGE,
     UnitOfElectricPotential,
     UnitOfLength,
     UnitOfSpeed,
@@ -33,6 +35,7 @@ class IturanSensorEntityDescription(SensorEntityDescription):
     """Describes Ituran sensor entity."""
 
     value_fn: Callable[[Vehicle], StateType | datetime]
+    is_available: Callable[[Vehicle], bool] = lambda _: True
 
 
 SENSOR_TYPES: list[IturanSensorEntityDescription] = [
@@ -41,6 +44,23 @@ SENSOR_TYPES: list[IturanSensorEntityDescription] = [
         translation_key="address",
         entity_registry_enabled_default=False,
         value_fn=lambda vehicle: vehicle.address,
+    ),
+    IturanSensorEntityDescription(
+        key="battery_level",
+        translation_key="battery_level",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda vehicle: vehicle.battery_level,
+        is_available=lambda vehicle: vehicle.is_electric_vehicle,
+    ),
+    IturanSensorEntityDescription(
+        key="battery_range",
+        translation_key="battery_range",
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        suggested_display_precision=0,
+        value_fn=lambda vehicle: vehicle.battery_range,
+        is_available=lambda vehicle: vehicle.is_electric_vehicle,
     ),
     IturanSensorEntityDescription(
         key="battery_voltage",
@@ -92,14 +112,15 @@ async def async_setup_entry(
     """Set up the Ituran sensors from config entry."""
     coordinator = config_entry.runtime_data
     async_add_entities(
-        IturanSensor(coordinator, license_plate, description)
+        IturanSensor(coordinator, vehicle.license_plate, description)
+        for vehicle in coordinator.data.values()
         for description in SENSOR_TYPES
-        for license_plate in coordinator.data
+        if description.is_available(vehicle)
     )
 
 
 class IturanSensor(IturanBaseEntity, SensorEntity):
-    """Ituran device tracker."""
+    """Ituran sensor."""
 
     entity_description: IturanSensorEntityDescription
 
@@ -113,7 +134,7 @@ class IturanSensor(IturanBaseEntity, SensorEntity):
         super().__init__(coordinator, license_plate, description.key)
         self.entity_description = description
 
-    @property
+    @cached_property
     def native_value(self) -> StateType | datetime:
         """Return the state of the device."""
         return self.entity_description.value_fn(self.vehicle)
