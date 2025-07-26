@@ -49,18 +49,17 @@ from .const import (
     ATTR_LANGUAGE,
     ATTR_TEXT,
     DATA_COMPONENT,
-    DATA_DEFAULT_ENTITY,
     DOMAIN,
     HOME_ASSISTANT_AGENT,
     SERVICE_PROCESS,
     SERVICE_RELOAD,
     ConversationEntityFeature,
 )
-from .default_agent import DefaultAgent, async_setup_default_agent
 from .entity import ConversationEntity
 from .http import async_setup as async_setup_conversation_http
 from .models import AbstractConversationAgent, ConversationInput, ConversationResult
 from .trace import ConversationTraceEventType, async_conversation_trace_append
+from .trigger import TriggerDetails
 from .util import async_get_result_from_chat_log
 
 __all__ = [
@@ -79,15 +78,18 @@ __all__ = [
     "ConverseError",
     "SystemContent",
     "ToolResultContent",
+    "TriggerDetails",
     "UserContent",
     "async_conversation_trace_append",
     "async_converse",
+    "async_get_agent",
     "async_get_agent_info",
     "async_get_chat_log",
     "async_get_result_from_chat_log",
     "async_set_agent",
     "async_setup",
     "async_unset_agent",
+    "get_agent_manager",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -100,7 +102,6 @@ SERVICE_PROCESS_SCHEMA = vol.Schema(
         vol.Optional(ATTR_CONVERSATION_ID): cv.string,
     }
 )
-
 
 SERVICE_RELOAD_SCHEMA = vol.Schema(
     {
@@ -140,7 +141,7 @@ def async_unset_agent(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
 ) -> None:
-    """Set the agent to handle the conversations."""
+    """Unset the agent to handle the conversations."""
     get_agent_manager(hass).async_unset_agent(config_entry.entry_id)
 
 
@@ -239,9 +240,8 @@ async def async_handle_sentence_triggers(
 
     Returns None if no match occurred.
     """
-    default_agent = async_get_agent(hass)
-    assert isinstance(default_agent, DefaultAgent)
-
+    default_agent = get_agent_manager(hass).default_agent
+    assert default_agent is not None
     return await default_agent.async_handle_sentence_triggers(user_input)
 
 
@@ -255,9 +255,8 @@ async def async_handle_intents(
 
     Returns None if no match occurred.
     """
-    default_agent = async_get_agent(hass)
-    assert isinstance(default_agent, DefaultAgent)
-
+    default_agent = get_agent_manager(hass).default_agent
+    assert default_agent is not None
     return await default_agent.async_handle_intents(
         user_input, intent_filter=intent_filter
     )
@@ -265,12 +264,12 @@ async def async_handle_intents(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the process service."""
-    entity_component = EntityComponent[ConversationEntity](_LOGGER, DOMAIN, hass)
-    hass.data[DATA_COMPONENT] = entity_component
+    get_agent_manager(hass).config_intents = config.get(DOMAIN, {}).get("intents", {})
 
-    await async_setup_default_agent(
-        hass, entity_component, config.get(DOMAIN, {}).get("intents", {})
+    component = hass.data[DATA_COMPONENT] = EntityComponent[ConversationEntity](
+        _LOGGER, DOMAIN, hass
     )
+    await component.async_setup({})
 
     async def handle_process(service: ServiceCall) -> ServiceResponse:
         """Parse text into commands."""
@@ -295,9 +294,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def handle_reload(service: ServiceCall) -> None:
         """Reload intents."""
-        await hass.data[DATA_DEFAULT_ENTITY].async_reload(
-            language=service.data.get(ATTR_LANGUAGE)
-        )
+        agent = get_agent_manager(hass).default_agent
+        if agent is not None:
+            await agent.async_reload(language=service.data.get(ATTR_LANGUAGE))
 
     hass.services.async_register(
         DOMAIN,
