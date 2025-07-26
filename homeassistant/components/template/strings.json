@@ -194,6 +194,12 @@
       }
     }
   },
+  "issues": {
+    "deprecated_weather_options": {
+      "title": "Deprecation: Legacy options in {entity_name}",
+      "description": "The legacy options for template weather are being removed in 2026.1.\n\nPlease update the following YAML options for {entity_id} ({entity_name}): \n\n{changes}"
+    }
+  },
   "options": {
     "step": {
       "alarm_control_panel": {
