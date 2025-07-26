@@ -142,7 +142,7 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         if self.coordinator.data.state.standby:
-            return MediaPlayerState.STANDBY
+            return MediaPlayerState.OFF
 
         if self.coordinator.data.app is None:
             return None
@@ -308,21 +308,21 @@ class RokuMediaPlayer(RokuEntity, MediaPlayerEntity):
     @roku_exception_handler()
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        if self.state not in {MediaPlayerState.STANDBY, MediaPlayerState.PAUSED}:
+        if self.state not in {MediaPlayerState.OFF, MediaPlayerState.PAUSED}:
             await self.coordinator.roku.remote("play")
             await self.coordinator.async_request_refresh()
 
     @roku_exception_handler()
     async def async_media_play(self) -> None:
         """Send play command."""
-        if self.state not in {MediaPlayerState.STANDBY, MediaPlayerState.PLAYING}:
+        if self.state not in {MediaPlayerState.OFF, MediaPlayerState.PLAYING}:
             await self.coordinator.roku.remote("play")
             await self.coordinator.async_request_refresh()
 
     @roku_exception_handler()
     async def async_media_play_pause(self) -> None:
         """Send play/pause command."""
-        if self.state != MediaPlayerState.STANDBY:
+        if self.state != MediaPlayerState.OFF:
             await self.coordinator.roku.remote("play")
             await self.coordinator.async_request_refresh()
 

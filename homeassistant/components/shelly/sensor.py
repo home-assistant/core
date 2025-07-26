@@ -52,13 +52,13 @@ from .entity import (
     async_setup_entry_attribute_entities,
     async_setup_entry_rest,
     async_setup_entry_rpc,
+    get_entity_rpc_device_info,
 )
 from .utils import (
     async_remove_orphaned_entities,
     get_blu_trv_device_info,
     get_device_entry_gen,
     get_device_uptime,
-    get_rpc_device_info,
     get_shelly_air_lamp_life,
     get_virtual_component_ids,
     is_rpc_wifi_stations_disabled,
@@ -138,8 +138,8 @@ class RpcEmeterPhaseSensor(RpcSensor):
         """Initialize select."""
         super().__init__(coordinator, key, attribute, description)
 
-        self._attr_device_info = get_rpc_device_info(
-            coordinator.device, coordinator.mac, key, description.emeter_phase
+        self._attr_device_info = get_entity_rpc_device_info(
+            coordinator, key, emeter_phase=description.emeter_phase
         )
 
 
@@ -864,8 +864,8 @@ RPC_SENSORS: Final = {
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
-        available=lambda status: (status and status["n_current"]) is not None,
-        removal_condition=lambda _config, status, _key: "n_current" not in status,
+        removal_condition=lambda _config, status, key: status[key].get("n_current")
+        is None,
         entity_registry_enabled_default=False,
     ),
     "total_current": RpcSensorDescription(
