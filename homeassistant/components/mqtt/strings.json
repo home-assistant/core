@@ -845,7 +845,7 @@
                 "temp_step": "The target temperature step in degrees Celsius or Fahrenheit.",
                 "temperature_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the temperature command topic.",
                 "temperature_command_topic": "The MQTT topic to publish commands to change the climate target temperature. [Learn more.]({url}#temperature_command_topic)",
-                "temperature_high_command_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be sent to \"Temperature high command topic\".",
+                "temperature_high_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the temperature high command topic.",
                 "temperature_high_command_topic": "The MQTT topic to publish commands to change the climate target high temperature. [Learn more.]({url}#temperature_high_command_topic)",
                 "temperature_low_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the temperature low command topic.",
                 "temperature_low_command_topic": "The MQTT topic to publish commands to change the climate target low temperature. [Learn more.]({url}#temperature_low_command_topic)",
