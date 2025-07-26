@@ -295,7 +295,6 @@ class TriggerSwitchEntity(TriggerEntity, SwitchEntity, RestoreEntity):
             raw = self._rendered.get(CONF_STATE)
             self._attr_is_on = template.result_as_boolean(raw)
 
-            self.async_set_context(self.coordinator.data["context"])
             self.async_write_ha_state()
         elif self._attr_assumed_state and len(self._rendered) > 0:
             # In case name, icon, or friendly name have a template but

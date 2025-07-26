@@ -60,8 +60,11 @@
     "step": {
       "init": {
         "data": {
-          "traffic_mode": "Traffic mode",
+          "traffic_mode": "Use traffic and time-aware routing",
           "route_mode": "Route mode"
+        },
+        "data_description": {
+          "traffic_mode": "Needed for defining arrival/departure times"
         }
       },
       "time_menu": {
