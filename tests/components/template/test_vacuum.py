@@ -1153,3 +1153,111 @@ async def test_empty_action_config(
     assert state.attributes["supported_features"] == (
         VacuumEntityFeature.STATE | VacuumEntityFeature.START | supported_features
     )
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        (
+            1,
+            {"name": TEST_OBJECT_ID, "start": [], **TEMPLATE_VACUUM_ACTIONS},
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("service", "expected"),
+    [
+        (vacuum.SERVICE_START, VacuumActivity.CLEANING),
+        (vacuum.SERVICE_PAUSE, VacuumActivity.PAUSED),
+        (vacuum.SERVICE_STOP, VacuumActivity.IDLE),
+        (vacuum.SERVICE_RETURN_TO_BASE, VacuumActivity.RETURNING),
+        (vacuum.SERVICE_CLEAN_SPOT, VacuumActivity.CLEANING),
+    ],
+)
+@pytest.mark.usefixtures("setup_vacuum")
+async def test_assumed_optimistic(
+    hass: HomeAssistant,
+    service: str,
+    expected: VacuumActivity,
+    calls: list[ServiceCall],
+) -> None:
+    """Test assumed optimistic."""
+
+    await hass.services.async_call(
+        vacuum.DOMAIN,
+        service,
+        {"entity_id": TEST_ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == expected
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        (
+            1,
+            {
+                "name": TEST_OBJECT_ID,
+                "state": "{{ states('sensor.test_state') }}",
+                "start": [],
+                **TEMPLATE_VACUUM_ACTIONS,
+                "optimistic": True,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("service", "expected"),
+    [
+        (vacuum.SERVICE_START, VacuumActivity.CLEANING),
+        (vacuum.SERVICE_PAUSE, VacuumActivity.PAUSED),
+        (vacuum.SERVICE_STOP, VacuumActivity.IDLE),
+        (vacuum.SERVICE_RETURN_TO_BASE, VacuumActivity.RETURNING),
+        (vacuum.SERVICE_CLEAN_SPOT, VacuumActivity.CLEANING),
+    ],
+)
+@pytest.mark.usefixtures("setup_vacuum")
+async def test_optimistic_option(
+    hass: HomeAssistant,
+    service: str,
+    expected: VacuumActivity,
+    calls: list[ServiceCall],
+) -> None:
+    """Test optimistic yaml option."""
+    hass.states.async_set(TEST_STATE_SENSOR, VacuumActivity.DOCKED)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == VacuumActivity.DOCKED
+
+    await hass.services.async_call(
+        vacuum.DOMAIN,
+        service,
+        {"entity_id": TEST_ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == expected
+
+    hass.states.async_set(TEST_STATE_SENSOR, VacuumActivity.RETURNING)
+    await hass.async_block_till_done()
+
+    hass.states.async_set(TEST_STATE_SENSOR, VacuumActivity.DOCKED)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == VacuumActivity.DOCKED
