@@ -119,6 +119,18 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
+def _align_trend_start_to_local_midnight(dt: datetime | None, scale: Scale) -> datetime | None:
+    """Convert UTC trend start to local midnight for daily statistics."""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=dt_util.UTC)
+    local_dt = dt.astimezone(dt_util.DEFAULT_TIME_ZONE)
+    if scale == Scale.DAY:
+        local_dt = local_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    return local_dt
+
+
 class SensePowerSensor(SenseEntity, SensorEntity):
     """Implementation of a Sense energy sensor."""
 
@@ -224,16 +236,7 @@ class SenseTrendsSensor(SensorEntity):
         """Return the time when the sensor was last reset, if any."""
         if self._attr_state_class == SensorStateClass.TOTAL:
             dt = self._gateway.trend_start(self._scale)
-            if dt is None:
-                return None
-            # Convert UTC to local time
-            if dt.tzinfo is None:
-                dt = dt.replace(tzinfo=dt_util.UTC)
-            local_dt = dt.astimezone(dt_util.DEFAULT_TIME_ZONE)
-            # Align to local midnight for daily scale
-            if self._scale == Scale.DAY:
-                local_dt = local_dt.replace(hour=0, minute=0, second=0, microsecond=0)
-            return local_dt
+            return _align_trend_start_to_local_midnight(dt, self._scale)
         return None
 
 
@@ -295,7 +298,6 @@ class SenseDeviceEnergySensor(SenseDeviceEntity, SensorEntity):
     @property
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
-        # Use the same logic as SenseTrendsSensor for alignment
         dt: datetime | None = None
         if hasattr(self._device, "trend_start"):
             trend_start = getattr(self._device, "trend_start")
@@ -305,11 +307,4 @@ class SenseDeviceEnergySensor(SenseDeviceEntity, SensorEntity):
                 return None
         else:
             return None
-        if dt is None:
-            return None
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=dt_util.UTC)
-        local_dt = dt.astimezone(dt_util.DEFAULT_TIME_ZONE)
-        if self._scale == Scale.DAY:
-            local_dt = local_dt.replace(hour=0, minute=0, second=0, microsecond=0)
-        return local_dt
+        return _align_trend_start_to_local_midnight(dt, self._scale)
