@@ -1,0 +1,17 @@
+# serializer version: 1
+# name: test_cover_entity
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'garage',
+      'friendly_name': 'Cover Controller Test Entity Name',
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.cover_controller_test_entity_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'opening',
+  })
+# ---
