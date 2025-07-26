@@ -334,12 +334,11 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     slug_validator=translation_key_validator,
                 ),
             },
-            vol.Optional("config_panel"): cv.schema_with_slug_keys(
-                cv.schema_with_slug_keys(
+            vol.Optional("config_panel"): vol.Schema(
+                vol.Any(
+                    {vol.Any(translation_key_validator, "_"): vol.Self},
                     translation_value_validator,
-                    slug_validator=translation_key_validator,
-                ),
-                slug_validator=vol.Any("_", cv.slug),
+                )
             ),
             vol.Optional("application_credentials"): {
                 vol.Optional("description"): translation_value_validator,
