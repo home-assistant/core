@@ -375,15 +375,10 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.NUMBER,
         entity_description=MatterNumberEntityDescription(
             key="speaker_setpoint",
-            native_unit_of_measurement=PERCENTAGE,
-            translation_key="pump_setpoint",
-            native_max_value=100,
-            native_min_value=0.5,
-            native_step=0.5,
-            device_to_ha=(
-                lambda x: None if x is None else x / 2  # Matter range (1-200)
-            ),
-            ha_to_device=lambda x: round(x * 2),  # HA range 0.5–100.0%
+            translation_key="speaker_setpoint",
+            native_max_value=255,
+            native_min_value=0,
+            native_step=1,
             mode=NumberMode.SLIDER,
         ),
         entity_class=MatterLevelControlNumber,
