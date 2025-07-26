@@ -184,7 +184,7 @@
         "name": "Setpoint"
       },
       "speaker_setpoint": {
-        "name": "Speaker setpoint"
+        "name": "Volume"
       },
       "temperature_offset": {
         "name": "Temperature offset"

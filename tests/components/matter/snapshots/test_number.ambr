@@ -2364,7 +2364,7 @@
     'state': '64',
   })
 # ---
-# name: test_numbers[speaker][number.audiolink_speaker_setpoint-entry]
+# name: test_numbers[speaker][number.audiolink_volume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2382,7 +2382,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.audiolink_speaker_setpoint',
+    'entity_id': 'number.audiolink_volume',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2394,7 +2394,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Speaker setpoint',
+    'original_name': 'Volume',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2404,17 +2404,17 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[speaker][number.audiolink_speaker_setpoint-state]
+# name: test_numbers[speaker][number.audiolink_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AudioLink Speaker setpoint',
+      'friendly_name': 'AudioLink Volume',
       'max': 255,
       'min': 0,
       'mode': <NumberMode.SLIDER: 'slider'>,
       'step': 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.audiolink_speaker_setpoint',
+    'entity_id': 'number.audiolink_volume',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
