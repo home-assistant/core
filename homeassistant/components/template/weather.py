@@ -39,8 +39,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import (
+    config_validation as cv,
+    issue_registry as ir,
+    template,
+)
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_conversion import (
@@ -50,8 +55,9 @@ from homeassistant.util.unit_conversion import (
     TemperatureConverter,
 )
 
+from . import DOMAIN
 from .coordinator import TriggerUpdateCoordinator
-from .helpers import async_setup_template_platform
+from .helpers import async_setup_template_platform, rewrite_legacy_to_modern_config
 from .template_entity import TemplateEntity, make_template_entity_common_modern_schema
 from .trigger_entity import TriggerEntity
 
@@ -81,55 +87,144 @@ CONDITION_CLASSES = {
     ATTR_CONDITION_EXCEPTIONAL,
 }
 
-CONF_WEATHER = "weather"
-CONF_TEMPERATURE_TEMPLATE = "temperature_template"
-CONF_HUMIDITY_TEMPLATE = "humidity_template"
-CONF_CONDITION_TEMPLATE = "condition_template"
-CONF_ATTRIBUTION_TEMPLATE = "attribution_template"
-CONF_PRESSURE_TEMPLATE = "pressure_template"
-CONF_WIND_SPEED_TEMPLATE = "wind_speed_template"
-CONF_WIND_BEARING_TEMPLATE = "wind_bearing_template"
-CONF_OZONE_TEMPLATE = "ozone_template"
-CONF_UV_INDEX_TEMPLATE = "uv_index_template"
-CONF_VISIBILITY_TEMPLATE = "visibility_template"
-CONF_FORECAST_DAILY_TEMPLATE = "forecast_daily_template"
-CONF_FORECAST_HOURLY_TEMPLATE = "forecast_hourly_template"
-CONF_FORECAST_TWICE_DAILY_TEMPLATE = "forecast_twice_daily_template"
-CONF_PRESSURE_UNIT = "pressure_unit"
-CONF_WIND_SPEED_UNIT = "wind_speed_unit"
-CONF_VISIBILITY_UNIT = "visibility_unit"
-CONF_PRECIPITATION_UNIT = "precipitation_unit"
-CONF_WIND_GUST_SPEED_TEMPLATE = "wind_gust_speed_template"
-CONF_CLOUD_COVERAGE_TEMPLATE = "cloud_coverage_template"
-CONF_DEW_POINT_TEMPLATE = "dew_point_template"
+CONF_APPARENT_TEMPERATURE = "apparent_temperature"
 CONF_APPARENT_TEMPERATURE_TEMPLATE = "apparent_temperature_template"
+CONF_ATTRIBUTION = "attribution"
+CONF_ATTRIBUTION_TEMPLATE = "attribution_template"
+CONF_CLOUD_COVERAGE = "cloud_coverage"
+CONF_CLOUD_COVERAGE_TEMPLATE = "cloud_coverage_template"
+CONF_CONDITION = "condition"
+CONF_CONDITION_TEMPLATE = "condition_template"
+CONF_DEW_POINT = "dew_point"
+CONF_DEW_POINT_TEMPLATE = "dew_point_template"
+CONF_FORECAST_DAILY = "forecast_daily"
+CONF_FORECAST_DAILY_TEMPLATE = "forecast_daily_template"
+CONF_FORECAST_HOURLY = "forecast_hourly"
+CONF_FORECAST_HOURLY_TEMPLATE = "forecast_hourly_template"
+CONF_FORECAST_TWICE_DAILY = "forecast_twice_daily"
+CONF_FORECAST_TWICE_DAILY_TEMPLATE = "forecast_twice_daily_template"
+CONF_HUMIDITY = "humidity"
+CONF_HUMIDITY_TEMPLATE = "humidity_template"
+CONF_OZONE = "ozone"
+CONF_OZONE_TEMPLATE = "ozone_template"
+CONF_PRECIPITATION_UNIT = "precipitation_unit"
+CONF_PRESSURE = "pressure"
+CONF_PRESSURE_TEMPLATE = "pressure_template"
+CONF_PRESSURE_UNIT = "pressure_unit"
+CONF_TEMPERATURE = "temperature"
+CONF_TEMPERATURE_TEMPLATE = "temperature_template"
+CONF_UV_INDEX = "uv_index"
+CONF_UV_INDEX_TEMPLATE = "uv_index_template"
+CONF_VISIBILITY = "visibility"
+CONF_VISIBILITY_TEMPLATE = "visibility_template"
+CONF_VISIBILITY_UNIT = "visibility_unit"
+CONF_WEATHER = "weather"
+CONF_WIND_BEARING = "wind_bearing"
+CONF_WIND_BEARING_TEMPLATE = "wind_bearing_template"
+CONF_WIND_GUST_SPEED = "wind_gust_speed"
+CONF_WIND_GUST_SPEED_TEMPLATE = "wind_gust_speed_template"
+CONF_WIND_SPEED = "wind_speed"
+CONF_WIND_SPEED_TEMPLATE = "wind_speed_template"
+CONF_WIND_SPEED_UNIT = "wind_speed_unit"
+
+DEPRECATION_WARNING = "deprecation_warning"
 
 DEFAULT_NAME = "Template Weather"
 
-WEATHER_YAML_SCHEMA = vol.Schema(
+LEGACY_FIELDS = {
+    CONF_APPARENT_TEMPERATURE_TEMPLATE: CONF_APPARENT_TEMPERATURE,
+    CONF_ATTRIBUTION_TEMPLATE: CONF_ATTRIBUTION,
+    CONF_CLOUD_COVERAGE_TEMPLATE: CONF_CLOUD_COVERAGE,
+    CONF_CONDITION_TEMPLATE: CONF_CONDITION,
+    CONF_DEW_POINT_TEMPLATE: CONF_DEW_POINT,
+    CONF_HUMIDITY_TEMPLATE: CONF_HUMIDITY,
+    CONF_FORECAST_DAILY_TEMPLATE: CONF_FORECAST_DAILY,
+    CONF_FORECAST_HOURLY_TEMPLATE: CONF_FORECAST_HOURLY,
+    CONF_FORECAST_TWICE_DAILY_TEMPLATE: CONF_FORECAST_TWICE_DAILY,
+    CONF_OZONE_TEMPLATE: CONF_OZONE,
+    CONF_PRESSURE_TEMPLATE: CONF_PRESSURE,
+    CONF_TEMPERATURE_TEMPLATE: CONF_TEMPERATURE,
+    CONF_UV_INDEX_TEMPLATE: CONF_UV_INDEX,
+    CONF_VISIBILITY_TEMPLATE: CONF_VISIBILITY,
+    CONF_WIND_BEARING_TEMPLATE: CONF_WIND_BEARING,
+    CONF_WIND_GUST_SPEED_TEMPLATE: CONF_WIND_GUST_SPEED,
+    CONF_WIND_SPEED_TEMPLATE: CONF_WIND_SPEED,
+}
+
+WEATHER_COMMON_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_APPARENT_TEMPERATURE): cv.template,
+        vol.Optional(CONF_ATTRIBUTION): cv.template,
+        vol.Optional(CONF_CLOUD_COVERAGE): cv.template,
+        vol.Required(CONF_CONDITION): cv.template,
+        vol.Optional(CONF_DEW_POINT): cv.template,
+        vol.Required(CONF_HUMIDITY): cv.template,
+        vol.Optional(CONF_FORECAST_DAILY): cv.template,
+        vol.Optional(CONF_FORECAST_HOURLY): cv.template,
+        vol.Optional(CONF_FORECAST_TWICE_DAILY): cv.template,
+        vol.Optional(CONF_OZONE): cv.template,
+        vol.Optional(CONF_PRECIPITATION_UNIT): vol.In(DistanceConverter.VALID_UNITS),
+        vol.Optional(CONF_PRESSURE): cv.template,
+        vol.Optional(CONF_PRESSURE_UNIT): vol.In(PressureConverter.VALID_UNITS),
+        vol.Required(CONF_TEMPERATURE): cv.template,
+        vol.Optional(CONF_TEMPERATURE_UNIT): vol.In(TemperatureConverter.VALID_UNITS),
+        vol.Optional(CONF_UV_INDEX): cv.template,
+        vol.Optional(CONF_VISIBILITY): cv.template,
+        vol.Optional(CONF_VISIBILITY_UNIT): vol.In(DistanceConverter.VALID_UNITS),
+        vol.Optional(CONF_WIND_BEARING): cv.template,
+        vol.Optional(CONF_WIND_GUST_SPEED): cv.template,
+        vol.Optional(CONF_WIND_SPEED): cv.template,
+        vol.Optional(CONF_WIND_SPEED_UNIT): vol.In(SpeedConverter.VALID_UNITS),
+    }
+)
+
+WEATHER_YAML_SCHEMA = (
+    vol.Schema({DEPRECATION_WARNING: str})
+    .extend(WEATHER_COMMON_SCHEMA.schema)
+    .extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
+)
+
+WEATHER_DEPRECATION_YAML_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_APPARENT_TEMPERATURE_TEMPLATE): cv.template,
+        vol.Optional(CONF_APPARENT_TEMPERATURE): cv.template,
         vol.Optional(CONF_ATTRIBUTION_TEMPLATE): cv.template,
+        vol.Optional(CONF_ATTRIBUTION): cv.template,
         vol.Optional(CONF_CLOUD_COVERAGE_TEMPLATE): cv.template,
-        vol.Required(CONF_CONDITION_TEMPLATE): cv.template,
+        vol.Optional(CONF_CLOUD_COVERAGE): cv.template,
+        vol.Exclusive(CONF_CONDITION_TEMPLATE, CONF_CONDITION): cv.template,
+        vol.Exclusive(CONF_CONDITION, CONF_CONDITION): cv.template,
         vol.Optional(CONF_DEW_POINT_TEMPLATE): cv.template,
-        vol.Required(CONF_HUMIDITY_TEMPLATE): cv.template,
+        vol.Optional(CONF_DEW_POINT): cv.template,
         vol.Optional(CONF_FORECAST_DAILY_TEMPLATE): cv.template,
+        vol.Optional(CONF_FORECAST_DAILY): cv.template,
         vol.Optional(CONF_FORECAST_HOURLY_TEMPLATE): cv.template,
+        vol.Optional(CONF_FORECAST_HOURLY): cv.template,
         vol.Optional(CONF_FORECAST_TWICE_DAILY_TEMPLATE): cv.template,
+        vol.Optional(CONF_FORECAST_TWICE_DAILY): cv.template,
+        vol.Exclusive(CONF_HUMIDITY_TEMPLATE, CONF_HUMIDITY): cv.template,
+        vol.Exclusive(CONF_HUMIDITY, CONF_HUMIDITY): cv.template,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.template,
         vol.Optional(CONF_OZONE_TEMPLATE): cv.template,
+        vol.Optional(CONF_OZONE): cv.template,
         vol.Optional(CONF_PRECIPITATION_UNIT): vol.In(DistanceConverter.VALID_UNITS),
         vol.Optional(CONF_PRESSURE_TEMPLATE): cv.template,
         vol.Optional(CONF_PRESSURE_UNIT): vol.In(PressureConverter.VALID_UNITS),
-        vol.Required(CONF_TEMPERATURE_TEMPLATE): cv.template,
+        vol.Optional(CONF_PRESSURE): cv.template,
+        vol.Exclusive(CONF_TEMPERATURE_TEMPLATE, CONF_TEMPERATURE): cv.template,
+        vol.Exclusive(CONF_TEMPERATURE, CONF_TEMPERATURE): cv.template,
         vol.Optional(CONF_TEMPERATURE_UNIT): vol.In(TemperatureConverter.VALID_UNITS),
-        vol.Optional(CONF_UV_INDEX_TEMPLATE): cv.template,
+        vol.Optional(CONF_UV_INDEX): cv.template,
         vol.Optional(CONF_VISIBILITY_TEMPLATE): cv.template,
         vol.Optional(CONF_VISIBILITY_UNIT): vol.In(DistanceConverter.VALID_UNITS),
+        vol.Optional(CONF_VISIBILITY): cv.template,
         vol.Optional(CONF_WIND_BEARING_TEMPLATE): cv.template,
+        vol.Optional(CONF_WIND_BEARING): cv.template,
         vol.Optional(CONF_WIND_GUST_SPEED_TEMPLATE): cv.template,
+        vol.Optional(CONF_WIND_GUST_SPEED): cv.template,
         vol.Optional(CONF_WIND_SPEED_TEMPLATE): cv.template,
         vol.Optional(CONF_WIND_SPEED_UNIT): vol.In(SpeedConverter.VALID_UNITS),
+        vol.Optional(CONF_WIND_SPEED): cv.template,
     }
 ).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
 
@@ -161,6 +256,25 @@ PLATFORM_SCHEMA = vol.Schema(
 ).extend(WEATHER_PLATFORM_SCHEMA.schema)
 
 
+def create_deprecation_issue(
+    hass: HomeAssistant, entity_id: str, name: str, changes: str
+) -> None:
+    """Create deprecation issue after entity creation."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_template_weather_{entity_id}",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_weather_options",
+        translation_placeholders={
+            "entity_name": name,
+            "entity_id": entity_id,
+            "changes": changes,
+        },
+    )
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -168,6 +282,29 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Template weather."""
+
+    if discovery_info:
+        entity_configs: list[ConfigType] = discovery_info["entities"]
+        modified_entity_configs = []
+        for entity_config in entity_configs:
+            options_before = set(entity_config.keys())
+            entity_config = rewrite_legacy_to_modern_config(
+                hass, entity_config, LEGACY_FIELDS
+            )
+            options_after = set(entity_config.keys())
+            if deprecated_options := options_before - options_after:
+                entity_config[DEPRECATION_WARNING] = "\n  ".join(
+                    [
+                        f"{option} -> {LEGACY_FIELDS[option]}"
+                        for option in deprecated_options
+                    ]
+                )
+
+            modified_entity_configs.append(entity_config)
+
+        if modified_entity_configs:
+            discovery_info["entities"] = modified_entity_configs
+
     await async_setup_template_platform(
         hass,
         WEATHER_DOMAIN,
@@ -176,7 +313,7 @@ async def async_setup_platform(
         TriggerWeatherEntity,
         async_add_entities,
         discovery_info,
-        {},
+        LEGACY_FIELDS,
     )
 
 
@@ -195,27 +332,25 @@ class StateWeatherEntity(TemplateEntity, WeatherEntity):
         """Initialize the Template weather."""
         super().__init__(hass, config, unique_id)
 
-        self._condition_template = config[CONF_CONDITION_TEMPLATE]
-        self._temperature_template = config[CONF_TEMPERATURE_TEMPLATE]
-        self._humidity_template = config[CONF_HUMIDITY_TEMPLATE]
-        self._attribution_template = config.get(CONF_ATTRIBUTION_TEMPLATE)
-        self._pressure_template = config.get(CONF_PRESSURE_TEMPLATE)
-        self._wind_speed_template = config.get(CONF_WIND_SPEED_TEMPLATE)
-        self._wind_bearing_template = config.get(CONF_WIND_BEARING_TEMPLATE)
-        self._ozone_template = config.get(CONF_OZONE_TEMPLATE)
-        self._uv_index_template = config.get(CONF_UV_INDEX_TEMPLATE)
-        self._visibility_template = config.get(CONF_VISIBILITY_TEMPLATE)
-        self._forecast_daily_template = config.get(CONF_FORECAST_DAILY_TEMPLATE)
-        self._forecast_hourly_template = config.get(CONF_FORECAST_HOURLY_TEMPLATE)
-        self._forecast_twice_daily_template = config.get(
-            CONF_FORECAST_TWICE_DAILY_TEMPLATE
-        )
-        self._wind_gust_speed_template = config.get(CONF_WIND_GUST_SPEED_TEMPLATE)
-        self._cloud_coverage_template = config.get(CONF_CLOUD_COVERAGE_TEMPLATE)
-        self._dew_point_template = config.get(CONF_DEW_POINT_TEMPLATE)
-        self._apparent_temperature_template = config.get(
-            CONF_APPARENT_TEMPERATURE_TEMPLATE
-        )
+        self._deprecation_warning: str | None = config.get(DEPRECATION_WARNING)
+
+        self._condition_template = config[CONF_CONDITION]
+        self._temperature_template = config[CONF_TEMPERATURE]
+        self._humidity_template = config[CONF_HUMIDITY]
+        self._attribution_template = config.get(CONF_ATTRIBUTION)
+        self._pressure_template = config.get(CONF_PRESSURE)
+        self._wind_speed_template = config.get(CONF_WIND_SPEED)
+        self._wind_bearing_template = config.get(CONF_WIND_BEARING)
+        self._ozone_template = config.get(CONF_OZONE)
+        self._uv_index_template = config.get(CONF_UV_INDEX)
+        self._visibility_template = config.get(CONF_VISIBILITY)
+        self._forecast_daily_template = config.get(CONF_FORECAST_DAILY)
+        self._forecast_hourly_template = config.get(CONF_FORECAST_HOURLY)
+        self._forecast_twice_daily_template = config.get(CONF_FORECAST_TWICE_DAILY)
+        self._wind_gust_speed_template = config.get(CONF_WIND_GUST_SPEED)
+        self._cloud_coverage_template = config.get(CONF_CLOUD_COVERAGE)
+        self._dew_point_template = config.get(CONF_DEW_POINT)
+        self._apparent_temperature_template = config.get(CONF_APPARENT_TEMPERATURE)
 
         self._attr_native_precipitation_unit = config.get(CONF_PRECIPITATION_UNIT)
         self._attr_native_pressure_unit = config.get(CONF_PRESSURE_UNIT)
@@ -248,6 +383,17 @@ class StateWeatherEntity(TemplateEntity, WeatherEntity):
             self._attr_supported_features |= WeatherEntityFeature.FORECAST_HOURLY
         if self._forecast_twice_daily_template:
             self._attr_supported_features |= WeatherEntityFeature.FORECAST_TWICE_DAILY
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        if self._deprecation_warning:
+            create_deprecation_issue(
+                self.hass,
+                self.entity_id,
+                self._attr_name or DEFAULT_NAME,
+                self._deprecation_warning,
+            )
 
     @property
     def condition(self) -> str | None:
@@ -532,9 +678,9 @@ class TriggerWeatherEntity(TriggerEntity, WeatherEntity, RestoreEntity):
     _entity_id_format = ENTITY_ID_FORMAT
     domain = WEATHER_DOMAIN
     extra_template_keys = (
-        CONF_CONDITION_TEMPLATE,
-        CONF_TEMPERATURE_TEMPLATE,
-        CONF_HUMIDITY_TEMPLATE,
+        CONF_CONDITION,
+        CONF_TEMPERATURE,
+        CONF_HUMIDITY,
     )
 
     def __init__(
@@ -546,6 +692,8 @@ class TriggerWeatherEntity(TriggerEntity, WeatherEntity, RestoreEntity):
         """Initialize."""
         super().__init__(hass, coordinator, config)
 
+        self._deprecation_warning: str | None = config.get(DEPRECATION_WARNING)
+
         self._attr_native_precipitation_unit = config.get(CONF_PRECIPITATION_UNIT)
         self._attr_native_pressure_unit = config.get(CONF_PRESSURE_UNIT)
         self._attr_native_temperature_unit = config.get(CONF_TEMPERATURE_UNIT)
@@ -553,27 +701,27 @@ class TriggerWeatherEntity(TriggerEntity, WeatherEntity, RestoreEntity):
         self._attr_native_wind_speed_unit = config.get(CONF_WIND_SPEED_UNIT)
 
         self._attr_supported_features = 0
-        if config.get(CONF_FORECAST_DAILY_TEMPLATE):
+        if config.get(CONF_FORECAST_DAILY):
             self._attr_supported_features |= WeatherEntityFeature.FORECAST_DAILY
-        if config.get(CONF_FORECAST_HOURLY_TEMPLATE):
+        if config.get(CONF_FORECAST_HOURLY):
             self._attr_supported_features |= WeatherEntityFeature.FORECAST_HOURLY
-        if config.get(CONF_FORECAST_TWICE_DAILY_TEMPLATE):
+        if config.get(CONF_FORECAST_TWICE_DAILY):
             self._attr_supported_features |= WeatherEntityFeature.FORECAST_TWICE_DAILY
 
         for key in (
-            CONF_APPARENT_TEMPERATURE_TEMPLATE,
-            CONF_CLOUD_COVERAGE_TEMPLATE,
-            CONF_DEW_POINT_TEMPLATE,
-            CONF_FORECAST_DAILY_TEMPLATE,
-            CONF_FORECAST_HOURLY_TEMPLATE,
-            CONF_FORECAST_TWICE_DAILY_TEMPLATE,
-            CONF_OZONE_TEMPLATE,
-            CONF_PRESSURE_TEMPLATE,
-            CONF_UV_INDEX_TEMPLATE,
-            CONF_VISIBILITY_TEMPLATE,
-            CONF_WIND_BEARING_TEMPLATE,
-            CONF_WIND_GUST_SPEED_TEMPLATE,
-            CONF_WIND_SPEED_TEMPLATE,
+            CONF_APPARENT_TEMPERATURE,
+            CONF_CLOUD_COVERAGE,
+            CONF_DEW_POINT,
+            CONF_FORECAST_DAILY,
+            CONF_FORECAST_HOURLY,
+            CONF_FORECAST_TWICE_DAILY,
+            CONF_OZONE,
+            CONF_PRESSURE,
+            CONF_UV_INDEX,
+            CONF_VISIBILITY,
+            CONF_WIND_BEARING,
+            CONF_WIND_GUST_SPEED,
+            CONF_WIND_SPEED,
         ):
             if isinstance(config.get(key), template.Template):
                 self._to_render_simple.append(key)
@@ -582,157 +730,140 @@ class TriggerWeatherEntity(TriggerEntity, WeatherEntity, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
+
+        if self._deprecation_warning:
+            create_deprecation_issue(
+                self.hass,
+                self.entity_id,
+                self._attr_name or DEFAULT_NAME,
+                self._deprecation_warning,
+            )
+
         if (
             (state := await self.async_get_last_state())
             and state.state is not None
             and state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
             and (weather_data := await self.async_get_last_weather_data())
         ):
-            self._rendered[CONF_APPARENT_TEMPERATURE_TEMPLATE] = (
+            self._rendered[CONF_APPARENT_TEMPERATURE] = (
                 weather_data.last_apparent_temperature
             )
-            self._rendered[CONF_CLOUD_COVERAGE_TEMPLATE] = (
-                weather_data.last_cloud_coverage
-            )
-            self._rendered[CONF_CONDITION_TEMPLATE] = state.state
-            self._rendered[CONF_DEW_POINT_TEMPLATE] = weather_data.last_dew_point
-            self._rendered[CONF_HUMIDITY_TEMPLATE] = weather_data.last_humidity
-            self._rendered[CONF_OZONE_TEMPLATE] = weather_data.last_ozone
-            self._rendered[CONF_PRESSURE_TEMPLATE] = weather_data.last_pressure
-            self._rendered[CONF_TEMPERATURE_TEMPLATE] = weather_data.last_temperature
-            self._rendered[CONF_UV_INDEX_TEMPLATE] = weather_data.last_uv_index
-            self._rendered[CONF_VISIBILITY_TEMPLATE] = weather_data.last_visibility
-            self._rendered[CONF_WIND_BEARING_TEMPLATE] = weather_data.last_wind_bearing
-            self._rendered[CONF_WIND_GUST_SPEED_TEMPLATE] = (
-                weather_data.last_wind_gust_speed
-            )
-            self._rendered[CONF_WIND_SPEED_TEMPLATE] = weather_data.last_wind_speed
+            self._rendered[CONF_CLOUD_COVERAGE] = weather_data.last_cloud_coverage
+            self._rendered[CONF_CONDITION] = state.state
+            self._rendered[CONF_DEW_POINT] = weather_data.last_dew_point
+            self._rendered[CONF_HUMIDITY] = weather_data.last_humidity
+            self._rendered[CONF_OZONE] = weather_data.last_ozone
+            self._rendered[CONF_PRESSURE] = weather_data.last_pressure
+            self._rendered[CONF_TEMPERATURE] = weather_data.last_temperature
+            self._rendered[CONF_UV_INDEX] = weather_data.last_uv_index
+            self._rendered[CONF_VISIBILITY] = weather_data.last_visibility
+            self._rendered[CONF_WIND_BEARING] = weather_data.last_wind_bearing
+            self._rendered[CONF_WIND_GUST_SPEED] = weather_data.last_wind_gust_speed
+            self._rendered[CONF_WIND_SPEED] = weather_data.last_wind_speed
 
     @property
     def condition(self) -> str | None:
         """Return the current condition."""
-        return self._rendered.get(CONF_CONDITION_TEMPLATE)
+        return self._rendered.get(CONF_CONDITION)
 
     @property
     def native_temperature(self) -> float | None:
         """Return the temperature."""
-        return vol.Any(vol.Coerce(float), None)(
-            self._rendered.get(CONF_TEMPERATURE_TEMPLATE)
-        )
+        return vol.Any(vol.Coerce(float), None)(self._rendered.get(CONF_TEMPERATURE))
 
     @property
     def humidity(self) -> float | None:
         """Return the humidity."""
-        return vol.Any(vol.Coerce(float), None)(
-            self._rendered.get(CONF_HUMIDITY_TEMPLATE)
-        )
+        return vol.Any(vol.Coerce(float), None)(self._rendered.get(CONF_HUMIDITY))
 
     @property
     def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
-        return vol.Any(vol.Coerce(float), None)(
-            self._rendered.get(CONF_WIND_SPEED_TEMPLATE)
-        )
+        return vol.Any(vol.Coerce(float), None)(self._rendered.get(CONF_WIND_SPEED))
 
     @property
     def wind_bearing(self) -> float | str | None:
         """Return the wind bearing."""
         return vol.Any(vol.Coerce(float), vol.Coerce(str), None)(
-            self._rendered.get(CONF_WIND_BEARING_TEMPLATE)
+            self._rendered.get(CONF_WIND_BEARING)
         )
 
     @property
     def ozone(self) -> float | None:
         """Return the ozone level."""
         return vol.Any(vol.Coerce(float), None)(
-            self._rendered.get(CONF_OZONE_TEMPLATE),
+            self._rendered.get(CONF_OZONE),
         )
 
     @property
     def uv_index(self) -> float | None:
         """Return the UV index."""
-        return vol.Any(vol.Coerce(float), None)(
-            self._rendered.get(CONF_UV_INDEX_TEMPLATE)
-        )
+        return vol.Any(vol.Coerce(float), None)(self._rendered.get(CONF_UV_INDEX))
 
     @property
     def native_visibility(self) -> float | None:
         """Return the visibility."""
-        return vol.Any(vol.Coerce(float), None)(
-            self._rendered.get(CONF_VISIBILITY_TEMPLATE)
-        )
+        return vol.Any(vol.Coerce(float), None)(self._rendered.get(CONF_VISIBILITY))
 
     @property
     def native_pressure(self) -> float | None:
         """Return the air pressure."""
-        return vol.Any(vol.Coerce(float), None)(
-            self._rendered.get(CONF_PRESSURE_TEMPLATE)
-        )
+        return vol.Any(vol.Coerce(float), None)(self._rendered.get(CONF_PRESSURE))
 
     @property
     def native_wind_gust_speed(self) -> float | None:
         """Return the wind gust speed."""
         return vol.Any(vol.Coerce(float), None)(
-            self._rendered.get(CONF_WIND_GUST_SPEED_TEMPLATE)
+            self._rendered.get(CONF_WIND_GUST_SPEED)
         )
 
     @property
     def cloud_coverage(self) -> float | None:
         """Return the cloud coverage."""
-        return vol.Any(vol.Coerce(float), None)(
-            self._rendered.get(CONF_CLOUD_COVERAGE_TEMPLATE)
-        )
+        return vol.Any(vol.Coerce(float), None)(self._rendered.get(CONF_CLOUD_COVERAGE))
 
     @property
     def native_dew_point(self) -> float | None:
         """Return the dew point."""
-        return vol.Any(vol.Coerce(float), None)(
-            self._rendered.get(CONF_DEW_POINT_TEMPLATE)
-        )
+        return vol.Any(vol.Coerce(float), None)(self._rendered.get(CONF_DEW_POINT))
 
     @property
     def native_apparent_temperature(self) -> float | None:
         """Return the apparent temperature."""
         return vol.Any(vol.Coerce(float), None)(
-            self._rendered.get(CONF_APPARENT_TEMPERATURE_TEMPLATE)
+            self._rendered.get(CONF_APPARENT_TEMPERATURE)
         )
 
     async def async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
-        return vol.Any(vol.Coerce(list), None)(
-            self._rendered.get(CONF_FORECAST_DAILY_TEMPLATE)
-        )
+        return vol.Any(vol.Coerce(list), None)(self._rendered.get(CONF_FORECAST_DAILY))
 
     async def async_forecast_hourly(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
-        return vol.Any(vol.Coerce(list), None)(
-            self._rendered.get(CONF_FORECAST_HOURLY_TEMPLATE)
-        )
+        return vol.Any(vol.Coerce(list), None)(self._rendered.get(CONF_FORECAST_HOURLY))
 
     async def async_forecast_twice_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
         return vol.Any(vol.Coerce(list), None)(
-            self._rendered.get(CONF_FORECAST_TWICE_DAILY_TEMPLATE)
+            self._rendered.get(CONF_FORECAST_TWICE_DAILY)
         )
 
     @property
     def extra_restore_state_data(self) -> WeatherExtraStoredData:
         """Return weather specific state data to be restored."""
         return WeatherExtraStoredData(
-            last_apparent_temperature=self._rendered.get(
-                CONF_APPARENT_TEMPERATURE_TEMPLATE
-            ),
-            last_cloud_coverage=self._rendered.get(CONF_CLOUD_COVERAGE_TEMPLATE),
-            last_dew_point=self._rendered.get(CONF_DEW_POINT_TEMPLATE),
-            last_humidity=self._rendered.get(CONF_HUMIDITY_TEMPLATE),
-            last_ozone=self._rendered.get(CONF_OZONE_TEMPLATE),
-            last_pressure=self._rendered.get(CONF_PRESSURE_TEMPLATE),
-            last_temperature=self._rendered.get(CONF_TEMPERATURE_TEMPLATE),
-            last_uv_index=self._rendered.get(CONF_UV_INDEX_TEMPLATE),
-            last_visibility=self._rendered.get(CONF_VISIBILITY_TEMPLATE),
-            last_wind_bearing=self._rendered.get(CONF_WIND_BEARING_TEMPLATE),
-            last_wind_gust_speed=self._rendered.get(CONF_WIND_GUST_SPEED_TEMPLATE),
-            last_wind_speed=self._rendered.get(CONF_WIND_SPEED_TEMPLATE),
+            last_apparent_temperature=self._rendered.get(CONF_APPARENT_TEMPERATURE),
+            last_cloud_coverage=self._rendered.get(CONF_CLOUD_COVERAGE),
+            last_dew_point=self._rendered.get(CONF_DEW_POINT),
+            last_humidity=self._rendered.get(CONF_HUMIDITY),
+            last_ozone=self._rendered.get(CONF_OZONE),
+            last_pressure=self._rendered.get(CONF_PRESSURE),
+            last_temperature=self._rendered.get(CONF_TEMPERATURE),
+            last_uv_index=self._rendered.get(CONF_UV_INDEX),
+            last_visibility=self._rendered.get(CONF_VISIBILITY),
+            last_wind_bearing=self._rendered.get(CONF_WIND_BEARING),
+            last_wind_gust_speed=self._rendered.get(CONF_WIND_GUST_SPEED),
+            last_wind_speed=self._rendered.get(CONF_WIND_SPEED),
         )
 
     async def async_get_last_weather_data(self) -> WeatherExtraStoredData | None:
