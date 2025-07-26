@@ -172,8 +172,10 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
                 .get("doorLockStateChangePollResult", {})
                 .get("result")
             )
+            LOGGER.debug("Lock status is %s", lock_status)
         if lock_status == "OK":
             self._state = state
+            await self.coordinator.async_refresh()
 
     def disable_autolock(self) -> None:
         """Disable autolock on a doorlock."""
