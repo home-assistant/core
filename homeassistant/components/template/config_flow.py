@@ -62,6 +62,7 @@ from .const import (
     CONF_TURN_ON,
     DOMAIN,
 )
+from .lock import CONF_LOCK, CONF_OPEN, CONF_UNLOCK, async_create_preview_lock
 from .number import (
     CONF_MAX,
     CONF_MIN,
@@ -142,6 +143,14 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                     ),
                 )
             }
+
+    if domain == Platform.LOCK:
+        schema |= _SCHEMA_STATE | {
+            vol.Required(CONF_LOCK): selector.ActionSelector(),
+            vol.Required(CONF_UNLOCK): selector.ActionSelector(),
+            vol.Optional(CONF_CODE_FORMAT): selector.TemplateSelector(),
+            vol.Optional(CONF_OPEN): selector.ActionSelector(),
+        }
 
     if domain == Platform.IMAGE:
         schema |= {
@@ -327,6 +336,7 @@ TEMPLATE_TYPES = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.LOCK,
     Platform.IMAGE,
     Platform.NUMBER,
     Platform.SELECT,
@@ -354,6 +364,11 @@ CONFIG_FLOW = {
         config_schema(Platform.IMAGE),
         preview="template",
         validate_user_input=validate_user_input(Platform.IMAGE),
+    ),
+    Platform.LOCK: SchemaFlowFormStep(
+        config_schema(Platform.LOCK),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.LOCK),
     ),
     Platform.NUMBER: SchemaFlowFormStep(
         config_schema(Platform.NUMBER),
@@ -399,6 +414,11 @@ OPTIONS_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.IMAGE),
     ),
+    Platform.LOCK: SchemaFlowFormStep(
+        options_schema(Platform.LOCK),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.LOCK),
+    ),
     Platform.NUMBER: SchemaFlowFormStep(
         options_schema(Platform.NUMBER),
         preview="template",
@@ -427,6 +447,7 @@ CREATE_PREVIEW_ENTITY: dict[
 ] = {
     Platform.ALARM_CONTROL_PANEL: async_create_preview_alarm_control_panel,
     Platform.BINARY_SENSOR: async_create_preview_binary_sensor,
+    Platform.LOCK: async_create_preview_lock,
     Platform.NUMBER: async_create_preview_number,
     Platform.SELECT: async_create_preview_select,
     Platform.SENSOR: async_create_preview_sensor,
