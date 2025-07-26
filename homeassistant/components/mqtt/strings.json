@@ -558,7 +558,7 @@
                 "current_humidity_topic": "Current humidity topic"
               },
               "data_description": {
-                "current_humidity_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the payload for the current humidity topic. [Learn more.]({url}#current_humidity_template)",
+                "current_humidity_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the current humidity value. [Learn more.]({url}#current_humidity_template)",
                 "current_humidity_topic": "The MQTT topic subscribed to receive current humidity update values. [Learn more.]({url}#current_humidity_topic)"
               }
             },
@@ -569,7 +569,7 @@
                 "current_temperature_topic": "Current temperature topic"
               },
               "data_description": {
-                "current_temperature_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the payload for the current temperature topic. [Learn more.]({url}#current_temperature_template)",
+                "current_temperature_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the current temperature value. [Learn more.]({url}#current_temperature_template)",
                 "current_temperature_topic": "The MQTT topic subscribed to receive current temperature update values. [Learn more.]({url}#current_temperature_topic)"
               }
             },
