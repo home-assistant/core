@@ -152,12 +152,12 @@ class LutronKeypadComponent(LutronBaseEntity):
     def keypad_name(self) -> str:
         """Return the keypad name.
 
-        If we are using radiora mode, we use the keypad device_group_name.
+        If we are using radiora mode, we use the keypad name, not the device_group_name.
         Usually the keypad device in the DB doesn't have a meaningful name (e.g., CDS 001 for international keypads).
         """
-        if not self._controller.use_radiora_mode:
-            return f"keypad {self._lutron_device.keypad.id}"
-        return self._lutron_device.keypad.device_group_name
+        if self._controller.use_radiora_mode:
+            return self._lutron_device.keypad.name
+        return f"keypad {self._lutron_device.keypad.id}"
 
     @property
     def device_name(self) -> str:
