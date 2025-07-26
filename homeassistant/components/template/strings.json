@@ -166,7 +166,8 @@
           "number": "Template a number",
           "select": "Template a select",
           "sensor": "Template a sensor",
-          "switch": "Template a switch"
+          "switch": "Template a switch",
+          "vacuum": "Template a vacuum"
         },
         "title": "Template helper"
       },
