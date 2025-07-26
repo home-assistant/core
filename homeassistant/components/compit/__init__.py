@@ -1,7 +1,5 @@
 """The Compit integration."""
 
-from __future__ import annotations
-
 import logging
 
 from compit_inext_api import (
