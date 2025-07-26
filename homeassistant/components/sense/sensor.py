@@ -193,7 +193,7 @@ class SenseVoltageSensor(SenseEntity, SensorEntity):
         return round(self._gateway.active_voltage[self._voltage_index], 1)
 
 
-class SenseTrendsSensor(SensorEntity):
+class SenseTrendsSensor(SenseEntity, SensorEntity):
     """Implementation of a Sense energy sensor."""
 
     def __init__(
