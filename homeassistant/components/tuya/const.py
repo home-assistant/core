@@ -215,6 +215,10 @@ class DPCode(StrEnum):
     HUMIDITY = "humidity"  # Humidity
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity
     HUMIDITY_INDOOR = "humidity_indoor"  # Indoor humidity
+    HUMIDITY_OUTDOOR = "humidity_outdoor"  # Outdoor humidity
+    HUMIDITY_OUTDOOR_1 = "humidity_outdoor_1"  # Outdoor humidity
+    HUMIDITY_OUTDOOR_2 = "humidity_outdoor_2"  # Outdoor humidity
+    HUMIDITY_OUTDOOR_3 = "humidity_outdoor_3"  # Outdoor humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
     IPC_WORK_MODE = "ipc_work_mode"
@@ -360,6 +364,9 @@ class DPCode(StrEnum):
     TEMP_CURRENT_EXTERNAL = (
         "temp_current_external"  # Current external temperature in Celsius
     )
+    TEMP_CURRENT_EXTERNAL_1 = "temp_current_external_1"  # Current external temperature in Celsius
+    TEMP_CURRENT_EXTERNAL_2 = "temp_current_external_2"  # Current external temperature in Celsius
+    TEMP_CURRENT_EXTERNAL_3 = "temp_current_external_3"  # Current external temperature in Celsius
     TEMP_CURRENT_EXTERNAL_F = (
         "temp_current_external_f"  # Current external temperature in Fahrenheit
     )
