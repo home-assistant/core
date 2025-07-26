@@ -1,0 +1,18 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Connect to CADIO",
+                "description": "Login using your CADIO account",
+                "data": {
+                    "email": "Email",
+                    "password": "Password"
+                }
+            }
+        },
+        "error": {
+            "invalid_auth": "Invalid email or password",
+            "cannot_connect": "Failed to connect to CADIO"
+        }
+    }
+}
