@@ -50,6 +50,8 @@ _STATES: EsphomeEnumMapper[EspMediaPlayerState, MediaPlayerState] = EsphomeEnumM
         EspMediaPlayerState.IDLE: MediaPlayerState.IDLE,
         EspMediaPlayerState.PLAYING: MediaPlayerState.PLAYING,
         EspMediaPlayerState.PAUSED: MediaPlayerState.PAUSED,
+        EspMediaPlayerState.OFF: MediaPlayerState.OFF,
+        EspMediaPlayerState.ON: MediaPlayerState.ON,
     }
 )
 
@@ -67,17 +69,8 @@ class EsphomeMediaPlayer(
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
-        flags = (
-            MediaPlayerEntityFeature.PLAY_MEDIA
-            | MediaPlayerEntityFeature.BROWSE_MEDIA
-            | MediaPlayerEntityFeature.STOP
-            | MediaPlayerEntityFeature.VOLUME_SET
-            | MediaPlayerEntityFeature.VOLUME_MUTE
-            | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
-        )
-        if self._static_info.supports_pause:
-            flags |= MediaPlayerEntityFeature.PAUSE | MediaPlayerEntityFeature.PLAY
-        self._attr_supported_features = flags
+        flags =  self._static_info.feature_flags_compat(self._api_version)
+        self._attr_supported_features = MediaPlayerEntityFeature(flags)
         self._entry_data.media_player_formats[self.unique_id] = cast(
             MediaPlayerInfo, static_info
         ).supported_formats
@@ -254,6 +247,24 @@ class EsphomeMediaPlayer(
         self._client.media_player_command(
             self._key,
             command=MediaPlayerCommand.MUTE if mute else MediaPlayerCommand.UNMUTE,
+            device_id=self._static_info.device_id,
+        )
+
+    @convert_api_error_ha_error
+    async def async_turn_on(self) -> None:
+        """Send turn on command."""
+        self._client.media_player_command(
+            self._key,
+            command=MediaPlayerCommand.TURN_ON,
+            device_id=self._static_info.device_id,
+        )
+
+    @convert_api_error_ha_error
+    async def async_turn_off(self) -> None:
+        """Send turn off command."""
+        self._client.media_player_command(
+            self._key,
+            command=MediaPlayerCommand.TURN_OFF,
             device_id=self._static_info.device_id,
         )
 
