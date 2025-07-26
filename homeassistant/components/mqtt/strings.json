@@ -842,7 +842,7 @@
                 "max_temp": "The maximum target temperature that can be set.",
                 "min_temp": "The minimum target temperature that can be set.",
                 "precision": "The precision in degrees the thermostat is working at.",
-                "temp_step": "The target temperature step in .",
+                "temp_step": "The target temperature step in degrees Celsius or Fahrenheit.",
                 "temperature_command_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be sent to \"Temperature command topic\".",
                 "temperature_command_topic": "The MQTT topic to publish commands to change the climate target temperature. [Learn more.]({url}#temperature_command_topic)",
                 "temperature_high_command_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be sent to \"Temperature high command topic\".",
