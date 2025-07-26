@@ -36,6 +36,11 @@
         }
       }
     },
+    "number": {
+      "speaker_setpoint": {
+        "default": "mdi:speaker"
+      }
+    },
     "select": {
       "laundry_washer_spin_speed": {
         "default": "mdi:reload"
@@ -113,9 +118,6 @@
       },
       "pump_status": {
         "default": "mdi:pump"
-      },
-      "speaker_setpoint": {
-        "default": "mdi:speaker"
       }
     },
     "switch": {
