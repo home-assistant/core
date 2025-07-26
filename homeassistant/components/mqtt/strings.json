@@ -854,7 +854,7 @@
                 "temperature_high_state_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to render the value received on the temperature high state topic with.",
                 "temperature_high_state_topic": "The MQTT topic to subscribe for changes of the target high temperature. [Learn more.]({url}#temperature_high_state_topic)",
                 "temperature_low_state_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to render the value received on the temperature low state topic with.",
-                "temperature_low_state_topic": "The MQTT topic to subscribe for changes of the target high temperature. [Learn more.]({url}#temperature_low_state_topic)"
+                "temperature_low_state_topic": "The MQTT topic to subscribe for changes of the target low temperature. [Learn more.]({url}#temperature_low_state_topic)"
               }
             }
           }
