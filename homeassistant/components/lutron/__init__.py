@@ -184,10 +184,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             )
             for button in keypad.buttons:
                 # If the button has a function assigned to it, add it as a scene
+                # in compatibility mode exclude Unknown buttons
                 # Add the button for the corresponding events
                 # Add the leds if they are controlled by integration in Lutron
 
-                if button.has_action:
+                is_known_button = not button.name.startswith("Unknown")
+
+                if button.has_action and (not use_radiora_mode or is_known_button):
                     entry_data.buttons.append(button)
 
                     _async_check_entity_unique_id(
