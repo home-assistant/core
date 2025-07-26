@@ -144,6 +144,12 @@ USB = [
         "vid": "10C4",
     },
     {
+        "description": "*sonoff*lite*mg21*",
+        "domain": "zha",
+        "pid": "EA60",
+        "vid": "10C4",
+    },
+    {
         "domain": "zwave_js",
         "pid": "0200",
         "vid": "0658",
