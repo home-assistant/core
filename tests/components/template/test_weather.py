@@ -33,6 +33,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Context, HomeAssistant, State
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -119,6 +120,27 @@ async def setup_weather(
     if style == ConfigurationStyle.TRIGGER:
         await async_setup_trigger_format(
             hass, count, {"name": TEST_OBJECT_ID, **weather_config}
+        )
+
+
+@pytest.fixture
+async def setup_weather_single_attribute(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    attribute: str,
+    attribute_template: str,
+    weather_config: dict[str, Any],
+) -> None:
+    """Do setup of weather integration."""
+    extra = {attribute: attribute_template}
+    if style == ConfigurationStyle.MODERN:
+        await async_setup_modern_format(
+            hass, count, {"name": TEST_OBJECT_ID, **weather_config, **extra}
+        )
+    if style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(
+            hass, count, {"name": TEST_OBJECT_ID, **weather_config, **extra}
         )
 
 
@@ -1128,3 +1150,108 @@ async def test_templated_optional_config(
     state = hass.states.get(TEST_WEATHER)
 
     assert state.attributes[attribute] == expected
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "weather": [
+                {"weather": {"platform": "demo"}},
+                {
+                    "platform": "template",
+                    "name": "test",
+                    "attribution_template": "{{ states('sensor.attribution') }}",
+                    "condition_template": "sunny",
+                    "temperature_template": "{{ states('sensor.temperature') | float }}",
+                    "humidity_template": "{{ states('sensor.humidity') | int }}",
+                    "pressure_template": "{{ states('sensor.pressure') }}",
+                    "wind_speed_template": "{{ states('sensor.windspeed') }}",
+                    "wind_bearing_template": "{{ states('sensor.windbearing') }}",
+                    "ozone_template": "{{ states('sensor.ozone') }}",
+                    "visibility_template": "{{ states('sensor.visibility') }}",
+                    "wind_gust_speed_template": "{{ states('sensor.wind_gust_speed') }}",
+                    "cloud_coverage_template": "{{ states('sensor.cloud_coverage') }}",
+                    "dew_point_template": "{{ states('sensor.dew_point') }}",
+                    "apparent_temperature_template": "{{ states('sensor.apparent_temperature') }}",
+                },
+            ]
+        },
+    ],
+)
+@pytest.mark.usefixtures("start_ha")
+async def test_legacy_does_not_create_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the issue is not created with legacy configurations."""
+    assert len(issue_registry.issues) == 0
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize("weather_config", [TEST_REQUIRED])
+@pytest.mark.parametrize(
+    ("attribute", "attribute_template"),
+    [
+        ("wind_speed_template", "{{ 4 }}"),
+        ("wind_bearing_template", "{{ 5 }}"),
+        ("ozone_template", "{{ 6 }}"),
+        ("uv_index_template", "{{ 7 }}"),
+        ("visibility_template", "{{ 8 }}"),
+        ("pressure_template", "{{ 9 }}"),
+        ("wind_gust_speed_template", "{{ 10 }}"),
+        ("cloud_coverage_template", "{{ 11 }}"),
+        ("dew_point_template", "{{ m12 }}"),
+        ("apparent_temperature_template", "{{ 13 }}"),
+        ("forecast_daily_template", "{{ [] }}"),
+        ("forecast_hourly_template", "{{ [] }}"),
+        ("forecast_twice_daily_template", "{{ [] }}"),
+    ],
+)
+@pytest.mark.usefixtures("setup_weather_single_attribute")
+async def test_create_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    attribute: str,
+) -> None:
+    """Test the issue is created with modern and trigger configurations."""
+    should_exclude = {
+        "wind_speed_template",
+        "wind_bearing_template",
+        "ozone_template",
+        "uv_index_template",
+        "visibility_template",
+        "pressure_template",
+        "wind_gust_speed_template",
+        "cloud_coverage_template",
+        "dew_point_template",
+        "apparent_temperature_template",
+        "forecast_daily_template",
+        "forecast_hourly_template",
+        "forecast_twice_daily_template",
+    } - {attribute}
+    should_include = {"condition_template", "temperature_template", "humidity_template"}
+    should_include.add(attribute)
+
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(
+        "template", f"deprecated_template_weather_{TEST_WEATHER}"
+    )
+    assert issue.domain == "template"
+    assert issue.severity == ir.IssueSeverity.WARNING
+
+    assert issue.translation_placeholders["entity_name"] == TEST_OBJECT_ID
+    assert issue.translation_placeholders["entity_id"] == TEST_WEATHER
+
+    assert "changes" in issue.translation_placeholders
+
+    changes = issue.translation_placeholders["changes"]
+    for include in should_include:
+        assert include in changes
+
+    for exclude in should_exclude:
+        assert exclude not in changes
