@@ -144,7 +144,7 @@ def async_client_heartbeat_timedelta_fn(hub: UnifiHub, obj_id: str) -> timedelta
 
     return (
         hub.config.option_wired_detection_time
-        if is_wired_client
+        if client.is_wired
         else hub.config.option_detection_time
     )
 
