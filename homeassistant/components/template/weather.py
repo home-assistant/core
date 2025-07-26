@@ -214,6 +214,7 @@ WEATHER_DEPRECATION_YAML_SCHEMA = vol.Schema(
         vol.Exclusive(CONF_TEMPERATURE_TEMPLATE, CONF_TEMPERATURE): cv.template,
         vol.Exclusive(CONF_TEMPERATURE, CONF_TEMPERATURE): cv.template,
         vol.Optional(CONF_TEMPERATURE_UNIT): vol.In(TemperatureConverter.VALID_UNITS),
+        vol.Optional(CONF_UV_INDEX_TEMPLATE): cv.template,
         vol.Optional(CONF_UV_INDEX): cv.template,
         vol.Optional(CONF_VISIBILITY_TEMPLATE): cv.template,
         vol.Optional(CONF_VISIBILITY_UNIT): vol.In(DistanceConverter.VALID_UNITS),
@@ -735,7 +736,7 @@ class TriggerWeatherEntity(TriggerEntity, WeatherEntity, RestoreEntity):
             create_deprecation_issue(
                 self.hass,
                 self.entity_id,
-                self._attr_name or DEFAULT_NAME,
+                self._rendered.get(CONF_NAME, DEFAULT_NAME),
                 self._deprecation_warning,
             )
 
