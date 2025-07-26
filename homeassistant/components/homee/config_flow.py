@@ -1,7 +1,6 @@
 """Config flow for homee integration."""
 
 from collections.abc import Mapping
-from ipaddress import AddressValueError, IPv4Address
 import logging
 from typing import Any
 
@@ -35,7 +34,8 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     homee: Homee
-    _host = ""
+    _host: str
+    _name: str
     _reauth_host: str
     _reauth_username: str
 
@@ -97,10 +97,14 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Ensure that an IPv4 address is received
         self._host = discovery_info.host
-        try:
-            IPv4Address(self._host)
-        except AddressValueError:
+        self._name = discovery_info.hostname[6:18]
+        if discovery_info.ip_address.version != 4:
             return self.async_abort(reason="ipv6_address")
+
+        await self.async_set_unique_id(self._name)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
+
+        self.context["title_placeholders"] = {"name": self._name, "host": self._host}
 
         return await self.async_step_zeroconf_confirm()
 
@@ -109,10 +113,61 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm the configuration of the device."""
 
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            self.homee = Homee(
+                self._host,
+                user_input[CONF_USERNAME],
+                user_input[CONF_PASSWORD],
+            )
+
+            try:
+                await self.homee.get_access_token()
+            except HomeeConnectionFailedException:
+                errors["base"] = "cannot_connect"
+            except HomeeAuthenticationFailedException:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                _LOGGER.info("Got access token for homee")
+                self.hass.loop.create_task(self.homee.run())
+                _LOGGER.debug("Homee task created")
+                await self.homee.wait_until_connected()
+                _LOGGER.info("Homee connected")
+                self.homee.disconnect()
+                _LOGGER.debug("Homee disconnecting")
+                await self.homee.wait_until_disconnected()
+                _LOGGER.info("Homee config successfully tested")
+
+                await self.async_set_unique_id(self.homee.settings.uid)
+
+                self._abort_if_unique_id_configured()
+
+                _LOGGER.info(
+                    "Created new homee entry with ID %s", self.homee.settings.uid
+                )
+
+                return self.async_create_entry(
+                    title=f"{self.homee.settings.homee_name} ({self.homee.host})",
+                    data={
+                        CONF_HOST: self._host,
+                        CONF_USERNAME: user_input[CONF_USERNAME],
+                        CONF_PASSWORD: user_input[CONF_PASSWORD],
+                    },
+                )
         return self.async_show_form(
             step_id="zeroconf_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
             description_placeholders={
-                CONF_HOST: self._host,
+                CONF_HOST: self._name,
             },
             last_step=True,
         )
