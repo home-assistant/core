@@ -1773,7 +1773,7 @@ async def test_max_humidity_custom(
 
 @pytest.mark.parametrize(
     "hass_config",
-    [help_custom_config(climate.DOMAIN, DEFAULT_CONFIG, ({"temp_step": 0.01},))],
+    [help_custom_config(climate.DOMAIN, DEFAULT_CONFIG, ({"temp_step": 0.1},))],
 )
 async def test_temp_step_custom(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
@@ -1785,7 +1785,7 @@ async def test_temp_step_custom(
     temp_step = state.attributes.get("target_temp_step")
 
     assert isinstance(temp_step, float)
-    assert temp_step == 0.01
+    assert temp_step == 0.1
 
 
 @pytest.mark.parametrize(

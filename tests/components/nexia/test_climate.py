@@ -33,7 +33,7 @@ async def test_climate_zones(hass: HomeAssistant) -> None:
         "supported_features": 415,
         "target_temp_high": 26.1,
         "target_temp_low": 17.2,
-        "target_temp_step": 1.0,
+        "target_temp_step": 0.6,  # 1 °F -> 0.6 °C (rounded)
         "temperature": None,
     }
     # Only test for a subset of attributes in case
@@ -65,7 +65,7 @@ async def test_climate_zones(hass: HomeAssistant) -> None:
         "supported_features": 415,
         "target_temp_high": 26.1,
         "target_temp_low": 17.2,
-        "target_temp_step": 1.0,
+        "target_temp_step": 0.6,  # 1 °F -> 0.6 °C (rounded)
         "temperature": None,
     }
 
