@@ -18,7 +18,6 @@
     "end_time_description": "The time this schedule ends, e.g. 01:05 for 1:05 AM.",
     "precondition_time": "Precondition time",
     "precondition_time_description": "The time the vehicle should complete preconditioning, e.g. 01:05 for 1:05 AM.",
-    "schedule_name": "Name",
     "schedule_name_description": "The name of the schedule.",
     "vehicle_to_schedule": "Vehicle to schedule.",
     "vehicle_to_remove_schedule": "Vehicle to remove schedule from.",
@@ -1296,7 +1295,7 @@
         },
         "name": {
           "description": "[%key:component::teslemetry::common::schedule_name_description%]",
-          "name": "[%key:component::teslemetry::common::schedule_name%]"
+          "name": "[%key:common::config_flow::data::name%]"
         }
       },
       "name": "Add charge schedule"
@@ -1348,7 +1347,7 @@
         },
         "name": {
           "description": "[%key:component::teslemetry::common::schedule_name_description%]",
-          "name": "[%key:component::teslemetry::common::schedule_name%]"
+          "name": "[%key:common::config_flow::data::name%]"
         }
       },
       "name": "Add precondition schedule"
@@ -1366,6 +1365,19 @@
         }
       },
       "name": "Remove precondition schedule"
+    }
+  },
+  "selector": {
+    "days_of_week": {
+      "options": {
+        "monday": "[%key:common::time::monday%]",
+        "tuesday": "[%key:common::time::tuesday%]",
+        "wednesday": "[%key:common::time::wednesday%]",
+        "thursday": "[%key:common::time::thursday%]",
+        "friday": "[%key:common::time::friday%]",
+        "saturday": "[%key:common::time::saturday%]",
+        "sunday": "[%key:common::time::sunday%]"
+      }
     }
   }
 }
