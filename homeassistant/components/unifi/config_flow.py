@@ -390,6 +390,12 @@ class UnifiOptionsFlowHandler(OptionsFlow):
                         ),
                     ): int,
                     vol.Optional(
+                        CONF_WIRED_DETECTION_TIME,
+                        default=int(
+                            self.hub.config.option_wired_detection_time.total_seconds()
+                        ),
+                    ): int,
+                    vol.Optional(
                         CONF_IGNORE_WIRED_BUG,
                         default=self.hub.config.option_ignore_wired_bug,
                     ): bool,

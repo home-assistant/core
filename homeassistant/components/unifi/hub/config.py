@@ -22,6 +22,7 @@ from ..const import (
     CONF_BLOCK_CLIENT,
     CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
+    CONF_WIRED_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
     CONF_SITE_ID,
@@ -32,6 +33,7 @@ from ..const import (
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_ALLOW_UPTIME_SENSORS,
     DEFAULT_DETECTION_TIME,
+    DEFAULT_WIRED_DETECTION_TIME,
     DEFAULT_DPI_RESTRICTIONS,
     DEFAULT_IGNORE_WIRED_BUG,
     DEFAULT_TRACK_CLIENTS,
@@ -68,6 +70,8 @@ class UnifiConfig:
     """Config entry option listing what SSIDs are being used to track clients."""
     option_detection_time: timedelta
     """Config entry option defining number of seconds from last seen to away"""
+    option_wired_detection_time: timedelta
+    """Config entry option defining number of seconds from last seen to away for wired clients"""
     option_ignore_wired_bug: bool
     """Config entry option to ignore wired bug."""
 
@@ -107,6 +111,9 @@ class UnifiConfig:
             option_ssid_filter=set(options.get(CONF_SSID_FILTER, [])),
             option_detection_time=timedelta(
                 seconds=options.get(CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME)
+            ),
+            option_wired_detection_time=timedelta(
+                seconds=options.get(CONF_WIRED_DETECTION_TIME, DEFAULT_WIRED_DETECTION_TIME)
             ),
             option_ignore_wired_bug=options.get(
                 CONF_IGNORE_WIRED_BUG, DEFAULT_IGNORE_WIRED_BUG
