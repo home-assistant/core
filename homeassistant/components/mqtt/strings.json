@@ -344,7 +344,7 @@
             "force_update": "Sends update events even if the value hasn’t changed. Useful if you want to have meaningful value graphs in history. [Learn more.]({url}#force_update)",
             "green_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract green color from the state payload value. Expected result of the template is an integer from 0-255 range.",
             "last_reset_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the last reset. When Last reset template is set, the State class option must be Total. [Learn more.]({url}#last_reset_value_template)",
-            "modes": "[Learn more.]({url}#modes)",
+            "modes": "A list of supported operation modes. [Learn more.]({url}#modes)",
             "mode_command_topic": "The MQTT topic to publish commands to change the climate operation mode. [Learn more.]({url}#mode_command_topic)",
             "mode_command_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to define the operation mode to be sent to the operation mode command topic. [Learn more.]({url}#mode_command_template)",
             "mode_state_topic": "The MQTT topic subscribed to receive operation mode state messages. [Learn more.]({url}#mode_state_topic)",
@@ -449,20 +449,20 @@
               }
             },
             "climate_swing_horizontal_mode_settings": {
-              "name": "Swing horizontal mode settings",
+              "name": "Horizontal swing mode settings",
               "data": {
-                "swing_horizontal_modes": "Swing horizontal modes",
-                "swing_horizontal_mode_command_topic": "Swing horizontal mode command topic",
-                "swing_horizontal_mode_command_template": "Swing horizontal mode command template",
-                "swing_horizontal_mode_state_topic": "Swing horizontal mode state topic",
-                "swing_horizontal_mode_state_template": "Swing horizontal mode state template"
+                "swing_horizontal_modes": "Horizontal swing modes",
+                "swing_horizontal_mode_command_topic": "Horizontal swing mode command topic",
+                "swing_horizontal_mode_command_template": "Horizontal swing mode command template",
+                "swing_horizontal_mode_state_topic": "Horizontal swing mode state topic",
+                "swing_horizontal_mode_state_template": "Horizontal swing mode state template"
               },
               "data_description": {
                 "swing_horizontal_modes": "List of horizontal swing modes this climate is capable of running at. Common horizontal swing modes that offer translations are `off` and `on`.",
-                "swing_horizontal_mode_command_topic": "The MQTT topic to publish commands to change the climate swing horizontal mode. [Learn more.]({url}#swing_horizontal_mode_command_topic)",
-                "swing_horizontal_mode_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the swing horizontal mode command topic.",
-                "swing_horizontal_mode_state_topic": "The MQTT topic subscribed to receive the climate swing horizontal mode. [Learn more.]({url}#swing_horizontal_mode_state_topic)",
-                "swing_horizontal_mode_state_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the climate swing horizontal mode value."
+                "swing_horizontal_mode_command_topic": "The MQTT topic to publish commands to change the climate horizontal swing mode. [Learn more.]({url}#swing_horizontal_mode_command_topic)",
+                "swing_horizontal_mode_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the horizontal horizontal mode command topic.",
+                "swing_horizontal_mode_state_topic": "The MQTT topic subscribed to receive the climate horizontal swing mode. [Learn more.]({url}#swing_horizontal_mode_state_topic)",
+                "swing_horizontal_mode_state_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the climate horizontal swing mode value."
               }
             },
             "climate_swing_mode_settings": {
