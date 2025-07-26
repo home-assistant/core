@@ -16,13 +16,11 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    UV_INDEX,
     Platform,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfPower,
-    UnitOfPrecipitationDepth,
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfVolume,
@@ -111,7 +109,7 @@ class DPCode(StrEnum):
     ANION = "anion"  # Ionizer unit
     ARM_DOWN_PERCENT = "arm_down_percent"
     ARM_UP_PERCENT = "arm_up_percent"
-    ATMOSPHERIC_PRESSURE = "atmospheric_pressture" # Typo is in Tuya API
+    ATMOSPHERIC_PRESSURE = "atmospheric_pressture"  # Typo is in Tuya API
     BASIC_ANTI_FLICKER = "basic_anti_flicker"
     BASIC_DEVICE_VOLUME = "basic_device_volume"
     BASIC_FLIP = "basic_flip"
@@ -281,8 +279,8 @@ class DPCode(StrEnum):
     PUMP_RESET = "pump_reset"  # Water pump reset
     PUMP_TIME = "pump_time"  # Water pump duration
     OXYGEN = "oxygen"  # Oxygen bar
-    RAIN_24H = "rain_24h" # mm
-    RAIN_RATE = "rain_rate" # mm/h
+    RAIN_24H = "rain_24h"  # mm
+    RAIN_RATE = "rain_rate"  # mm/h
     RECORD_MODE = "record_mode"
     RECORD_SWITCH = "record_switch"  # Recording switch
     RELAY_STATUS = "relay_status"
@@ -369,9 +367,15 @@ class DPCode(StrEnum):
     TEMP_CURRENT_EXTERNAL = (
         "temp_current_external"  # Current external temperature in Celsius
     )
-    TEMP_CURRENT_EXTERNAL_1 = "temp_current_external_1"  # Current external temperature in Celsius
-    TEMP_CURRENT_EXTERNAL_2 = "temp_current_external_2"  # Current external temperature in Celsius
-    TEMP_CURRENT_EXTERNAL_3 = "temp_current_external_3"  # Current external temperature in Celsius
+    TEMP_CURRENT_EXTERNAL_1 = (
+        "temp_current_external_1"  # Current external temperature in Celsius
+    )
+    TEMP_CURRENT_EXTERNAL_2 = (
+        "temp_current_external_2"  # Current external temperature in Celsius
+    )
+    TEMP_CURRENT_EXTERNAL_3 = (
+        "temp_current_external_3"  # Current external temperature in Celsius
+    )
     TEMP_CURRENT_EXTERNAL_F = (
         "temp_current_external_f"  # Current external temperature in Fahrenheit
     )
