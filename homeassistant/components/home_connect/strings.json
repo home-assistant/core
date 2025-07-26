@@ -582,7 +582,7 @@
         },
         "consumer_products_cleaning_robot_option_cleaning_mode": {
           "name": "Cleaning mode",
-          "description": "Defines the favoured cleaning mode."
+          "description": "Defines the favored cleaning mode."
         },
         "consumer_products_coffee_maker_option_bean_amount": {
           "name": "Bean amount",
@@ -670,7 +670,7 @@
         },
         "cooking_oven_option_setpoint_temperature": {
           "name": "Setpoint temperature",
-          "description": "Defines the target cavity temperature, which will be hold by the oven."
+          "description": "Defines the target cavity temperature, which will be held by the oven."
         },
         "b_s_h_common_option_duration": {
           "name": "Duration",
