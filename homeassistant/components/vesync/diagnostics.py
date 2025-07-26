@@ -26,18 +26,15 @@ async def async_get_config_entry_diagnostics(
 
     return {
         DOMAIN: {
-            "bulb_count": len(manager.bulbs),
-            "fan_count": len(manager.fans),
-            "outlets_count": len(manager.outlets),
-            "switch_count": len(manager.switches),
+            "bulb_count": len(manager.devices.bulbs),
+            "fan_count": len(manager.devices.fans),
+            "humidifers_count": len(manager.devices.humidifiers),
+            "air_purifiers": len(manager.devices.air_purifiers),
+            "outlets_count": len(manager.devices.outlets),
+            "switch_count": len(manager.devices.switches),
             "timezone": manager.time_zone,
         },
-        "devices": {
-            "bulbs": [_redact_device_values(device) for device in manager.bulbs],
-            "fans": [_redact_device_values(device) for device in manager.fans],
-            "outlets": [_redact_device_values(device) for device in manager.outlets],
-            "switches": [_redact_device_values(device) for device in manager.switches],
-        },
+        "devices": [_redact_device_values(device) for device in manager.devices],
     }
 
 
@@ -46,7 +43,7 @@ async def async_get_device_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
     manager: VeSync = hass.data[DOMAIN][VS_MANAGER]
-    device_dict = _build_device_dict(manager)
+    device_dict = manager.devices
     vesync_device_id = next(iden[1] for iden in device.identifiers if iden[0] == DOMAIN)
 
     # Base device information, without sensitive information.
@@ -95,15 +92,6 @@ async def async_get_device_diagnostics(
         )
 
     return data
-
-
-def _build_device_dict(manager: VeSync) -> dict:
-    """Build a dictionary of ALL VeSync devices."""
-    device_dict = {x.cid: x for x in manager.switches}
-    device_dict.update({x.cid: x for x in manager.fans})
-    device_dict.update({x.cid: x for x in manager.outlets})
-    device_dict.update({x.cid: x for x in manager.bulbs})
-    return device_dict
 
 
 def _redact_device_values(device: VeSyncBaseDevice) -> dict:
