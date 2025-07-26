@@ -1,6 +1,7 @@
 """Config flow for homee integration."""
 
 from collections.abc import Mapping
+from ipaddress import AddressValueError, IPv4Address
 import logging
 from typing import Any
 
@@ -13,6 +14,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
@@ -33,6 +35,7 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     homee: Homee
+    _host = ""
     _reauth_host: str
     _reauth_username: str
 
@@ -85,6 +88,33 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=AUTH_SCHEMA,
             errors=errors,
+        )
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery."""
+
+        # Ensure that an IPv4 address is received
+        self._host = discovery_info.host
+        try:
+            IPv4Address(self._host)
+        except AddressValueError:
+            return self.async_abort(reason="ipv6_address")
+
+        return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm the configuration of the device."""
+
+        return self.async_show_form(
+            step_id="zeroconf_confirm",
+            description_placeholders={
+                CONF_HOST: self._host,
+            },
+            last_step=True,
         )
 
     async def async_step_reauth(
