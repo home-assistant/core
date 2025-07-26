@@ -25,13 +25,8 @@ from homeassistant.util import slugify
 
 from .const import DOMAIN, LOGGER, SHELLY_GAS_MODELS
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
-from .utils import (
-    get_block_device_info,
-    get_blu_trv_device_info,
-    get_device_entry_gen,
-    get_rpc_device_info,
-    get_rpc_key_ids,
-)
+from .entity import get_entity_block_device_info, get_entity_rpc_device_info
+from .utils import get_blu_trv_device_info, get_device_entry_gen, get_rpc_key_ids
 
 PARALLEL_UPDATES = 0
 
@@ -233,23 +228,9 @@ class ShellyButton(ShellyBaseButton):
 
         self._attr_unique_id = f"{coordinator.mac}_{description.key}"
         if isinstance(coordinator, ShellyBlockCoordinator):
-            self._attr_device_info = get_block_device_info(
-                coordinator.device,
-                coordinator.mac,
-                coordinator.configuration_url,
-                coordinator.model,
-                coordinator.model_name,
-                suggested_area=coordinator.suggested_area,
-            )
+            self._attr_device_info = get_entity_block_device_info(coordinator)
         else:
-            self._attr_device_info = get_rpc_device_info(
-                coordinator.device,
-                coordinator.mac,
-                coordinator.configuration_url,
-                coordinator.model,
-                coordinator.model_name,
-                suggested_area=coordinator.suggested_area,
-            )
+            self._attr_device_info = get_entity_rpc_device_info(coordinator)
 
     async def _press_method(self) -> None:
         """Press method."""
