@@ -213,13 +213,13 @@ add_precondition_schedule:
       selector:
         select:
           options:
-            - Monday
-            - Tuesday
-            - Wednesday
-            - Thursday
-            - Friday
-            - Saturday
-            - Sunday
+            - monday
+            - tuesday
+            - wednesday
+            - thursday
+            - friday
+            - saturday
+            - sunday
           multiple: true
     enable:
       required: true
