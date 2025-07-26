@@ -164,7 +164,9 @@ class OSOEnergyWaterHeater(
 
     _attr_name = None
     _attr_supported_features = (
-        WaterHeaterEntityFeature.TARGET_TEMPERATURE | WaterHeaterEntityFeature.ON_OFF
+        WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        | WaterHeaterEntityFeature.AWAY_MODE
+        | WaterHeaterEntityFeature.ON_OFF
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
@@ -204,6 +206,11 @@ class OSOEnergyWaterHeater(
         return self.entity_data.current_temperature
 
     @property
+    def is_away_mode_on(self) -> bool:
+        """Return if the heater is in away mode."""
+        return self.entity_data.isInPowerSave
+
+    @property
     def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self.entity_data.target_temperature
@@ -227,6 +234,14 @@ class OSOEnergyWaterHeater(
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self.entity_data.max_temperature
+
+    async def async_turn_away_mode_on(self) -> None:
+        """Turn on away mode."""
+        await self.osoenergy.hotwater.enable_holiday_mode(self.entity_data)
+
+    async def async_turn_away_mode_off(self) -> None:
+        """Turn off away mode."""
+        await self.osoenergy.hotwater.disable_holiday_mode(self.entity_data)
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on hotwater."""
