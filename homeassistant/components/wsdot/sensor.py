@@ -7,17 +7,22 @@ import logging
 from typing import Any
 
 import voluptuous as vol
-from wsdot import TravelTime, WsdotTravelError, WsdotTravelTimes
+import wsdot as wsdot_api
 
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,22 +49,46 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Migrate a platform-style wsdot to entry-style."""
+    # old-style config was entered by hand. make sure all values are valid
+    api_key = config[CONF_API_KEY]
+    session = async_get_clientsession(hass)
+    try:
+        # check for valid API Key
+        wsdot_api.WsdotTravelTimes(
+            api_key=api_key, session=session
+        ).get_all_travel_times()
+    except wsdot_api.WsdotTravelError as wsdot_error:
+        raise PlatformNotReady from wsdot_error
+
+    for old_entry in hass.config_entries.async_loaded_entries(DOMAIN):
+        await hass.config_entries.async_remove(old_entry.entry_id)
+    await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the WSDOT sensor."""
     sensors = []
     session = async_get_clientsession(hass)
-    api_key = config[CONF_API_KEY]
-    wsdot_travel = WsdotTravelTimes(api_key=api_key, session=session)
-    for travel_time in config[CONF_TRAVEL_TIMES]:
+    api_key = entry.data[CONF_API_KEY]
+    wsdot_travel = wsdot_api.WsdotTravelTimes(api_key=api_key, session=session)
+    for travel_time in entry.data[CONF_TRAVEL_TIMES]:
         name = travel_time.get(CONF_NAME) or travel_time.get(CONF_ID)
         travel_time_id = int(travel_time[CONF_ID])
         sensors.append(
             WashingtonStateTravelTimeSensor(name, wsdot_travel, travel_time_id)
         )
 
-    add_entities(sensors, True)
+    add_entities(sensors)
 
 
 class WashingtonStateTransportSensor(SensorEntity):
@@ -95,11 +124,11 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
     def __init__(
-        self, name: str, wsdot_travel: WsdotTravelTimes, travel_time_id: int
+        self, name: str, wsdot_travel: wsdot_api.WsdotTravelTimes, travel_time_id: int
     ) -> None:
         """Construct a travel time sensor."""
         super().__init__(name)
-        self._data: TravelTime | None = None
+        self._data: wsdot_api.TravelTime | None = None
         self._travel_time_id = travel_time_id
         self._wsdot_travel = wsdot_travel
 
@@ -107,7 +136,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
         """Get the latest data from WSDOT."""
         try:
             travel_time = await self._wsdot_travel.get_travel_time(self._travel_time_id)
-        except WsdotTravelError:
+        except wsdot_api.WsdotTravelError:
             _LOGGER.warning("Invalid response from WSDOT API")
         else:
             self._data = travel_time
