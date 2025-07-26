@@ -697,9 +697,7 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
         self.entity_description = description
 
         self._attr_device_info = get_entity_rpc_device_info(coordinator, key)
-        self._attr_unique_id = self._attr_unique_id = (
-            f"{coordinator.mac}-{key}-{attribute}"
-        )
+        self._attr_unique_id = f"{coordinator.mac}-{key}-{attribute}"
         self._last_value = None
 
         if coordinator.device.initialized:
