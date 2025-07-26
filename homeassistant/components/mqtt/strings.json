@@ -427,7 +427,7 @@
               "data_description": {
                 "payload_off": "[%key:component::mqtt::config_subentries::device::step::mqtt_platform_config::data_description::payload_off%]",
                 "payload_on": "[%key:component::mqtt::config_subentries::device::step::mqtt_platform_config::data_description::payload_off%]",
-                "power_command_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be sent to power command topic. The `value` parameter is the payload set for payload \"on\" or payload \"off\".",
+                "power_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the power command topic. The `value` parameter is the payload set for payload \"on\" or payload \"off\".",
                 "power_command_topic": "The MQTT topic to publish commands to change the climate power state. Sends the payload configured with payload \"on\" or payload \"off\". [Learn more.]({url}#power_command_topic)"
               }
             },
@@ -810,7 +810,7 @@
               "data_description": {
                 "max_humidity": "The maximum target humidity that can be set.",
                 "min_humidity": "The minimum target humidity that can be set.",
-                "target_humidity_command_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be sent to \"Humidity command topic\".",
+                "target_humidity_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the humidity command topic.",
                 "target_humidity_command_topic": "The MQTT topic to publish commands to change the climate target humidity. [Learn more.]({url}#humidity_command_topic)",
                 "target_humidity_state_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to render the value received on the humidity state topic with.",
                 "target_humidity_state_topic": "The MQTT topic to subscribe for changes of the target humidity. [Learn more.]({url}#humidity_state_topic)"
@@ -843,11 +843,11 @@
                 "min_temp": "The minimum target temperature that can be set.",
                 "precision": "The precision in degrees the thermostat is working at.",
                 "temp_step": "The target temperature step in degrees Celsius or Fahrenheit.",
-                "temperature_command_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be sent to \"Temperature command topic\".",
+                "temperature_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the temperature command topic.",
                 "temperature_command_topic": "The MQTT topic to publish commands to change the climate target temperature. [Learn more.]({url}#temperature_command_topic)",
                 "temperature_high_command_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be sent to \"Temperature high command topic\".",
                 "temperature_high_command_topic": "The MQTT topic to publish commands to change the climate target high temperature. [Learn more.]({url}#temperature_high_command_topic)",
-                "temperature_low_command_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be sent to \"Temperature low command topic\".",
+                "temperature_low_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the temperature low command topic.",
                 "temperature_low_command_topic": "The MQTT topic to publish commands to change the climate target low temperature. [Learn more.]({url}#temperature_low_command_topic)",
                 "temperature_state_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to render the value received on the temperature state topic with.",
                 "temperature_state_topic": "The MQTT topic to subscribe for changes of the target temperature. [Learn more.]({url}#temperature_state_topic)",
