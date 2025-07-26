@@ -2,13 +2,18 @@
 
 from __future__ import annotations
 
+import contextlib
 from dataclasses import dataclass
+from decimal import Decimal, InvalidOperation
+import time
+from typing import Any
 
 from tuya_sharing import CustomerDevice, Manager
 from tuya_sharing.device import DeviceStatusRange
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS as SENSOR_DEVICE_CLASS_UNITS,
+    RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -33,6 +38,8 @@ from . import TuyaConfigEntry
 from .const import (
     DEVICE_CLASS_UNITS,
     DOMAIN,
+    ENERGY_REPORT_MODE_CUMULATIVE,
+    ENERGY_REPORT_MODE_INCREMENTAL,
     LOGGER,
     TUYA_DISCOVERY_NEW,
     DPCode,
@@ -1391,15 +1398,27 @@ async def async_setup_entry(
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered Tuya sensor."""
-        entities: list[TuyaSensorEntity] = []
+        entities: list[TuyaSensorEntity | TuyaEnergySensorEntity] = []
         for device_id in device_ids:
             device = hass_data.manager.device_map[device_id]
             if descriptions := SENSORS.get(device.category):
-                entities.extend(
-                    TuyaSensorEntity(device, hass_data.manager, description)
-                    for description in descriptions
-                    if description.key in device.status
-                )
+                for description in descriptions:
+                    if description.key in device.status:
+                        # Use energy sensor for energy and energy storage device classes
+                        if description.device_class in (
+                            SensorDeviceClass.ENERGY,
+                            SensorDeviceClass.ENERGY_STORAGE,
+                        ):
+                            entity: TuyaSensorEntity | TuyaEnergySensorEntity = (
+                                TuyaEnergySensorEntity(
+                                    device, hass_data.manager, description, entry
+                                )
+                            )
+                        else:
+                            entity = TuyaSensorEntity(
+                                device, hass_data.manager, description
+                            )
+                        entities.append(entity)
 
         async_add_entities(entities)
 
@@ -1529,3 +1548,170 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
         # Valid string or enum value
         return value
+
+
+class TuyaEnergySensorEntity(TuyaSensorEntity, RestoreSensor):
+    """Tuya energy sensor with configurable reporting mode.
+
+    Supports both cumulative and incremental energy reporting modes:
+    - Cumulative: Device reports total energy (default)
+    - Incremental: Device reports energy deltas, sensor accumulates them
+    """
+
+    def __init__(
+        self,
+        device: CustomerDevice,
+        device_manager: Manager,
+        description: TuyaSensorEntityDescription,
+        config_entry: TuyaConfigEntry,
+    ) -> None:
+        """Initialize energy sensor."""
+        super().__init__(device, device_manager, description)
+        self._config_entry = config_entry
+        self._cumulative_total: Decimal = Decimal(0)
+        self._last_update_time: int | None = None
+        self._last_raw_value: Decimal | None = None
+
+    async def async_added_to_hass(self) -> None:
+        """Restore state on startup."""
+        await super().async_added_to_hass()
+
+        if (
+            self._is_incremental_mode
+            and (state := await self.async_get_last_state())
+            and state.state not in ("unknown", "unavailable")
+            and state.attributes
+        ):
+            # Restore cumulative total if available
+            if cumulative_total := state.attributes.get("cumulative_total"):
+                with contextlib.suppress(ValueError, TypeError, InvalidOperation):
+                    self._cumulative_total = Decimal(str(cumulative_total))
+
+            # Restore last update time if available
+            if last_update_time := state.attributes.get("last_update_time"):
+                with contextlib.suppress(ValueError, TypeError):
+                    # Direct conversion handles str, int, float inputs
+                    self._last_update_time = int(last_update_time)
+
+            # Restore last raw value if available to prevent duplicate accumulation
+            if last_raw_value := state.attributes.get("last_raw_value"):
+                with contextlib.suppress(ValueError, TypeError, InvalidOperation):
+                    self._last_raw_value = Decimal(str(last_raw_value))
+
+    @property
+    def _is_incremental_mode(self) -> bool:
+        """Check if sensor is configured for incremental reporting."""
+        # Use config entry (device-level) options
+        device_mode = self._config_entry.options.get("device_energy_modes", {}).get(
+            self.device.id, ENERGY_REPORT_MODE_CUMULATIVE
+        )
+
+        return device_mode == ENERGY_REPORT_MODE_INCREMENTAL
+
+    async def _handle_state_update(
+        self,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict | None = None,
+    ) -> None:
+        """Handle state updates from device with DP timestamp information."""
+
+        # Early return if this entity's key is not in updated properties
+        if not (
+            updated_status_properties
+            and self.entity_description.key in updated_status_properties
+        ):
+            await super()._handle_state_update(updated_status_properties, dp_timestamps)
+            return
+
+        sensor_dp_timestamp = (
+            dp_timestamps.get(self.entity_description.key) if dp_timestamps else None
+        )
+
+        if self._is_incremental_mode:
+            self._process_incremental_update(sensor_dp_timestamp)
+
+        await super()._handle_state_update(updated_status_properties, dp_timestamps)
+
+    def _process_incremental_update(self, dp_timestamp: int | None = None) -> None:
+        """Process incremental energy update with DP timestamp-based deduplication.
+
+        Args:
+            dp_timestamp: The DP timestamp from MQTT message (milliseconds).
+
+        Only accumulates energy deltas when DP timestamp is newer than last processed,
+        preventing duplicate accumulation from both push updates and HA polling.
+
+        """
+        raw_value = super().native_value
+        if raw_value is None:
+            return
+
+        try:
+            current_value = Decimal(str(raw_value))
+        except (ValueError, TypeError, InvalidOperation):
+            LOGGER.warning("Invalid energy value %s for %s", raw_value, self.entity_id)
+            return
+
+        # Process new increment
+        # Negative values are likely errors, don't accumulate
+        if current_value < 0:
+            return
+
+        # Use new update check method that considers both value and timestamp
+        if not self._is_new_update(current_value, dp_timestamp):
+            return
+
+        self._cumulative_total += current_value
+
+    def _is_new_update(
+        self, current_value: Decimal, dp_timestamp: int | None = None
+    ) -> bool:
+        if dp_timestamp is not None:
+            if self._last_update_time is None or dp_timestamp > self._last_update_time:
+                self._last_update_time = dp_timestamp
+                self._last_raw_value = current_value
+                return True
+            return False
+
+        if self._last_raw_value is None or current_value != self._last_raw_value:
+            self._last_raw_value = current_value
+            self._last_update_time = int(time.time() * 1000)
+            return True
+
+        return False
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the energy value based on reporting mode."""
+        if self._is_incremental_mode:
+            # Convert Decimal to float for Home Assistant compatibility
+            return float(self._cumulative_total)
+        return super().native_value
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return diagnostic attributes."""
+        attrs = dict(super().extra_state_attributes or {})
+
+        # Only show energy report mode attributes for qualifying energy sensors
+        if self.device_class in (
+            SensorDeviceClass.ENERGY,
+            SensorDeviceClass.ENERGY_STORAGE,
+        ) and self.state_class in (
+            SensorStateClass.TOTAL_INCREASING,
+            SensorStateClass.TOTAL,
+        ):
+            if self._is_incremental_mode:
+                attrs["energy_report_mode"] = "incremental"
+                # Use string representation to avoid float precision issues
+                attrs["cumulative_total"] = str(self._cumulative_total)
+                # Only include last_update_time if it's not None
+                if self._last_update_time is not None:
+                    attrs["last_update_time"] = self._last_update_time
+                # Only include last_raw_value if it's not None
+                if self._last_raw_value is not None:
+                    attrs["last_raw_value"] = str(self._last_raw_value)
+            else:
+                attrs["energy_report_mode"] = "cumulative"
+
+        return attrs

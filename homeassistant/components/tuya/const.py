@@ -35,6 +35,11 @@ CONF_TERMINAL_ID = "terminal_id"
 CONF_TOKEN_INFO = "token_info"
 CONF_USER_CODE = "user_code"
 CONF_USERNAME = "username"
+CONF_ENERGY_REPORT_MODE = "energy_report_mode"
+
+# Energy reporting modes
+ENERGY_REPORT_MODE_CUMULATIVE = "cumulative"
+ENERGY_REPORT_MODE_INCREMENTAL = "incremental"
 
 TUYA_CLIENT_ID = "HA_3y9q4ak7g4ephrvke"
 TUYA_SCHEMA = "haauthorize"
