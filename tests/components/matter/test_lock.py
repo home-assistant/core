@@ -197,15 +197,15 @@ async def test_lock_with_unbolt(
         blocking=True,
     )
     assert matter_client.send_device_command.call_count == 1
-    # unlock should unbolt on a lock with unbolt feature
+    # unlock should not unbolt, even on a lock with unbolt feature
     assert matter_client.send_device_command.call_args == call(
         node_id=matter_node.node_id,
         endpoint_id=1,
-        command=clusters.DoorLock.Commands.UnboltDoor(),
+        command=clusters.DoorLock.Commands.UnlockDoor(),
         timed_request_timeout_ms=1000,
     )
     matter_client.send_device_command.reset_mock()
-    # test open / unlatch
+    # open should unbolt on a lock with unbolt feature
     await hass.services.async_call(
         "lock",
         "open",
@@ -218,7 +218,7 @@ async def test_lock_with_unbolt(
     assert matter_client.send_device_command.call_args == call(
         node_id=matter_node.node_id,
         endpoint_id=1,
-        command=clusters.DoorLock.Commands.UnlockDoor(),
+        command=clusters.DoorLock.Commands.UnboltDoor(),
         timed_request_timeout_ms=1000,
     )
 
