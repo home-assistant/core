@@ -48,7 +48,7 @@ class AirOSDataUpdateCoordinator(DataUpdateCoordinator[AirOSData]):
             await self.airos_device.login()
             return await self.airos_device.status()
         except (ConnectionAuthenticationError,) as err:
-            _LOGGER.exception("Error authenticating with airOS device: %s")
+            _LOGGER.exception("Error authenticating with airOS device")
             raise ConfigEntryError(
                 translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err

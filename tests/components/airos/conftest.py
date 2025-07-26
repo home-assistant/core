@@ -1,7 +1,6 @@
 """Common fixtures for the Ubiquiti airOS tests."""
 
 from collections.abc import Generator
-from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from airos.airos8 import AirOSData
@@ -31,7 +30,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_airos_client(
-    request: pytest.FixtureRequest, ap_fixture: dict[str, Any]
+    request: pytest.FixtureRequest, ap_fixture: AirOSData
 ) -> Generator[AsyncMock]:
     """Fixture to mock the AirOS API client."""
     mock_airos = AsyncMock()
