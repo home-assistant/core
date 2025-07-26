@@ -699,6 +699,9 @@
           "charging": "[%key:common::state::charging%]",
           "charge_done": "Charge done"
         }
+      },
+      "supply_frequency": {
+        "name": "Supply frequency"
       }
     },
     "switch": {
