@@ -109,6 +109,7 @@ class DPCode(StrEnum):
     ANION = "anion"  # Ionizer unit
     ARM_DOWN_PERCENT = "arm_down_percent"
     ARM_UP_PERCENT = "arm_up_percent"
+    ATMOSPHERIC_PRESSURE = "atmospheric_pressture"  # Typo is in Tuya API
     BASIC_ANTI_FLICKER = "basic_anti_flicker"
     BASIC_DEVICE_VOLUME = "basic_device_volume"
     BASIC_FLIP = "basic_flip"
@@ -215,6 +216,10 @@ class DPCode(StrEnum):
     HUMIDITY = "humidity"  # Humidity
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity
     HUMIDITY_INDOOR = "humidity_indoor"  # Indoor humidity
+    HUMIDITY_OUTDOOR = "humidity_outdoor"  # Outdoor humidity
+    HUMIDITY_OUTDOOR_1 = "humidity_outdoor_1"  # Outdoor humidity
+    HUMIDITY_OUTDOOR_2 = "humidity_outdoor_2"  # Outdoor humidity
+    HUMIDITY_OUTDOOR_3 = "humidity_outdoor_3"  # Outdoor humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
     IPC_WORK_MODE = "ipc_work_mode"
@@ -274,6 +279,8 @@ class DPCode(StrEnum):
     PUMP_RESET = "pump_reset"  # Water pump reset
     PUMP_TIME = "pump_time"  # Water pump duration
     OXYGEN = "oxygen"  # Oxygen bar
+    RAIN_24H = "rain_24h"  # mm
+    RAIN_RATE = "rain_rate"  # mm/h
     RECORD_MODE = "record_mode"
     RECORD_SWITCH = "record_switch"  # Recording switch
     RELAY_STATUS = "relay_status"
@@ -360,6 +367,15 @@ class DPCode(StrEnum):
     TEMP_CURRENT_EXTERNAL = (
         "temp_current_external"  # Current external temperature in Celsius
     )
+    TEMP_CURRENT_EXTERNAL_1 = (
+        "temp_current_external_1"  # Current external temperature in Celsius
+    )
+    TEMP_CURRENT_EXTERNAL_2 = (
+        "temp_current_external_2"  # Current external temperature in Celsius
+    )
+    TEMP_CURRENT_EXTERNAL_3 = (
+        "temp_current_external_3"  # Current external temperature in Celsius
+    )
     TEMP_CURRENT_EXTERNAL_F = (
         "temp_current_external_f"  # Current external temperature in Fahrenheit
     )
@@ -383,6 +399,7 @@ class DPCode(StrEnum):
     UPPER_TEMP = "upper_temp"
     UPPER_TEMP_F = "upper_temp_f"
     UV = "uv"  # UV sterilization
+    UV_INDEX = "uv_index"
     UV_RUNTIME = "uv_runtime"  # UV runtime
     VA_BATTERY = "va_battery"
     VA_HUMIDITY = "va_humidity"
@@ -405,6 +422,7 @@ class DPCode(StrEnum):
     WINDOW_CHECK = "window_check"
     WINDOW_STATE = "window_state"
     WINDSPEED = "windspeed"
+    WINDSPEED_AVG = "windspeed_avg"
     WIRELESS_BATTERYLOCK = "wireless_batterylock"
     WIRELESS_ELECTRICITY = "wireless_electricity"
     WORK_MODE = "work_mode"  # Working mode
