@@ -34,6 +34,7 @@ from homeassistant.components.climate import (
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_HUMIDITY,
     DEFAULT_MIN_TEMP,
+    PRESET_NONE,
 )
 from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.file_upload import process_uploaded_file
@@ -749,6 +750,18 @@ def default_precision(config: dict[str, Any]) -> str:
 def validate_climate_platform_config(config: dict[str, Any]) -> dict[str, str]:
     """Validate the climate platform options."""
     errors: dict[str, str] = {}
+    if (
+        CONF_PRESET_MODES_LIST in config
+        and PRESET_NONE in config[CONF_PRESET_MODES_LIST]
+    ):
+        errors["climate_preset_mode_settings"] = "preset_mode_none_not_allowed"
+    if (
+        CONF_HUMIDITY_MIN in config
+        and config[CONF_HUMIDITY_MIN] >= config[CONF_HUMIDITY_MAX]
+    ):
+        errors["target_humidity_settings"] = "max_below_min_humidity"
+    if CONF_TEMP_MIN in config and config[CONF_TEMP_MIN] >= config[CONF_TEMP_MAX]:
+        errors["target_temperature_settings"] = "max_below_min_temperature"
 
     return errors
 

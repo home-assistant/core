@@ -914,10 +914,13 @@
         "invalid_uom_for_state_class": "The unit of measurement \"{unit_of_measurement}\" is not supported by the selected state class, please either remove the state class, select a state class which supports \"{unit_of_measurement}\", or pick a supported unit of measurement from the list",
         "invalid_url": "Invalid URL",
         "last_reset_not_with_state_class_total": "The last reset value template option should be used with state class 'Total' only",
+        "max_below_min_humidity": "Max humidity value should be greater than min humidity value",
         "max_below_min_kelvin": "Max Kelvin value should be greater than min Kelvin value",
+        "max_below_min_temperature": "Max temperature value should be greater than min temperature value",
         "options_not_allowed_with_state_class_or_uom": "The 'Options' setting is not allowed when state class or unit of measurement are used",
         "options_device_class_enum": "The 'Options' setting must be used with the Enumeration device class. If you continue, the existing options will be reset",
         "options_with_enum_device_class": "Configure options for the enumeration sensor",
+        "preset_mode_none_not_allowed": "Preset \"none\" is not a valid preset mode",
         "uom_required_for_device_class": "The selected device class requires a unit"
       }
     }

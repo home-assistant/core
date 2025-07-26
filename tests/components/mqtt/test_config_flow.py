@@ -2822,6 +2822,30 @@ async def test_migrate_of_incompatible_config_entry(
                     },
                     {"modes": "empty_list_not_allowed"},
                 ),
+                (
+                    {
+                        "modes": ["off", "heat", "cool", "auto"],
+                        "target_temperature_settings": {
+                            "temperature_command_topic": "test-topic",
+                            "min_temp": 19.0,
+                            "max_temp": 18.0,
+                        },
+                        "target_humidity_settings": {
+                            "target_humidity_command_topic": "test-topic",
+                            "min_humidity": 50,
+                            "max_humidity": 40,
+                        },
+                        "climate_preset_mode_settings": {
+                            "preset_mode_command_topic": "preset-mode-command-topic",
+                            "preset_modes": ["none"],
+                        },
+                    },
+                    {
+                        "target_temperature_settings": "max_below_min_temperature",
+                        "target_humidity_settings": "max_below_min_humidity",
+                        "climate_preset_mode_settings": "preset_mode_none_not_allowed",
+                    },
+                ),
             ),
             "Milk notifier Cooler",
         ),
