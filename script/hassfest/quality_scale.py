@@ -1802,7 +1802,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "otbr",
     "otp",
     "ourgroceries",
-    "overkiz",
     "ovo_energy",
     "owntracks",
     "p1_monitor",
