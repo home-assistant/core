@@ -69,7 +69,8 @@ class EsphomeMediaPlayer(
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
-        self._attr_supported_features = self._static_info.feature_flags_compat(self._api_version)
+        flags =  self._static_info.feature_flags_compat(self._api_version)
+        self._attr_supported_features = MediaPlayerEntityFeature(flags)
         self._entry_data.media_player_formats[self.unique_id] = cast(
             MediaPlayerInfo, static_info
         ).supported_formats
@@ -252,13 +253,19 @@ class EsphomeMediaPlayer(
     @convert_api_error_ha_error
     async def async_turn_on(self) -> None:
         """Send turn on command."""
-        self._client.media_player_command(self._key, command=MediaPlayerCommand.TURN_ON)
+        self._client.media_player_command(
+            self._key,
+            command=MediaPlayerCommand.TURN_ON,
+            device_id=self._static_info.device_id,
+        )
 
     @convert_api_error_ha_error
     async def async_turn_off(self) -> None:
         """Send turn off command."""
         self._client.media_player_command(
-            self._key, command=MediaPlayerCommand.TURN_OFF
+            self._key,
+            command=MediaPlayerCommand.TURN_OFF,
+            device_id=self._static_info.device_id,
         )
 
 
