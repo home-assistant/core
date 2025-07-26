@@ -296,9 +296,13 @@ class SenseDeviceEnergySensor(SenseDeviceEntity, SensorEntity):
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
         # Use the same logic as SenseTrendsSensor for alignment
-        dt = getattr(self._device, "trend_start", None)
-        if callable(dt):
-            dt = self._device.trend_start(self._scale)
+        dt: datetime | None = None
+        if hasattr(self._device, "trend_start"):
+            trend_start = getattr(self._device, "trend_start")
+            if callable(trend_start):
+                dt = trend_start(self._scale)
+            else:
+                return None
         else:
             return None
         if dt is None:
