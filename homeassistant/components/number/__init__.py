@@ -14,7 +14,12 @@ from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MODE, CONF_UNIT_OF_MEASUREMENT, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_MODE,
+    CONF_UNIT_OF_MEASUREMENT,
+    UnitOfTemperature,
+    UnitOfTemperatureDelta,
+)
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -176,6 +181,27 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "mode",
     "native_unit_of_measurement",
     "native_value",
+}
+
+_MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_UNIT: dict[UnitOfTemperature, str] = {
+    UnitOfTemperature.CELSIUS: UnitOfTemperature.CELSIUS,
+    UnitOfTemperature.FAHRENHEIT: UnitOfTemperature.FAHRENHEIT,
+}
+_MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_DELTA_UNIT: dict[UnitOfTemperature, str] = {
+    UnitOfTemperature.CELSIUS: UnitOfTemperatureDelta.CELSIUS,
+    UnitOfTemperature.FAHRENHEIT: UnitOfTemperatureDelta.FAHRENHEIT,
+}
+_DEVICECLASS_NATIVE_CONFIG_TO_UOM: dict[
+    NumberDeviceClass | None, dict[str | None, dict[UnitOfTemperature, str]]
+] = {
+    NumberDeviceClass.TEMPERATURE: {
+        UnitOfTemperature.CELSIUS: _MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_UNIT,
+        UnitOfTemperature.FAHRENHEIT: _MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_UNIT,
+    },
+    NumberDeviceClass.TEMPERATURE_DELTA: {
+        UnitOfTemperatureDelta.CELSIUS: _MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_DELTA_UNIT,
+        UnitOfTemperatureDelta.FAHRENHEIT: _MAP_CONFIG_TEMPERATURE_UNIT_TO_TEMPERATURE_DELTA_UNIT,
+    },
 }
 
 
@@ -376,14 +402,14 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return self._number_option_unit_of_measurement
 
         native_unit_of_measurement = self.native_unit_of_measurement
-        # device_class is checked after native_unit_of_measurement since most
-        # of the time we can avoid the device_class check
-        if (
-            native_unit_of_measurement
-            in (UnitOfTemperature.CELSIUS, UnitOfTemperature.FAHRENHEIT)
-            and self.device_class == NumberDeviceClass.TEMPERATURE
-        ):
-            return self.hass.config.units.temperature_unit
+        try:
+            return _DEVICECLASS_NATIVE_CONFIG_TO_UOM[self.device_class][
+                native_unit_of_measurement
+            ][self.hass.config.units.temperature_unit]
+        except KeyError:
+            # any unsupported device_class and/or unit conversion
+            # will silently be discarded
+            pass
 
         if (translation_key := self._unit_of_measurement_translation_key) and (
             unit_of_measurement
@@ -554,3 +580,19 @@ class RestoreNumber(NumberEntity, RestoreEntity):
         if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
             return None
         return NumberExtraStoredData.from_dict(restored_last_extra_data.as_dict())
+
+
+@callback
+def async_update_number_units(hass: HomeAssistant) -> None:
+    """Update the unit_of_measurement according to the unit system."""
+
+    device_classes = _DEVICECLASS_NATIVE_CONFIG_TO_UOM.keys()
+    # Skip unneeded state refresh if user has set an option_unit in registry
+    # or device_class is not relevant.
+    for number in (
+        number
+        for number in hass.data[DATA_COMPONENT].entities
+        if number.device_class in device_classes
+        and (number._number_option_unit_of_measurement is None)  # noqa: SLF001
+    ):
+        number.async_write_ha_state()
