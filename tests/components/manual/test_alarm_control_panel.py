@@ -1561,3 +1561,29 @@ async def test_invalid_arming_states(hass: HomeAssistant) -> None:
 
     state = hass.states.get("alarm_control_panel.test")
     assert state is None
+
+
+async def test_trigger_while_triggered(hass: HomeAssistant) -> None:
+    """Trigger while triggered."""
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "delay_time": 0,
+                "name": "test",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    entity_id = "alarm_control_panel.test"
+
+    await common.async_alarm_trigger(hass, entity_id=entity_id)
+
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.TRIGGERED
+
+    await common.async_alarm_trigger(hass, entity_id=entity_id)
+
+    assert hass.states.get(entity_id).state == AlarmControlPanelState.TRIGGERED
