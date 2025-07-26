@@ -121,10 +121,9 @@ def async_client_is_connected_fn(hub: UnifiHub, obj_id: str) -> bool:
         return False
 
     # Use different detection times for wired vs wireless clients
-    is_wired_client = client.mac not in hub.entity_loader.wireless_clients
     detection_time = (
         hub.config.option_wired_detection_time
-        if is_wired_client
+        if client.is_wired
         else hub.config.option_detection_time
     )
 
@@ -142,7 +141,7 @@ def async_client_heartbeat_timedelta_fn(hub: UnifiHub, obj_id: str) -> timedelta
     """Get heartbeat timedelta for client based on wired/wireless status."""
     client = hub.api.clients[obj_id]
     is_wired_client = client.mac not in hub.entity_loader.wireless_clients
-    
+
     return (
         hub.config.option_wired_detection_time
         if is_wired_client

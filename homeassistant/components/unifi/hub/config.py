@@ -22,7 +22,6 @@ from ..const import (
     CONF_BLOCK_CLIENT,
     CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
-    CONF_WIRED_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
     CONF_SITE_ID,
@@ -30,15 +29,16 @@ from ..const import (
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
+    CONF_WIRED_DETECTION_TIME,
     DEFAULT_ALLOW_BANDWIDTH_SENSORS,
     DEFAULT_ALLOW_UPTIME_SENSORS,
     DEFAULT_DETECTION_TIME,
-    DEFAULT_WIRED_DETECTION_TIME,
     DEFAULT_DPI_RESTRICTIONS,
     DEFAULT_IGNORE_WIRED_BUG,
     DEFAULT_TRACK_CLIENTS,
     DEFAULT_TRACK_DEVICES,
     DEFAULT_TRACK_WIRED_CLIENTS,
+    DEFAULT_WIRED_DETECTION_TIME,
 )
 
 
@@ -113,7 +113,9 @@ class UnifiConfig:
                 seconds=options.get(CONF_DETECTION_TIME, DEFAULT_DETECTION_TIME)
             ),
             option_wired_detection_time=timedelta(
-                seconds=options.get(CONF_WIRED_DETECTION_TIME, DEFAULT_WIRED_DETECTION_TIME)
+                seconds=options.get(
+                    CONF_WIRED_DETECTION_TIME, DEFAULT_WIRED_DETECTION_TIME
+                )
             ),
             option_ignore_wired_bug=options.get(
                 CONF_IGNORE_WIRED_BUG, DEFAULT_IGNORE_WIRED_BUG
