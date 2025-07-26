@@ -507,7 +507,7 @@
     'supported_features': 0,
     'translation_key': 'last_amount',
     'unique_id': 'tuya.bfd0273e59494eb34esvrxfeed_report',
-    'unit_of_measurement': '',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_platform_setup_and_discovery[cwwsq_cleverio_pf100][sensor.cleverio_pf100_last_amount-state]
@@ -515,7 +515,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Cleverio PF100 Last amount',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cleverio_pf100_last_amount',
