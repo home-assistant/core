@@ -2388,7 +2388,7 @@ pysqueezebox==0.12.1
 pystiebeleltron==0.1.0
 
 # homeassistant.components.suez_water
-pysuezV2==2.0.5
+pysuezV2==2.0.7
 
 # homeassistant.components.switchbee
 pyswitchbee==1.8.3
