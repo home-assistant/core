@@ -243,9 +243,9 @@
             "climate_feature_current_humidity": "Current humidity support",
             "climate_feature_current_temperature": "Current temperature support",
             "climate_feature_fan_modes": "Fan mode support",
-            "climate_feature_power": "Power \"on\"/\"off\" support",
+            "climate_feature_power": "Power on/off support",
             "climate_feature_preset_modes": "[%key:component::mqtt::config_subentries::device::step::entity_platform_config::data::fan_feature_preset_modes%]",
-            "climate_feature_swing_horizontal_modes": "Swing horizontal mode support",
+            "climate_feature_swing_horizontal_modes": "Horizontal swing mode support",
             "climate_feature_swing_modes": "Swing mode support",
             "climate_feature_target_temperature": "Target temperature support",
             "climate_feature_target_humidity": "Target humidity support",
@@ -267,10 +267,10 @@
             "climate_feature_current_humidity": "The climate supports reporting the current humidity.",
             "climate_feature_current_temperature": "The climate supports reporting the current temperature.",
             "climate_feature_fan_modes": "The climate supports fan modes.",
-            "climate_feature_power": "The climate supports power the \"on\" and \"off\" action.",
+            "climate_feature_power": "The climate supports the power \"on\" and \"off\" commands.",
             "climate_feature_preset_modes": "The climate supports preset modes.",
-            "climate_feature_swing_horizontal_modes": "The climate support horizontal swing modes.",
-            "climate_feature_swing_modes": "The climate support swing modes.",
+            "climate_feature_swing_horizontal_modes": "The climate supports horizontal swing modes.",
+            "climate_feature_swing_modes": "The climate supports swing modes.",
             "climate_feature_target_temperature": "The climate supports setting the target temperature.",
             "climate_feature_target_humidity": "The climate supports setting the target humidity.",
             "device_class": "The device class of the {platform} entity. [Learn more.]({url}#device_class)",
@@ -345,8 +345,8 @@
             "green_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract green color from the state payload value. Expected result of the template is an integer from 0-255 range.",
             "last_reset_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the last reset. When Last reset template is set, the State class option must be Total. [Learn more.]({url}#last_reset_value_template)",
             "modes": "[Learn more.]({url}#modes)",
-            "mode_command_topic": "The MQTT topic to publish to change the climate operation mode. [Learn more.]({url}#mode_command_topic)",
-            "mode_command_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to define the operation mode to be sent to the mode command topic. [Learn more.]({url}#mode_command_template)",
+            "mode_command_topic": "The MQTT topic to publish commands to change the climate operation mode. [Learn more.]({url}#mode_command_topic)",
+            "mode_command_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to define the operation mode to be sent to the operation mode command topic. [Learn more.]({url}#mode_command_template)",
             "mode_state_topic": "The MQTT topic subscribed to receive operation mode state messages. [Learn more.]({url}#mode_state_topic)",
             "mode_state_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the payload for the operation mode state topic. [Learn more.]({url}#mode_state_template)",
             "on_command_type": "Defines when the payload \"on\" is sent. Using \"Last\" (the default) will send any style (brightness, color, etc) topics first and then a payload \"on\" to the command topic. Using \"First\" will send the payload \"on\" and then any style topics. Using \"Brightness\" will only send brightness commands instead of the payload \"on\" to turn the light on.",
@@ -458,7 +458,7 @@
                 "swing_horizontal_mode_state_template": "Swing horizontal mode state template"
               },
               "data_description": {
-                "swing_horizontal_modes": "List of swing horizontal modes this climate is capable of running at. Common swing horizontal modes that offer translations are `off` and `on`.",
+                "swing_horizontal_modes": "List of horizontal swing modes this climate is capable of running at. Common horizontal swing modes that offer translations are `off` and `on`.",
                 "swing_horizontal_mode_command_topic": "The MQTT topic to publish commands to change the climate swing horizontal mode. [Learn more.]({url}#swing_horizontal_mode_command_topic)",
                 "swing_horizontal_mode_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the swing horizontal mode command topic.",
                 "swing_horizontal_mode_state_topic": "The MQTT topic subscribed to receive the climate swing horizontal mode. [Learn more.]({url}#swing_horizontal_mode_state_topic)",
@@ -800,16 +800,16 @@
             "target_humidity_settings": {
               "name": "Target humidity settings",
               "data": {
-                "max_humidity": "Maximal humidity",
-                "min_humidity": "Minimal humidity",
+                "max_humidity": "Maximum humidity",
+                "min_humidity": "Minimum humidity",
                 "target_humidity_command_template": "Humidity command template",
                 "target_humidity_command_topic": "Humidity command topic",
                 "target_humidity_state_template": "Humidity state template",
                 "target_humidity_state_topic": "Humidity state topic"
               },
               "data_description": {
-                "max_humidity": "The maximal target humidity that can be set.",
-                "min_humidity": "The minimal target humidity that can be set.",
+                "max_humidity": "The maximum target humidity that can be set.",
+                "min_humidity": "The minimum target humidity that can be set.",
                 "target_humidity_command_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be sent to \"Humidity command topic\".",
                 "target_humidity_command_topic": "The MQTT topic to publish commands to change the climate target humidity. [Learn more.]({url}#humidity_command_topic)",
                 "target_humidity_state_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to render the value received on the humidity state topic with.",
@@ -820,8 +820,8 @@
               "name": "Target temperature settings",
               "data": {
                 "initial": "Intial temperature",
-                "max_temp": "Maximal temperature",
-                "min_temp": "Minimal temperature",
+                "max_temp": "Maximum temperature",
+                "min_temp": "Minimum temperature",
                 "precision": "Precision",
                 "temp_step": "Temperature step",
                 "temperature_command_template": "Temperature command template",
@@ -839,8 +839,8 @@
               },
               "data_description": {
                 "initial": "The climate initalizes with this target temperature.",
-                "max_temp": "The maximal target temperature that can be set.",
-                "min_temp": "The minimal target temperature that can be set.",
+                "max_temp": "The maximum target temperature that can be set.",
+                "min_temp": "The minimum target temperature that can be set.",
                 "precision": "The precision in degrees the thermostat is working at.",
                 "temp_step": "The target temperature step in .",
                 "temperature_command_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be sent to \"Temperature command topic\".",
@@ -1229,7 +1229,7 @@
     "target_temperature_feature": {
       "options": {
         "single": "Single target temperature",
-        "high_low": "High/Low target temperature",
+        "high_low": "High/low target temperature",
         "none": "No target temperature"
       }
     }
