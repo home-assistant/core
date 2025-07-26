@@ -428,7 +428,7 @@
                 "payload_off": "[%key:component::mqtt::config_subentries::device::step::mqtt_platform_config::data_description::payload_off%]",
                 "payload_on": "[%key:component::mqtt::config_subentries::device::step::mqtt_platform_config::data_description::payload_off%]",
                 "power_command_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be sent to power command topic. The `value` parameter is the payload set for payload \"on\" or payload \"off\".",
-                "power_command_topic": "The MQTT topic to publish commands to change the climate power state. Sends the payload configured with payload \"on\" or payload \"on\". [Learn more.]({url}#power_command_topic)"
+                "power_command_topic": "The MQTT topic to publish commands to change the climate power state. Sends the payload configured with payload \"on\" or payload \"off\". [Learn more.]({url}#power_command_topic)"
               }
             },
             "climate_preset_mode_settings": {
