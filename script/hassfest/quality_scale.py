@@ -1891,7 +1891,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "rfxtrx",
     "rhasspy",
     "ridwell",
-    "ring",
     "ripple",
     "risco",
     "rituals_perfume_genie",
