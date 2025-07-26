@@ -193,6 +193,7 @@
           "alarm_control_panel": "Template an alarm control panel",
           "binary_sensor": "Template a binary sensor",
           "button": "Template a button",
+          "fan": "Template a fan",
           "image": "Template an image",
           "number": "Template a number",
           "select": "Template a select",
