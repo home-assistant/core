@@ -39,51 +39,56 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
     _reauth_host: str
     _reauth_username: str
 
+    async def _connect_homee(self) -> dict[str, str]:
+        errors: dict[str, str] = {}
+        try:
+            await self.homee.get_access_token()
+        except HomeeConnectionFailedException:
+            errors["base"] = "cannot_connect"
+        except HomeeAuthenticationFailedException:
+            errors["base"] = "invalid_auth"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        else:
+            _LOGGER.info("Got access token for homee")
+            self.hass.loop.create_task(self.homee.run())
+            _LOGGER.debug("Homee task created")
+            await self.homee.wait_until_connected()
+            _LOGGER.info("Homee connected")
+            self.homee.disconnect()
+            _LOGGER.debug("Homee disconnecting")
+            await self.homee.wait_until_disconnected()
+            _LOGGER.info("Homee config successfully tested")
+
+            await self.async_set_unique_id(self.homee.settings.uid)
+
+            self._abort_if_unique_id_configured()
+
+            _LOGGER.info("Created new homee entry with ID %s", self.homee.settings.uid)
+
+        return errors
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial user step."""
+        errors: dict[str, str] = {}
 
-        errors = {}
         if user_input is not None:
             self.homee = Homee(
                 user_input[CONF_HOST],
                 user_input[CONF_USERNAME],
                 user_input[CONF_PASSWORD],
             )
+            errors = await self._connect_homee()
 
-            try:
-                await self.homee.get_access_token()
-            except HomeeConnectionFailedException:
-                errors["base"] = "cannot_connect"
-            except HomeeAuthenticationFailedException:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                _LOGGER.info("Got access token for homee")
-                self.hass.loop.create_task(self.homee.run())
-                _LOGGER.debug("Homee task created")
-                await self.homee.wait_until_connected()
-                _LOGGER.info("Homee connected")
-                self.homee.disconnect()
-                _LOGGER.debug("Homee disconnecting")
-                await self.homee.wait_until_disconnected()
-                _LOGGER.info("Homee config successfully tested")
-
-                await self.async_set_unique_id(self.homee.settings.uid)
-
-                self._abort_if_unique_id_configured()
-
-                _LOGGER.info(
-                    "Created new homee entry with ID %s", self.homee.settings.uid
-                )
-
+            if not errors:
                 return self.async_create_entry(
                     title=f"{self.homee.settings.homee_name} ({self.homee.host})",
                     data=user_input,
                 )
+
         return self.async_show_form(
             step_id="user",
             data_schema=AUTH_SCHEMA,
@@ -121,34 +126,9 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_PASSWORD],
             )
 
-            try:
-                await self.homee.get_access_token()
-            except HomeeConnectionFailedException:
-                errors["base"] = "cannot_connect"
-            except HomeeAuthenticationFailedException:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                _LOGGER.info("Got access token for homee")
-                self.hass.loop.create_task(self.homee.run())
-                _LOGGER.debug("Homee task created")
-                await self.homee.wait_until_connected()
-                _LOGGER.info("Homee connected")
-                self.homee.disconnect()
-                _LOGGER.debug("Homee disconnecting")
-                await self.homee.wait_until_disconnected()
-                _LOGGER.info("Homee config successfully tested")
+            errors = await self._connect_homee()
 
-                await self.async_set_unique_id(self.homee.settings.uid)
-
-                self._abort_if_unique_id_configured()
-
-                _LOGGER.info(
-                    "Created new homee entry with ID %s", self.homee.settings.uid
-                )
-
+            if not errors:
                 return self.async_create_entry(
                     title=f"{self.homee.settings.homee_name} ({self.homee.host})",
                     data={
@@ -157,6 +137,7 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                     },
                 )
+
         return self.async_show_form(
             step_id="zeroconf_confirm",
             data_schema=vol.Schema(
