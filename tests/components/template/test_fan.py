@@ -1833,3 +1833,51 @@ async def test_nested_unique_id(
     entry = entity_registry.async_get("fan.test_b")
     assert entry
     assert entry.unique_id == "x-b"
+
+
+@pytest.mark.parametrize(
+    ("count", "fan_config"),
+    [
+        (
+            1,
+            {
+                "name": TEST_OBJECT_ID,
+                "state": "{{ is_state('sensor.test_sensor', 'on') }}",
+                "turn_on": [],
+                "turn_off": [],
+                "optimistic": True,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_fan")
+async def test_optimistic_option(hass: HomeAssistant) -> None:
+    """Test optimistic yaml option."""
+    hass.states.async_set(_STATE_TEST_SENSOR, STATE_OFF)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        fan.DOMAIN,
+        "turn_on",
+        {"entity_id": TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_ON
+
+    hass.states.async_set(_STATE_TEST_SENSOR, STATE_ON)
+    await hass.async_block_till_done()
+
+    hass.states.async_set(_STATE_TEST_SENSOR, STATE_OFF)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF
