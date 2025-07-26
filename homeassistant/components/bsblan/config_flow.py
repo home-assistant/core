@@ -8,7 +8,7 @@ from typing import Any
 from bsblan import BSBLAN, BSBLANAuthError, BSBLANConfig, BSBLANError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -138,6 +138,19 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             await self._get_bsblan_info(is_discovery=is_discovery)
         except BSBLANAuthError:
+            if is_discovery:
+                return self.async_show_form(
+                    step_id="discovery_confirm",
+                    data_schema=vol.Schema(
+                        {
+                            vol.Optional(CONF_PASSKEY): str,
+                            vol.Optional(CONF_USERNAME): str,
+                            vol.Optional(CONF_PASSWORD): str,
+                        }
+                    ),
+                    errors={"base": "invalid_auth"},
+                    description_placeholders={"host": str(self.host)},
+                )
             return self._show_setup_form({"base": "invalid_auth"}, user_input)
         except BSBLANError:
             if is_discovery:
