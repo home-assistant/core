@@ -113,6 +113,9 @@
       },
       "pump_status": {
         "default": "mdi:pump"
+      },
+      "speaker_setpoint": {
+        "default": "mdi:speaker"
       }
     },
     "switch": {
