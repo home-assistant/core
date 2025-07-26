@@ -199,7 +199,7 @@
           "state": "[%key:component::template::config::step::sensor::data::state%]",
           "start": "Actions on turn off",
           "fan_speed": "Fan speed",
-          "fan_speeds": "Fan Speeds",
+          "fan_speeds": "Fan speeds",
           "set_fan_speed": "Actions on set fan speed",
           "battery_level": "Battery level",
           "stop": "Actions on stop",
