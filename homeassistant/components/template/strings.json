@@ -194,6 +194,7 @@
           "binary_sensor": "Template a binary sensor",
           "button": "Template a button",
           "image": "Template an image",
+          "light": "Template a light",
           "number": "Template a number",
           "select": "Template a select",
           "sensor": "Template a sensor",
