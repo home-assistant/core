@@ -1050,7 +1050,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==10.0.4
+ical==11.0.0
 
 # homeassistant.components.caldav
 icalendar==6.1.0
