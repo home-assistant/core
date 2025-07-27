@@ -294,6 +294,12 @@
       },
       "image_hue": {
         "default": "mdi:image-edit"
+      },
+      "pre_record_time": {
+        "default": "mdi:history"
+      },
+      "pre_record_battery_stop": {
+        "default": "mdi:history"
       }
     },
     "select": {
@@ -380,6 +386,9 @@
       },
       "scene_mode": {
         "default": "mdi:view-list"
+      },
+      "pre_record_fps": {
+        "default": "mdi:history"
       }
     },
     "sensor": {
@@ -452,6 +461,9 @@
       },
       "manual_record": {
         "default": "mdi:record-rec"
+      },
+      "pre_record": {
+        "default": "mdi:history"
       },
       "hub_ringtone_on_event": {
         "default": "mdi:music-note"

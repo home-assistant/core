@@ -645,6 +645,12 @@
       },
       "image_hue": {
         "name": "Image hue"
+      },
+      "pre_record_time": {
+        "name": "Pre-recording time"
+      },
+      "pre_record_battery_stop": {
+        "name": "Pre-recording battery stop"
       }
     },
     "select": {
@@ -845,6 +851,9 @@
           "home": "[%key:common::state::home%]",
           "away": "[%key:common::state::not_home%]"
         }
+      },
+      "pre_record_fps": {
+        "name": "Pre-recording frame rate"
       }
     },
     "sensor": {
@@ -927,6 +936,9 @@
       },
       "manual_record": {
         "name": "Manual record"
+      },
+      "pre_record": {
+        "name": "Pre-recording"
       },
       "hub_ringtone_on_event": {
         "name": "Hub ringtone on event"
