@@ -7,7 +7,6 @@ import logging
 from aioautomower.model import Message, SingleMessageData
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.storage import Store
@@ -38,9 +37,8 @@ class AutomowerMessageEventEntityDescription(EventEntityDescription):
 
 MESSAGE_SENSOR_TYPES: tuple[AutomowerMessageEventEntityDescription, ...] = (
     AutomowerMessageEventEntityDescription(
-        key="last_error",
-        translation_key="last_error",
-        entity_category=EntityCategory.DIAGNOSTIC,
+        key="message",
+        translation_key="message",
         value_fn=lambda msg: msg.code,
     ),
 )

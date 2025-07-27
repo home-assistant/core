@@ -62,7 +62,7 @@ async def test_event(
     assert mock_automower_client.register_single_message_callback.called
 
     # Check initial state
-    state = hass.states.get("event.test_mower_1_last_error")
+    state = hass.states.get("event.test_mower_1_message")
     assert state is None
 
     # Simulate a new message for this mower
@@ -84,6 +84,6 @@ async def test_event(
     await hass.async_block_till_done()
     freezer.tick(SCAN_INTERVAL)
     await hass.async_block_till_done()
-    state = hass.states.get("event.test_mower_1_last_error")
+    state = hass.states.get("event.test_mower_1_message")
     assert state.attributes[ATTR_EVENT_TYPE] == "wheel_motor_overloaded_rear_left"
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

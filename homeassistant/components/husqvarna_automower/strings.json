@@ -56,8 +56,8 @@
       }
     },
     "event": {
-      "last_error": {
-        "name": "Last error",
+      "message": {
+        "name": "Message",
         "state_attributes": {
           "event_type": {
             "state": {

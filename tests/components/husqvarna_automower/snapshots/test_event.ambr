@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_event[event.test_mower_1_last_error-entry]
+# name: test_event[event.test_mower_1_message-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -136,8 +136,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'event',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'event.test_mower_1_last_error',
+    'entity_category': None,
+    'entity_id': 'event.test_mower_1_message',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -149,17 +149,17 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Last error',
+    'original_name': 'Message',
     'platform': 'husqvarna_automower',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'last_error',
-    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_last_error',
+    'translation_key': 'message',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_message',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_event[event.test_mower_1_last_error-state]
+# name: test_event[event.test_mower_1_message-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'event_type': 'wheel_motor_overloaded_rear_left',
@@ -287,13 +287,13 @@
         'wrong_pin_code',
         'zone_generator_problem',
       ]),
-      'friendly_name': 'Test Mower 1 Last error',
+      'friendly_name': 'Test Mower 1 Message',
       'latitude': 49.0,
       'longitude': 10.0,
       'severity': <Severity.ERROR: 'error'>,
     }),
     'context': <ANY>,
-    'entity_id': 'event.test_mower_1_last_error',
+    'entity_id': 'event.test_mower_1_message',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
