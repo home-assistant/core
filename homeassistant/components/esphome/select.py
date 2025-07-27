@@ -52,7 +52,7 @@ async def async_setup_entry(
             [
                 EsphomeAssistPipelineSelect(hass, entry_data),
                 EsphomeVadSensitivitySelect(hass, entry_data),
-                EsphomeAssistSatelliteWakeWordSelect(hass, entry_data),
+                EsphomeAssistSatelliteWakeWordSelect(entry_data),
             ]
         )
 
@@ -76,7 +76,9 @@ class EsphomeSelect(EsphomeEntity[SelectInfo, SelectState], SelectEntity):
     @convert_api_error_ha_error
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        self._client.select_command(self._key, option)
+        self._client.select_command(
+            self._key, option, device_id=self._static_info.device_id
+        )
 
 
 class EsphomeAssistPipelineSelect(EsphomeAssistEntity, AssistPipelineSelect):
@@ -107,11 +109,10 @@ class EsphomeAssistSatelliteWakeWordSelect(
         translation_key="wake_word",
         entity_category=EntityCategory.CONFIG,
     )
-    _attr_should_poll = False
     _attr_current_option: str | None = None
     _attr_options: list[str] = []
 
-    def __init__(self, hass: HomeAssistant, entry_data: RuntimeEntryData) -> None:
+    def __init__(self, entry_data: RuntimeEntryData) -> None:
         """Initialize a wake word selector."""
         EsphomeAssistEntity.__init__(self, entry_data)
 

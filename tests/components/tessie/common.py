@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from aiohttp.client import RequestInfo
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tessie import PLATFORMS
 from homeassistant.components.tessie.const import DOMAIN, TessieStatus

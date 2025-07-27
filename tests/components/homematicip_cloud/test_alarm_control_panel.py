@@ -2,13 +2,8 @@
 
 from homematicip.async_home import AsyncHome
 
-from homeassistant.components.alarm_control_panel import (
-    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
-    AlarmControlPanelState,
-)
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .helper import HomeFactory, get_and_check_entity_basics
 
@@ -37,17 +32,6 @@ async def _async_manipulate_security_zones(
     home.update_home_only(json)
     home.fire_update_event(json)
     await hass.async_block_till_done()
-
-
-async def test_manually_configured_platform(hass: HomeAssistant) -> None:
-    """Test that we do not set up an access point."""
-    assert await async_setup_component(
-        hass,
-        ALARM_CONTROL_PANEL_DOMAIN,
-        {ALARM_CONTROL_PANEL_DOMAIN: {"platform": HMIPC_DOMAIN}},
-    )
-
-    assert not hass.data.get(HMIPC_DOMAIN)
 
 
 async def test_hmip_alarm_control_panel(

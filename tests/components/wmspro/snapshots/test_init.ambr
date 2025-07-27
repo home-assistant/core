@@ -1,0 +1,397 @@
+# serializer version: 1
+# name: test_cover_device[mock_hub_configuration_prod_awning_dimmer-mock_hub_status_prod_awning][device-19239]
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'terrasse',
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://webcontrol/control',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wmspro',
+        '19239',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'WAREMA Renkhoff SE',
+    'model': 'Room',
+    'model_id': None,
+    'name': 'Terrasse',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '19239',
+    'suggested_area': 'Terrasse',
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_cover_device[mock_hub_configuration_prod_awning_dimmer-mock_hub_status_prod_awning][device-58717]
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'terrasse',
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://webcontrol/control',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wmspro',
+        '58717',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'WAREMA Renkhoff SE',
+    'model': 'Awning',
+    'model_id': None,
+    'name': 'Markise',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '58717',
+    'suggested_area': 'Terrasse',
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_cover_device[mock_hub_configuration_prod_awning_dimmer-mock_hub_status_prod_awning][device-97358]
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'terrasse',
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://webcontrol/control',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wmspro',
+        '97358',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'WAREMA Renkhoff SE',
+    'model': 'Dimmer',
+    'model_id': None,
+    'name': 'Licht',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '97358',
+    'suggested_area': 'Terrasse',
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_cover_device[mock_hub_configuration_prod_awning_dimmer-mock_hub_status_prod_dimmer][device-19239]
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'terrasse',
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://webcontrol/control',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wmspro',
+        '19239',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'WAREMA Renkhoff SE',
+    'model': 'Room',
+    'model_id': None,
+    'name': 'Terrasse',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '19239',
+    'suggested_area': 'Terrasse',
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_cover_device[mock_hub_configuration_prod_awning_dimmer-mock_hub_status_prod_dimmer][device-58717]
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'terrasse',
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://webcontrol/control',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wmspro',
+        '58717',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'WAREMA Renkhoff SE',
+    'model': 'Awning',
+    'model_id': None,
+    'name': 'Markise',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '58717',
+    'suggested_area': 'Terrasse',
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_cover_device[mock_hub_configuration_prod_awning_dimmer-mock_hub_status_prod_dimmer][device-97358]
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'terrasse',
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://webcontrol/control',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wmspro',
+        '97358',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'WAREMA Renkhoff SE',
+    'model': 'Dimmer',
+    'model_id': None,
+    'name': 'Licht',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '97358',
+    'suggested_area': 'Terrasse',
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_cover_device[mock_hub_configuration_prod_roller_shutter-mock_hub_status_prod_roller_shutter][device-116682]
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'wohnbereich',
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://webcontrol/control',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wmspro',
+        '116682',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'WAREMA Renkhoff SE',
+    'model': 'RollerShutterBlind',
+    'model_id': None,
+    'name': 'Wohnzimmer',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '116682',
+    'suggested_area': 'Wohnbereich',
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_cover_device[mock_hub_configuration_prod_roller_shutter-mock_hub_status_prod_roller_shutter][device-172555]
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'wohnbereich',
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://webcontrol/control',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wmspro',
+        '172555',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'WAREMA Renkhoff SE',
+    'model': 'RollerShutterBlind',
+    'model_id': None,
+    'name': 'Badezimmer',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '172555',
+    'suggested_area': 'Wohnbereich',
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_cover_device[mock_hub_configuration_prod_roller_shutter-mock_hub_status_prod_roller_shutter][device-18894]
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'wohnbereich',
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://webcontrol/control',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wmspro',
+        '18894',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'WAREMA Renkhoff SE',
+    'model': 'RollerShutterBlind',
+    'model_id': None,
+    'name': 'Wohnebene alle',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '18894',
+    'suggested_area': 'Wohnbereich',
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_cover_device[mock_hub_configuration_prod_roller_shutter-mock_hub_status_prod_roller_shutter][device-230952]
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'wohnbereich',
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://webcontrol/control',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wmspro',
+        '230952',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'WAREMA Renkhoff SE',
+    'model': 'RollerShutterBlind',
+    'model_id': None,
+    'name': 'Sportzimmer',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '230952',
+    'suggested_area': 'Wohnbereich',
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_cover_device[mock_hub_configuration_prod_roller_shutter-mock_hub_status_prod_roller_shutter][device-284942]
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'terrasse',
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://webcontrol/control',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wmspro',
+        '284942',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'WAREMA Renkhoff SE',
+    'model': 'RollerShutterBlind',
+    'model_id': None,
+    'name': 'Terrasse',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '284942',
+    'suggested_area': 'Terrasse',
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---
+# name: test_cover_device[mock_hub_configuration_prod_roller_shutter-mock_hub_status_prod_roller_shutter][device-328518]
+  DeviceRegistryEntrySnapshot({
+    'area_id': 'alle',
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://webcontrol/control',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'wmspro',
+        '328518',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'WAREMA Renkhoff SE',
+    'model': 'RollerShutterBlind',
+    'model_id': None,
+    'name': 'alle Rollläden',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': '328518',
+    'suggested_area': 'Alle',
+    'sw_version': None,
+    'via_device_id': <ANY>,
+  })
+# ---

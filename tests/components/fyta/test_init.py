@@ -10,7 +10,7 @@ from fyta_cli.fyta_exceptions import (
 )
 import pytest
 
-from homeassistant.components.fyta.const import CONF_EXPIRATION, DOMAIN as FYTA_DOMAIN
+from homeassistant.components.fyta.const import CONF_EXPIRATION, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
@@ -127,7 +127,7 @@ async def test_migrate_config_entry(
 ) -> None:
     """Test successful migration of entry data."""
     entry = MockConfigEntry(
-        domain=FYTA_DOMAIN,
+        domain=DOMAIN,
         title=USERNAME,
         data={
             CONF_USERNAME: USERNAME,

@@ -1646,6 +1646,7 @@ class ConfigEntriesFlowManager(
             report_usage(
                 "creates a config entry when another entry with the same unique ID "
                 "exists",
+                breaks_in_ha_version="2026.3",
                 core_behavior=ReportBehavior.LOG,
                 core_integration_behavior=ReportBehavior.LOG,
                 custom_integration_behavior=ReportBehavior.LOG,
@@ -2603,46 +2604,6 @@ class ConfigEntries:
             )
         )
 
-    async def async_forward_entry_setup(
-        self, entry: ConfigEntry, domain: Platform | str
-    ) -> bool:
-        """Forward the setup of an entry to a different component.
-
-        By default an entry is setup with the component it belongs to. If that
-        component also has related platforms, the component will have to
-        forward the entry to be setup by that component.
-
-        This method is deprecated and will stop working in Home Assistant 2025.6.
-
-        Instead, await async_forward_entry_setups as it can load
-        multiple platforms at once and is more efficient since it
-        does not require a separate import executor job for each platform.
-        """
-        report_usage(
-            "calls async_forward_entry_setup for "
-            f"integration, {entry.domain} with title: {entry.title} "
-            f"and entry_id: {entry.entry_id}, which is deprecated, "
-            "await async_forward_entry_setups instead",
-            core_behavior=ReportBehavior.LOG,
-            breaks_in_ha_version="2025.6",
-        )
-        if not entry.setup_lock.locked():
-            async with entry.setup_lock:
-                if entry.state is not ConfigEntryState.LOADED:
-                    raise OperationNotAllowed(
-                        f"The config entry '{entry.title}' ({entry.domain}) with "
-                        f"entry_id '{entry.entry_id}' cannot forward setup for "
-                        f"{domain} because it is in state {entry.state}, but needs "
-                        f"to be in the {ConfigEntryState.LOADED} state"
-                    )
-                return await self._async_forward_entry_setup(entry, domain, True)
-        result = await self._async_forward_entry_setup(entry, domain, True)
-        # If the lock was held when we stated, and it was released during
-        # the platform setup, it means they did not await the setup call.
-        if not entry.setup_lock.locked():
-            _report_non_awaited_platform_forwards(entry, "async_forward_entry_setup")
-        return result
-
     async def _async_forward_entry_setup(
         self,
         entry: ConfigEntry,
@@ -2879,10 +2840,16 @@ class ConfigFlow(ConfigEntryBaseFlow):
     ) -> None:
         """Abort if current entries match all data.
 
+        Do not abort for the entry that is being updated by the current flow.
         Requires `already_configured` in strings.json in user visible flows.
         """
         _async_abort_entries_match(
-            self._async_current_entries(include_ignore=False), match_dict
+            [
+                entry
+                for entry in self._async_current_entries(include_ignore=False)
+                if entry.entry_id != self.context.get("entry_id")
+            ],
+            match_dict,
         )
 
     @callback
@@ -3454,6 +3421,11 @@ class ConfigSubentryFlow(
         """Return config entry id."""
         return self.handler[0]
 
+    @property
+    def _subentry_type(self) -> str:
+        """Return type of subentry we are editing/creating."""
+        return self.handler[1]
+
     @callback
     def _get_entry(self) -> ConfigEntry:
         """Return the config entry linked to the current context."""
@@ -3519,7 +3491,22 @@ class OptionsFlowManager(
         entry = self.hass.config_entries.async_get_known_entry(flow.handler)
 
         if result["data"] is not None:
-            self.hass.config_entries.async_update_entry(entry, options=result["data"])
+            automatic_reload = False
+            if isinstance(flow, OptionsFlowWithReload):
+                automatic_reload = flow.automatic_reload
+
+            if automatic_reload and entry.update_listeners:
+                raise ValueError(
+                    "Config entry update listeners should not be used with OptionsFlowWithReload"
+                )
+
+            if (
+                self.hass.config_entries.async_update_entry(
+                    entry, options=result["data"]
+                )
+                and automatic_reload is True
+            ):
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
 
         result["result"] = True
         return result
@@ -3626,6 +3613,18 @@ class OptionsFlowWithConfigEntry(OptionsFlow):
     def options(self) -> dict[str, Any]:
         """Return a mutable copy of the config entry options."""
         return self._options
+
+
+class OptionsFlowWithReload(OptionsFlow):
+    """Automatic reloading class for config options flows.
+
+    Triggers an automatic reload of the config entry when the flow ends with
+    calling `async_create_entry` with changed options.
+    It's not allowed to use this class if the integration uses config entry
+    update listeners.
+    """
+
+    automatic_reload: bool = True
 
 
 class EntityRegistryDisabledHandler:

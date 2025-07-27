@@ -1,6 +1,6 @@
 {
   "common": {
-    "data_description_api_key": "The tankerkoenig API-Key to be used.",
+    "data_description_api_key": "The tankerkoenig API key to be used.",
     "data_description_location": "Pick the location where to search for gas stations.",
     "data_description_name": "The name of the particular region to be added.",
     "data_description_radius": "The radius in kilometers to search for gas stations around the selected location.",

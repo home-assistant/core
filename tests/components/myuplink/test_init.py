@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 from aiohttp import ClientConnectionError
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.myuplink.const import DOMAIN, OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState

@@ -39,11 +39,11 @@ PARALLEL_UPDATES = 1
 class HomeConnectLightEntityDescription(LightEntityDescription):
     """Light entity description."""
 
-    brightness_key: SettingKey | None = None
+    brightness_key: SettingKey
+    brightness_scale: tuple[float, float]
     color_key: SettingKey | None = None
     enable_custom_color_value_key: str | None = None
     custom_color_key: SettingKey | None = None
-    brightness_scale: tuple[float, float] = (0.0, 100.0)
 
 
 LIGHTS: tuple[HomeConnectLightEntityDescription, ...] = (

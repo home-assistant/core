@@ -32,6 +32,7 @@ from .coordinator import (
     LaMarzoccoRuntimeData,
     LaMarzoccoScheduleUpdateCoordinator,
     LaMarzoccoSettingsUpdateCoordinator,
+    LaMarzoccoStatisticsUpdateCoordinator,
 )
 
 PLATFORMS = [
@@ -56,11 +57,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
     assert entry.unique_id
     serial = entry.unique_id
 
-    client = async_create_clientsession(hass)
     cloud_client = LaMarzoccoCloudClient(
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
-        client=client,
+        client=async_create_clientsession(hass),
     )
 
     try:
@@ -69,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="authentication_failed"
         ) from ex
-    except RequestNotSuccessful as ex:
+    except (RequestNotSuccessful, TimeoutError) as ex:
         _LOGGER.debug(ex, exc_info=True)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN, translation_key="api_error"
@@ -140,24 +140,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
         LaMarzoccoConfigUpdateCoordinator(hass, entry, device),
         LaMarzoccoSettingsUpdateCoordinator(hass, entry, device),
         LaMarzoccoScheduleUpdateCoordinator(hass, entry, device),
+        LaMarzoccoStatisticsUpdateCoordinator(hass, entry, device),
     )
 
     await asyncio.gather(
         coordinators.config_coordinator.async_config_entry_first_refresh(),
         coordinators.settings_coordinator.async_config_entry_first_refresh(),
         coordinators.schedule_coordinator.async_config_entry_first_refresh(),
+        coordinators.statistics_coordinator.async_config_entry_first_refresh(),
     )
 
     entry.runtime_data = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    async def update_listener(
-        hass: HomeAssistant, entry: LaMarzoccoConfigEntry
-    ) -> None:
-        await hass.config_entries.async_reload(entry.entry_id)
-
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 
