@@ -120,9 +120,9 @@ rules:
   reconfiguration-flow:
     status: exempt
     comment: |
-      This backup storage integration's configuration consists of static SFTP 
+      This backup storage integration's configuration consists of static SFTP
       connection parameters (host, port, credentials, backup path). Changes to
-      these parameters effectively create a connection to a different backup 
+      these parameters effectively create a connection to a different backup
       location, which should be configured as a separate integration instance.
   repair-issues:
     status: exempt
