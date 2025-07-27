@@ -8,10 +8,7 @@ rules:
   brands: done
   common-modules: done
   config-flow: done
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      Coverage is 100%, but the tests need to be improved.
+  config-flow-test-coverage: done
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
@@ -22,7 +19,7 @@ rules:
     comment: |
       Currently we store created entities in hass.data. That should be removed in the future.
   entity-unique-id: done
-  has-entity-name: todo
+  has-entity-name: done
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
@@ -39,9 +36,9 @@ rules:
   parallel-updates: todo
   reauthentication-flow:
     status: exempt
-    comment: |
-      This integration does not require authentication.
-  test-coverage: todo
+    comment: This integration does not require authentication.
+  test-coverage: done
+
   # Gold
   devices: todo
   diagnostics: todo
@@ -77,7 +74,4 @@ rules:
     status: exempt
     comment: |
       This integration is not making any HTTP requests.
-  strict-typing:
-    status: todo
-    comment: |
-      The library is not fully typed yet.
+  strict-typing: done

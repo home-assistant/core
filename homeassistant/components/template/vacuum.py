@@ -76,7 +76,7 @@ LEGACY_FIELDS = {
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
-VACUUM_SCHEMA = vol.All(
+VACUUM_YAML_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Optional(CONF_BATTERY_LEVEL): cv.template,
@@ -94,7 +94,7 @@ VACUUM_SCHEMA = vol.All(
     ).extend(make_template_entity_common_modern_attributes_schema(DEFAULT_NAME).schema)
 )
 
-LEGACY_VACUUM_SCHEMA = vol.All(
+VACUUM_LEGACY_YAML_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
     vol.Schema(
         {
@@ -119,7 +119,7 @@ LEGACY_VACUUM_SCHEMA = vol.All(
 )
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_VACUUMS): cv.schema_with_slug_keys(LEGACY_VACUUM_SCHEMA)}
+    {vol.Required(CONF_VACUUMS): cv.schema_with_slug_keys(VACUUM_LEGACY_YAML_SCHEMA)}
 )
 
 
@@ -404,5 +404,4 @@ class TriggerVacuumEntity(TriggerEntity, AbstractTemplateVacuum):
             write_ha_state = True
 
         if write_ha_state:
-            self.async_set_context(self.coordinator.data["context"])
             self.async_write_ha_state()

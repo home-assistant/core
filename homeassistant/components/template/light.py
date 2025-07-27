@@ -121,7 +121,7 @@ LEGACY_FIELDS = {
 
 DEFAULT_NAME = "Template Light"
 
-LIGHT_SCHEMA = vol.Schema(
+LIGHT_YAML_SCHEMA = vol.Schema(
     {
         vol.Inclusive(CONF_EFFECT_ACTION, "effect"): cv.SCRIPT_SCHEMA,
         vol.Inclusive(CONF_EFFECT_LIST, "effect"): cv.template,
@@ -147,7 +147,7 @@ LIGHT_SCHEMA = vol.Schema(
     }
 ).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
 
-LEGACY_LIGHT_SCHEMA = vol.All(
+LIGHT_LEGACY_YAML_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
     vol.Schema(
         {
@@ -186,7 +186,7 @@ PLATFORM_SCHEMA = vol.All(
     cv.removed(CONF_WHITE_VALUE_ACTION),
     cv.removed(CONF_WHITE_VALUE_TEMPLATE),
     LIGHT_PLATFORM_SCHEMA.extend(
-        {vol.Required(CONF_LIGHTS): cv.schema_with_slug_keys(LEGACY_LIGHT_SCHEMA)}
+        {vol.Required(CONF_LIGHTS): cv.schema_with_slug_keys(LIGHT_LEGACY_YAML_SCHEMA)}
     ),
 )
 
@@ -1166,7 +1166,6 @@ class TriggerLightEntity(TriggerEntity, AbstractTemplateLight):
             raw = self._rendered.get(CONF_STATE)
             self._state = template.result_as_boolean(raw)
 
-            self.async_set_context(self.coordinator.data["context"])
             write_ha_state = True
         elif self._optimistic and len(self._rendered) > 0:
             # In case any non optimistic template
