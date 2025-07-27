@@ -26,6 +26,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_CLOUD_COVERAGE,
     ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_HUMIDITY,
+    ATTR_FORECAST_IS_DAYTIME,
     ATTR_FORECAST_NATIVE_PRECIPITATION,
     ATTR_FORECAST_NATIVE_PRESSURE,
     ATTR_FORECAST_NATIVE_TEMP,
@@ -109,7 +110,9 @@ class SmhiWeather(SmhiWeatherBaseEntity, SingleCoordinatorWeatherEntity):
     _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
     _attr_native_pressure_unit = UnitOfPressure.HPA
     _attr_supported_features = (
-        WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
+        WeatherEntityFeature.FORECAST_DAILY
+        | WeatherEntityFeature.FORECAST_HOURLY
+        | WeatherEntityFeature.FORECAST_TWICE_DAILY
     )
     _attr_name = None
 
@@ -146,7 +149,7 @@ class SmhiWeather(SmhiWeatherBaseEntity, SingleCoordinatorWeatherEntity):
         super()._handle_coordinator_update()
 
     def _get_forecast_data(
-        self, forecast_data: list[SMHIForecast] | None
+        self, forecast_data: list[SMHIForecast] | None, forecast_type: str
     ) -> list[Forecast] | None:
         """Get forecast data."""
         if forecast_data is None or len(forecast_data) < 3:
@@ -161,7 +164,7 @@ class SmhiWeather(SmhiWeatherBaseEntity, SingleCoordinatorWeatherEntity):
             ):
                 condition = ATTR_CONDITION_CLEAR_NIGHT
 
-            data.append(
+            new_forecast = Forecast(
                 {
                     ATTR_FORECAST_TIME: forecast["valid_time"].isoformat(),
                     ATTR_FORECAST_NATIVE_TEMP: forecast["temperature_max"],
@@ -179,13 +182,23 @@ class SmhiWeather(SmhiWeatherBaseEntity, SingleCoordinatorWeatherEntity):
                     ATTR_FORECAST_CLOUD_COVERAGE: forecast["total_cloud"],
                 }
             )
+            if forecast_type == "twice_daily":
+                new_forecast[ATTR_FORECAST_IS_DAYTIME] = False
+                if forecast["valid_time"].hour == 12:
+                    new_forecast[ATTR_FORECAST_IS_DAYTIME] = True
+
+            data.append(new_forecast)
 
         return data
 
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Service to retrieve the daily forecast."""
-        return self._get_forecast_data(self.coordinator.data.daily)
+        return self._get_forecast_data(self.coordinator.data.daily, "daily")
 
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Service to retrieve the hourly forecast."""
-        return self._get_forecast_data(self.coordinator.data.hourly)
+        return self._get_forecast_data(self.coordinator.data.hourly, "hourly")
+
+    def _async_forecast_twice_daily(self) -> list[Forecast] | None:
+        """Service to retrieve the twice daily forecast."""
+        return self._get_forecast_data(self.coordinator.data.twice_daily, "twice_daily")

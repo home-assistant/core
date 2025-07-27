@@ -19,6 +19,7 @@ CONF_ARRIVAL = "arrival"
 CONF_DEPARTURE = "departure"
 CONF_ARRIVAL_TIME = "arrival_time"
 CONF_DEPARTURE_TIME = "departure_time"
+CONF_TRAFFIC_MODE = "traffic_mode"
 
 DEFAULT_NAME = "HERE Travel Time"
 
