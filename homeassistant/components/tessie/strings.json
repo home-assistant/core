@@ -48,7 +48,7 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "off": "Normal",
+              "off": "[%key:common::state::normal%]",
               "on": "Keep mode",
               "dog": "Dog mode",
               "camp": "Camp mode"
@@ -217,7 +217,7 @@
           "connected": "[%key:common::state::connected%]",
           "scheduled": "Scheduled",
           "negotiating": "Negotiating",
-          "error": "Error",
+          "error": "[%key:common::state::error%]",
           "charging_finished": "Charging finished",
           "waiting_car": "Waiting car",
           "charging_reduced": "Charging reduced"
@@ -336,7 +336,7 @@
         "state": {
           "autonomous": "Autonomous",
           "backup": "Backup",
-          "self_consumption": "Self consumption"
+          "self_consumption": "Self-consumption"
         }
       }
     },
@@ -495,7 +495,7 @@
         "name": "Speed limit"
       },
       "off_grid_vehicle_charging_reserve_percent": {
-        "name": "Off grid reserve"
+        "name": "Off-grid reserve"
       }
     },
     "update": {

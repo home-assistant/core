@@ -3,6 +3,19 @@
   "name": "Airthings",
   "codeowners": ["@danielhiversen", "@LaStrada"],
   "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "airthings-view"
+    },
+    {
+      "hostname": "airthings-hub",
+      "macaddress": "D0141190*"
+    },
+    {
+      "hostname": "airthings-hub",
+      "macaddress": "70B3D52A0*"
+    }
+  ],
   "documentation": "https://www.home-assistant.io/integrations/airthings",
   "iot_class": "cloud_polling",
   "loggers": ["airthings"],

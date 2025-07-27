@@ -63,6 +63,7 @@ BINARY_PUSH_SENSORS = (
         cmd_id=33,
         device_class=BinarySensorDeviceClass.MOTION,
         value=lambda api, ch: api.motion_detected(ch),
+        supported=lambda api, ch: api.supported(ch, "motion_detection"),
     ),
     ReolinkBinarySensorEntityDescription(
         key=FACE_DETECTION_TYPE,
@@ -115,6 +116,7 @@ BINARY_PUSH_SENSORS = (
         translation_key="visitor",
         value=lambda api, ch: api.visitor_detected(ch),
         supported=lambda api, ch: api.is_doorbell(ch),
+        always_available=True,
     ),
     ReolinkBinarySensorEntityDescription(
         key="cry",
@@ -301,7 +303,7 @@ async def async_setup_entry(
             )
             for entity_description in BINARY_SMART_AI_SENSORS
             for location in api.baichuan.smart_location_list(
-                channel, entity_description.key
+                channel, entity_description.smart_type
             )
             if entity_description.supported(api, channel, location)
         )

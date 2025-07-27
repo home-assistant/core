@@ -21,24 +21,24 @@ from tests.common import MockConfigEntry
 async def test_migrate_unique_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    config_entry: MockConfigEntry,
     old_key: str,
     new_key: str,
 ) -> None:
     """Test unique id migration."""
-    entry = MockConfigEntry(domain=DOMAIN, data={})
-    entry.add_to_hass(hass)
+    config_entry.add_to_hass(hass)
 
     entity: er.RegistryEntry = entity_registry.async_get_or_create(
         domain=SENSOR_DOMAIN,
         platform=DOMAIN,
-        unique_id=f"{entry.entry_id}-{old_key}",
-        config_entry=entry,
+        unique_id=f"{config_entry.entry_id}-{old_key}",
+        config_entry=config_entry,
     )
     assert entity.unique_id.endswith(f"-{old_key}")
 
-    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     entity_migrated = entity_registry.async_get(entity.entity_id)
     assert entity_migrated
-    assert entity_migrated.unique_id == f"{entry.entry_id}-{new_key}"
+    assert entity_migrated.unique_id == f"{config_entry.entry_id}-{new_key}"

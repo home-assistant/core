@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 from aiocomelit.api import AlarmDataObject, ComelitVedoAreaObject, ComelitVedoZoneObject
 from aiocomelit.const import AlarmAreaState, AlarmZoneState
 from freezegun.api import FrozenDateTimeFactory
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.comelit.const import SCAN_INTERVAL
 from homeassistant.const import STATE_UNKNOWN, Platform
@@ -33,7 +33,7 @@ async def test_all_entities(
     await snapshot_platform(
         hass,
         entity_registry,
-        snapshot(),
+        snapshot,
         mock_vedo_config_entry.entry_id,
     )
 

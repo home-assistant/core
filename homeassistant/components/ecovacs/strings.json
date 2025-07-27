@@ -229,9 +229,9 @@
         "state_attributes": {
           "fan_speed": {
             "state": {
+              "normal": "[%key:common::state::normal%]",
               "max": "Max",
               "max_plus": "Max+",
-              "normal": "Normal",
               "quiet": "Quiet"
             }
           },

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from aiostreammagic import (
+    ControlBusMode,
     RepeatMode as CambridgeRepeatMode,
     ShuffleMode,
     TransportControl,
@@ -44,7 +45,6 @@ from homeassistant.const import (
     STATE_ON,
     STATE_PAUSED,
     STATE_PLAYING,
-    STATE_STANDBY,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -129,11 +129,34 @@ async def test_entity_supported_features(
     )
 
 
+async def test_entity_supported_features_with_control_bus(
+    hass: HomeAssistant,
+    mock_stream_magic_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test entity attributes with control bus state."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_stream_magic_client.state.pre_amp_mode = False
+    mock_stream_magic_client.state.control_bus = ControlBusMode.AMPLIFIER
+
+    await mock_state_update(mock_stream_magic_client)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    attrs = state.attributes
+    assert MediaPlayerEntityFeature.VOLUME_STEP in attrs[ATTR_SUPPORTED_FEATURES]
+    assert (
+        MediaPlayerEntityFeature.VOLUME_SET | MediaPlayerEntityFeature.VOLUME_MUTE
+        not in attrs[ATTR_SUPPORTED_FEATURES]
+    )
+
+
 @pytest.mark.parametrize(
     ("power_state", "play_state", "media_player_state"),
     [
-        (True, "NETWORK", STATE_STANDBY),
-        (False, "NETWORK", STATE_STANDBY),
+        (True, "NETWORK", STATE_OFF),
+        (False, "NETWORK", STATE_OFF),
         (False, "play", STATE_OFF),
         (True, "play", STATE_PLAYING),
         (True, "pause", STATE_PAUSED),

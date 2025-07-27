@@ -24,10 +24,6 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Return logger."""
         return logging.getLogger(__name__)
 
-    async def async_step_import(self, data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import from YAML."""
-        return await self.async_step_user()
-
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:

@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from tests.common import async_fire_time_changed
+from tests.common import async_call_logger_set_level, async_fire_time_changed
 from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
 
@@ -533,27 +533,19 @@ async def test_enable_disable_debug_logging(
 ) -> None:
     """Test enabling and disabling debug logging."""
     assert await async_setup_component(hass, "logger", {"logger": {}})
-    await hass.services.async_call(
-        "logger",
-        "set_level",
-        {"homeassistant.components.websocket_api": "DEBUG"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    await websocket_client.send_json({"id": 1, "type": "ping"})
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 1
-    assert msg["type"] == "pong"
-    assert 'Sending b\'{"id":1,"type":"pong"}\'' in caplog.text
-    await hass.services.async_call(
-        "logger",
-        "set_level",
-        {"homeassistant.components.websocket_api": "WARNING"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    await websocket_client.send_json({"id": 2, "type": "ping"})
-    msg = await websocket_client.receive_json()
-    assert msg["id"] == 2
-    assert msg["type"] == "pong"
-    assert 'Sending b\'{"id":2,"type":"pong"}\'' not in caplog.text
+    async with async_call_logger_set_level(
+        "homeassistant.components.websocket_api", "DEBUG", hass=hass, caplog=caplog
+    ):
+        await websocket_client.send_json({"id": 1, "type": "ping"})
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == 1
+        assert msg["type"] == "pong"
+        assert 'Sending b\'{"id":1,"type":"pong"}\'' in caplog.text
+    async with async_call_logger_set_level(
+        "homeassistant.components.websocket_api", "WARNING", hass=hass, caplog=caplog
+    ):
+        await websocket_client.send_json({"id": 2, "type": "ping"})
+        msg = await websocket_client.receive_json()
+        assert msg["id"] == 2
+        assert msg["type"] == "pong"
+        assert 'Sending b\'{"id":2,"type":"pong"}\'' not in caplog.text

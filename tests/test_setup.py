@@ -57,21 +57,21 @@ async def test_validate_component_config(hass: HomeAssistant) -> None:
     with assert_setup_component(0):
         assert not await setup.async_setup_component(hass, "comp_conf", {})
 
-    hass.data.pop(setup.DATA_SETUP)
+    hass.data.pop(setup._DATA_SETUP)
 
     with assert_setup_component(0):
         assert not await setup.async_setup_component(
             hass, "comp_conf", {"comp_conf": None}
         )
 
-    hass.data.pop(setup.DATA_SETUP)
+    hass.data.pop(setup._DATA_SETUP)
 
     with assert_setup_component(0):
         assert not await setup.async_setup_component(
             hass, "comp_conf", {"comp_conf": {}}
         )
 
-    hass.data.pop(setup.DATA_SETUP)
+    hass.data.pop(setup._DATA_SETUP)
 
     with assert_setup_component(0):
         assert not await setup.async_setup_component(
@@ -80,7 +80,7 @@ async def test_validate_component_config(hass: HomeAssistant) -> None:
             {"comp_conf": {"hello": "world", "invalid": "extra"}},
         )
 
-    hass.data.pop(setup.DATA_SETUP)
+    hass.data.pop(setup._DATA_SETUP)
 
     with assert_setup_component(1):
         assert await setup.async_setup_component(
@@ -111,7 +111,7 @@ async def test_validate_platform_config(
             {"platform_conf": {"platform": "not_existing", "hello": "world"}},
         )
 
-    hass.data.pop(setup.DATA_SETUP)
+    hass.data.pop(setup._DATA_SETUP)
     hass.config.components.remove("platform_conf")
 
     with assert_setup_component(1):
@@ -121,7 +121,7 @@ async def test_validate_platform_config(
             {"platform_conf": {"platform": "whatever", "hello": "world"}},
         )
 
-    hass.data.pop(setup.DATA_SETUP)
+    hass.data.pop(setup._DATA_SETUP)
     hass.config.components.remove("platform_conf")
 
     with assert_setup_component(1):
@@ -131,7 +131,7 @@ async def test_validate_platform_config(
             {"platform_conf": [{"platform": "whatever", "hello": "world"}]},
         )
 
-    hass.data.pop(setup.DATA_SETUP)
+    hass.data.pop(setup._DATA_SETUP)
     hass.config.components.remove("platform_conf")
 
     # Any falsey platform config will be ignored (None, {}, etc)
@@ -240,7 +240,7 @@ async def test_validate_platform_config_4(hass: HomeAssistant) -> None:
             },
         )
 
-    hass.data.pop(setup.DATA_SETUP)
+    hass.data.pop(setup._DATA_SETUP)
     hass.config.components.remove("platform_conf")
 
 
@@ -345,12 +345,82 @@ async def test_component_not_setup_missing_dependencies(hass: HomeAssistant) -> 
     assert not await setup.async_setup_component(hass, "comp", {})
     assert "comp" not in hass.config.components
 
-    hass.data.pop(setup.DATA_SETUP)
+    hass.data.pop(setup._DATA_SETUP)
 
     mock_integration(hass, MockModule("comp2", dependencies=deps))
     mock_integration(hass, MockModule("maybe_existing"))
 
     assert await setup.async_setup_component(hass, "comp2", {})
+
+
+async def test_component_not_setup_already_setup_dependencies(
+    hass: HomeAssistant,
+) -> None:
+    """Test we do not set up component dependencies if they are already set up."""
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            dependencies=["dep1"],
+            partial_manifest={"after_dependencies": ["dep2"]},
+        ),
+    )
+    mock_integration(hass, MockModule("dep1"))
+    mock_integration(hass, MockModule("dep2"))
+
+    setup.async_set_domains_to_be_loaded(hass, {"comp", "dep2"})
+
+    hass.config.components.add("dep1")
+    hass.config.components.add("dep2")
+
+    with patch(
+        "homeassistant.setup.async_setup_component",
+        side_effect=setup.async_setup_component,
+    ) as mock_setup:
+        await mock_setup(hass, "comp", {})
+
+    assert mock_setup.call_count == 1
+
+
+@pytest.mark.usefixtures("mock_handlers")
+async def test_component_setup_dependencies_with_config_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test we wait for a dependency with config entry."""
+    calls: list[str] = []
+
+    async def mock_async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+        await asyncio.sleep(0)
+        calls.append("entry")
+        return True
+
+    mock_integration(hass, MockModule("comp", async_setup_entry=mock_async_setup_entry))
+    mock_platform(hass, "comp.config_flow", None)
+    MockConfigEntry(domain="comp").add_to_hass(hass)
+
+    async def mock_async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        calls.append("comp")
+        return True
+
+    mock_integration(
+        hass,
+        MockModule("comp2", dependencies=["comp"], async_setup=mock_async_setup),
+    )
+    mock_integration(
+        hass,
+        MockModule("comp3", dependencies=["comp"], async_setup=mock_async_setup),
+    )
+
+    await asyncio.gather(
+        setup.async_setup_component(hass, "comp2", {}),
+        setup.async_setup_component(hass, "comp3", {}),
+    )
+
+    assert "comp" in hass.config.components
+    assert "comp2" in hass.config.components
+    assert "comp3" in hass.config.components
+
+    assert calls == ["entry", "comp", "comp"]
 
 
 async def test_component_failing_setup(hass: HomeAssistant) -> None:
@@ -373,8 +443,8 @@ async def test_component_exception_setup(hass: HomeAssistant) -> None:
     mock_integration(hass, MockModule(domain, setup=exception_setup))
 
     assert not await setup.async_setup_component(hass, domain, {})
-    assert domain in hass.data[setup.DATA_SETUP]
-    assert domain not in hass.data[setup.DATA_SETUP_DONE]
+    assert domain in hass.data[setup._DATA_SETUP]
+    assert domain not in hass.data[setup._DATA_SETUP_DONE]
     assert domain not in hass.config.components
 
 
@@ -393,8 +463,8 @@ async def test_component_base_exception_setup(hass: HomeAssistant) -> None:
         await setup.async_setup_component(hass, "comp", {})
     assert str(exc_info.value) == "fail!"
 
-    assert domain in hass.data[setup.DATA_SETUP]
-    assert domain not in hass.data[setup.DATA_SETUP_DONE]
+    assert domain in hass.data[setup._DATA_SETUP]
+    assert domain not in hass.data[setup._DATA_SETUP_DONE]
     assert domain not in hass.config.components
 
 
@@ -407,12 +477,12 @@ async def test_set_domains_to_be_loaded(hass: HomeAssistant) -> None:
     domains = {domain_good, domain_bad, domain_exception, domain_base_exception}
     setup.async_set_domains_to_be_loaded(hass, domains)
 
-    assert set(hass.data[setup.DATA_SETUP_DONE]) == domains
-    setup_done = dict(hass.data[setup.DATA_SETUP_DONE])
+    assert set(hass.data[setup._DATA_SETUP_DONE]) == domains
+    setup_done = dict(hass.data[setup._DATA_SETUP_DONE])
 
     # Calling async_set_domains_to_be_loaded again should not create new futures
     setup.async_set_domains_to_be_loaded(hass, domains)
-    assert setup_done == hass.data[setup.DATA_SETUP_DONE]
+    assert setup_done == hass.data[setup._DATA_SETUP_DONE]
 
     def good_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Success."""
@@ -445,8 +515,8 @@ async def test_set_domains_to_be_loaded(hass: HomeAssistant) -> None:
         await setup.async_setup_component(hass, domain_base_exception, {})
 
     # Check the result of the setup
-    assert not hass.data[setup.DATA_SETUP_DONE]
-    assert set(hass.data[setup.DATA_SETUP]) == {
+    assert not hass.data[setup._DATA_SETUP_DONE]
+    assert set(hass.data[setup._DATA_SETUP]) == {
         domain_bad,
         domain_exception,
         domain_base_exception,
@@ -455,7 +525,7 @@ async def test_set_domains_to_be_loaded(hass: HomeAssistant) -> None:
 
     # Calling async_set_domains_to_be_loaded again should not create any new futures
     setup.async_set_domains_to_be_loaded(hass, domains)
-    assert not hass.data[setup.DATA_SETUP_DONE]
+    assert not hass.data[setup._DATA_SETUP_DONE]
 
 
 async def test_component_setup_after_dependencies(hass: HomeAssistant) -> None:
@@ -538,7 +608,7 @@ async def test_platform_specific_config_validation(hass: HomeAssistant) -> None:
         assert mock_setup.call_count == 0
         assert len(mock_notify.mock_calls) == 1
 
-    hass.data.pop(setup.DATA_SETUP)
+    hass.data.pop(setup._DATA_SETUP)
     hass.config.components.remove("switch")
 
     with (
@@ -560,7 +630,7 @@ async def test_platform_specific_config_validation(hass: HomeAssistant) -> None:
         assert mock_setup.call_count == 0
         assert len(mock_notify.mock_calls) == 1
 
-    hass.data.pop(setup.DATA_SETUP)
+    hass.data.pop(setup._DATA_SETUP)
     hass.config.components.remove("switch")
 
     with (
@@ -586,7 +656,7 @@ async def test_disable_component_if_invalid_return(hass: HomeAssistant) -> None:
     assert not await setup.async_setup_component(hass, "disabled_component", {})
     assert "disabled_component" not in hass.config.components
 
-    hass.data.pop(setup.DATA_SETUP)
+    hass.data.pop(setup._DATA_SETUP)
     mock_integration(
         hass,
         MockModule("disabled_component", setup=lambda hass, config: False),
@@ -595,7 +665,7 @@ async def test_disable_component_if_invalid_return(hass: HomeAssistant) -> None:
     assert not await setup.async_setup_component(hass, "disabled_component", {})
     assert "disabled_component" not in hass.config.components
 
-    hass.data.pop(setup.DATA_SETUP)
+    hass.data.pop(setup._DATA_SETUP)
     mock_integration(
         hass, MockModule("disabled_component", setup=lambda hass, config: True)
     )
@@ -869,7 +939,7 @@ async def test_integration_only_setup_entry(hass: HomeAssistant) -> None:
 async def test_async_start_setup_running(hass: HomeAssistant) -> None:
     """Test setup started context manager does nothing when running."""
     assert hass.state is CoreState.running
-    setup_started = hass.data.setdefault(setup.DATA_SETUP_STARTED, {})
+    setup_started = hass.data.setdefault(setup._DATA_SETUP_STARTED, {})
 
     with setup.async_start_setup(
         hass, integration="august", phase=setup.SetupPhases.SETUP
@@ -882,7 +952,7 @@ async def test_async_start_setup_config_entry(
 ) -> None:
     """Test setup started keeps track of setup times with a config entry."""
     hass.set_state(CoreState.not_running)
-    setup_started = hass.data.setdefault(setup.DATA_SETUP_STARTED, {})
+    setup_started = hass.data.setdefault(setup._DATA_SETUP_STARTED, {})
     setup_time = setup._setup_times(hass)
 
     with setup.async_start_setup(
@@ -992,7 +1062,7 @@ async def test_async_start_setup_config_entry_late_platform(
 ) -> None:
     """Test setup started tracks config entry time with a late platform load."""
     hass.set_state(CoreState.not_running)
-    setup_started = hass.data.setdefault(setup.DATA_SETUP_STARTED, {})
+    setup_started = hass.data.setdefault(setup._DATA_SETUP_STARTED, {})
     setup_time = setup._setup_times(hass)
 
     with setup.async_start_setup(
@@ -1046,7 +1116,7 @@ async def test_async_start_setup_config_entry_platform_wait(
 ) -> None:
     """Test setup started tracks wait time when a platform loads inside of config entry setup."""
     hass.set_state(CoreState.not_running)
-    setup_started = hass.data.setdefault(setup.DATA_SETUP_STARTED, {})
+    setup_started = hass.data.setdefault(setup._DATA_SETUP_STARTED, {})
     setup_time = setup._setup_times(hass)
 
     with setup.async_start_setup(
@@ -1088,7 +1158,7 @@ async def test_async_start_setup_config_entry_platform_wait(
 async def test_async_start_setup_top_level_yaml(hass: HomeAssistant) -> None:
     """Test setup started context manager keeps track of setup times with modern yaml."""
     hass.set_state(CoreState.not_running)
-    setup_started = hass.data.setdefault(setup.DATA_SETUP_STARTED, {})
+    setup_started = hass.data.setdefault(setup._DATA_SETUP_STARTED, {})
     setup_time = setup._setup_times(hass)
 
     with setup.async_start_setup(
@@ -1104,7 +1174,7 @@ async def test_async_start_setup_top_level_yaml(hass: HomeAssistant) -> None:
 async def test_async_start_setup_platform_integration(hass: HomeAssistant) -> None:
     """Test setup started keeps track of setup times a platform integration."""
     hass.set_state(CoreState.not_running)
-    setup_started = hass.data.setdefault(setup.DATA_SETUP_STARTED, {})
+    setup_started = hass.data.setdefault(setup._DATA_SETUP_STARTED, {})
     setup_time = setup._setup_times(hass)
 
     with setup.async_start_setup(
@@ -1138,7 +1208,7 @@ async def test_async_start_setup_legacy_platform_integration(
 ) -> None:
     """Test setup started keeps track of setup times for a legacy platform integration."""
     hass.set_state(CoreState.not_running)
-    setup_started = hass.data.setdefault(setup.DATA_SETUP_STARTED, {})
+    setup_started = hass.data.setdefault(setup._DATA_SETUP_STARTED, {})
     setup_time = setup._setup_times(hass)
 
     with setup.async_start_setup(
@@ -1260,7 +1330,7 @@ async def test_setup_config_entry_from_yaml(
     assert await setup.async_setup_component(hass, "test_integration_only_entry", {})
     assert expected_warning not in caplog.text
     caplog.clear()
-    hass.data.pop(setup.DATA_SETUP)
+    hass.data.pop(setup._DATA_SETUP)
     hass.config.components.remove("test_integration_only_entry")
 
     # There should be a warning, but setup should not fail
@@ -1269,7 +1339,7 @@ async def test_setup_config_entry_from_yaml(
     )
     assert expected_warning in caplog.text
     caplog.clear()
-    hass.data.pop(setup.DATA_SETUP)
+    hass.data.pop(setup._DATA_SETUP)
     hass.config.components.remove("test_integration_only_entry")
 
     # There should be a warning, but setup should not fail
@@ -1278,7 +1348,7 @@ async def test_setup_config_entry_from_yaml(
     )
     assert expected_warning in caplog.text
     caplog.clear()
-    hass.data.pop(setup.DATA_SETUP)
+    hass.data.pop(setup._DATA_SETUP)
     hass.config.components.remove("test_integration_only_entry")
 
     # There should be a warning, but setup should not fail
@@ -1289,7 +1359,7 @@ async def test_setup_config_entry_from_yaml(
     )
     assert expected_warning in caplog.text
     caplog.clear()
-    hass.data.pop(setup.DATA_SETUP)
+    hass.data.pop(setup._DATA_SETUP)
     hass.config.components.remove("test_integration_only_entry")
 
 
@@ -1338,3 +1408,42 @@ async def test_async_prepare_setup_platform(
         await setup.async_prepare_setup_platform(hass, {}, "button", "test") is None
     )
     assert button_platform is not None
+
+
+async def test_async_wait_component(hass: HomeAssistant) -> None:
+    """Test async_wait_component."""
+    setup_stall = asyncio.Event()
+    setup_started = asyncio.Event()
+
+    async def mock_setup(hass: HomeAssistant, _) -> bool:
+        setup_started.set()
+        await setup_stall.wait()
+        return True
+
+    mock_integration(hass, MockModule("test", async_setup=mock_setup))
+
+    # The integration not loaded, and is also not scheduled to load
+    assert await setup.async_wait_component(hass, "test") is False
+
+    # Mark the component as scheduled to be loaded
+    setup.async_set_domains_to_be_loaded(hass, {"test"})
+
+    # Start loading the component, including its config entries
+    hass.async_create_task(setup.async_setup_component(hass, "test", {}))
+    await setup_started.wait()
+
+    # The component is not yet loaded
+    assert "test" not in hass.config.components
+
+    # Allow setup to proceed
+    setup_stall.set()
+
+    # The component is scheduled to load, this will block until the config entry is loaded
+    assert await setup.async_wait_component(hass, "test") is True
+
+    # The component has been loaded
+    assert "test" in hass.config.components
+
+    # Clear the event, then call again to make sure we don't block
+    setup_stall.clear()
+    assert await setup.async_wait_component(hass, "test") is True

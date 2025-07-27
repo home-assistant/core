@@ -17,7 +17,6 @@ from homeassistant.components.event import (
     EventEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -27,7 +26,7 @@ from .const import (
     SHIX3_1_INPUTS_EVENTS_TYPES,
 )
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
-from .entity import ShellyBlockEntity
+from .entity import ShellyBlockEntity, get_entity_rpc_device_info
 from .utils import (
     async_remove_orphaned_entities,
     async_remove_shelly_entity,
@@ -37,6 +36,8 @@ from .utils import (
     is_block_momentary_input,
     is_rpc_momentary_input,
 )
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -75,7 +76,6 @@ SCRIPT_EVENT: Final = ShellyRpcEventDescription(
     translation_key="script",
     device_class=None,
     entity_registry_enabled_default=False,
-    has_entity_name=True,
 )
 
 
@@ -193,6 +193,7 @@ class ShellyBlockEvent(ShellyBlockEntity, EventEntity):
 class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
     """Represent RPC event entity."""
 
+    _attr_has_entity_name = True
     entity_description: ShellyRpcEventDescription
 
     def __init__(
@@ -204,9 +205,7 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
         """Initialize Shelly entity."""
         super().__init__(coordinator)
         self.event_id = int(key.split(":")[-1])
-        self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
-        )
+        self._attr_device_info = get_entity_rpc_device_info(coordinator, key)
         self._attr_unique_id = f"{coordinator.mac}-{key}"
         self._attr_name = get_rpc_entity_name(coordinator.device, key)
         self.entity_description = description

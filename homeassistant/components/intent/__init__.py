@@ -10,6 +10,11 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import http, sensor
+from homeassistant.components.button import (
+    DOMAIN as BUTTON_DOMAIN,
+    SERVICE_PRESS as SERVICE_PRESS_BUTTON,
+    ButtonDeviceClass,
+)
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -20,6 +25,7 @@ from homeassistant.components.cover import (
     CoverDeviceClass,
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
@@ -80,6 +86,7 @@ __all__ = [
 ]
 
 ONOFF_DEVICE_CLASSES = {
+    ButtonDeviceClass,
     CoverDeviceClass,
     ValveDeviceClass,
     SwitchDeviceClass,
@@ -103,7 +110,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             intent.INTENT_TURN_ON,
             HOMEASSISTANT_DOMAIN,
             SERVICE_TURN_ON,
-            description="Turns on/opens a device or entity",
+            description="Turns on/opens/presses a device or entity. For locks, this performs a 'lock' action. Use for requests like 'turn on', 'activate', 'enable', or 'lock'.",
             device_classes=ONOFF_DEVICE_CLASSES,
         ),
     )
@@ -113,7 +120,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             intent.INTENT_TURN_OFF,
             HOMEASSISTANT_DOMAIN,
             SERVICE_TURN_OFF,
-            description="Turns off/closes a device or entity",
+            description="Turns off/closes a device or entity. For locks, this performs an 'unlock' action. Use for requests like 'turn off', 'deactivate', 'disable', or 'unlock'.",
             device_classes=ONOFF_DEVICE_CLASSES,
         ),
     )
@@ -167,6 +174,25 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
     ) -> None:
         """Call service on entity with handling for special cases."""
         hass = intent_obj.hass
+
+        if state.domain in (BUTTON_DOMAIN, INPUT_BUTTON_DOMAIN):
+            if service != SERVICE_TURN_ON:
+                raise intent.IntentHandleError(
+                    f"Entity {state.entity_id} cannot be turned off"
+                )
+
+            await self._run_then_background(
+                hass.async_create_task(
+                    hass.services.async_call(
+                        state.domain,
+                        SERVICE_PRESS_BUTTON,
+                        {ATTR_ENTITY_ID: state.entity_id},
+                        context=intent_obj.context,
+                        blocking=True,
+                    )
+                )
+            )
+            return
 
         if state.domain == COVER_DOMAIN:
             # on = open

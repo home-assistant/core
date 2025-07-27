@@ -21,7 +21,7 @@ from homeassistant.setup import async_setup_component
 
 from .util import async_init_integration
 
-from tests.common import async_get_device_automations
+from tests.common import MockConfigEntry, async_get_device_automations
 
 
 async def test_get_all_actions_for_specified_user(
@@ -79,10 +79,10 @@ async def test_no_actions_for_anonymous_user(
     assert len(actions) == 0
 
 
-async def test_no_actions_invalid_device(
+async def test_no_actions_device_not_found(
     hass: HomeAssistant,
 ) -> None:
-    """Test we get no actions for an invalid device."""
+    """Test we get no actions for a device that cannot be found."""
     list_commands_return_value = {"beeper.enable": None}
     await async_init_integration(
         hass,
@@ -95,6 +95,30 @@ async def test_no_actions_invalid_device(
         hass, DOMAIN, DeviceAutomationType.ACTION
     )
     actions = await platform.async_get_actions(hass, device_id)
+
+    assert len(actions) == 0
+
+
+async def test_no_actions_device_invalid(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test we get no actions for a device that is invalid."""
+    list_commands_return_value = {"beeper.enable": None}
+    entry = await async_init_integration(
+        hass,
+        list_vars={"ups.status": "OL"},
+        list_commands_return_value=list_commands_return_value,
+    )
+    device_entry = next(device for device in device_registry.devices.values())
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    platform = await device_automation.async_get_device_automation_platform(
+        hass, DOMAIN, DeviceAutomationType.ACTION
+    )
+    actions = await platform.async_get_actions(hass, device_entry.id)
 
     assert len(actions) == 0
 
@@ -227,8 +251,8 @@ async def test_run_command_exception(
         )
 
 
-async def test_action_exception_invalid_device(hass: HomeAssistant) -> None:
-    """Test raises exception if invalid device."""
+async def test_action_exception_device_not_found(hass: HomeAssistant) -> None:
+    """Test raises exception if device not found."""
     list_commands_return_value = {"beeper.enable": None}
     await async_init_integration(
         hass,
@@ -246,6 +270,67 @@ async def test_action_exception_invalid_device(hass: HomeAssistant) -> None:
         await platform.async_call_action_from_config(
             hass,
             {CONF_TYPE: "beeper.enable", CONF_DEVICE_ID: device_id},
+            {},
+            None,
+        )
+
+
+async def test_action_exception_invalid_config(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test raises exception if no NUT config entry found."""
+
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "mock-identifier")},
+    )
+
+    platform = await device_automation.async_get_device_automation_platform(
+        hass, DOMAIN, DeviceAutomationType.ACTION
+    )
+
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await platform.async_call_action_from_config(
+            hass,
+            {CONF_TYPE: "beeper.enable", CONF_DEVICE_ID: device_entry.id},
+            {},
+            None,
+        )
+
+
+async def test_action_exception_device_invalid(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test raises exception if config entry for device is invalid."""
+    list_commands_return_value = {"beeper.enable": None}
+    entry = await async_init_integration(
+        hass,
+        list_vars={"ups.status": "OL"},
+        list_commands_return_value=list_commands_return_value,
+    )
+    device_entry = next(device for device in device_registry.devices.values())
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    platform = await device_automation.async_get_device_automation_platform(
+        hass, DOMAIN, DeviceAutomationType.ACTION
+    )
+
+    error_message = (
+        f"Invalid configuration entries for NUT device with ID {device_entry.id}"
+    )
+    with pytest.raises(InvalidDeviceAutomationConfig, match=error_message):
+        await platform.async_call_action_from_config(
+            hass,
+            {CONF_TYPE: "beeper.enable", CONF_DEVICE_ID: device_entry.id},
             {},
             None,
         )

@@ -12,6 +12,7 @@ class WhirlpoolEntity(Entity):
     """Base class for Whirlpool entities."""
 
     _attr_has_entity_name = True
+    _attr_should_poll = False
 
     def __init__(self, appliance: Appliance, unique_id_suffix: str = "") -> None:
         """Initialize the entity."""
@@ -19,8 +20,9 @@ class WhirlpoolEntity(Entity):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, appliance.said)},
-            name=appliance.name.capitalize(),
+            name=appliance.name.capitalize() if appliance.name else appliance.said,
             manufacturer="Whirlpool",
+            model_id=appliance.appliance_info.model_number,
         )
         self._attr_unique_id = f"{appliance.said}{unique_id_suffix}"
 

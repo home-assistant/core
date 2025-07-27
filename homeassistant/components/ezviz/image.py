@@ -5,8 +5,8 @@ from __future__ import annotations
 import logging
 
 from propcache.api import cached_property
-from pyezviz.exceptions import PyEzvizError
-from pyezviz.utils import decrypt_image
+from pyezvizapi.exceptions import PyEzvizError
+from pyezvizapi.utils import decrypt_image
 
 from homeassistant.components.image import Image, ImageEntity, ImageEntityDescription
 from homeassistant.config_entries import SOURCE_IGNORE

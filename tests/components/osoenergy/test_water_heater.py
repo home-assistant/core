@@ -3,7 +3,7 @@
 from unittest.mock import ANY, MagicMock, patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.osoenergy.const import DOMAIN
 from homeassistant.components.osoenergy.water_heater import (

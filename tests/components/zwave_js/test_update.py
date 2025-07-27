@@ -277,7 +277,7 @@ async def test_update_entity_dead(
     zen_31,
     integration,
 ) -> None:
-    """Test update occurs when device is dead after it becomes alive."""
+    """Test update occurs even when device is dead."""
     event = Event(
         "dead",
         data={"source": "node", "event": "dead", "nodeId": zen_31.node_id},
@@ -290,17 +290,7 @@ async def test_update_entity_dead(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
     await hass.async_block_till_done()
 
-    # Because node is asleep we shouldn't attempt to check for firmware updates
-    assert len(client.async_send_command.call_args_list) == 0
-
-    event = Event(
-        "alive",
-        data={"source": "node", "event": "alive", "nodeId": zen_31.node_id},
-    )
-    zen_31.receive_event(event)
-    await hass.async_block_till_done()
-
-    # Now that the node is up we can check for updates
+    # Checking for firmware updates should proceed even for dead nodes
     assert len(client.async_send_command.call_args_list) > 0
 
     args = client.async_send_command.call_args_list[0][0][0]
@@ -324,12 +314,12 @@ async def test_update_entity_ha_not_running(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert len(client.async_send_command.call_args_list) == 1
+    assert len(client.async_send_command.call_args_list) == 4
 
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert len(client.async_send_command.call_args_list) == 1
+    assert len(client.async_send_command.call_args_list) == 4
 
     # Update should be delayed by a day because HA is not running
     hass.set_state(CoreState.starting)
@@ -337,15 +327,15 @@ async def test_update_entity_ha_not_running(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
     await hass.async_block_till_done()
 
-    assert len(client.async_send_command.call_args_list) == 1
+    assert len(client.async_send_command.call_args_list) == 4
 
     hass.set_state(CoreState.running)
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
     await hass.async_block_till_done()
 
-    assert len(client.async_send_command.call_args_list) == 2
-    args = client.async_send_command.call_args_list[1][0][0]
+    assert len(client.async_send_command.call_args_list) == 5
+    args = client.async_send_command.call_args_list[4][0][0]
     assert args["command"] == "controller.get_available_firmware_updates"
     assert args["nodeId"] == zen_31.node_id
 
@@ -651,12 +641,12 @@ async def test_update_entity_delay(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert len(client.async_send_command.call_args_list) == 2
+    assert len(client.async_send_command.call_args_list) == 6
 
     await hass.async_start()
     await hass.async_block_till_done()
 
-    assert len(client.async_send_command.call_args_list) == 2
+    assert len(client.async_send_command.call_args_list) == 6
 
     update_interval = timedelta(minutes=5)
     freezer.tick(update_interval)
@@ -665,8 +655,8 @@ async def test_update_entity_delay(
 
     nodes: set[int] = set()
 
-    assert len(client.async_send_command.call_args_list) == 3
-    args = client.async_send_command.call_args_list[2][0][0]
+    assert len(client.async_send_command.call_args_list) == 7
+    args = client.async_send_command.call_args_list[6][0][0]
     assert args["command"] == "controller.get_available_firmware_updates"
     nodes.add(args["nodeId"])
 
@@ -674,8 +664,8 @@ async def test_update_entity_delay(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert len(client.async_send_command.call_args_list) == 4
-    args = client.async_send_command.call_args_list[3][0][0]
+    assert len(client.async_send_command.call_args_list) == 8
+    args = client.async_send_command.call_args_list[7][0][0]
     assert args["command"] == "controller.get_available_firmware_updates"
     nodes.add(args["nodeId"])
 
@@ -846,8 +836,8 @@ async def test_update_entity_full_restore_data_update_available(
     assert attrs[ATTR_IN_PROGRESS] is True
     assert attrs[ATTR_UPDATE_PERCENTAGE] is None
 
-    assert len(client.async_send_command.call_args_list) == 2
-    assert client.async_send_command.call_args_list[1][0][0] == {
+    assert len(client.async_send_command.call_args_list) == 5
+    assert client.async_send_command.call_args_list[4][0][0] == {
         "command": "controller.firmware_update_ota",
         "nodeId": climate_radio_thermostat_ct100_plus_different_endpoints.node_id,
         "updateInfo": {

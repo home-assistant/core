@@ -248,6 +248,58 @@ def async_setup_entity_entry_helper(
     mqtt_data = hass.data[DATA_MQTT]
 
     @callback
+    def _async_migrate_subentry(
+        config: dict[str, Any], raw_config: dict[str, Any], migration_type: str
+    ) -> bool:
+        """Start a repair flow to allow migration of MQTT device subentries.
+
+        If a YAML config or discovery is detected using the ID
+        of an existing mqtt subentry, and exported configuration is detected,
+        and a repair flow is offered to migrate the subentry.
+        """
+        if (
+            CONF_DEVICE in config
+            and CONF_IDENTIFIERS in config[CONF_DEVICE]
+            and config[CONF_DEVICE][CONF_IDENTIFIERS]
+            and (subentry_id := config[CONF_DEVICE][CONF_IDENTIFIERS][0])
+            in entry.subentries
+        ):
+            name: str = config[CONF_DEVICE].get(CONF_NAME, "-")
+            if migration_type == "subentry_migration_yaml":
+                _LOGGER.info(
+                    "Starting migration repair flow for MQTT subentry %s "
+                    "for migration to YAML config: %s",
+                    subentry_id,
+                    raw_config,
+                )
+            elif migration_type == "subentry_migration_discovery":
+                _LOGGER.info(
+                    "Starting migration repair flow for MQTT subentry %s "
+                    "for migration to configuration via MQTT discovery: %s",
+                    subentry_id,
+                    raw_config,
+                )
+            async_create_issue(
+                hass,
+                DOMAIN,
+                subentry_id,
+                issue_domain=DOMAIN,
+                is_fixable=True,
+                severity=IssueSeverity.WARNING,
+                learn_more_url=learn_more_url(domain),
+                data={
+                    "entry_id": entry.entry_id,
+                    "subentry_id": subentry_id,
+                    "name": name,
+                },
+                translation_placeholders={"name": name},
+                translation_key=migration_type,
+            )
+            return True
+
+        return False
+
+    @callback
     def _async_setup_entity_entry_from_discovery(
         discovery_payload: MQTTDiscoveryPayload,
     ) -> None:
@@ -263,9 +315,22 @@ def async_setup_entity_entry_helper(
                 entity_class = schema_class_mapping[config[CONF_SCHEMA]]
             if TYPE_CHECKING:
                 assert entity_class is not None
-            async_add_entities(
-                [entity_class(hass, config, entry, discovery_payload.discovery_data)]
-            )
+            if _async_migrate_subentry(
+                config, discovery_payload, "subentry_migration_discovery"
+            ):
+                _handle_discovery_failure(hass, discovery_payload)
+                _LOGGER.debug(
+                    "MQTT discovery skipped, as device exists in subentry, "
+                    "and repair flow must be completed first"
+                )
+            else:
+                async_add_entities(
+                    [
+                        entity_class(
+                            hass, config, entry, discovery_payload.discovery_data
+                        )
+                    ]
+                )
         except vol.Invalid as err:
             _handle_discovery_failure(hass, discovery_payload)
             async_handle_schema_error(discovery_payload, err)
@@ -313,6 +378,11 @@ def async_setup_entity_entry_helper(
                 component_config.pop("platform")
                 component_config.update(availability_config)
                 component_config.update(device_mqtt_options)
+                if (
+                    CONF_ENTITY_CATEGORY in component_config
+                    and component_config[CONF_ENTITY_CATEGORY] is None
+                ):
+                    component_config.pop(CONF_ENTITY_CATEGORY)
 
                 try:
                     config = platform_schema_modern(component_config)
@@ -341,6 +411,11 @@ def async_setup_entity_entry_helper(
                     entity_class = schema_class_mapping[config[CONF_SCHEMA]]
                 if TYPE_CHECKING:
                     assert entity_class is not None
+                if _async_migrate_subentry(
+                    config, yaml_config, "subentry_migration_yaml"
+                ):
+                    continue
+
                 entities.append(entity_class(hass, config, entry, None))
             except vol.Invalid as exc:
                 error = str(exc)
@@ -384,16 +459,6 @@ def async_setup_entity_entry_helper(
     _async_setup_entities()
 
 
-def init_entity_id_from_config(
-    hass: HomeAssistant, entity: Entity, config: ConfigType, entity_id_format: str
-) -> None:
-    """Set entity_id from object_id if defined in config."""
-    if CONF_OBJECT_ID in config:
-        entity.entity_id = async_generate_entity_id(
-            entity_id_format, config[CONF_OBJECT_ID], None, hass
-        )
-
-
 class MqttAttributesMixin(Entity):
     """Mixin used for platforms that support JSON attributes."""
 
@@ -402,6 +467,7 @@ class MqttAttributesMixin(Entity):
     _message_callback: Callable[
         [MessageCallbackType, set[str] | None, ReceiveMessage], None
     ]
+    _process_update_extra_state_attributes: Callable[[dict[str, Any]], None]
 
     def __init__(self, config: ConfigType) -> None:
         """Initialize the JSON attributes mixin."""
@@ -438,7 +504,13 @@ class MqttAttributesMixin(Entity):
                     "msg_callback": partial(
                         self._message_callback,
                         self._attributes_message_received,
-                        {"_attr_extra_state_attributes"},
+                        {
+                            "_attr_extra_state_attributes",
+                            "_attr_gps_accuracy",
+                            "_attr_latitude",
+                            "_attr_location_name",
+                            "_attr_longitude",
+                        },
                     ),
                     "entity_id": self.entity_id,
                     "qos": self._attributes_config.get(CONF_QOS),
@@ -477,7 +549,11 @@ class MqttAttributesMixin(Entity):
                     if k not in MQTT_ATTRIBUTES_BLOCKED
                     and k not in self._attributes_extra_blocked
                 }
-                self._attr_extra_state_attributes = filtered_dict
+                if hasattr(self, "_process_update_extra_state_attributes"):
+                    self._process_update_extra_state_attributes(filtered_dict)
+                else:
+                    self._attr_extra_state_attributes = filtered_dict
+
             else:
                 _LOGGER.warning("JSON result was not a dictionary")
 
@@ -629,8 +705,7 @@ async def cleanup_device_registry(
     entities, triggers or tags.
     """
     # Local import to avoid circular dependencies
-    # pylint: disable-next=import-outside-toplevel
-    from . import device_trigger, tag
+    from . import device_trigger, tag  # noqa: PLC0415
 
     device_registry = dr.async_get(hass)
     entity_registry = er.async_get(hass)
@@ -1297,6 +1372,7 @@ class MqttEntity(
     _attr_should_poll = False
     _default_name: str | None
     _entity_id_format: str
+    _update_registry_entity_id: str | None = None
 
     def __init__(
         self,
@@ -1331,13 +1407,33 @@ class MqttEntity(
 
     def _init_entity_id(self) -> None:
         """Set entity_id from object_id if defined in config."""
-        init_entity_id_from_config(
-            self.hass, self, self._config, self._entity_id_format
+        if CONF_OBJECT_ID not in self._config:
+            return
+        self.entity_id = async_generate_entity_id(
+            self._entity_id_format, self._config[CONF_OBJECT_ID], None, self.hass
         )
+        if self.unique_id is None:
+            return
+        # Check for previous deleted entities
+        entity_registry = er.async_get(self.hass)
+        entity_platform = self._entity_id_format.split(".")[0]
+        if (
+            deleted_entry := entity_registry.deleted_entities.get(
+                (entity_platform, DOMAIN, self.unique_id)
+            )
+        ) and deleted_entry.entity_id != self.entity_id:
+            #  Plan to update the entity_id basis on `object_id` if a deleted entity was found
+            self._update_registry_entity_id = self.entity_id
 
     @final
     async def async_added_to_hass(self) -> None:
         """Subscribe to MQTT events."""
+        if self._update_registry_entity_id is not None:
+            entity_registry = er.async_get(self.hass)
+            entity_registry.async_update_entity(
+                self.entity_id, new_entity_id=self._update_registry_entity_id
+            )
+
         await super().async_added_to_hass()
         self._subscriptions = {}
         self._prepare_subscribe_topics()

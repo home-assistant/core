@@ -264,6 +264,17 @@ SELECT_ENTITIES = (
             ch, fps=int(value)
         ),
     ),
+    ReolinkSelectEntityDescription(
+        key="post_rec_time",
+        cmd_key="GetRec",
+        translation_key="post_rec_time",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        get_options=lambda api, ch: api.post_recording_time_list(ch),
+        supported=lambda api, ch: api.supported(ch, "post_rec_time"),
+        value=lambda api, ch: api.post_recording_time(ch),
+        method=lambda api, ch, value: api.set_post_recording_time(ch, value),
+    ),
 )
 
 HOST_SELECT_ENTITIES = (
@@ -276,6 +287,17 @@ HOST_SELECT_ENTITIES = (
         supported=lambda api: api.supported(None, "scenes"),
         value=lambda api: api.baichuan.active_scene,
         method=lambda api, name: api.baichuan.set_scene(scene_name=name),
+    ),
+    ReolinkHostSelectEntityDescription(
+        key="packing_time",
+        cmd_key="GetRec",
+        translation_key="packing_time",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        get_options=lambda api: api.recording_packing_time_list,
+        supported=lambda api: api.supported(None, "pak_time"),
+        value=lambda api: api.recording_packing_time,
+        method=lambda api, value: api.set_recording_packing_time(value),
     ),
 )
 

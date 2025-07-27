@@ -8,12 +8,12 @@ from pytest_unordered import unordered
 
 from homeassistant import config_entries
 from homeassistant.components.template import DOMAIN, async_setup_entry
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 from tests.typing import WebSocketGenerator
 
 SWITCH_BEFORE_OPTIONS = {
@@ -217,16 +217,14 @@ async def test_config_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == template_type
 
+    availability = {"advanced_options": {"availability": "{{ True }}"}}
+
     with patch(
         "homeassistant.components.template.async_setup_entry", wraps=async_setup_entry
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                "name": "My template",
-                **state_template,
-                **extra_input,
-            },
+            {"name": "My template", **state_template, **extra_input, **availability},
         )
         await hass.async_block_till_done()
 
@@ -238,6 +236,7 @@ async def test_config_flow(
         "template_type": template_type,
         **state_template,
         **extra_options,
+        **availability,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -248,6 +247,7 @@ async def test_config_flow(
         "template_type": template_type,
         **state_template,
         **extra_options,
+        **availability,
     }
 
     state = hass.states.get(f"{template_type}.my_template")
@@ -405,17 +405,6 @@ async def test_config_flow_device(
         **state_template,
         **extra_options,
     }
-
-
-def get_suggested(schema, key):
-    """Get suggested value for key in voluptuous schema."""
-    for k in schema:
-        if k == key:
-            if k.description is None or "suggested_value" not in k.description:
-                return None
-            return k.description["suggested_value"]
-    # If the desired key is missing from the schema, return None
-    return None
 
 
 @pytest.mark.parametrize(
@@ -608,7 +597,7 @@ async def test_options(
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == template_type
-    assert get_suggested(
+    assert get_schema_suggested_value(
         result["data_schema"].schema, key_template
     ) == old_state_template.get(key_template)
     assert "name" not in result["data_schema"].schema
@@ -655,8 +644,10 @@ async def test_options(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == template_type
 
-    assert get_suggested(result["data_schema"].schema, "name") is None
-    assert get_suggested(result["data_schema"].schema, key_template) is None
+    assert get_schema_suggested_value(result["data_schema"].schema, "name") is None
+    assert (
+        get_schema_suggested_value(result["data_schema"].schema, key_template) is None
+    )
 
 
 @pytest.mark.parametrize(
@@ -684,7 +675,7 @@ async def test_options(
             "{{ float(states('sensor.one'), default='') + float(states('sensor.two'), default='') }}",
             {},
             {"one": "30.0", "two": "20.0"},
-            ["", STATE_UNAVAILABLE, "50.0"],
+            ["", STATE_UNKNOWN, "50.0"],
             [{}, {}],
             [["one", "two"], ["one", "two"]],
         ),
@@ -704,6 +695,9 @@ async def test_config_flow_preview(
     """Test the config flow preview."""
     client = await hass_ws_client(hass)
 
+    hass.states.async_set("binary_sensor.available", "on")
+    await hass.async_block_till_done()
+
     input_entities = ["one", "two"]
 
     result = await hass.config_entries.flow.async_init(
@@ -721,12 +715,22 @@ async def test_config_flow_preview(
     assert result["errors"] is None
     assert result["preview"] == "template"
 
+    availability = {
+        "advanced_options": {
+            "availability": "{{ is_state('binary_sensor.available', 'on') }}"
+        }
+    }
+
     await client.send_json_auto_id(
         {
             "type": "template/start_preview",
             "flow_id": result["flow_id"],
             "flow_type": "config_flow",
-            "user_input": {"name": "My template", "state": state_template}
+            "user_input": {
+                "name": "My template",
+                "state": state_template,
+                **availability,
+            }
             | extra_user_input,
         }
     )
@@ -734,13 +738,16 @@ async def test_config_flow_preview(
     assert msg["success"]
     assert msg["result"] is None
 
+    entities = [f"{template_type}.{_id}" for _id in listeners[0]]
+    entities.append("binary_sensor.available")
+
     msg = await client.receive_json()
     assert msg["event"] == {
         "attributes": {"friendly_name": "My template"} | extra_attributes[0],
         "listeners": {
             "all": False,
             "domains": [],
-            "entities": unordered([f"{template_type}.{_id}" for _id in listeners[0]]),
+            "entities": unordered(entities),
             "time": False,
         },
         "state": template_states[0],
@@ -752,6 +759,9 @@ async def test_config_flow_preview(
         )
         await hass.async_block_till_done()
 
+    entities = [f"{template_type}.{_id}" for _id in listeners[1]]
+    entities.append("binary_sensor.available")
+
     for template_state in template_states[1:]:
         msg = await client.receive_json()
         assert msg["event"] == {
@@ -761,14 +771,32 @@ async def test_config_flow_preview(
             "listeners": {
                 "all": False,
                 "domains": [],
-                "entities": unordered(
-                    [f"{template_type}.{_id}" for _id in listeners[1]]
-                ),
+                "entities": unordered(entities),
                 "time": False,
             },
             "state": template_state,
         }
-    assert len(hass.states.async_all()) == 2
+    assert len(hass.states.async_all()) == 3
+
+    # Test preview availability.
+    hass.states.async_set("binary_sensor.available", "off")
+    await hass.async_block_till_done()
+
+    msg = await client.receive_json()
+    assert msg["event"] == {
+        "attributes": {"friendly_name": "My template"}
+        | extra_attributes[0]
+        | extra_attributes[1],
+        "listeners": {
+            "all": False,
+            "domains": [],
+            "entities": unordered(entities),
+            "time": False,
+        },
+        "state": STATE_UNAVAILABLE,
+    }
+
+    assert len(hass.states.async_all()) == 3
 
 
 EARLY_END_ERROR = "invalid template (TemplateSyntaxError: unexpected 'end of template')"

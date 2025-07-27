@@ -210,9 +210,7 @@ def async_setup(hass: HomeAssistant) -> bool:
             if new_size > current_size:
                 lru.set_size(new_size)
 
-    from .event import (  # pylint: disable=import-outside-toplevel
-        async_track_time_interval,
-    )
+    from .event import async_track_time_interval  # noqa: PLC0415
 
     cancel = async_track_time_interval(
         hass, _async_adjust_lru_sizes, timedelta(minutes=10)
@@ -527,8 +525,7 @@ class Template:
         Note: A valid hass instance should always be passed in. The hass parameter
         will be non optional in Home Assistant Core 2025.10.
         """
-        # pylint: disable-next=import-outside-toplevel
-        from .frame import ReportBehavior, report_usage
+        from .frame import ReportBehavior, report_usage  # noqa: PLC0415
 
         if not isinstance(template, str):
             raise TypeError("Expected template to be a string")
@@ -1072,7 +1069,7 @@ class TemplateStateBase(State):
         raise KeyError
 
     @under_cached_property
-    def entity_id(self) -> str:  # type: ignore[override]
+    def entity_id(self) -> str:
         """Wrap State.entity_id.
 
         Intentionally does not collect state
@@ -1128,7 +1125,7 @@ class TemplateStateBase(State):
         return self._state.object_id
 
     @property
-    def name(self) -> str:  # type: ignore[override]
+    def name(self) -> str:
         """Wrap State.name."""
         self._collect_state()
         return self._state.name
@@ -1141,8 +1138,7 @@ class TemplateStateBase(State):
     def format_state(self, rounded: bool, with_unit: bool) -> str:
         """Return a formatted version of the state."""
         # Import here, not at top-level, to avoid circular import
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.sensor import (
+        from homeassistant.components.sensor import (  # noqa: PLC0415
             DOMAIN as SENSOR_DOMAIN,
             async_rounded_state,
         )
@@ -1278,7 +1274,7 @@ def forgiving_boolean[_T](
     """Try to convert value to a boolean."""
     try:
         # Import here, not at top-level to avoid circular import
-        from . import config_validation as cv  # pylint: disable=import-outside-toplevel
+        from . import config_validation as cv  # noqa: PLC0415
 
         return cv.boolean(value)
     except vol.Invalid:
@@ -1303,7 +1299,7 @@ def result_as_boolean(template_result: Any | None) -> bool:
 def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
     """Expand out any groups and zones into entity states."""
     # circular import.
-    from . import entity as entity_helper  # pylint: disable=import-outside-toplevel
+    from . import entity as entity_helper  # noqa: PLC0415
 
     search = list(args)
     found = {}
@@ -1376,8 +1372,7 @@ def integration_entities(hass: HomeAssistant, entry_name: str) -> Iterable[str]:
         return entities
 
     # fallback to just returning all entities for a domain
-    # pylint: disable-next=import-outside-toplevel
-    from .entity import entity_sources
+    from .entity import entity_sources  # noqa: PLC0415
 
     return [
         entity_id
@@ -1411,6 +1406,28 @@ def device_id(hass: HomeAssistant, entity_id_or_device_name: str) -> str | None:
         ),
         None,
     )
+
+
+def device_name(hass: HomeAssistant, lookup_value: str) -> str | None:
+    """Get the device name from an device id, or entity id."""
+    device_reg = device_registry.async_get(hass)
+    if device := device_reg.async_get(lookup_value):
+        return device.name_by_user or device.name
+
+    ent_reg = entity_registry.async_get(hass)
+    # Import here, not at top-level to avoid circular import
+    from . import config_validation as cv  # noqa: PLC0415
+
+    try:
+        cv.entity_id(lookup_value)
+    except vol.Invalid:
+        pass
+    else:
+        if entity := ent_reg.async_get(lookup_value):
+            if entity.device_id and (device := device_reg.async_get(entity.device_id)):
+                return device.name_by_user or device.name
+
+    return None
 
 
 def device_attr(hass: HomeAssistant, device_or_entity_id: str, attr_name: str) -> Any:
@@ -1557,7 +1574,7 @@ def area_id(hass: HomeAssistant, lookup_value: str) -> str | None:
     ent_reg = entity_registry.async_get(hass)
     dev_reg = device_registry.async_get(hass)
     # Import here, not at top-level to avoid circular import
-    from . import config_validation as cv  # pylint: disable=import-outside-toplevel
+    from . import config_validation as cv  # noqa: PLC0415
 
     try:
         cv.entity_id(lookup_value)
@@ -1595,7 +1612,7 @@ def area_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     dev_reg = device_registry.async_get(hass)
     ent_reg = entity_registry.async_get(hass)
     # Import here, not at top-level to avoid circular import
-    from . import config_validation as cv  # pylint: disable=import-outside-toplevel
+    from . import config_validation as cv  # noqa: PLC0415
 
     try:
         cv.entity_id(lookup_value)
@@ -1676,7 +1693,7 @@ def labels(hass: HomeAssistant, lookup_value: Any = None) -> Iterable[str | None
     ent_reg = entity_registry.async_get(hass)
 
     # Import here, not at top-level to avoid circular import
-    from . import config_validation as cv  # pylint: disable=import-outside-toplevel
+    from . import config_validation as cv  # noqa: PLC0415
 
     lookup_value = str(lookup_value)
 
@@ -1714,6 +1731,14 @@ def label_name(hass: HomeAssistant, lookup_value: str) -> str | None:
     label_reg = label_registry.async_get(hass)
     if label := label_reg.async_get_label(lookup_value):
         return label.name
+    return None
+
+
+def label_description(hass: HomeAssistant, lookup_value: str) -> str | None:
+    """Get the label description from a label ID."""
+    label_reg = label_registry.async_get(hass)
+    if label := label_reg.async_get_label(lookup_value):
+        return label.description
     return None
 
 
@@ -1995,6 +2020,34 @@ def add(value, amount, default=_SENTINEL):
         if default is _SENTINEL:
             raise_no_default("add", value)
         return default
+
+
+def apply(value, fn, *args, **kwargs):
+    """Call the given callable with the provided arguments and keyword arguments."""
+    return fn(value, *args, **kwargs)
+
+
+def as_function(macro: jinja2.runtime.Macro) -> Callable[..., Any]:
+    """Turn a macro with a 'returns' keyword argument into a function that returns what that argument is called with."""
+
+    def wrapper(value, *args, **kwargs):
+        return_value = None
+
+        def returns(value):
+            nonlocal return_value
+            return_value = value
+            return value
+
+        # Call the callable with the value and other args
+        macro(value, *args, **kwargs, returns=returns)
+        return return_value
+
+    # Remove "macro_" from the macro's name to avoid confusion in the wrapper's name
+    trimmed_name = macro.name.removeprefix("macro_")
+
+    wrapper.__name__ = trimmed_name
+    wrapper.__qualname__ = trimmed_name
+    return wrapper
 
 
 def logarithm(value, base=math.e, default=_SENTINEL):
@@ -2550,9 +2603,16 @@ def struct_unpack(value: bytes, format_string: str, offset: int = 0) -> Any | No
         return None
 
 
-def base64_encode(value: str) -> str:
+def from_hex(value: str) -> bytes:
+    """Perform hex string decode."""
+    return bytes.fromhex(value)
+
+
+def base64_encode(value: str | bytes) -> str:
     """Perform base64 encode."""
-    return base64.b64encode(value.encode("utf-8")).decode("utf-8")
+    if isinstance(value, str):
+        value = value.encode("utf-8")
+    return base64.b64encode(value).decode("utf-8")
 
 
 def base64_decode(value: str, encoding: str | None = "utf-8") -> str | bytes:
@@ -2574,9 +2634,14 @@ def ordinal(value):
     )
 
 
-def from_json(value):
+def from_json(value, default=_SENTINEL):
     """Convert a JSON string to an object."""
-    return json_loads(value)
+    try:
+        return json_loads(value)
+    except JSON_DECODE_EXCEPTIONS:
+        if default is _SENTINEL:
+            raise_no_default("from_json", value)
+        return default
 
 
 def _to_json_default(obj: Any) -> None:
@@ -3035,9 +3100,11 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             str | jinja2.nodes.Template, CodeType | None
         ] = weakref.WeakValueDictionary()
         self.add_extension("jinja2.ext.loopcontrols")
+        self.add_extension("jinja2.ext.do")
 
         self.globals["acos"] = arc_cosine
         self.globals["as_datetime"] = as_datetime
+        self.globals["as_function"] = as_function
         self.globals["as_local"] = dt_util.as_local
         self.globals["as_timedelta"] = as_timedelta
         self.globals["as_timestamp"] = forgiving_as_timestamp
@@ -3088,7 +3155,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.filters["acos"] = arc_cosine
         self.filters["add"] = add
+        self.filters["apply"] = apply
         self.filters["as_datetime"] = as_datetime
+        self.filters["as_function"] = as_function
         self.filters["as_local"] = dt_util.as_local
         self.filters["as_timedelta"] = as_timedelta
         self.filters["as_timestamp"] = forgiving_as_timestamp
@@ -3109,6 +3178,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["flatten"] = flatten
         self.filters["float"] = forgiving_float_filter
         self.filters["from_json"] = from_json
+        self.filters["from_hex"] = from_hex
         self.filters["iif"] = iif
         self.filters["int"] = forgiving_int_filter
         self.filters["intersect"] = intersect
@@ -3147,6 +3217,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["unpack"] = struct_unpack
         self.filters["version"] = version
 
+        self.tests["apply"] = apply
         self.tests["contains"] = contains
         self.tests["datetime"] = _is_datetime
         self.tests["is_number"] = is_number
@@ -3230,6 +3301,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         # Device extensions
 
+        self.globals["device_name"] = hassfunction(device_name)
+        self.filters["device_name"] = self.globals["device_name"]
+
         self.globals["device_attr"] = hassfunction(device_attr)
         self.filters["device_attr"] = self.globals["device_attr"]
 
@@ -3252,6 +3326,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.globals["label_name"] = hassfunction(label_name)
         self.filters["label_name"] = self.globals["label_name"]
+
+        self.globals["label_description"] = hassfunction(label_description)
+        self.filters["label_description"] = self.globals["label_description"]
 
         self.globals["label_areas"] = hassfunction(label_areas)
         self.filters["label_areas"] = self.globals["label_areas"]
