@@ -62,6 +62,11 @@ class MatterEntityDescription(EntityDescription):
     device_to_ha: Callable[[Any], Any] | None = None
     ha_to_device: Callable[[Any], Any] | None = None
     command_timeout: int | None = None
+    # Location of the label in the entity name. Can be "name", "after", "ignore"
+    label_location: str = "after"  # Location of the label in the entity name
+    # alternate set of labels to be used for locating the label name
+    # if set, this will override the default label set "label", "button", "orientation", "name"
+    custom_naming_label_list: list[str] | None = None
 
 
 class MatterEntity(Entity):
@@ -102,34 +107,50 @@ class MatterEntity(Entity):
         )
         self._attr_available = self._endpoint.node.available
         # mark endpoint postfix if the device has the primary attribute on multiple endpoints
+        # this will get overwritten, and label used instead, if there is a label and label_location="after"
         if not self._endpoint.node.is_bridge_device and any(
             ep
             for ep in self._endpoint.node.endpoints.values()
             if ep != self._endpoint
-            and ep.has_attribute(None, entity_info.primary_attribute)
+            and ep.has_cluster(entity_info.primary_attribute.cluster_id)
         ):
             self._name_postfix = str(self._endpoint.endpoint_id)
             if self._platform_translation_key and not self.translation_key:
                 self._attr_translation_key = self._platform_translation_key
 
-        # prefer the label attribute for the entity name
+        # prefer the label attribute if one exists
         # Matter has a way for users and/or vendors to specify a name for an endpoint
         # which is always preferred over a standard HA (generated) name
         for attr in (
-            clusters.FixedLabel.Attributes.LabelList,
             clusters.UserLabel.Attributes.LabelList,
+            clusters.FixedLabel.Attributes.LabelList,
         ):
             if not (labels := self.get_matter_attribute_value(attr)):
                 continue
             for label in labels:
-                if label.label not in ["Label", "Button"]:
+                if entity_info.entity_description.custom_naming_label_list is not None:
+                    if label.label.lower() not in [
+                        x.lower()
+                        for x in entity_info.entity_description.custom_naming_label_list
+                    ]:
+                        # skip labels that are not in the custom naming label list
+                        continue
+                elif label.label.lower() not in [
+                    "label",
+                    "button",
+                    "orientation",
+                    "name",
+                ]:
                     continue
                 # fixed or user label found: use it
                 label_value: str = label.value
                 # in the case the label is only the label id, use it as postfix only
-                if label_value.isnumeric():
+                if (
+                    entity_info.entity_description.label_location.lower() == "after"
+                    or label_value.isnumeric()
+                ):
                     self._name_postfix = label_value
-                else:
+                elif entity_info.entity_description.label_location.lower() == "name":
                     self._attr_name = label_value
                 break
 
