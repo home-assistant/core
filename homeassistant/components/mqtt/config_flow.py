@@ -52,7 +52,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
-    OptionsFlowWithReload,
+    OptionsFlow,
     SubentryFlowResult,
 )
 from homeassistant.const import (
@@ -2537,7 +2537,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class MQTTOptionsFlowHandler(OptionsFlowWithReload):
+class MQTTOptionsFlowHandler(OptionsFlow):
     """Handle MQTT options."""
 
     async def async_step_init(self, user_input: None = None) -> ConfigFlowResult:
@@ -3353,7 +3353,7 @@ def _validate_pki_file(
 
 
 async def async_get_broker_settings(  # noqa: C901
-    flow: ConfigFlow | OptionsFlowWithReload,
+    flow: ConfigFlow | OptionsFlow,
     fields: OrderedDict[Any, Any],
     entry_config: MappingProxyType[str, Any] | None,
     user_input: dict[str, Any] | None,
