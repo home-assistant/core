@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 import re
+from typing import override
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -790,6 +791,7 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
         self.item = item
         self.entity_description = entity_description
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to needed data on add."""
         await super().async_added_to_hass()
@@ -799,6 +801,7 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
                 f"{SENSOR_DOMAIN}/{self.entity_description.last_reset_item}"
             )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from needed data on remove."""
         await super().async_will_remove_from_hass()
@@ -809,15 +812,18 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
             )
 
     @property
+    @override
     def _device_unique_id(self) -> str:
         return f"{self.key}.{self.item}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return sensor state."""
         return self._state
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return sensor's unit of measurement."""
         return self.entity_description.native_unit_of_measurement or self._unit
@@ -830,6 +836,7 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
         return super().icon
 
     @property
+    @override
     def device_class(self) -> SensorDeviceClass | None:
         """Return device class for sensor."""
         if self.entity_description.device_class_fn:
@@ -838,10 +845,12 @@ class HuaweiLteSensor(HuaweiLteBaseEntityWithDevice, SensorEntity):
         return super().device_class
 
     @property
+    @override
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
         return self._last_reset
 
+    @override
     async def async_update(self) -> None:
         """Update state."""
         try:
