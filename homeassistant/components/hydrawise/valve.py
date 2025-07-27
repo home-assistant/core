@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import Any
 
-from pydrawise.schema import Zone
+from pydrawise.schema import Controller, Zone
 
 from homeassistant.components.valve import (
     ValveDeviceClass,
@@ -33,12 +34,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Hydrawise valve platform."""
     coordinators = config_entry.runtime_data
-    async_add_entities(
-        HydrawiseValve(coordinators.main, description, controller, zone_id=zone.id)
-        for controller in coordinators.main.data.controllers.values()
-        for zone in controller.zones
-        for description in VALVE_TYPES
+
+    def _add_new_zones(zones: Iterable[tuple[Zone, Controller]]) -> None:
+        async_add_entities(
+            HydrawiseValve(coordinators.main, description, controller, zone_id=zone.id)
+            for zone, controller in zones
+            for description in VALVE_TYPES
+        )
+
+    _add_new_zones(
+        [
+            (zone, coordinators.main.data.zone_id_to_controller[zone.id])
+            for zone in coordinators.main.data.zones.values()
+        ]
     )
+    coordinators.main.new_zones_callbacks.append(_add_new_zones)
 
 
 class HydrawiseValve(HydrawiseEntity, ValveEntity):
