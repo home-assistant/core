@@ -172,13 +172,13 @@ async def test_client_not_initialized(
 
     client = BackupAgentClient(config_entry, hass)
     with pytest.raises(RuntimeError) as exc:
-        await client._initialized()
+        await client._check_initialized()
     assert "Connection is not initialized" in str(exc.value)
 
     client._ssh = True
     client.sftp = True
     with pytest.raises(RuntimeError) as exc:
-        await client._initialized("false_file")
+        await client._check_initialized("false_file")
     assert "Attempted to access file outside of configured backup location" in str(
         exc.value
     )
