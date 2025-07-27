@@ -98,7 +98,7 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
     """Return a CalendarEvent from an API event."""
 
     return CalendarEvent(
-        summary=event.summary,
+        summary=event.summary or "",
         start=(
             dt_util.as_local(event.start)
             if isinstance(event.start, datetime)
