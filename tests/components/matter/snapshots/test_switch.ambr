@@ -830,7 +830,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[thermostat][switch.longan_link_hvac-entry]
+# name: test_switches[thermostat][switch.longan_link_hvac_north-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -843,7 +843,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.longan_link_hvac',
+    'entity_id': 'switch.longan_link_hvac_north',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -855,7 +855,7 @@
     }),
     'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'North',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -865,14 +865,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[thermostat][switch.longan_link_hvac-state]
+# name: test_switches[thermostat][switch.longan_link_hvac_north-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'outlet',
-      'friendly_name': 'Longan link HVAC',
+      'friendly_name': 'Longan link HVAC North',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.longan_link_hvac',
+    'entity_id': 'switch.longan_link_hvac_north',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
