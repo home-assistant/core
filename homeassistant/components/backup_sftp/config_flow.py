@@ -17,7 +17,6 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
-from homeassistant.util import slugify
 
 from . import SFTPConfigEntryData
 from .const import (
@@ -125,19 +124,9 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                     await sftp.chdir(user_config.backup_location)
                     await sftp.listdir()
 
-                identifier = slugify(
-                    ".".join(
-                        [
-                            user_config.host,
-                            str(user_config.port),
-                            user_config.username,
-                            user_config.backup_location,
-                        ]
-                    )
-                )
                 LOGGER.debug(
                     "Will register SFTP Backup Location agent with identifier %s",
-                    identifier,
+                    user_config.unique_id,
                 )
 
             except OSError as e:
@@ -159,7 +148,7 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                 placeholders["exception"] = type(e).__name__
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(identifier)
+                await self.async_set_unique_id(user_config.unique_id)
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
