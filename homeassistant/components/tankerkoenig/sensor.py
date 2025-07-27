@@ -107,7 +107,14 @@ class FuelPriceSensor(TankerkoenigCoordinatorEntity, SensorEntity):
         self._attr_extra_state_attributes = attrs
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return the current price for the fuel type."""
         info = self.coordinator.data[self._station_id]
-        return getattr(info, self._fuel_type)
+        result = None
+        if self._fuel_type is GasType.E10:
+            result = info.e10
+        elif self._fuel_type is GasType.E5:
+            result = info.e5
+        else:
+            result = info.diesel
+        return result
