@@ -819,7 +819,7 @@
             "target_temperature_settings": {
               "name": "Target temperature settings",
               "data": {
-                "initial": "Intial temperature",
+                "initial": "Initial temperature",
                 "max_temp": "Maximum temperature",
                 "min_temp": "Minimum temperature",
                 "precision": "Precision",
