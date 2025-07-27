@@ -129,7 +129,9 @@ async def test_agents_list_backups_fail(
     backup_agent_client: AsyncMock,
 ) -> None:
     """Test agent list backups fails."""
-    backup_agent_client.async_list_backups.side_effect = SFTPError(1234, "Error message")
+    backup_agent_client.async_list_backups.side_effect = SFTPError(
+        1234, "Error message"
+    )
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "backup/info"})
