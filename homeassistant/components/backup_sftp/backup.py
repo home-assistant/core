@@ -54,10 +54,10 @@ class SFTPBackupAgent(BackupAgent):
     def __init__(self, hass: HomeAssistant, entry: SFTPConfigEntry) -> None:
         """Initialize the SFTPBackupAgent backup sync agent."""
         super().__init__()
-        self._entry = entry
-        self._hass = hass
-        self.name = entry.title
-        self.unique_id = self._entry.unique_id
+        self._entry: SFTPConfigEntry = entry
+        self._hass: HomeAssistant = hass
+        self.name: str = entry.title
+        self.unique_id: str = entry.runtime_data.unique_id
 
     async def async_download_backup(
         self,

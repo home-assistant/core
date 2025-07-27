@@ -8,6 +8,7 @@ from homeassistant.components.backup import BackupAgentError
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
+from homeassistant.util import slugify
 
 from .client import BackupAgentClient
 from .const import (
@@ -30,9 +31,23 @@ class SFTPConfigEntryData:
     host: str
     port: int = 22
     username: str
-    password: str = field(repr=False)
-    private_key_file: str = ""
-    backup_location: str = ""
+    password: str | None = field(repr=False)
+    private_key_file: str | None = ""
+    backup_location: str
+
+    @property
+    def unique_id(self) -> str:
+        """Return unique id for this config entry."""
+        return slugify(
+            ".".join(
+                [
+                    self.host,
+                    str(self.port),
+                    self.username,
+                    self.backup_location,
+                ]
+            )
+        )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool:
@@ -44,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool
         username=entry.data[CONF_USERNAME],
         password=entry.data.get(CONF_PASSWORD),
         private_key_file=entry.data.get(CONF_PRIVATE_KEY_FILE),
-        backup_location=entry.data.get(CONF_BACKUP_LOCATION),
+        backup_location=entry.data[CONF_BACKUP_LOCATION],
     )
     entry.runtime_data = cfg
 

@@ -59,8 +59,12 @@ class AsyncFileIterator:
 
     async def _initialize(self) -> None:
         """Load file object."""
-        self._client = await BackupAgentClient(self.cfg, self.hass).open()
-        self._fileobj = await self._client.sftp.open(self.file_path, "rb")
+        self._client: BackupAgentClient = await BackupAgentClient(
+            self.cfg, self.hass
+        ).open()
+        self._fileobj: SFTPClientFile = await self._client.sftp.open(
+            self.file_path, "rb"
+        )
 
         self._initialized = True
 
@@ -73,7 +77,7 @@ class AsyncFileIterator:
         if not self._initialized:
             await self._initialize()
 
-        chunk = await self._fileobj.read(self.buffer_size)
+        chunk: bytes = await self._fileobj.read(self.buffer_size)
         if not chunk:
             try:
                 await self._fileobj.close()
@@ -88,25 +92,27 @@ class BackupMetadata:
     """Represent single backup file metadata."""
 
     file_path: str
-    metadata: dict[str, str | dict[str | list[str]]]
+    metadata: dict[str, str | dict[str, list[str]]]
     metadata_file: str
 
 
 class BackupAgentClient:
     """Helper class that manages SSH and SFTP Server connections."""
 
+    sftp: SFTPClient
+
     def __init__(self, config: SFTPConfigEntry, hass: HomeAssistant) -> None:
         """Initialize `BackupAgentClient`."""
         self.cfg: SFTPConfigEntry = config
         self.hass: HomeAssistant = hass
         self._ssh: SSHClientConnection | None = None
-        self.sftp: SFTPClient | None = None
+        # self.sftp: SFTPClient | None = None
         LOGGER.debug("Initialized with config: %s", self.cfg.runtime_data)
 
     async def __aenter__(self) -> Self:
         """Async context manager entrypoint."""
 
-        return await self.open()
+        return await self.open()  # type: ignore[return-value]  # mypy will otherwise raise an error
 
     async def __aexit__(
         self,
@@ -230,7 +236,7 @@ class BackupAgentClient:
                 await f.write(b)
 
         LOGGER.debug("Writing backup metadata")
-        metadata: dict[str, str] = {
+        metadata: dict[str, str | dict[str, list[str]]] = {
             "file_path": file_path,
             "metadata": backup.as_dict(),
         }
