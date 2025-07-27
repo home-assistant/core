@@ -460,7 +460,7 @@
               "data_description": {
                 "swing_horizontal_modes": "List of horizontal swing modes this climate is capable of running at. Common horizontal swing modes that offer translations are `off` and `on`.",
                 "swing_horizontal_mode_command_topic": "The MQTT topic to publish commands to change the climate horizontal swing mode. [Learn more.]({url}#swing_horizontal_mode_command_topic)",
-                "swing_horizontal_mode_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the horizontal horizontal mode command topic.",
+                "swing_horizontal_mode_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the horizontal swing mode command topic.",
                 "swing_horizontal_mode_state_topic": "The MQTT topic subscribed to receive the climate horizontal swing mode. [Learn more.]({url}#swing_horizontal_mode_state_topic)",
                 "swing_horizontal_mode_state_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the climate horizontal swing mode value."
               }
