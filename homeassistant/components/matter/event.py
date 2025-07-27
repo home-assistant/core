@@ -142,7 +142,6 @@ DISCOVERY_SCHEMAS = [
             key="GenericSwitch",
             device_class=EventDeviceClass.BUTTON,
             translation_key="button",
-            custom_naming_label_list=["button"],
         ),
         entity_class=MatterEventEntity,
         required_attributes=(

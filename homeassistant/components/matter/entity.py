@@ -65,7 +65,7 @@ class MatterEntityDescription(EntityDescription):
     # Location of the label in the entity name. Can be "name", "after", "ignore"
     label_location: str = "after"  # Location of the label in the entity name
     # alternate set of labels to be used for locating the label name
-    # if set, this will override the default label set "label", "button", "orientation", "name"
+    # if set, this will override the default label set "label", "button", "orientation", "name", "light"
     custom_naming_label_list: list[str] | None = None
 
 
@@ -140,6 +140,7 @@ class MatterEntity(Entity):
                     "button",
                     "orientation",
                     "name",
+                    "light",
                 ]:
                     continue
                 # fixed or user label found: use it
