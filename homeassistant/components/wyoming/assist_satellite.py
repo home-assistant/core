@@ -49,7 +49,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.ulid import ulid_now
 
-from .const import DOMAIN, SAMPLE_CHANNELS, SAMPLE_WIDTH
+from .const import DOMAIN, SAMPLE_CHANNELS, SAMPLE_RATE, SAMPLE_WIDTH
 from .data import WyomingService
 from .devices import SatelliteDevice
 from .entity import WyomingSatelliteEntity
@@ -63,7 +63,6 @@ _RESTART_SECONDS: Final = 3
 _PING_TIMEOUT: Final = 5
 _PING_SEND_DELAY: Final = 2
 _PIPELINE_FINISH_TIMEOUT: Final = 1
-_TTS_SAMPLE_RATE: Final = 16000
 _ANNOUNCE_CHUNK_BYTES: Final = 2048
 _TTS_TIMEOUT_EXTRA: Final = 1.0
 
@@ -167,7 +166,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         """Return options for text-to-speech."""
         return {
             tts.ATTR_PREFERRED_FORMAT: "wav",
-            tts.ATTR_PREFERRED_SAMPLE_RATE: _TTS_SAMPLE_RATE,
+            tts.ATTR_PREFERRED_SAMPLE_RATE: SAMPLE_RATE,
             tts.ATTR_PREFERRED_SAMPLE_CHANNELS: SAMPLE_CHANNELS,
             tts.ATTR_PREFERRED_SAMPLE_BYTES: SAMPLE_WIDTH,
         }
@@ -281,6 +280,9 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
             self._is_tts_streaming = False
             return  # Do not forward
 
+        if event.type == assist_pipeline.PipelineEventType.STT_START:
+            self.device.set_is_active(True)
+
         if event.type == assist_pipeline.PipelineEventType.INTENT_PROGRESS:
             if (
                 event.data
@@ -332,61 +334,92 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
             self._played_event_received = asyncio.Event()
 
         self._played_event_received.clear()
-        await self._client.write_event(
-            AudioStart(
-                rate=_TTS_SAMPLE_RATE,
-                width=SAMPLE_WIDTH,
-                channels=SAMPLE_CHANNELS,
-                timestamp=0,
-            ).event()
-        )
 
+        proc = None
         timestamp = 0
-        try:
-            # Use ffmpeg to convert to raw PCM audio with the appropriate format
-            proc = await asyncio.create_subprocess_exec(
-                self._ffmpeg_manager.binary,
-                "-i",
-                media_url,
-                "-f",
-                "s16le",
-                "-ac",
-                str(SAMPLE_CHANNELS),
-                "-ar",
-                str(_TTS_SAMPLE_RATE),
-                "-nostats",
-                "pipe:",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                close_fds=False,  # use posix_spawn in CPython < 3.13
-            )
-            assert proc.stdout is not None
-            while True:
-                chunk_bytes = await proc.stdout.read(_ANNOUNCE_CHUNK_BYTES)
-                if not chunk_bytes:
-                    break
-
-                chunk = AudioChunk(
-                    rate=_TTS_SAMPLE_RATE,
-                    width=SAMPLE_WIDTH,
-                    channels=SAMPLE_CHANNELS,
-                    audio=chunk_bytes,
-                    timestamp=timestamp,
+        if self._client is not None:
+            try:
+                await self._client.write_event(
+                    AudioStart(
+                        rate=SAMPLE_RATE,
+                        width=SAMPLE_WIDTH,
+                        channels=SAMPLE_CHANNELS,
+                        timestamp=0,
+                    ).event()
                 )
-                await self._client.write_event(chunk.event())
 
-                timestamp += chunk.milliseconds
-        finally:
-            await self._client.write_event(AudioStop().event())
-            if timestamp > 0:
-                # Wait the length of the audio or until we receive a played event
-                audio_seconds = timestamp / 1000
-                try:
-                    async with asyncio.timeout(audio_seconds + 1.5):
-                        await self._played_event_received.wait()
-                except TimeoutError:
-                    # Older satellite clients will wait longer than necessary
-                    _LOGGER.debug("Did not receive played event for announcement")
+                proc = await asyncio.create_subprocess_exec(
+                    self._ffmpeg_manager.binary,
+                    "-i",
+                    media_url,
+                    "-f",
+                    "s16le",
+                    "-ac",
+                    str(SAMPLE_CHANNELS),
+                    "-ar",
+                    str(SAMPLE_RATE),
+                    "-nostats",
+                    "pipe:",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,  # Critical for preventing hangs
+                    close_fds=False,
+                )
+                assert proc.stdout is not None
+                assert proc.stderr is not None
+
+                # --- KEY LOGIC: Drain both pipes concurrently to prevent ffmpeg from blocking ---
+                async def _drain_stdout() -> None:
+                    """Read stdout and forward audio chunks to the satellite."""
+                    nonlocal timestamp
+                    if proc.stdout is not None and self._client is not None:
+                        while True:
+                            chunk_bytes = await proc.stdout.read(_ANNOUNCE_CHUNK_BYTES)
+                            if not chunk_bytes:
+                                break  # Pipe closed
+
+                            chunk = AudioChunk(
+                                rate=SAMPLE_RATE,
+                                width=SAMPLE_WIDTH,
+                                channels=SAMPLE_CHANNELS,
+                                audio=chunk_bytes,
+                                timestamp=timestamp,
+                            )
+                            await self._client.write_event(chunk.event())
+                            timestamp += chunk.milliseconds
+
+                async def _drain_stderr() -> None:
+                    """Read stderr and log it to prevent the pipe from blocking."""
+                    if proc.stderr is not None:
+                        while True:
+                            line = await proc.stderr.readline()
+                            if not line:
+                                break  # Pipe closed
+                            _LOGGER.debug("ffmpeg stderr: %s", line.decode().strip())
+
+                # Run both drainers in parallel. They will finish when ffmpeg exits.
+                await asyncio.gather(_drain_stdout(), _drain_stderr())
+
+            finally:
+                # Tell the satellite the audio stream has ended
+                await self._client.write_event(AudioStop().event())
+
+                # --- KEY LOGIC: Explicitly clean up the subprocess ---
+                if proc and proc.returncode is None:
+                    try:
+                        proc.terminate()
+                        await asyncio.wait_for(proc.wait(), timeout=1.0)
+                    except (TimeoutError, ProcessLookupError):
+                        pass  # Process already exited or is hung
+
+                if timestamp > 0:
+                    # Wait for the satellite to confirm it has finished playing
+                    audio_seconds = timestamp / 1000
+                    try:
+                        async with asyncio.timeout(audio_seconds + 1.5):
+                            await self._played_event_received.wait()
+                    except TimeoutError:
+                        # Older satellite clients will wait longer than necessary
+                        _LOGGER.debug("Did not receive played event for announcement")
 
     async def async_announce(self, announcement: AssistSatelliteAnnouncement) -> None:
         """Announce media on the satellite."""
