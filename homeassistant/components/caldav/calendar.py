@@ -237,12 +237,19 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
     async def async_create_event(self, **kwargs: Any) -> None:
         """Add a new event to calendar."""
         try:
-            event_data = _create_event_data(**kwargs)
+            # Convert parameters to CalDAV format
+            event_data = _convert_event_params_to_dict(**kwargs)
 
             def _create_event() -> None:
                 """Create event in CalDAV calendar."""
                 calendar = self.coordinator.calendar
-                calendar.save_event(event_data)
+                # Try using save_event with parameters first, fallback to iCalendar string
+                try:
+                    calendar.save_event(**event_data)
+                except (TypeError, AttributeError):
+                    # Fallback to iCalendar string format
+                    event_ical = _convert_event_params_to_ical(**kwargs)
+                    calendar.save_event(event_ical)
 
             await self.hass.async_add_executor_job(_create_event)
 
@@ -263,28 +270,14 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         try:
             def _delete_event() -> None:
                 """Delete event from CalDAV calendar."""
-                calendar = self.coordinator.calendar
-                # Search for events with the given UID
-                events = calendar.search(
-                    event=True,
-                    expand=False,
-                )
-
-                for event_obj in events:
-                    if hasattr(event_obj.instance, "vevent"):
-                        vevent = event_obj.instance.vevent
-                        if hasattr(vevent, "uid") and vevent.uid.value == uid:
-                            # Handle recurrence if specified
-                            if recurrence_id is not None:
-                                # For recurring events, we should handle recurrence_id
-                                # For now, we'll delete the entire series
-                                _LOGGER.warning(
-                                    "Recurrence handling not fully implemented, deleting entire event series"
-                                )
-                            event_obj.delete()
-                            return
-
-                _raise_event_not_found(uid)
+                event_obj = _find_event_by_uid(self.coordinator.calendar, uid)
+                if recurrence_id is not None:
+                    # For recurring events, we should handle recurrence_id
+                    # For now, we'll delete the entire series
+                    _LOGGER.warning(
+                        "Recurrence handling not fully implemented, deleting entire event series"
+                    )
+                event_obj.delete()
 
             await self.hass.async_add_executor_job(_delete_event)
 
@@ -304,33 +297,26 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
     ) -> None:
         """Update an existing event on the calendar."""
         try:
-            event_data = _create_event_data(**event)
-
             def _update_event() -> None:
                 """Update event in CalDAV calendar."""
-                calendar = self.coordinator.calendar
-                # Search for events with the given UID
-                events = calendar.search(
-                    event=True,
-                    expand=False,
-                )
+                event_obj = _find_event_by_uid(self.coordinator.calendar, uid)
+                if recurrence_id is not None:
+                    _LOGGER.warning(
+                        "Recurrence handling not fully implemented, updating entire event series"
+                    )
 
-                for event_obj in events:
-                    if hasattr(event_obj.instance, "vevent"):
-                        vevent = event_obj.instance.vevent
-                        if hasattr(vevent, "uid") and vevent.uid.value == uid:
-                            # Handle recurrence if specified
-                            if recurrence_id is not None:
-                                _LOGGER.warning(
-                                    "Recurrence handling not fully implemented, updating entire event series"
-                                )
-
-                            # Update the event data
-                            event_obj.data = event_data
-                            event_obj.save()
-                            return
-
-                _raise_event_not_found(uid)
+                # Try direct parameter update first, fallback to iCalendar string
+                try:
+                    event_data = _convert_event_params_to_dict(**event)
+                    # Update directly if CalDAV library supports it
+                    for key, value in event_data.items():
+                        setattr(event_obj, key, value)
+                    event_obj.save()
+                except (TypeError, AttributeError):
+                    # Fallback to iCalendar string replacement
+                    event_ical = _convert_event_params_to_ical(**event)
+                    event_obj.data = event_ical
+                    event_obj.save()
 
             await self.hass.async_add_executor_job(_update_event)
 
@@ -342,23 +328,62 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         await self.coordinator.async_request_refresh()
 
 
-def _create_event_data(**kwargs: Any) -> str:
-    """Create iCalendar event data from Home Assistant event parameters."""
+def _convert_event_params_to_dict(**kwargs: Any) -> dict[str, Any]:
+    """Convert Home Assistant event parameters to CalDAV parameter format.
+    
+    This attempts to use direct parameter passing similar to save_todo().
+    """
+    event_data: dict[str, Any] = {}
+    
+    # Handle summary
+    if 'summary' in kwargs:
+        event_data['summary'] = kwargs['summary']
+    
+    # Handle start/end times (using RFC5545 field names)
+    if 'dtstart' in kwargs:
+        event_data['dtstart'] = kwargs['dtstart']
+        
+    if 'dtend' in kwargs:
+        event_data['dtend'] = kwargs['dtend']
+    
+    # Handle optional fields
+    if kwargs.get('description'):
+        event_data['description'] = kwargs['description']
+        
+    if kwargs.get('location'):
+        event_data['location'] = kwargs['location']
+    
+    # Handle UID
+    if 'uid' in kwargs:
+        event_data['uid'] = kwargs['uid']
+    else:
+        event_data['uid'] = str(uuid.uuid4())
+    
+    return event_data
+
+
+def _convert_event_params_to_ical(**kwargs: Any) -> str:
+    """Convert Home Assistant event parameters to iCalendar format.
+    
+    This is the fallback method that creates iCalendar strings.
+    Uses RFC5545 field names as received from the calendar service.
+    """
     calendar = icalendar.Calendar()
     calendar.add('prodid', '-//Home Assistant//CalDAV//EN')
     calendar.add('version', '2.0')
 
     event = icalendar.Event()
 
-    # Required fields
-    if 'summary' in kwargs:
-        event.add('summary', kwargs['summary'])
-
+    # Handle start/end times (using RFC5545 field names)
     if 'dtstart' in kwargs:
         event.add('dtstart', kwargs['dtstart'])
 
     if 'dtend' in kwargs:
         event.add('dtend', kwargs['dtend'])
+
+    # Required fields
+    if 'summary' in kwargs:
+        event.add('summary', kwargs['summary'])
 
     # Optional fields
     if kwargs.get('description'):
@@ -377,10 +402,20 @@ def _create_event_data(**kwargs: Any) -> str:
     event.add('dtstamp', datetime.now().astimezone())
 
     calendar.add_component(event)
-
     return calendar.to_ical().decode('utf-8')
 
 
-def _raise_event_not_found(uid: str) -> None:
-    """Raise ValueError for event not found."""
+def _find_event_by_uid(calendar: caldav.Calendar, uid: str) -> caldav.CalendarObjectResource:
+    """Find an event by UID using existing search patterns.
+    
+    This reuses the same search pattern used by the coordinator.
+    """
+    events = calendar.search(event=True, expand=False)
+    
+    for event_obj in events:
+        if hasattr(event_obj.instance, "vevent"):
+            vevent = event_obj.instance.vevent
+            if hasattr(vevent, "uid") and vevent.uid.value == uid:
+                return event_obj
+    
     raise ValueError(f"Event with UID {uid} not found")
