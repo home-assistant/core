@@ -49,7 +49,9 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
-        description_placeholders = {}
+        description_placeholders = {
+            "doc_url": "https://www.home-assistant.io/integrations/openweathermap/"
+        }
 
         if user_input is not None:
             latitude = user_input[CONF_LATITUDE]
