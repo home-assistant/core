@@ -66,6 +66,7 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
             config_entry=config_entry,
             name=config_entry.title,
             update_interval=timedelta(seconds=5),
+            always_update=False,
         )
 
     def _get_starlink_data(self) -> StarlinkData:
@@ -76,17 +77,11 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         sleep = get_sleep_config(context)
         status, obstruction, alert = status_data(context)
         index, _, _, _, _, usage, consumption, *_ = history_stats(
-            parse_samples=-1, start=self.history_stats_start, context=context
+            parse_samples=-1 if self.history_stats_start is not None else 1,
+            start=self.history_stats_start,
+            context=context,
         )
         self.history_stats_start = index["end_counter"]
-        if self.data:
-            if index["samples"] > 0:
-                usage["download_usage"] += self.data.usage["download_usage"]
-                usage["upload_usage"] += self.data.usage["upload_usage"]
-                consumption["total_energy"] += self.data.consumption["total_energy"]
-            else:
-                usage = self.data.usage
-                consumption = self.data.consumption
         return StarlinkData(
             location, sleep, status, obstruction, alert, usage, consumption
         )
@@ -94,10 +89,9 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
     async def _async_update_data(self) -> StarlinkData:
         async with asyncio.timeout(4):
             try:
-                result = await self.hass.async_add_executor_job(self._get_starlink_data)
+                return await self.hass.async_add_executor_job(self._get_starlink_data)
             except GrpcError as exc:
                 raise UpdateFailed from exc
-            return result
 
     async def async_stow_starlink(self, stow: bool) -> None:
         """Set whether Starlink system tied to this coordinator should be stowed."""
