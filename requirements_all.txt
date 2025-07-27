@@ -405,7 +405,7 @@ aiostreammagic==2.11.0
 aioswitcher==6.0.0
 
 # homeassistant.components.syncthing
-aiosyncthing==0.5.1
+aiosyncthing==0.6.3
 
 # homeassistant.components.tankerkoenig
 aiotankerkoenig==0.4.2
