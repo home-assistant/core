@@ -34,11 +34,6 @@
       "humidity": {
         "name": "Humidity"
       }
-    },
-    "climate": {
-      "climate": {
-        "name": "Climate"
-      }
     }
   }
 }
