@@ -12,6 +12,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import DOMAIN
+
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=5)
@@ -29,7 +31,7 @@ class AirPatrolDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]
         super().__init__(
             hass,
             _LOGGER,
-            name=f"AirPatrol {config_entry.data['email']}",
+            name=f"{DOMAIN.capitalize()} {config_entry.data['email']}",
             update_interval=SCAN_INTERVAL,
             config_entry=config_entry,
         )

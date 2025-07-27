@@ -254,8 +254,7 @@ class AirPatrolClimate(
         )
         # Update local data with the response data
         self._unit["climate"] = response_data
-        if self.hass is not None:
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
@@ -281,8 +280,7 @@ class AirPatrolClimate(
         )
         # Update local data with the response data
         self._unit["climate"] = response_data
-        if self.hass is not None:
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
@@ -306,8 +304,7 @@ class AirPatrolClimate(
         )
         # Update local data with the response data
         self._unit["climate"] = response_data
-        if self.hass is not None:
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing mode."""
@@ -329,8 +326,7 @@ class AirPatrolClimate(
         )
         # Update local data with the response data
         self._unit["climate"] = response_data
-        if self.hass is not None:
-            self.async_write_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
