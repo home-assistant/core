@@ -67,7 +67,7 @@ class PlaystationNetwork:
         self.user = self.psn.user(online_id="me")
         self.client = self.psn.me()
         self.shareable_profile_link = self.client.get_shareable_profile_link()
-        self.trophy_titles = list(self.user.trophy_titles())
+        self.trophy_titles = list(self.user.trophy_titles(page_size=500))
 
     async def async_setup(self) -> None:
         """Setup PSN."""

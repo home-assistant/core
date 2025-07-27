@@ -116,7 +116,7 @@ class PlaystationNetworkTrophyTitlesCoordinator(
     async def update_data(self) -> list[TrophyTitle]:
         """Update trophy titles data."""
         self.psn.trophy_titles = await self.hass.async_add_executor_job(
-            lambda: list(self.psn.user.trophy_titles())
+            lambda: list(self.psn.user.trophy_titles(page_size=500))
         )
         await self.config_entry.runtime_data.user_data.async_request_refresh()
         return self.psn.trophy_titles
