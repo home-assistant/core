@@ -200,14 +200,11 @@ class MatterListSelectEntity(MatterEntity, SelectEntity):
         list_values_raw = self.get_matter_attribute_value(
             self.entity_description.list_attribute
         )
-        # Accept both list[str] and list[int], convert int to str
-        if isinstance(list_values_raw, list):
-            if list_values_raw and isinstance(list_values_raw[0], int):
-                list_values = [str(v) for v in list_values_raw]
-            else:
-                list_values = list_values_raw
-        else:
-            list_values = []
+        if TYPE_CHECKING:
+            assert list_values_raw is not None
+
+        # Accept both list[str] and list[int], convert to str
+        list_values = [str(v) for v in list_values_raw]
         self._attr_options = list_values
         current_option_idx: int = self.get_matter_attribute_value(
             self._entity_info.primary_attribute
