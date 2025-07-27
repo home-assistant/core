@@ -69,7 +69,6 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_NAME], data=data, options=options
                 )
 
-        # Ensure doc_url is always present
         description_placeholders["doc_url"] = (
             "https://www.home-assistant.io/integrations/openweathermap/"
         )
