@@ -845,16 +845,16 @@
                 "temp_step": "The target temperature step in degrees Celsius or Fahrenheit.",
                 "temperature_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the temperature command topic.",
                 "temperature_command_topic": "The MQTT topic to publish commands to change the climate target temperature. [Learn more.]({url}#temperature_command_topic)",
-                "temperature_high_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the temperature high command topic.",
-                "temperature_high_command_topic": "The MQTT topic to publish commands to change the climate target high temperature. [Learn more.]({url}#temperature_high_command_topic)",
-                "temperature_low_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the temperature low command topic.",
-                "temperature_low_command_topic": "The MQTT topic to publish commands to change the climate target low temperature. [Learn more.]({url}#temperature_low_command_topic)",
+                "temperature_high_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the upper temperature command topic.",
+                "temperature_high_command_topic": "The MQTT topic to publish commands to change the climate upper target temperature. [Learn more.]({url}#temperature_high_command_topic)",
+                "temperature_low_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the lower temperature command topic.",
+                "temperature_low_command_topic": "The MQTT topic to publish commands to change the climate lower target temperature. [Learn more.]({url}#temperature_low_command_topic)",
                 "temperature_state_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to render the value received on the temperature state topic with.",
                 "temperature_state_topic": "The MQTT topic to subscribe for changes of the target temperature. [Learn more.]({url}#temperature_state_topic)",
-                "temperature_high_state_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to render the value received on the temperature high state topic with.",
-                "temperature_high_state_topic": "The MQTT topic to subscribe for changes of the target high temperature. [Learn more.]({url}#temperature_high_state_topic)",
-                "temperature_low_state_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to render the value received on the temperature low state topic with.",
-                "temperature_low_state_topic": "The MQTT topic to subscribe for changes of the target low temperature. [Learn more.]({url}#temperature_low_state_topic)"
+                "temperature_high_state_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to render the value received on the upper temperature state topic with.",
+                "temperature_high_state_topic": "The MQTT topic to subscribe for changes of the upper target temperature. [Learn more.]({url}#temperature_high_state_topic)",
+                "temperature_low_state_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to render the value received on the lower temperature state topic with.",
+                "temperature_low_state_topic": "The MQTT topic to subscribe for changes of the lower target temperature. [Learn more.]({url}#temperature_low_state_topic)"
               }
             }
           }
