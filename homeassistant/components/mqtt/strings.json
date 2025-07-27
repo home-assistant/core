@@ -1232,7 +1232,7 @@
     "target_temperature_feature": {
       "options": {
         "single": "Single target temperature",
-        "high_low": "High/low target temperature",
+        "high_low": "Upper/lower target temperature",
         "none": "No target temperature"
       }
     }
