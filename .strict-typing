@@ -502,6 +502,7 @@ homeassistant.components.tag.*
 homeassistant.components.tailscale.*
 homeassistant.components.tailwind.*
 homeassistant.components.tami4.*
+homeassistant.components.tankerkoenig.*
 homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
 homeassistant.components.technove.*
