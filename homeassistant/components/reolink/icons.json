@@ -396,11 +396,11 @@
       "packing_time": {
         "default": "mdi:record-rec"
       },
-      "post_rec_time": {
-        "default": "mdi:record-rec"
-      },
       "pre_record_fps": {
         "default": "mdi:history"
+      },
+      "post_rec_time": {
+        "default": "mdi:record-rec"
       }
     },
     "sensor": {
