@@ -55,7 +55,6 @@ rules:
       or require token refresh. Authentication failures indicate configuration issues
       that should be resolved by reconfiguring the integration.
   test-coverage: done
-
   # Gold
   devices:
     status: exempt
