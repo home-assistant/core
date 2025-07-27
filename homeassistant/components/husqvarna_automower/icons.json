@@ -11,7 +11,7 @@
       }
     },
     "event": {
-      "last_error": {
+      "message": {
         "default": "mdi:alert-circle-check-outline"
       }
     },
