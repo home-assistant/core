@@ -19,8 +19,7 @@ PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
-class AirPatrolConfigEntry(ConfigEntry["AirPatrolDataUpdateCoordinator"]):
-    """AirPatrol config entry."""
+type AirPatrolConfigEntry = ConfigEntry["AirPatrolDataUpdateCoordinator"]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AirPatrolConfigEntry) -> bool:

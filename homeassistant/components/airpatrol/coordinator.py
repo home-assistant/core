@@ -25,12 +25,11 @@ class AirPatrolDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]
     ) -> None:
         """Initialize."""
         self.api = api
-        self.config_entry = config_entry
 
         super().__init__(
             hass,
             _LOGGER,
-            name=f"AirPatrol {self.config_entry.data['email']}",
+            name=f"AirPatrol {config_entry.data['email']}",
             update_interval=SCAN_INTERVAL,
             config_entry=config_entry,
         )

@@ -1,7 +1,7 @@
 """Test the AirPatrol sensor platform."""
 
 import logging
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -11,10 +11,7 @@ from homeassistant.components.airpatrol.sensor import (
 )
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import PERCENTAGE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-
-from tests.common import MockConfigEntry
 
 MOCK_UNIT_DATA = {
     "unit_id": "test_unit_001",
@@ -149,34 +146,6 @@ def test_sensor_native_value_missing_data() -> None:
     sensor = AirPatrolSensor(coordinator, description, MOCK_UNIT_DATA, "test_unit_001")
 
     assert sensor.native_value is None
-
-
-@pytest.mark.asyncio
-async def test_async_setup_entry(hass: HomeAssistant) -> None:
-    """Test async_setup_entry."""
-    coordinator = MagicMock(spec=DataUpdateCoordinator)
-    coordinator.api = MagicMock()
-    coordinator.api.get_units = AsyncMock(return_value=[MOCK_UNIT_DATA])
-    coordinator.api.get_data = AsyncMock(
-        return_value=[
-            {
-                "unit_id": "test_unit_001",
-                "climate": {"RoomTemp": "22.5", "RoomHumidity": "45.2"},
-            }
-        ]
-    )
-
-    entry = MockConfigEntry(domain="airpatrol")
-    entry.runtime_data = coordinator
-
-    async_add_entities = MagicMock()
-    # Removed call to undefined async_setup_entry
-    # await async_setup_entry(hass, entry, async_add_entities)
-    # Verify that entities were added
-    # async_add_entities.assert_called_once()
-    if async_add_entities.call_args:
-        entities = async_add_entities.call_args[0][0]
-        assert len(entities) == 3  # status, temperature, humidity sensors
 
 
 def test_sensor_available_logging(caplog: pytest.LogCaptureFixture) -> None:
