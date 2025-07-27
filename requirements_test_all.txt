@@ -865,7 +865,7 @@ gardena-bluetooth==1.6.0
 gassist-text==0.0.14
 
 # homeassistant.components.google
-gcal-sync==7.1.0
+gcal-sync==8.0.0
 
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
@@ -985,7 +985,7 @@ ha-philipsjs==3.2.2
 ha-silabs-firmware-client==0.2.0
 
 # homeassistant.components.habitica
-habiticalib==0.4.0
+habiticalib==0.4.1
 
 # homeassistant.components.bluetooth
 habluetooth==4.0.1
@@ -1050,7 +1050,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==10.0.4
+ical==11.0.0
 
 # homeassistant.components.caldav
 icalendar==6.1.0
@@ -2209,7 +2209,7 @@ renault-api==0.3.1
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.14.3
+reolink-aio==0.14.4
 
 # homeassistant.components.rflink
 rflink==0.0.67
