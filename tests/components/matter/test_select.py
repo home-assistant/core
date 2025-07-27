@@ -245,8 +245,8 @@ async def test_microwave_oven(
 ) -> None:
     """Test ListSelect entity is discovered and working from a microwave oven fixture."""
 
-    # SupportedWatts    on MicrowaveOvenControl cluster (1/96/6)
-    # SelectedWattIndex on MicrowaveOvenControl cluster (1/96/7)
+    # SupportedWatts    from MicrowaveOvenControl cluster (1/96/6)
+    # SelectedWattIndex from MicrowaveOvenControl cluster (1/96/7)
     matter_client.write_attribute.reset_mock()
     state = hass.states.get("select.microwave_oven_power_level_w")
     assert state
