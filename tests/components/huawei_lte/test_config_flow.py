@@ -332,7 +332,7 @@ async def test_ssdp(
 ) -> None:
     """Test SSDP discovery initiates config properly."""
     url = FIXTURE_USER_INPUT[CONF_URL][:-1]  # strip trailing slash for appending port
-    context = {"source": config_entries.SOURCE_SSDP}
+    context = config_entries.ConfigFlowContext(source=config_entries.SOURCE_SSDP)
     login_requests_mock.request(**requests_mock_request_kwargs)
     service_info = SsdpServiceInfo(
         ssdp_usn="mock_usn",
