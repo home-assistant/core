@@ -88,7 +88,7 @@ async def async_setup_entry(
 
 @dataclass(frozen=True)
 class MatterLightEntityDescription(LightEntityDescription, MatterEntityDescription):
-    """Describe Matter Number Input entities."""
+    """Describe Matter Light entities."""
 
 
 class MatterLight(MatterEntity, LightEntity):

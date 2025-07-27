@@ -44,7 +44,7 @@ async def async_setup_entry(
 
 @dataclass(frozen=True)
 class MatterSwitchEntityDescription(SwitchEntityDescription, MatterEntityDescription):
-    """Describe Matter Numeric Switch entities."""
+    """Describe Matter Switch entities."""
 
 
 class MatterSwitch(MatterEntity, SwitchEntity):
