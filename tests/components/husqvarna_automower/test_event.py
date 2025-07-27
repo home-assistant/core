@@ -4,18 +4,15 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
-from aioautomower.exceptions import ApiError
-from aioautomower.model import MessageData
-from aioautomower.model.model_message import Message, MessageAttributes, Severity
+from aioautomower.model import SingleMessageData
+from aioautomower.model.model_message import Message, Severity, SingleMessageAttributes
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.event import ATTR_EVENT_TYPE
-from homeassistant.components.husqvarna_automower.const import DOMAIN
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 
@@ -25,33 +22,8 @@ from .const import TEST_MOWER_ID
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-async def test_event(
-    hass: HomeAssistant,
-    mock_automower_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test that a new message arriving over the websocket updates the sensor."""
-    original_side_effect = mock_automower_client.async_get_messages.side_effect
-    mock_automower_client.async_get_messages.side_effect = ApiError
-    await setup_integration(hass, mock_config_entry)
-    await hass.async_block_till_done()
-    state = hass.states.get("event.test_mower_1_last_error")
-    assert state is None
-
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.state is ConfigEntryState.LOADED
-    await hass.config_entries.async_remove(entry.entry_id)
-    await hass.async_block_till_done()
-
-    mock_automower_client.async_get_messages.side_effect = original_side_effect
-    await setup_integration(hass, mock_config_entry)
-    await hass.async_block_till_done()
-    state = hass.states.get("event.test_mower_1_last_error")
-    assert state is not None
-
-
 @pytest.mark.freeze_time(datetime(2023, 6, 5, 12))
-async def test_new_websocket_message(
+async def test_event(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -65,16 +37,15 @@ async def test_new_websocket_message(
         [Platform.EVENT],
     ):
         # Capture callbacks per mower_id
-        callback_holder: dict[str, Callable[[MessageData], None]] = {}
+        callback_holder: dict[str, Callable[[SingleMessageData], None]] = {}
 
         @callback
         def fake_register_websocket_response(
-            cb: Callable[[MessageData], None],
-            mower_id: str,
+            cb: Callable[[SingleMessageData], None],
         ) -> None:
-            callback_holder[mower_id] = cb
+            callback_holder[TEST_MOWER_ID] = cb
 
-        mock_automower_client.register_message_callback.side_effect = (
+        mock_automower_client.register_single_message_callback.side_effect = (
             fake_register_websocket_response
         )
 
@@ -88,30 +59,27 @@ async def test_new_websocket_message(
     await hass.async_block_till_done()
 
     # Ensure callback was registered for the test mower
-    assert mock_automower_client.register_message_callback.called
-    assert TEST_MOWER_ID in callback_holder
+    assert mock_automower_client.register_single_message_callback.called
 
     # Check initial state
     state = hass.states.get("event.test_mower_1_last_error")
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state is None
 
     # Simulate a new message for this mower
-    message = MessageData(
+    message = SingleMessageData(
         type="messages",
         id=TEST_MOWER_ID,
-        attributes=MessageAttributes(
-            messages=[
-                Message(
-                    time=datetime(2025, 7, 13, 15, 30, tzinfo=UTC),
-                    code="wheel_motor_overloaded_rear_left",
-                    severity=Severity.ERROR,
-                    latitude=49.0,
-                    longitude=10.0,
-                )
-            ]
+        attributes=SingleMessageAttributes(
+            message=Message(
+                time=datetime(2025, 7, 13, 15, 30, tzinfo=UTC),
+                code="wheel_motor_overloaded_rear_left",
+                severity=Severity.ERROR,
+                latitude=49.0,
+                longitude=10.0,
+            )
         ),
     )
+
     callback_holder[TEST_MOWER_ID](message)
     await hass.async_block_till_done()
     freezer.tick(SCAN_INTERVAL)

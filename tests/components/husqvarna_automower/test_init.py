@@ -313,8 +313,6 @@ async def test_coordinator_automatic_registry_cleanup(
     current_devices = len(
         dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     )
-    state = hass.states.get("event.test_mower_1_last_error")
-    assert state is not None
     # Remove mower 2 and check if it worked
     mower2_messages = messages.pop("1234")
     mock_automower_client.async_get_messages.return_value = mower2_messages
@@ -402,9 +400,6 @@ async def test_coordinator_automatic_registry_cleanup(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-
-    state = hass.states.get("event.test_mower_1_last_error")
-    assert state is not None
     assert (
         len(dr.async_entries_for_config_entry(device_registry, entry.entry_id))
         == current_devices

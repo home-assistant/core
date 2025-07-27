@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_new_websocket_message[event.test_mower_1_last_error-entry]
+# name: test_event[event.test_mower_1_last_error-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -159,7 +159,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_new_websocket_message[event.test_mower_1_last_error-state]
+# name: test_event[event.test_mower_1_last_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'event_type': 'wheel_motor_overloaded_rear_left',
