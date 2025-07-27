@@ -15,6 +15,7 @@ class LIPMode(StrEnum):
     ERROR = "ERROR"
     SYSVAR = "SYSVAR"
     MONITORING = "MONITORING"
+    SYSTEM = "SYSTEM"
 
     @classmethod
     def from_string(cls, mode_str: str) -> "LIPMode":
@@ -52,6 +53,10 @@ PARSER_CONFIG = {
         "value": (4, int),
     },
     LIPMode.MONITORING: {
+        "component_number": (None, None),
+        "action_number": (3, int),
+    },
+    LIPMode.SYSTEM: {
         "component_number": (None, None),
         "action_number": (3, int),
     },
@@ -104,6 +109,7 @@ class LIPAction(IntEnum):
     DEVICE_LED_STATE = 9  # Used for querying and setting led state
     GROUP_STATE = 3  # Used for querying a group
     SYSVAR_STATE = 1  # Used for querying a variable state
+    SYSTEM_TIME = 1  # Used for heart-beat
 
 
 class LIPLedState(IntEnum):

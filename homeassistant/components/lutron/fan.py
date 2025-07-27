@@ -63,7 +63,7 @@ class LutronFan(LutronOutput, FanEntity):
         """Set the speed of the fan, as a percentage."""
         if percentage > 0:
             self._prev_percentage = percentage
-        await self._controller.output_set_level(self._lutron_device.id, percentage)
+        await self._lutron_device.set_level(percentage)
 
     async def async_turn_on(
         self,
@@ -81,15 +81,15 @@ class LutronFan(LutronOutput, FanEntity):
             new_percentage = 67
         else:
             new_percentage = self._prev_percentage
-        await self._controller.output_set_level(self._lutron_device.id, new_percentage)
+        await self._lutron_device.set_level(new_percentage)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        await self._controller.output_set_level(self._lutron_device.id, 0)
+        await self._lutron_device.set_level(0)
 
     async def _request_state(self) -> None:
         """Request the state from the device."""
-        await self._controller.output_get_level(self._lutron_device.id)
+        await self._lutron_device.get_level()
 
     def _update_callback(self, value: int):
         """Update the state attributes."""

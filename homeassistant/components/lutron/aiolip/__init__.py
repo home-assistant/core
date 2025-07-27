@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Callable
 import logging
 from pathlib import Path
+from typing import Any
 import urllib.request
 
 __version__ = "1.1.7"
@@ -49,27 +50,40 @@ class LutronController:
 
     def __init__(
         self,
-        hass,
-        host,
-        user,
-        password,
-        use_full_path,
-        use_area_for_device_name,
-        use_radiora_mode,
-    ):
-        """Initialize the Lutron controller."""
+        hass: Any,  # HomeAssistant type
+        host: str,
+        user: str,
+        password: str,
+        use_full_path: bool,
+        use_area_for_device_name: bool,
+        use_radiora_mode: bool,
+    ) -> None:
+        """Initialize the Lutron controller.
+
+        Args:
+            hass: Home Assistant instance
+            host: Hostname or IP address of the Lutron controller
+            user: Username for authentication
+            password: Password for authentication
+            use_full_path: Whether to use full path for area names
+            use_area_for_device_name: Whether to include area in device names
+            use_radiora_mode: Whether to use RadioRA compatibility mode
+
+        """
         self.hass = hass
         self.host = host
+        self.user = user
+        self.password = password
         self.lip = LIP()
         self.connected = False
-        self.connect_lock = None
+        self.connect_lock: asyncio.Lock | None = None
         self._subscribers: dict[
-            tuple[int, int | None], list[Callable]
+            tuple[int, int | None], list[Callable[[Any], None]]
         ] = {}  # integration_id, component_number -> list of entities
-        self.guid = None
-        self.areas = []
-        self.variables = []
-        self.name = None
+        self.guid: str | None = None
+        self.areas: list[Any] = []  # List[Area] type
+        self.variables: list[Sysvar] = []
+        self.name: str | None = None
         self.use_full_path = use_full_path
         self.use_area_for_device_name = use_area_for_device_name
         self.use_radiora_mode = use_radiora_mode
@@ -89,6 +103,31 @@ class LutronController:
         """Subscribe the callable for a specific integration_id. Can be multiple entities for the same integration (e.g. keypad leds)."""
         key = (integration_id, component_number)
         self._subscribers.setdefault(key, []).append(callback)
+
+    def unsubscribe(
+        self,
+        integration_id: int,
+        component_number: int | None,
+        callback: Callable[[Any], None],
+    ) -> None:
+        """Unsubscribe a callback from a specific integration_id.
+
+        Args:
+            integration_id: The integration ID to unsubscribe from
+            component_number: The component number (optional)
+            callback: The callback function to remove
+
+        """
+        key = (integration_id, component_number)
+        if key in self._subscribers and callback in self._subscribers[key]:
+            self._subscribers[key].remove(callback)
+            if not self._subscribers[key]:
+                del self._subscribers[key]
+            _LOGGER.debug(
+                "Unsubscribed from integration_id=%d, component_number=%s",
+                integration_id,
+                component_number,
+            )
 
     def _dispatch_message(self, msg: LIPMessage):
         """Call the function in the subscriber entity."""
@@ -116,12 +155,12 @@ class LutronController:
 
     async def action(self, mode: LIPMode, *args):
         """Send an action command."""
-        await self.connect()
+        await self._ensure_connected()
         await self.lip.action(mode, *args)
 
     async def query(self, mode: LIPMode, *args):
         """Send a query command."""
-        await self.connect()
+        await self._ensure_connected()
         await self.lip.query(mode, *args)
 
     async def stop(self):
@@ -130,120 +169,69 @@ class LutronController:
             await self.lip.async_stop()
             self.connected = False
 
-    async def output_set_level(
-        self, output_id: int, new_level: float, fade_time: str | None = None
-    ) -> None:
-        """Set the level of an output."""
-        await self.action(
-            LIPMode.OUTPUT, output_id, LIPAction.OUTPUT_LEVEL, new_level, fade_time
-        )
-
-    async def output_get_level(self, output_id: int) -> None:
-        """Query the level of an output."""
-        await self.query(LIPMode.OUTPUT, output_id, LIPAction.OUTPUT_LEVEL)
-
-    async def output_start_raising(self, output_id: int):
-        """Start raising the motor."""
-        await self.action(LIPMode.OUTPUT, output_id, LIPAction.OUTPUT_START_RAISING)
-
-    async def output_start_lowering(self, output_id: int):
-        """Start lowering the motor."""
-        await self.action(LIPMode.OUTPUT, output_id, LIPAction.OUTPUT_START_LOWERING)
-
-    async def output_stop(self, output_id: int):
-        """Stop the motor."""
-        await self.action(LIPMode.OUTPUT, output_id, LIPAction.OUTPUT_STOP)
-
-    async def output_jog_raise(self, output_id: int):
-        """Jog raise the motor."""
-        await self.action(LIPMode.OUTPUT, output_id, LIPAction.OUTPUT_MOTOR_JOG_RAISE)
-
-    async def output_jog_lower(self, output_id: int):
-        """Jog lower the motor."""
-        await self.action(LIPMode.OUTPUT, output_id, LIPAction.OUTPUT_MOTOR_JOG_LOWER)
-
-    async def group_get_state(self, group_id: int) -> None:
-        """Query the level of an output."""
-        await self.query(LIPMode.GROUP, group_id, LIPAction.GROUP_STATE)
-
-    async def device_press(self, keypad_id: int, component_number: int) -> None:
-        """Triggers a simulated button press to the Keypad."""
-        await self.action(
-            LIPMode.DEVICE, keypad_id, component_number, LIPAction.DEVICE_PRESS
-        )
-
-    async def device_turn_on(self, keypad_id: int, component_number: int):
-        """Turn on the LED."""
-        await self.action(
-            LIPMode.DEVICE,
-            keypad_id,
-            component_number,
-            LIPAction.DEVICE_LED_STATE,
-            LIPLedState.ON,
-        )
-
-    async def device_turn_off(self, keypad_id: int, component_number: int):
-        """Turn off the LED."""
-        await self.action(
-            LIPMode.DEVICE,
-            keypad_id,
-            component_number,
-            LIPAction.DEVICE_LED_STATE,
-            LIPLedState.OFF,
-        )
-
-    async def device_get_state(self, keypad_id: int, component_number: int):
-        """Get LED state."""
-        await self.query(
-            LIPMode.DEVICE, keypad_id, component_number, LIPAction.DEVICE_LED_STATE
-        )
-
-    async def sysvar_set_state(self, sysvar_id: int, value: int):
-        """Set the variable."""
-        await self.action(LIPMode.SYSVAR, sysvar_id, LIPAction.SYSVAR_STATE, value)
-
-    async def sysvar_get_state(self, sysvar_id: int) -> None:
-        """Get the Variable state."""
-        await self.query(LIPMode.SYSVAR, sysvar_id, LIPAction.SYSVAR_STATE)
+    async def _ensure_connected(self) -> None:
+        """Ensure the controller is connected before sending commands."""
+        if not self.connected:
+            await self.connect()
 
     def load_xml_db(
         self,
-        cache_path=None,
-        refresh_data=True,
-        variable_ids=None,
-    ):
+        cache_path: str | None = None,
+        refresh_data: bool = True,
+        variable_ids: list[int] | None = None,
+    ) -> bool:
         """Load the Lutron database from the server if refresh_data is True.
 
         If not, if a locally cached copy is available, use that instead, or
         create one and store it
-        """
 
+        Args:
+            cache_path: Path to cache the XML database
+            refresh_data: Whether to refresh data from server
+            variable_ids: List of variable IDs to include
+
+        Returns:
+            True if successful
+
+        Raises:
+            Exception: If database loading fails
+
+        """
         xml_db = None
         loaded_from = None
         variable_ids = variable_ids or []
 
         if cache_path and not refresh_data:
             try:
-                with Path.open(cache_path, "rb") as f:  # pylint: disable=unspecified-encoding
+                with Path(cache_path).open("rb") as f:  # pylint: disable=unspecified-encoding
                     xml_db = f.read()
                     loaded_from = "cache"
+                    _LOGGER.debug("Loaded XML database from cache: %s", cache_path)
             except OSError as e:
                 _LOGGER.debug("Failed to read XML cache: %s", e)
+
         if not loaded_from:
             url = "http://" + self.host + "/DbXmlInfo.xml"
-            with urllib.request.urlopen(url) as xmlfile:
-                xml_db = xmlfile.read()
-                loaded_from = "repeater"
-                if cache_path and not refresh_data:
-                    with Path.open(cache_path, "wb") as f:  # pylint: disable=unspecified-encoding
-                        f.write(xml_db)
-                        _LOGGER.info("Stored db as %s", cache_path)
+            try:
+                with urllib.request.urlopen(url) as xmlfile:
+                    xml_db = xmlfile.read()
+                    loaded_from = "repeater"
+                    _LOGGER.debug("Loaded XML database from repeater: %s", url)
+                    if cache_path and not refresh_data:
+                        if xml_db is not None:
+                            with Path(cache_path).open("wb") as f:  # pylint: disable=unspecified-encoding
+                                f.write(xml_db)
+                                _LOGGER.info("Stored db as %s", cache_path)
+            except Exception as e:
+                _LOGGER.error("Failed to load XML database from %s: %s", url, e)
+                raise
 
         _LOGGER.info("Loaded xml db from %s", loaded_from)
 
         parser = LutronXmlDbParser(
             xml_db_str=xml_db,
             variable_ids=variable_ids,
+            controller=self,  # Pass controller to parser
         )
         assert parser.parse()  # throw our own exception
         self.areas = parser.areas
@@ -254,7 +242,8 @@ class LutronController:
         _LOGGER.info("Found Lutron project: %s, %d areas", self.name, len(self.areas))
 
         if cache_path and loaded_from == "repeater":
-            with Path.open(cache_path, "wb") as f:  # pylint: disable=unspecified-encoding
-                f.write(xml_db)
+            if xml_db is not None:
+                with Path(cache_path).open("wb") as f:  # pylint: disable=unspecified-encoding
+                    f.write(xml_db)
 
         return True

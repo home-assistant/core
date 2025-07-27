@@ -51,7 +51,7 @@ class LutronOccupancySensor(LutronBaseEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
 
     async def _request_state(self):
-        await self._controller.group_get_state(self._lutron_device.id)
+        await self._lutron_device.get_state()
 
     def _update_callback(self, value: int):
         """Handle group state update."""
