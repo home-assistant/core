@@ -157,6 +157,8 @@ class LutronController:
         args: list[Any] = [command.integration_id]
         if command.component_number is not None:
             args.append(command.component_number)
+        if command.action is not None:
+            args.append(command.action)
         if command.value is not None:
             args.append(command.value)
         if command.fade_time is not None:
