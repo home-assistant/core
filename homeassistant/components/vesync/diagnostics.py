@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from pyvesync import VeSync
 
@@ -13,7 +13,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import DOMAIN, VS_MANAGER
-from .entity import VeSyncBaseDevice
 
 KEYS_TO_REDACT = {"manager", "uuid", "mac_id"}
 
@@ -26,6 +25,7 @@ async def async_get_config_entry_diagnostics(
 
     return {
         DOMAIN: {
+            "Total Device Count": len(manager.devices),
             "bulb_count": len(manager.devices.bulbs),
             "fan_count": len(manager.devices.fans),
             "humidifers_count": len(manager.devices.humidifiers),
@@ -43,11 +43,24 @@ async def async_get_device_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
     manager: VeSync = hass.data[DOMAIN][VS_MANAGER]
-    device_dict = manager.devices
     vesync_device_id = next(iden[1] for iden in device.identifiers if iden[0] == DOMAIN)
 
+    def get_vesync_unique_id(dev: Any) -> str:
+        """Return the unique ID for a VeSync device."""
+        cid = getattr(dev, "cid", None)
+        sub_device_no = getattr(dev, "sub_device_no", None)
+        if cid is None:
+            return ""
+        if isinstance(sub_device_no, int):
+            return f"{cid}{sub_device_no!s}"
+        return str(cid)
+
+    vesync_device = next(
+        dev for dev in manager.devices if get_vesync_unique_id(dev) == vesync_device_id
+    )
+
     # Base device information, without sensitive information.
-    data = _redact_device_values(device_dict[vesync_device_id])
+    data = _redact_device_values(vesync_device)
 
     data["home_assistant"] = {
         "name": device.name,
@@ -73,7 +86,7 @@ async def async_get_device_diagnostics(
             # The context doesn't provide useful information in this case.
             state_dict.pop("context", None)
 
-        data["home_assistant"]["entities"].append(
+        cast(dict[str, Any], data["home_assistant"])["entities"].append(
             {
                 "domain": entity_entry.domain,
                 "entity_id": entity_entry.entity_id,
@@ -94,12 +107,19 @@ async def async_get_device_diagnostics(
     return data
 
 
-def _redact_device_values(device: VeSyncBaseDevice) -> dict:
+def _redact_device_values(obj: object) -> dict[str, str | dict[str, Any]]:
     """Rebuild and redact values of a VeSync device."""
-    data = {}
-    for key, item in device.__dict__.items():
-        if key not in KEYS_TO_REDACT:
-            data[key] = item
+    data: dict[str, str | dict[str, Any]] = {}
+    for key in dir(obj):
+        if key.startswith("_"):
+            # Skip private attributes
+            continue
+        if callable(getattr(obj, key)):
+            data[key] = "Method"
+        elif key == "state":
+            data[key] = _redact_device_values(getattr(obj, key))
+        elif key not in KEYS_TO_REDACT:
+            data[key] = getattr(obj, key)
         else:
             data[key] = REDACTED
 
