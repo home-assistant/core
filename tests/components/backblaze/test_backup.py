@@ -240,75 +240,128 @@ async def test_agents_list_backups_with_corrupted_metadata(
     caplog: pytest.LogCaptureFixture,
     test_backup: AgentBackup,
 ) -> None:
-    """Test listing backups when one metadata file is corrupted or non-conforming."""
-    # Create agent
+    """Test listing backups when one metadata file is corrupted or non-conforming.
+
+    This test verifies that the BackblazeBackupAgent correctly handles various
+    scenarios of invalid or unreadable metadata files when listing backups,
+    ensuring only valid backups are returned and appropriate errors are logged.
+    """
+    # Create an instance of the BackblazeBackupAgent.
     agent = BackblazeBackupAgent(hass, mock_config_entry)
 
-    # Set up mock responses for both valid and corrupted/non-conforming metadata files
-    # Mocking b2sdk.v2.Bucket.list_file_versions
-    mock_file_version_valid = Mock()
-    mock_file_version_valid.file_name = "valid_backup.metadata.json"
+    # --- Set up mock responses for different types of metadata files ---
+
+    # Use test_backup.backup_id directly for simpler filename matching
+    # The agent's _process_metadata_file_sync will derive the backup_id from the filename
+    # by stripping the prefix and '.tar.metadata.json' suffix.
+    # So, the core part of the filename should be the backup_id + '.tar'
+    valid_backup_core_name = f"{test_backup.backup_id}.tar"
+
+    # 0. Mock for the main backup archive file (.tar).
+    # This file is needed for the valid metadata to find its corresponding archive.
+    mock_file_version_tar = Mock(spec=FileVersion)
+    mock_file_version_tar.file_name = (
+        f"{mock_config_entry.data['prefix']}{valid_backup_core_name}"
+    )
+    mock_file_version_tar.upload_timestamp = 1672531200000
+    mock_file_version_tar.file_id = "tar_id"
+    mock_file_version_tar.size = (
+        test_backup.size
+    )  # Ensure size matches for AgentBackup creation
+
+    # 1. Mock for a valid metadata file.
+    # This file will be successfully parsed and represent a valid backup.
+    mock_file_version_valid = Mock(spec=FileVersion)
+    mock_file_version_valid.file_name = f"{mock_config_entry.data['prefix']}{valid_backup_core_name}{METADATA_FILE_SUFFIX}"
     mock_file_version_valid.upload_timestamp = 1672531200000  # Jan 1, 2023 00:00:00 UTC
     mock_file_version_valid.file_id = "valid_id"
-    valid_metadata_content = json.dumps(test_backup.as_dict())
+    # The content is a JSON string of a valid AgentBackup.
+    valid_metadata_content = json.dumps(BACKUP_METADATA)
     mock_file_version_valid.download.return_value.response.content = (
         valid_metadata_content.encode("utf-8")
     )
 
-    mock_file_version_corrupted = Mock()
-    mock_file_version_corrupted.file_name = "corrupted_backup.metadata.json"
+    # 2. Mock for a corrupted metadata file (invalid JSON).
+    # Ensure it follows the expected naming convention for metadata files.
+    mock_file_version_corrupted = Mock(spec=FileVersion)
+    mock_file_version_corrupted.file_name = f"{mock_config_entry.data['prefix']}corrupted_backup_id.tar{METADATA_FILE_SUFFIX}"
     mock_file_version_corrupted.upload_timestamp = 1672531200000
     mock_file_version_corrupted.file_id = "corrupted_id"
+    # The content is intentionally malformed JSON.
     mock_file_version_corrupted.download.return_value.response.content = (
         b"{invalid json content"
     )
 
-    mock_file_version_non_conforming_missing_id = Mock()
-    mock_file_version_non_conforming_missing_id.file_name = (
-        "non_conforming_missing_id.metadata.json"
-    )
+    # 3. Mock for a non-conforming metadata file (missing 'backup_id').
+    # Ensure it follows the expected naming convention for metadata files.
+    mock_file_version_non_conforming_missing_id = Mock(spec=FileVersion)
+    mock_file_version_non_conforming_missing_id.file_name = f"{mock_config_entry.data['prefix']}non_conforming_missing_id.tar{METADATA_FILE_SUFFIX}"
     mock_file_version_non_conforming_missing_id.upload_timestamp = 1672531200000
     mock_file_version_non_conforming_missing_id.file_id = "non_conforming_id_1"
+    # Metadata lacks the 'backup_id' field.
     non_conforming_metadata_1 = {"metadata_version": METADATA_VERSION}
     mock_file_version_non_conforming_missing_id.download.return_value.response.content = json.dumps(
         non_conforming_metadata_1
     ).encode("utf-8")
 
-    mock_file_version_non_conforming_wrong_version = Mock()
-    mock_file_version_non_conforming_wrong_version.file_name = (
-        "non_conforming_wrong_version.metadata.json"
-    )
+    # 4. Mock for a non-conforming metadata file (wrong 'metadata_version').
+    # Ensure it follows the expected naming convention for metadata files.
+    mock_file_version_non_conforming_wrong_version = Mock(spec=FileVersion)
+    mock_file_version_non_conforming_wrong_version.file_name = f"{mock_config_entry.data['prefix']}non_conforming_wrong_version.tar{METADATA_FILE_SUFFIX}"
     mock_file_version_non_conforming_wrong_version.upload_timestamp = 1672531200000
     mock_file_version_non_conforming_wrong_version.file_id = "non_conforming_id_2"
+    # Metadata has an incorrect 'metadata_version'.
     non_conforming_metadata_2 = {"metadata_version": "2", "backup_id": "test"}
     mock_file_version_non_conforming_wrong_version.download.return_value.response.content = json.dumps(
         non_conforming_metadata_2
     ).encode("utf-8")
 
-    mock_file_version_b2_error = Mock()
-    mock_file_version_b2_error.file_name = "b2_error.metadata.json"
+    # 5. Mock for a file that causes a B2Error during download.
+    # Ensure it follows the expected naming convention for metadata files.
+    mock_file_version_b2_error = Mock(spec=FileVersion)
+    mock_file_version_b2_error.file_name = (
+        f"{mock_config_entry.data['prefix']}b2_error_file.tar{METADATA_FILE_SUFFIX}"
+    )
     mock_file_version_b2_error.upload_timestamp = 1672531200000
     mock_file_version_b2_error.file_id = "b2_error_id"
+    # Configure the download method to raise a B2Error.
     mock_file_version_b2_error.download.side_effect = B2Error("simulated B2 error")
 
+    # Create the dictionary that _get_all_files_in_prefix should return.
+    # This directly controls the input to async_list_backups for file discovery.
+    mock_all_files_in_prefix = {
+        mock_file_version_valid.file_name: mock_file_version_valid,
+        mock_file_version_corrupted.file_name: mock_file_version_corrupted,
+        mock_file_version_non_conforming_missing_id.file_name: mock_file_version_non_conforming_missing_id,
+        mock_file_version_non_conforming_wrong_version.file_name: mock_file_version_non_conforming_wrong_version,
+        mock_file_version_b2_error.file_name: mock_file_version_b2_error,
+        mock_file_version_tar.file_name: mock_file_version_tar,
+    }
+
+    # --- Patching and Execution ---
     with (
+        # Patch _get_all_files_in_prefix directly to control the list of files.
         patch(
-            "b2sdk.v2.Bucket.list_file_versions",
-            return_value=[
-                mock_file_version_valid,
-                mock_file_version_corrupted,
-                mock_file_version_non_conforming_missing_id,
-                mock_file_version_non_conforming_wrong_version,
-                mock_file_version_b2_error,
-            ],
+            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._get_all_files_in_prefix",
+            return_value=mock_all_files_in_prefix,
         ),
+        # Capture logs at DEBUG level to ensure we catch all relevant messages,
+        # including "Skipping non-conforming" which might be at DEBUG or INFO.
         caplog.at_level(logging.DEBUG),
-    ):  # Use DEBUG to capture "Skipping non-conforming"
+    ):
+        # Call the method under test: async_list_backups.
         backups = await agent.async_list_backups()
+
+        # --- Assertions ---
+        # Only the valid backup should be returned.
         assert len(backups) == 1
         assert backups[0].backup_id == test_backup.backup_id
-        assert "Failed to parse metadata file" in caplog.text
-        assert "Skipping non-conforming metadata file" in caplog.text
+
+        # Assert that specific log messages indicating handling of invalid files are present.
+        assert "Failed to parse metadata file" in caplog.text  # For corrupted JSON
+        assert (
+            "Skipping non-conforming metadata file" in caplog.text
+        )  # For missing ID and wrong version
         assert "simulated B2 error" in caplog.text  # For the B2Error during download
 
 
@@ -627,6 +680,369 @@ async def test_agents_upload_failure_and_abort(
     assert "Simulated unexpected error" in caplog.text
 
 
+async def test_upload_metadata_failure_cleanup(
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test cleanup when metadata upload fails after successful backup upload."""
+    client = await hass_client()
+    # Create a backup with small size to trigger simple upload
+    backup = AgentBackup(**{**TEST_BACKUP.as_dict(), "size": 100})
+
+    # Mock bucket and file version
+    mock_bucket = Mock()
+    mock_file_version = Mock()
+    mock_bucket.upload_bytes.return_value = mock_file_version
+
+    # Make metadata upload fail
+    mock_bucket.upload_bytes.side_effect = [
+        mock_file_version,  # Success for backup file
+        B2Error("Metadata upload failed"),  # Failure for metadata
+    ]
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+            return_value=backup,
+        ),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=backup,
+        ),
+        patch.object(mock_config_entry, "runtime_data", new=mock_bucket),
+        patch(
+            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._upload_multipart_b2"
+        ),  # Ensure multipart isn't used
+        caplog.at_level(logging.WARNING),
+    ):
+        # Create an AsyncMock for the open_stream callable
+        mock_open_stream_callable = AsyncMock()
+
+        async def async_chunk_generator():
+            yield b"test"
+            yield b""
+
+        mock_open_stream_callable.return_value = async_chunk_generator()
+
+        agent = BackblazeBackupAgent(client.app["hass"], mock_config_entry)
+
+        # This should trigger the cleanup logic
+        with pytest.raises(BackupAgentError):
+            await agent.async_upload_backup(
+                open_stream=mock_open_stream_callable,
+                backup=backup,
+            )
+
+        # Verify cleanup was attempted - mock the file info lookup
+        mock_bucket.get_file_info_by_name.assert_called_once()
+        # The delete method should be called on the file version
+        mock_bucket.get_file_info_by_name.return_value.delete.assert_called_once()
+        assert "Attempting to delete partially uploaded main backup file" in caplog.text
+        assert "Metadata upload failed" in caplog.text
+
+
+async def test_stream_closing_behavior(
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that streams are properly closed during multipart upload."""
+    client = await hass_client()
+    backup = AgentBackup(**{**TEST_BACKUP.as_dict(), "size": DEFAULT_MIN_PART_SIZE * 2})
+
+    class MockStreamClose:
+        def __init__(self) -> None:
+            self.close_called = False
+
+        async def __aiter__(self):
+            yield b"chunk1"
+            yield b"chunk2"
+
+        def close(self):
+            self.close_called = True
+
+        # Add async context manager methods
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc_val, exc_tb):
+            self.close()
+
+    class MockStreamAclose:
+        def __init__(self) -> None:
+            self.aclose_called = False
+
+        async def __aiter__(self):
+            yield b"chunk1"
+            yield b"chunk2"
+
+        async def aclose(self):
+            self.aclose_called = True
+
+        # Add async context manager methods
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc_val, exc_tb):
+            await self.aclose()
+
+    stream_with_close = MockStreamClose()
+    stream_with_aclose = MockStreamAclose()
+
+    # mock_open_stream_callable should return the async context manager instances directly
+    mock_open_stream_callable = AsyncMock()
+    mock_open_stream_callable.side_effect = [stream_with_close, stream_with_aclose]
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+            return_value=backup,
+        ),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=backup,
+        ),
+        patch.object(mock_config_entry, "runtime_data", new=Mock()),
+        patch(
+            "homeassistant.components.backblaze.backup.aiofiles.open"
+        ),  # Bypass actual file ops
+    ):
+        agent = BackblazeBackupAgent(client.app["hass"], mock_config_entry)
+
+        # Now, open_stream=mock_open_stream_callable works directly because
+        # mock_open_stream_callable() returns an object that is an async context manager.
+        await agent.async_upload_backup(
+            open_stream=mock_open_stream_callable,
+            backup=backup,
+        )
+        assert stream_with_close.close_called
+
+        await agent.async_upload_backup(
+            open_stream=mock_open_stream_callable,
+            backup=backup,
+        )
+        assert stream_with_aclose.aclose_called
+
+
+async def test_download_backup_not_found(
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test BackupNotFound exception during backup download."""
+    client = await hass_client()
+    agent = BackblazeBackupAgent(client.app["hass"], mock_config_entry)
+
+    with (
+        patch(
+            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._find_file_and_metadata_version_by_id",
+            return_value=(None, None),
+        ),
+    ):
+        # Create a dummy async generator for the stream
+        async def dummy_stream():
+            yield b""
+
+        with pytest.raises(BackupNotFound, match="Backup test_backup not found"):
+            await agent.async_download_backup("test_backup", stream=dummy_stream())
+
+
+async def test_upload_multipart_b2_exceptions(
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test exception handling in multipart upload."""
+    client = await hass_client()
+    backup = AgentBackup(**{**TEST_BACKUP.as_dict(), "size": DEFAULT_MIN_PART_SIZE * 2})
+
+    mock_open_stream_callable = AsyncMock()
+
+    async def async_chunk_generator():
+        yield b"chunk1"
+        yield b"chunk2"
+
+    mock_open_stream_callable.return_value = async_chunk_generator()
+
+    # Case 1: B2Error during upload
+    with (
+        patch.object(mock_config_entry, "runtime_data", new=Mock()),
+        patch(
+            "homeassistant.components.backblaze.backup.aiofiles.open",
+            side_effect=B2Error("B2 connection error"),
+        ),
+        caplog.at_level(logging.ERROR),
+    ):
+        agent = BackblazeBackupAgent(client.app["hass"], mock_config_entry)
+
+        with pytest.raises(BackupAgentError):
+            await agent.async_upload_backup(
+                open_stream=mock_open_stream_callable,
+                backup=backup,
+            )
+
+        assert "B2 connection error during upload" in caplog.text
+
+    caplog.clear()
+
+    # Case 2: Unexpected exception during upload
+    with (
+        patch.object(mock_config_entry, "runtime_data", new=Mock()),
+        patch(
+            "homeassistant.components.backblaze.backup.aiofiles.open",
+            side_effect=Exception("Unexpected error"),
+        ),
+        caplog.at_level(logging.ERROR),
+    ):
+        agent = BackblazeBackupAgent(client.app["hass"], mock_config_entry)
+
+        with pytest.raises(BackupAgentError):
+            await agent.async_upload_backup(
+                open_stream=mock_open_stream_callable,
+                backup=backup,
+            )
+
+        assert "An error occurred during upload" in caplog.text
+
+
+async def test_temp_file_cleanup_failure(
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test temporary file cleanup failure during multipart upload."""
+    client = await hass_client()
+    backup = AgentBackup(**{**TEST_BACKUP.as_dict(), "size": DEFAULT_MIN_PART_SIZE * 2})
+
+    mock_open_stream_callable = AsyncMock()
+
+    async def async_chunk_generator():
+        yield b"chunk1"
+        yield b"chunk2"
+
+    mock_open_stream_callable.return_value = async_chunk_generator()
+
+    mock_bucket = Mock()
+    with (
+        patch.object(mock_config_entry, "runtime_data", new=mock_bucket),
+        patch(
+            "homeassistant.components.backblaze.backup.aiofiles.open"
+        ),  # Bypass actual file ops
+        patch("os.unlink", side_effect=OSError("Permission denied")),
+        caplog.at_level(logging.WARNING),
+    ):
+        agent = BackblazeBackupAgent(client.app["hass"], mock_config_entry)
+
+        # Mock the upload to succeed so we reach the cleanup step
+        mock_bucket.upload_local_file.return_value = Mock()
+
+        await agent.async_upload_backup(
+            open_stream=mock_open_stream_callable,
+            backup=backup,
+        )
+
+        assert any(
+            "Failed to delete temporary file" in record.message
+            for record in caplog.records
+        )
+
+
+async def test_metadata_deletion_unexpected_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test unexpected exceptions during metadata deletion."""
+    agent = BackblazeBackupAgent(hass, mock_config_entry)
+
+    # Setup mock files
+    mock_backup_file = Mock(spec=FileVersion)
+    mock_metadata_file = Mock(spec=FileVersion)
+
+    # Make metadata deletion raise an unexpected exception
+    mock_metadata_file.delete.side_effect = Exception("Unexpected error")
+
+    with (
+        patch(
+            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._find_file_and_metadata_version_by_id",
+            return_value=(mock_backup_file, mock_metadata_file),
+        ),
+        caplog.at_level(logging.ERROR),
+    ):
+        with pytest.raises(
+            BackupAgentError, match="Unexpected error in metadata deletion"
+        ):
+            await agent.async_delete_backup("test_backup")
+
+        # Verify the backup file was still deleted
+        mock_backup_file.delete.assert_called_once()
+
+        # Verify the error was logged
+        assert "Unexpected error from executor for metadata" in caplog.text
+
+
+async def test_debug_log_backup_not_found(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test debug log when backup is not found during search."""
+    agent = BackblazeBackupAgent(hass, mock_config_entry)
+
+    with (
+        patch(
+            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._get_all_files_in_prefix",
+            return_value={},
+        ),
+        caplog.at_level(logging.DEBUG),
+    ):
+        # This will call _find_file_and_metadata_version_by_id which should log at debug
+        with pytest.raises(BackupNotFound):
+            await agent.async_get_backup("non_existent_backup")
+
+        assert "Backup non_existent_backup not found" in caplog.text
+
+
+async def test_metadata_processing_backup_file_missing(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test warning when metadata file exists but backup file is missing."""
+    agent = BackblazeBackupAgent(hass, mock_config_entry)
+
+    # Create mock metadata file
+    mock_metadata_file = Mock(spec=FileVersion)
+    mock_metadata_file.file_name = (
+        f"{mock_config_entry.data['prefix']}test_backup.tar{METADATA_FILE_SUFFIX}"
+    )
+
+    # Mock metadata content
+    def mock_download():
+        mock_response = Mock()
+        mock_response.content = json.dumps(
+            {
+                "metadata_version": METADATA_VERSION,
+                "backup_id": "test_backup",
+                "backup_metadata": TEST_BACKUP.as_dict(),
+            }
+        ).encode("utf-8")
+        return mock_response
+
+    mock_metadata_file.download.return_value.response = mock_download()
+
+    # Return only the metadata file in the file list
+    with patch(
+        "homeassistant.components.backblaze.backup.BackblazeBackupAgent._get_all_files_in_prefix",
+        return_value={mock_metadata_file.file_name: mock_metadata_file},
+    ):
+        # This will call _process_metadata_file_for_id_sync
+        result = await agent.async_list_backups()
+
+        # Should not return the backup since file is missing
+        assert len(result) == 0
+        assert "no corresponding backup file" in caplog.text
+
+
 async def test_agents_delete(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -670,21 +1086,35 @@ async def test_agents_delete(
 
 
 @pytest.mark.parametrize(
-    ("find_file_return_value", "delete_side_effect", "expected_error_logged"),
+    (
+        "find_file_return_value",
+        "delete_side_effect",
+        "expected_agent_error_in_response",
+    ),
     [
         # Scenario 1: Metadata file not found during delete
+        # Main backup file deleted, warning logged for missing metadata.
+        # API response indicates success with no agent errors.
         (
-            (Mock(file_name="test.tar"), None),
+            (Mock(spec=FileVersion, file_name="test.tar"), None),
             None,
             False,
         ),
         # Scenario 2: B2Error during metadata file deletion
+        # Main backup file deleted, but metadata deletion fails with B2Error.
+        # This is converted to BackupAgentError, causing an agent error in the API response.
         (
-            (Mock(file_name="test.tar"), Mock(file_name="test.tar.metadata.json")),
+            (
+                Mock(spec=FileVersion, file_name="test.tar"),
+                Mock(spec=FileVersion, file_name="test.tar.metadata.json"),
+            ),
             B2Error("test b2 error during metadata delete"),
-            False,
+            True,
         ),
-        # Scenario 3: Backup not found (no files returned by _find_file...)
+        # Scenario 3: Backup not found
+        # _find_file_and_metadata_version_by_id returns None,None.
+        # BackupNotFound is raised and handled by Home Assistant core,
+        # resulting in a successful API response with no agent errors.
         (
             (None, None),
             None,
@@ -702,17 +1132,16 @@ async def test_agents_delete_scenarios(
     hass_ws_client: WebSocketGenerator,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
-    find_file_return_value: tuple,
+    find_file_return_value: tuple[FileVersion | None, FileVersion | None],
     delete_side_effect: Exception | None,
-    expected_error_logged: bool,
+    expected_agent_error_in_response: bool,
 ) -> None:
     """Test agent delete backup for various scenarios."""
 
     mock_main_file_delete = Mock()
     mock_metadata_file_delete = Mock(side_effect=delete_side_effect)
 
-    mock_backup_file = find_file_return_value[0]
-    mock_metadata_file = find_file_return_value[1]
+    mock_backup_file, mock_metadata_file = find_file_return_value
 
     if mock_backup_file:
         mock_backup_file.delete = mock_main_file_delete
@@ -743,12 +1172,8 @@ async def test_agents_delete_scenarios(
 
             assert response["success"] is True
             assert response["result"] == {"agent_errors": {}}
-
             assert mock_main_file_delete.call_count == 0
             assert mock_metadata_file_delete.call_count == 0
-
-            # REMOVE THIS ASSERTION as the exception message is not logged by the component
-            # assert f"Backup {TEST_BACKUP.backup_id} not found" in caplog.text
 
             return
 
@@ -760,15 +1185,18 @@ async def test_agents_delete_scenarios(
         )
         response = await client.receive_json()
 
-    assert response["success"] is not expected_error_logged
+    # The API generally returns success=True for the request itself,
+    # and communicates agent-specific errors via the 'agent_errors' field.
+    assert response["success"] is True
 
-    if expected_error_logged:
+    if expected_agent_error_in_response:
         expected_response_error_msg = "Failed during async_delete_backup"
         assert response["result"] == {
             "agent_errors": {
                 f"{agent.domain}.{agent.unique_id}": expected_response_error_msg
             }
         }
+        # Verify specific error message from B2Error is in logs.
         assert any(
             "Failed to delete metadata file" in s and str(delete_side_effect) in s
             for s in caplog.messages
@@ -777,6 +1205,7 @@ async def test_agents_delete_scenarios(
         assert mock_metadata_file_delete.call_count == 1
     else:
         assert response["result"] == {"agent_errors": {}}
+        # For "metadata_not_found" scenario, a warning should be logged.
         assert any(
             "Metadata file for backup" in s and "not found for deletion" in s
             for s in caplog.messages
