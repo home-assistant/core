@@ -173,16 +173,11 @@ async def _async_get_recipe(call: ServiceCall) -> ServiceResponse:
 async def _async_get_recipes(call: ServiceCall) -> ServiceResponse:
     """Get recipes."""
     entry = _async_get_entry(call)
-    search_terms = call.data.get(ATTR_SEARCH_TERMS, "")
+    search_terms = call.data.get(ATTR_SEARCH_TERMS, None)
     result_limit = call.data.get(ATTR_RESULT_LIMIT, 10)
     client = entry.runtime_data.client
     try:
-        if search_terms:
-            recipes = await client.get_recipes(
-                search=search_terms, per_page=result_limit
-            )
-        else:
-            recipes = await client.get_recipes(per_page=result_limit)
+        recipes = await client.get_recipes(search=search_terms, per_page=result_limit)
     except MealieConnectionError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
