@@ -233,29 +233,6 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-def test_chime(reolink_connect: MagicMock) -> None:
-    """Mock a reolink chime."""
-    TEST_CHIME = Chime(
-        host=reolink_connect,
-        dev_id=12345678,
-        channel=0,
-    )
-    TEST_CHIME.name = "Test chime"
-    TEST_CHIME.volume = 3
-    TEST_CHIME.connect_state = 2
-    TEST_CHIME.led_state = True
-    TEST_CHIME.event_info = {
-        "md": {"switch": 0, "musicId": 0},
-        "people": {"switch": 0, "musicId": 1},
-        "visitor": {"switch": 1, "musicId": 2},
-    }
-
-    reolink_connect.chime_list = [TEST_CHIME]
-    reolink_connect.chime.return_value = TEST_CHIME
-    return TEST_CHIME
-
-
-@pytest.fixture
 def reolink_chime(reolink_host: MagicMock) -> None:
     """Mock a reolink chime."""
     TEST_CHIME = Chime(
