@@ -205,6 +205,41 @@ async def test_agents_upload(
     assert f"Uploading backup {TEST_BACKUP.backup_id}" in caplog.text
 
 
+async def test_agents_upload_simple_file(
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test agent upload backup for a small file."""
+    client = await hass_client()
+    backup_with_size = AgentBackup(**{**TEST_BACKUP.as_dict(), "size": 100})
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+            return_value=backup_with_size,
+        ),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=backup_with_size,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+        patch(
+            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._upload_simple_b2",
+            autospec=True,
+        ) as mock_upload_simple_b2,
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
+            data={"file": io.StringIO("test")},
+        )
+
+    assert resp.status == 201
+    mock_upload_simple_b2.assert_called_once()
+    assert "Uploading main backup file" in caplog.text
+    assert "Simple upload finished" in caplog.text
+
+
 async def test_agents_upload_metadata_upload_fails(
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
@@ -237,6 +272,82 @@ async def test_agents_upload_metadata_upload_fails(
     assert "Failed during upload_files" in caplog.text
 
 
+async def test_agents_upload_multipart_file(
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test agent upload backup for a large file using multipart upload."""
+    client = await hass_client()
+    backup_with_size = AgentBackup(**{**TEST_BACKUP.as_dict(), "size": 100000000})
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+            return_value=backup_with_size,
+        ),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=backup_with_size,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+        patch(
+            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._upload_multipart_b2",
+            autospec=True,
+        ) as mock_upload_multipart_b2,
+    ):
+        mocked_open.return_value.read = Mock(
+            side_effect=[b"test" * 100000, b""]
+        )  # Large file
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
+            data={"file": io.StringIO("test")},
+        )
+
+    assert resp.status == 201
+    mock_upload_multipart_b2.assert_called_once()
+    assert "Starting multipart upload" in caplog.text
+    assert "Multipart upload finished" in caplog.text
+
+
+async def test_agents_upload_multipart_file_abort(
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test agent upload backup for a large file using multipart upload with abort."""
+    client = await hass_client()
+    backup_with_size = AgentBackup(**{**TEST_BACKUP.as_dict(), "size": 100000000})
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+            return_value=backup_with_size,
+        ),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=backup_with_size,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+        patch(
+            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._upload_multipart_b2",
+            side_effect=Exception("Simulated multipart upload error"),
+        ),
+        patch(
+            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._bucket.cancel_large_file",
+            autospec=True,
+        ) as mock_cancel_large_file,
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test" * 100000, b""])
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
+            data={"file": io.StringIO("test")},
+        )
+
+    assert resp.status == 500  # Expect 500 due to the exception
+    mock_cancel_large_file.assert_called_once()
+    assert "Simulated multipart upload error" in caplog.text
+    assert "Aborting multipart upload" in caplog.text
+
+
 async def test_agents_delete(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -255,6 +366,40 @@ async def test_agents_delete(
 
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
+
+
+async def test_agents_upload_unexpected_error(
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test agent upload backup logs unexpected error."""
+    client = await hass_client()
+    backup_with_size = AgentBackup(**{**TEST_BACKUP.as_dict(), "size": 100})
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+            return_value=backup_with_size,
+        ),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=backup_with_size,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+        patch(
+            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._upload_simple_b2",
+            side_effect=ValueError("Simulated unexpected error"),
+        ),
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
+            data={"file": io.StringIO("test")},
+        )
+
+    assert resp.status == 500
+    assert "An unexpected error occurred during backup upload" in caplog.text
+    assert "Simulated unexpected error" in caplog.text
 
 
 async def test_agents_error_on_download_not_found(
