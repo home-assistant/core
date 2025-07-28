@@ -62,6 +62,7 @@ CONF_MAX_FPS = "max_fps"
 CONF_MAX_HEIGHT = "max_height"
 CONF_MAX_WIDTH = "max_width"
 CONF_STREAM_ADDRESS = "stream_address"
+CONF_STREAM_BACKEND = "stream_backend"  # "ffmpeg" or "gstreamer"
 CONF_STREAM_SOURCE = "stream_source"
 CONF_SUPPORT_AUDIO = "support_audio"
 CONF_THRESHOLD_CO = "co_threshold"
@@ -88,6 +89,7 @@ DEFAULT_VIDEO_CODEC = VIDEO_CODEC_LIBX264
 DEFAULT_VIDEO_PROFILE_NAMES = VIDEO_PROFILE_NAMES
 DEFAULT_VIDEO_MAP = "0:v:0"
 DEFAULT_VIDEO_PACKET_SIZE = 1316
+DEFAULT_STREAM_BACKEND = "ffmpeg"
 DEFAULT_STREAM_COUNT = 3
 
 # #### Features ####
