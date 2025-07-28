@@ -27,6 +27,17 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "entity": {
+    "sensor": {
+      "tilt_state": {
+        "state": {
+          "neutral": "Neutral",
+          "non_neutral": "Non-neutral",
+          "tilted": "Tilted"
+        }
+      }
+    }
+  },
   "exceptions": {
     "access_point_not_found": {
       "message": "No matching access point found for access point ID {id}"

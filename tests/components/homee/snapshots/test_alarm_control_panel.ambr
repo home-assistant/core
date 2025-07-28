@@ -27,6 +27,7 @@
     'original_name': 'Status',
     'platform': 'homee',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <AlarmControlPanelEntityFeature: 39>,
     'translation_key': 'homee_mode',
     'unique_id': '00055511EECC--1-1',

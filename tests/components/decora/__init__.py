@@ -1,0 +1,1 @@
+"""Decora component tests."""

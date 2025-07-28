@@ -8,7 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.bmw_connected_drive import DOMAIN as BMW_DOMAIN
+from homeassistant.components.bmw_connected_drive import DOMAIN
 from homeassistant.components.bmw_connected_drive.const import SCAN_INTERVALS
 from homeassistant.components.bmw_connected_drive.sensor import SENSOR_TYPES
 from homeassistant.components.sensor import SensorDeviceClass
@@ -96,9 +96,9 @@ async def test_entity_option_translations(
     # Setup component to load translations
     assert await setup_mocked_integration(hass)
 
-    prefix = f"component.{BMW_DOMAIN}.entity.{Platform.SENSOR.value}"
+    prefix = f"component.{DOMAIN}.entity.{Platform.SENSOR.value}"
 
-    translations = await async_get_translations(hass, "en", "entity", [BMW_DOMAIN])
+    translations = await async_get_translations(hass, "en", "entity", [DOMAIN])
     translation_states = {
         k for k in translations if k.startswith(prefix) and ".state." in k
     }

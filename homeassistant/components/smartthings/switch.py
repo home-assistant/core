@@ -48,6 +48,9 @@ class SmartThingsSwitchEntityDescription(SwitchEntityDescription):
 
     status_attribute: Attribute
     component_translation_key: dict[str, str] | None = None
+    on_key: str = "on"
+    on_command: Command = Command.ON
+    off_command: Command = Command.OFF
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -92,12 +95,32 @@ CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescriptio
         status_attribute=Attribute.SWITCH,
         component_translation_key={
             "icemaker": "ice_maker",
+            "icemaker-02": "ice_maker_2",
         },
     ),
     Capability.SAMSUNG_CE_SABBATH_MODE: SmartThingsSwitchEntityDescription(
         key=Capability.SAMSUNG_CE_SABBATH_MODE,
         translation_key="sabbath_mode",
         status_attribute=Attribute.STATUS,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    Capability.SAMSUNG_CE_POWER_COOL: SmartThingsSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_POWER_COOL,
+        translation_key="power_cool",
+        status_attribute=Attribute.ACTIVATED,
+        on_key="True",
+        on_command=Command.ACTIVATE,
+        off_command=Command.DEACTIVATE,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    Capability.SAMSUNG_CE_POWER_FREEZE: SmartThingsSwitchEntityDescription(
+        key=Capability.SAMSUNG_CE_POWER_FREEZE,
+        translation_key="power_freeze",
+        status_attribute=Attribute.ACTIVATED,
+        on_key="True",
+        on_command=Command.ACTIVATE,
+        off_command=Command.DEACTIVATE,
+        entity_category=EntityCategory.CONFIG,
     ),
     Capability.SAMSUNG_CE_STEAM_CLOSET_SANITIZE_MODE: SmartThingsSwitchEntityDescription(
         key=Capability.SAMSUNG_CE_STEAM_CLOSET_SANITIZE_MODE,
@@ -239,14 +262,14 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
         """Turn the switch off."""
         await self.execute_device_command(
             self.switch_capability,
-            Command.OFF,
+            self.entity_description.off_command,
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.execute_device_command(
             self.switch_capability,
-            Command.ON,
+            self.entity_description.on_command,
         )
 
     @property
@@ -256,7 +279,7 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
             self.get_attribute_value(
                 self.switch_capability, self.entity_description.status_attribute
             )
-            == "on"
+            == self.entity_description.on_key
         )
 
 

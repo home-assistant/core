@@ -35,6 +35,7 @@
     'original_name': 'Disk available',
     'platform': 'immich',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_available',
     'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_disk_available',
@@ -54,7 +55,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '136.34839630127',
+    'state': '136.34842300415',
   })
 # ---
 # name: test_sensors[sensor.someone_disk_size-entry]
@@ -93,6 +94,7 @@
     'original_name': 'Disk size',
     'platform': 'immich',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_size',
     'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_disk_size',
@@ -145,6 +147,7 @@
     'original_name': 'Disk usage',
     'platform': 'immich',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_usage',
     'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_disk_usage',
@@ -202,6 +205,7 @@
     'original_name': 'Disk used',
     'platform': 'immich',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'disk_use',
     'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_disk_use',
@@ -221,7 +225,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '142.865287780762',
+    'state': '142.865261077881',
   })
 # ---
 # name: test_sensors[sensor.someone_disk_used_by_photos-entry]
@@ -260,6 +264,7 @@
     'original_name': 'Disk used by photos',
     'platform': 'immich',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'usage_by_photos',
     'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_usage_by_photos',
@@ -318,6 +323,7 @@
     'original_name': 'Disk used by videos',
     'platform': 'immich',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'usage_by_videos',
     'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_usage_by_videos',
@@ -370,6 +376,7 @@
     'original_name': 'Photos count',
     'platform': 'immich',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'photos_count',
     'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_photos_count',
@@ -421,6 +428,7 @@
     'original_name': 'Videos count',
     'platform': 'immich',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'videos_count',
     'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_videos_count',
