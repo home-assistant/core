@@ -83,9 +83,9 @@
       "cover": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
-          "device_class": "[%key:component::template::config::step::sensor::data::device_class%]",
+          "device_class": "[%key:component::template::common::device_class%]",
           "name": "[%key:common::config_flow::data::name%]",
-          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "state": "[%key:component::template::common::state%]",
           "open_cover": "Actions on open",
           "close_cover": "Actions on close",
           "stop_cover": "Actions on stop",
@@ -95,13 +95,13 @@
           "set_cover_tilt_position": "Actions on set tilt position"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::common::device_id_description%]"
         },
         "sections": {
           "advanced_options": {
-            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+              "availability": "[%key:component::template::common::availability%]"
             }
           }
         },
@@ -302,7 +302,7 @@
       "cover": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
-          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "state": "[%key:component::template::common::state%]",
           "open_cover": "[%key:component::template::config::step::cover::data::open_cover%]",
           "close_cover": "[%key:component::template::config::step::cover::data::close_cover%]",
           "stop_cover": "[%key:component::template::config::step::cover::data::stop_cover%]",
@@ -312,13 +312,13 @@
           "set_cover_tilt_position": "[%key:component::template::config::step::cover::data::set_cover_tilt_position%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::common::device_id_description%]"
         },
         "sections": {
           "advanced_options": {
-            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+              "availability": "[%key:component::template::common::availability%]"
             }
           }
         },
