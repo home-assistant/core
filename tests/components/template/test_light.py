@@ -37,6 +37,9 @@ from tests.common import assert_setup_component
 # Represent for light's availability
 _STATE_AVAILABILITY_BOOLEAN = "availability_boolean.state"
 
+TEST_OBJECT_ID = "test_light"
+TEST_ENTITY_ID = f"light.{TEST_OBJECT_ID}"
+TEST_STATE_ENTITY_ID = "light.test_state"
 
 OPTIMISTIC_ON_OFF_LIGHT_CONFIG = {
     "turn_on": {
@@ -2740,3 +2743,51 @@ async def test_effect_with_empty_action(
     """Test empty set_effect action."""
     state = hass.states.get("light.test_template_light")
     assert state.attributes["supported_features"] == LightEntityFeature.EFFECT
+
+
+@pytest.mark.parametrize(
+    ("count", "light_config"),
+    [
+        (
+            1,
+            {
+                "name": TEST_OBJECT_ID,
+                "state": "{{ is_state('light.test_state', 'on') }}",
+                "turn_on": [],
+                "turn_off": [],
+                "optimistic": True,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_light")
+async def test_optimistic_option(hass: HomeAssistant) -> None:
+    """Test optimistic yaml option."""
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_OFF)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        light.DOMAIN,
+        "turn_on",
+        {"entity_id": TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_ON
+
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_ON)
+    await hass.async_block_till_done()
+
+    hass.states.async_set(TEST_STATE_ENTITY_ID, STATE_OFF)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_OFF
