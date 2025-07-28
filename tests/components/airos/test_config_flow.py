@@ -52,25 +52,10 @@ async def test_form_duplicate_entry(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_airos_client: AsyncMock,
-    ap_fixture: dict[str, Any],
+    mock_config_entry: MockConfigEntry
 ) -> None:
     """Test the form does not allow duplicate entries."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        MOCK_CONFIG,
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "NanoStation 5AC ap name"
-    assert result["result"].unique_id == "03aa0d0b40fed0a47088293584ef5432"
-    assert result["data"] == MOCK_CONFIG
-    assert len(mock_setup_entry.mock_calls) == 1
+    mock_config_entry.add_to_hass(hass)
 
     # Test we can't re-add existing device
     result2 = await hass.config_entries.flow.async_init(
