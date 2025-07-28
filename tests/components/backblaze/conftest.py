@@ -216,6 +216,21 @@ def b2_fixture():
 
         BucketSimulator.ls = ls
 
+        # Mock start_large_file and cancel_large_file for BucketSimulator
+        def mock_start_large_file(
+            file_name, content_type, file_info, account_auth_token
+        ):
+            mock_large_file = Mock()
+            mock_large_file.file_name = file_name
+            mock_large_file.file_id = "mock_file_id"
+            return mock_large_file
+
+        def mock_cancel_large_file(file_id, account_auth_token):
+            pass
+
+        BucketSimulator.start_large_file = mock_start_large_file
+        BucketSimulator.cancel_large_file = mock_cancel_large_file
+
         yield BackblazeFixture(application_key_id, application_key, bucket, sim, auth)
 
 
