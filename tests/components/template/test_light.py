@@ -2748,7 +2748,7 @@ async def test_setup_config_entry(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the config flow."""
+    """Tests creating a light from a config entry."""
 
     hass.states.async_set(
         "sensor.test_sensor",
