@@ -7,6 +7,9 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
+from homeassistant.components.esphome.encryption_key_storage import (
+    ESPHomeEncryptionKeyStorage,
+)
 from homeassistant.core import HomeAssistant
 
 
@@ -108,3 +111,42 @@ async def test_encryption_key_removal(mock_storage_func, hass: HomeAssistant) ->
 
 
 # More comprehensive tests covering code paths not covered by basic tests above
+
+
+async def test_encryption_key_storage_remove_key(hass: HomeAssistant) -> None:
+    """Test ESPHomeEncryptionKeyStorage async_remove_key method."""
+    # Create storage instance
+    storage = ESPHomeEncryptionKeyStorage(hass)
+
+    # Test removing a key that exists
+    mac_address = "11:22:33:44:55:aa"
+    test_key = "test_encryption_key_32_bytes_long"
+
+    # First store a key
+    await storage.async_store_key(mac_address, test_key)
+
+    # Verify key exists
+    retrieved_key = await storage.async_get_key(mac_address)
+    assert retrieved_key == test_key
+
+    # Remove the key
+    await storage.async_remove_key(mac_address)
+
+    # Verify key no longer exists
+    retrieved_key = await storage.async_get_key(mac_address)
+    assert retrieved_key is None
+
+    # Test removing a key that doesn't exist (should not raise an error)
+    non_existent_mac = "aa:bb:cc:dd:ee:ff"
+    await storage.async_remove_key(non_existent_mac)  # Should not raise
+
+    # Test case insensitive removal
+    upper_mac = "22:33:44:55:66:77"
+    await storage.async_store_key(upper_mac, test_key)
+
+    # Remove using lowercase MAC address
+    await storage.async_remove_key(upper_mac.lower())
+
+    # Verify key was removed
+    retrieved_key = await storage.async_get_key(upper_mac)
+    assert retrieved_key is None
