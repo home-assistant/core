@@ -164,7 +164,7 @@ async def test_chime_select(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.SELECT}.reolink_chime_visitor_ringtone"
+    entity_id = f"{Platform.SELECT}.test_chime_visitor_ringtone"
     assert hass.states.get(entity_id).state == "pianokey"
 
     # Test selecting chime ringtone option
