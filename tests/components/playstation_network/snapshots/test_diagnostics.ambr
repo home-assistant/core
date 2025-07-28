@@ -91,16 +91,7 @@
         'groupName': dict({
           'value': '',
         }),
-        'members': list([
-          dict({
-            'accountId': '**REDACTED**',
-            'onlineId': '**REDACTED**',
-          }),
-          dict({
-            'accountId': '**REDACTED**',
-            'onlineId': '**REDACTED**',
-          }),
-        ]),
+        'members': '**REDACTED**',
       }),
     }),
   })

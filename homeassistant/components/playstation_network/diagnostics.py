@@ -22,6 +22,7 @@ TO_REDACT = {
     "username",
     "onlineId",
     "accountId",
+    "members",
     "body",
     "shareable_profile_link",
 }
