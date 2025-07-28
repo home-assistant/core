@@ -79,6 +79,7 @@ class PlaystationNetworkImageEntity(PlaystationNetworkServiceEntity, ImageEntity
     """An image entity."""
 
     entity_description: PlaystationNetworkImageEntityDescription
+    coordinator: PlaystationNetworkUserDataCoordinator
 
     def __init__(
         self,

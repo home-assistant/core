@@ -51,6 +51,11 @@
       "avatar": {
         "default": "mdi:account-circle"
       }
+    },
+    "notify": {
+      "group_message": {
+        "default": "mdi:forum"
+      }
     }
   }
 }
