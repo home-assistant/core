@@ -143,8 +143,14 @@ async def get_programs(call: ServiceCall) -> ServiceResponse:
                         ),
                         "duration": (
                             {
-                                "min": item["parameters"]["duration"]["min"],
-                                "max": item["parameters"]["duration"]["max"],
+                                "min": {
+                                    "hours": item["parameters"]["duration"]["min"][0],
+                                    "minutes": item["parameters"]["duration"]["min"][1],
+                                },
+                                "max": {
+                                    "hours": item["parameters"]["duration"]["max"][0],
+                                    "minutes": item["parameters"]["duration"]["max"][1],
+                                },
                                 "mandatory": item["parameters"]["duration"][
                                     "mandatory"
                                 ],

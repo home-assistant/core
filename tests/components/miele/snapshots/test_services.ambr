@@ -24,14 +24,14 @@
         'parameters': dict({
           'duration': dict({
             'mandatory': True,
-            'max': list([
-              12,
-              0,
-            ]),
-            'min': list([
-              0,
-              1,
-            ]),
+            'max': dict({
+              'hours': 12,
+              'minutes': 0,
+            }),
+            'min': dict({
+              'hours': 0,
+              'minutes': 1,
+            }),
           }),
           'temperature': dict({
             'mandatory': False,
