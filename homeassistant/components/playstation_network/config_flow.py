@@ -77,6 +77,15 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     await self.async_set_unique_id(user.account_id)
                     self._abort_if_unique_id_configured()
+                    config_entries = self.hass.config_entries.async_entries(DOMAIN)
+                    for entry in config_entries:
+                        if user.account_id in {
+                            subentry.unique_id for subentry in entry.subentries.values()
+                        }:
+                            return self.async_abort(
+                                reason="already_configured_as_subentry"
+                            )
+
                     return self.async_create_entry(
                         title=user.online_id,
                         data={CONF_NPSSO: npsso},
@@ -166,10 +175,20 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Subentry user flow."""
-        errors: dict[str, str] = {}
         config_entry: PlaystationNetworkConfigEntry = self._get_entry()
 
         if user_input is not None:
+            config_entries = self.hass.config_entries.async_entries(DOMAIN)
+            if user_input[CONF_ACCOUNT_ID] in {
+                entry.unique_id for entry in config_entries
+            }:
+                return self.async_abort(reason="already_configured_as_entry")
+            for entry in config_entries:
+                if user_input[CONF_ACCOUNT_ID] in {
+                    subentry.unique_id for subentry in entry.subentries.values()
+                }:
+                    return self.async_abort(reason="already_configured")
+
             return self.async_create_entry(
                 title=self.friends_list[user_input[CONF_ACCOUNT_ID]].online_id,
                 data=user_input,
@@ -202,5 +221,4 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
                 ),
                 user_input,
             ),
-            errors=errors,
         )

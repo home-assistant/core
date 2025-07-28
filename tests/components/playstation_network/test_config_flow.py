@@ -400,4 +400,4 @@ async def test_add_friend_flow_already_configured(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "already_configured_friend"

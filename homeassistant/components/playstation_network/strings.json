@@ -39,6 +39,7 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_configured_as_subentry": "Already configured as a friend for another account. Delete the existing entry first.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unique_id_mismatch": "The provided NPSSO token corresponds to the account {wrong_account}. Please re-authenticate with the account **{name}**",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
@@ -67,7 +68,8 @@
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "abort": {
-        "already_configured": "Friend is already configured"
+        "already_configured_as_entry": "Already configured as a service. This account cannot be added as a friend.",
+        "already_configured": "Already configured as a friend in this or another account."
       }
     }
   },
