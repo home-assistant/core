@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.lunatone.const import DOMAIN
 from homeassistant.const import CONF_URL
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -46,6 +47,18 @@ def mock_lunatone_auth(base_url: str) -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_lunatone_devices(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]:
+    """Mock a Lunatone devices object."""
+    with patch(
+        "homeassistant.components.lunatone.Devices",
+        autospec=True,
+    ) as mock_devices:
+        devices = mock_devices.return_value
+        devices._auth = mock_lunatone_auth
+        yield devices
+
+
+@pytest.fixture
 def mock_lunatone_info(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]:
     """Mock a Lunatone info object."""
     with (
@@ -75,3 +88,15 @@ def mock_config_entry(base_url: str) -> MockConfigEntry:
         data={CONF_URL: base_url},
         unique_id="12345",
     )
+
+
+@pytest.fixture
+async def setup_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> MockConfigEntry:
+    """Set up the Lunatone integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    return mock_config_entry
