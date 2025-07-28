@@ -22,6 +22,7 @@ from .const import (
     ATTR_LIGHTS,
     ATTR_PUMPS,
     ATTR_REMINDERS,
+    ATTR_SENSORS,
     ATTR_STATUS,
     DOMAIN,
     POLLING_TIMEOUT,
@@ -108,6 +109,7 @@ class SmartTubController:
             ATTR_LIGHTS: {light.zone: light for light in full_status.lights},
             ATTR_REMINDERS: {reminder.id: reminder for reminder in reminders},
             ATTR_ERRORS: errors,
+            ATTR_SENSORS: {sensor.address: sensor for sensor in full_status.sensors},
         }
 
     @callback
