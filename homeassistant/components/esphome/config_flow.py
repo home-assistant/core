@@ -235,8 +235,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 self._device_name
                 and await self._retrieve_encryption_key_from_dashboard()
             ) or (
-                self._device_mac
-                and await self._retrieve_encryption_key_from_dashboard()
+                self._device_mac and await self._retrieve_encryption_key_from_storage()
             ):
                 response = await self.fetch_device_info()
 
