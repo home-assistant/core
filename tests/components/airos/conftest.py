@@ -37,9 +37,7 @@ def mock_airos_client(
         patch(
             "homeassistant.components.airos.config_flow.AirOS", autospec=True
         ) as mock_airos,
-        patch(
-            "homeassistant.components.airos.coordinator.AirOS", new=mock_airos
-        ),
+        patch("homeassistant.components.airos.coordinator.AirOS", new=mock_airos),
         patch("homeassistant.components.airos.AirOS", new=mock_airos),
     ):
         client = mock_airos.return_value
