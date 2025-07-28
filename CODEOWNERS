@@ -1256,6 +1256,8 @@ build.json @home-assistant/supervisor
 /tests/components/recorder/ @home-assistant/core
 /homeassistant/components/recovery_mode/ @home-assistant/core
 /tests/components/recovery_mode/ @home-assistant/core
+/homeassistant/components/redgtech/ @jonhsady @luan-nvg
+/tests/components/redgtech/ @jonhsady @luan-nvg
 /homeassistant/components/refoss/ @ashionky
 /tests/components/refoss/ @ashionky
 /homeassistant/components/rehlko/ @bdraco @peterager
@@ -1434,8 +1436,6 @@ build.json @home-assistant/supervisor
 /tests/components/snoo/ @Lash-L
 /homeassistant/components/snooz/ @AustinBrunkhorst
 /tests/components/snooz/ @AustinBrunkhorst
-/homeassistant/components/redgtech/ @jonhsady @luan-nvg
-/tests/components/redgtech/ @jonhsady @luan-nvg
 /homeassistant/components/solaredge/ @frenck @bdraco
 /tests/components/solaredge/ @frenck @bdraco
 /homeassistant/components/solaredge_local/ @drobtravels @scheric
