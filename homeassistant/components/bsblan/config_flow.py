@@ -223,7 +223,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         self.password = user_input.get(CONF_PASSWORD)
 
         try:
-            await self._get_bsblan_info()
+            await self._get_bsblan_info(raise_on_progress=False, is_reauth=True)
         except BSBLANAuthError:
             return self.async_show_form(
                 step_id="reauth_confirm",
@@ -329,7 +329,10 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def _get_bsblan_info(
-        self, raise_on_progress: bool = True, is_discovery: bool = False
+        self,
+        raise_on_progress: bool = True,
+        is_discovery: bool = False,
+        is_reauth: bool = False,
     ) -> None:
         """Get device information from a BSBLAN device."""
         config = BSBLANConfig(
@@ -352,11 +355,13 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                 format_mac(self.mac), raise_on_progress=raise_on_progress
             )
 
-        # Always allow updating host/port for both user and discovery flows
-        # This ensures connectivity is maintained when devices change IP addresses
-        self._abort_if_unique_id_configured(
-            updates={
-                CONF_HOST: self.host,
-                CONF_PORT: self.port,
-            }
-        )
+        # Skip unique_id configuration check during reauth to prevent "already_configured" abort
+        if not is_reauth:
+            # Always allow updating host/port for both user and discovery flows
+            # This ensures connectivity is maintained when devices change IP addresses
+            self._abort_if_unique_id_configured(
+                updates={
+                    CONF_HOST: self.host,
+                    CONF_PORT: self.port,
+                }
+            )
