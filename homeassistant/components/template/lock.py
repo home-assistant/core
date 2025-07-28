@@ -29,12 +29,13 @@ from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_PICTURE, DOMAIN
+from .const import DOMAIN
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
 from .helpers import async_setup_template_platform
 from .template_entity import (
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
     TemplateEntity,
     make_template_entity_common_modern_schema,
 )
@@ -54,18 +55,18 @@ LEGACY_FIELDS = {
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
-LOCK_YAML_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Optional(CONF_CODE_FORMAT): cv.template,
-            vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_OPEN): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-            vol.Optional(CONF_PICTURE): cv.template,
-            vol.Required(CONF_STATE): cv.template,
-            vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
-        }
-    ).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
+LOCK_COMMON_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_CODE_FORMAT): cv.template,
+        vol.Required(CONF_LOCK): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_OPEN): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_STATE): cv.template,
+        vol.Required(CONF_UNLOCK): cv.SCRIPT_SCHEMA,
+    }
+)
+
+LOCK_YAML_SCHEMA = LOCK_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
+    make_template_entity_common_modern_schema(DEFAULT_NAME).schema
 )
 
 PLATFORM_SCHEMA = LOCK_PLATFORM_SCHEMA.extend(
@@ -105,6 +106,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
     """Representation of a template lock features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
+    _optimistic_entity = True
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -112,12 +114,9 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
         """Initialize the features."""
 
         self._state: LockState | None = None
-        self._state_template = config.get(CONF_STATE)
         self._code_format_template = config.get(CONF_CODE_FORMAT)
         self._code_format: str | None = None
         self._code_format_template_error: TemplateError | None = None
-        self._optimistic = config.get(CONF_OPTIMISTIC)
-        self._attr_assumed_state = bool(self._optimistic)
 
     def _iterate_scripts(
         self, config: dict[str, Any]
@@ -211,7 +210,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
         # template before processing the action.
         self._raise_template_error_if_available()
 
-        if self._optimistic:
+        if self._attr_assumed_state:
             self._state = LockState.LOCKED
             self.async_write_ha_state()
 
@@ -229,7 +228,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
         # template before processing the action.
         self._raise_template_error_if_available()
 
-        if self._optimistic:
+        if self._attr_assumed_state:
             self._state = LockState.UNLOCKED
             self.async_write_ha_state()
 
@@ -247,7 +246,7 @@ class AbstractTemplateLock(AbstractTemplateEntity, LockEntity):
         # template before processing the action.
         self._raise_template_error_if_available()
 
-        if self._optimistic:
+        if self._attr_assumed_state:
             self._state = LockState.OPEN
             self.async_write_ha_state()
 
@@ -310,11 +309,13 @@ class StateLockEntity(TemplateEntity, AbstractTemplateLock):
     @callback
     def _async_setup_templates(self) -> None:
         """Set up templates."""
-        if TYPE_CHECKING:
-            assert self._state_template is not None
-        self.add_template_attribute(
-            "_state", self._state_template, None, self._update_state
-        )
+        if self._template is not None:
+            self.add_template_attribute(
+                "_state",
+                self._template,
+                None,
+                self._update_state,
+            )
         if self._code_format_template:
             self.add_template_attribute(
                 "_code_format_template",
@@ -329,7 +330,6 @@ class TriggerLockEntity(TriggerEntity, AbstractTemplateLock):
     """Lock entity based on trigger data."""
 
     domain = LOCK_DOMAIN
-    extra_template_keys = (CONF_STATE,)
 
     def __init__(
         self,
@@ -342,6 +342,9 @@ class TriggerLockEntity(TriggerEntity, AbstractTemplateLock):
         AbstractTemplateLock.__init__(self, config)
 
         self._attr_name = name = self._rendered.get(CONF_NAME, DEFAULT_NAME)
+
+        if CONF_STATE in config:
+            self._to_render_simple.append(CONF_STATE)
 
         if isinstance(config.get(CONF_CODE_FORMAT), template.Template):
             self._to_render_simple.append(CONF_CODE_FORMAT)
@@ -371,9 +374,9 @@ class TriggerLockEntity(TriggerEntity, AbstractTemplateLock):
                 updater(rendered)
                 write_ha_state = True
 
-        if not self._optimistic:
+        if not self._attr_assumed_state:
             write_ha_state = True
-        elif self._optimistic and len(self._rendered) > 0:
+        elif self._attr_assumed_state and len(self._rendered) > 0:
             # In case any non optimistic template
             write_ha_state = True
 
