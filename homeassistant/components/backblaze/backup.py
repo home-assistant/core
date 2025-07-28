@@ -99,7 +99,9 @@ class BackblazeBackupAgent(BackupAgent):
     ) -> AsyncIterator[bytes]:
         """Download a backup."""
 
-        file, metadata_file = await self._find_file_and_metadata_name_by_id(backup_id)
+        file, metadata_file = await self._find_file_and_metadata_version_by_id(
+            backup_id
+        )
         if file is None:
             raise BackupNotFound(f"Backup {backup_id} not found")
 
@@ -163,6 +165,8 @@ class BackblazeBackupAgent(BackupAgent):
             else:
                 await self._upload_multipart_b2(filename, open_stream, backup_file_info)
 
+            _LOGGER.info("Main backup file upload finished for %s", filename)
+
             # --- Metadata File Upload ---
             metadata_content_bytes = json.dumps(metadata_content).encode("utf-8")
             _LOGGER.info("Uploading metadata file: %s", metadata_filename)
@@ -176,11 +180,41 @@ class BackblazeBackupAgent(BackupAgent):
             )
             _LOGGER.info("Metadata file upload finished for %s", metadata_filename)
 
-        except B2Error as err:  # Assuming B2Error is defined
+        except B2Error as err:
             _LOGGER.error("Backblaze B2 API error during backup upload: %s", err)
-            raise BackupAgentError(  # Assuming BackupAgentError is defined
+            # Attempt to clean up the main backup file if metadata upload failed
+            _LOGGER.warning(
+                "Attempting to delete partially uploaded main backup file %s due to metadata upload failure",
+                filename,
+            )
+            try:
+                # Need to get the FileVersion object for the main file to delete it
+                # This would require another B2 call unless you cache the FileVersion object from the upload result
+                # For simplicity, if you can't get the FileVersion easily, log and note manual cleanup may be needed.
+                # A more robust solution involves storing the uploaded file_id/file_name from the initial upload.
+                # Example using get_file_info_by_name (if you know the full name):
+                uploaded_main_file_info = await self._hass.async_add_executor_job(
+                    self._bucket.get_file_info_by_name, filename
+                )
+                await self._hass.async_add_executor_job(uploaded_main_file_info.delete)
+                _LOGGER.info(
+                    "Successfully deleted partially uploaded main backup file %s",
+                    filename,
+                )
+            except Exception:
+                _LOGGER.exception(
+                    "Failed to clean up partially uploaded main backup file %s:",
+                    filename,
+                )
+                _LOGGER.exception(
+                    "Manual intervention may be required to delete %s from Backblaze B2",
+                    filename,
+                )
+
+            raise BackupAgentError(
                 f"Failed to upload backup to Backblaze B2: {err}"
             ) from err
+
         except Exception as err:
             _LOGGER.exception("An unexpected error occurred during backup upload")
             raise BackupAgentError(
@@ -361,7 +395,9 @@ class BackblazeBackupAgent(BackupAgent):
     @handle_b2_errors
     async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
         """Delete a backup and its associated metadata file."""
-        file, metadata_file = await self._find_file_and_metadata_name_by_id(backup_id)
+        file, metadata_file = await self._find_file_and_metadata_version_by_id(
+            backup_id
+        )
         if file is None:
             raise BackupNotFound(f"Backup {backup_id} not found")
 
@@ -428,7 +464,7 @@ class BackblazeBackupAgent(BackupAgent):
     @handle_b2_errors
     async def async_get_backup(self, backup_id: str, **kwargs: Any) -> AgentBackup:
         """Get a backup by finding its metadata file and then constructing the AgentBackup."""
-        file, metadata_file_version = await self._find_file_and_metadata_name_by_id(
+        file, metadata_file_version = await self._find_file_and_metadata_version_by_id(
             backup_id
         )
         if file is None or metadata_file_version is None:
@@ -436,9 +472,7 @@ class BackblazeBackupAgent(BackupAgent):
 
         # Download and parse the metadata file
         def _download_metadata_sync_job() -> dict[str, Any]:
-            downloaded_meta = (
-                metadata_file_version.download()
-            )  # Use the FileVersion directly
+            downloaded_meta = metadata_file_version.download()
             metadata_bytes = downloaded_meta.response.content
             return cast(dict[str, Any], json.loads(metadata_bytes.decode("utf-8")))
 
@@ -448,10 +482,10 @@ class BackblazeBackupAgent(BackupAgent):
 
         return self._backup_from_b2_metadata(metadata_content, file)
 
-    async def _find_file_and_metadata_name_by_id(
+    async def _find_file_and_metadata_version_by_id(
         self, backup_id: str
     ) -> tuple[FileVersion | None, FileVersion | None]:
-        """Find the main backup file and determine its associated metadata file name by backup ID."""
+        """Find the main backup file and its associated metadata file version by backup ID."""
         all_files_in_prefix = await self._get_all_files_in_prefix()
 
         # Collect tasks for concurrent metadata downloads
@@ -469,9 +503,9 @@ class BackblazeBackupAgent(BackupAgent):
                 )
 
         results = await asyncio.gather(*tasks)
-        for result_backup_file, result_metadata_file in results:
-            if result_backup_file and result_metadata_file:
-                return result_backup_file, result_metadata_file
+        for result_backup_file, result_metadata_file_version in results:
+            if result_backup_file and result_metadata_file_version:
+                return result_backup_file, result_metadata_file_version
 
         _LOGGER.debug("Backup %s not found", backup_id)
         return None, None
