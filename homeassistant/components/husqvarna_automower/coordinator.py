@@ -84,7 +84,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                 self._watchdog_task = self.config_entry.async_create_background_task(
                     self.hass,
                     self._pong_watchdog(),
-                    "webdocket_watchdog",
+                    "websocket_watchdog",
                 )
 
             self.api.register_ws_ready_callback(start_watchdog)
