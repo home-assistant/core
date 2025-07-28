@@ -354,6 +354,14 @@
       }
     }
   },
+  "exceptions": {
+    "change_hvac_mode_not_supported": {
+      "message": "Changing HVAC mode is not supported."
+    },
+    "invalid_gateway_id": {
+      "message": "Gateway {gw_id} not found or not loaded!"
+    }
+  },
   "options": {
     "step": {
       "init": {
@@ -379,7 +387,7 @@
     },
     "set_central_heating_ovrd": {
       "name": "Set central heating override",
-      "description": "Sets the central heating override option on the gateway. When overriding the control setpoint (via a 'Set control set point' action with a value other than 0), the gateway automatically enables the central heating override to start heating. This action can then be used to control the central heating override status. To return control of the central heating to the thermostat, use the 'Set control set point' action with temperature value 0. You will only need this if you are writing your own software thermostat.",
+      "description": "Sets the central heating override option on the gateway. When overriding the control setpoint (via a 'Set control setpoint' action with a value other than 0), the gateway automatically enables the central heating override to start heating. This action can then be used to control the central heating override status. To return control of the central heating to the thermostat, use the 'Set control setpoint' action with temperature value 0. You will only need this if you are writing your own software thermostat.",
       "fields": {
         "gateway_id": {
           "name": "[%key:component::opentherm_gw::services::reset_gateway::fields::gateway_id::name%]",
@@ -410,7 +418,7 @@
       }
     },
     "set_control_setpoint": {
-      "name": "Set control set point",
+      "name": "Set control setpoint",
       "description": "Sets the central heating control setpoint override on the gateway. You will only need this if you are writing your own software thermostat.",
       "fields": {
         "gateway_id": {
@@ -438,7 +446,7 @@
       }
     },
     "set_hot_water_setpoint": {
-      "name": "Set hot water set point",
+      "name": "Set hot water setpoint",
       "description": "Sets the domestic hot water setpoint on the gateway.",
       "fields": {
         "gateway_id": {

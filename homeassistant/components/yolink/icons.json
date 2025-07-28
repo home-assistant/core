@@ -1,5 +1,10 @@
 {
   "entity": {
+    "binary_sensor": {
+      "water_running": {
+        "default": "mdi:waves-arrow-right"
+      }
+    },
     "number": {
       "config_volume": {
         "default": "mdi:volume-high"

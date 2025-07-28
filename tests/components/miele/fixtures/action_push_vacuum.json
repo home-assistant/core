@@ -1,0 +1,17 @@
+{
+  "Dummy_Vacuum_1": {
+    "processAction": [],
+    "light": [],
+    "ambientLight": [],
+    "startTime": [],
+    "ventilationStep": [],
+    "programId": [3],
+    "targetTemperature": [],
+    "deviceName": true,
+    "powerOn": true,
+    "powerOff": false,
+    "colors": [],
+    "modes": [],
+    "runOnTime": []
+  }
+}

@@ -6,7 +6,7 @@ from unittest.mock import patch
 from freezegun.api import FrozenDateTimeFactory
 from icmplib import Host
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.ping.const import CONF_IMPORTED_BY, DOMAIN

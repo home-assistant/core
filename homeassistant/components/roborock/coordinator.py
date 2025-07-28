@@ -28,7 +28,7 @@ from roborock.version_a01_apis import RoborockClientA01
 from roborock.web_api import RoborockApiClient
 from vacuum_map_parser_base.config.color import ColorsPalette
 from vacuum_map_parser_base.config.image_config import ImageConfig
-from vacuum_map_parser_base.config.size import Sizes
+from vacuum_map_parser_base.config.size import Size, Sizes
 from vacuum_map_parser_base.map_data import MapData
 from vacuum_map_parser_roborock.map_data_parser import RoborockMapDataParser
 
@@ -148,7 +148,13 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         ]
         self.map_parser = RoborockMapDataParser(
             ColorsPalette(),
-            Sizes({k: v * MAP_SCALE for k, v in Sizes.SIZES.items()}),
+            Sizes(
+                {
+                    k: v * MAP_SCALE
+                    for k, v in Sizes.SIZES.items()
+                    if k != Size.MOP_PATH_WIDTH
+                }
+            ),
             drawables,
             ImageConfig(scale=MAP_SCALE),
             [],

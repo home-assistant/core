@@ -22,13 +22,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.ssl import get_default_context
 
-from .const import (
-    CONF_GCID,
-    CONF_READ_ONLY,
-    CONF_REFRESH_TOKEN,
-    DOMAIN as BMW_DOMAIN,
-    SCAN_INTERVALS,
-)
+from .const import CONF_GCID, CONF_READ_ONLY, CONF_REFRESH_TOKEN, DOMAIN, SCAN_INTERVALS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +57,7 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
             hass,
             _LOGGER,
             config_entry=config_entry,
-            name=f"{BMW_DOMAIN}-{config_entry.data[CONF_USERNAME]}",
+            name=f"{DOMAIN}-{config_entry.data[CONF_USERNAME]}",
             update_interval=timedelta(
                 seconds=SCAN_INTERVALS[config_entry.data[CONF_REGION]]
             ),
@@ -81,26 +75,26 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator[None]):
         except MyBMWCaptchaMissingError as err:
             # If a captcha is required (user/password login flow), always trigger the reauth flow
             raise ConfigEntryAuthFailed(
-                translation_domain=BMW_DOMAIN,
+                translation_domain=DOMAIN,
                 translation_key="missing_captcha",
             ) from err
         except MyBMWAuthError as err:
             # Allow one retry interval before raising AuthFailed to avoid flaky API issues
             if self.last_update_success:
                 raise UpdateFailed(
-                    translation_domain=BMW_DOMAIN,
+                    translation_domain=DOMAIN,
                     translation_key="update_failed",
                     translation_placeholders={"exception": str(err)},
                 ) from err
             # Clear refresh token and trigger reauth if previous update failed as well
             self._update_config_entry_refresh_token(None)
             raise ConfigEntryAuthFailed(
-                translation_domain=BMW_DOMAIN,
+                translation_domain=DOMAIN,
                 translation_key="invalid_auth",
             ) from err
         except (MyBMWAPIError, RequestError) as err:
             raise UpdateFailed(
-                translation_domain=BMW_DOMAIN,
+                translation_domain=DOMAIN,
                 translation_key="update_failed",
                 translation_placeholders={"exception": str(err)},
             ) from err

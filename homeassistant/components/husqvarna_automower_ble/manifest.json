@@ -12,5 +12,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/husqvarna_automower_ble",
   "iot_class": "local_polling",
-  "requirements": ["automower-ble==0.2.0"]
+  "requirements": ["automower-ble==0.2.1"]
 }

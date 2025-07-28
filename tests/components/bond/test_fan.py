@@ -11,7 +11,7 @@ import pytest
 from homeassistant import core
 from homeassistant.components import fan
 from homeassistant.components.bond.const import (
-    DOMAIN as BOND_DOMAIN,
+    DOMAIN,
     SERVICE_SET_FAN_SPEED_TRACKED_STATE,
 )
 from homeassistant.components.bond.fan import PRESET_MODE_BREEZE
@@ -367,7 +367,7 @@ async def test_set_speed_belief_speed_zero(hass: HomeAssistant) -> None:
 
     with patch_bond_action() as mock_action, patch_bond_device_state():
         await hass.services.async_call(
-            BOND_DOMAIN,
+            DOMAIN,
             SERVICE_SET_FAN_SPEED_TRACKED_STATE,
             {ATTR_ENTITY_ID: "fan.name_1", "speed": 0},
             blocking=True,
@@ -391,7 +391,7 @@ async def test_set_speed_belief_speed_api_error(hass: HomeAssistant) -> None:
         patch_bond_device_state(),
     ):
         await hass.services.async_call(
-            BOND_DOMAIN,
+            DOMAIN,
             SERVICE_SET_FAN_SPEED_TRACKED_STATE,
             {ATTR_ENTITY_ID: "fan.name_1", "speed": 100},
             blocking=True,
@@ -406,7 +406,7 @@ async def test_set_speed_belief_speed_100(hass: HomeAssistant) -> None:
 
     with patch_bond_action() as mock_action, patch_bond_device_state():
         await hass.services.async_call(
-            BOND_DOMAIN,
+            DOMAIN,
             SERVICE_SET_FAN_SPEED_TRACKED_STATE,
             {ATTR_ENTITY_ID: "fan.name_1", "speed": 100},
             blocking=True,

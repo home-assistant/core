@@ -17,12 +17,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from ..const import (
-    CONF_MASTER_GATEWAY,
-    DOMAIN as DECONZ_DOMAIN,
-    HASSIO_CONFIGURATION_URL,
-    PLATFORMS,
-)
+from ..const import CONF_MASTER_GATEWAY, DOMAIN, HASSIO_CONFIGURATION_URL, PLATFORMS
 from .config import DeconzConfig
 
 if TYPE_CHECKING:
@@ -193,7 +188,7 @@ class DeconzHub:
             config_entry_id=self.config_entry.entry_id,
             configuration_url=configuration_url,
             entry_type=dr.DeviceEntryType.SERVICE,
-            identifiers={(DECONZ_DOMAIN, self.api.config.bridge_id)},
+            identifiers={(DOMAIN, self.api.config.bridge_id)},
             manufacturer="Dresden Elektronik",
             model=self.api.config.model_id,
             name=self.api.config.name,

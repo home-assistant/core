@@ -11,7 +11,7 @@ from homeassistant.components.devolo_home_network.const import (
     FIRMWARE_UPDATE_INTERVAL,
 )
 from homeassistant.components.update import DOMAIN as PLATFORM, SERVICE_INSTALL
-from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -25,16 +25,18 @@ from tests.common import async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_device")
-async def test_update_setup(hass: HomeAssistant) -> None:
+async def test_update_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
     """Test default setup of the update component."""
     entry = configure_integration(hass)
     device_name = entry.title.replace(" ", "_").lower()
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
 
-    assert hass.states.get(f"{PLATFORM}.{device_name}_firmware") is not None
-
-    await hass.config_entries.async_unload(entry.entry_id)
+    assert not entity_registry.async_get(f"{PLATFORM}.{device_name}_firmware").disabled
 
 
 async def test_update_firmware(
@@ -84,8 +86,6 @@ async def test_update_firmware(
     )
     assert device_info is not None
     assert device_info.sw_version == mock_device.firmware_version
-
-    await hass.config_entries.async_unload(entry.entry_id)
 
 
 async def test_device_failure_check(
@@ -137,8 +137,6 @@ async def test_device_failure_update(
             blocking=True,
         )
 
-    await hass.config_entries.async_unload(entry.entry_id)
-
 
 async def test_auth_failed(hass: HomeAssistant, mock_device: MockDevice) -> None:
     """Test updating unauthorized triggers the reauth flow."""
@@ -168,5 +166,3 @@ async def test_auth_failed(hass: HomeAssistant, mock_device: MockDevice) -> None
     assert "context" in flow
     assert flow["context"]["source"] == SOURCE_REAUTH
     assert flow["context"]["entry_id"] == entry.entry_id
-
-    await hass.config_entries.async_unload(entry.entry_id)

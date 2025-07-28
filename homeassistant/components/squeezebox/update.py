@@ -19,6 +19,7 @@ from homeassistant.helpers.event import async_call_later
 
 from . import SqueezeboxConfigEntry
 from .const import (
+    DOMAIN,
     SERVER_MODEL,
     STATUS_QUERY_VERSION,
     STATUS_UPDATE_NEWPLUGINS,
@@ -37,6 +38,9 @@ newplugins = UpdateEntityDescription(
 )
 
 POLL_AFTER_INSTALL = 120
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -158,7 +162,8 @@ class ServerStatusUpdatePlugins(ServerStatusUpdate):
             self.restart_triggered = False
             self.async_write_ha_state()
             raise HomeAssistantError(
-                "Error trying to update LMS Plugins: Restart failed"
+                translation_domain=DOMAIN,
+                translation_key="update_restart_failed",
             )
 
     async def _async_update_catchall(self, now: datetime | None = None) -> None:

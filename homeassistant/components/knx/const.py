@@ -14,7 +14,7 @@ from homeassistant.const import Platform
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
-    from . import KNXModule
+    from .knx_module import KNXModule
 
 DOMAIN: Final = "knx"
 KNX_MODULE_KEY: HassKey[KNXModule] = HassKey(DOMAIN)
@@ -104,9 +104,9 @@ class KNXConfigEntryData(TypedDict, total=False):
     multicast_group: str
     multicast_port: int
     route_back: bool  # not required
-    host: str  # only required for tunnelling
-    port: int  # only required for tunnelling
-    tunnel_endpoint_ia: str | None  # tunnelling only - not required (use get())
+    host: str  # only required for tunneling
+    port: int  # only required for tunneling
+    tunnel_endpoint_ia: str | None  # tunneling only - not required (use get())
     # KNX secure
     user_id: int | None  # not required
     user_password: str | None  # not required

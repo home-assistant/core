@@ -49,7 +49,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def location_data(request: pytest.FixtureRequest) -> _LocationData | None:
     """Return data based on location name."""
-    if not hasattr(request, "param"):
+    if not hasattr(request, "param") or request.param is None:
         return None
 
     return LOCATIONS[request.param]

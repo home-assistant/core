@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 import requests_mock
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from script.alexa_locales import SITE, run_script
 

@@ -3,7 +3,7 @@
 from datetime import timedelta
 
 from freezegun.api import FrozenDateTimeFactory
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tessie.coordinator import TESSIE_SYNC_INTERVAL
 from homeassistant.const import Platform

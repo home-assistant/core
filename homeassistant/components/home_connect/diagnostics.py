@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from aiohomeconnect.model import GetSetting, Status
+
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
@@ -11,14 +13,30 @@ from .const import DOMAIN
 from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 
 
+def _serialize_item(item: Status | GetSetting) -> dict[str, Any]:
+    """Serialize a status or setting item to a dictionary."""
+    data = {"value": item.value}
+    if item.unit is not None:
+        data["unit"] = item.unit
+    if item.constraints is not None:
+        data["constraints"] = {
+            k: v for k, v in item.constraints.to_dict().items() if v is not None
+        }
+    return data
+
+
 async def _generate_appliance_diagnostics(
     appliance: HomeConnectApplianceData,
 ) -> dict[str, Any]:
     return {
         **appliance.info.to_dict(),
-        "status": {key.value: status.value for key, status in appliance.status.items()},
+        "status": {
+            key.value: _serialize_item(status)
+            for key, status in appliance.status.items()
+        },
         "settings": {
-            key.value: setting.value for key, setting in appliance.settings.items()
+            key.value: _serialize_item(setting)
+            for key, setting in appliance.settings.items()
         },
         "programs": [program.raw_key for program in appliance.programs],
     }

@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DOMAIN
 from .coordinator import JellyfinDataUpdateCoordinator
 
 
@@ -24,11 +24,7 @@ class JellyfinServerEntity(JellyfinEntity):
         """Initialize the Jellyfin entity."""
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, coordinator.server_id)},
-            manufacturer=DEFAULT_NAME,
-            name=coordinator.server_name,
-            sw_version=coordinator.server_version,
         )
 
 

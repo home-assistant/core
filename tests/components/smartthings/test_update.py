@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 from pysmartthings import Attribute, Capability, Command
 from pysmartthings.models import HealthStatus
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.smartthings.const import MAIN
 from homeassistant.components.update import (

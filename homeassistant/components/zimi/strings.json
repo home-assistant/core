@@ -42,5 +42,12 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "door_temperature": {
+        "name": "Outside temperature"
+      }
+    }
   }
 }

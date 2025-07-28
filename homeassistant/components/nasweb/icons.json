@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "sensor_input": {
+        "default": "mdi:help-circle-outline",
+        "state": {
+          "tamper": "mdi:lock-alert",
+          "active": "mdi:alert",
+          "normal": "mdi:shield-check-outline",
+          "problem": "mdi:alert-circle"
+        }
+      }
+    }
+  }
+}

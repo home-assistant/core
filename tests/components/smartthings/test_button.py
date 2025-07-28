@@ -6,7 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pysmartthings import Capability, Command
 from pysmartthings.models import HealthStatus
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.smartthings import MAIN

@@ -42,6 +42,7 @@
     'original_name': None,
     'platform': 'bryant_evolution',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 395>,
     'translation_key': None,
     'unique_id': '01J3XJZSTEF6G5V0QJX6HBC94T-S1-Z1',

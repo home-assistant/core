@@ -721,8 +721,7 @@ def template(value: Any | None) -> template_helper.Template:
     if isinstance(value, (list, dict, template_helper.Template)):
         raise vol.Invalid("template value should be a string")
     if not (hass := _async_get_hass_or_none()):
-        # pylint: disable-next=import-outside-toplevel
-        from .frame import ReportBehavior, report_usage
+        from .frame import ReportBehavior, report_usage  # noqa: PLC0415
 
         report_usage(
             (
@@ -750,8 +749,7 @@ def dynamic_template(value: Any | None) -> template_helper.Template:
     if not template_helper.is_template_string(str(value)):
         raise vol.Invalid("template value does not contain a dynamic template")
     if not (hass := _async_get_hass_or_none()):
-        # pylint: disable-next=import-outside-toplevel
-        from .frame import ReportBehavior, report_usage
+        from .frame import ReportBehavior, report_usage  # noqa: PLC0415
 
         report_usage(
             (
@@ -1084,10 +1082,13 @@ def renamed(
     return validator
 
 
+type ValueSchemas = dict[Hashable, VolSchemaType | Callable[[Any], dict[str, Any]]]
+
+
 def key_value_schemas(
     key: str,
-    value_schemas: dict[Hashable, VolSchemaType | Callable[[Any], dict[str, Any]]],
-    default_schema: VolSchemaType | None = None,
+    value_schemas: ValueSchemas,
+    default_schema: VolSchemaType | Callable[[Any], dict[str, Any]] | None = None,
     default_description: str | None = None,
 ) -> Callable[[Any], dict[Hashable, Any]]:
     """Create a validator that validates based on a value for specific key.
@@ -1148,9 +1149,9 @@ def custom_serializer(schema: Any) -> Any:
 
 def _custom_serializer(schema: Any, *, allow_section: bool) -> Any:
     """Serialize additional types for voluptuous_serialize."""
-    from homeassistant import data_entry_flow  # pylint: disable=import-outside-toplevel
+    from homeassistant import data_entry_flow  # noqa: PLC0415
 
-    from . import selector  # pylint: disable=import-outside-toplevel
+    from . import selector  # noqa: PLC0415
 
     if schema is positive_time_period_dict:
         return {"type": "positive_time_period_dict"}
@@ -1213,8 +1214,7 @@ def _no_yaml_config_schema(
     """Return a config schema which logs if attempted to setup from YAML."""
 
     def raise_issue() -> None:
-        # pylint: disable-next=import-outside-toplevel
-        from .issue_registry import IssueSeverity, async_create_issue
+        from .issue_registry import IssueSeverity, async_create_issue  # noqa: PLC0415
 
         # HomeAssistantError is raised if called from the wrong thread
         with contextlib.suppress(HomeAssistantError):
@@ -1537,22 +1537,6 @@ def STATE_CONDITION_SCHEMA(value: Any) -> dict[str, Any]:
     return key_dependency("for", "state")(validated)
 
 
-SUN_CONDITION_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            **CONDITION_BASE_SCHEMA,
-            vol.Required(CONF_CONDITION): "sun",
-            vol.Optional("before"): sun_event,
-            vol.Optional("before_offset"): time_period,
-            vol.Optional("after"): vol.All(
-                vol.Lower, vol.Any(SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE)
-            ),
-            vol.Optional("after_offset"): time_period,
-        }
-    ),
-    has_at_least_one_key("before", "after"),
-)
-
 TEMPLATE_CONDITION_SCHEMA = vol.Schema(
     {
         **CONDITION_BASE_SCHEMA,
@@ -1583,18 +1567,6 @@ TRIGGER_CONDITION_SCHEMA = vol.Schema(
         **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): "trigger",
         vol.Required(CONF_ID): vol.All(ensure_list, [string]),
-    }
-)
-
-ZONE_CONDITION_SCHEMA = vol.Schema(
-    {
-        **CONDITION_BASE_SCHEMA,
-        vol.Required(CONF_CONDITION): "zone",
-        vol.Required(CONF_ENTITY_ID): entity_ids,
-        vol.Required("zone"): entity_ids,
-        # To support use_trigger_value in automation
-        # Deprecated 2016/04/25
-        vol.Optional("event"): vol.Any("enter", "leave"),
     }
 )
 
@@ -1735,25 +1707,40 @@ CONDITION_SHORTHAND_SCHEMA = vol.Schema(
     }
 )
 
+BUILT_IN_CONDITIONS: ValueSchemas = {
+    "and": AND_CONDITION_SCHEMA,
+    "device": DEVICE_CONDITION_SCHEMA,
+    "not": NOT_CONDITION_SCHEMA,
+    "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
+    "or": OR_CONDITION_SCHEMA,
+    "state": STATE_CONDITION_SCHEMA,
+    "template": TEMPLATE_CONDITION_SCHEMA,
+    "time": TIME_CONDITION_SCHEMA,
+    "trigger": TRIGGER_CONDITION_SCHEMA,
+}
+
+
+# This is first round of validation, we don't want to mutate the config here already,
+# just ensure basics as condition type and alias are there.
+def _base_condition_validator(value: Any) -> Any:
+    vol.Schema(
+        {
+            **CONDITION_BASE_SCHEMA,
+            CONF_CONDITION: vol.NotIn(BUILT_IN_CONDITIONS),
+        },
+        extra=vol.ALLOW_EXTRA,
+    )(value)
+    return value
+
+
 CONDITION_SCHEMA: vol.Schema = vol.Schema(
     vol.Any(
         vol.All(
             expand_condition_shorthand,
             key_value_schemas(
                 CONF_CONDITION,
-                {
-                    "and": AND_CONDITION_SCHEMA,
-                    "device": DEVICE_CONDITION_SCHEMA,
-                    "not": NOT_CONDITION_SCHEMA,
-                    "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
-                    "or": OR_CONDITION_SCHEMA,
-                    "state": STATE_CONDITION_SCHEMA,
-                    "sun": SUN_CONDITION_SCHEMA,
-                    "template": TEMPLATE_CONDITION_SCHEMA,
-                    "time": TIME_CONDITION_SCHEMA,
-                    "trigger": TRIGGER_CONDITION_SCHEMA,
-                    "zone": ZONE_CONDITION_SCHEMA,
-                },
+                BUILT_IN_CONDITIONS,
+                _base_condition_validator,
             ),
         ),
         dynamic_template_condition,
@@ -1780,20 +1767,11 @@ CONDITION_ACTION_SCHEMA: vol.Schema = vol.Schema(
         expand_condition_shorthand,
         key_value_schemas(
             CONF_CONDITION,
-            {
-                "and": AND_CONDITION_SCHEMA,
-                "device": DEVICE_CONDITION_SCHEMA,
-                "not": NOT_CONDITION_SCHEMA,
-                "numeric_state": NUMERIC_STATE_CONDITION_SCHEMA,
-                "or": OR_CONDITION_SCHEMA,
-                "state": STATE_CONDITION_SCHEMA,
-                "sun": SUN_CONDITION_SCHEMA,
-                "template": TEMPLATE_CONDITION_SCHEMA,
-                "time": TIME_CONDITION_SCHEMA,
-                "trigger": TRIGGER_CONDITION_SCHEMA,
-                "zone": ZONE_CONDITION_SCHEMA,
-            },
-            dynamic_template_condition_action,
+            BUILT_IN_CONDITIONS,
+            vol.Any(
+                dynamic_template_condition_action,
+                _base_condition_validator,
+            ),
             "a list of conditions or a valid template",
         ),
     )
@@ -1852,7 +1830,7 @@ def _base_trigger_list_flatten(triggers: list[Any]) -> list[Any]:
     return flatlist
 
 
-# This is first round of validation, we don't want to process the config here already,
+# This is first round of validation, we don't want to mutate the config here already,
 # just ensure basics as platform and ID are there.
 def _base_trigger_validator(value: Any) -> Any:
     _base_trigger_validator_schema(value)

@@ -15,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -26,8 +25,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
-from .coordinator import MelnorDataUpdateCoordinator
+from .coordinator import MelnorConfigEntry, MelnorDataUpdateCoordinator
 from .entity import MelnorBluetoothEntity, MelnorZoneEntity, get_entities_for_valves
 
 
@@ -104,12 +102,12 @@ ZONE_ENTITY_DESCRIPTIONS: list[MelnorZoneSensorEntityDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MelnorConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
 
-    coordinator: MelnorDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     # Device-level sensors
     async_add_entities(

@@ -37,7 +37,7 @@ from tests.common import (
     mock_platform,
 )
 from tests.components.stt.common import MockSTTProvider, MockSTTProviderEntity
-from tests.components.tts.common import MockTTSProvider
+from tests.components.tts.common import MockTTSEntity, MockTTSProvider
 
 _TRANSCRIPT = "test transcript"
 
@@ -66,6 +66,15 @@ async def mock_tts_provider() -> MockTTSProvider:
     provider = MockTTSProvider("en")
     provider._supported_languages = ["en-US"]
     return provider
+
+
+@pytest.fixture
+def mock_tts_entity() -> MockTTSEntity:
+    """Test TTS entity."""
+    entity = MockTTSEntity("en")
+    entity._attr_unique_id = "test_tts"
+    entity._attr_supported_languages = ["en-US"]
+    return entity
 
 
 @pytest.fixture
@@ -198,6 +207,7 @@ async def init_supporting_components(
     mock_stt_provider: MockSTTProvider,
     mock_stt_provider_entity: MockSTTProviderEntity,
     mock_tts_provider: MockTTSProvider,
+    mock_tts_entity: MockTTSEntity,
     mock_wake_word_provider_entity: MockWakeWordEntity,
     mock_wake_word_provider_entity2: MockWakeWordEntity2,
     config_flow_fixture,
@@ -209,7 +219,7 @@ async def init_supporting_components(
     ) -> bool:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
-            config_entry, [Platform.STT, Platform.WAKE_WORD]
+            config_entry, [Platform.STT, Platform.TTS, Platform.WAKE_WORD]
         )
         return True
 
@@ -229,6 +239,14 @@ async def init_supporting_components(
     ) -> None:
         """Set up test stt platform via config entry."""
         async_add_entities([mock_stt_provider_entity])
+
+    async def async_setup_entry_tts_platform(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Set up test tts platform via config entry."""
+        async_add_entities([mock_tts_entity])
 
     async def async_setup_entry_wake_word_platform(
         hass: HomeAssistant,
@@ -253,6 +271,7 @@ async def init_supporting_components(
         "test.tts",
         MockTTSPlatform(
             async_get_engine=AsyncMock(return_value=mock_tts_provider),
+            async_setup_entry=async_setup_entry_tts_platform,
         ),
     )
     mock_platform(

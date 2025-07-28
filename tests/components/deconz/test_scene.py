@@ -5,7 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN, SERVICE_TURN_ON
 from homeassistant.const import ATTR_ENTITY_ID, Platform

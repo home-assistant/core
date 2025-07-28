@@ -182,9 +182,9 @@
       "group_members_assume_state": "Group members assume state of group",
       "enable_identify_on_join": "Enable identify effect when devices join the network",
       "default_light_transition": "Default light transition time (seconds)",
-      "consider_unavailable_mains": "Consider mains powered devices unavailable after (seconds)",
-      "enable_mains_startup_polling": "Refresh state for mains powered devices on startup",
-      "consider_unavailable_battery": "Consider battery powered devices unavailable after (seconds)"
+      "consider_unavailable_mains": "Consider mains-powered devices unavailable after (seconds)",
+      "enable_mains_startup_polling": "Refresh state for mains-powered devices on startup",
+      "consider_unavailable_battery": "Consider battery-powered devices unavailable after (seconds)"
     },
     "zha_alarm_options": {
       "title": "Alarm control panel options",
@@ -659,7 +659,15 @@
     },
     "fan": {
       "fan": {
-        "name": "[%key:component::fan::title%]"
+        "name": "[%key:component::fan::title%]",
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "[%key:common::state::auto%]",
+              "smart": "Smart"
+            }
+          }
+        }
       },
       "fan_group": {
         "name": "Fan group"
@@ -667,7 +675,14 @@
     },
     "light": {
       "light": {
-        "name": "[%key:component::light::title%]"
+        "name": "[%key:component::light::title%]",
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "colorloop": "Color loop"
+            }
+          }
+        }
       },
       "light_group": {
         "name": "Light group"
@@ -905,7 +920,7 @@
         "name": "Fade time"
       },
       "regulator_set_point": {
-        "name": "Regulator set point"
+        "name": "Regulator setpoint"
       },
       "detection_delay": {
         "name": "Detection delay"
@@ -1103,7 +1118,7 @@
         "name": "Comfort temperature"
       },
       "valve_state_auto_shutdown": {
-        "name": "Valve state auto shutdown"
+        "name": "Valve state auto-shutdown"
       },
       "shutdown_timer": {
         "name": "Shutdown timer"
@@ -1137,6 +1152,24 @@
       },
       "external_temperature_sensor_value": {
         "name": "External temperature sensor value"
+      },
+      "update_frequency": {
+        "name": "Update frequency"
+      },
+      "sound_volume": {
+        "name": "Sound volume"
+      },
+      "lift_drive_up_time": {
+        "name": "Lift drive up time"
+      },
+      "lift_drive_down_time": {
+        "name": "Lift drive down time"
+      },
+      "tilt_open_close_and_step_time": {
+        "name": "Tilt open close and step time"
+      },
+      "tilt_position_percentage_after_move_to_level": {
+        "name": "Tilt position percentage after move to level"
       }
     },
     "select": {
@@ -1186,7 +1219,7 @@
         "name": "Smart fan LED display levels"
       },
       "increased_non_neutral_output": {
-        "name": "Non neutral output"
+        "name": "Increased non-neutral output"
       },
       "leading_or_trailing_edge": {
         "name": "Dimming mode"
@@ -1207,7 +1240,7 @@
         "name": "Decoupled mode"
       },
       "detection_sensitivity": {
-        "name": "Detection Sensitivity"
+        "name": "Detection sensitivity"
       },
       "keypad_lockout": {
         "name": "Keypad lockout"
@@ -1367,6 +1400,15 @@
       },
       "alarm_sound_mode": {
         "name": "Alarm sound mode"
+      },
+      "external_switch_type": {
+        "name": "External switch type"
+      },
+      "switch_indication": {
+        "name": "Switch indication"
+      },
+      "switch_actions": {
+        "name": "Switch actions"
       }
     },
     "sensor": {
@@ -1638,7 +1680,7 @@
         "name": "Total power factor"
       },
       "self_test_result": {
-        "name": "Self test result"
+        "name": "Self-test result"
       },
       "lower_explosive_limit": {
         "name": "% Lower explosive limit"
@@ -1720,6 +1762,32 @@
       },
       "lifetime": {
         "name": "Lifetime"
+      },
+      "last_action_source": {
+        "name": "Last action source",
+        "state": {
+          "zigbee": "Zigbee",
+          "keypad": "Keypad",
+          "fingerprint": "Fingerprint",
+          "rfid": "RFID",
+          "self": "Self"
+        }
+      },
+      "last_action": {
+        "name": "Last action",
+        "state": {
+          "lock": "[%key:common::state::locked%]",
+          "unlock": "[%key:common::state::unlocked%]"
+        }
+      },
+      "last_action_user": {
+        "name": "Last action user"
+      },
+      "last_pin_code": {
+        "name": "Last PIN code"
+      },
+      "opening": {
+        "name": "Opening"
       }
     },
     "switch": {
@@ -1928,13 +1996,16 @@
         "name": "Schedule mode"
       },
       "auto_clean": {
-        "name": "Auto clean"
+        "name": "Autoclean"
       },
       "test_mode": {
         "name": "Test mode"
       },
       "external_temperature_sensor": {
         "name": "External temperature sensor"
+      },
+      "auto_relock": {
+        "name": "Autorelock"
       }
     }
   }

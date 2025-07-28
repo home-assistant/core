@@ -116,7 +116,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
 
     _LOGGER.debug("NUT Sensors Available: %s", status if status else None)
 
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     unique_id = _unique_id_from_status(status)
     if unique_id is None:
         unique_id = entry.entry_id
@@ -187,7 +186,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool
 
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: NutConfigEntry,
     device_entry: dr.DeviceEntry,
 ) -> bool:
     """Remove NUT config entry from a device."""
@@ -197,11 +196,6 @@ async def async_remove_config_entry_device(
         if identifier[0] == DOMAIN
         and identifier[1] in config_entry.runtime_data.unique_id
     )
-
-
-async def _async_update_listener(hass: HomeAssistant, entry: NutConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 def _manufacturer_from_status(status: dict[str, str]) -> str | None:

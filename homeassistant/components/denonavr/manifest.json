@@ -6,7 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/denonavr",
   "iot_class": "local_push",
   "loggers": ["denonavr"],
-  "requirements": ["denonavr==1.1.0"],
+  "requirements": ["denonavr==1.1.1"],
   "ssdp": [
     {
       "manufacturer": "Denon",

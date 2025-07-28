@@ -3,18 +3,15 @@
 from datetime import datetime as dt
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 from hdate.holidays import HolidayDatabase
 from hdate.parasha import Parasha
 import pytest
 
-from homeassistant.components.jewish_calendar.const import DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_PLATFORM
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize("language", ["en", "he"])
@@ -59,7 +56,6 @@ TEST_PARAMS = [
             "attr": {
                 "device_class": "enum",
                 "friendly_name": "Jewish Calendar Holiday",
-                "icon": "mdi:calendar-star",
                 "id": "rosh_hashana_i",
                 "type": "YOM_TOV",
                 "options": lambda: HolidayDatabase(False).get_all_names(),
@@ -77,7 +73,6 @@ TEST_PARAMS = [
             "attr": {
                 "device_class": "enum",
                 "friendly_name": "Jewish Calendar Holiday",
-                "icon": "mdi:calendar-star",
                 "id": "chanukah, rosh_chodesh",
                 "type": "MELACHA_PERMITTED_HOLIDAY, ROSH_CHODESH",
                 "options": lambda: HolidayDatabase(False).get_all_names(),
@@ -95,8 +90,7 @@ TEST_PARAMS = [
             "attr": {
                 "device_class": "enum",
                 "friendly_name": "Jewish Calendar Weekly Torah portion",
-                "icon": "mdi:book-open-variant",
-                "options": list(Parasha),
+                "options": [str(p) for p in Parasha],
             },
         },
         "he",
@@ -144,7 +138,6 @@ TEST_PARAMS = [
                 "hebrew_year": "5779",
                 "hebrew_month_name": "מרחשוון",
                 "hebrew_day": "6",
-                "icon": "mdi:star-david",
                 "friendly_name": "Jewish Calendar Date",
             },
         },
@@ -546,15 +539,29 @@ async def test_dafyomi_sensor(hass: HomeAssistant, results: str) -> None:
     assert hass.states.get("sensor.jewish_calendar_daf_yomi").state == results
 
 
-async def test_no_discovery_info(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+@pytest.mark.parametrize(
+    ("test_time", "results"),
+    [
+        (
+            dt(2025, 6, 10, 17),
+            {
+                "initial_state": "14 Sivan 5785",
+                "move_to": dt(2025, 6, 10, 23, 0),
+                "new_state": "15 Sivan 5785",
+            },
+        ),
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("setup_at_time")
+async def test_sensor_does_not_update_on_time_change(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, results: dict[str, Any]
 ) -> None:
-    """Test setup without discovery info."""
-    assert SENSOR_DOMAIN not in hass.config.components
-    assert await async_setup_component(
-        hass,
-        SENSOR_DOMAIN,
-        {SENSOR_DOMAIN: {CONF_PLATFORM: DOMAIN}},
-    )
+    """Test that the Jewish calendar sensor does not update after time advances (regression test for update bug)."""
+    sensor_id = "sensor.jewish_calendar_date"
+    assert hass.states.get(sensor_id).state == results["initial_state"]
+
+    freezer.move_to(results["move_to"])
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert SENSOR_DOMAIN in hass.config.components
+    assert hass.states.get(sensor_id).state == results["new_state"]

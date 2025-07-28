@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.braviatv.const import CONF_USE_PSK, DOMAIN
