@@ -42,12 +42,8 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery-update-info:
-    status: exempt
-    comment: airOS does not do SSDP or ZeroConf but self-emits packets
-  discovery:
-    status: exempt
-    comment: airOS does not do SSDP or ZeroConf but self-emits packets
+  discovery-update-info: todo
+  discovery: todo
   docs-data-update: done
   docs-examples: todo
   docs-known-limitations: done
