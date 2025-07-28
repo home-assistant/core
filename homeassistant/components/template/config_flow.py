@@ -28,6 +28,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
     Platform,
+    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import section
@@ -76,6 +77,15 @@ from .select import CONF_OPTIONS, CONF_SELECT_OPTION, async_create_preview_selec
 from .sensor import async_create_preview_sensor
 from .switch import async_create_preview_switch
 from .template_entity import TemplateEntity
+from .weather import (
+    CONF_CONDITION,
+    CONF_FORECAST_DAILY,
+    CONF_FORECAST_HOURLY,
+    CONF_HUMIDITY,
+    CONF_TEMPERATURE,
+    CONF_TEMPERATURE_UNIT,
+    async_create_preview_weather,
+)
 
 _SCHEMA_STATE: dict[vol.Marker, Any] = {
     vol.Required(CONF_STATE): selector.TemplateSelector(),
@@ -222,6 +232,22 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(CONF_TURN_OFF): selector.ActionSelector(),
         }
 
+    if domain == Platform.WEATHER:
+        schema |= {
+            vol.Required(CONF_CONDITION): selector.TemplateSelector(),
+            vol.Required(CONF_HUMIDITY): selector.TemplateSelector(),
+            vol.Required(CONF_TEMPERATURE): selector.TemplateSelector(),
+            vol.Optional(CONF_TEMPERATURE_UNIT): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[cls.value for cls in UnitOfTemperature],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    sort=True,
+                ),
+            ),
+            vol.Optional(CONF_FORECAST_DAILY): selector.TemplateSelector(),
+            vol.Optional(CONF_FORECAST_HOURLY): selector.TemplateSelector(),
+        }
+
     schema |= {
         vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
         vol.Optional(CONF_ADVANCED_OPTIONS): section(
@@ -332,6 +358,7 @@ TEMPLATE_TYPES = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.WEATHER,
 ]
 
 CONFIG_FLOW = {
@@ -374,6 +401,11 @@ CONFIG_FLOW = {
         config_schema(Platform.SWITCH),
         preview="template",
         validate_user_input=validate_user_input(Platform.SWITCH),
+    ),
+    Platform.WEATHER: SchemaFlowFormStep(
+        config_schema(Platform.WEATHER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.WEATHER),
     ),
 }
 
@@ -419,6 +451,11 @@ OPTIONS_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.SWITCH),
     ),
+    Platform.WEATHER: SchemaFlowFormStep(
+        options_schema(Platform.WEATHER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.WEATHER),
+    ),
 }
 
 CREATE_PREVIEW_ENTITY: dict[
@@ -431,6 +468,7 @@ CREATE_PREVIEW_ENTITY: dict[
     Platform.SELECT: async_create_preview_select,
     Platform.SENSOR: async_create_preview_sensor,
     Platform.SWITCH: async_create_preview_switch,
+    Platform.WEATHER: async_create_preview_weather,
 }
 
 

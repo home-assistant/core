@@ -191,6 +191,30 @@
           }
         },
         "title": "Template switch"
+      },
+      "weather": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "condition": "Condition",
+          "humidity": "Humidity",
+          "temperature": "Temperature",
+          "temperature_unit": "Temperature unit",
+          "forecast_daily": "Forecast daily",
+          "forecast_hourly": "Forecast hourly"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "data": {
+              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+            }
+          }
+        },
+        "title": "Template weather"
       }
     }
   },
@@ -370,6 +394,30 @@
           }
         },
         "title": "[%key:component::template::config::step::switch::title%]"
+      },
+      "weather": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "condition": "[%key:component::template::config::step::weather::data::condition%]",
+          "humidity": "[%key:component::template::config::step::weather::data::humidity%]",
+          "temperature": "[%key:component::template::config::step::weather::data::temperature%]",
+          "temperature_unit": "[%key:component::template::config::step::weather::data::temperature_unit%]",
+          "forecast_daily": "[%key:component::template::config::step::weather::data::forecast_daily%]",
+          "forecast_hourly": "[%key:component::template::config::step::weather::data::forecast_hourly%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "data": {
+              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+            }
+          }
+        },
+        "title": "[%key:component::template::config::step::weather::title%]"
       }
     }
   },

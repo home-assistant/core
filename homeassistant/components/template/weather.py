@@ -31,6 +31,7 @@ from homeassistant.components.weather import (
     WeatherEntity,
     WeatherEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_TEMPERATURE_UNIT,
@@ -44,7 +45,10 @@ from homeassistant.helpers import (
     issue_registry as ir,
     template,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -57,8 +61,17 @@ from homeassistant.util.unit_conversion import (
 
 from . import DOMAIN
 from .coordinator import TriggerUpdateCoordinator
-from .helpers import async_setup_template_platform, rewrite_legacy_to_modern_config
-from .template_entity import TemplateEntity, make_template_entity_common_modern_schema
+from .helpers import (
+    async_setup_template_entry,
+    async_setup_template_platform,
+    async_setup_template_preview,
+    rewrite_legacy_to_modern_config,
+)
+from .template_entity import (
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    TemplateEntity,
+    make_template_entity_common_modern_schema,
+)
 from .trigger_entity import TriggerEntity
 
 CHECK_FORECAST_KEYS = (
@@ -256,6 +269,10 @@ PLATFORM_SCHEMA = vol.Schema(
     }
 ).extend(WEATHER_PLATFORM_SCHEMA.schema)
 
+WEATHER_CONFIG_ENTRY_SCHEMA = WEATHER_COMMON_SCHEMA.extend(
+    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
+)
+
 
 def create_deprecation_issue(
     hass: HomeAssistant, entity_id: str, name: str, changes: str
@@ -315,6 +332,35 @@ async def async_setup_platform(
         async_add_entities,
         discovery_info,
         LEGACY_FIELDS,
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    await async_setup_template_entry(
+        hass,
+        config_entry,
+        async_add_entities,
+        StateWeatherEntity,
+        WEATHER_CONFIG_ENTRY_SCHEMA,
+    )
+
+
+@callback
+def async_create_preview_weather(
+    hass: HomeAssistant, name: str, config: dict[str, Any]
+) -> StateWeatherEntity:
+    """Create a preview."""
+    return async_setup_template_preview(
+        hass,
+        name,
+        config,
+        StateWeatherEntity,
+        WEATHER_CONFIG_ENTRY_SCHEMA,
     )
 
 
