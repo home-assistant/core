@@ -36,13 +36,13 @@ class DatadogConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle user config flow."""
         errors: dict[str, str] = {}
         if user_input:
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
             # Validate connection to Datadog Agent
             success = await validate_datadog_connection(
                 self.hass,
                 user_input,
-            )
-            self._async_abort_entries_match(
-                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
             )
             if not success:
                 errors["base"] = "cannot_connect"
