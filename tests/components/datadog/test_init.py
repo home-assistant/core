@@ -8,7 +8,6 @@ from homeassistant.components.datadog import async_setup_entry
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_LOGBOOK_ENTRY, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .common import MOCK_DATA, MOCK_OPTIONS, create_mock_state
 
@@ -30,11 +29,20 @@ async def test_datadog_setup_full(hass: HomeAssistant) -> None:
     with (
         patch("homeassistant.components.datadog.DogStatsd") as mock_dogstatsd,
     ):
-        config = {
-            datadog.DOMAIN: {"host": "host", "port": 123, "rate": 1, "prefix": "foo"}
-        }
-
-        assert await async_setup_component(hass, datadog.DOMAIN, config)
+        entry = MockConfigEntry(
+            domain=datadog.DOMAIN,
+            data={
+                "host": "host",
+                "port": 123,
+            },
+            options={
+                "rate": 1,
+                "prefix": "foo",
+            },
+        )
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
         assert mock_dogstatsd.call_count == 1
         assert mock_dogstatsd.call_args == mock.call(
