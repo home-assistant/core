@@ -162,7 +162,7 @@ async def test_agents_download(
         )
 
         # Mock the download of the metadata file
-        # This mock is for when _find_file_and_metadata_name_by_id calls download() on the metadata file
+        # This mock is for when _find_file_and_metadata_version_by_id calls download() on the metadata file
         mock_download.return_value.response.content = json.dumps(
             BACKUP_METADATA
         ).encode("utf-8")
@@ -426,7 +426,7 @@ async def test_agents_download_backup_not_found(
 ) -> None:
     """Test agent download backup raises BackupNotFound."""
     with patch(
-        "homeassistant.components.backblaze.backup.BackblazeBackupAgent._find_file_and_metadata_name_by_id",
+        "homeassistant.components.backblaze.backup.BackblazeBackupAgent._find_file_and_metadata_version_by_id",
         return_value=(None, None),
     ):
         client = await hass_client()
@@ -470,8 +470,11 @@ async def test_agents_delete_metadata_file_not_found(
     """Test agent delete backup logs warning if metadata file not found."""
     with (
         patch(
-            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._find_file_and_metadata_name_by_id",
-            return_value=(Mock(file_name="test.tar"), "test.tar.metadata.json"),
+            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._find_file_and_metadata_version_by_id",
+            return_value=(
+                Mock(file_name="test.tar"),
+                Mock(file_name="test.tar.metadata.json"),
+            ),
         ),
         patch("b2sdk.v2.FileVersion.delete"),
         patch(
@@ -505,8 +508,11 @@ async def test_agents_delete_metadata_file_b2_error(
     """Test agent delete backup logs error if B2Error during metadata file deletion."""
     with (
         patch(
-            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._find_file_and_metadata_name_by_id",
-            return_value=(Mock(file_name="test.tar"), "test.tar.metadata.json"),
+            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._find_file_and_metadata_version_by_id",
+            return_value=(
+                Mock(file_name="test.tar"),
+                Mock(file_name="test.tar.metadata.json"),
+            ),
         ),
         patch("b2sdk.v2.FileVersion.delete"),
         patch(
@@ -564,7 +570,7 @@ async def test_async_download_backup_not_found(
 ) -> None:
     """Test async_download_backup when backup is not found (line 106)."""
     with patch(
-        "homeassistant.components.backblaze.backup.BackblazeBackupAgent._find_file_and_metadata_name_by_id",
+        "homeassistant.components.backblaze.backup.BackblazeBackupAgent._find_file_and_metadata_version_by_id",
         return_value=(None, None),
     ):
         client = await hass_client()
@@ -597,8 +603,11 @@ async def test_async_get_backup_metadata_not_found(
 
     with (
         patch(
-            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._find_file_and_metadata_name_by_id",
-            return_value=(Mock(file_name="test.tar"), "test.tar.metadata.json"),
+            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._find_file_and_metadata_version_by_id",
+            return_value=(
+                Mock(file_name="test.tar"),
+                Mock(file_name="test.tar.metadata.json"),
+            ),
         ),
         patch(
             "b2sdk.v2.FileVersion.download",
@@ -677,7 +686,7 @@ async def test_async_download_backup_not_found_error(
 
     with (
         patch(
-            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._find_file_and_metadata_name_by_id",
+            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._find_file_and_metadata_version_by_id",
             return_value=(None, None),
         ),
         pytest.raises(BackupNotFound),
