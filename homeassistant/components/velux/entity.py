@@ -23,11 +23,7 @@ class VeluxEntity(Entity):
             if node.serial_number
             else f"{config_entry_id}_{node.node_id}"
         )
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={
                 (
                     DOMAIN,

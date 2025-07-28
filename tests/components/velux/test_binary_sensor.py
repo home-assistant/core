@@ -8,7 +8,8 @@ import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import DeviceRegistry
+from homeassistant.helpers.entity_registry import EntityRegistry
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -55,6 +56,8 @@ async def test_rain_sensor_device_association(
     hass: HomeAssistant,
     mock_window: MagicMock,
     mock_config_entry: MockConfigEntry,
+    entity_registry: EntityRegistry,
+    device_registry: DeviceRegistry,
 ) -> None:
     """Test the rain sensor is properly associated with its device."""
 
@@ -68,10 +71,6 @@ async def test_rain_sensor_device_association(
     # Verify entity exists
     state = hass.states.get(test_entity_id)
     assert state is not None
-
-    # Get registries
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
 
     # Get entity entry
     entity_entry = entity_registry.async_get(test_entity_id)
