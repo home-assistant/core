@@ -163,7 +163,9 @@ async def test_agents_download(
 
         # Mock the download of the metadata file
         # This mock is for when _find_file_and_metadata_name_by_id calls download() on the metadata file
-        mock_download.return_value.text_content = json.dumps(BACKUP_METADATA)
+        mock_download.return_value.response.content = json.dumps(
+            BACKUP_METADATA
+        ).encode("utf-8")
 
         client = await hass_client()
         backup_id = TEST_BACKUP.backup_id
@@ -553,7 +555,9 @@ async def test_process_metadata_file_sync_non_conforming(
         "metadata_version": METADATA_VERSION,
         # Missing backup_id
     }
-    file_version.download.return_value.text_content = json.dumps(metadata_content)
+    mock_downloaded_file = Mock()
+    mock_downloaded_file.response.content = json.dumps(metadata_content).encode("utf-8")
+    file_version.download.return_value = mock_downloaded_file
 
     with caplog.at_level(logging.DEBUG):
         result = await hass.async_add_executor_job(
@@ -570,7 +574,9 @@ async def test_process_metadata_file_sync_non_conforming(
         "metadata_version": "2",
         "backup_id": "test",
     }
-    file_version.download.return_value.text_content = json.dumps(metadata_content)
+    mock_downloaded_file = Mock()
+    mock_downloaded_file.response.content = json.dumps(metadata_content).encode("utf-8")
+    file_version.download.return_value = mock_downloaded_file
 
     with caplog.at_level(logging.DEBUG):
         result = await hass.async_add_executor_job(
