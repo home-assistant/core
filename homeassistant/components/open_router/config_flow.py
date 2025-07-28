@@ -5,8 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from openai import AsyncOpenAI
-from python_open_router import OpenRouterClient, OpenRouterError
+from python_open_router import Model, OpenRouterClient, OpenRouterError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -20,7 +19,6 @@ from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL
 from homeassistant.core import callback
 from homeassistant.helpers import llm
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -85,7 +83,7 @@ class ConversationFlowHandler(ConfigSubentryFlow):
 
     def __init__(self) -> None:
         """Initialize the subentry flow."""
-        self.options: dict[str, str] = {}
+        self.models: dict[str, Model] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -95,14 +93,18 @@ class ConversationFlowHandler(ConfigSubentryFlow):
             if not user_input.get(CONF_LLM_HASS_API):
                 user_input.pop(CONF_LLM_HASS_API, None)
             return self.async_create_entry(
-                title=self.options[user_input[CONF_MODEL]], data=user_input
+                title=self.models[user_input[CONF_MODEL]].name, data=user_input
             )
         entry = self._get_entry()
-        client = AsyncOpenAI(
-            base_url="https://openrouter.ai/api/v1",
-            api_key=entry.data[CONF_API_KEY],
-            http_client=get_async_client(self.hass),
+        client = OpenRouterClient(
+            entry.data[CONF_API_KEY], async_get_clientsession(self.hass)
         )
+        models = await client.get_models()
+        self.models = {model.id: model for model in models}
+        options = [
+            SelectOptionDict(value=model.id, label=model.name) for model in models
+        ]
+
         hass_apis: list[SelectOptionDict] = [
             SelectOptionDict(
                 label=api.name,
@@ -110,10 +112,6 @@ class ConversationFlowHandler(ConfigSubentryFlow):
             )
             for api in llm.async_get_apis(self.hass)
         ]
-        options = []
-        async for model in client.with_options(timeout=10.0).models.list():
-            options.append(SelectOptionDict(value=model.id, label=model.name))  # type: ignore[attr-defined]
-            self.options[model.id] = model.name  # type: ignore[attr-defined]
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
