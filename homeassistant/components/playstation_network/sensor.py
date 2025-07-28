@@ -19,6 +19,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
 from .coordinator import (
+    PlayStationNetworkBaseCoordinator,
     PlaystationNetworkConfigEntry,
     PlaystationNetworkData,
     PlaystationNetworkFriendDataCoordinator,
@@ -182,7 +183,7 @@ class PlaystationNetworkSensorBaseEntity(
     """Base sensor entity."""
 
     entity_description: PlaystationNetworkSensorEntityDescription
-    coordinator: PlaystationNetworkUserDataCoordinator
+    coordinator: PlayStationNetworkBaseCoordinator
 
     @property
     def native_value(self) -> StateType | datetime:
