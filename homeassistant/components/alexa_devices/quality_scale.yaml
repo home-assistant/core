@@ -60,9 +60,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: exempt
-    comment: Amazon login name most likely won't change
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: no known use cases for repair issues or flows, yet
