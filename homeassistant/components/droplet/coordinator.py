@@ -112,11 +112,11 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
     def _get_cumulative_volume(self, interval: AccumulatedVolume) -> float:
         if self.droplet.accumulator_expired(dt_util.now(), interval):
             self.droplet.reset_accumulator(interval, self._make_reset_time(interval))
-        return self.droplet.get_accumulated_volume(interval) * ML_L_CONVERSION
+        return self.droplet.get_accumulated_volume(interval) / ML_L_CONVERSION
 
     def get_volume_delta(self) -> float:
         """Get volume since the last point."""
-        return self.droplet.get_volume_delta() * ML_L_CONVERSION
+        return self.droplet.get_volume_delta() / ML_L_CONVERSION
 
     def get_flow_rate(self) -> float:
         """Retrieve Droplet's latest flow rate."""
