@@ -47,7 +47,7 @@ def mock_config_entry() -> MockConfigEntry:
 class MockVehicle:
     """Mock vehicle."""
 
-    def __init__(self) -> None:
+    def __init__(self, is_electric_vehicle=False) -> None:
         """Initialize mock vehicle."""
         self.license_plate = "12345678"
         self.make = "mock make"
@@ -61,11 +61,20 @@ class MockVehicle:
             2024, 1, 1, 0, 0, 0, tzinfo=ZoneInfo("Asia/Jerusalem")
         )
         self.battery_voltage = 12.0
+        self.is_electric_vehicle = is_electric_vehicle
+        if is_electric_vehicle:
+            self.battery_level = 42
+            self.battery_range = 150
+            self.is_charging = True
+        else:
+            self.battery_level = 0
+            self.battery_range = 0
+            self.is_charging = False
 
 
 @pytest.fixture
-def mock_ituran() -> Generator[AsyncMock]:
-    """Return a mocked PalazzettiClient."""
+def mock_ituran(request: pytest.FixtureRequest) -> Generator[AsyncMock]:
+    """Return a mocked Ituran."""
     with (
         patch(
             "homeassistant.components.ituran.coordinator.Ituran",
@@ -79,7 +88,8 @@ def mock_ituran() -> Generator[AsyncMock]:
         mock_ituran = ituran.return_value
         mock_ituran.is_authenticated.return_value = False
         mock_ituran.authenticate.return_value = True
-        mock_ituran.get_vehicles.return_value = [MockVehicle()]
+        is_electric_vehicle = getattr(request, "param", False)
+        mock_ituran.get_vehicles.return_value = [MockVehicle(is_electric_vehicle)]
         type(mock_ituran).mobile_id = PropertyMock(
             return_value=MOCK_CONFIG_DATA[CONF_MOBILE_ID]
         )

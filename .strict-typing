@@ -377,6 +377,7 @@ homeassistant.components.onedrive.*
 homeassistant.components.onewire.*
 homeassistant.components.onkyo.*
 homeassistant.components.open_meteo.*
+homeassistant.components.open_router.*
 homeassistant.components.openai_conversation.*
 homeassistant.components.openexchangerates.*
 homeassistant.components.opensky.*
@@ -500,6 +501,7 @@ homeassistant.components.tag.*
 homeassistant.components.tailscale.*
 homeassistant.components.tailwind.*
 homeassistant.components.tami4.*
+homeassistant.components.tankerkoenig.*
 homeassistant.components.tautulli.*
 homeassistant.components.tcp.*
 homeassistant.components.technove.*
@@ -535,6 +537,7 @@ homeassistant.components.unifiprotect.*
 homeassistant.components.upcloud.*
 homeassistant.components.update.*
 homeassistant.components.uptime.*
+homeassistant.components.uptime_kuma.*
 homeassistant.components.uptimerobot.*
 homeassistant.components.usb.*
 homeassistant.components.uvc.*
