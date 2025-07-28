@@ -44,6 +44,7 @@ from .helpers import async_setup_template_platform
 from .template_entity import (
     TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
     TemplateEntity,
     make_template_entity_common_modern_attributes_schema,
 )
@@ -76,23 +77,25 @@ LEGACY_FIELDS = {
     CONF_VALUE_TEMPLATE: CONF_STATE,
 }
 
-VACUUM_YAML_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Optional(CONF_BATTERY_LEVEL): cv.template,
-            vol.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
-            vol.Optional(CONF_FAN_SPEED): cv.template,
-            vol.Optional(CONF_STATE): cv.template,
-            vol.Optional(SERVICE_CLEAN_SPOT): cv.SCRIPT_SCHEMA,
-            vol.Optional(SERVICE_LOCATE): cv.SCRIPT_SCHEMA,
-            vol.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
-            vol.Optional(SERVICE_RETURN_TO_BASE): cv.SCRIPT_SCHEMA,
-            vol.Optional(SERVICE_SET_FAN_SPEED): cv.SCRIPT_SCHEMA,
-            vol.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
-            vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
-        }
-    ).extend(make_template_entity_common_modern_attributes_schema(DEFAULT_NAME).schema)
+VACUUM_COMMON_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_BATTERY_LEVEL): cv.template,
+        vol.Optional(CONF_FAN_SPEED_LIST, default=[]): cv.ensure_list,
+        vol.Optional(CONF_FAN_SPEED): cv.template,
+        vol.Optional(CONF_STATE): cv.template,
+        vol.Optional(SERVICE_CLEAN_SPOT): cv.SCRIPT_SCHEMA,
+        vol.Optional(SERVICE_LOCATE): cv.SCRIPT_SCHEMA,
+        vol.Optional(SERVICE_PAUSE): cv.SCRIPT_SCHEMA,
+        vol.Optional(SERVICE_RETURN_TO_BASE): cv.SCRIPT_SCHEMA,
+        vol.Optional(SERVICE_SET_FAN_SPEED): cv.SCRIPT_SCHEMA,
+        vol.Required(SERVICE_START): cv.SCRIPT_SCHEMA,
+        vol.Optional(SERVICE_STOP): cv.SCRIPT_SCHEMA,
+    }
 )
+
+VACUUM_YAML_SCHEMA = VACUUM_COMMON_SCHEMA.extend(
+    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
+).extend(make_template_entity_common_modern_attributes_schema(DEFAULT_NAME).schema)
 
 VACUUM_LEGACY_YAML_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
@@ -147,16 +150,15 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
     """Representation of a template vacuum features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
+    _optimistic_entity = True
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
     def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
-        self._template = config.get(CONF_STATE)
         self._battery_level_template = config.get(CONF_BATTERY_LEVEL)
         self._fan_speed_template = config.get(CONF_FAN_SPEED)
 
-        self._state = None
         self._battery_level = None
         self._attr_fan_speed = None
 
@@ -185,17 +187,12 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
             if (action_config := config.get(action_id)) is not None:
                 yield (action_id, action_config, supported_feature)
 
-    @property
-    def activity(self) -> VacuumActivity | None:
-        """Return the status of the vacuum cleaner."""
-        return self._state
-
     def _handle_state(self, result: Any) -> None:
         # Validate state
         if result in _VALID_STATES:
-            self._state = result
+            self._attr_activity = result
         elif result == STATE_UNKNOWN:
-            self._state = None
+            self._attr_activity = None
         else:
             _LOGGER.error(
                 "Received invalid vacuum state: %s for entity %s. Expected: %s",
@@ -203,31 +200,46 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
                 self.entity_id,
                 ", ".join(_VALID_STATES),
             )
-            self._state = None
+            self._attr_activity = None
 
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
+        if self._attr_assumed_state:
+            self._attr_activity = VacuumActivity.CLEANING
+            self.async_write_ha_state()
         await self.async_run_script(
             self._action_scripts[SERVICE_START], context=self._context
         )
 
     async def async_pause(self) -> None:
         """Pause the cleaning task."""
+        if self._attr_assumed_state:
+            self._attr_activity = VacuumActivity.PAUSED
+            self.async_write_ha_state()
         if script := self._action_scripts.get(SERVICE_PAUSE):
             await self.async_run_script(script, context=self._context)
 
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the cleaning task."""
+        if self._attr_assumed_state:
+            self._attr_activity = VacuumActivity.IDLE
+            self.async_write_ha_state()
         if script := self._action_scripts.get(SERVICE_STOP):
             await self.async_run_script(script, context=self._context)
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
+        if self._attr_assumed_state:
+            self._attr_activity = VacuumActivity.RETURNING
+            self.async_write_ha_state()
         if script := self._action_scripts.get(SERVICE_RETURN_TO_BASE):
             await self.async_run_script(script, context=self._context)
 
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
+        if self._attr_assumed_state:
+            self._attr_activity = VacuumActivity.CLEANING
+            self.async_write_ha_state()
         if script := self._action_scripts.get(SERVICE_CLEAN_SPOT):
             await self.async_run_script(script, context=self._context)
 
@@ -274,7 +286,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
         if isinstance(fan_speed, TemplateError):
             # This is legacy behavior
             self._attr_fan_speed = None
-            self._state = None
+            self._attr_activity = None
             return
 
         if fan_speed in self._attr_fan_speed_list:
@@ -320,7 +332,7 @@ class TemplateStateVacuumEntity(TemplateEntity, AbstractTemplateVacuum):
         """Set up templates."""
         if self._template is not None:
             self.add_template_attribute(
-                "_state", self._template, None, self._update_state
+                "_attr_activity", self._template, None, self._update_state
             )
         if self._fan_speed_template is not None:
             self.add_template_attribute(
@@ -344,7 +356,7 @@ class TemplateStateVacuumEntity(TemplateEntity, AbstractTemplateVacuum):
         super()._update_state(result)
         if isinstance(result, TemplateError):
             # This is legacy behavior
-            self._state = STATE_UNKNOWN
+            self._attr_activity = None
             if not self._availability_template:
                 self._attr_available = True
             return
