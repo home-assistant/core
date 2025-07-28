@@ -286,7 +286,7 @@ async def test_turn_away_mode_on(
     """Test turning the heater away mode on."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.services.async_call(
-        Platform.WATER_HEATER,
+        WATER_HEATER_DOMAIN,
         SERVICE_SET_AWAY_MODE,
         {ATTR_ENTITY_ID: "water_heater.test_device", ATTR_AWAY_MODE: "on"},
         blocking=True,
@@ -303,7 +303,7 @@ async def test_turn_away_mode_off(
     """Test turning the heater away mode off."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.services.async_call(
-        Platform.WATER_HEATER,
+        WATER_HEATER_DOMAIN,
         SERVICE_SET_AWAY_MODE,
         {ATTR_ENTITY_ID: "water_heater.test_device", ATTR_AWAY_MODE: "off"},
         blocking=True,
