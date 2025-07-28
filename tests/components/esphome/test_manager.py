@@ -28,12 +28,18 @@ from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_BLUETOOTH_MAC_ADDRESS,
     CONF_DEVICE_NAME,
+    CONF_NOISE_PSK,
     CONF_SUBSCRIBE_LOGS,
     DOMAIN,
     STABLE_BLE_URL_VERSION,
     STABLE_BLE_VERSION_STR,
 )
-from homeassistant.components.esphome.manager import DEVICE_CONFLICT_ISSUE_FORMAT
+from homeassistant.components.esphome.domain_data import DomainData
+from homeassistant.components.esphome.entry_data import RuntimeEntryData
+from homeassistant.components.esphome.manager import (
+    DEVICE_CONFLICT_ISSUE_FORMAT,
+    ESPHomeManager,
+)
 from homeassistant.components.tag import DOMAIN as TAG_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -1903,3 +1909,236 @@ async def test_manager_dynamic_encryption_key_generation_flow(
     mock_storage.async_store_key.assert_called_once_with(
         "11:22:33:44:55:aa", generated_key
     )
+
+
+@patch("secrets.token_bytes")
+@patch("homeassistant.components.esphome.manager.async_get_encryption_key_storage")
+async def test_manager_handle_dynamic_encryption_key_no_existing_key(
+    mock_storage_func, mock_token_bytes, hass: HomeAssistant, mock_client: APIClient
+) -> None:
+    """Test _handle_dynamic_encryption_key when no existing key is found."""
+    # Setup test data
+    test_key_bytes = b"test_key_32_bytes_long_exactly!"
+    mock_token_bytes.return_value = test_key_bytes
+    expected_key_b64 = base64.b64encode(test_key_bytes)
+    expected_key_str = expected_key_b64.decode("utf-8")
+
+    # Setup storage mock
+    mock_storage = Mock()
+    mock_storage.async_store_key = AsyncMock()
+    mock_storage_func.return_value = mock_storage
+
+    # Setup client mock for noise_encryption_set_key
+    mock_client.noise_encryption_set_key = AsyncMock(return_value=True)
+
+    # Create device info that supports encryption
+    device_info = DeviceInfo(
+        uses_password=False,
+        name="test-device",
+        mac_address="11:22:33:44:55:aa",
+        esphome_version="2023.12.0",
+        api_encryption_supported=True,  # Device supports encryption
+    )
+
+    # Create config entry without noise PSK (no existing key)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test-device",
+            # No CONF_NOISE_PSK - this simulates no existing key
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.esphome.manager.ReconnectLogic"):
+        # Create an ESPHomeManager instance directly for testing
+        domain_data = DomainData.get(hass)
+
+        # Set up the runtime data that the manager expects
+        entry_data = RuntimeEntryData(
+            client=mock_client,
+            entry_id=entry.entry_id,
+            title=entry.title,
+            store=domain_data.get_or_create_store(hass, entry),
+            original_options=dict(entry.options),
+        )
+        entry.runtime_data = entry_data
+
+        manager = ESPHomeManager(
+            hass, entry, "192.168.1.100", None, mock_client, None, domain_data
+        )
+
+        # Call the method under test
+        await manager._handle_dynamic_encryption_key(device_info)
+
+    # Verify secrets.token_bytes was called with 32 bytes
+    mock_token_bytes.assert_called_once_with(32)
+
+    # Verify noise_encryption_set_key was called with the generated key
+    mock_client.noise_encryption_set_key.assert_called_once_with(expected_key_b64)
+
+    # Verify storage was called with the same key
+    mock_storage.async_store_key.assert_called_once_with(
+        "11:22:33:44:55:aa", expected_key_str
+    )
+
+    # Verify config entry was updated with the new key
+    assert entry.data[CONF_NOISE_PSK] == expected_key_str
+
+
+@patch("secrets.token_bytes")
+@patch("homeassistant.components.esphome.manager.async_get_encryption_key_storage")
+async def test_manager_handle_dynamic_encryption_key_device_set_key_fails(
+    mock_storage_func, mock_token_bytes, hass: HomeAssistant, mock_client: APIClient
+) -> None:
+    """Test _handle_dynamic_encryption_key when noise_encryption_set_key returns False."""
+    # Setup test data
+    test_key_bytes = b"test_key_32_bytes_long_exactly!"
+    mock_token_bytes.return_value = test_key_bytes
+    expected_key_b64 = base64.b64encode(test_key_bytes)
+
+    # Setup storage mock
+    mock_storage = Mock()
+    mock_storage.async_store_key = AsyncMock()
+    mock_storage_func.return_value = mock_storage
+
+    # Setup client mock for noise_encryption_set_key to return False (failure)
+    mock_client.noise_encryption_set_key = AsyncMock(return_value=False)
+
+    # Create device info that supports encryption
+    device_info = DeviceInfo(
+        uses_password=False,
+        name="test-device",
+        mac_address="11:22:33:44:55:aa",
+        esphome_version="2023.12.0",
+        api_encryption_supported=True,  # Device supports encryption
+    )
+
+    # Create config entry without noise PSK (no existing key)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test-device",
+            # No CONF_NOISE_PSK - this simulates no existing key
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.esphome.manager.ReconnectLogic"):
+        # Create an ESPHomeManager instance directly for testing
+        domain_data = DomainData.get(hass)
+
+        # Set up the runtime data that the manager expects
+        entry_data = RuntimeEntryData(
+            client=mock_client,
+            entry_id=entry.entry_id,
+            title=entry.title,
+            store=domain_data.get_or_create_store(hass, entry),
+            original_options=dict(entry.options),
+        )
+        entry.runtime_data = entry_data
+
+        manager = ESPHomeManager(
+            hass, entry, "192.168.1.100", None, mock_client, None, domain_data
+        )
+
+        # Call the method under test
+        await manager._handle_dynamic_encryption_key(device_info)
+
+    # Verify secrets.token_bytes was called with 32 bytes
+    mock_token_bytes.assert_called_once_with(32)
+
+    # Verify noise_encryption_set_key was called with the generated key
+    mock_client.noise_encryption_set_key.assert_called_once_with(expected_key_b64)
+
+    # Verify storage was NOT called since device key setting failed
+    mock_storage.async_store_key.assert_not_called()
+
+    # Verify config entry was NOT updated since device key setting failed
+    assert CONF_NOISE_PSK not in entry.data
+
+
+@patch("secrets.token_bytes")
+@patch("homeassistant.components.esphome.manager.async_get_encryption_key_storage")
+async def test_manager_handle_dynamic_encryption_key_connection_error(
+    mock_storage_func, mock_token_bytes, hass: HomeAssistant, mock_client: APIClient
+) -> None:
+    """Test _handle_dynamic_encryption_key when noise_encryption_set_key raises APIConnectionError."""
+    # Setup test data
+    test_key_bytes = b"test_key_32_bytes_long_exactly!"
+    mock_token_bytes.return_value = test_key_bytes
+    expected_key_b64 = base64.b64encode(test_key_bytes)
+
+    # Setup storage mock
+    mock_storage = Mock()
+    mock_storage.async_store_key = AsyncMock()
+    mock_storage_func.return_value = mock_storage
+
+    # Setup client mock for noise_encryption_set_key to raise APIConnectionError
+    mock_client.noise_encryption_set_key = AsyncMock(
+        side_effect=APIConnectionError("Connection failed")
+    )
+
+    # Create device info that supports encryption
+    device_info = DeviceInfo(
+        uses_password=False,
+        name="test-device",
+        mac_address="11:22:33:44:55:aa",
+        esphome_version="2023.12.0",
+        api_encryption_supported=True,  # Device supports encryption
+    )
+
+    # Create config entry without noise PSK (no existing key)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test-device",
+            # No CONF_NOISE_PSK - this simulates no existing key
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.esphome.manager.ReconnectLogic"):
+        # Create an ESPHomeManager instance directly for testing
+        domain_data = DomainData.get(hass)
+
+        # Set up the runtime data that the manager expects
+        entry_data = RuntimeEntryData(
+            client=mock_client,
+            entry_id=entry.entry_id,
+            title=entry.title,
+            store=domain_data.get_or_create_store(hass, entry),
+            original_options=dict(entry.options),
+        )
+        entry.runtime_data = entry_data
+
+        manager = ESPHomeManager(
+            hass, entry, "192.168.1.100", None, mock_client, None, domain_data
+        )
+
+        # Call the method under test
+        await manager._handle_dynamic_encryption_key(device_info)
+
+    # Verify secrets.token_bytes was called with 32 bytes
+    mock_token_bytes.assert_called_once_with(32)
+
+    # Verify noise_encryption_set_key was called with the generated key
+    mock_client.noise_encryption_set_key.assert_called_once_with(expected_key_b64)
+
+    # Verify storage was NOT called since APIConnectionError was raised
+    mock_storage.async_store_key.assert_not_called()
+
+    # Verify config entry was NOT updated since APIConnectionError was raised
+    assert CONF_NOISE_PSK not in entry.data
