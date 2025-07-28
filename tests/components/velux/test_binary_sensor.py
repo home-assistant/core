@@ -41,8 +41,7 @@ async def test_rain_sensor_state(
     assert state.state == STATE_OFF
 
     # simulate rain detected
-    limitation = await mock_window.get_limitation()
-    limitation.min_value = 93
+    mock_window.get_limitation.return_value.min_value = 93
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
