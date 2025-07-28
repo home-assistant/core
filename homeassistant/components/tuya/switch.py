@@ -910,7 +910,7 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
         if (
             hasattr(self.entity_description, "deprecated_by")
             and self.entity_description.deprecated_by
-            and self.enabled  # Only show message for enabled entities
+            and self.enabled
         ):
             ir.async_create_issue(
                 self.hass,
