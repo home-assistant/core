@@ -872,32 +872,11 @@ async def async_setup_entry(
         for device_id in device_ids:
             device = hass_data.manager.device_map[device_id]
             if descriptions := SWITCHES.get(device.category):
-                for description in descriptions:
-                    if description.key in device.status:
-                        # Create deprecation issue for entities marked as deprecated
-                        if (
-                            hasattr(description, "deprecated_by")
-                            and description.deprecated_by
-                        ):
-                            ir.async_create_issue(
-                                hass,
-                                DOMAIN,
-                                f"deprecated_switch_{device_id}_{description.key}",
-                                is_fixable=False,
-                                issue_domain=DOMAIN,
-                                severity=ir.IssueSeverity.WARNING,
-                                translation_key="deprecated_switch_replaced_by_other",
-                                translation_placeholders={
-                                    "device_name": device.name,
-                                    "entity_type": description.deprecated_by,
-                                    "switch_name": description.translation_key
-                                    or description.key,
-                                },
-                            )
-
-                        entities.append(
-                            TuyaSwitchEntity(device, hass_data.manager, description)
-                        )
+                entities.extend(
+                    TuyaSwitchEntity(device, hass_data.manager, description)
+                    for description in descriptions
+                    if description.key in device.status
+                )
 
         async_add_entities(entities)
 
@@ -921,6 +900,32 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
+
+    async def async_added_to_hass(self) -> None:
+        """Called when entity is added to Home Assistant."""
+        await super().async_added_to_hass()
+
+        # Create deprecation issue for entities marked as deprecated
+        # Only show deprecation message if the entity is enabled
+        if (
+            hasattr(self.entity_description, "deprecated_by")
+            and self.entity_description.deprecated_by
+            and self.enabled  # Only show message for enabled entities
+        ):
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"deprecated_switch_{self.device.id}_{self.entity_description.key}",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_switch_replaced_by_other",
+                translation_placeholders={
+                    "device_name": str(self.device.name),
+                    "entity_type": self.entity_description.deprecated_by,
+                    "switch_name": str(self.name),
+                },
+            )
 
     @property
     def is_on(self) -> bool:
