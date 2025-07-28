@@ -1,4 +1,4 @@
-"""Test the Ituran device_tracker."""
+"""Test the Ituran binary sensor platform."""
 
 from unittest.mock import AsyncMock, patch
 
