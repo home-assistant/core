@@ -14,7 +14,7 @@ from homeassistant.const import (
     STATE_ON,
     EntityCategory,
 )
-from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
@@ -482,10 +482,10 @@ async def test_async_track_target_selector_state_change_event(
     hass: HomeAssistant,
 ) -> None:
     """Test async_track_target_selector_state_change_event with multiple targets."""
-    events: list[Event[EventStateChangedData]] = []
+    events: list[target.TargetStateChangedData] = []
 
     @callback
-    def state_change_callback(event: Event[EventStateChangedData]):
+    def state_change_callback(event: target.TargetStateChangedData):
         """Handle state change events."""
         events.append(event)
 
@@ -504,8 +504,10 @@ async def test_async_track_target_selector_state_change_event(
         assert len(events) == len(entities_to_assert_change)
         entities_seen = set()
         for event in events:
-            entities_seen.add(event.data["entity_id"])
-            assert event.data["new_state"].state == last_state
+            state_change_event = event.state_change_event
+            entities_seen.add(state_change_event.data["entity_id"])
+            assert state_change_event.data["new_state"].state == last_state
+            assert event.targeted_entity_ids == set(entities_to_assert_change)
         assert entities_seen == set(entities_to_assert_change)
         events.clear()
 
