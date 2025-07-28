@@ -1,6 +1,8 @@
 """Common items for testing the zimi component."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, create_autospec, patch
+
+from zcc.device import ControlPointDevice
 
 from homeassistant.components.zimi.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -35,7 +37,7 @@ def mock_api_device(
 ) -> MagicMock:
     """Mock a Zimi ControlPointDevice which is used in the zcc API with defaults."""
 
-    mock_api_device = MagicMock()
+    mock_api_device = create_autospec(ControlPointDevice)
 
     mock_api_device.identifier = ENTITY_INFO["id"]
     mock_api_device.room = ENTITY_INFO["room"]
@@ -52,19 +54,8 @@ def mock_api_device(
 
     mock_api_device.manufacture_info = mock_manfacture_info
 
-    mock_api_device.subscribe = AsyncMock()
-
     mock_api_device.brightness = 0
     mock_api_device.percentage = 0
-
-    mock_api_device.close_door = AsyncMock()
-    mock_api_device.open_door = AsyncMock()
-    mock_api_device.open_to_percentage = AsyncMock()
-
-    mock_api_device.set_brightness = AsyncMock()
-    mock_api_device.set_fanspeed = AsyncMock()
-    mock_api_device.turn_on = AsyncMock()
-    mock_api_device.turn_off = AsyncMock()
 
     return mock_api_device
 
