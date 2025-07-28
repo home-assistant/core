@@ -12,6 +12,7 @@ from psnawp_api.core.psnawp_exceptions import (
     PSNAWPClientError,
     PSNAWPServerError,
 )
+from psnawp_api.models.group.group_datatypes import GroupDetails
 from psnawp_api.models.trophies import TrophyTitle
 
 from homeassistant.config_entries import ConfigEntry
@@ -33,6 +34,7 @@ class PlaystationNetworkRuntimeData:
 
     user_data: PlaystationNetworkUserDataCoordinator
     trophy_titles: PlaystationNetworkTrophyTitlesCoordinator
+    groups: PlaystationNetworkGroupsUpdateCoordinator
 
 
 class PlayStationNetworkBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
@@ -120,3 +122,21 @@ class PlaystationNetworkTrophyTitlesCoordinator(
         )
         await self.config_entry.runtime_data.user_data.async_request_refresh()
         return self.psn.trophy_titles
+
+
+class PlaystationNetworkGroupsUpdateCoordinator(
+    PlayStationNetworkBaseCoordinator[dict[str, GroupDetails]]
+):
+    """Groups data update coordinator for PSN."""
+
+    _update_interval = timedelta(hours=3)
+
+    async def update_data(self) -> dict[str, GroupDetails]:
+        """Update groups data."""
+        return await self.hass.async_add_executor_job(
+            lambda: {
+                group_info.group_id: group_info.get_group_information()
+                for group_info in self.psn.client.get_groups()
+                if not group_info.group_id.startswith("~")
+            }
+        )

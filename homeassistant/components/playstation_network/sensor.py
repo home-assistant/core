@@ -18,7 +18,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .coordinator import PlaystationNetworkConfigEntry, PlaystationNetworkData
+from .coordinator import (
+    PlaystationNetworkConfigEntry,
+    PlaystationNetworkData,
+    PlaystationNetworkUserDataCoordinator,
+)
 from .entity import PlaystationNetworkServiceEntity
 
 PARALLEL_UPDATES = 0
@@ -145,6 +149,7 @@ class PlaystationNetworkSensorEntity(
     """Representation of a PlayStation Network sensor entity."""
 
     entity_description: PlaystationNetworkSensorEntityDescription
+    coordinator: PlaystationNetworkUserDataCoordinator
 
     @property
     def native_value(self) -> StateType | datetime:

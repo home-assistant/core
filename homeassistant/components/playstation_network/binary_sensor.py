@@ -13,7 +13,11 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import PlaystationNetworkConfigEntry, PlaystationNetworkData
+from .coordinator import (
+    PlaystationNetworkConfigEntry,
+    PlaystationNetworkData,
+    PlaystationNetworkUserDataCoordinator,
+)
 from .entity import PlaystationNetworkServiceEntity
 
 PARALLEL_UPDATES = 0
@@ -63,6 +67,7 @@ class PlaystationNetworkBinarySensorEntity(
     """Representation of a PlayStation Network binary sensor entity."""
 
     entity_description: PlaystationNetworkBinarySensorEntityDescription
+    coordinator: PlaystationNetworkUserDataCoordinator
 
     @property
     def is_on(self) -> bool:
