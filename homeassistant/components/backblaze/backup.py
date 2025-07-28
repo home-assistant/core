@@ -515,9 +515,10 @@ class BackblazeBackupAgent(BackupAgent):
                     (
                         archive_file_version
                         for archive_file_name, archive_file_version in all_files_in_prefix.items()
-                        if archive_file_name
-                        == found_metadata_file_name.removesuffix(METADATA_FILE_SUFFIX)
-                        and not archive_file_name.endswith(METADATA_FILE_SUFFIX)
+                        if archive_file_name.startswith(
+                            found_metadata_file_name.removesuffix(METADATA_FILE_SUFFIX)
+                        )
+                        and archive_file_name.endswith(".tar")
                     ),
                     None,
                 )
@@ -606,7 +607,7 @@ class BackblazeBackupAgent(BackupAgent):
                     # and is not a metadata file itself
                     if archive_file_name.startswith(
                         self._prefix + backup_id
-                    ) and not archive_file_name.endswith(METADATA_FILE_SUFFIX):
+                    ) and archive_file_name.endswith(".tar"):
                         found_backup_archive_file = archive_file_version
                         _LOGGER.debug(
                             "Matched metadata file '%s' with archive file '%s'",

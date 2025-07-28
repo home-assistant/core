@@ -154,6 +154,7 @@ def b2_fixture():
                 # It should provide an iter_content method that yields the content
                 mock_response = Mock()
                 mock_response.iter_content.return_value = iter([self._content])
+                mock_response.content = self._content  # Add this line
                 return mock_response
 
         # Define a mock for download_file_by_id on RawSimulator
