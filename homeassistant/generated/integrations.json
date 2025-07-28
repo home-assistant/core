@@ -1171,7 +1171,7 @@
     "datadog": {
       "name": "Datadog",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "ddwrt": {
@@ -4639,7 +4639,7 @@
       "iot_class": "cloud_polling"
     },
     "openai_conversation": {
-      "name": "OpenAI Conversation",
+      "name": "OpenAI",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
@@ -7665,6 +7665,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "zbox_hub": {
+      "name": "Z-Box Hub",
+      "integration_type": "virtual",
+      "supported_by": "fibaro"
     },
     "zengge": {
       "name": "Zengge",
