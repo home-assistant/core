@@ -23,9 +23,10 @@ from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import ConfigurationStyle
+from .conftest import ConfigurationStyle, async_get_flow_preview_state
 
 from tests.common import MockConfigEntry, assert_setup_component, mock_restore_cache
+from tests.conftest import WebSocketGenerator
 
 TEST_OBJECT_ID = "test_template_panel"
 TEST_ENTITY_ID = f"alarm_control_panel.{TEST_OBJECT_ID}"
@@ -915,3 +916,19 @@ async def test_device_id(
     template_entity = entity_registry.async_get("alarm_control_panel.my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
+
+
+async def test_flow_preview(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the config flow preview."""
+
+    state = await async_get_flow_preview_state(
+        hass,
+        hass_ws_client,
+        ALARM_DOMAIN,
+        {"name": "My template", "state": "{{ 'disarmed' }}"},
+    )
+
+    assert state["state"] == AlarmControlPanelState.DISARMED

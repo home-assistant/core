@@ -5,6 +5,7 @@ from functools import partial
 
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
+    EnumWithDeprecatedMembers,
     all_with_deprecated_constants,
     check_if_deprecated_constant,
     dir_with_deprecated_constants,
@@ -50,7 +51,13 @@ ATTR_SOUND_MODE_LIST = "sound_mode_list"
 DOMAIN = "media_player"
 
 
-class MediaPlayerState(StrEnum):
+class MediaPlayerState(
+    StrEnum,
+    metaclass=EnumWithDeprecatedMembers,
+    deprecated={
+        "STANDBY": ("MediaPlayerState.OFF or MediaPlayerState.IDLE", "2026.8.0"),
+    },
+):
     """State of media player entities."""
 
     OFF = "off"

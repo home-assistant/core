@@ -263,7 +263,7 @@ WINDOW_COVERING_SLAT_CURRENT_VALUE_SCHEMA = ZWaveValueDiscoverySchema(
 )
 
 # For device class mapping see:
-# https://github.com/zwave-js/node-zwave-js/blob/master/packages/config/config/deviceClasses.json
+# https://github.com/zwave-js/node-zwave-js/blob/master/packages/config/config/
 DISCOVERY_SCHEMAS = [
     # ====== START OF DEVICE SPECIFIC MAPPING SCHEMAS =======
     # Honeywell 39358 In-Wall Fan Control using switch multilevel CC
@@ -291,12 +291,16 @@ DISCOVERY_SCHEMAS = [
             FanValueMapping(speeds=[(1, 33), (34, 67), (68, 99)]),
         ),
     ),
-    # GE/Jasco - In-Wall Smart Fan Control - 14287 / 55258 / ZW4002
+    # GE/Jasco - In-Wall Smart Fan Controls
     ZWaveDiscoverySchema(
         platform=Platform.FAN,
         hint="has_fan_value_mapping",
         manufacturer_id={0x0063},
-        product_id={0x3131, 0x3337},
+        product_id={
+            0x3131,
+            0x3337,  # 14287 / 55258 / ZW4002
+            0x3533,  # 58446 / ZWA4013
+        },
         product_type={0x4944},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         data_template=FixedFanValueMappingDataTemplate(

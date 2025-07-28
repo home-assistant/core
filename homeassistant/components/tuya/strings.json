@@ -56,6 +56,15 @@
       },
       "tilt": {
         "name": "Tilt"
+      },
+      "tankfull": {
+        "name": "Tank full"
+      },
+      "defrost": {
+        "name": "Defrost"
+      },
+      "wet": {
+        "name": "Wet"
       }
     },
     "button": {
@@ -210,6 +219,18 @@
       },
       "down_delay": {
         "name": "Down delay"
+      },
+      "temp_correction": {
+        "name": "Temperature correction"
+      },
+      "arm_delay": {
+        "name": "Arm delay"
+      },
+      "alarm_delay": {
+        "name": "Alarm delay"
+      },
+      "siren_duration": {
+        "name": "Siren duration"
       }
     },
     "select": {
@@ -476,6 +497,13 @@
           "level_9": "Level 9",
           "level_10": "High"
         }
+      },
+      "odor_elimination_mode": {
+        "name": "Odor elimination mode",
+        "state": {
+          "smart": "Smart",
+          "interim": "Interim"
+        }
       }
     },
     "sensor": {
@@ -688,6 +716,15 @@
       },
       "water_time": {
         "name": "Water usage duration"
+      },
+      "odor_elimination_status": {
+        "name": "Status",
+        "state": {
+          "work": "Working",
+          "standby": "[%key:common::state::standby%]",
+          "charging": "[%key:common::state::charging%]",
+          "charge_done": "Charge done"
+        }
       }
     },
     "switch": {
@@ -897,6 +934,12 @@
       },
       "sterilization": {
         "name": "Sterilization"
+      },
+      "arm_beep": {
+        "name": "Arm beep"
+      },
+      "siren": {
+        "name": "Siren"
       }
     }
   }

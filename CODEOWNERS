@@ -684,8 +684,8 @@ build.json @home-assistant/supervisor
 /tests/components/husqvarna_automower/ @Thomas55555
 /homeassistant/components/husqvarna_automower_ble/ @alistair23
 /tests/components/husqvarna_automower_ble/ @alistair23
-/homeassistant/components/huum/ @frwickst
-/tests/components/huum/ @frwickst
+/homeassistant/components/huum/ @frwickst @vincentwolsink
+/tests/components/huum/ @frwickst @vincentwolsink
 /homeassistant/components/hvv_departures/ @vigonotion
 /tests/components/hvv_departures/ @vigonotion
 /homeassistant/components/hydrawise/ @dknowles2 @thomaskistler @ptcryan
@@ -1102,6 +1102,8 @@ build.json @home-assistant/supervisor
 /tests/components/onvif/ @hunterjm @jterrace
 /homeassistant/components/open_meteo/ @frenck
 /tests/components/open_meteo/ @frenck
+/homeassistant/components/open_router/ @joostlek
+/tests/components/open_router/ @joostlek
 /homeassistant/components/openai_conversation/ @balloob
 /tests/components/openai_conversation/ @balloob
 /homeassistant/components/openerz/ @misialq
@@ -1658,6 +1660,8 @@ build.json @home-assistant/supervisor
 /tests/components/upnp/ @StevenLooman
 /homeassistant/components/uptime/ @frenck
 /tests/components/uptime/ @frenck
+/homeassistant/components/uptime_kuma/ @tr4nt0r
+/tests/components/uptime_kuma/ @tr4nt0r
 /homeassistant/components/uptimerobot/ @ludeeus @chemelli74
 /tests/components/uptimerobot/ @ludeeus @chemelli74
 /homeassistant/components/usb/ @bdraco
@@ -1756,8 +1760,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/wirelesstag/ @sergeymaysak
 /homeassistant/components/withings/ @joostlek
 /tests/components/withings/ @joostlek
-/homeassistant/components/wiz/ @sbidy
-/tests/components/wiz/ @sbidy
+/homeassistant/components/wiz/ @sbidy @arturpragacz
+/tests/components/wiz/ @sbidy @arturpragacz
 /homeassistant/components/wled/ @frenck
 /tests/components/wled/ @frenck
 /homeassistant/components/wmspro/ @mback2k

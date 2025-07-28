@@ -26,7 +26,6 @@ async def test_generic_datetime_entity(
             object_id="mydatetime",
             key=1,
             name="my datetime",
-            unique_id="my_datetime",
         )
     ]
     states = [DateTimeState(key=1, epoch_seconds=1713270896)]
@@ -50,7 +49,7 @@ async def test_generic_datetime_entity(
         },
         blocking=True,
     )
-    mock_client.datetime_command.assert_has_calls([call(1, 946689825)])
+    mock_client.datetime_command.assert_has_calls([call(1, 946689825, device_id=0)])
     mock_client.datetime_command.reset_mock()
 
 
@@ -65,7 +64,6 @@ async def test_generic_datetime_missing_state(
             object_id="mydatetime",
             key=1,
             name="my datetime",
-            unique_id="my_datetime",
         )
     ]
     states = [DateTimeState(key=1, missing_state=True)]

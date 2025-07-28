@@ -25,7 +25,8 @@ from homeassistant.util import color as color_util
 
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType, WorkMode
-from .entity import IntegerTypeData, TuyaEntity
+from .entity import TuyaEntity
+from .models import IntegerTypeData
 from .util import remap_value
 
 
@@ -235,6 +236,15 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
     # Air conditioner
     # https://developer.tuya.com/en/docs/iot/categorykt?id=Kaiuz0z71ov2n
     "kt": (
+        TuyaLightEntityDescription(
+            key=DPCode.LIGHT,
+            translation_key="backlight",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Undocumented tower fan
+    # https://github.com/orgs/home-assistant/discussions/329
+    "ks": (
         TuyaLightEntityDescription(
             key=DPCode.LIGHT,
             translation_key="backlight",

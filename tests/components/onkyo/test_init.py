@@ -33,26 +33,6 @@ async def test_load_unload_entry(
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_update_entry(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-) -> None:
-    """Test update options."""
-
-    with patch.object(hass.config_entries, "async_reload", return_value=True):
-        config_entry = create_empty_config_entry()
-        receiver_info = create_receiver_info(1)
-        await setup_integration(hass, config_entry, receiver_info)
-
-        # Force option change
-        assert hass.config_entries.async_update_entry(
-            config_entry, options={"option": "new_value"}
-        )
-        await hass.async_block_till_done()
-
-        hass.config_entries.async_reload.assert_called_with(config_entry.entry_id)
-
-
 async def test_no_connection(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from abc import abstractmethod
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -10,6 +12,7 @@ from psnawp_api.core.psnawp_exceptions import (
     PSNAWPClientError,
     PSNAWPServerError,
 )
+from psnawp_api.models.trophies import TrophyTitle
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -21,13 +24,22 @@ from .helpers import PlaystationNetwork, PlaystationNetworkData
 
 _LOGGER = logging.getLogger(__name__)
 
-type PlaystationNetworkConfigEntry = ConfigEntry[PlaystationNetworkCoordinator]
+type PlaystationNetworkConfigEntry = ConfigEntry[PlaystationNetworkRuntimeData]
 
 
-class PlaystationNetworkCoordinator(DataUpdateCoordinator[PlaystationNetworkData]):
-    """Data update coordinator for PSN."""
+@dataclass
+class PlaystationNetworkRuntimeData:
+    """Dataclass holding PSN runtime data."""
+
+    user_data: PlaystationNetworkUserDataCoordinator
+    trophy_titles: PlaystationNetworkTrophyTitlesCoordinator
+
+
+class PlayStationNetworkBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
+    """Base coordinator for PSN."""
 
     config_entry: PlaystationNetworkConfigEntry
+    _update_inverval: timedelta
 
     def __init__(
         self,
@@ -41,16 +53,43 @@ class PlaystationNetworkCoordinator(DataUpdateCoordinator[PlaystationNetworkData
             name=DOMAIN,
             logger=_LOGGER,
             config_entry=config_entry,
-            update_interval=timedelta(seconds=30),
+            update_interval=self._update_interval,
         )
 
         self.psn = psn
+
+    @abstractmethod
+    async def update_data(self) -> _DataT:
+        """Update coordinator data."""
+
+    async def _async_update_data(self) -> _DataT:
+        """Get the latest data from the PSN."""
+        try:
+            return await self.update_data()
+        except PSNAWPAuthenticationError as error:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="not_ready",
+            ) from error
+        except (PSNAWPServerError, PSNAWPClientError) as error:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            ) from error
+
+
+class PlaystationNetworkUserDataCoordinator(
+    PlayStationNetworkBaseCoordinator[PlaystationNetworkData]
+):
+    """Data update coordinator for PSN."""
+
+    _update_interval = timedelta(seconds=30)
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
 
         try:
-            await self.psn.get_user()
+            await self.psn.async_setup()
         except PSNAWPAuthenticationError as error:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -62,17 +101,22 @@ class PlaystationNetworkCoordinator(DataUpdateCoordinator[PlaystationNetworkData
                 translation_key="update_failed",
             ) from error
 
-    async def _async_update_data(self) -> PlaystationNetworkData:
+    async def update_data(self) -> PlaystationNetworkData:
         """Get the latest data from the PSN."""
-        try:
-            return await self.psn.get_data()
-        except PSNAWPAuthenticationError as error:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="not_ready",
-            ) from error
-        except (PSNAWPServerError, PSNAWPClientError) as error:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_failed",
-            ) from error
+        return await self.psn.get_data()
+
+
+class PlaystationNetworkTrophyTitlesCoordinator(
+    PlayStationNetworkBaseCoordinator[list[TrophyTitle]]
+):
+    """Trophy titles data update coordinator for PSN."""
+
+    _update_interval = timedelta(days=1)
+
+    async def update_data(self) -> list[TrophyTitle]:
+        """Update trophy titles data."""
+        self.psn.trophy_titles = await self.hass.async_add_executor_job(
+            lambda: list(self.psn.user.trophy_titles())
+        )
+        await self.config_entry.runtime_data.user_data.async_request_refresh()
+        return self.psn.trophy_titles

@@ -34,6 +34,13 @@
         'unit': None,
         'value': None,
       }),
+      'hydrological_alert': dict({
+        'level': 'yellow',
+        'probability': 80,
+        'valid_from': '2024-04-27T07:00:00+00:00',
+        'valid_to': '2024-04-28T11:00:00+00:00',
+        'value': 'rapid_water_level_rise',
+      }),
       'latitude': None,
       'longitude': None,
       'river': 'River Name',

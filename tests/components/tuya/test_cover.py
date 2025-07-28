@@ -55,3 +55,36 @@ async def test_platform_setup_no_discovery(
     assert not er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["cl_am43_corded_motor_zigbee_cover"],
+)
+@pytest.mark.parametrize(
+    ("percent_control", "percent_state"),
+    [
+        (100, 52),
+        (0, 100),
+        (50, 25),
+    ],
+)
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
+async def test_percent_state_on_cover(
+    hass: HomeAssistant,
+    mock_manager: ManagerCompat,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    percent_control: int,
+    percent_state: int,
+) -> None:
+    """Test percent_state attribute on the cover entity."""
+    mock_device.status["percent_control"] = percent_control
+    # 100 is closed and 0 is open for Tuya covers
+    mock_device.status["percent_state"] = 100 - percent_state
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    cover_state = hass.states.get("cover.kitchen_blinds_curtain")
+    assert cover_state is not None, "cover.kitchen_blinds_curtain does not exist"
+    assert cover_state.attributes["current_position"] == percent_state

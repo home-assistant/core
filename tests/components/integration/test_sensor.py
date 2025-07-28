@@ -294,23 +294,35 @@ async def test_restore_state_failed(hass: HomeAssistant, extra_attributes) -> No
     assert state.state == STATE_UNKNOWN
 
 
+@pytest.mark.parametrize("extra_config", [{}, {"max_sub_interval": {"minutes": 9999}}])
 @pytest.mark.parametrize("force_update", [False, True])
 @pytest.mark.parametrize(
     "sequence",
     [
+        # time, value, attributes, expected
         (
-            (20, 10, 1.67),
-            (30, 30, 5.0),
-            (40, 5, 7.92),
-            (50, 5, 8.75),
-            (60, 0, 9.17),
+            (0, 0, {}, 0),
+            (20, 10, {}, 1.67),
+            (30, 30, {}, 5.0),
+            (40, 5, {}, 7.92),
+            (50, 5, {}, 8.75),  # This fires a state report
+            (60, 0, {}, 9.17),
+        ),
+        (
+            (0, 0, {}, 0),
+            (20, 10, {}, 1.67),
+            (30, 30, {}, 5.0),
+            (40, 5, {}, 7.92),
+            (50, 5, {"foo": "bar"}, 8.75),  # This fires a state change
+            (60, 0, {}, 9.17),
         ),
     ],
 )
 async def test_trapezoidal(
     hass: HomeAssistant,
-    sequence: tuple[tuple[float, float, float], ...],
+    sequence: tuple[tuple[float, float, dict[str, Any], float], ...],
     force_update: bool,
+    extra_config: dict[str, Any],
 ) -> None:
     """Test integration sensor state."""
     config = {
@@ -320,23 +332,29 @@ async def test_trapezoidal(
             "source": "sensor.power",
             "round": 2,
         }
+        | extra_config
     }
 
     assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.integration")
+    assert state.state == STATE_UNKNOWN
 
     entity_id = config["sensor"]["source"]
     hass.states.async_set(entity_id, 0, {})
     await hass.async_block_till_done()
+    state = hass.states.get("sensor.integration")
+    assert state.state == STATE_UNKNOWN
 
     start_time = dt_util.utcnow()
     with freeze_time(start_time) as freezer:
         # Testing a power sensor with non-monotonic intervals and values
-        for time, value, expected in sequence:
+        for time, value, extra_attributes, expected in sequence:
             freezer.move_to(start_time + timedelta(minutes=time))
             hass.states.async_set(
                 entity_id,
                 value,
-                {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT},
+                {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT} | extra_attributes,
                 force_update=force_update,
             )
             await hass.async_block_till_done()
@@ -346,25 +364,35 @@ async def test_trapezoidal(
     assert state.attributes.get("unit_of_measurement") == UnitOfEnergy.KILO_WATT_HOUR
 
 
+@pytest.mark.parametrize("extra_config", [{}, {"max_sub_interval": {"minutes": 9999}}])
 @pytest.mark.parametrize("force_update", [False, True])
 @pytest.mark.parametrize(
     "sequence",
     [
+        # time, value, attributes, expected
         (
-            (20, 10, 0.0),
-            (30, 30, 1.67),
-            (40, 5, 6.67),
-            (50, 5, 7.5),
-            (60, 0, 8.33),
+            (20, 10, {}, 0.0),
+            (30, 30, {}, 1.67),
+            (40, 5, {}, 6.67),
+            (50, 5, {}, 7.5),  # This fires a state report
+            (60, 0, {}, 8.33),
+        ),
+        (
+            (20, 10, {}, 0.0),
+            (30, 30, {}, 1.67),
+            (40, 5, {}, 6.67),
+            (50, 5, {"foo": "bar"}, 7.5),  # This fires a state change
+            (60, 0, {}, 8.33),
         ),
     ],
 )
 async def test_left(
     hass: HomeAssistant,
-    sequence: tuple[tuple[float, float, float], ...],
+    sequence: tuple[tuple[float, float, dict[str, Any], float], ...],
     force_update: bool,
+    extra_config: dict[str, Any],
 ) -> None:
-    """Test integration sensor state with left reimann method."""
+    """Test integration sensor state with left Riemann method."""
     config = {
         "sensor": {
             "platform": "integration",
@@ -373,25 +401,31 @@ async def test_left(
             "source": "sensor.power",
             "round": 2,
         }
+        | extra_config
     }
 
     assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.integration")
+    assert state.state == STATE_UNKNOWN
 
     entity_id = config["sensor"]["source"]
     hass.states.async_set(
         entity_id, 0, {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT}
     )
     await hass.async_block_till_done()
+    state = hass.states.get("sensor.integration")
+    assert state.state == STATE_UNKNOWN
 
     # Testing a power sensor with non-monotonic intervals and values
     start_time = dt_util.utcnow()
     with freeze_time(start_time) as freezer:
-        for time, value, expected in sequence:
+        for time, value, extra_attributes, expected in sequence:
             freezer.move_to(start_time + timedelta(minutes=time))
             hass.states.async_set(
                 entity_id,
                 value,
-                {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT},
+                {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT} | extra_attributes,
                 force_update=force_update,
             )
             await hass.async_block_till_done()
@@ -401,25 +435,34 @@ async def test_left(
     assert state.attributes.get("unit_of_measurement") == UnitOfEnergy.KILO_WATT_HOUR
 
 
+@pytest.mark.parametrize("extra_config", [{}, {"max_sub_interval": {"minutes": 9999}}])
 @pytest.mark.parametrize("force_update", [False, True])
 @pytest.mark.parametrize(
     "sequence",
     [
         (
-            (20, 10, 3.33),
-            (30, 30, 8.33),
-            (40, 5, 9.17),
-            (50, 5, 10.0),
-            (60, 0, 10.0),
+            (20, 10, {}, 3.33),
+            (30, 30, {}, 8.33),
+            (40, 5, {}, 9.17),
+            (50, 5, {}, 10.0),  # This fires a state report
+            (60, 0, {}, 10.0),
+        ),
+        (
+            (20, 10, {}, 3.33),
+            (30, 30, {}, 8.33),
+            (40, 5, {}, 9.17),
+            (50, 5, {"foo": "bar"}, 10.0),  # This fires a state change
+            (60, 0, {}, 10.0),
         ),
     ],
 )
 async def test_right(
     hass: HomeAssistant,
-    sequence: tuple[tuple[float, float, float], ...],
+    sequence: tuple[tuple[float, float, dict[str, Any], float], ...],
     force_update: bool,
+    extra_config: dict[str, Any],
 ) -> None:
-    """Test integration sensor state with left reimann method."""
+    """Test integration sensor state with right Riemann method."""
     config = {
         "sensor": {
             "platform": "integration",
@@ -428,25 +471,31 @@ async def test_right(
             "source": "sensor.power",
             "round": 2,
         }
+        | extra_config
     }
 
     assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.integration")
+    assert state.state == STATE_UNKNOWN
 
     entity_id = config["sensor"]["source"]
     hass.states.async_set(
         entity_id, 0, {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT}
     )
     await hass.async_block_till_done()
+    state = hass.states.get("sensor.integration")
+    assert state.state == STATE_UNKNOWN
 
     # Testing a power sensor with non-monotonic intervals and values
     start_time = dt_util.utcnow()
     with freeze_time(start_time) as freezer:
-        for time, value, expected in sequence:
+        for time, value, extra_attributes, expected in sequence:
             freezer.move_to(start_time + timedelta(minutes=time))
             hass.states.async_set(
                 entity_id,
                 value,
-                {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT},
+                {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT} | extra_attributes,
                 force_update=force_update,
             )
             await hass.async_block_till_done()

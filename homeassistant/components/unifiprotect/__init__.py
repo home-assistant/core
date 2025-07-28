@@ -114,7 +114,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
         hass.config_entries.async_update_entry(entry, unique_id=nvr_info.mac)
 
     entry.runtime_data = data_service
-    entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, data_service.async_stop)
     )
@@ -137,11 +136,6 @@ async def _async_setup_entry(
     hass.http.register_view(SnapshotProxyView(hass))
     hass.http.register_view(VideoProxyView(hass))
     hass.http.register_view(VideoEventProxyView(hass))
-
-
-async def _async_options_updated(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
-    """Update options."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:

@@ -7,7 +7,6 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import switch, template
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.template.switch import rewrite_legacy_to_modern_conf
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -18,7 +17,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant, ServiceCall, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.template import Template
 from homeassistant.setup import async_setup_component
 
 from .conftest import ConfigurationStyle, async_get_flow_preview_state
@@ -304,37 +302,6 @@ async def setup_single_attribute_optimistic_switch(
                 **extra,
             },
         )
-
-
-async def test_legacy_to_modern_config(hass: HomeAssistant) -> None:
-    """Test the conversion of legacy template to modern template."""
-    config = {
-        "foo": {
-            "friendly_name": "foo bar",
-            "value_template": "{{ 1 == 1 }}",
-            "unique_id": "foo-bar-switch",
-            "icon_template": "{{ 'mdi.abc' }}",
-            "entity_picture_template": "{{ 'mypicture.jpg' }}",
-            "availability_template": "{{ 1 == 1 }}",
-            **SWITCH_ACTIONS,
-        }
-    }
-    altered_configs = rewrite_legacy_to_modern_conf(hass, config)
-
-    assert len(altered_configs) == 1
-    assert [
-        {
-            "availability": Template("{{ 1 == 1 }}", hass),
-            "icon": Template("{{ 'mdi.abc' }}", hass),
-            "name": Template("foo bar", hass),
-            "object_id": "foo",
-            "picture": Template("{{ 'mypicture.jpg' }}", hass),
-            "turn_off": SWITCH_TURN_OFF,
-            "turn_on": SWITCH_TURN_ON,
-            "unique_id": "foo-bar-switch",
-            "state": Template("{{ 1 == 1 }}", hass),
-        }
-    ] == altered_configs
 
 
 @pytest.mark.parametrize(("count", "state_template"), [(1, "{{ True }}")])

@@ -120,7 +120,6 @@ async def _test_setup_and_signaling(
         [
             "rtsp://stream",
             f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
-            f"ffmpeg:{camera.entity_id}#video=mjpeg",
         ],
     )
 
@@ -139,7 +138,6 @@ async def _test_setup_and_signaling(
         [
             "rtsp://stream",
             f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
-            f"ffmpeg:{camera.entity_id}#video=mjpeg",
         ],
     )
 
@@ -670,3 +668,31 @@ async def test_async_get_image(
         HomeAssistantError, match="Stream source is not supported by go2rtc"
     ):
         await async_get_image(hass, camera.entity_id)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_generic_workaround(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test workaround for generic integration cameras."""
+    camera = init_test_integration
+    assert isinstance(camera._webrtc_provider, WebRTCProvider)
+
+    image_bytes = load_fixture_bytes("snapshot.jpg", DOMAIN)
+
+    rest_client.get_jpeg_snapshot.return_value = image_bytes
+    camera.set_stream_source("https://my_stream_url.m3u8")
+
+    with patch.object(camera.platform, "platform_name", "generic"):
+        image = await async_get_image(hass, camera.entity_id)
+        assert image.content == image_bytes
+
+    rest_client.streams.add.assert_called_once_with(
+        camera.entity_id,
+        [
+            "ffmpeg:https://my_stream_url.m3u8",
+            f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
+        ],
+    )
