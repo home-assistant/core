@@ -24,7 +24,15 @@ __all__ = [
     "Sysvar",
 ]
 
-from .data import LIPAction, LIPGroupState, LIPLedState, LIPMessage, LIPMode
+from .data import (
+    LIPAction,
+    LIPCommand,
+    LIPGroupState,
+    LIPLedState,
+    LIPMessage,
+    LIPMode,
+    LIPOperation,
+)
 from .lutron_db import (
     Button,
     Device,
@@ -110,24 +118,12 @@ class LutronController:
         component_number: int | None,
         callback: Callable[[Any], None],
     ) -> None:
-        """Unsubscribe a callback from a specific integration_id.
-
-        Args:
-            integration_id: The integration ID to unsubscribe from
-            component_number: The component number (optional)
-            callback: The callback function to remove
-
-        """
+        """Unsubscribe from updates for a specific integration_id and component_number."""
         key = (integration_id, component_number)
-        if key in self._subscribers and callback in self._subscribers[key]:
+        if key in self._subscribers:
             self._subscribers[key].remove(callback)
             if not self._subscribers[key]:
                 del self._subscribers[key]
-            _LOGGER.debug(
-                "Unsubscribed from integration_id=%d, component_number=%s",
-                integration_id,
-                component_number,
-            )
 
     def _dispatch_message(self, msg: LIPMessage):
         """Call the function in the subscriber entity."""
@@ -153,13 +149,34 @@ class LutronController:
                     # Optionally log or handle unknown message types
                     _LOGGER.debug("Unhandled LIP message: %s", msg)
 
+    async def execute_command(self, command: LIPCommand) -> None:
+        """Execute a LIPCommand."""
+        await self._ensure_connected()
+
+        # Build args list
+        args: list[Any] = [command.integration_id]
+        if command.component_number is not None:
+            args.append(command.component_number)
+        if command.value is not None:
+            args.append(command.value)
+        if command.fade_time is not None:
+            args.append(command.fade_time)
+
+        # Use the appropriate method based on operation
+        if command.operation == LIPOperation.EXECUTE:
+            await self.lip.action(command.mode, *args)
+        elif command.operation == LIPOperation.QUERY:
+            await self.lip.query(command.mode, *args)
+        else:
+            raise ValueError(f"Unsupported operation: {command.operation}")
+
     async def action(self, mode: LIPMode, *args):
-        """Send an action command."""
+        """Send an action command (legacy method)."""
         await self._ensure_connected()
         await self.lip.action(mode, *args)
 
     async def query(self, mode: LIPMode, *args):
-        """Send a query command."""
+        """Send a query command (legacy method)."""
         await self._ensure_connected()
         await self.lip.query(mode, *args)
 

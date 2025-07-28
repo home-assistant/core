@@ -24,7 +24,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Lutron fan platform.
 
-    Adds fan controls from the Main Repeater associated with the config_entry as
+    Adds fans from the Main Repeater associated with the config_entry as
     fan entities.
     """
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
@@ -63,7 +63,7 @@ class LutronFan(LutronOutput, FanEntity):
         """Set the speed of the fan, as a percentage."""
         if percentage > 0:
             self._prev_percentage = percentage
-        await self._lutron_device.set_level(percentage)
+        await self._execute_device_command(self._lutron_device.set_level, percentage)
 
     async def async_turn_on(
         self,
@@ -81,15 +81,17 @@ class LutronFan(LutronOutput, FanEntity):
             new_percentage = 67
         else:
             new_percentage = self._prev_percentage
-        await self._lutron_device.set_level(new_percentage)
+        await self._execute_device_command(
+            self._lutron_device.set_level, new_percentage
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        await self._lutron_device.set_level(0)
+        await self._execute_device_command(self._lutron_device.set_level, 0)
 
     async def _request_state(self) -> None:
         """Request the state from the device."""
-        await self._lutron_device.get_level()
+        await self._execute_device_command(self._lutron_device.get_level)
 
     def _update_callback(self, value: int):
         """Update the state attributes."""

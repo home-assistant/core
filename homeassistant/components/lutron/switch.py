@@ -54,15 +54,15 @@ class LutronSwitch(LutronOutput, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self._lutron_device.set_level(100)
+        await self._execute_device_command(self._lutron_device.set_level, 100)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self._lutron_device.set_level(0)
+        await self._execute_device_command(self._lutron_device.set_level, 0)
 
     async def _request_state(self):
         """Request the state of the switch."""
-        await self._lutron_device.get_level()
+        await self._execute_device_command(self._lutron_device.get_level)
 
     def _update_callback(self, value: float):
         """Set switch state."""
@@ -88,18 +88,19 @@ class LutronLedSwitch(LutronKeypadComponent, SwitchEntity):
         self._attr_name = lutron_device.name
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn the light on."""
-        await self._lutron_device.turn_on()
+        """Turn the LED on."""
+        await self._execute_device_command(self._lutron_device.turn_on)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn the light off."""
-        await self._lutron_device.turn_off()
+        """Turn the LED off."""
+        await self._execute_device_command(self._lutron_device.turn_off)
 
     async def _request_state(self):
-        await self._lutron_device.get_state()
+        """Request the state of the LED."""
+        await self._execute_device_command(self._lutron_device.get_state)
 
     def _update_callback(self, value: int):
-        """Handle device LED state update."""
+        """Set LED state."""
         self._attr_is_on = value == LIPLedState.ON
         self.async_write_ha_state()
 

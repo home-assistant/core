@@ -50,7 +50,7 @@ class LutronScene(LutronKeypadComponent, Scene):
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
-        await self._lutron_device.press()
+        await self._execute_device_command(self._lutron_device.press)
 
     async def async_added_to_hass(self) -> None:  # pylint: disable=hass-missing-super-call
         """Do not register scene as this is only from HA to Lutron."""

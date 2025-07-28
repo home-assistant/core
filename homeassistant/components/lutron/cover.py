@@ -1,4 +1,4 @@
-"""Support for Lutron shades."""
+"""Support for Lutron shades and covers."""
 
 from __future__ import annotations
 
@@ -209,7 +209,7 @@ class LutronCoverTimeBased(LutronOutput, CoverEntity, RestoreEntity):
         self._target_position = 0
 
         self.start_auto_updater()
-        await self._lutron_device.start_lowering()
+        await self._execute_device_command(self._lutron_device.start_lowering)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Turn the device open."""
@@ -220,13 +220,13 @@ class LutronCoverTimeBased(LutronOutput, CoverEntity, RestoreEntity):
         self._target_position = 100
 
         self.start_auto_updater()
-        await self._lutron_device.start_raising()
+        await self._execute_device_command(self._lutron_device.start_raising)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Turn the device stop."""
         _LOGGER.debug("%s: async_stop_cover", self._attr_name)
         self._handle_stop()
-        await self._lutron_device.stop()
+        await self._execute_device_command(self._lutron_device.stop)
 
     async def set_position(self, position):
         """Move the cover to a specific position."""
@@ -373,15 +373,15 @@ class LutronCoverTimeBased(LutronOutput, CoverEntity, RestoreEntity):
         if command == "close_cover":
             cmd = "DOWN"
             self._state = False
-            await self._controller.output_start_lowering(self._lutron_device.id)
+            await self._execute_device_command(self._lutron_device.start_lowering)
         elif command == "open_cover":
             cmd = "UP"
             self._state = True
-            await self._controller.output_start_raising(self._lutron_device.id)
+            await self._execute_device_command(self._lutron_device.start_raising)
         elif command == "stop_cover":
             cmd = "STOP"
             self._state = True
-            await self._controller.output_stop(self._lutron_device.id)
+            await self._execute_device_command(self._lutron_device.stop)
 
         _LOGGER.debug("%s: _async_handle_command :: %s", self._attr_name, cmd)
 
@@ -414,26 +414,25 @@ class LutronCover(LutronOutput, CoverEntity):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self._lutron_device.set_level(0)
+        await self._execute_device_command(self._lutron_device.set_level, 0)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self._lutron_device.set_level(100)
+        await self._execute_device_command(self._lutron_device.set_level, 100)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the shade to a specific position."""
         if ATTR_POSITION in kwargs:
             position = kwargs[ATTR_POSITION]
-            await self._lutron_device.set_level(position)
+            await self._execute_device_command(self._lutron_device.set_level, position)
 
     async def _request_state(self) -> None:
         """Request the state of the cover."""
-        await self._lutron_device.get_level()
+        await self._execute_device_command(self._lutron_device.get_level)
 
     def _update_callback(self, value: int):
         """Update the state attributes."""
         self._attr_is_closed = value < 1
         self._attr_current_cover_position = value
         self.async_write_ha_state()
-
         _LOGGER.debug("Lutron ID: %d updated to %f", self._lutron_device.id, value)

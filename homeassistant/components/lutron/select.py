@@ -67,10 +67,10 @@ class LutronVariableSelect(LutronVariable, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Set the selected option."""
         new_value = LABEL_TO_VALUE[option]
-        await self._lutron_device.set_state(new_value)
+        await self._execute_device_command(self._lutron_device.set_state, new_value)
 
     async def _request_state(self):
-        await self._lutron_device.get_state()
+        await self._execute_device_command(self._lutron_device.get_state)
 
     def _update_callback(self, value: int):
         """Handle state update."""

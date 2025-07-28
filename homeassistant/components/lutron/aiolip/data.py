@@ -112,6 +112,19 @@ class LIPAction(IntEnum):
     SYSTEM_TIME = 1  # Used for heart-beat
 
 
+@dataclass
+class LIPCommand:
+    """Command for Lutron operations."""
+
+    operation: LIPOperation
+    mode: LIPMode
+    integration_id: int
+    action: LIPAction
+    value: float | None = None
+    fade_time: str | None = None
+    component_number: int | None = None
+
+
 class LIPLedState(IntEnum):
     """Class for led states."""
 

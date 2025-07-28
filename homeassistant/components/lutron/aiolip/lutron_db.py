@@ -10,14 +10,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any, ClassVar
 
 import defusedxml.ElementTree as ET
 
-if TYPE_CHECKING:
-    from . import LutronController
-
-from .data import LIPAction, LIPLedState, LIPMode
+from .data import LIPAction, LIPCommand, LIPLedState, LIPMode, LIPOperation
 
 _LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.DEBUG)
@@ -170,9 +167,7 @@ class LutronXmlDbParser:
             "integration_id": int(output_xml.get("IntegrationID")),
             "uuid": output_xml.get("UUID"),
         }
-        output = Output(**kwargs)
-        output.controller = self._controller
-        return output
+        return Output(**kwargs)
 
     def _parse_keypad(self, area, keypad_xml, device_group, device_type):
         """Parse a keypad device (the Visor receiver is technically a keypad too)."""
@@ -188,7 +183,6 @@ class LutronXmlDbParser:
             integration_id=int(keypad_xml.get("IntegrationID")),
             uuid=keypad_xml.get("UUID"),
         )
-        keypad.controller = self._controller
         components = keypad_xml.find("Components")
         if components is None:
             return keypad
@@ -290,14 +284,12 @@ class LutronXmlDbParser:
         groups, what's assigned to them, and when they go (un)occupied. We'll handle
         this later.
         """
-        sensor = MotionSensor(
+        return MotionSensor(
             area=area,
             name=sensor_xml.get("Name"),
             integration_id=int(sensor_xml.get("IntegrationID")),
             uuid=sensor_xml.get("UUID"),
         )
-        sensor.controller = self._controller
-        return sensor
 
     def _parse_occupancy_group(self, group_xml):
         """Parse an Occupancy Group object.
@@ -306,88 +298,75 @@ class LutronXmlDbParser:
         objects by ID.
         OccupancyGroup gets the integration_id from the area
         """
-        occupancy_group = OccupancyGroup(
+        return OccupancyGroup(
             name="Occupancy Group",
             integration_id=0,
             group_number=group_xml.get("OccupancyGroupNumber"),
             uuid=group_xml.get("UUID"),
         )
-        occupancy_group.controller = self._controller
-        return occupancy_group
 
     def _parse_sysvar(self, integration_id):
         """Create a Sysvar object.
 
         We only have the integration_id available here, so we use that.
         """
-        sysvar = Sysvar(
+        return Sysvar(
             name=f"variable {integration_id}", integration_id=integration_id, uuid=None
         )
-        sysvar.controller = self._controller
-        return sysvar
 
 
+@dataclass
 class Area:
     """An area (i.e. a room) that contains devices/outputs/etc."""
 
-    def __init__(self, name, location, integration_id, occupancy_group):
-        """Initialize the area."""
-        self._name = name
-        self._location = location
-        self._integration_id = integration_id
-        self._occupancy_group = occupancy_group
-        self._outputs = []
-        self._keypads = []
-        self._sensors = []
-        if occupancy_group:
-            occupancy_group.bind_area(self)
+    name: str
+    location: str
+    integration_id: int
+    occupancy_group: OccupancyGroup | None = None
 
+    # Internal collections are not part of the dataclass constructor
+    _outputs: list = field(default_factory=list, init=False, repr=False)
+    _keypads: list = field(default_factory=list, init=False, repr=False)
+    _sensors: list = field(default_factory=list, init=False, repr=False)
+
+    def __post_init__(self) -> None:
+        """Bind the occupancy group to this area after initialization."""
+        if self.occupancy_group:
+            self.occupancy_group.bind_area(self)
+
+    # Methods used by the XML parser during object graph construction
     def add_output(self, output):
-        """Add an output object that's part of this area, only used during initial parsing."""
+        """Add an output object that's part of this area (used during initial parsing)."""
         self._outputs.append(output)
 
     def add_keypad(self, keypad):
-        """Add a keypad object that's part of this area, only used during initial parsing."""
+        """Add a keypad object that's part of this area (used during initial parsing)."""
         self._keypads.append(keypad)
 
     def add_sensor(self, sensor):
-        """Add a motion sensor object that's part of this area, only used during initial parsing."""
+        """Add a motion sensor object that's part of this area (used during initial parsing)."""
         self._sensors.append(sensor)
 
+    # Convenience properties -------------------------------------------------
     @property
-    def name(self):
-        """Returns the name of this area."""
-        return self._name
-
-    @property
-    def location(self):
-        """Returns the location of this area which is the name of the parent area or the empty string."""
-        return self._location
-
-    @property
-    def id(self):
+    def id(self) -> int:
         """The integration id of the area."""
-        return self._integration_id
-
-    @property
-    def occupancy_group(self):
-        """Returns the OccupancyGroup for this area, or None."""
-        return self._occupancy_group
+        return self.integration_id
 
     @property
     def outputs(self):
-        """Return the tuple of the Outputs from this area."""
-        return tuple(output for output in self._outputs)
+        """Return a tuple of the outputs belonging to this area."""
+        return tuple(self._outputs)
 
     @property
     def keypads(self):
-        """Return the tuple of the Keypads from this area."""
-        return tuple(keypad for keypad in self._keypads)
+        """Return a tuple of the keypads belonging to this area."""
+        return tuple(self._keypads)
 
     @property
     def sensors(self):
-        """Return the tuple of the MotionSensors from this area."""
-        return tuple(sensor for sensor in self._sensors)
+        """Return a tuple of the motion sensors belonging to this area."""
+        return tuple(self._sensors)
 
 
 @dataclass
@@ -399,35 +378,51 @@ class Device:
     integration_id: int
     area: Area | None = None
     legacy_uuid: str | None = field(init=False, default=None)
-    _controller: LutronController | None = field(init=False, default=None)
+
+    LIP_MODE: ClassVar[LIPMode] = LIPMode.UNKNOWN  # Override in subclasses
 
     def __post_init__(self):
         """Override to Initialize the Lutron entity."""
         self.legacy_uuid = f"{self.integration_id}-0"
 
     @property
-    def controller(self) -> LutronController:
-        """Get the controller instance.
-
-        Raises:
-            RuntimeError: If controller is not set
-
-        """
-        if self._controller is None:
-            raise RuntimeError(
-                f"Controller not set on device {self.name} (ID: {self.integration_id})"
-            )
-        return self._controller
-
-    @controller.setter
-    def controller(self, value: LutronController) -> None:
-        """Set the controller instance."""
-        self._controller = value
-
-    @property
     def id(self) -> int:
         """Return the integration ID."""
         return self.integration_id
+
+    def _query(
+        self,
+        action: LIPAction,
+        value: float | None = None,
+        fade_time: str | None = None,
+    ) -> LIPCommand:
+        """Create a query command."""
+        return LIPCommand(
+            operation=LIPOperation.QUERY,
+            mode=self.LIP_MODE,
+            component_number=None,
+            integration_id=self.integration_id,
+            action=action,
+            value=value,
+            fade_time=fade_time,
+        )
+
+    def _execute(
+        self,
+        action: LIPAction,
+        value: float | None = None,
+        fade_time: str | None = None,
+    ) -> LIPCommand:
+        """Create an execute command."""
+        return LIPCommand(
+            operation=LIPOperation.EXECUTE,
+            mode=self.LIP_MODE,
+            integration_id=self.integration_id,
+            component_number=None,
+            action=action,
+            value=value,
+            fade_time=fade_time,
+        )
 
 
 @dataclass
@@ -436,6 +431,8 @@ class Output(Device):
 
     This generally refers to a switched/dimmed load, e.g. light fixture, outlet, etc.
     """
+
+    LIP_MODE: ClassVar[LIPMode] = LIPMode.OUTPUT
 
     watts: int = 0
     output_type: str = ""
@@ -469,51 +466,33 @@ class Output(Device):
             self.is_light = True
             self.is_dimmable = not t.startswith("NON_DIM")
 
-    async def set_level(self, level: float, fade_time: str | None = None) -> None:
-        """Set the output level."""
-        await self.controller.action(
-            LIPMode.OUTPUT,
-            self.integration_id,
-            LIPAction.OUTPUT_LEVEL,
-            level,
-            fade_time,
-        )
+    def set_level(self, level: float, fade_time: str | None = None) -> LIPCommand:
+        """Return a command to set the output level."""
+        return self._execute(LIPAction.OUTPUT_LEVEL, value=level, fade_time=fade_time)
 
-    async def get_level(self) -> None:
-        """Get the current output level."""
-        await self.controller.query(
-            LIPMode.OUTPUT, self.integration_id, LIPAction.OUTPUT_LEVEL
-        )
+    def get_level(self) -> LIPCommand:
+        """Return a command to get the output level."""
+        return self._query(LIPAction.OUTPUT_LEVEL)
 
-    async def start_raising(self) -> None:
-        """Start raising the motor."""
-        await self.controller.action(
-            LIPMode.OUTPUT, self.integration_id, LIPAction.OUTPUT_START_RAISING
-        )
+    def start_raising(self) -> LIPCommand:
+        """Return a command to start raising the motor."""
+        return self._execute(LIPAction.OUTPUT_START_RAISING)
 
-    async def start_lowering(self) -> None:
-        """Start lowering the motor."""
-        await self.controller.action(
-            LIPMode.OUTPUT, self.integration_id, LIPAction.OUTPUT_START_LOWERING
-        )
+    def start_lowering(self) -> LIPCommand:
+        """Return a command to start lowering the motor."""
+        return self._execute(LIPAction.OUTPUT_START_LOWERING)
 
-    async def stop(self) -> None:
-        """Stop the motor."""
-        await self.controller.action(
-            LIPMode.OUTPUT, self.integration_id, LIPAction.OUTPUT_STOP
-        )
+    def stop(self) -> LIPCommand:
+        """Return a command to stop the motor."""
+        return self._execute(LIPAction.OUTPUT_STOP)
 
-    async def jog_raise(self) -> None:
-        """Start raising the motor."""
-        await self.controller.action(
-            LIPMode.OUTPUT, self.integration_id, LIPAction.OUTPUT_MOTOR_JOG_RAISE
-        )
+    def jog_raise(self) -> LIPCommand:
+        """Return a command to start raising the motor."""
+        return self._execute(LIPAction.OUTPUT_MOTOR_JOG_RAISE)
 
-    async def jog_lower(self) -> None:
-        """Start lowering the motor."""
-        await self.controller.action(
-            LIPMode.OUTPUT, self.integration_id, LIPAction.OUTPUT_MOTOR_JOG_LOWER
-        )
+    def jog_lower(self) -> LIPCommand:
+        """Return a command to start lowering the motor."""
+        return self._execute(LIPAction.OUTPUT_MOTOR_JOG_LOWER)
 
 
 @dataclass
@@ -526,6 +505,8 @@ class KeypadComponent(Device):
     is only used for interfacing with the controller.
     """
 
+    LIP_MODE: ClassVar[LIPMode] = LIPMode.DEVICE
+
     keypad: Any = None
     number: int = 0  # user-friendly number
     component_number: int = 0  # lutron internal number
@@ -535,19 +516,39 @@ class KeypadComponent(Device):
         self.area = self.keypad.area
         self.legacy_uuid = f"{self.integration_id}-{self.component_number}"
 
-    @property
-    def controller(self) -> LutronController:
-        """Get the controller instance. For a keypad component is the keypad controller."""
-        if self.keypad.controller is None:
-            raise RuntimeError(
-                f"Controller not set on device {self.name} (ID: {self.integration_id})(Component: {self.component_number}"
-            )
-        return self.keypad.controller
+    def _query(
+        self,
+        action: LIPAction,
+        value: float | None = None,
+        fade_time: str | None = None,
+    ) -> LIPCommand:
+        """Create a query command with component number."""
+        return LIPCommand(
+            operation=LIPOperation.QUERY,
+            mode=self.LIP_MODE,
+            integration_id=self.integration_id,
+            component_number=self.component_number,
+            action=action,
+            value=value,
+            fade_time=fade_time,
+        )
 
-    @controller.setter
-    def controller(self, value: LutronController) -> None:
-        """Set the controller instance."""
-        self.keypad.controller = value
+    def _execute(
+        self,
+        action: LIPAction,
+        value: float | None = None,
+        fade_time: str | None = None,
+    ) -> LIPCommand:
+        """Create an execute command with component number."""
+        return LIPCommand(
+            operation=LIPOperation.EXECUTE,
+            mode=self.LIP_MODE,
+            integration_id=self.integration_id,
+            component_number=self.component_number,
+            action=action,
+            value=value,
+            fade_time=fade_time,
+        )
 
 
 @dataclass
@@ -574,53 +575,33 @@ class Button(KeypadComponent):
             "SimpleConditional",
         )
 
-    async def press(self) -> None:
-        """Simulate a button press."""
-        await self.keypad.controller.action(
-            LIPMode.DEVICE,
-            self.integration_id,
-            self.component_number,
-            LIPAction.DEVICE_PRESS,
-        )
+    def press(self) -> LIPCommand:
+        """Return a command to press the button."""
+        return self._execute(LIPAction.DEVICE_PRESS)
 
 
 @dataclass
 class Led(KeypadComponent):
     """Object representing a keypad LED."""
 
-    async def turn_on(self) -> None:
-        """Turn on the LED."""
-        await self.controller.action(
-            LIPMode.DEVICE,
-            self.integration_id,
-            self.component_number,
-            LIPAction.DEVICE_LED_STATE,
-            LIPLedState.ON,
-        )
+    def turn_on(self) -> LIPCommand:
+        """Return a command to turn on the LED."""
+        return self._execute(LIPAction.DEVICE_LED_STATE, value=LIPLedState.ON)
 
-    async def turn_off(self) -> None:
-        """Turn off the LED."""
-        await self.controller.action(
-            LIPMode.DEVICE,
-            self.integration_id,
-            self.component_number,
-            LIPAction.DEVICE_LED_STATE,
-            LIPLedState.OFF,
-        )
+    def turn_off(self) -> LIPCommand:
+        """Return a command to turn off the LED."""
+        return self._execute(LIPAction.DEVICE_LED_STATE, value=LIPLedState.OFF)
 
-    async def get_state(self) -> None:
-        """Get the LED state."""
-        await self.controller.query(
-            LIPMode.DEVICE,
-            self.integration_id,
-            self.component_number,
-            LIPAction.DEVICE_LED_STATE,
-        )
+    def get_state(self) -> LIPCommand:
+        """Return a command to get the LED state."""
+        return self._query(LIPAction.DEVICE_LED_STATE)
 
 
 @dataclass
 class Keypad(Device):
     """Object representing a Lutron keypad."""
+
+    LIP_MODE: ClassVar[LIPMode] = LIPMode.DEVICE
 
     device_type: str | None = None
     device_group_name: str | None = None
@@ -639,6 +620,7 @@ class Keypad(Device):
         self.components[led.component_number] = led
 
 
+@dataclass
 class MotionSensor(Device):
     """Placeholder class for the motion sensor device.
 
@@ -651,10 +633,14 @@ class MotionSensor(Device):
     _ACTION_BATTERY_STATUS = 22
     """
 
+    LIP_MODE: ClassVar[LIPMode] = LIPMode.DEVICE
+
 
 @dataclass
 class OccupancyGroup(Device):
     """Represents one or more occupancy/vacancy sensors grouped into an Area."""
+
+    LIP_MODE: ClassVar[LIPMode] = LIPMode.GROUP
 
     area: Any = None
     group_number: str | None = None
@@ -666,25 +652,21 @@ class OccupancyGroup(Device):
         self.name = f"Occ {area.name}"
         self.integration_id = area.id
 
-    async def get_state(self) -> None:
-        """Get the LED state."""
-        await self.controller.query(
-            LIPMode.GROUP, self.integration_id, LIPAction.GROUP_STATE
-        )
+    def get_state(self) -> LIPCommand:
+        """Return a command to get the group state."""
+        return self._query(LIPAction.GROUP_STATE)
 
 
 @dataclass
 class Sysvar(Device):
-    """Represents one or more occupancy/vacancy sensors grouped into an Area."""
+    """Represents Lutron variables."""
 
-    async def set_state(self, value: int) -> None:
-        """Set the system variable state."""
-        await self.controller.action(
-            LIPMode.SYSVAR, self.integration_id, LIPAction.SYSVAR_STATE, value
-        )
+    LIP_MODE: ClassVar[LIPMode] = LIPMode.SYSVAR
 
-    async def get_state(self) -> None:
-        """Get the system variable state."""
-        await self.controller.query(
-            LIPMode.SYSVAR, self.integration_id, LIPAction.SYSVAR_STATE
-        )
+    def set_state(self, value: int) -> LIPCommand:
+        """Return a command to set the system variable state."""
+        return self._execute(LIPAction.SYSVAR_STATE, value=value)
+
+    def get_state(self) -> LIPCommand:
+        """Return a command to get the system variable state."""
+        return self._query(LIPAction.SYSVAR_STATE)

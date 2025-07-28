@@ -57,7 +57,7 @@ class LutronVariableSensor(LutronVariable, SensorEntity):
         super().__init__(lutron_device, controller)
 
     async def _request_state(self):
-        await self._controller.sysvar_get_state(self._lutron_device.id)
+        await self._execute_device_command(self._lutron_device.get_state)
 
     def _update_callback(self, value: int):
         """Set variable state."""

@@ -1,6 +1,6 @@
 """Base class for Lutron devices."""
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import Any
 
 from homeassistant.const import ATTR_IDENTIFIERS, ATTR_VIA_DEVICE
@@ -36,7 +36,7 @@ class LutronBaseEntity(Entity):
             manufacturer="Lutron",
             name=self.device_name,
             suggested_area=self.area_name,
-            via_device=(DOMAIN, controller.guid),
+            via_device=(DOMAIN, controller.guid or "unknown"),
         )
 
     @property
@@ -96,6 +96,17 @@ class LutronBaseEntity(Entity):
         """Return the state attributes."""
         return {"lutron_integration_id": self._lutron_device.id}
 
+    async def _execute_device_command(
+        self, command_method: Callable, *args, **kwargs
+    ) -> None:
+        """Execute a command from the device.
+
+        Takes a device method (like self._lutron_device.set_level)
+        and its arguments, creates the command, and executes it through the controller.
+        """
+        command = command_method(*args, **kwargs)
+        await self._controller.execute_command(command)
+
 
 class LutronOutput(LutronBaseEntity):
     """Representation of a Lutron output device entity."""
@@ -133,9 +144,14 @@ class LutronKeypadComponent(LutronBaseEntity):
             suggested_area=self.area_name,
         )
         if lutron_device.keypad.device_type == "MAIN_REPEATER":
-            self._attr_device_info[ATTR_IDENTIFIERS].add((DOMAIN, controller.guid))
+            self._attr_device_info[ATTR_IDENTIFIERS].add(
+                (DOMAIN, controller.guid or "unknown")
+            )
         else:
-            self._attr_device_info[ATTR_VIA_DEVICE] = (DOMAIN, controller.guid)
+            self._attr_device_info[ATTR_VIA_DEVICE] = (
+                DOMAIN,
+                controller.guid or "unknown",
+            )
 
     @property
     def name(self) -> str:
