@@ -40,7 +40,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
 
     host: str | None = None
     verify_ssl: bool = True
-    _hassio_discovery: dict[str, Any] | None = None
+    _hassio_discovery: HassioServiceInfo | None = None
 
     async def check_connection(
         self, api_token: str
@@ -162,9 +162,12 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
 
         This flow is triggered by the discovery component.
         """
-        await self._async_handle_discovery_without_unique_id()
 
-        self._hassio_discovery = discovery_info.config
+        await self.async_set_unique_id(discovery_info.uuid)
+
+        self._abort_if_unique_id_configured()
+
+        self._hassio_discovery = discovery_info
 
         return await self.async_step_hassio_confirm()
 
@@ -178,9 +181,7 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
 
         assert self._hassio_discovery
 
-        self.host = (
-            f"{self._hassio_discovery[CONF_HOST]}:{self._hassio_discovery[CONF_PORT]}"
-        )
+        self.host = f"{self._hassio_discovery.config[CONF_HOST]}:{self._hassio_discovery.config[CONF_PORT]}"
         self.verify_ssl = True
 
         errors, user_id = await self.check_connection(
@@ -208,6 +209,6 @@ class MealieConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="hassio_confirm",
             data_schema=DISCOVERY_SCHEMA,
-            description_placeholders={"addon": self._hassio_discovery["addon"]},
+            description_placeholders={"addon": self._hassio_discovery.config["addon"]},
             errors=errors or {},
         )
