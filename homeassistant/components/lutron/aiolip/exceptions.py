@@ -136,7 +136,7 @@ class LutronDeviceNotFoundError(LutronException):
         self.device_type = device_type
 
 
-class LutronCommandError(LutronException):
+class LIPCommandError(LutronException):
     """Exception raised when a command fails to execute."""
 
     def __init__(
