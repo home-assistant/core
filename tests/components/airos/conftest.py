@@ -33,24 +33,19 @@ def mock_airos_client(
     request: pytest.FixtureRequest, ap_fixture: AirOSData
 ) -> Generator[AsyncMock]:
     """Fixture to mock the AirOS API client."""
-    mock_airos = AsyncMock()
-    mock_airos.status.return_value = ap_fixture
-
-    if hasattr(request, "param"):
-        mock_airos.login.side_effect = request.param
-    else:
-        mock_airos.login.return_value = True
-
     with (
         patch(
-            "homeassistant.components.airos.config_flow.AirOS", return_value=mock_airos
-        ),
+            "homeassistant.components.airos.config_flow.AirOS", autospec=True
+        ) as mock_airos,
         patch(
-            "homeassistant.components.airos.coordinator.AirOS", return_value=mock_airos
+            "homeassistant.components.airos.coordinator.AirOS", new=mock_airos
         ),
-        patch("homeassistant.components.airos.AirOS", return_value=mock_airos),
+        patch("homeassistant.components.airos.AirOS", new=mock_airos),
     ):
-        yield mock_airos
+        client = mock_airos.return_value
+        client.status.return_value = ap_fixture
+        client.login.return_value = True
+        yield client
 
 
 @pytest.fixture
