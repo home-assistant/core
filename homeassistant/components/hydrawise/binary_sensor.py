@@ -104,13 +104,11 @@ async def async_setup_entry(
 
     def _add_new_zones(zones: Iterable[tuple[Zone, Controller]]) -> None:
         async_add_entities(
-            [
-                HydrawiseZoneBinarySensor(
-                    coordinators.main, description, controller, zone_id=zone.id
-                )
-                for zone, controller in zones
-                for description in ZONE_BINARY_SENSORS
-            ]
+            HydrawiseZoneBinarySensor(
+                coordinators.main, description, controller, zone_id=zone.id
+            )
+            for zone, controller in zones
+            for description in ZONE_BINARY_SENSORS
         )
 
     _add_new_controllers(coordinators.main.data.controllers.values())
