@@ -150,27 +150,8 @@ class PlaystationNetworkImageEntity(PlaystationNetworkImageBaseEntity):
 
     coordinator: PlaystationNetworkUserDataCoordinator
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        coordinator: PlaystationNetworkUserDataCoordinator,
-        entity_description: PlaystationNetworkImageEntityDescription,
-    ) -> None:
-        """Initialize the image entity."""
-        super().__init__(hass, coordinator, entity_description)
-
 
 class PlaystationNetworkFriendImageEntity(PlaystationNetworkImageBaseEntity):
     """An image entity."""
 
     coordinator: PlaystationNetworkFriendDataCoordinator
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        coordinator: PlaystationNetworkFriendDataCoordinator,
-        entity_description: PlaystationNetworkImageEntityDescription,
-        subentry: ConfigSubentry,
-    ) -> None:
-        """Initialize the image entity."""
-        super().__init__(hass, coordinator, entity_description, subentry)
