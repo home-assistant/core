@@ -181,7 +181,9 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         self._async_abort_entries_match({CONF_URL: discovery_info.config[CONF_URL]})
         await self.async_set_unique_id(discovery_info.uuid)
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured(
+            updates={CONF_URL: discovery_info.config[CONF_URL]}
+        )
 
         self._hassio_discovery = discovery_info
         return await self.async_step_hassio_confirm()

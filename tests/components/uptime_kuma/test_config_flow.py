@@ -448,3 +448,35 @@ async def test_hassio_addon_discovery_ignored(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_pythonkuma")
+async def test_hassio_addon_discovery_update_info(
+    hass: HomeAssistant,
+) -> None:
+    """Test we abort discovery flow if already configured and we update from discovery info."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="a0d7b954_uptime-kuma",
+        data={
+            CONF_URL: "http://localhost:80/",
+            CONF_VERIFY_SSL: True,
+            CONF_API_KEY: "apikey",
+        },
+        entry_id="123456789",
+        unique_id="1234",
+    )
+
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        data=ADDON_SERVICE_INFO,
+        context={"source": SOURCE_HASSIO},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert entry.data[CONF_URL] == "http://localhost:3001/"
