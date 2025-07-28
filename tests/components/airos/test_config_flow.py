@@ -20,7 +20,7 @@ from tests.common import MockConfigEntry
 
 MOCK_CONFIG = {
     CONF_HOST: "1.1.1.1",
-    CONF_USERNAME: "test-username",
+    CONF_USERNAME: "ubnt",
     CONF_PASSWORD: "test-password",
 }
 
@@ -51,10 +51,28 @@ async def test_form_creates_entry(
 
 
 async def test_form_duplicate_entry(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_airos_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test the form does not allow duplicate entries."""
     mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert not result["errors"]
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_CONFIG,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.parametrize(
