@@ -1,6 +1,7 @@
 """Creates the event entities for supported mowers."""
 
 import logging
+from typing import TYPE_CHECKING
 
 from aioautomower.model import Message, SingleMessageData
 
@@ -114,8 +115,8 @@ class AutomowerMessageEventEntity(AutomowerBaseEntity, EventEntity):
             return
         message: Message = msg_data.attributes.message
         code = message.code
-        if not code:
-            return
+        if TYPE_CHECKING:
+            assert code is not None
 
         self._trigger_event(
             code,

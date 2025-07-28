@@ -12,6 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.event import ATTR_EVENT_TYPE
 from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -36,14 +37,13 @@ async def test_event(
         "homeassistant.components.husqvarna_automower.PLATFORMS",
         [Platform.EVENT],
     ):
-        # Capture callbacks per mower_id
-        callback_holder: dict[str, Callable[[SingleMessageData], None]] = {}
+        callbacks: list[Callable[[SingleMessageData], None]] = []
 
         @callback
         def fake_register_websocket_response(
             cb: Callable[[SingleMessageData], None],
         ) -> None:
-            callback_holder[TEST_MOWER_ID] = cb
+            callbacks.append(cb)
 
         mock_automower_client.register_single_message_callback.side_effect = (
             fake_register_websocket_response
@@ -80,10 +80,60 @@ async def test_event(
         ),
     )
 
-    callback_holder[TEST_MOWER_ID](message)
+    for cb in callbacks:
+        cb(message)
     await hass.async_block_till_done()
     freezer.tick(SCAN_INTERVAL)
     await hass.async_block_till_done()
     state = hass.states.get("event.test_mower_1_message")
     assert state.attributes[ATTR_EVENT_TYPE] == "wheel_motor_overloaded_rear_left"
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("event.test_mower_1_message")
+    assert state.attributes[ATTR_EVENT_TYPE] == "wheel_motor_overloaded_rear_left"
+    message = SingleMessageData(
+        type="messages",
+        id=TEST_MOWER_ID,
+        attributes=SingleMessageAttributes(
+            message=Message(
+                time=datetime(2025, 7, 13, 16, 00, tzinfo=UTC),
+                code="alarm_mower_lifted",
+                severity=Severity.ERROR,
+                latitude=48.0,
+                longitude=11.0,
+            )
+        ),
+    )
+
+    for cb in callbacks:
+        cb(message)
+    await hass.async_block_till_done()
+    state = hass.states.get("event.test_mower_1_message")
+    assert state.attributes[ATTR_EVENT_TYPE] == "alarm_mower_lifted"
+
+    message = SingleMessageData(
+        type="messages",
+        id="1234",
+        attributes=SingleMessageAttributes(
+            message=Message(
+                time=datetime(2025, 7, 13, 16, 00, tzinfo=UTC),
+                code="battery_problem",
+                severity=Severity.ERROR,
+                latitude=48.0,
+                longitude=11.0,
+            )
+        ),
+    )
+
+    for cb in callbacks:
+        cb(message)
+    await hass.async_block_till_done()
+    state = hass.states.get("event.test_mower_1_message")
+    assert state.attributes[ATTR_EVENT_TYPE] == "alarm_mower_lifted"
