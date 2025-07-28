@@ -350,7 +350,6 @@
       'options': list([
         'providing_power',
         'no_power_available',
-        'unknown',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -390,7 +389,6 @@
       'options': list([
         'providing_power',
         'no_power_available',
-        'unknown',
       ]),
     }),
     'context': <ANY>,
@@ -2268,7 +2266,6 @@
       'options': list([
         'providing_power',
         'no_power_available',
-        'unknown',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -2308,7 +2305,6 @@
       'options': list([
         'providing_power',
         'no_power_available',
-        'unknown',
       ]),
     }),
     'context': <ANY>,
