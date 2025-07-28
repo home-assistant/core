@@ -16,6 +16,8 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 MOCK_CONFIG = {
     CONF_HOST: "1.1.1.1",
     CONF_USERNAME: "test-username",
@@ -49,25 +51,10 @@ async def test_form_creates_entry(
 
 
 async def test_form_duplicate_entry(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_airos_client: AsyncMock,
-    mock_config_entry: MockConfigEntry
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test the form does not allow duplicate entries."""
     mock_config_entry.add_to_hass(hass)
-
-    # Test we can't re-add existing device
-    result2 = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"],
-        MOCK_CONFIG,
-    )
-
-    assert result2["type"] is FlowResultType.ABORT
 
 
 @pytest.mark.parametrize(

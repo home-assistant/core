@@ -75,7 +75,7 @@ async def test_sensor_update_exception_handling(
 
     mock_airos_client.login.side_effect = None
 
-    freezer.tick(timedelta(seconds=SCAN_INTERVAL.total_seconds() + 1))
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL.total_seconds()))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
