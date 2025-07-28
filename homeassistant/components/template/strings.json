@@ -208,7 +208,7 @@
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
           "name": "[%key:common::config_flow::data::name%]",
-          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "state": "[%key:component::template::common::state%]",
           "start": "Actions on turn off",
           "fan_speed": "Fan speed",
           "fan_speeds": "Fan speeds",
@@ -221,13 +221,13 @@
           "locate": "Actions on locate"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::common::device_id_description%]"
         },
         "sections": {
           "advanced_options": {
-            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+              "availability": "[%key:component::template::common::availability%]"
             }
           }
         },
@@ -410,7 +410,7 @@
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
           "name": "[%key:common::config_flow::data::name%]",
-          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "state": "[%key:component::template::common::state%]",
           "start": "[%key:component::template::config::step::vacuum::data::start%]",
           "fan_speed": "[%key:component::template::config::step::vacuum::data::fan_speed%]",
           "fan_speeds": "[%key:component::template::config::step::vacuum::data::fan_speeds%]",
@@ -423,13 +423,13 @@
           "locate": "[%key:component::template::config::step::vacuum::data::locate%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::common::device_id_description%]"
         },
         "sections": {
           "advanced_options": {
-            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+              "availability": "[%key:component::template::common::availability%]"
             }
           }
         },
