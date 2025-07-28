@@ -63,7 +63,7 @@ class MatterRangeNumberEntityDescription(
 
     # Functions to format the min and max values for display or conversion
     format_min_value: Callable[[float], float] = lambda x: x
-    format_max_value: Callable[[Any], Any] = lambda x: x
+    format_max_value: Callable[[float], float] = lambda x: x
 
     # command: a custom callback to create the command to send to the device
     # the callback's argument will be the index of the selected list value
