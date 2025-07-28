@@ -276,9 +276,6 @@ aiolifx-effects==0.3.2
 # homeassistant.components.lifx
 aiolifx-themes==0.6.4
 
-# homeassistant.components.redgtech
-redgtech==0.1.28
-
 # homeassistant.components.lifx
 aiolifx==1.1.4
 
@@ -2133,6 +2130,9 @@ radiotherm==2.1.0
 
 # homeassistant.components.rapt_ble
 rapt-ble==0.1.2
+
+# homeassistant.components.redgtech
+redgtech-api==0.1.29
 
 # homeassistant.components.refoss
 refoss-ha==1.2.5
