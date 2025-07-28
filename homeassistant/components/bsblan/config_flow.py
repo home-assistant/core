@@ -268,16 +268,16 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
             )
 
         # Update the config entry with new auth data
-        new_data = existing_entry.data.copy()
+        data_updates = {}
         if self.passkey is not None:
-            new_data[CONF_PASSKEY] = self.passkey
+            data_updates[CONF_PASSKEY] = self.passkey
         if self.username is not None:
-            new_data[CONF_USERNAME] = self.username
+            data_updates[CONF_USERNAME] = self.username
         if self.password is not None:
-            new_data[CONF_PASSWORD] = self.password
+            data_updates[CONF_PASSWORD] = self.password
 
         return self.async_update_reload_and_abort(
-            existing_entry, data=new_data, reason="reauth_successful"
+            existing_entry, data_updates=data_updates, reason="reauth_successful"
         )
 
     @callback
