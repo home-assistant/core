@@ -21,13 +21,20 @@ LIP_USERNAME = "lutron"
 LIP_PASSWORD = "integration"
 LIP_PORT = 23
 
-LIP_KEEP_ALIVE = "?SYSTEM,10"
+LIP_KEEP_ALIVE = (
+    "?SYSTEM,10"  # cannot find documentation on this, return the date time of the db?
+)
 
 CONNECT_TIMEOUT = 10
 SOCKET_TIMEOUT = 45  # The bridge can try to do ident which can take up to 30 seconds
 
 LIP_READ_TIMEOUT = 60
 LIP_KEEP_ALIVE_INTERVAL = 60
+
+# Time (in seconds) to wait before attempting to reconnect again after a failed
+# connection attempt. This prevents a tight loop that can overwhelm the event
+# loop and the bridge when it is unavailable.
+RECONNECT_DELAY = 5
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -270,6 +277,8 @@ class LIP:
                     _LOGGER.debug(
                         "Timed out while trying to reconnect to %s", self._host
                     )
+                    # Back-off a bit before the next reconnect attempt to avoid a busy loop.
+                    await asyncio.sleep(RECONNECT_DELAY)
                 else:
                     self._keepalive_watchdog()
                     return
@@ -364,7 +373,7 @@ class LIP:
         """Process a lip message. This is processing only response (i.e. ~") events."""
 
         message = self._parser.parse(response)
-
+        _LOGGER.debug("Incoming message: %s", message.raw if message else response)
         if message:
             if message.mode == LIPMode.KEEPALIVE:
                 self._last_keep_alive_response = self._parser.last_keepalive
