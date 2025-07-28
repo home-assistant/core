@@ -28,3 +28,5 @@ BACKUP_METADATA = {
     "backup_id": "23e64aec",
     "backup_metadata": TEST_BACKUP.as_dict(),
 }
+
+METADATA_FILE_SUFFIX = ".metadata.json"

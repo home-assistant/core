@@ -3,11 +3,14 @@
 import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine
 import functools
-import hashlib
 import json
 import logging
+import mimetypes
+import os
+import tempfile
 from typing import Any, cast
 
+import aiofiles
 from b2sdk.v2 import DEFAULT_MIN_PART_SIZE, FileVersion
 from b2sdk.v2.exception import B2Error
 
@@ -260,140 +263,56 @@ class BackblazeBackupAgent(BackupAgent):
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         file_info: dict[str, Any],
     ) -> None:
-        """Uploads a large file to B2 using multipart upload (streaming)."""
-        _LOGGER.info("Starting multipart upload for %s", filename)
-
-        large_file = None
-
+        temp_file_path: str | None = None
         try:
-            # Step 1: Start a large file upload. This is a synchronous call.
-            def _start_large_file_job() -> Any:
-                return self._bucket.start_large_file(
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".tmp") as tmp:
+                temp_file_path = tmp.name
+
+            stream_to_disk = await open_stream()
+            try:
+                async with aiofiles.open(temp_file_path, mode="wb") as f:
+                    async for chunk in stream_to_disk:
+                        await f.write(chunk)
+            finally:
+                if hasattr(stream_to_disk, "aclose") and callable(
+                    stream_to_disk.aclose
+                ):
+                    await stream_to_disk.aclose()
+                elif hasattr(stream_to_disk, "close") and callable(
+                    stream_to_disk.close
+                ):
+                    stream_to_disk.close()
+
+            def _upload_local_file_job() -> FileVersion:
+                content_type, _ = mimetypes.guess_type(filename)
+                return self._bucket.upload_local_file(
+                    local_file=temp_file_path,
                     file_name=filename,
-                    content_type="application/x-tar",
+                    content_type=content_type or "application/octet-stream",
                     file_info=file_info,
                 )
 
-            large_file = await self._hass.async_add_executor_job(_start_large_file_job)
-            file_id = large_file.file_id
-
-            parts: list[dict[str, Any]] = []
-            part_number = 1
-            buffer_size = 0
-            buffer: list[bytes] = []
-
-            stream = await open_stream()
-            async for chunk in stream:
-                buffer_size += len(chunk)
-                buffer.append(chunk)
-
-                # Upload parts as the buffer reaches the minimum part size.
-                if buffer_size >= DEFAULT_MIN_PART_SIZE:
-                    current_part_data = b"".join(buffer)
-                    current_part_number = part_number
-
-                    _LOGGER.info(
-                        "Uploading part number %d for %s (size: %d bytes)",
-                        current_part_number,
-                        filename,
-                        len(current_part_data),
-                    )
-
-                    # Run the synchronous upload_part call in the executor.
-                    def _upload_part_job(data: bytes, num: int) -> None:
-                        self._bucket.upload_part(
-                            file_id=file_id,
-                            part_number=num,
-                            data_stream=data,
-                        )
-
-                    # Use functools.partial to pass arguments to the job function.
-                    await self._hass.async_add_executor_job(
-                        functools.partial(
-                            _upload_part_job, current_part_data, current_part_number
-                        )
-                    )
-
-                    sha1_checksum = hashlib.sha1(current_part_data).hexdigest()
-                    parts.append(
-                        {
-                            "partNumber": current_part_number,
-                            "contentSha1": sha1_checksum,
-                        }
-                    )
-
-                    part_number += 1
-                    buffer_size = 0
-                    buffer = []
-
-            # Upload any remaining data as the final part.
-            if buffer:
-                final_part_data_to_upload = b"".join(buffer)
-                final_part_number_to_upload = part_number
-
-                _LOGGER.info(
-                    "Uploading final part number %d for %s (size: %d bytes)",
-                    final_part_number_to_upload,
-                    filename,
-                    len(final_part_data_to_upload),
-                )
-
-                # Run the synchronous upload_part call for the final part.
-                def _upload_final_part_job(data: bytes, num: int) -> None:
-                    self._bucket.upload_part(
-                        file_id=file_id,
-                        part_number=num,
-                        data_stream=data,
-                    )
-
-                await self._hass.async_add_executor_job(
-                    functools.partial(
-                        _upload_final_part_job,
-                        final_part_data_to_upload,
-                        final_part_number_to_upload,
-                    )
-                )
-
-                sha1_checksum = hashlib.sha1(final_part_data_to_upload).hexdigest()
-                parts.append(
-                    {
-                        "partNumber": final_part_number_to_upload,
-                        "contentSha1": sha1_checksum,
-                    }
-                )
-
-            # Step 3: Finish the large file upload, providing all part SHA1s.
-            final_sha1_array = [p["contentSha1"] for p in parts]
-
-            def _finish_large_file_job(sha1s: list[str]) -> None:
-                self._bucket.finish_large_file(
-                    file_id=file_id,
-                    part_sha1_array=sha1s,
-                )
-
-            await self._hass.async_add_executor_job(
-                functools.partial(_finish_large_file_job, final_sha1_array)
+            file_version = await self._hass.async_add_executor_job(
+                _upload_local_file_job
             )
-            _LOGGER.info("Multipart upload finished for %s", filename)
+            _LOGGER.info(
+                "Successfully uploaded %s (ID: %s)", filename, file_version.id_
+            )
 
-        except Exception:
-            # If an error occurs during multipart upload, attempt to cancel it
-            # to prevent incomplete files from remaining in the bucket.
-            if large_file:
-                try:
-                    _LOGGER.warning("Aborting multipart upload for %s", filename)
-
-                    def _cancel_large_file_job(file_id_to_cancel: str) -> None:
-                        self._bucket.cancel_large_file(file_id_to_cancel)
-
-                    await self._hass.async_add_executor_job(
-                        functools.partial(_cancel_large_file_job, file_id)
-                    )
-                except Exception:
-                    _LOGGER.exception(
-                        "Failed to abort multipart upload for %s", filename
-                    )
+        except B2Error:
+            _LOGGER.exception("B2 connection error during upload for %s", filename)
             raise
+        except Exception:
+            _LOGGER.exception("An error occurred during upload for %s:", filename)
+            raise
+        finally:
+            if temp_file_path and os.path.exists(temp_file_path):
+                try:
+                    os.unlink(temp_file_path)
+                except OSError as e:
+                    _LOGGER.warning(
+                        "Failed to delete temporary file %s: %s", temp_file_path, e
+                    )
 
     @handle_b2_errors
     async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
@@ -425,8 +344,20 @@ class BackblazeBackupAgent(BackupAgent):
                         metadata_file.file_name,
                         err,
                     )
+                    raise
 
-            await self._hass.async_add_executor_job(delete_metadata_file_sync)
+            try:
+                await self._hass.async_add_executor_job(delete_metadata_file_sync)
+            except B2Error:
+                _LOGGER.error("B2Error propagated from executor for metadata")
+                raise
+            except (
+                Exception
+            ) as e:  # <--- Catch any other unexpected executor exceptions
+                _LOGGER.error("Unexpected error from executor for metadata: %s", e)
+                raise BackupAgentError(
+                    "Unexpected error in metadata deletion"
+                ) from e  # Convert to BackupAgentError
         else:
             _LOGGER.warning(
                 "Metadata file for backup %s not found for deletion", backup_id
