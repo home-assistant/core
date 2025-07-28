@@ -57,5 +57,5 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_PASSWORD: "test-password",
             CONF_USERNAME: "ubnt",
         },
-        unique_id="03aa0d0b40fed0a47088293584ef5432",
+        unique_id="01:23:45:67:89:AB",
     )

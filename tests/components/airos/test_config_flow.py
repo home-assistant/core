@@ -45,7 +45,7 @@ async def test_form_creates_entry(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "NanoStation 5AC ap name"
-    assert result["result"].unique_id == "03aa0d0b40fed0a47088293584ef5432"
+    assert result["result"].unique_id == "01:23:45:67:89:AB"
     assert result["data"] == MOCK_CONFIG
     assert len(mock_setup_entry.mock_calls) == 1
 

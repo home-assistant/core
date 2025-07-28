@@ -135,7 +135,7 @@ class AirOSSensor(AirOSEntity, SensorEntity):
         super().__init__(coordinator)
 
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.data.host.device_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator.data.wireless.apmac}_{description.key}"
 
     @property
     def native_value(self) -> StateType:
