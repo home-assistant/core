@@ -698,8 +698,12 @@ async def test_upload_metadata_failure_cleanup(
     # Make metadata upload fail
     mock_bucket.upload_bytes.side_effect = [
         mock_file_version,  # Success for backup file
-        B2Error("Metadata upload failed"),  # Failure for metadata
+        B2Error("Metadata upload failed (simulated)"),  # Failure for metadata
     ]
+
+    mock_bucket.get_file_info_by_name.side_effect = Exception(
+        "Cleanup file info lookup failed"
+    )
 
     with (
         patch(
@@ -728,18 +732,28 @@ async def test_upload_metadata_failure_cleanup(
         agent = BackblazeBackupAgent(client.app["hass"], mock_config_entry)
 
         # This should trigger the cleanup logic
-        with pytest.raises(BackupAgentError):
+        with pytest.raises(BackupAgentError) as excinfo:
             await agent.async_upload_backup(
                 open_stream=mock_open_stream_callable,
                 backup=backup,
             )
 
+        assert "Failed to upload backup to Backblaze B2" in str(excinfo.value)
+        assert "Metadata upload failed (simulated)" in str(excinfo.value)
+
         # Verify cleanup was attempted - mock the file info lookup
         mock_bucket.get_file_info_by_name.assert_called_once()
-        # The delete method should be called on the file version
-        mock_bucket.get_file_info_by_name.return_value.delete.assert_called_once()
+
+        mock_file_version.delete.assert_not_called()
+
+        assert (
+            "Backblaze B2 API error during backup upload: Metadata upload failed (simulated)"
+            in caplog.text
+        )
         assert "Attempting to delete partially uploaded main backup file" in caplog.text
-        assert "Metadata upload failed" in caplog.text
+        assert "Failed to clean up partially uploaded main backup file" in caplog.text
+        assert "Cleanup file info lookup failed" in caplog.text
+        assert "Manual intervention may be required to delete" in caplog.text
 
 
 async def test_stream_closing_behavior(
@@ -1002,45 +1016,270 @@ async def test_debug_log_backup_not_found(
         assert "Backup non_existent_backup not found" in caplog.text
 
 
-async def test_metadata_processing_backup_file_missing(
+@pytest.mark.asyncio
+async def test_metadata_processing_log_messages(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test warning when metadata file exists but backup file is missing."""
+    """Test scenarios to hit specific log messages in metadata processing.
+
+    Test scenarios to hit specific log messages in metadata processing:
+    1. Metadata file exists but backup file is missing (from async_list_backups context).
+    2. Metadata file is unparsable (JSONDecodeError) (from async_list_backups context).
+    3. Metadata file download causes B2Error (from async_list_backups context).
+    4. Metadata backup_id does not match target backup_id (DEBUG log, from _find_file_and_metadata_version_by_id context).
+    5. **NEW**: Metadata file found, but matching backup .tar not found (for_id_sync context).
+    6. **NEW**: Metadata file parsing fails during ID search (for_id_sync context).
+    """
     agent = BackblazeBackupAgent(hass, mock_config_entry)
+    prefix = mock_config_entry.data["prefix"]
 
-    # Create mock metadata file
-    mock_metadata_file = Mock(spec=FileVersion)
-    mock_metadata_file.file_name = (
-        f"{mock_config_entry.data['prefix']}test_backup.tar{METADATA_FILE_SUFFIX}"
-    )
+    # --- Scenario 1: Metadata file exists but backup file is missing (WARNING) ---
+    caplog.clear()
+    with caplog.at_level(
+        logging.WARNING
+    ):  # Set to WARNING to capture this specific log
+        mock_metadata_file_missing_backup = Mock(spec=FileVersion)
+        mock_metadata_file_missing_backup.file_name = (
+            f"{prefix}test_backup.tar{METADATA_FILE_SUFFIX}"
+        )
+        # This is the ID extracted from the filename, not necessarily the metadata content's ID
+        derived_backup_id_from_filename = "test_backup.tar"[: -len(".tar")]
 
-    # Mock metadata content
-    def mock_download():
-        mock_response = Mock()
-        mock_response.content = json.dumps(
-            {
-                "metadata_version": METADATA_VERSION,
-                "backup_id": "test_backup",
-                "backup_metadata": TEST_BACKUP.as_dict(),
-            }
-        ).encode("utf-8")
-        return mock_response
+        def mock_download_valid_metadata():
+            mock_response = Mock()
+            mock_response.content = json.dumps(
+                {
+                    "metadata_version": METADATA_VERSION,
+                    "backup_id": "test_backup",  # Valid metadata content
+                    "backup_metadata": TEST_BACKUP.as_dict(),
+                }
+            ).encode("utf-8")
+            return mock_response
 
-    mock_metadata_file.download.return_value.response = mock_download()
+        mock_metadata_file_missing_backup.download.return_value.response = (
+            mock_download_valid_metadata()
+        )
 
-    # Return only the metadata file in the file list
-    with patch(
-        "homeassistant.components.backblaze.backup.BackblazeBackupAgent._get_all_files_in_prefix",
-        return_value={mock_metadata_file.file_name: mock_metadata_file},
-    ):
-        # This will call _process_metadata_file_for_id_sync
-        result = await agent.async_list_backups()
+        with patch(
+            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._get_all_files_in_prefix",
+            return_value={
+                mock_metadata_file_missing_backup.file_name: mock_metadata_file_missing_backup
+            },
+        ):
+            # This will trigger _process_metadata_file_sync, which won't find the .tar file
+            result = await agent.async_list_backups()
 
-        # Should not return the backup since file is missing
-        assert len(result) == 0
-        assert "no corresponding backup file" in caplog.text
+            assert len(result) == 0
+            assert (
+                f"Found metadata file {mock_metadata_file_missing_backup.file_name} but no corresponding backup file starting with {derived_backup_id_from_filename} (after prefix)"
+                in caplog.text
+            )
+
+    # --- Scenario 2: Metadata file is unparsable (JSONDecodeError) (WARNING) ---
+    caplog.clear()
+    with caplog.at_level(logging.WARNING):
+        mock_metadata_file_corrupted = Mock(spec=FileVersion)
+        mock_metadata_file_corrupted.file_name = (
+            f"{prefix}corrupted_backup.tar{METADATA_FILE_SUFFIX}"
+        )
+
+        def mock_download_corrupted_metadata():
+            mock_response = Mock()
+            mock_response.content = b"{invalid json"
+            return mock_response
+
+        mock_metadata_file_corrupted.download.return_value.response = (
+            mock_download_corrupted_metadata()
+        )
+
+        with patch(
+            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._get_all_files_in_prefix",
+            return_value={
+                mock_metadata_file_corrupted.file_name: mock_metadata_file_corrupted
+            },
+        ):
+            # This will call _process_metadata_file_sync internally
+            result = await agent.async_list_backups()
+
+            assert len(result) == 0
+            assert "Failed to parse metadata file" in caplog.text
+            assert (
+                f"{mock_metadata_file_corrupted.file_name}: Expecting property name enclosed in double quotes: line 1 column 2 (char 1)"
+                in caplog.text
+            )
+
+    # --- Scenario 3: Metadata file download causes B2Error (WARNING) ---
+    caplog.clear()
+    with caplog.at_level(logging.WARNING):
+        mock_metadata_file_b2_error = Mock(spec=FileVersion)
+        mock_metadata_file_b2_error.file_name = (
+            f"{prefix}b2error_backup.tar{METADATA_FILE_SUFFIX}"
+        )
+
+        def mock_download_b2_error():
+            raise B2Error("Simulated B2 download error for metadata")
+
+        mock_metadata_file_b2_error.download.side_effect = mock_download_b2_error
+
+        with patch(
+            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._get_all_files_in_prefix",
+            return_value={
+                mock_metadata_file_b2_error.file_name: mock_metadata_file_b2_error
+            },
+        ):
+            # This will call _process_metadata_file_sync internally
+            result = await agent.async_list_backups()
+
+            assert len(result) == 0
+            assert (
+                f"Failed to parse metadata file {mock_metadata_file_b2_error.file_name}: Simulated B2 download error for metadata"
+                in caplog.text
+            )
+
+    # --- Scenario 4: Metadata backup_id does not match target backup_id or version (DEBUG) ---
+    # This scenario is for _process_metadata_file_for_id_sync, which is called by _find_file_and_metadata_version_by_id
+    caplog.clear()
+    with caplog.at_level(logging.DEBUG):  # Set to DEBUG to capture this specific log
+        # Mock a metadata file that has a *different* backup_id than what _find_file_and_metadata_version_by_id is looking for
+        mock_metadata_file_mismatch = Mock(spec=FileVersion)
+        # Filename should still correspond to a potential backup
+        mock_metadata_file_mismatch.file_name = (
+            f"{prefix}another_backup.tar{METADATA_FILE_SUFFIX}"
+        )
+
+        def mock_download_mismatch_metadata():
+            mock_response = Mock()
+            mock_response.content = json.dumps(
+                {
+                    "metadata_version": METADATA_VERSION,
+                    "backup_id": "different_id",  # This is the ID in the metadata
+                    "backup_metadata": TEST_BACKUP.as_dict(),
+                }
+            ).encode("utf-8")
+            return mock_response
+
+        mock_metadata_file_mismatch.download.return_value.response = (
+            mock_download_mismatch_metadata()
+        )
+
+        # We also need to provide a mock .tar file, otherwise it hits the "no corresponding backup file" warning first
+        mock_tar_file_for_mismatch = Mock(spec=FileVersion)
+        mock_tar_file_for_mismatch.file_name = f"{prefix}another_backup.tar"
+
+        with patch(
+            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._get_all_files_in_prefix",
+            return_value={
+                mock_metadata_file_mismatch.file_name: mock_metadata_file_mismatch,
+                mock_tar_file_for_mismatch.file_name: mock_tar_file_for_mismatch,
+            },
+        ):
+            # We call _find_file_and_metadata_version_by_id directly to specify the target_backup_id
+            # that will NOT match the metadata's internal backup_id
+            target_id = "some_non_matching_id"
+            (
+                backup_file,
+                metadata_file,
+            ) = await agent._find_file_and_metadata_version_by_id(target_id)
+
+            assert backup_file is None
+            assert metadata_file is None
+            assert (
+                f"Metadata file {mock_metadata_file_mismatch.file_name} does not match target backup ID {target_id} or version"
+                in caplog.text
+            )
+
+    # --- NEW SCENARIO 5: Metadata file found, but matching backup .tar not found (for_id_sync context) ---
+    # This hits: _LOGGER.warning("Found metadata file %s for backup ID %s, but no corresponding backup file")
+    caplog.clear()
+    with caplog.at_level(logging.WARNING):
+        target_backup_id_s5 = "specific_backup_id_for_s5"
+        mock_metadata_file_only_s5 = Mock(spec=FileVersion)
+        mock_metadata_file_only_s5.file_name = (
+            f"{prefix}{target_backup_id_s5}.tar{METADATA_FILE_SUFFIX}"
+        )
+
+        def mock_download_valid_metadata_s5():
+            mock_response = Mock()
+            mock_response.content = json.dumps(
+                {
+                    "metadata_version": METADATA_VERSION,
+                    "backup_id": target_backup_id_s5,  # Matches the target_backup_id
+                    "backup_metadata": TEST_BACKUP.as_dict(),
+                }
+            ).encode("utf-8")
+            return mock_response
+
+        mock_metadata_file_only_s5.download.return_value.response = (
+            mock_download_valid_metadata_s5()
+        )
+
+        with patch(
+            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._get_all_files_in_prefix",
+            return_value={
+                # ONLY return the metadata file, NO corresponding .tar file
+                mock_metadata_file_only_s5.file_name: mock_metadata_file_only_s5
+            },
+        ):
+            (
+                backup_file,
+                metadata_file,
+            ) = await agent._find_file_and_metadata_version_by_id(target_backup_id_s5)
+
+            assert backup_file is None
+            assert (
+                metadata_file is None
+            )  # Or it might return the metadata file if found, depending on exact return logic. For this log, it should be None, None for the full backup.
+            # Assert the EXACT warning message with "for backup ID %s"
+            assert (
+                f"Found metadata file {mock_metadata_file_only_s5.file_name} for backup ID {target_backup_id_s5}, but no corresponding backup file"
+                in caplog.text
+            )
+
+    # --- NEW SCENARIO 6: Metadata file parsing fails during ID search (for_id_sync context) ---
+    # This hits: _LOGGER.warning("Failed to parse metadata file %s during ID search: %s")
+    caplog.clear()
+    with caplog.at_level(logging.WARNING):
+        target_backup_id_s6 = "faulty_backup_id_for_s6"
+        mock_metadata_file_faulty_s6 = Mock(spec=FileVersion)
+        mock_metadata_file_faulty_s6.file_name = (
+            f"{prefix}{target_backup_id_s6}.tar{METADATA_FILE_SUFFIX}"
+        )
+
+        def mock_download_faulty_metadata_s6():
+            mock_response = Mock()
+            mock_response.content = b"not json at all"  # Invalid JSON
+            return mock_response
+
+        mock_metadata_file_faulty_s6.download.return_value.response = (
+            mock_download_faulty_metadata_s6()
+        )
+
+        # We need a corresponding .tar file so the system attempts to process this metadata.
+        # Otherwise, _get_all_files_in_prefix might filter it out if there's no .tar pairing logic beforehand.
+        mock_tar_file_s6 = Mock(spec=FileVersion)
+        mock_tar_file_s6.file_name = f"{prefix}{target_backup_id_s6}.tar"
+
+        with patch(
+            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._get_all_files_in_prefix",
+            return_value={
+                mock_metadata_file_faulty_s6.file_name: mock_metadata_file_faulty_s6,
+                mock_tar_file_s6.file_name: mock_tar_file_s6,  # Provide the tar file too
+            },
+        ):
+            (
+                backup_file,
+                metadata_file,
+            ) = await agent._find_file_and_metadata_version_by_id(target_backup_id_s6)
+
+            assert backup_file is None
+            assert metadata_file is None
+            # Assert the EXACT warning message with "during ID search"
+            assert (
+                f"Failed to parse metadata file {mock_metadata_file_faulty_s6.file_name} during ID search: Expecting value: line 1 column 1 (char 0)"
+                in caplog.text
+            )
 
 
 async def test_agents_delete(
