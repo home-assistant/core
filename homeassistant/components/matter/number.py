@@ -62,7 +62,7 @@ class MatterRangeNumberEntityDescription(
     max_attribute: type[ClusterAttributeDescriptor]
 
     # Functions to format the min and max values for display or conversion
-    format_min_value: Callable[[Any], Any] = lambda x: x
+    format_min_value: Callable[[float], float] = lambda x: x
     format_max_value: Callable[[Any], Any] = lambda x: x
 
     # command: a custom callback to create the command to send to the device
