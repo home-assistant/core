@@ -36,7 +36,7 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: No options to configure
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -45,9 +45,7 @@ rules:
     status: exempt
     comment: |
       This integration does not require authentication.
-  test-coverage:
-    status: todo
-
+  test-coverage: done
   # Gold
   devices: done
   diagnostics: todo
