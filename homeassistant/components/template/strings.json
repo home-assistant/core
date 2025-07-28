@@ -84,9 +84,9 @@
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
           "name": "[%key:common::config_flow::data::name%]",
-          "state": "[%key:component::template::config::step::sensor::data::state%]",
-          "turn_off": "[%key:component::template::config::step::switch::data::turn_off%]",
-          "turn_on": "[%key:component::template::config::step::switch::data::turn_on%]",
+          "state": "[%key:component::template::common::state%]",
+          "turn_off": "[%key:component::template::common::turn_off%]",
+          "turn_on": "[%key:component::template::common::turn_on%]",
           "percentage": "Percentage",
           "set_percentage": "Actions on set percentage",
           "preset_mode": "Preset mode",
@@ -99,13 +99,13 @@
           "speed_count": "Speed count"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::common::device_id_description%]"
         },
         "sections": {
           "advanced_options": {
-            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+              "availability": "[%key:component::template::common::availability%]"
             }
           }
         },
@@ -305,9 +305,9 @@
       "fan": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
-          "state": "[%key:component::template::config::step::sensor::data::state%]",
-          "turn_off": "[%key:component::template::config::step::switch::data::turn_off%]",
-          "turn_on": "[%key:component::template::config::step::switch::data::turn_on%]",
+          "state": "[%key:component::template::common::state%]",
+          "turn_off": "[%key:component::template::common::turn_off%]",
+          "turn_on": "[%key:component::template::common::turn_on%]",
           "percentage": "[%key:component::template::config::step::fan::data::percentage%]",
           "set_percentage": "[%key:component::template::config::step::fan::data::set_percentage%]",
           "preset_mode": "[%key:component::template::config::step::fan::data::preset_mode%]",
@@ -320,13 +320,13 @@
           "speed_count": "[%key:component::template::config::step::fan::data::speed_count%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::common::device_id_description%]"
         },
         "sections": {
           "advanced_options": {
-            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+              "availability": "[%key:component::template::common::availability%]"
             }
           }
         },
