@@ -29,7 +29,7 @@ class VeluxEntity(Entity):
                     DOMAIN,
                     self.node.serial_number
                     if self.node.serial_number
-                    else str(self.node.node_id),
+                    else f"{config_entry_id}_{node.node_id}",
                 )
             },
             name=self.node.name if self.node.name else f"#{self.node.node_id}",
