@@ -61,23 +61,22 @@ async def test_form_creates_entry(
 
 
 @pytest.mark.parametrize(
-    ("mock_airos_client", "expected_base"),
+    ("exception", "error"),
     [
         (ConnectionAuthenticationError, "invalid_auth"),
         (DeviceConnectionError, "cannot_connect"),
         (KeyDataMissingError, "key_data_missing"),
         (Exception, "unknown"),
     ],
-    indirect=["mock_airos_client"],
 )
 async def test_form_exception_handling(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_airos_client: AsyncMock,
-    ap_fixture: dict[str, Any],
-    expected_base: str,
+    exception: Exception,
+    error: str,
 ) -> None:
-    """Test we handle invalid auth."""
+    """Test we handle exceptions."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -91,7 +90,6 @@ async def test_form_exception_handling(
     assert result["errors"] == {"base": expected_base}
 
     mock_airos_client.login.side_effect = None
-    mock_airos_client.login.return_value = True
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
