@@ -77,7 +77,6 @@ from .sensor import async_create_preview_sensor
 from .switch import async_create_preview_switch
 from .template_entity import TemplateEntity
 from .vacuum import (
-    CONF_BATTERY_LEVEL,
     CONF_FAN_SPEED,
     CONF_FAN_SPEED_LIST,
     SERVICE_CLEAN_SPOT,
@@ -248,7 +247,6 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                 )
             ),
             vol.Optional(SERVICE_SET_FAN_SPEED): selector.ActionSelector(),
-            vol.Optional(CONF_BATTERY_LEVEL): selector.TemplateSelector(),
             vol.Optional(SERVICE_STOP): selector.ActionSelector(),
             vol.Optional(SERVICE_PAUSE): selector.ActionSelector(),
             vol.Optional(SERVICE_RETURN_TO_BASE): selector.ActionSelector(),
