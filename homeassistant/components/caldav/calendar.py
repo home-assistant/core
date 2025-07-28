@@ -8,6 +8,7 @@ from typing import Any
 import uuid
 
 import caldav
+from dateutil.parser import parse as date_parse
 import icalendar
 import voluptuous as vol
 
@@ -271,18 +272,23 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
             def _delete_event() -> None:
                 """Delete event from CalDAV calendar."""
                 event_obj = _find_event_by_uid(self.coordinator.calendar, uid)
+
                 if recurrence_id is not None:
-                    # For recurring events, we should handle recurrence_id
-                    # For now, we'll delete the entire series
-                    _LOGGER.warning(
-                        "Recurrence handling not fully implemented, deleting entire event series"
-                    )
-                event_obj.delete()
+                    # Handle recurring event modification
+                    # For recurrence_id, we need to either delete a specific instance or create an exception
+                    if recurrence_range == "THIS_AND_FUTURE":
+                        # Modify the original event to end before this instance
+                        _modify_recurring_event_until(event_obj, recurrence_id)
+                    else:
+                        # Delete just this instance by adding an EXDATE to the series
+                        _add_exception_to_recurring_event(event_obj, recurrence_id)
+                else:
+                    # Delete the entire event or event series
+                    event_obj.delete()
 
             await self.hass.async_add_executor_job(_delete_event)
 
         except Exception as err:
-            _LOGGER.error("Error deleting calendar event: %s", err)
             raise HomeAssistantError(f"Unable to delete event: {err}") from err
 
         # Refresh coordinator data to remove deleted event
@@ -300,28 +306,22 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
             def _update_event() -> None:
                 """Update event in CalDAV calendar."""
                 event_obj = _find_event_by_uid(self.coordinator.calendar, uid)
-                if recurrence_id is not None:
-                    _LOGGER.warning(
-                        "Recurrence handling not fully implemented, updating entire event series"
-                    )
 
-                # Try direct parameter update first, fallback to iCalendar string
-                try:
-                    event_data = _convert_event_params_to_dict(**event)
-                    # Update directly if CalDAV library supports it
-                    for key, value in event_data.items():
-                        setattr(event_obj, key, value)
-                    event_obj.save()
-                except (TypeError, AttributeError):
-                    # Fallback to iCalendar string replacement
-                    event_ical = _convert_event_params_to_ical(**event)
-                    event_obj.data = event_ical
-                    event_obj.save()
+                if recurrence_id is not None:
+                    # Handle recurring event modification
+                    if recurrence_range == "THIS_AND_FUTURE":
+                        # Split the series: truncate original and create new series
+                        _split_recurring_event_series(event_obj, event, recurrence_id)
+                    else:
+                        # Create exception for single instance
+                        _create_recurring_event_exception(event_obj, event, recurrence_id)
+                else:
+                    # Update the entire event or event series
+                    _update_event_data(event_obj, event)
 
             await self.hass.async_add_executor_job(_update_event)
 
         except Exception as err:
-            _LOGGER.error("Error updating calendar event: %s", err)
             raise HomeAssistantError(f"Unable to update event: {err}") from err
 
         # Refresh coordinator data to show updated event
@@ -330,41 +330,41 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
 
 def _convert_event_params_to_dict(**kwargs: Any) -> dict[str, Any]:
     """Convert Home Assistant event parameters to CalDAV parameter format.
-    
+
     This attempts to use direct parameter passing similar to save_todo().
     """
     event_data: dict[str, Any] = {}
-    
+
     # Handle summary
     if 'summary' in kwargs:
         event_data['summary'] = kwargs['summary']
-    
+
     # Handle start/end times (using RFC5545 field names)
     if 'dtstart' in kwargs:
         event_data['dtstart'] = kwargs['dtstart']
-        
+
     if 'dtend' in kwargs:
         event_data['dtend'] = kwargs['dtend']
-    
+
     # Handle optional fields
     if kwargs.get('description'):
         event_data['description'] = kwargs['description']
-        
+
     if kwargs.get('location'):
         event_data['location'] = kwargs['location']
-    
+
     # Handle UID
     if 'uid' in kwargs:
         event_data['uid'] = kwargs['uid']
     else:
         event_data['uid'] = str(uuid.uuid4())
-    
+
     return event_data
 
 
 def _convert_event_params_to_ical(**kwargs: Any) -> str:
     """Convert Home Assistant event parameters to iCalendar format.
-    
+
     This is the fallback method that creates iCalendar strings.
     Uses RFC5545 field names as received from the calendar service.
     """
@@ -407,15 +407,150 @@ def _convert_event_params_to_ical(**kwargs: Any) -> str:
 
 def _find_event_by_uid(calendar: caldav.Calendar, uid: str) -> caldav.CalendarObjectResource:
     """Find an event by UID using existing search patterns.
-    
+
     This reuses the same search pattern used by the coordinator.
     """
     events = calendar.search(event=True, expand=False)
-    
+
     for event_obj in events:
         if hasattr(event_obj.instance, "vevent"):
             vevent = event_obj.instance.vevent
             if hasattr(vevent, "uid") and vevent.uid.value == uid:
                 return event_obj
-    
+
     raise ValueError(f"Event with UID {uid} not found")
+
+
+def _modify_recurring_event_until(event_obj: caldav.CalendarObjectResource, recurrence_id: str) -> None:
+    """Modify a recurring event to end before the specified recurrence ID."""
+    try:
+        # Parse the recurrence_id as a datetime to set as UNTIL
+        until_date = date_parse(recurrence_id)
+
+        # Get the event data and modify the RRULE
+        vevent = event_obj.instance.vevent
+
+        if hasattr(vevent, 'rrule'):
+            # Parse existing RRULE and add UNTIL
+            rrule_str = str(vevent.rrule.value)
+            if 'UNTIL=' not in rrule_str:
+                # Add UNTIL to the RRULE
+                rrule_str += f";UNTIL={until_date.strftime('%Y%m%dT%H%M%SZ')}"
+                # Update the RRULE
+                vevent.rrule.value = rrule_str
+                event_obj.save()
+        else:
+            # No RRULE found, just delete the single event
+            event_obj.delete()
+
+    except (ValueError, AttributeError, TypeError) as err:
+        _LOGGER.warning("Failed to modify recurring event until date: %s", err)
+        # Fallback to deleting the entire series
+        event_obj.delete()
+
+
+def _add_exception_to_recurring_event(event_obj: caldav.CalendarObjectResource, recurrence_id: str) -> None:
+    """Add an exception date (EXDATE) to a recurring event."""
+    try:
+        exception_date = date_parse(recurrence_id)
+
+        vevent = event_obj.instance.vevent
+
+        # Add EXDATE to exclude this specific instance
+        if hasattr(vevent, 'exdate'):
+            # Add to existing EXDATE list
+            if hasattr(vevent.exdate, 'value'):
+                if isinstance(vevent.exdate.value, list):
+                    vevent.exdate.value.append(exception_date)
+                else:
+                    vevent.exdate.value = [vevent.exdate.value, exception_date]
+        else:
+            # Create new EXDATE
+            vevent.add('exdate', exception_date)
+
+        event_obj.save()
+
+    except (ValueError, AttributeError, TypeError) as err:
+        _LOGGER.warning("Failed to add exception to recurring event: %s", err)
+        # Fallback to deleting the entire series
+        event_obj.delete()
+
+
+def _split_recurring_event_series(event_obj: caldav.CalendarObjectResource, event_data: dict[str, Any], recurrence_id: str) -> None:
+    """Split a recurring event series at the specified recurrence ID."""
+    try:
+        split_date = date_parse(recurrence_id)
+
+        # First, modify the original series to end before the split date
+        _modify_recurring_event_until(event_obj, recurrence_id)
+
+        # Then create a new series starting from the split date
+        new_event_data = _convert_event_params_to_ical(**event_data)
+        # Parse and modify the start date to match recurrence_id
+        new_event = icalendar.Calendar.from_ical(new_event_data)
+
+        for component in new_event.walk():
+            if component.name == "VEVENT":
+                component['dtstart'] = split_date
+                # Adjust end time accordingly
+                if 'dtend' in component:
+                    duration = component['dtend'].dt - component['dtstart'].dt
+                    component['dtend'] = split_date + duration
+                # Generate new UID for the new series
+                component['uid'] = str(uuid.uuid4())
+
+        # Save the new series
+        event_obj.calendar.save_event(new_event.to_ical().decode('utf-8'))
+
+    except (ValueError, AttributeError, TypeError) as err:
+        _LOGGER.warning("Failed to split recurring event series: %s", err)
+        # Fallback to updating the entire series
+        _update_event_data(event_obj, event_data)
+
+
+def _create_recurring_event_exception(event_obj: caldav.CalendarObjectResource, event_data: dict[str, Any], recurrence_id: str) -> None:
+    """Create an exception event for a single instance of a recurring series."""
+    try:
+        exception_date = date_parse(recurrence_id)
+
+        # First, add the exception date to the original series
+        _add_exception_to_recurring_event(event_obj, recurrence_id)
+
+        # Then create a new single event for this exception
+        exception_event_data = dict(event_data)
+        exception_event_data['dtstart'] = exception_date
+
+        # If there's an end time, adjust it to maintain duration
+        if 'dtend' in exception_event_data:
+            original_vevent = event_obj.instance.vevent
+            if hasattr(original_vevent, 'dtstart') and hasattr(original_vevent, 'dtend'):
+                duration = original_vevent.dtend.value - original_vevent.dtstart.value
+                exception_event_data['dtend'] = exception_date + duration
+
+        # Set recurrence-id to link it to the original series
+        exception_event_data['recurrence-id'] = exception_date
+
+        # Create the exception event
+        exception_ical = _convert_event_params_to_ical(**exception_event_data)
+        event_obj.calendar.save_event(exception_ical)
+
+    except (ValueError, AttributeError, TypeError) as err:
+        _LOGGER.warning("Failed to create recurring event exception: %s", err)
+        # Fallback to updating the entire series
+        _update_event_data(event_obj, event_data)
+
+
+def _update_event_data(event_obj: caldav.CalendarObjectResource, event_data: dict[str, Any]) -> None:
+    """Update event data using the best available method."""
+    # Try direct parameter update first, fallback to iCalendar string
+    try:
+        converted_data = _convert_event_params_to_dict(**event_data)
+        # Update directly if CalDAV library supports it
+        for key, value in converted_data.items():
+            setattr(event_obj, key, value)
+        event_obj.save()
+    except (TypeError, AttributeError):
+        # Fallback to iCalendar string replacement
+        event_ical = _convert_event_params_to_ical(**event_data)
+        event_obj.data = event_ical
+        event_obj.save()
