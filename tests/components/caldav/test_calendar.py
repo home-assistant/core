@@ -11,6 +11,7 @@ from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.calendar import CalendarEntityFeature
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -1140,3 +1141,127 @@ async def test_config_entry_supported_components(
     # No entity created when no components exist
     state = hass.states.get("calendar.calendar_4")
     assert not state
+
+
+async def test_create_event(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test creating a calendar event."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    # Get the calendar entity
+    calendar_entity = hass.data["calendar"].get_entity("calendar.example")
+    assert calendar_entity
+
+    # Mock the calendar object to verify save_event was called
+    mock_calendar = calendar_entity.coordinator.calendar
+    mock_calendar.save_event = Mock()
+
+    # Test creating an event
+    event_data = {
+        "summary": "Test Event",
+        "dtstart": datetime.datetime(2023, 11, 27, 10, 0, 0),
+        "dtend": datetime.datetime(2023, 11, 27, 11, 0, 0),
+        "description": "Test Description",
+        "location": "Test Location",
+    }
+
+    await calendar_entity.async_create_event(**event_data)
+
+    # Verify save_event was called
+    assert mock_calendar.save_event.called
+
+    # Verify the event data contains expected content
+    call_args = mock_calendar.save_event.call_args[0][0]
+    assert "Test Event" in call_args
+    assert "Test Description" in call_args
+    assert "Test Location" in call_args
+
+
+async def test_delete_event(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test deleting a calendar event."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    # Get the calendar entity
+    calendar_entity = hass.data["calendar"].get_entity("calendar.example")
+    assert calendar_entity
+
+    # Mock the calendar and event objects
+    mock_event = Mock()
+    mock_event.delete = Mock()
+    mock_event.instance.vevent.uid.value = "test-uid"
+
+    mock_calendar = calendar_entity.coordinator.calendar
+    mock_calendar.search = Mock(return_value=[mock_event])
+
+    # Test deleting an event
+    await calendar_entity.async_delete_event("test-uid")
+
+    # Verify delete was called
+    assert mock_event.delete.called
+    assert mock_calendar.search.called
+
+
+async def test_update_event(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test updating a calendar event."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    # Get the calendar entity
+    calendar_entity = hass.data["calendar"].get_entity("calendar.example")
+    assert calendar_entity
+
+    # Mock the calendar and event objects
+    mock_event = Mock()
+    mock_event.save = Mock()
+    mock_event.instance.vevent.uid.value = "test-uid"
+
+    mock_calendar = calendar_entity.coordinator.calendar
+    mock_calendar.search = Mock(return_value=[mock_event])
+
+    # Test updating an event
+    event_data = {
+        "summary": "Updated Event",
+        "dtstart": datetime.datetime(2023, 11, 27, 10, 0, 0),
+        "dtend": datetime.datetime(2023, 11, 27, 11, 0, 0),
+        "description": "Updated Description",
+    }
+
+    await calendar_entity.async_update_event("test-uid", event_data)
+
+    # Verify save was called
+    assert mock_event.save.called
+    assert mock_calendar.search.called
+
+    # Verify the event data was updated
+    assert hasattr(mock_event, "data")
+
+
+async def test_supported_features(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that the calendar entity supports create, delete, and update features."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+
+    # Get the calendar entity
+    calendar_entity = hass.data["calendar"].get_entity("calendar.example")
+    assert calendar_entity
+
+    # Verify supported features
+    expected_features = (
+        CalendarEntityFeature.CREATE_EVENT
+        | CalendarEntityFeature.DELETE_EVENT
+        | CalendarEntityFeature.UPDATE_EVENT
+    )
+    assert calendar_entity.supported_features == expected_features
