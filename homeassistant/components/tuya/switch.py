@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from tuya_sharing import CustomerDevice, Manager
@@ -13,12 +14,22 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode
+from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode
 from .entity import TuyaEntity
+
+
+@dataclass(frozen=True, kw_only=True)
+class TuyaSwitchEntityDescription(SwitchEntityDescription):
+    """Describe a Tuya switch entity."""
+
+    # Mark entities that are deprecated and replaced by other entity types
+    deprecated_by: str | None = None
+
 
 # All descriptions can be found here. Mostly the Boolean data types in the
 # default instruction set of each category end up being a Switch.
@@ -599,6 +610,15 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Smart Water Timer
+    "sfkzq": (
+        TuyaSwitchEntityDescription(
+            key=DPCode.SWITCH,
+            translation_key="switch",
+            entity_registry_enabled_default=False,
+            deprecated_by="valve",
+        ),
+    ),
     # Siren Alarm
     # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
     "sgbj": (
@@ -852,11 +872,32 @@ async def async_setup_entry(
         for device_id in device_ids:
             device = hass_data.manager.device_map[device_id]
             if descriptions := SWITCHES.get(device.category):
-                entities.extend(
-                    TuyaSwitchEntity(device, hass_data.manager, description)
-                    for description in descriptions
-                    if description.key in device.status
-                )
+                for description in descriptions:
+                    if description.key in device.status:
+                        # Create deprecation issue for entities marked as deprecated
+                        if (
+                            hasattr(description, "deprecated_by")
+                            and description.deprecated_by
+                        ):
+                            ir.async_create_issue(
+                                hass,
+                                DOMAIN,
+                                f"deprecated_switch_{device_id}_{description.key}",
+                                is_fixable=False,
+                                issue_domain=DOMAIN,
+                                severity=ir.IssueSeverity.WARNING,
+                                translation_key="deprecated_switch_replaced_by_other",
+                                translation_placeholders={
+                                    "device_name": device.name,
+                                    "entity_type": description.deprecated_by,
+                                    "switch_name": description.translation_key
+                                    or description.key,
+                                },
+                            )
+
+                        entities.append(
+                            TuyaSwitchEntity(device, hass_data.manager, description)
+                        )
 
         async_add_entities(entities)
 

@@ -768,9 +768,6 @@
       "sleep_aid": {
         "name": "Sleep aid"
       },
-      "indexed_switch": {
-        "name": "Switch {index}"
-      },
       "switch_1": {
         "name": "Switch 1"
       },
@@ -929,6 +926,12 @@
       "indexed_switch": {
         "name": "Switch {index}"
       }
+    }
+  },
+  "issues": {
+    "deprecated_switch_replaced_by_other": {
+      "title": "Switch entity has been replaced",
+      "description": "The {switch_name} switch entity for your {device_name} device has been deprecated and replaced by a {entity_type} entity. The {entity_type} entity provides more appropriate controls for this device. Please disable the switch entity and use the {entity_type} entity instead."
     }
   }
 }
