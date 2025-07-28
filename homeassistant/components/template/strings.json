@@ -210,7 +210,7 @@
       "alarm_control_panel": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
-          "value_template": "component::template::common::state",
+          "value_template": "[%key:component::template::common::state%]",
           "disarm": "[%key:component::template::config::step::alarm_control_panel::data::disarm%]",
           "arm_away": "[%key:component::template::config::step::alarm_control_panel::data::arm_away%]",
           "arm_custom_bypass": "[%key:component::template::config::step::alarm_control_panel::data::arm_custom_bypass%]",
