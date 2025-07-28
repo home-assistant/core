@@ -107,13 +107,13 @@ def b2_fixture():
             len(test_backup_data),
             "application/octet-stream",
             sha1_backup,
-            {},  # Store the full BACKUP_METADATA dict as user_file_info on the tar file
+            {
+                "backup_metadata": json.dumps(BACKUP_METADATA)
+            },  # Store the full BACKUP_METADATA dict as user_file_info on the tar file
             stream_backup,
         )
 
         # --- Upload the metadata JSON file ---
-        # The content of the metadata JSON file is BACKUP_METADATA["backup_metadata"]
-        # which is already a JSON string from TEST_BACKUP.as_dict()
         metadata_json_content_bytes = json.dumps(BACKUP_METADATA).encode("utf-8")
         stream_metadata = io.BytesIO(metadata_json_content_bytes)
         stream_metadata.seek(0)
