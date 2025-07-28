@@ -49,7 +49,7 @@ class SamsungJetBotVacuum(SmartThingsEntity, StateVacuumEntity):
     )
 
     def __init__(self, client: SmartThings, device: FullDevice) -> None:
-        """Initialize the Jet Bot vacuum entity."""
+        """Initialize the Samsung robot cleaner vacuum entity."""
         super().__init__(
             client,
             device,
