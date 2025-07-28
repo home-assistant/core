@@ -1,7 +1,8 @@
 """Common fixtures for the Immich tests."""
 
 from collections.abc import AsyncGenerator, Generator
-from unittest.mock import AsyncMock, patch
+from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioimmich import (
     ImmichAlbums,
@@ -12,6 +13,8 @@ from aioimmich import (
     ImmichTags,
     ImmichUsers,
 )
+from aioimmich.albums.models import ImmichAddAssetsToAlbumResponse
+from aioimmich.assets.models import ImmichAssetUploadResponse
 from aioimmich.people.models import ImmichPerson
 from aioimmich.server.models import (
     ImmichServerAbout,
@@ -24,6 +27,7 @@ from aioimmich.users.models import ImmichUserObject
 import pytest
 
 from homeassistant.components.immich.const import DOMAIN
+from homeassistant.components.media_source import PlayMedia
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -77,6 +81,12 @@ def mock_immich_albums() -> AsyncMock:
     mock = AsyncMock(spec=ImmichAlbums)
     mock.async_get_all_albums.return_value = [MOCK_ALBUM_WITHOUT_ASSETS]
     mock.async_get_album_info.return_value = MOCK_ALBUM_WITH_ASSETS
+    mock.async_add_assets_to_album.return_value = [
+        ImmichAddAssetsToAlbumResponse.from_dict(
+            {"id": "abcdef-0123456789", "success": True}
+        )
+    ]
+
     return mock
 
 
@@ -86,6 +96,9 @@ def mock_immich_assets() -> AsyncMock:
     mock = AsyncMock(spec=ImmichAssests)
     mock.async_view_asset.return_value = b"xxxx"
     mock.async_play_video_stream.return_value = MockStreamReaderChunked(b"xxxx")
+    mock.async_upload_asset.return_value = ImmichAssetUploadResponse.from_dict(
+        {"id": "abcdef-0123456789", "status": "created"}
+    )
     return mock
 
 
@@ -293,6 +306,20 @@ async def mock_non_admin_immich(mock_immich: AsyncMock) -> AsyncMock:
     """Mock the Immich API."""
     mock_immich.users.async_get_my_user.return_value.is_admin = False
     return mock_immich
+
+
+@pytest.fixture
+def mock_media_source() -> Generator[MagicMock]:
+    """Mock the media source."""
+    with patch(
+        "homeassistant.components.immich.services.async_resolve_media",
+        return_value=PlayMedia(
+            url="media-source://media_source/local/screenshot.jpg",
+            mime_type="image/jpeg",
+            path=Path("/media/screenshot.jpg"),
+        ),
+    ) as mock_media:
+        yield mock_media
 
 
 @pytest.fixture
