@@ -4,7 +4,7 @@
   "codeowners": ["@HarvsG"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bayesian",
-  "integration_type": "helper",
-  "iot_class": "local_polling",
+  "integration_type": "hub",
+  "iot_class": "calculated",
   "quality_scale": "internal"
 }

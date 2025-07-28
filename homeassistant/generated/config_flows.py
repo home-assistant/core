@@ -5,7 +5,6 @@ To update, run python3 -m script.hassfest
 
 FLOWS = {
     "helper": [
-        "bayesian",
         "derivative",
         "filter",
         "generic_hygrostat",
@@ -87,6 +86,7 @@ FLOWS = {
         "baf",
         "balboa",
         "bang_olufsen",
+        "bayesian",
         "blebox",
         "blink",
         "blue_current",
