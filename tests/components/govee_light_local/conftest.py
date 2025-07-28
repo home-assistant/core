@@ -1,6 +1,6 @@
 """Tests configuration for Govee Local API."""
 
-from asyncio import AbstractEventLoop, Event
+import asyncio
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
@@ -74,12 +74,13 @@ def fixture_mock_coordinator() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(name="mock_govee_api")
-def fixture_mock_govee_api(event_loop: AbstractEventLoop) -> Generator[AsyncMock]:
+def fixture_mock_govee_api() -> Generator[AsyncMock]:
     """Set up Govee Local API fixture."""
 
     mock_registry = MagicMock(spec=DeviceRegistry, wraps=DeviceRegistry)
     mock_registry._discovered_devices = {}
 
+    event_loop = asyncio.get_event_loop()
     controller = GoveeController(event_loop)
     controller._registry = mock_registry
 
@@ -87,7 +88,7 @@ def fixture_mock_govee_api(event_loop: AbstractEventLoop) -> Generator[AsyncMock
     mock_api._registry = mock_registry
 
     mock_api.start = AsyncMock()
-    mock_api.cleanup = MagicMock(return_value=Event())
+    mock_api.cleanup = MagicMock(return_value=asyncio.Event())
     mock_api.cleanup.return_value.set()
     mock_api.turn_on_off = AsyncMock()
     mock_api.set_brightness = AsyncMock()
