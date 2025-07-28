@@ -149,7 +149,7 @@ async def test_host_scene_select(
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
-async def reolink_chime_select(
+async def test_chime_select(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     config_entry: MockConfigEntry,
