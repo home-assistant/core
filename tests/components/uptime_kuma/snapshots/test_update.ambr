@@ -1,0 +1,61 @@
+# serializer version: 1
+# name: test_update[update.uptime_example_org_uptime_kuma_version-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'update',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'update.uptime_example_org_uptime_kuma_version',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Uptime Kuma version',
+    'platform': 'uptime_kuma',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <UpdateEntityFeature: 16>,
+    'translation_key': <UptimeKumaUpdate.UPDATE: 'update'>,
+    'unique_id': '123456789_update',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_update[update.uptime_example_org_uptime_kuma_version-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'auto_update': False,
+      'display_precision': 0,
+      'entity_picture': 'https://brands.home-assistant.io/_/uptime_kuma/icon.png',
+      'friendly_name': 'uptime.example.org Uptime Kuma version',
+      'in_progress': False,
+      'installed_version': '2.0.0',
+      'latest_version': '2.0.1',
+      'release_summary': None,
+      'release_url': 'https://github.com/louislam/uptime-kuma/releases/tag/2.0.1',
+      'skipped_version': None,
+      'supported_features': <UpdateEntityFeature: 16>,
+      'title': 'Uptime Kuma 2.0.1',
+      'update_percentage': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'update.uptime_example_org_uptime_kuma_version',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

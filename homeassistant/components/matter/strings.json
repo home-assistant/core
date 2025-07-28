@@ -180,6 +180,9 @@
       "altitude": {
         "name": "Altitude above sea level"
       },
+      "cook_time": {
+        "name": "Cook time"
+      },
       "pump_setpoint": {
         "name": "Setpoint"
       },
@@ -221,6 +224,9 @@
       },
       "device_energy_management_mode": {
         "name": "Energy management mode"
+      },
+      "power_level": {
+        "name": "Power level (W)"
       },
       "sensitivity_level": {
         "name": "Sensitivity",
