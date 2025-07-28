@@ -84,7 +84,6 @@ class PlayStationNetworkBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
                 translation_key="not_ready",
             ) from error
         except (PSNAWPServerError, PSNAWPClientError) as error:
-            _LOGGER.exception("Update failed:")
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
@@ -109,7 +108,6 @@ class PlaystationNetworkUserDataCoordinator(
                 translation_key="not_ready",
             ) from error
         except (PSNAWPServerError, PSNAWPClientError) as error:
-            _LOGGER.exception("Update failed:")
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",

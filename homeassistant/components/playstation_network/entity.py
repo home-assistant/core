@@ -34,7 +34,7 @@ class PlaystationNetworkServiceEntity(
         unique_id = coordinator.config_entry.unique_id
 
         if subentry is not None:
-            unique_id += f"_{subentry.subentry_id}"
+            unique_id += f"_{subentry.unique_id}"
         self._attr_unique_id = f"{unique_id}_{entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},

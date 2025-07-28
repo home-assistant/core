@@ -168,19 +168,20 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
         """Subentry user flow."""
         errors: dict[str, str] = {}
         config_entry: PlaystationNetworkConfigEntry = self._get_entry()
-        if user_input is None:
-            self.friends_list = await self.hass.async_add_executor_job(
-                lambda: {
-                    friend.account_id: friend
-                    for friend in config_entry.runtime_data.user_data.psn.user.friends_list()
-                }
-            )
+
         if user_input is not None:
             return self.async_create_entry(
                 title=self.friends_list[user_input[CONF_ACCOUNT_ID]].online_id,
                 data=user_input,
                 unique_id=user_input[CONF_ACCOUNT_ID],
             )
+
+        self.friends_list = await self.hass.async_add_executor_job(
+            lambda: {
+                friend.account_id: friend
+                for friend in config_entry.runtime_data.user_data.psn.user.friends_list()
+            }
+        )
 
         options = [
             SelectOptionDict(
