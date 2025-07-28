@@ -94,16 +94,6 @@ SWITCH_CONFIG_ENTRY_SCHEMA = SWITCH_COMMON_SCHEMA.extend(
 )
 
 
-def rewrite_options_to_modern_conf(option_config: dict[str, dict]) -> dict[str, dict]:
-    """Rewrite option configuration to modern configuration."""
-    option_config = {**option_config}
-
-    if CONF_VALUE_TEMPLATE in option_config:
-        option_config[CONF_STATE] = option_config.pop(CONF_VALUE_TEMPLATE)
-
-    return option_config
-
-
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
