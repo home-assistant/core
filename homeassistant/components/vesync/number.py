@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 class VeSyncNumberEntityDescription(NumberEntityDescription):
     """Class to describe a Vesync number entity."""
 
-    exists_fn: Callable[[VeSyncBaseDevice], bool]
+    exists_fn: Callable[[VeSyncBaseDevice], bool] = lambda _: True
     value_fn: Callable[[VeSyncBaseDevice], float]
     native_min_value_lambda: Callable[[VeSyncBaseDevice], float]
     native_max_value_lambda: Callable[[VeSyncBaseDevice], float]

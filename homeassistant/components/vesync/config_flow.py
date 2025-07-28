@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from typing import Any
 
 from pyvesync import VeSync
+from pyvesync.utils.errors import VeSyncError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -50,8 +51,9 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
         password = user_input[CONF_PASSWORD]
 
         manager = VeSync(username, password)
-        login = await self.hass.async_add_executor_job(manager.login)
-        if not login:
+        try:
+            await manager.login()
+        except VeSyncError:
             return self._show_form(errors={"base": "invalid_auth"})
 
         return self.async_create_entry(
@@ -75,15 +77,23 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
             password = user_input[CONF_PASSWORD]
 
             manager = VeSync(username, password)
-            login = await self.hass.async_add_executor_job(manager.login)
-            if login:
-                return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
-                    data_updates={
-                        CONF_USERNAME: username,
-                        CONF_PASSWORD: password,
-                    },
+            try:
+                await manager.login()
+            except VeSyncError:
+                return self.async_show_form(
+                    step_id="reauth_confirm",
+                    data_schema=DATA_SCHEMA,
+                    description_placeholders={"name": "VeSync"},
+                    errors={"base": "invalid_auth"},
                 )
+
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(),
+                data_updates={
+                    CONF_USERNAME: username,
+                    CONF_PASSWORD: password,
+                },
+            )
 
         return self.async_show_form(
             step_id="reauth_confirm",
