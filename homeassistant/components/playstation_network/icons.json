@@ -57,9 +57,6 @@
       },
       "avatar": {
         "default": "mdi:account-circle"
-      },
-      "now_playing_image": {
-        "default": "mdi:image"
       }
     },
     "notify": {
