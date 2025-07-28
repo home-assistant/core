@@ -300,6 +300,12 @@
       },
       "image_hue": {
         "default": "mdi:image-edit"
+      },
+      "pre_record_time": {
+        "default": "mdi:history"
+      },
+      "pre_record_battery_stop": {
+        "default": "mdi:history"
       }
     },
     "select": {
@@ -390,6 +396,9 @@
       "packing_time": {
         "default": "mdi:record-rec"
       },
+      "pre_record_fps": {
+        "default": "mdi:history"
+      },
       "post_rec_time": {
         "default": "mdi:record-rec"
       }
@@ -469,6 +478,9 @@
       },
       "manual_record": {
         "default": "mdi:record-rec"
+      },
+      "pre_record": {
+        "default": "mdi:history"
       },
       "hub_ringtone_on_event": {
         "default": "mdi:music-note"
