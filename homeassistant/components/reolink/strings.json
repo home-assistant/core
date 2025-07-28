@@ -659,7 +659,7 @@
         "name": "Pre-recording time"
       },
       "pre_record_battery_stop": {
-        "name": "Pre-recording battery stop"
+        "name": "Pre-recording stop battery level"
       }
     },
     "select": {
