@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.const import CONF_HOST
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
@@ -26,6 +26,7 @@ class AirOSEntity(CoordinatorEntity[AirOSDataUpdateCoordinator]):
         )
 
         self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, airos_data.wireless.apmac)},
             configuration_url=configuration_url,
             identifiers={(DOMAIN, str(airos_data.host.device_id))},
             manufacturer=MANUFACTURER,
