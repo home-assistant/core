@@ -1,0 +1,50 @@
+{
+  "config": {
+    "abort": {
+      "access_not_configured": "Please read the below message we got from Google:\n\n{message}",
+      "no_device": "Please create a Hinen Device to be able to use the integration. Instructions can be found at {support_url}.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "wrong_account": "Wrong account: please authenticate with the right account."
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "devices": {
+        "description": "Select the devices you want to add.",
+        "data": { "devices": "Hinen devices" }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Hinen integration needs to re-authenticate your account"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "[%key:component::Hinen::config::step::devices::description%]",
+        "data": {
+          "devices": "[%key:component::Hinen::config::step::devices::data::devices%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "alert_status": {
+        "name": "alert status"
+      },
+      "status": {
+        "name": "status"
+      }
+    }
+  }
+}

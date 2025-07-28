@@ -1,0 +1,52 @@
+{
+  "config": {
+    "abort": {
+      "access_not_configured": "Please read the below message we got from Hinen:\n\n{message}",
+      "already_configured": "Account is already configured",
+      "no_device": "Please connect a Hinen device to be able to use the integration. Instructions can be found at {support_url}.",
+      "oauth_error": "Received invalid token data.",
+      "oauth_failed": "Error while obtaining access token.",
+      "oauth_timeout": "Timeout resolving OAuth token.",
+      "oauth_unauthorized": "OAuth authorization error while obtaining access token.",
+      "reauth_successful": "Re-authentication was successful",
+      "unknown": "Unexpected error",
+      "wrong_account": "Wrong account: please authenticate with the right account."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect",
+      "invalid_auth": "Invalid authentication"
+    },
+    "step": {
+      "channels": {
+        "data": {
+          "channels": "Hinen devices"
+        },
+        "description": "Select the device you want to add."
+      },
+      "reauth_confirm": {
+        "description": "The Hinen integration needs to re-authenticate your account",
+        "title": "Authentication expired for {name}"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "alert_status": {
+        "name": "Alert Status"
+      },
+      "status": {
+        "name": "Status"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "channels": "Hinen devices"
+        },
+        "description": "Select the device you want to add."
+      }
+    }
+  }
+}
