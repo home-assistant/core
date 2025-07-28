@@ -230,7 +230,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 response = await self.fetch_device_info()
                 self._noise_psk = None
 
-            # tTry to retrieve an existing key from dashboard or storage.
+            # Try to retrieve an existing key from dashboard or storage.
             if (
                 self._device_name
                 and await self._retrieve_encryption_key_from_dashboard()
