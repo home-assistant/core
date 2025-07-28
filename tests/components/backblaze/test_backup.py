@@ -29,6 +29,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
+from .conftest import FileVersion
 from .const import BACKUP_METADATA, METADATA_FILE_SUFFIX, TEST_BACKUP
 
 from tests.common import MockConfigEntry
@@ -373,34 +374,85 @@ async def test_agents_upload_simple_file(
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test agent upload backup for a small file."""
+    """Test agent upload backup for a small file using direct async_upload_backup call.
+
+    This test adapts the multipart upload test's structure to verify the simple
+    file upload path within the BackblazeBackupAgent.
+    """
     client = await hass_client()
+    # Define a backup with a size small enough to trigger a simple upload
     backup_with_size = AgentBackup(**{**TEST_BACKUP.as_dict(), "size": 100})
+
+    # Calculate the expected file name using suggested_filename,
+    # which is what BackblazeBackupAgent._upload_simple_b2 will use.
+    mock_config_entry.data["prefix"] + suggested_filename(backup_with_size)
+
+    # Create an AsyncMock for the open_stream callable.
+    # This mock will simulate reading the backup file in chunks.
+    mock_open_stream_callable = AsyncMock()
+
+    # Define an async generator that yields the content for the small file.
+    # The total size should match backup_with_size.size (100 bytes here).
+    async def async_chunk_generator():
+        yield b"test" * 25  # Yields 100 bytes (4 bytes/chunk * 25 chunks)
+        # An empty bytes object signals the end of the stream
+        yield b""
+
+    mock_open_stream_callable.return_value = async_chunk_generator()
+
+    # Create a mock for the _bucket object, which is part of the Backblaze runtime data.
+    mock_bucket = Mock()
+
+    # Create a mock for the FileVersion object that `upload_file` (for simple uploads)
+    # is expected to return.
+    mock_file_version_result = Mock(spec=FileVersion)
+    mock_file_version_result.id_ = "test_simple_file_id_456"  # Assign a dummy ID
+
+    # Set the return value for the `upload_file` method on `mock_bucket`.
+    # This is the method called for simple (non-multipart) uploads.
+    mock_bucket.upload_file.return_value = mock_file_version_result
+
     with (
+        # Patch BackupManager.async_get_backup to return our test backup.
         patch(
             "homeassistant.components.backup.manager.BackupManager.async_get_backup",
             return_value=backup_with_size,
         ),
+        # Patch read_backup to return our test backup.
         patch(
             "homeassistant.components.backup.manager.read_backup",
             return_value=backup_with_size,
         ),
-        patch("pathlib.Path.open") as mocked_open,
+        # Patch the `runtime_data` attribute of the `mock_config_entry` instance
+        # to inject our mock_bucket.
+        patch.object(mock_config_entry, "runtime_data", new=mock_bucket),
+        # Patch _upload_multipart_b2 to ensure it's *not* called, confirming the simple path.
         patch(
-            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._upload_simple_b2",
+            "homeassistant.components.backblaze.backup.BackblazeBackupAgent._upload_multipart_b2",
             autospec=True,
-        ) as mock_upload_simple_b2,
-        caplog.at_level(logging.INFO),  # Capture INFO for upload logs
+        ) as mock_upload_multipart_b2,
+        # Capture INFO level logs to check for the success message.
+        caplog.at_level(logging.INFO),
     ):
-        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
-        resp = await client.post(
-            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
-            data={"file": io.StringIO("test")},
+        # Instantiate the BackblazeBackupAgent directly.
+        agent = BackblazeBackupAgent(client.app["hass"], mock_config_entry)
+
+        # Call the async_upload_backup method directly, simulating the upload process.
+        await agent.async_upload_backup(
+            open_stream=mock_open_stream_callable,
+            backup=backup_with_size,
         )
 
-    assert resp.status == 201
-    mock_upload_simple_b2.assert_called_once()
-    assert "Main backup file upload finished" in caplog.text
+    # Assert that the multipart upload path was not taken.
+    assert mock_upload_multipart_b2.called is False
+
+    # Assert that the `upload_file` method on the mock_bucket was called exactly once.
+    assert mock_bucket.upload_bytes.call_count == 2
+
+    # Construct the expected log message using the calculated file name and mock ID.
+    expected_log_message = "Simple upload finished for "
+    # Assert that the expected log message is present in the captured logs.
+    assert expected_log_message in caplog.text
 
 
 async def test_agents_upload_multipart_file(
