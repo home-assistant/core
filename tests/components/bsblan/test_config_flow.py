@@ -3,7 +3,7 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock
 
-from bsblan import BSBLANAuthError, BSBLANConnectionError
+from bsblan import BSBLANAuthError, BSBLANConnectionError, BSBLANError
 import pytest
 
 from homeassistant.components.bsblan.const import CONF_PASSKEY, DOMAIN
@@ -872,3 +872,39 @@ async def test_reauth_flow_partial_credentials_update(
     # Host and port should remain unchanged
     assert mock_config_entry.data[CONF_HOST] == "127.0.0.1"
     assert mock_config_entry.data[CONF_PORT] == 80
+
+
+async def test_zeroconf_discovery_auth_error_during_confirm(
+    hass: HomeAssistant,
+    mock_bsblan: MagicMock,
+    zeroconf_discovery_info: ZeroconfServiceInfo,
+) -> None:
+    """Test authentication error during discovery_confirm step."""
+    # Remove MAC from discovery to force discovery_confirm step
+    zeroconf_discovery_info.properties.pop("mac", None)
+
+    # Setup device to require authentication during initial discovery
+    mock_bsblan.device.side_effect = BSBLANError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=zeroconf_discovery_info,
+    )
+
+    _assert_form_result(result, "discovery_confirm")
+
+    # Now setup auth error for the confirmation step
+    mock_bsblan.device.side_effect = BSBLANAuthError
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PASSKEY: "wrong_key",
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "wrong_password",
+        },
+    )
+
+    # Should show the discovery_confirm form again with auth error
+    _assert_form_result(result2, "discovery_confirm", {"base": "invalid_auth"})
