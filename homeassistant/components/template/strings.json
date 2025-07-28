@@ -104,20 +104,20 @@
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
           "name": "[%key:common::config_flow::data::name%]",
-          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "state": "[%key:component::template::common::state%]",
           "lock": "Actions on lock",
           "unlock": "Actions on unlock",
-          "code_format": "[%key:component::template::config::step::alarm_control_panel::data::code_format%]",
+          "code_format": "[%key:component::template::common::code_format%]",
           "open": "Actions on open"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::common::device_id_description%]"
         },
         "sections": {
           "advanced_options": {
-            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+              "availability": "[%key:component::template::common::availability%]"
             }
           }
         },
@@ -316,20 +316,20 @@
       "lock": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
-          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "state": "[%key:component::template::common::state%]",
           "lock": "[%key:component::template::config::step::lock::data::lock%]",
           "unlock": "[%key:component::template::config::step::lock::data::unlock%]",
-          "code_format": "[%key:component::template::config::step::alarm_control_panel::data::code_format%]",
+          "code_format": "[%key:component::template::common::code_format%]",
           "open": "[%key:component::template::config::step::lock::data::open%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
+          "device_id": "[%key:component::template::common::device_id_description%]"
         },
         "sections": {
           "advanced_options": {
-            "name": "[%key:component::template::config::step::sensor::sections::advanced_options::name%]",
+            "name": "[%key:component::template::common::advanced_options%]",
             "data": {
-              "availability": "[%key:component::template::config::step::sensor::sections::advanced_options::data::availability%]"
+              "availability": "[%key:component::template::common::availability%]"
             }
           }
         },
