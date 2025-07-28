@@ -50,8 +50,6 @@ _STATES: EsphomeEnumMapper[EspMediaPlayerState, MediaPlayerState] = EsphomeEnumM
         EspMediaPlayerState.IDLE: MediaPlayerState.IDLE,
         EspMediaPlayerState.PLAYING: MediaPlayerState.PLAYING,
         EspMediaPlayerState.PAUSED: MediaPlayerState.PAUSED,
-        EspMediaPlayerState.OFF: MediaPlayerState.OFF,
-        EspMediaPlayerState.ON: MediaPlayerState.ON,
     }
 )
 
@@ -247,24 +245,6 @@ class EsphomeMediaPlayer(
         self._client.media_player_command(
             self._key,
             command=MediaPlayerCommand.MUTE if mute else MediaPlayerCommand.UNMUTE,
-            device_id=self._static_info.device_id,
-        )
-
-    @convert_api_error_ha_error
-    async def async_turn_on(self) -> None:
-        """Send turn on command."""
-        self._client.media_player_command(
-            self._key,
-            command=MediaPlayerCommand.TURN_ON,
-            device_id=self._static_info.device_id,
-        )
-
-    @convert_api_error_ha_error
-    async def async_turn_off(self) -> None:
-        """Send turn off command."""
-        self._client.media_player_command(
-            self._key,
-            command=MediaPlayerCommand.TURN_OFF,
             device_id=self._static_info.device_id,
         )
 

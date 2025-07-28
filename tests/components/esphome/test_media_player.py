@@ -27,8 +27,6 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_STOP,
     SERVICE_PLAY_MEDIA,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     BrowseMedia,
@@ -156,31 +154,6 @@ async def test_media_player_entity(
     )
     mock_client.media_player_command.assert_has_calls(
         [call(1, command=MediaPlayerCommand.STOP, device_id=0)]
-    )
-    mock_client.media_player_command.reset_mock()
-
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {
-            ATTR_ENTITY_ID: "media_player.test_my_media_player",
-        },
-        blocking=True,
-    )
-    mock_client.media_player_command.assert_has_calls(
-        [call(1, command=MediaPlayerCommand.TURN_OFF)]
-    )
-
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_ON,
-        {
-            ATTR_ENTITY_ID: "media_player.test_my_media_player",
-        },
-        blocking=True,
-    )
-    mock_client.media_player_command.assert_has_calls(
-        [call(1, command=MediaPlayerCommand.TURN_ON)]
     )
     mock_client.media_player_command.reset_mock()
 
