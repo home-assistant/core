@@ -28,18 +28,16 @@ class VeluxEntity(Entity):
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return DeviceInfo(
-            {
-                "identifiers": {
-                    (
-                        DOMAIN,
-                        self.node.serial_number
-                        if self.node.serial_number
-                        else str(self.node.node_id),
-                    )
-                },
-                "name": self.node.name if self.node.name else f"#{self.node.node_id}",
-                "serial_number": self.node.serial_number,
-            }
+            identifiers={
+                (
+                    DOMAIN,
+                    self.node.serial_number
+                    if self.node.serial_number
+                    else str(self.node.node_id),
+                )
+            },
+            name=self.node.name if self.node.name else f"#{self.node.node_id}",
+            serial_number=self.node.serial_number,
         )
 
     @callback
