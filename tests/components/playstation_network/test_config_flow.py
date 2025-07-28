@@ -409,7 +409,7 @@ async def test_add_friend_flow(hass: HomeAssistant) -> None:
     subentry_id = list(config_entry.subentries)[0]
     assert config_entry.subentries == {
         subentry_id: ConfigSubentry(
-            data={CONF_ACCOUNT_ID: "fren-psn-id"},
+            data={},
             subentry_id=subentry_id,
             subentry_type="friend",
             title="PublicUniversalFriend",

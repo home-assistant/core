@@ -135,10 +135,6 @@ SENSOR_DESCRIPTIONS_USER: tuple[PlaystationNetworkSensorEntityDescription, ...] 
         device_class=SensorDeviceClass.ENUM,
         options=["offline", "availabletoplay", "availabletocommunicate", "busy"],
     ),
-)
-
-
-SENSOR_DESCRIPTIONS_FRIEND: tuple[PlaystationNetworkSensorEntityDescription, ...] = (
     PlaystationNetworkSensorEntityDescription(
         key=PlaystationNetworkSensor.NOW_PLAYING,
         translation_key=PlaystationNetworkSensor.NOW_PLAYING,
@@ -170,7 +166,7 @@ async def async_setup_entry(
                     description,
                     config_entry.subentries[subentry_id],
                 )
-                for description in SENSOR_DESCRIPTIONS_USER + SENSOR_DESCRIPTIONS_FRIEND
+                for description in SENSOR_DESCRIPTIONS_USER
             ],
             config_subentry_id=subentry_id,
         )

@@ -191,7 +191,7 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
 
             return self.async_create_entry(
                 title=self.friends_list[user_input[CONF_ACCOUNT_ID]].online_id,
-                data=user_input,
+                data={},
                 unique_id=user_input[CONF_ACCOUNT_ID],
             )
 

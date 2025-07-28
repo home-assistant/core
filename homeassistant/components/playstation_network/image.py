@@ -63,9 +63,6 @@ IMAGE_DESCRIPTIONS_ALL: tuple[PlaystationNetworkImageEntityDescription, ...] = (
             )
         ),
     ),
-)
-
-IMAGE_DESCRIPTIONS_FRIENDS: tuple[PlaystationNetworkImageEntityDescription, ...] = (
     PlaystationNetworkImageEntityDescription(
         key=PlaystationNetworkImage.NOW_PLAYING_IMAGE,
         translation_key=PlaystationNetworkImage.NOW_PLAYING_IMAGE,
@@ -105,7 +102,7 @@ async def async_setup_entry(
                     description,
                     config_entry.subentries[subentry_id],
                 )
-                for description in IMAGE_DESCRIPTIONS_ALL + IMAGE_DESCRIPTIONS_FRIENDS
+                for description in IMAGE_DESCRIPTIONS_ALL
             ],
             config_subentry_id=subentry_id,
         )

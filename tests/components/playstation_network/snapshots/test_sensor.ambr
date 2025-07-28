@@ -275,7 +275,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PlaystationNetworkSensor.NOW_PLAYING: 'now_playing'>,
-    'unique_id': 'fren-psn-id_now_playing',
+    'unique_id': 'my-psn-id_now_playing',
     'unit_of_measurement': None,
   })
 # ---
@@ -286,6 +286,54 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testuser_now_playing',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'STAR WARS Jedi: Survivor™',
+  })
+# ---
+# name: test_sensors[sensor.testuser_now_playing_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.testuser_now_playing_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Now playing',
+    'platform': 'playstation_network',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <PlaystationNetworkSensor.NOW_PLAYING: 'now_playing'>,
+    'unique_id': 'fren-psn-id_now_playing',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.testuser_now_playing_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'testuser Now playing',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.testuser_now_playing_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
