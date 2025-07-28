@@ -107,30 +107,34 @@ class PlaystationNetwork:
         data.shareable_profile_link = self.shareable_profile_link
         data.availability = data.presence["basicPresence"]["availability"]
 
-        session = SessionData()
-        session.platform = PlatformType(
-            data.presence["basicPresence"]["primaryPlatformInfo"]["platform"]
-        )
-
-        if session.platform in SUPPORTED_PLATFORMS:
-            session.status = data.presence.get("basicPresence", {}).get(
-                "primaryPlatformInfo"
-            )["onlineStatus"]
-
-            game_title_info = data.presence.get("basicPresence", {}).get(
-                "gameTitleInfoList"
+        if "platform" in data.presence["basicPresence"]["primaryPlatformInfo"]:
+            primary_platform = PlatformType(
+                data.presence["basicPresence"]["primaryPlatformInfo"]["platform"]
+            )
+            game_title_info: dict[str, Any] = next(
+                iter(
+                    data.presence.get("basicPresence", {}).get("gameTitleInfoList", [])
+                ),
+                {},
+            )
+            status = data.presence.get("basicPresence", {}).get("primaryPlatformInfo")[
+                "onlineStatus"
+            ]
+            title_format = (
+                PlatformType(fmt) if (fmt := game_title_info.get("format")) else None
             )
 
-            if game_title_info:
-                session.title_id = game_title_info[0]["npTitleId"]
-                session.title_name = game_title_info[0]["titleName"]
-                session.format = PlatformType(game_title_info[0]["format"])
-                if session.format in {PlatformType.PS5, PlatformType.PSPC}:
-                    session.media_image_url = game_title_info[0]["conceptIconUrl"]
-                else:
-                    session.media_image_url = game_title_info[0]["npTitleIconUrl"]
-
-            data.active_sessions[session.platform] = session
+            data.active_sessions[primary_platform] = SessionData(
+                platform=primary_platform,
+                status=status,
+                title_id=game_title_info.get("npTitleId"),
+                title_name=game_title_info.get("titleName"),
+                format=title_format,
+                media_image_url=(
+                    game_title_info.get("conceptIconUrl")
+                    or game_title_info.get("npTitleIconUrl")
+                ),
+            )
 
         if self.legacy_profile:
             presence = self.legacy_profile["profile"].get("presences", [])

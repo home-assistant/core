@@ -17,7 +17,7 @@
           "mode": "[%key:common::config_flow::data::mode%]",
           "name": "[%key:common::config_flow::data::name%]"
         },
-        "description": "To generate API key go to https://openweathermap.org/appid"
+        "description": "To generate an API key, please refer to the [integration documentation]({doc_url})"
       }
     }
   },
