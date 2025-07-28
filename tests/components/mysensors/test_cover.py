@@ -9,12 +9,18 @@ from mysensors.sensor import Sensor
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
+    ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
+    ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
+    SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
+    SERVICE_OPEN_COVER_TILT,
     SERVICE_SET_COVER_POSITION,
+    SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
+    SERVICE_STOP_COVER_TILT,
     CoverState,
 )
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID
@@ -271,6 +277,100 @@ async def test_cover_node_binary(
 
     receive_message("1;1;1;0;30;0\n")
     receive_message("1;1;1;0;2;0\n")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.state == CoverState.CLOSED
+
+
+async def test_cover_node_tilt(
+    hass: HomeAssistant,
+    cover_node_tilt: Sensor,
+    receive_message: Callable[[str], None],
+    transport_write: MagicMock,
+) -> None:
+    """Test a cover tilt node."""
+    entity_id = "cover.cover_tilt_node_1_1"
+
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.state == CoverState.CLOSED
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_TILT_POSITION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_TILT_POSITION: 25},
+        blocking=True,
+    )
+
+    assert transport_write.call_count == 1
+    assert transport_write.call_args == call("1;1;1;1;58;25\n")
+
+    receive_message("1;1;1;0;58;25\n")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 25
+
+    transport_write.reset_mock()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER_TILT,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert transport_write.call_count == 1
+    assert transport_write.call_args == call("1;1;1;1;58;100\n")
+
+    receive_message("1;1;1;0;58;100\n")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 100
+
+    transport_write.reset_mock()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER_TILT,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert transport_write.call_count == 1
+    assert transport_write.call_args == call("1;1;1;1;58;0\n")
+
+    receive_message("1;1;1;0;58;0\n")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+
+    assert state
+    assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
+
+    transport_write.reset_mock()
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER_TILT,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert transport_write.call_count == 1
+    assert transport_write.call_args == call("1;1;1;1;31;1\n")
+
+    receive_message("1;1;1;0;31;1\n")
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
