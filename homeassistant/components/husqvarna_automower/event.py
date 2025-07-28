@@ -1,7 +1,5 @@
-"""Creates the sensor entities for the mower."""
+"""Creates the event entities for supported mowers."""
 
-from collections.abc import Callable
-from dataclasses import dataclass
 import logging
 
 from aioautomower.model import Message, SingleMessageData
@@ -28,20 +26,13 @@ ATTR_LONGITUDE = "longitude"
 _STORAGE_KEY = f"{DOMAIN}_message_event_seen"
 
 
-@dataclass(frozen=True, kw_only=True)
-class AutomowerMessageEventEntityDescription(EventEntityDescription):
-    """Describes an Automower message event."""
-
-    value_fn: Callable[[Message], str | None]
-
-
-MESSAGE_SENSOR_TYPES: tuple[AutomowerMessageEventEntityDescription, ...] = (
-    AutomowerMessageEventEntityDescription(
+EVENT_DESCRIPTIONS = [
+    EventEntityDescription(
         key="message",
         translation_key="message",
-        value_fn=lambda msg: msg.code,
-    ),
-)
+        event_types=ERROR_KEYS,
+    )
+]
 
 
 async def async_setup_entry(
@@ -49,7 +40,12 @@ async def async_setup_entry(
     entry: AutomowerConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Automower message event entities."""
+    """Set up Automower message event entities.
+
+    Not all mowers support message events, so we create entities
+    only for those that do. The entities are created dynamically
+    based on the messages received from the API.
+    """
     coordinator: AutomowerDataUpdateCoordinator = entry.runtime_data
     store: Store[dict[str, bool]] = Store(hass, 1, _STORAGE_KEY)
     seen_mowers: dict[str, bool] = await store.async_load() or {}
@@ -59,7 +55,7 @@ async def async_setup_entry(
 
     # Restore previously seen mowers
     for mower_id in seen_mowers:
-        for description in MESSAGE_SENSOR_TYPES:
+        for description in EVENT_DESCRIPTIONS:
             entity = AutomowerMessageEventEntity(mower_id, coordinator, description)
             entities_by_mower_id[mower_id] = entity
             async_add_entities([entity])
@@ -76,7 +72,7 @@ async def async_setup_entry(
         _LOGGER.debug("Creating message event entity for mower %s", mower_id)
 
         new_entities: list[AutomowerMessageEventEntity] = []
-        for description in MESSAGE_SENSOR_TYPES:
+        for description in EVENT_DESCRIPTIONS:
             entity = AutomowerMessageEventEntity(mower_id, coordinator, description)
             entities_by_mower_id[mower_id] = entity
             new_entities.append(entity)
@@ -97,25 +93,25 @@ async def async_setup_entry(
 class AutomowerMessageEventEntity(AutomowerBaseEntity, EventEntity):
     """Automower EventEntity for error messages."""
 
-    entity_description: AutomowerMessageEventEntityDescription
-    _attr_event_types = ERROR_KEYS
+    entity_description: EventEntityDescription
 
     def __init__(
         self,
         mower_id: str,
         coordinator: AutomowerDataUpdateCoordinator,
-        description: AutomowerMessageEventEntityDescription,
+        description: EventEntityDescription,
     ) -> None:
         """Initialize the Automower error event."""
         super().__init__(mower_id, coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{mower_id}_{description.key}"
-        self.coordinator = coordinator
         self.mower_id = mower_id
 
     @callback
     def async_handle_new_message(self, msg_data: SingleMessageData) -> None:
         """Handle new message from API."""
+        if msg_data.id != self.mower_id:
+            return
         message: Message = msg_data.attributes.message
         code = message.code
         if not code:
