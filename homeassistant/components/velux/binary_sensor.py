@@ -56,7 +56,7 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
         try:
             limitation = await self.node.get_limitation()
         except PyVLXException:
-            LOGGER.error("Error fetch limitation data for cover %s", self.name)
+            LOGGER.error("Error fetching limitation data for cover %s", self.name)
             return
 
         # Velux windows with rain sensors report an opening limitation of 93 when rain is detected.
