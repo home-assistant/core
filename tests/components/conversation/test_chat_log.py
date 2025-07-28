@@ -517,6 +517,27 @@ async def test_tool_call_exception(
                 ]
             },
         ],
+        # With thinking content
+        [
+            {"role": "assistant"},
+            {"thinking_content": "Test Thinking"},
+        ],
+        # With content and thinking content
+        [
+            {"role": "assistant"},
+            {"content": "Test"},
+            {"thinking_content": "Test Thinking"},
+        ],
+        # With native content
+        [
+            {"role": "assistant"},
+            {"native": {"type": "test", "value": "Test Native"}},
+        ],
+        # With native object content
+        [
+            {"role": "assistant"},
+            {"native": object()},
+        ],
     ],
 )
 async def test_add_delta_content_stream(
