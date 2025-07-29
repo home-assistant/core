@@ -70,7 +70,6 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         self._attr_unique_id = serial_number
 
         self.serial_number = serial_number
-        self._state: str | None = None
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -174,8 +173,8 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
             )
             LOGGER.debug("Lock status is %s", lock_status)
         if lock_status == "OK":
-            self._state = state
-            await self.coordinator.async_refresh()
+            self.coordinator.data["locks"][self.serial_number]["lockStatus"] = target_state
+            self.async_write_ha_state()
 
     def disable_autolock(self) -> None:
         """Disable autolock on a doorlock."""
