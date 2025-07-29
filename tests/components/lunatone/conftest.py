@@ -75,7 +75,7 @@ def mock_lunatone_info(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]:
         info._auth = mock_lunatone_auth
         info.name = "Test"
         info.version = "v1.14.1/1.4.3"
-        info.serial_number = "12345"
+        info.serial_number = 12345
         yield info
 
 

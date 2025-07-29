@@ -145,12 +145,10 @@ async def test_availability_on_error(
     version = AwesomeVersion("1.14.1")
     entity = LunatoneLight(mock_lunatone_device, 12345, version)
 
-    # Simuliere Fehler → Unavailable
     mock_lunatone_device.async_update.side_effect = aiohttp.ClientConnectionError()
     await entity.async_update()
     assert not entity.available
 
-    # Simuliere Erfolg → Wieder verfügbar
     mock_lunatone_device.async_update.side_effect = None
     await entity.async_update()
     assert entity.available
