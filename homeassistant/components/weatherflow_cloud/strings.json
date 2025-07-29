@@ -73,7 +73,7 @@
         "name": "Nearcast precip yesterday"
       },
       "precip_analysis_type_yesterday": {
-        "name": "Precip analysis yesterday"
+        "name": "Precip type yesterday"
       },
       "precip_minutes_local_day": {
         "name": "Precip min today"
