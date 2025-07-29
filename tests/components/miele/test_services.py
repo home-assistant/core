@@ -113,11 +113,20 @@ async def test_services_with_response(
     )
 
 
+@pytest.mark.parametrize(
+    ("service", "error"),
+    [
+        (SERVICE_SET_PROGRAM, "'Set program' action failed"),
+        (SERVICE_SET_PROGRAM_OVEN, "'Set program on oven' action failed"),
+    ],
+)
 async def test_service_api_errors(
     hass: HomeAssistant,
     device_registry: DeviceRegistry,
     mock_miele_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    service: str,
+    error: str,
 ) -> None:
     """Test service api errors."""
     await setup_integration(hass, mock_config_entry)
@@ -125,10 +134,10 @@ async def test_service_api_errors(
 
     # Test http error
     mock_miele_client.set_program.side_effect = ClientResponseError("TestInfo", "test")
-    with pytest.raises(HomeAssistantError, match="'Set program' action failed"):
+    with pytest.raises(HomeAssistantError, match=error):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_SET_PROGRAM,
+            service,
             {ATTR_DEVICE_ID: device.id, ATTR_PROGRAM_ID: 1},
             blocking=True,
         )
