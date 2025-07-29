@@ -6,6 +6,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
+from airos.data import NetRole, WirelessMode
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -27,6 +29,9 @@ from .entity import AirOSEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+WIRELESS_MODE_OPTIONS = [mode.value.replace("-", "_").lower() for mode in WirelessMode]
+NETROLE_OPTIONS = [mode.value for mode in NetRole]
+
 
 @dataclass(frozen=True, kw_only=True)
 class AirOSSensorEntityDescription(SensorEntityDescription):
@@ -47,7 +52,9 @@ SENSORS: tuple[AirOSSensorEntityDescription, ...] = (
     AirOSSensorEntityDescription(
         key="host_netrole",
         translation_key="host_netrole",
+        device_class=SensorDeviceClass.ENUM,
         value_fn=lambda data: data.host.netrole.value,
+        options=NETROLE_OPTIONS,
     ),
     AirOSSensorEntityDescription(
         key="wireless_frequency",
@@ -65,7 +72,9 @@ SENSORS: tuple[AirOSSensorEntityDescription, ...] = (
     AirOSSensorEntityDescription(
         key="wireless_mode",
         translation_key="wireless_mode",
-        value_fn=lambda data: data.wireless.mode.value,
+        device_class=SensorDeviceClass.ENUM,
+        value_fn=lambda data: data.wireless.mode.value.replace("-", "_").lower(),
+        options=WIRELESS_MODE_OPTIONS,
     ),
     AirOSSensorEntityDescription(
         key="wireless_antenna_gain",

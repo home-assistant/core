@@ -46,8 +46,8 @@
       "wireless_mode": {
         "name": "Wireless mode",
         "state": {
-          "ap-ptp": "Access point",
-          "sta-ptp": "Station"
+          "ap_ptp": "Access point",
+          "sta_ptp": "Station"
         }
       },
       "wireless_antenna_gain": {
