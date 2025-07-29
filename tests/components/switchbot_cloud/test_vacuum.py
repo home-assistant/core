@@ -5,7 +5,16 @@ from unittest.mock import patch
 from switchbot_api import Device
 
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
-from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, VacuumActivity
+from homeassistant.components.switchbot_cloud.const import VACUUM_FAN_SPEED_QUIET
+from homeassistant.components.vacuum import (
+    ATTR_FAN_SPEED,
+    DOMAIN as VACUUM_DOMAIN,
+    SERVICE_PAUSE,
+    SERVICE_RETURN_TO_BASE,
+    SERVICE_SET_FAN_SPEED,
+    SERVICE_START,
+    VacuumActivity,
+)
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
@@ -65,8 +74,8 @@ async def test_k10_plus_set_fan_speed(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            "set_fan_speed",
-            {ATTR_ENTITY_ID: entity_id, "fan_speed": "quiet"},
+            SERVICE_SET_FAN_SPEED,
+            {ATTR_ENTITY_ID: entity_id, ATTR_FAN_SPEED: VACUUM_FAN_SPEED_QUIET},
             blocking=True,
         )
         mock_send_command.assert_called()
@@ -103,7 +112,10 @@ async def test_k10_plus_return_to_base(
 
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
-            VACUUM_DOMAIN, "return_to_base", {ATTR_ENTITY_ID: entity_id}, blocking=True
+            VACUUM_DOMAIN,
+            SERVICE_RETURN_TO_BASE,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
         )
         mock_send_command.assert_called()
 
@@ -139,7 +151,7 @@ async def test_k10_plus_pause(
 
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
-            VACUUM_DOMAIN, "pause", {ATTR_ENTITY_ID: entity_id}, blocking=True
+            VACUUM_DOMAIN, SERVICE_PAUSE, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
         mock_send_command.assert_called()
 
@@ -174,7 +186,7 @@ async def test_k10_plus_set_start(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            "start",
+            SERVICE_START,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
@@ -211,8 +223,8 @@ async def test_k20_plus_pro_set_fan_speed(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            "set_fan_speed",
-            {ATTR_ENTITY_ID: entity_id, "fan_speed": "quiet"},
+            SERVICE_SET_FAN_SPEED,
+            {ATTR_ENTITY_ID: entity_id, ATTR_FAN_SPEED: VACUUM_FAN_SPEED_QUIET},
             blocking=True,
         )
         mock_send_command.assert_called()
@@ -250,7 +262,10 @@ async def test_k20_plus_pro_return_to_base(
 
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
-            VACUUM_DOMAIN, "return_to_base", {ATTR_ENTITY_ID: entity_id}, blocking=True
+            VACUUM_DOMAIN,
+            SERVICE_RETURN_TO_BASE,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
         )
         mock_send_command.assert_called()
 
@@ -287,7 +302,7 @@ async def test_k20_plus_pro_pause(
 
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
-            VACUUM_DOMAIN, "pause", {ATTR_ENTITY_ID: entity_id}, blocking=True
+            VACUUM_DOMAIN, SERVICE_PAUSE, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
         mock_send_command.assert_called()
 
@@ -322,7 +337,7 @@ async def test_k20_plus_pro_start(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            "start",
+            SERVICE_START,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
@@ -359,8 +374,8 @@ async def test_k10_plus_pro_combo_set_fan_speed(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            "set_fan_speed",
-            {ATTR_ENTITY_ID: entity_id, "fan_speed": "quiet"},
+            SERVICE_SET_FAN_SPEED,
+            {ATTR_ENTITY_ID: entity_id, ATTR_FAN_SPEED: VACUUM_FAN_SPEED_QUIET},
             blocking=True,
         )
         mock_send_command.assert_called()
@@ -396,7 +411,7 @@ async def test_s20_start(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            "start",
+            SERVICE_START,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
@@ -433,8 +448,8 @@ async def test_s20set_fan_speed(
     with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             VACUUM_DOMAIN,
-            "set_fan_speed",
-            {ATTR_ENTITY_ID: entity_id, "fan_speed": "quiet"},
+            SERVICE_SET_FAN_SPEED,
+            {ATTR_ENTITY_ID: entity_id, ATTR_FAN_SPEED: VACUUM_FAN_SPEED_QUIET},
             blocking=True,
         )
         mock_send_command.assert_called()
