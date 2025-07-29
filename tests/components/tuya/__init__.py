@@ -83,6 +83,11 @@ DEVICE_MOCKS = {
         Platform.SENSOR,
         Platform.SWITCH,
     ],
+    "dlq_ele_breaker": [
+        # New fixture with supply_frequency support
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
     "dlq_metering_3pn_wifi": [
         # https://github.com/home-assistant/core/issues/143499
         Platform.SENSOR,

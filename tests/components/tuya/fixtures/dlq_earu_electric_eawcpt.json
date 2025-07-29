@@ -61,16 +61,6 @@
     "alarm_set_2": {
       "type": "Raw",
       "value": {}
-    },
-    "supply_frequency": {
-      "type": "Integer",
-      "value": {
-        "unit": "Hz",
-        "min": 0,
-        "max": 9999,
-        "scale": 2,
-        "step": 1
-      }
     }
   },
   "status_range": {
@@ -231,16 +221,6 @@
     "alarm_set_2": {
       "type": "Raw",
       "value": {}
-    },
-    "supply_frequency": {
-      "type": "Integer",
-      "value": {
-        "unit": "Hz",
-        "min": 0,
-        "max": 9999,
-        "scale": 2,
-        "step": 1
-      }
     }
   },
   "status": {
@@ -262,7 +242,6 @@
     "cycle_time": "",
     "temp_value": 0,
     "alarm_set_1": "",
-    "alarm_set_2": "AQAAAAMAAAAEAAAA",
-    "supply_frequency": 5000
+    "alarm_set_2": "AQAAAAMAAAAEAAAA"
   }
 }
