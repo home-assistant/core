@@ -7,7 +7,6 @@ from unittest.mock import AsyncMock, create_autospec, patch
 
 from aioautomower.commands import MowerCommands, WorkAreaSettings
 from aioautomower.model import MessageData, MowerAttributes
-from aioautomower.model.model_message import MessageAttributes
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from aiohttp import ClientWebSocketResponse
 import pytest
@@ -123,7 +122,6 @@ async def setup_credentials(hass: HomeAssistant) -> None:
 @pytest.fixture
 def mock_automower_client(
     values: dict[str, MowerAttributes],
-    messages: MessageData,
 ) -> Generator[AsyncMock]:
     """Mock a Husqvarna Automower client."""
 
@@ -133,16 +131,6 @@ def mock_automower_client(
         await listen_block.wait()
         pytest.fail("Listen was not cancelled!")
 
-    async def get_message_side_effect(mower_id: str) -> MessageData:
-        return messages.get(
-            mower_id,
-            MessageData(
-                type="messages",
-                id=mower_id,
-                attributes=MessageAttributes(messages=[]),
-            ),
-        )
-
     with patch(
         "homeassistant.components.husqvarna_automower.AutomowerSession",
         autospec=True,
@@ -151,9 +139,6 @@ def mock_automower_client(
         mock_instance = mock.return_value
         mock_instance.auth = AsyncMock(side_effect=ClientWebSocketResponse)
         mock_instance.get_status = AsyncMock(return_value=values)
-        mock_instance.async_get_messages = AsyncMock(
-            side_effect=get_message_side_effect
-        )
         mock_instance.start_listening = AsyncMock(side_effect=listen)
         mock_instance.commands = create_autospec(
             MowerCommands, instance=True, spec_set=True

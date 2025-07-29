@@ -123,10 +123,3 @@ class AutomowerMessageEventEntity(AutomowerBaseEntity, EventEntity):
             },
         )
         self.async_write_ha_state()
-
-    async def async_added_to_hass(self) -> None:
-        """Register for message updates."""
-        await super().async_added_to_hass()
-        self.coordinator.api.register_single_message_callback(
-            self.async_handle_new_message
-        )
