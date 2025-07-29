@@ -5,7 +5,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_IP_ADDRESS, CONF_NAME, CONF_PORT, CONF_TYPE
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
@@ -13,7 +13,6 @@ from .const import DEFAULT_PORT, DOMAIN, TYPE_TCP_SERVER_MODE
 
 SCHEMA_DEVICE = vol.Schema(
     {
-        vol.Required(CONF_NAME, default="Envertec EVT-800"): cv.string,
         vol.Required(CONF_IP_ADDRESS): cv.string,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Required(CONF_TYPE, default=TYPE_TCP_SERVER_MODE): vol.In(
@@ -32,7 +31,6 @@ class EnvertecFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize."""
         self._data: dict[str, Any] = {
-            CONF_NAME: "Envertech EVT800",
             CONF_IP_ADDRESS: vol.UNDEFINED,
             CONF_PORT: DEFAULT_PORT,
             CONF_TYPE: TYPE_TCP_SERVER_MODE,
@@ -44,7 +42,6 @@ class EnvertecFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """First step in config flow."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._data[CONF_NAME] = user_input[CONF_NAME]
             self._data[CONF_IP_ADDRESS] = user_input[CONF_IP_ADDRESS]
             self._data[CONF_PORT] = user_input[CONF_PORT]
             self._data[CONF_TYPE] = user_input[CONF_TYPE]
@@ -59,7 +56,7 @@ class EnvertecFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured(updates=self._data)
 
                 return self.async_create_entry(
-                    title=self._data[CONF_NAME], data=self._data
+                    title="Envertech EVT800", data=self._data
                 )
 
         return self.async_show_form(

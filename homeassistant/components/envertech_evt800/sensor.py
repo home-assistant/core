@@ -42,24 +42,28 @@ SENSORS: dict[str, SensorEntityDescription] = {
         suggested_display_precision=0,
         entity_registry_enabled_default=False,
         entity_registry_visible_default=False,
+        translation_key="timestamp",
     ),
     "id_1": SensorEntityDescription(
         key="id_1",
         name="MPTT ID 1",
         entity_registry_enabled_default=False,
         entity_registry_visible_default=True,
+        translation_key="mptt_id_1",
     ),
     "id_2": SensorEntityDescription(
         key="id_2",
         name="MPTT ID 2",
         entity_registry_enabled_default=False,
         entity_registry_visible_default=True,
+        translation_key="mptt_id_2",
     ),
     "sw-version": SensorEntityDescription(
         key="sw-version",
         name="Software Version",
         entity_registry_enabled_default=False,
         entity_registry_visible_default=True,
+        translation_key="software_version",
     ),
     "input_voltage_1": SensorEntityDescription(
         key="input_voltage_1",
@@ -68,6 +72,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
         suggested_display_precision=2,
+        translation_key="input_voltage_1",
     ),
     "input_voltage_2": SensorEntityDescription(
         key="input_voltage_2",
@@ -76,6 +81,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
         suggested_display_precision=2,
+        translation_key="input_voltage_2",
     ),
     "power_1": SensorEntityDescription(
         key="power_1",
@@ -84,6 +90,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         suggested_display_precision=0,
+        translation_key="power_1",
     ),
     "power_2": SensorEntityDescription(
         key="power_2",
@@ -92,6 +99,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         suggested_display_precision=0,
+        translation_key="power_2",
     ),
     "current_1": SensorEntityDescription(
         key="current_1",
@@ -100,6 +108,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
         suggested_display_precision=2,
+        translation_key="current_1",
     ),
     "current_2": SensorEntityDescription(
         key="current_2",
@@ -108,6 +117,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
         suggested_display_precision=2,
+        translation_key="current_2",
     ),
     "ac_frequency_1": SensorEntityDescription(
         key="ac_frequency_1",
@@ -116,6 +126,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.FREQUENCY,
         suggested_display_precision=1,
+        translation_key="ac_frequency_1",
     ),
     "ac_frequency_2": SensorEntityDescription(
         key="ac_frequency_2",
@@ -124,6 +135,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.FREQUENCY,
         suggested_display_precision=1,
+        translation_key="ac_frequency_2",
     ),
     "ac_voltage_1": SensorEntityDescription(
         key="ac_voltage_1",
@@ -132,6 +144,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
         suggested_display_precision=0,
+        translation_key="ac_voltage_1",
     ),
     "ac_voltage_2": SensorEntityDescription(
         key="ac_voltage_2",
@@ -140,6 +153,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
         suggested_display_precision=0,
+        translation_key="ac_voltage_2",
     ),
     "temperature_1": SensorEntityDescription(
         key="temperature_1",
@@ -148,6 +162,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         suggested_display_precision=1,
+        translation_key="temperature_1",
     ),
     "temperature_2": SensorEntityDescription(
         key="temperature_2",
@@ -156,6 +171,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         suggested_display_precision=1,
+        translation_key="temperature_2",
     ),
     "total_energy_1": SensorEntityDescription(
         key="total_energy_1",
@@ -164,6 +180,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.ENERGY,
         suggested_display_precision=2,
+        translation_key="total_energy_1",
     ),
     "total_energy_2": SensorEntityDescription(
         key="total_energy_2",
@@ -172,6 +189,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.ENERGY,
         suggested_display_precision=2,
+        translation_key="total_energy_2",
     ),
 }
 
