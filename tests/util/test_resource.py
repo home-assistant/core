@@ -2,7 +2,7 @@
 
 import os
 import resource
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import pytest
 
@@ -13,16 +13,27 @@ from homeassistant.util.resource import (
 
 
 @pytest.mark.parametrize(
-    ("original_soft", "should_increase"),
+    ("original_soft", "expected_calls", "should_log_already_sufficient"),
     [
-        (1024, True),
-        (DEFAULT_SOFT_FILE_LIMIT - 1, True),
-        (DEFAULT_SOFT_FILE_LIMIT, False),
-        (DEFAULT_SOFT_FILE_LIMIT + 1, False),
+        (
+            1024,
+            [call(resource.RLIMIT_NOFILE, (DEFAULT_SOFT_FILE_LIMIT, 524288))],
+            False,
+        ),
+        (
+            DEFAULT_SOFT_FILE_LIMIT - 1,
+            [call(resource.RLIMIT_NOFILE, (DEFAULT_SOFT_FILE_LIMIT, 524288))],
+            False,
+        ),
+        (DEFAULT_SOFT_FILE_LIMIT, [], True),
+        (DEFAULT_SOFT_FILE_LIMIT + 1, [], True),
     ],
 )
 def test_set_open_file_descriptor_limit_default(
-    caplog: pytest.LogCaptureFixture, original_soft: int, should_increase: bool
+    caplog: pytest.LogCaptureFixture,
+    original_soft: int,
+    expected_calls: list,
+    should_log_already_sufficient: bool,
 ) -> None:
     """Test setting file limit with default value."""
     original_hard = 524288
@@ -35,28 +46,30 @@ def test_set_open_file_descriptor_limit_default(
     ):
         set_open_file_descriptor_limit()
 
-    if should_increase:
-        mock_setrlimit.assert_called_once_with(
-            resource.RLIMIT_NOFILE, (DEFAULT_SOFT_FILE_LIMIT, original_hard)
-        )
-    else:
-        mock_setrlimit.assert_not_called()
+    assert mock_setrlimit.call_args_list == expected_calls
+    if should_log_already_sufficient:
         assert f"Current soft limit ({original_soft}) is already" in caplog.text
 
 
 @pytest.mark.parametrize(
-    ("original_soft", "custom_limit", "should_increase"),
+    (
+        "original_soft",
+        "custom_limit",
+        "expected_calls",
+        "should_log_already_sufficient",
+    ),
     [
-        (1499, 1500, True),
-        (1500, 1500, False),
-        (1501, 1500, False),
+        (1499, 1500, [call(resource.RLIMIT_NOFILE, (1500, 524288))], False),
+        (1500, 1500, [], True),
+        (1501, 1500, [], True),
     ],
 )
 def test_set_open_file_descriptor_limit_environment_variable(
     caplog: pytest.LogCaptureFixture,
     original_soft: int,
     custom_limit: int,
-    should_increase: bool,
+    expected_calls: list,
+    should_log_already_sufficient: bool,
 ) -> None:
     """Test setting file limit from environment variable."""
     original_hard = 524288
@@ -70,12 +83,8 @@ def test_set_open_file_descriptor_limit_environment_variable(
     ):
         set_open_file_descriptor_limit()
 
-    if should_increase:
-        mock_setrlimit.assert_called_once_with(
-            resource.RLIMIT_NOFILE, (custom_limit, original_hard)
-        )
-    else:
-        mock_setrlimit.assert_not_called()
+    assert mock_setrlimit.call_args_list == expected_calls
+    if should_log_already_sufficient:
         assert f"Current soft limit ({original_soft}) is already" in caplog.text
 
 
