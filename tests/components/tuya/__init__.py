@@ -148,6 +148,11 @@ DEVICE_MOCKS = {
         Platform.SELECT,
         Platform.SWITCH,
     ],
+    "wk_air_conditioner": [
+        # https://github.com/home-assistant/core/issues/146263
+        Platform.CLIMATE,
+        Platform.SWITCH,
+    ],
     "ydkt_dolceclima_unsupported": [
         # https://github.com/orgs/home-assistant/discussions/288
         # unsupported device - no platforms
