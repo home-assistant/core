@@ -4,10 +4,15 @@ from unittest.mock import MagicMock
 
 from aiohttp import ClientResponseError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 from voluptuous import MultipleInvalid
 
 from homeassistant.components.miele.const import DOMAIN
-from homeassistant.components.miele.services import ATTR_PROGRAM_ID, SERVICE_SET_PROGRAM
+from homeassistant.components.miele.services import (
+    ATTR_PROGRAM_ID,
+    SERVICE_GET_PROGRAMS,
+    SERVICE_SET_PROGRAM,
+)
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -44,6 +49,28 @@ async def test_services(
     )
 
 
+async def test_services_with_response(
+    hass: HomeAssistant,
+    device_registry: DeviceRegistry,
+    mock_miele_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Tests that the custom services that returns a response are correct."""
+
+    await setup_integration(hass, mock_config_entry)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_APPLIANCE)})
+    assert snapshot == await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_PROGRAMS,
+        {
+            ATTR_DEVICE_ID: device.id,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+
 async def test_service_api_errors(
     hass: HomeAssistant,
     device_registry: DeviceRegistry,
@@ -60,12 +87,35 @@ async def test_service_api_errors(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_PROGRAM,
-            {"device_id": device.id, ATTR_PROGRAM_ID: 1},
+            {ATTR_DEVICE_ID: device.id, ATTR_PROGRAM_ID: 1},
             blocking=True,
         )
     mock_miele_client.set_program.assert_called_once_with(
         TEST_APPLIANCE, {"programId": 1}
     )
+
+
+async def test_get_service_api_errors(
+    hass: HomeAssistant,
+    device_registry: DeviceRegistry,
+    mock_miele_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test service api errors."""
+    await setup_integration(hass, mock_config_entry)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_APPLIANCE)})
+
+    # Test http error
+    mock_miele_client.get_programs.side_effect = ClientResponseError("TestInfo", "test")
+    with pytest.raises(HomeAssistantError, match="'Get programs' action failed"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_PROGRAMS,
+            {ATTR_DEVICE_ID: device.id},
+            blocking=True,
+            return_response=True,
+        )
+    mock_miele_client.get_programs.assert_called_once()
 
 
 async def test_service_validation_errors(
