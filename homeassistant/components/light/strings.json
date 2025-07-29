@@ -471,6 +471,10 @@
         "state": {
           "name": "State",
           "description": "The state to trigger on."
+        },
+        "behavior": {
+          "name": "Behavior",
+          "description": "The behavior of the targeted entities to trigger on."
         }
       }
     }
