@@ -701,6 +701,7 @@ FLOWS = {
         "vodafone_station",
         "voip",
         "volumio",
+        "volvo",
         "volvooncall",
         "vulcan",
         "wake_on_lan",
