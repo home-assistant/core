@@ -2,7 +2,13 @@
 
 from unittest.mock import patch
 
-from switchbot_api import Device
+from switchbot_api import (
+    Device,
+    VacuumCleanerV2Commands,
+    VacuumCleanerV3Commands,
+    VacuumCleanMode,
+    VacuumCommands,
+)
 
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
 from homeassistant.components.switchbot_cloud.const import VACUUM_FAN_SPEED_QUIET
@@ -78,7 +84,9 @@ async def test_k10_plus_set_fan_speed(
             {ATTR_ENTITY_ID: entity_id, ATTR_FAN_SPEED: VACUUM_FAN_SPEED_QUIET},
             blocking=True,
         )
-        mock_send_command.assert_called()
+        mock_send_command.assert_called_once_with(
+            "vacuum-id-1", VacuumCommands.POW_LEVEL, "command", "0"
+        )
 
 
 async def test_k10_plus_return_to_base(
@@ -117,7 +125,9 @@ async def test_k10_plus_return_to_base(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        mock_send_command.assert_called()
+        mock_send_command.assert_called_once_with(
+            "vacuum-id-1", VacuumCommands.DOCK, "command", "default"
+        )
 
 
 async def test_k10_plus_pause(
@@ -153,7 +163,9 @@ async def test_k10_plus_pause(
         await hass.services.async_call(
             VACUUM_DOMAIN, SERVICE_PAUSE, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
-        mock_send_command.assert_called()
+        mock_send_command.assert_called_once_with(
+            "vacuum-id-1", VacuumCommands.STOP, "command", "default"
+        )
 
 
 async def test_k10_plus_set_start(
@@ -190,7 +202,9 @@ async def test_k10_plus_set_start(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        mock_send_command.assert_called()
+        mock_send_command.assert_called_once_with(
+            "vacuum-id-1", VacuumCommands.START, "command", "default"
+        )
 
 
 async def test_k20_plus_pro_set_fan_speed(
@@ -227,7 +241,16 @@ async def test_k20_plus_pro_set_fan_speed(
             {ATTR_ENTITY_ID: entity_id, ATTR_FAN_SPEED: VACUUM_FAN_SPEED_QUIET},
             blocking=True,
         )
-        mock_send_command.assert_called()
+        mock_send_command.assert_called_once_with(
+            "vacuum-id-1",
+            VacuumCleanerV2Commands.CHANGE_PARAM,
+            "command",
+            {
+                "fanLevel": 1,
+                "waterLevel": 1,
+                "times": 1,
+            },
+        )
 
 
 async def test_k20_plus_pro_return_to_base(
@@ -267,7 +290,9 @@ async def test_k20_plus_pro_return_to_base(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        mock_send_command.assert_called()
+        mock_send_command.assert_called_once_with(
+            "vacuum-id-1", VacuumCleanerV2Commands.DOCK, "command", "default"
+        )
 
 
 async def test_k20_plus_pro_pause(
@@ -304,7 +329,9 @@ async def test_k20_plus_pro_pause(
         await hass.services.async_call(
             VACUUM_DOMAIN, SERVICE_PAUSE, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
-        mock_send_command.assert_called()
+        mock_send_command.assert_called_once_with(
+            "vacuum-id-1", VacuumCleanerV2Commands.PAUSE, "command", "default"
+        )
 
 
 async def test_k20_plus_pro_start(
@@ -341,7 +368,18 @@ async def test_k20_plus_pro_start(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        mock_send_command.assert_called()
+        mock_send_command.assert_called_once_with(
+            "vacuum-id-1",
+            VacuumCleanerV2Commands.START_CLEAN,
+            "command",
+            {
+                "action": VacuumCleanMode.SWEEP.value,
+                "param": {
+                    "fanLevel": 1,
+                    "times": 1,
+                },
+            },
+        )
 
 
 async def test_k10_plus_pro_combo_set_fan_speed(
@@ -378,7 +416,15 @@ async def test_k10_plus_pro_combo_set_fan_speed(
             {ATTR_ENTITY_ID: entity_id, ATTR_FAN_SPEED: VACUUM_FAN_SPEED_QUIET},
             blocking=True,
         )
-        mock_send_command.assert_called()
+        mock_send_command.assert_called_once_with(
+            "vacuum-id-1",
+            VacuumCleanerV2Commands.CHANGE_PARAM,
+            "command",
+            {
+                "fanLevel": 1,
+                "times": 1,
+            },
+        )
 
 
 async def test_s20_start(
@@ -415,7 +461,19 @@ async def test_s20_start(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-        mock_send_command.assert_called()
+        mock_send_command.assert_called_once_with(
+            "vacuum-id-1",
+            VacuumCleanerV3Commands.START_CLEAN,
+            "command",
+            {
+                "action": VacuumCleanMode.SWEEP.value,
+                "param": {
+                    "fanLevel": 0,
+                    "waterLevel": 1,
+                    "times": 1,
+                },
+            },
+        )
 
 
 async def test_s20set_fan_speed(
@@ -452,4 +510,13 @@ async def test_s20set_fan_speed(
             {ATTR_ENTITY_ID: entity_id, ATTR_FAN_SPEED: VACUUM_FAN_SPEED_QUIET},
             blocking=True,
         )
-        mock_send_command.assert_called()
+        mock_send_command.assert_called_once_with(
+            "vacuum-id-1",
+            VacuumCleanerV3Commands.CHANGE_PARAM,
+            "command",
+            {
+                "fanLevel": 1,
+                "waterLevel": 1,
+                "times": 1,
+            },
+        )
