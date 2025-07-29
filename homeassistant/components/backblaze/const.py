@@ -18,3 +18,5 @@ DATA_BACKUP_AGENT_LISTENERS: HassKey[list[Callable[[], None]]] = HassKey(
 
 METADATA_FILE_SUFFIX = ".metadata.json"
 METADATA_VERSION = "1"
+
+BACKBLAZE_REALM = "production"
