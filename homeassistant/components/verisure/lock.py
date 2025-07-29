@@ -10,7 +10,7 @@ from verisure import Error as VerisureError
 from homeassistant.components.lock import LockEntity, LockState
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CODE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -70,6 +70,9 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         self._attr_unique_id = serial_number
 
         self.serial_number = serial_number
+        self._attr_is_locked = False
+        self._attr_changed_by = None
+        self._attr_changed_method: str | None = None
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -92,18 +95,9 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         )
 
     @property
-    def changed_by(self) -> str | None:
+    def changed_method(self) -> str | None:
         """Last change triggered by."""
-        return (
-            self.coordinator.data["locks"][self.serial_number]
-            .get("user", {})
-            .get("name")
-        )
-
-    @property
-    def changed_method(self) -> str:
-        """Last change method."""
-        return self.coordinator.data["locks"][self.serial_number]["lockMethod"]
+        return self._attr_changed_method
 
     @property
     def code_format(self) -> str:
@@ -112,13 +106,6 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
             CONF_LOCK_CODE_DIGITS, DEFAULT_LOCK_CODE_DIGITS
         )
         return f"^\\d{{{digits}}}$"
-
-    @property
-    def is_locked(self) -> bool:
-        """Return true if lock is locked."""
-        return (
-            self.coordinator.data["locks"][self.serial_number]["lockStatus"] == "LOCKED"
-        )
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
@@ -173,7 +160,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
             )
             LOGGER.debug("Lock status is %s", lock_status)
         if lock_status == "OK":
-            self.coordinator.data["locks"][self.serial_number]["lockStatus"] = target_state
+            self._attr_is_locked = state == LockState.LOCKED
             self.async_write_ha_state()
 
     def disable_autolock(self) -> None:
@@ -197,3 +184,19 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
             LOGGER.debug("Enabling autolock on %s", self.serial_number)
         except VerisureError as ex:
             LOGGER.error("Could not enable autolock, %s", ex)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._attr_is_locked = (
+            self.coordinator.data["locks"][self.serial_number]["lockStatus"] == "LOCKED"
+        )
+        self._attr_changed_by = (
+            self.coordinator.data["locks"][self.serial_number]
+            .get("user", {})
+            .get("name")
+        )
+        self._attr_changed_method = self.coordinator.data["locks"][self.serial_number][
+            "lockMethod"
+        ]
+        super()._handle_coordinator_update()
