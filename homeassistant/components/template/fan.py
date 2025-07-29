@@ -561,5 +561,4 @@ class TriggerFanEntity(TriggerEntity, AbstractTemplateFan):
             write_ha_state = True
 
         if write_ha_state:
-            self.async_set_context(self.coordinator.data["context"])
             self.async_write_ha_state()

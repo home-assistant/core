@@ -1166,7 +1166,6 @@ class TriggerLightEntity(TriggerEntity, AbstractTemplateLight):
             raw = self._rendered.get(CONF_STATE)
             self._state = template.result_as_boolean(raw)
 
-            self.async_set_context(self.coordinator.data["context"])
             write_ha_state = True
         elif self._optimistic and len(self._rendered) > 0:
             # In case any non optimistic template

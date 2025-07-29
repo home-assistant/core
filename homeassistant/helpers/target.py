@@ -40,6 +40,14 @@ from .typing import ConfigType
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclasses.dataclass(slots=True, frozen=True)
+class TargetStateChangedData:
+    """Data for state change events related to targets."""
+
+    state_change_event: Event[EventStateChangedData]
+    targeted_entity_ids: set[str]
+
+
 def _has_match(ids: str | list[str] | None) -> TypeGuard[str | list[str]]:
     """Check if ids can match anything."""
     return ids not in (None, ENTITY_MATCH_NONE)
@@ -259,7 +267,7 @@ class TargetStateChangeTracker:
         self,
         hass: HomeAssistant,
         selector_data: TargetSelectorData,
-        action: Callable[[Event[EventStateChangedData]], Any],
+        action: Callable[[TargetStateChangedData], Any],
     ) -> None:
         """Initialize the state change tracker."""
         self._hass = hass
@@ -281,6 +289,8 @@ class TargetStateChangeTracker:
             self._hass, self._selector_data, expand_group=False
         )
 
+        tracked_entities = selected.referenced.union(selected.indirectly_referenced)
+
         @callback
         def state_change_listener(event: Event[EventStateChangedData]) -> None:
             """Handle state change events."""
@@ -288,9 +298,7 @@ class TargetStateChangeTracker:
                 event.data["entity_id"] in selected.referenced
                 or event.data["entity_id"] in selected.indirectly_referenced
             ):
-                self._action(event)
-
-        tracked_entities = selected.referenced.union(selected.indirectly_referenced)
+                self._action(TargetStateChangedData(event, tracked_entities))
 
         _LOGGER.debug("Tracking state changes for entities: %s", tracked_entities)
         self._state_change_unsub = async_track_state_change_event(
@@ -339,7 +347,7 @@ class TargetStateChangeTracker:
 def async_track_target_selector_state_change_event(
     hass: HomeAssistant,
     target_selector_config: ConfigType,
-    action: Callable[[Event[EventStateChangedData]], Any],
+    action: Callable[[TargetStateChangedData], Any],
 ) -> CALLBACK_TYPE:
     """Track state changes for entities referenced directly or indirectly in a target selector."""
     selector_data = TargetSelectorData(target_selector_config)
