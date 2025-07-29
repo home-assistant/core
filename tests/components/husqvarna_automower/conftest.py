@@ -6,7 +6,7 @@ import time
 from unittest.mock import AsyncMock, create_autospec, patch
 
 from aioautomower.commands import MowerCommands, WorkAreaSettings
-from aioautomower.model import MessageData, MowerAttributes
+from aioautomower.model import MowerAttributes
 from aioautomower.utils import mower_list_to_dictionary_dataclass
 from aiohttp import ClientWebSocketResponse
 import pytest
@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .const import CLIENT_ID, CLIENT_SECRET, TEST_MOWER_ID, USER_ID
+from .const import CLIENT_ID, CLIENT_SECRET, USER_ID
 
 from tests.common import MockConfigEntry, load_fixture, load_json_value_fixture
 
@@ -56,18 +56,6 @@ def mock_values(mower_time_zone) -> dict[str, MowerAttributes]:
         load_json_value_fixture("mower.json", DOMAIN),
         mower_time_zone,
     )
-
-
-@pytest.fixture(name="messages")
-def mock_messages() -> MessageData:
-    """Fixture to set correct scope for the token."""
-    raw_data = load_json_value_fixture("messages.json", DOMAIN)
-    return {
-        TEST_MOWER_ID: MessageData.from_dict(raw_data["data"]),
-        "1234": MessageData.from_dict(
-            {"type": "messages", "id": "messages", "attributes": {}}
-        ),
-    }
 
 
 @pytest.fixture(name="values_one_mower")
