@@ -66,14 +66,14 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self.url: str | None = None
-        self.name: str | None = None
-        self.serial_number: int | None = None
-        self.dali_device_scan_task: asyncio.Task | None = None
+        self._url: str | None = None
+        self._name: str | None = None
+        self._serial_number: int | None = None
+        self._dali_device_scan_task: asyncio.Task | None = None
 
     @property
     def _title(self) -> str:
-        return f"{self.name or 'DALI Gateway'} {self.serial_number}"
+        return f"{self._name or 'DALI Gateway'} {self._serial_number}"
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -81,18 +81,18 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self.url = user_input[CONF_URL]
-            data = {CONF_URL: self.url}
+            self._url = user_input[CONF_URL]
+            data = {CONF_URL: self._url}
             self._async_abort_entries_match(data)
             auth = Auth(
                 session=async_get_clientsession(self.hass),
-                base_url=self.url,
+                base_url=self._url,
             )
             info = Info(auth)
             try:
                 await info.async_update()
             except aiohttp.InvalidUrlClientError:
-                _LOGGER.debug(("Invalid URL: %s"), self.url)
+                _LOGGER.debug(("Invalid URL: %s"), self._url)
                 errors["base"] = "invalid_url"
             except aiohttp.ClientConnectionError:
                 _LOGGER.debug(
@@ -100,13 +100,13 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
                         "Failed to connect to device %s. Check the URL and if the "
                         "device is connected to power"
                     ),
-                    self.url,
+                    self._url,
                 )
                 errors["base"] = "cannot_connect"
             else:
-                self.name = info.name
-                self.serial_number = info.serial_number
-                await self.async_set_unique_id(str(self.serial_number))
+                self._name = info.name
+                self._serial_number = info.serial_number
+                await self.async_set_unique_id(str(self._serial_number))
                 if self.source == SOURCE_USER:
                     self._abort_if_unique_id_configured()
                     return await self.async_step_dali()
@@ -130,28 +130,28 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow that does DALI related stuff."""
         step_id = "dali"
 
-        if self.dali_device_scan_task:
+        if self._dali_device_scan_task:
             next_step_id = None
-            if self.dali_device_scan_task.cancelled():
+            if self._dali_device_scan_task.cancelled():
                 _LOGGER.debug("DALI device scan timeout")
                 next_step_id = "failed"
-            elif self.dali_device_scan_task.done():
+            elif self._dali_device_scan_task.done():
                 next_step_id = "finish"
             if next_step_id:
-                self.dali_device_scan_task = None
+                self._dali_device_scan_task = None
                 return self.async_show_progress_done(next_step_id=next_step_id)
 
         if user_input is not None:
             method = user_input[CONF_SCAN_METHOD]
             if method == DALIDeviceScanMethod.DO_NOTHING:  # Skip device scan
                 return await self.async_step_finish({})
-            self.dali_device_scan_task = self.hass.async_create_task(
+            self._dali_device_scan_task = self.hass.async_create_task(
                 self._async_start_dali_device_scan(method)
             )
             return self.async_show_progress(
                 step_id=step_id,
                 progress_action="device_scan",
-                progress_task=self.dali_device_scan_task,
+                progress_task=self._dali_device_scan_task,
             )
         return self.async_show_form(
             step_id=step_id,
@@ -172,7 +172,7 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             return self.async_create_entry(
                 title=self._title,
-                data={CONF_URL: self.url},
+                data={CONF_URL: self._url},
             )
         return self.async_show_form()
 
@@ -185,7 +185,7 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_start_dali_device_scan(self, method: DALIDeviceScanMethod) -> None:
         auth = Auth(
             session=async_get_clientsession(self.hass),
-            base_url=self.url,
+            base_url=self._url,
         )
         scan = DALIScan(auth)
         await scan.async_cancel()
