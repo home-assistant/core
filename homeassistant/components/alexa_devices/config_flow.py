@@ -152,6 +152,8 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         updated_username = user_input[CONF_USERNAME]
+        updated_password = user_input[CONF_PASSWORD]
+        updated_country = user_input[CONF_COUNTRY]
 
         self._async_abort_entries_match({CONF_USERNAME: updated_username})
 
@@ -172,6 +174,8 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
                 reconfigure_entry,
                 data_updates={
                     CONF_USERNAME: updated_username,
+                    CONF_PASSWORD: updated_password,
+                    CONF_COUNTRY: updated_country,
                     CONF_LOGIN_DATA: data,
                 },
             )

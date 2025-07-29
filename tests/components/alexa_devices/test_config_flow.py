@@ -234,13 +234,15 @@ async def test_reconfigure_successful(
     assert mock_config_entry.data[CONF_USERNAME] == "fake_email@gmail.com"
 
     new_username = "new_fake_email@gmail.com"
+    new_password = "new_fake_password"
+    new_country = "new_fake_country"
 
     reconfigure_result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_COUNTRY: TEST_COUNTRY,
+            CONF_COUNTRY: new_country,
             CONF_USERNAME: new_username,
-            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_PASSWORD: new_password,
             CONF_CODE: TEST_CODE,
         },
     )
@@ -250,6 +252,8 @@ async def test_reconfigure_successful(
 
     # changed entry
     assert mock_config_entry.data[CONF_USERNAME] == new_username
+    assert mock_config_entry.data[CONF_PASSWORD] == new_password
+    assert mock_config_entry.data[CONF_COUNTRY] == new_country
 
 
 @pytest.mark.parametrize(
