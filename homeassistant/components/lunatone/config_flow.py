@@ -92,16 +92,8 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await info.async_update()
             except aiohttp.InvalidUrlClientError:
-                _LOGGER.debug(("Invalid URL: %s"), self._url)
                 errors["base"] = "invalid_url"
             except aiohttp.ClientConnectionError:
-                _LOGGER.debug(
-                    (
-                        "Failed to connect to device %s. Check the URL and if the "
-                        "device is connected to power"
-                    ),
-                    self._url,
-                )
                 errors["base"] = "cannot_connect"
             else:
                 self._name = info.name
