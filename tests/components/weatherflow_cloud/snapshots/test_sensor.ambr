@@ -657,74 +657,6 @@
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[sensor.my_home_station_precip_analysis_yesterday-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'none',
-        'rain',
-        'hail',
-        'rain_hail',
-        'unknown',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.my_home_station_precip_analysis_yesterday',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': None,
-    'original_name': 'Precip analysis yesterday',
-    'platform': 'weatherflow_cloud',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'precip_analysis_type_yesterday',
-    'unique_id': '24432_precip_analysis_type_yesterday',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.my_home_station_precip_analysis_yesterday-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
-      'device_class': 'enum',
-      'friendly_name': 'My Home Station Precip analysis yesterday',
-      'options': list([
-        'none',
-        'rain',
-        'hail',
-        'rain_hail',
-        'unknown',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.my_home_station_precip_analysis_yesterday',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'none',
-  })
-# ---
 # name: test_all_entities[sensor.my_home_station_precip_min_today-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -891,6 +823,76 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_precip_type_yesterday-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'rain',
+        'snow',
+        'sleet',
+        'storm',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.my_home_station_precip_type_yesterday',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Precip type yesterday',
+    'platform': 'weatherflow_cloud',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'precip_analysis_type_yesterday',
+    'unique_id': '24432_precip_analysis_type_yesterday',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.my_home_station_precip_type_yesterday-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Weather data delivered by WeatherFlow/Tempest API',
+      'device_class': 'enum',
+      'friendly_name': 'My Home Station Precip type yesterday',
+      'options': list([
+        'none',
+        'rain',
+        'snow',
+        'sleet',
+        'storm',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_home_station_precip_type_yesterday',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
   })
 # ---
 # name: test_all_entities[sensor.my_home_station_precip_yesterday-entry]
