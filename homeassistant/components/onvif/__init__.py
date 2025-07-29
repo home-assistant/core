@@ -56,13 +56,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if not entry.data.get(CONF_SNAPSHOT_AUTH):
                 await async_populate_snapshot_auth(hass, device, entry)
         except (TimeoutError, aiohttp.ClientError) as err:
-            LOGGER.debug(
-                "Error connecting to camera %s:%s: %s",
-                device.device.host,
-                device.device.port,
-                err,
-                exc_info=True,
-            )
             raise ConfigEntryNotReady(
                 f"Could not connect to camera {device.device.host}:{device.device.port}: {err}"
             ) from err
