@@ -1,24 +1,35 @@
 """Tests for init module."""
 
 from collections.abc import Callable
+from copy import deepcopy
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
-from aioautomower.model import SingleMessageData
+from aioautomower.model import MowerAttributes, SingleMessageData
 from aioautomower.model.model_message import Message, Severity, SingleMessageAttributes
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.event import ATTR_EVENT_TYPE
+from homeassistant.components.husqvarna_automower.coordinator import SCAN_INTERVAL
+from homeassistant.components.husqvarna_automower.event import STORAGE_KEY
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.storage import Store
 
 from . import setup_integration
 from .const import TEST_MOWER_ID
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+
+async def get_seen_mowers(hass: HomeAssistant) -> dict[str, bool]:
+    """Return the current seen mowers from persistent storage."""
+    store = Store(hass, 1, STORAGE_KEY)
+    return await store.async_load() or {}
 
 
 @pytest.mark.freeze_time(datetime(2023, 6, 5, 12))
@@ -26,6 +37,8 @@ async def test_event(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    values: dict[str, MowerAttributes],
 ) -> None:
     """Test that a new message arriving over the websocket creates and updates the sensor."""
 
@@ -71,6 +84,7 @@ async def test_event(
         cb(message)
     await hass.async_block_till_done()
     state = hass.states.get("event.test_mower_1_message")
+    assert state is not None
     assert state.attributes[ATTR_EVENT_TYPE] == "wheel_motor_overloaded_rear_left"
 
     await hass.config_entries.async_remove(mock_config_entry.entry_id)
@@ -100,6 +114,7 @@ async def test_event(
         cb(message)
     await hass.async_block_till_done()
     state = hass.states.get("event.test_mower_1_message")
+    assert state is not None
     assert state.attributes[ATTR_EVENT_TYPE] == "alarm_mower_lifted"
 
     message = SingleMessageData(
@@ -120,7 +135,35 @@ async def test_event(
         cb(message)
     await hass.async_block_till_done()
     state = hass.states.get("event.test_mower_1_message")
+    assert state is not None
     assert state.attributes[ATTR_EVENT_TYPE] == "alarm_mower_lifted"
+
+    state = hass.states.get("event.test_mower_2_message")
+    assert state is not None
+    assert state.attributes[ATTR_EVENT_TYPE] == "battery_problem"
+    seen_mowers = await get_seen_mowers(hass)
+    assert "1234" in seen_mowers
+
+    values_copy = deepcopy(values)
+    values_copy.pop("1234")
+    mock_automower_client.get_status.return_value = values_copy
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("event.test_mower_2_message")
+    assert state is None
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+    state = hass.states.get("event.test_mower_2_message")
+    assert state is None
+
+    seen_mowers = await get_seen_mowers(hass)
+    assert "1234" not in seen_mowers
 
 
 @pytest.mark.freeze_time(datetime(2023, 6, 5, 12))
@@ -128,6 +171,7 @@ async def test_event_snapshot(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:

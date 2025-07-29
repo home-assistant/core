@@ -1,8 +1,9 @@
 """Creates the event entities for supported mowers."""
 
+from collections.abc import Callable
 import logging
 
-from aioautomower.model import Message, SingleMessageData
+from aioautomower.model import SingleMessageData
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
 from homeassistant.core import HomeAssistant, callback
@@ -23,7 +24,7 @@ ATTR_LATITUDE = "latitude"
 ATTR_LONGITUDE = "longitude"
 ATTR_DATE_TIME = "date_time"
 
-_STORAGE_KEY = f"{DOMAIN}_message_event_seen"
+STORAGE_KEY = f"{DOMAIN}_message_event_seen"
 
 
 EVENT_DESCRIPTIONS = [
@@ -47,53 +48,39 @@ async def async_setup_entry(
     based on the messages received from the API.
     """
     coordinator: AutomowerDataUpdateCoordinator = entry.runtime_data
-    store: Store[dict[str, bool]] = Store(hass, 1, _STORAGE_KEY)
-    seen_mowers: dict[str, bool] = await store.async_load() or {}
+    store: Store[dict[str, bool]] = Store(hass, 1, STORAGE_KEY)
+    seen_mowers = await store.async_load() or {}
 
-    # Mapping mower_id -> entity instance
-    entities_by_mower_id: dict[str, AutomowerMessageEventEntity] = {}
-
-    # Restore previously seen mowers
-    for mower_id in seen_mowers:
-        for description in EVENT_DESCRIPTIONS:
-            entity = AutomowerMessageEventEntity(mower_id, coordinator, description)
-            entities_by_mower_id[mower_id] = entity
-            async_add_entities([entity])
-
-    async def handle_new_message(message_data: SingleMessageData) -> None:
-        mower_id = message_data.id
-
-        if mower_id in entities_by_mower_id:
-            entities_by_mower_id[mower_id].async_handle_new_message(message_data)
-            return
-
+    def _add_for_mower(mower_id: str) -> None:
         seen_mowers[mower_id] = True
-        await store.async_save(seen_mowers)
-        _LOGGER.debug("Creating message event entity for mower %s", mower_id)
+        hass.async_create_task(store.async_save(seen_mowers))
+        entities = [
+            AutomowerMessageEventEntity(mower_id, coordinator, desc)
+            for desc in EVENT_DESCRIPTIONS
+        ]
+        async_add_entities(entities)
 
-        new_entities: list[AutomowerMessageEventEntity] = []
-        for description in EVENT_DESCRIPTIONS:
-            entity = AutomowerMessageEventEntity(mower_id, coordinator, description)
-            entities_by_mower_id[mower_id] = entity
-            new_entities.append(entity)
+    # Restore and clean up seen mowers
+    for mower_id in list(seen_mowers):
+        if mower_id in coordinator.data:
+            _add_for_mower(mower_id)
+        else:
+            del seen_mowers[mower_id]
+            hass.async_create_task(store.async_save(seen_mowers))
 
-        async_add_entities(new_entities)
-        for entity in new_entities:
-            entity.async_handle_new_message(message_data)
+    @callback
+    def _on_single_message(msg: SingleMessageData) -> None:
+        if msg.id not in seen_mowers:
+            _add_for_mower(msg.id)
 
-        # Register a single global callback for all mower messages
-
-    def _schedule_handle(msg_data: SingleMessageData) -> None:
-        """Schedule the async handler for new messages."""
-        hass.async_create_task(handle_new_message(msg_data))
-
-    coordinator.api.register_single_message_callback(_schedule_handle)
+    coordinator.api.register_single_message_callback(_on_single_message)
 
 
 class AutomowerMessageEventEntity(AutomowerBaseEntity, EventEntity):
-    """Automower EventEntity for error messages."""
+    """EventEntity for Automower message events."""
 
     entity_description: EventEntityDescription
+    _message_cb: Callable[[SingleMessageData], None] | None = None
 
     def __init__(
         self,
@@ -101,25 +88,38 @@ class AutomowerMessageEventEntity(AutomowerBaseEntity, EventEntity):
         coordinator: AutomowerDataUpdateCoordinator,
         description: EventEntityDescription,
     ) -> None:
-        """Initialize the Automower error event."""
+        """Initialize Automower message event entity."""
         super().__init__(mower_id, coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{mower_id}_{description.key}"
         self.mower_id = mower_id
+        self._message_cb = None
 
-    @callback
-    def async_handle_new_message(self, msg_data: SingleMessageData) -> None:
-        """Handle new message from API."""
-        if msg_data.id != self.mower_id:
-            return
-        message: Message = msg_data.attributes.message
-        self._trigger_event(
-            message.code,
-            {
-                ATTR_SEVERITY: message.severity,
-                ATTR_LATITUDE: message.latitude,
-                ATTR_LONGITUDE: message.longitude,
-                ATTR_DATE_TIME: message.time,
-            },
-        )
-        self.async_write_ha_state()
+    async def async_added_to_hass(self) -> None:
+        """Register callback when entity is added to hass."""
+        await super().async_added_to_hass()
+
+        @callback
+        def _handle(msg: SingleMessageData) -> None:
+            if msg.id != self.mower_id:
+                return
+            message = msg.attributes.message
+            self._trigger_event(
+                message.code,
+                {
+                    ATTR_SEVERITY: message.severity,
+                    ATTR_LATITUDE: message.latitude,
+                    ATTR_LONGITUDE: message.longitude,
+                    ATTR_DATE_TIME: message.time,
+                },
+            )
+            self.async_write_ha_state()
+
+        self._message_cb = _handle
+        self.coordinator.api.register_single_message_callback(self._message_cb)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Unregister WebSocket callback when entity is removed."""
+        if self._message_cb:
+            self.coordinator.api.unregister_single_message_callback(self._message_cb)
+            self._message_cb = None
