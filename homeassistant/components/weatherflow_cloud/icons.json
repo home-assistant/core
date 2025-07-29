@@ -38,28 +38,24 @@
       "precip_accum_local_day": {
         "default": "mdi:umbrella-closed",
         "range": {
-          "0": "mdi:umbrella-closed",
           "0.01": "mdi:umbrella"
         }
       },
       "precip_accum_local_day_final": {
         "default": "mdi:umbrella-closed",
         "range": {
-          "0": "mdi:umbrella-closed",
           "0.01": "mdi:umbrella"
         }
       },
       "precip_accum_local_yesterday": {
         "default": "mdi:umbrella-closed",
         "range": {
-          "0": "mdi:umbrella-closed",
           "0.01": "mdi:umbrella"
         }
       },
       "precip_accum_local_yesterday_final": {
         "default": "mdi:umbrella-closed",
         "range": {
-          "0": "mdi:umbrella-closed",
           "0.01": "mdi:umbrella"
         }
       },
@@ -67,21 +63,18 @@
       "precip_minutes_local_day": {
         "default": "mdi:umbrella-closed",
         "range": {
-          "0": "mdi:umbrella-closed",
           "1": "mdi:umbrella"
         }
       },
       "precip_minutes_local_yesterday": {
         "default": "mdi:umbrella-closed",
         "range": {
-          "0": "mdi:umbrella-closed",
           "1": "mdi:umbrella"
         }
       },
       "precip_minutes_local_yesterday_final": {
         "default": "mdi:umbrella-closed",
         "range": {
-          "0": "mdi:umbrella-closed",
           "1": "mdi:umbrella"
         }
       },
