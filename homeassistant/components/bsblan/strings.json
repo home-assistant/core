@@ -38,7 +38,7 @@
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The BSB-Lan integration needs to re-authenticate with {name}",
         "data": {
-          "passkey": "Passkey string",
+          "passkey": "[%key:component::bsblan::config::step::user::data::passkey%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
