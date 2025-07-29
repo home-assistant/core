@@ -39,6 +39,14 @@ from .const import DOMAIN
 from .coordinator import WeatherFlowObservationCoordinator, WeatherFlowWindCoordinator
 from .entity import WeatherFlowCloudEntity
 
+PRECIPITATION_TYPE = {
+    0: "none",
+    1: "rain",
+    2: "snow",
+    3: "sleet",
+    4: "storm",
+}
+
 
 @dataclass(frozen=True, kw_only=True)
 class WeatherFlowCloudSensorEntityDescription(
@@ -69,14 +77,7 @@ class WeatherFlowCloudSensorEntityDescriptionWebsocketObservation(
 
 def map_precip_type(value: int) -> str | None:
     """Map precipitation type to string."""
-    mapping = {
-        0: "none",
-        1: "rain",
-        2: "snow",
-        3: "sleet",
-        4: "storm",
-    }
-    return mapping.get(value)
+    return PRECIPITATION_TYPE.get(value)
 
 
 WEBSOCKET_WIND_SENSORS: tuple[
@@ -282,7 +283,9 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=["none", "rain", "snow", "sleet", "storm"],
         suggested_display_precision=1,
-        value_fn=lambda data: map_precip_type(data.precip_analysis_type_yesterday),
+        value_fn=lambda data: PRECIPITATION_TYPE.get(
+            data.precip_analysis_type_yesterday
+        ),
     ),
     WeatherFlowCloudSensorEntityDescription(
         key="precip_minutes_local_day",
