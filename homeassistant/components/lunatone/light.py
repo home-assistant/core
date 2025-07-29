@@ -103,7 +103,7 @@ class LunatoneLight(LightEntity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
-        if self._interface_version >= "1.10.0" and self._interface_version < "1.15.0":
+        if self._interface_version < "1.15.0":
             await asyncio.sleep(0.02)
         try:
             await self._device.async_update()
