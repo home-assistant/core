@@ -4,6 +4,7 @@ from collections.abc import Generator
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from psnawp_api.models.group.group import Group
 from psnawp_api.models.trophies import (
     PlatformType,
     TrophySet,
@@ -159,6 +160,16 @@ def mock_psnawpapi(mock_user: MagicMock) -> Generator[MagicMock]:
         client.me.return_value.get_shareable_profile_link.return_value = {
             "shareImageUrl": "https://xxxxx.cloudfront.net/profile-testuser?Expires=1753304493"
         }
+        group = MagicMock(spec=Group, group_id="test-groupid")
+
+        group.get_group_information.return_value = {
+            "groupName": {"value": ""},
+            "members": [
+                {"onlineId": "PublicUniversalFriend", "accountId": "fren-psn-id"},
+                {"onlineId": "testuser", "accountId": PSN_ID},
+            ],
+        }
+        client.me.return_value.get_groups.return_value = [group]
         yield client
 
 

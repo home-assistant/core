@@ -7267,6 +7267,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "volvo": {
+      "name": "Volvo",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "volvooncall": {
       "name": "Volvo On Call",
       "integration_type": "hub",
@@ -7659,6 +7665,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "zbox_hub": {
+      "name": "Z-Box Hub",
+      "integration_type": "virtual",
+      "supported_by": "fibaro"
     },
     "zengge": {
       "name": "Zengge",
