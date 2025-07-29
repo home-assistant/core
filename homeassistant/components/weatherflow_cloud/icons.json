@@ -86,6 +86,9 @@
           "1": "mdi:umbrella"
         }
       },
+      "precip_analysis_type_yesterday": {
+        "default": "mdi:radar"
+      },
       "sea_level_pressure": {
         "default": "mdi:gauge"
       },
