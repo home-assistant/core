@@ -25,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> bool:
     """Set up Lunatone from a config entry."""
+    assert entry.unique_id
 
     auth = Auth(async_get_clientsession(hass), entry.data[CONF_URL])
     info = Info(auth)
@@ -36,16 +37,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
     coordinator_devices = LunatoneDevicesDataUpdateCoordinator(hass, entry, devices)
     await coordinator_devices.async_config_entry_first_refresh()
 
-    if entry.unique_id is not None:
-        device_registry = dr.async_get(hass)
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            identifiers={(DOMAIN, entry.unique_id)},
-            name=entry.title,
-            manufacturer="Lunatone",
-            sw_version=info.version,
-            configuration_url=entry.data[CONF_URL],
-        )
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.unique_id)},
+        name=entry.title,
+        manufacturer="Lunatone",
+        sw_version=info.version,
+        configuration_url=entry.data[CONF_URL],
+    )
 
     entry.runtime_data = LunatoneData(coordinator_info, coordinator_devices)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
