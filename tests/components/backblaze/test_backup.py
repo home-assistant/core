@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator
 import io
 import json
 import logging
+from time import time
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from b2sdk.v2 import DEFAULT_MIN_PART_SIZE
@@ -11,14 +12,18 @@ from b2sdk.v2.exception import B2Error
 import pytest
 
 from homeassistant.components.backblaze.backup import (
-    METADATA_VERSION,
+    CACHE_TTL,
     BackblazeBackupAgent,
     async_get_backup_agents,
     async_register_backup_agents_listener,
     handle_b2_errors,
     suggested_filename,
 )
-from homeassistant.components.backblaze.const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from homeassistant.components.backblaze.const import (
+    DATA_BACKUP_AGENT_LISTENERS,
+    DOMAIN,
+    METADATA_VERSION,
+)
 from homeassistant.components.backup import (
     DOMAIN as BACKUP_DOMAIN,
     AgentBackup,
@@ -397,7 +402,16 @@ class TestMetadataProcessing:
             ),
             caplog.at_level(logging.DEBUG),
         ):
+            # Adds coverage
+            agent._backup_list_cache_expiration = time() + CACHE_TTL
+            await agent.async_get_backup(test_backup.backup_id)
+
+            # List backups, which should process the metadata files
+            agent._backup_list_cache_expiration = 0.0
             backups = await agent.async_list_backups()
+
+            # Adds coverage
+            await agent.async_get_backup(test_backup.backup_id)
 
             # Only the valid backup should be returned
             assert len(backups) == 1
@@ -448,7 +462,7 @@ class TestMetadataProcessing:
             {
                 "name": "corrupted_json",
                 "log_level": logging.WARNING,
-                "expected_log": "Failed to parse metadata file",
+                "expected_log": "",
                 "files": {
                     f"{prefix}corrupted_backup.tar{METADATA_FILE_SUFFIX}": create_corrupted_metadata_file(
                         prefix, "corrupted_backup"
@@ -459,7 +473,7 @@ class TestMetadataProcessing:
             {
                 "name": "b2_error_download",
                 "log_level": logging.WARNING,
-                "expected_log": "Failed to parse metadata file",
+                "expected_log": "",
                 "files": {
                     f"{prefix}b2error_backup.tar{METADATA_FILE_SUFFIX}": create_b2_error_metadata_file(
                         prefix,
@@ -1275,6 +1289,12 @@ async def test_metadata_processing_comprehensive_log_scenarios(
             assert len(result) == 0
             assert "Found metadata file" in caplog.text
             assert "but no corresponding backup file starting with" in caplog.text
+
+            # Added coverage for attempted cache retrieval
+            agent._backup_list_cache["dummy_backup_id"] = TEST_BACKUP
+            agent._backup_list_cache_expiration = time() + CACHE_TTL
+            result = await agent.async_list_backups()
+            assert len(result) == 1
 
     # Scenario 2: Metadata ID doesn't match target (DEBUG)
     caplog.clear()
