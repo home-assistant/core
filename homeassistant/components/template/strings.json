@@ -99,7 +99,8 @@
           "speed_count": "Speed count"
         },
         "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "speed_count": "The number of speeds the fan supports. Used to calculate the percentage step for the `fan.increase_speed` and `fan.decrease_speed` actions."
         },
         "sections": {
           "advanced_options": {
@@ -320,7 +321,8 @@
           "speed_count": "[%key:component::template::config::step::fan::data::speed_count%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "speed_count": "[%key:component::template::config::step::fan::data_description::speed_count%]"
         },
         "sections": {
           "advanced_options": {

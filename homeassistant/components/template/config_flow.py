@@ -180,7 +180,7 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(CONF_SET_OSCILLATING_ACTION): selector.ActionSelector(),
             vol.Optional(CONF_SPEED_COUNT): selector.NumberSelector(
                 selector.NumberSelectorConfig(
-                    min=0, max=100, step=1, mode=selector.NumberSelectorMode.BOX
+                    min=1, max=100, step=1, mode=selector.NumberSelectorMode.BOX
                 ),
             ),
         }
