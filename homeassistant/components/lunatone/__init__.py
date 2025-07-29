@@ -1,6 +1,5 @@
 """The Lunatone integration."""
 
-import logging
 from typing import Final
 
 from lunatone_rest_api_client import Auth, Devices, Info
@@ -19,8 +18,6 @@ from .coordinator import (
 )
 
 PLATFORMS: Final[list[Platform]] = [Platform.LIGHT]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> bool:
@@ -56,11 +53,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
 async def async_unload_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def async_migrate_entry(
-    hass: HomeAssistant, config_entry: LunatoneConfigEntry
-) -> bool:
-    """Migrate old config entry."""
-    _LOGGER.debug("Nothing to migrate")
-    return True
