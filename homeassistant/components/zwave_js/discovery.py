@@ -307,10 +307,10 @@ DISCOVERY_SCHEMAS = [
             FanValueMapping(speeds=[(1, 32), (33, 66), (67, 99)]),
         ),
     ),
-    # GE/Jasco - In-Wall Fan Speed Control - 58446 / ZWA4013                                                                                                                                                                                                                                                                     
+    # GE/Jasco - In-Wall Fan Speed Control - 58446 / ZWA4013
     ZWaveDiscoverySchema(
         platform=Platform.FAN,
-        hint="has_fan_value_mapping",                                                                                                                                                                                                                                                                  
+        hint="has_fan_value_mapping",
         manufacturer_id={0x0063},
         product_id={0x3533},
         product_type={0x4944},
