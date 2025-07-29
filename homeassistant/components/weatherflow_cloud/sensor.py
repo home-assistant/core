@@ -67,6 +67,18 @@ class WeatherFlowCloudSensorEntityDescriptionWebsocketObservation(
     value_fn: Callable[[WebsocketObservation], StateType | datetime]
 
 
+def map_precip_type(value):
+    """Map precipitation type to string."""
+    mapping = {
+        0: "none",
+        1: "rain",
+        2: "snow",
+        3: "sleet",
+        4: "storm",
+    }
+    return mapping.get(value, "unknown")
+
+
 WEBSOCKET_WIND_SENSORS: tuple[
     WeatherFlowCloudSensorEntityDescriptionWebsocketWind, ...
 ] = (
@@ -223,6 +235,82 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
     ),
+    # Rain Sensors
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_accum_last_1hr",
+        translation_key="precip_accum_last_1hr",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.precip_accum_last_1hr,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_accum_local_day",
+        translation_key="precip_accum_local_day",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.precip_accum_local_day,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_accum_local_day_final",
+        translation_key="precip_accum_local_day_final",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.precip_accum_local_day_final,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_accum_local_yesterday",
+        translation_key="precip_accum_local_yesterday",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.precip_accum_local_yesterday,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_accum_local_yesterday_final",
+        translation_key="precip_accum_local_yesterday_final",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.precip_accum_local_yesterday_final,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_analysis_type_yesterday",
+        translation_key="precip_analysis_type_yesterday",
+        device_class=SensorDeviceClass.ENUM,
+        options=["none", "rain", "snow", "sleet", "storm", "unknown"],
+        suggested_display_precision=1,
+        value_fn=lambda data: map_precip_type(data.precip_analysis_type_yesterday),
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_minutes_local_day",
+        translation_key="precip_minutes_local_day",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.precip_minutes_local_day,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_minutes_local_yesterday",
+        translation_key="precip_minutes_local_yesterday",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.precip_minutes_local_yesterday,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_minutes_local_yesterday_final",
+        translation_key="precip_minutes_local_yesterday_final",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.precip_minutes_local_yesterday_final,
+    ),
+    # precip_minutes_local_day: int = field(default=0)
+    # precip_minutes_local_yesterday: int = field(default=0)
+    # precip_minutes_local_yesterday_final: int = field(default=0)
     # Lightning Sensors
     WeatherFlowCloudSensorEntityDescription(
         key="lightning_strike_count",
