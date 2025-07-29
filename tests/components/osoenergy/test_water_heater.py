@@ -334,22 +334,3 @@ async def test_oso_set_away_mode_on(
     mock_osoenergy_client().hotwater.enable_holiday_mode.assert_called_once_with(
         ANY, 10
     )
-
-
-async def test_oso_set_away_mode_on_without_duration(
-    hass: HomeAssistant,
-    mock_osoenergy_client: MagicMock,
-    mock_config_entry: ConfigEntry,
-) -> None:
-    """Test enabling away mode."""
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_TURN_AWAY_MODE_ON,
-        {ATTR_ENTITY_ID: "water_heater.test_device"},
-        blocking=True,
-    )
-
-    mock_osoenergy_client().hotwater.enable_holiday_mode.assert_called_once_with(
-        ANY, 365
-    )

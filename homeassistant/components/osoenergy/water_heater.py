@@ -74,7 +74,7 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_TURN_AWAY_MODE_ON,
         {
-            vol.Optional(ATTR_DURATION_DAYS): vol.All(
+            vol.Required(ATTR_DURATION_DAYS): vol.All(
                 vol.Coerce(int), vol.Range(min=1, max=365)
             ),
         },
@@ -292,13 +292,8 @@ class OSOEnergyWaterHeater(
         """Handle the service call."""
         await self.osoenergy.hotwater.set_v40_min(self.entity_data, v40_min)
 
-    async def async_oso_turn_away_mode_on(
-        self, duration_days: int | None = None
-    ) -> None:
+    async def async_oso_turn_away_mode_on(self, duration_days: int) -> None:
         """Enable away mode with duration."""
-        if duration_days is None:
-            duration_days = 365
-
         await self.osoenergy.hotwater.enable_holiday_mode(
             self.entity_data, duration_days
         )
