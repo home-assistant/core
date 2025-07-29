@@ -276,7 +276,7 @@ async def test_reconfigure(
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
