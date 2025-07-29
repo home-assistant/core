@@ -77,6 +77,10 @@
         '0': 1,
         'null': 1,
       }),
+      '594': dict({
+        '0': 1,
+        'null': 1,
+      }),
       'DingDongOpt': dict({
         '0': 2,
         'null': 2,
