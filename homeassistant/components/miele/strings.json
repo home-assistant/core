@@ -1117,7 +1117,7 @@
           "name": "[%key:component::sensor::entity_component::temperature::name%]"
         },
         "duration": {
-          "description": "The duration for the oven program in minutes.",
+          "description": "The duration for the oven program.",
           "name": "[%key:component::sensor::entity_component::duration::name%]"
         }
       }
