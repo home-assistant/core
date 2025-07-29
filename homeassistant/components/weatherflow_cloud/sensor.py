@@ -67,7 +67,7 @@ class WeatherFlowCloudSensorEntityDescriptionWebsocketObservation(
     value_fn: Callable[[WebsocketObservation], StateType | datetime]
 
 
-def map_precip_type(value):
+def map_precip_type(value: int) -> str | None:
     """Map precipitation type to string."""
     mapping = {
         0: "none",
@@ -76,7 +76,7 @@ def map_precip_type(value):
         3: "sleet",
         4: "storm",
     }
-    return mapping.get(value, "unknown")
+    return mapping.get(value)
 
 
 WEBSOCKET_WIND_SENSORS: tuple[
@@ -280,7 +280,7 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         key="precip_analysis_type_yesterday",
         translation_key="precip_analysis_type_yesterday",
         device_class=SensorDeviceClass.ENUM,
-        options=["none", "rain", "snow", "sleet", "storm", "unknown"],
+        options=["none", "rain", "snow", "sleet", "storm"],
         suggested_display_precision=1,
         value_fn=lambda data: map_precip_type(data.precip_analysis_type_yesterday),
     ),
