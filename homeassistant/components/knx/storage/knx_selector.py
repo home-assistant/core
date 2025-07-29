@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from ..validation import ga_validator, maybe_ga_validator, sync_state_validator
 from .const import CONF_DPT, CONF_GA_PASSIVE, CONF_GA_STATE, CONF_GA_WRITE
+from .util import dpt_string_to_dict
 
 
 class AllSerializeFirst(vol.All):
@@ -179,14 +180,6 @@ class GASelector(KNXSelectorBase):
     def serialize(self) -> dict[str, Any]:
         """Serialize the selector to a dictionary."""
 
-        def dpt_to_dict(dpt: str) -> dict[str, int | None]:
-            """Convert a DPT string to a dictionary."""
-            dpt_num = dpt.split(".")
-            return {
-                "main": int(dpt_num[0]),
-                "sub": int(dpt_num[1]) if len(dpt_num) > 1 else None,
-            }
-
         options: dict[str, Any] = {
             "write": {"required": self.write_required} if self.write else False,
             "state": {"required": self.state_required} if self.state else False,
@@ -197,12 +190,12 @@ class GASelector(KNXSelectorBase):
                 {
                     "value": item.value,
                     "translation_key": item.value.replace(".", "_"),
-                    "dpt": dpt_to_dict(item.value),  # used to filter DPTs in dropdown
+                    "dpt": dpt_string_to_dict(item.value),  # used for filtering GAs
                 }
                 for item in self.dpt
             ]
         if self.valid_dpt is not None:
-            options["validDPTs"] = [dpt_to_dict(dpt) for dpt in self.valid_dpt]
+            options["validDPTs"] = [dpt_string_to_dict(dpt) for dpt in self.valid_dpt]
 
         return {
             "type": self.selector_type,
