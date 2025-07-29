@@ -42,7 +42,6 @@ DALI_DEVICE_SCAN_METHODS: Final[list[str]] = [
 DATA_SCHEMA: Final[vol.Schema] = vol.Schema(
     {vol.Required(CONF_URL, default="http://"): cv.string},
 )
-RECONFIGURE_SCHEMA: Final[vol.Schema] = DATA_SCHEMA
 CONF_SCAN_METHOD: Final = "device_scan_method"
 DALI_SCAN_SCHEMA: Final[vol.Schema] = vol.Schema(
     {
@@ -118,14 +117,9 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=self._title,
                 )
 
-        step_id = "reconfigure"
-        data_schema = RECONFIGURE_SCHEMA
-        if self.source == SOURCE_USER:
-            step_id = "user"
-            data_schema = DATA_SCHEMA
         return self.async_show_form(
-            step_id=step_id,
-            data_schema=data_schema,
+            step_id="user",
+            data_schema=DATA_SCHEMA,
             errors=errors,
             last_step=bool(self.source == SOURCE_RECONFIGURE),
         )
