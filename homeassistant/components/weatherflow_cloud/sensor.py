@@ -308,9 +308,6 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         suggested_display_precision=1,
         value_fn=lambda data: data.precip_minutes_local_yesterday_final,
     ),
-    # precip_minutes_local_day: int = field(default=0)
-    # precip_minutes_local_yesterday: int = field(default=0)
-    # precip_minutes_local_yesterday_final: int = field(default=0)
     # Lightning Sensors
     WeatherFlowCloudSensorEntityDescription(
         key="lightning_strike_count",
