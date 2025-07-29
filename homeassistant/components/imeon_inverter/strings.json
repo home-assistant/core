@@ -178,21 +178,21 @@
       "timeline_type_msg": {
         "name": "Timeline status",
         "state": {
-          "com_lost": "Communication lost. Please refer to your monitoring panel.",
-          "warning_grid": "Power grid warning detected. Please refer to your monitoring panel.",
-          "warning_pv": "PV system warning detected. Please refer to your monitoring panel.",
-          "warning_bat": "Battery warning detected. Please refer to your monitoring panel.",
-          "error_ond": "Inverter error detected. Please refer to your monitoring panel.",
-          "error_soft": "Software error detected. Please refer to your monitoring panel.",
-          "error_pv": "PV system error detected. Please refer to your monitoring panel.",
-          "error_grid": "Power grid error detected. Please refer to your monitoring panel.",
-          "error_bat": "Battery error detected. Please refer to your monitoring panel.",
+          "com_lost": "Communication lost.",
+          "warning_grid": "Power grid warning detected.",
+          "warning_pv": "PV system warning detected.",
+          "warning_bat": "Battery warning detected.",
+          "error_ond": "Inverter error detected.",
+          "error_soft": "Software error detected.",
+          "error_pv": "PV system error detected.",
+          "error_grid": "Power grid error detected.",
+          "error_bat": "Battery error detected.",
           "good_1": "System operating normally.",
-          "web_account": "Web account notification. Please refer to your monitoring panel.",
-          "info_soft": "Software information available. Please refer to your monitoring panel.",
-          "info_ond": "Inverter information available. Please refer to your monitoring panel.",
-          "info_bat": "Battery information available. Please refer to your monitoring panel.",
-          "info_smartlo": "Smart load information available. Please refer to your monitoring panel."
+          "web_account": "Web account notification.",
+          "info_soft": "Software information available.",
+          "info_ond": "Inverter information available.",
+          "info_bat": "Battery information available.",
+          "info_smartlo": "Smart load information available."
         }
       },
       "energy_pv": {
