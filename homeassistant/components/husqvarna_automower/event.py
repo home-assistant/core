@@ -5,7 +5,6 @@ import logging
 from aioautomower.model import Message, SingleMessageData
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
-from homeassistant.const import ATTR_TIME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.storage import Store
@@ -22,7 +21,7 @@ PARALLEL_UPDATES = 1
 ATTR_SEVERITY = "severity"
 ATTR_LATITUDE = "latitude"
 ATTR_LONGITUDE = "longitude"
-
+ATTR_DATE_TIME = "date_time"
 
 _STORAGE_KEY = f"{DOMAIN}_message_event_seen"
 
@@ -120,7 +119,7 @@ class AutomowerMessageEventEntity(AutomowerBaseEntity, EventEntity):
                 ATTR_SEVERITY: message.severity,
                 ATTR_LATITUDE: message.latitude,
                 ATTR_LONGITUDE: message.longitude,
-                ATTR_TIME: message.time,
+                ATTR_DATE_TIME: message.time,
             },
         )
         self.async_write_ha_state()
