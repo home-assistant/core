@@ -35,7 +35,9 @@ def knx_serializer(
     return UNSUPPORTED  # type: ignore[no-any-return]
 
 
-def get_serialized_schema(platform: Platform) -> dict | list | None:
+def get_serialized_schema(
+    platform: Platform,
+) -> dict[str, Any] | list[dict[str, Any]] | None:
     """Get the schema for a specific platform."""
     if knx_schema := KNX_SCHEMA_FOR_PLATFORM.get(platform):
         return convert(knx_schema, custom_serializer=knx_serializer)  # type: ignore[no-any-return]
