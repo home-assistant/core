@@ -15,7 +15,6 @@ from aiotankerkoenig import (
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -40,6 +39,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_STATIONS, DEFAULT_RADIUS, DOMAIN
+from .coordinator import TankerkoenigConfigEntry
 
 
 async def async_get_nearby_stations(
@@ -71,7 +71,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: TankerkoenigConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()

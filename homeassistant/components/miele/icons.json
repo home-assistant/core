@@ -103,5 +103,13 @@
         "default": "mdi:snowflake"
       }
     }
+  },
+  "services": {
+    "get_programs": {
+      "service": "mdi:stack-overflow"
+    },
+    "set_program": {
+      "service": "mdi:arrow-right-circle-outline"
+    }
   }
 }
