@@ -219,14 +219,6 @@ class MatchFailedReason(Enum):
     MULTIPLE_TARGETS = auto()
     """Two or more entities matched when a single target is required."""
 
-    def is_no_entities_reason(self) -> bool:
-        """Return True if the match failed because no entities matched."""
-        return self not in (
-            MatchFailedReason.INVALID_AREA,
-            MatchFailedReason.INVALID_FLOOR,
-            MatchFailedReason.DUPLICATE_NAME,
-        )
-
 
 @dataclass
 class MatchTargetsConstraints:
