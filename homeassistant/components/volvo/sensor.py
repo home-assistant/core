@@ -146,6 +146,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -154,6 +155,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         device_class=SensorDeviceClass.SPEED,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     # vehicle endpoint
     VolvoSensorDescription(
@@ -170,6 +172,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     # energy state endpoint
     VolvoSensorDescription(
@@ -240,6 +243,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -248,6 +252,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     # diagnostics endpoint
     VolvoSensorDescription(
@@ -256,6 +261,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     # diagnostics endpoint
     VolvoSensorDescription(
@@ -280,6 +286,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfVolume.LITERS,
         device_class=SensorDeviceClass.VOLUME_STORAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     # odometer endpoint
     VolvoSensorDescription(
@@ -288,12 +295,14 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=1,
     ),
     # energy state endpoint
     VolvoSensorDescription(
         key="target_battery_charge_level",
         api_field="targetBatteryChargeLevel",
         native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=0,
     ),
     # diagnostics endpoint
     VolvoSensorDescription(
@@ -311,6 +320,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=0,
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -319,6 +329,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=0,
     ),
 )
 
