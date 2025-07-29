@@ -695,10 +695,10 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
 
 def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
     """Get domains of components to set up."""
-    # Filter out the repeating and common config section [homeassistant]
-    domains = {
-        domain for key in config if (domain := cv.domain_key(key)) != core.DOMAIN
-    }
+    # The common config section [homeassistant] could be filtered here,
+    # but that is not necessary, since it corresponds to the core integration,
+    # that is always unconditionally loaded.
+    domains = {cv.domain_key(key) for key in config}
 
     # Add config entry and default domains
     if not hass.config.recovery_mode:
@@ -726,34 +726,28 @@ async def _async_resolve_domains_and_preload(
       together with all their dependencies.
     """
     domains_to_setup = _get_domains(hass, config)
-    platform_integrations = conf_util.extract_platform_integrations(
-        config, BASE_PLATFORMS
-    )
-    # Ensure base platforms that have platform integrations are added to `domains`,
-    # so they can be setup first instead of discovering them later when a config
-    # entry setup task notices that it's needed and there is already a long line
-    # to use the import executor.
+
+    # Also process all base platforms since we do not require the manifest
+    # to list them as dependencies.
+    # We want to later avoid lock contention when multiple integrations try to load
+    # their manifests at once.
     #
+    # Additionally process integrations that are defined under base platforms
+    # to speed things up.
     # For example if we have
     # sensor:
     #   - platform: template
     #
-    # `template` has to be loaded to validate the config for sensor
-    # so we want to start loading `sensor` as soon as we know
-    # it will be needed. The more platforms under `sensor:`, the longer
+    # `template` has to be loaded to validate the config for sensor.
+    # The more platforms under `sensor:`, the longer
     # it will take to finish setup for `sensor` because each of these
     # platforms has to be imported before we can validate the config.
     #
     # Thankfully we are migrating away from the platform pattern
     # so this will be less of a problem in the future.
-    domains_to_setup.update(platform_integrations)
-
-    # Additionally process base platforms since we do not require the manifest
-    # to list them as dependencies.
-    # We want to later avoid lock contention when multiple integrations try to load
-    # their manifests at once.
-    # Also process integrations that are defined under base platforms
-    # to speed things up.
+    platform_integrations = conf_util.extract_platform_integrations(
+        config, BASE_PLATFORMS
+    )
     additional_domains_to_process = {
         *BASE_PLATFORMS,
         *chain.from_iterable(platform_integrations.values()),
