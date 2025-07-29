@@ -6,7 +6,7 @@ from typing import cast
 import aiohttp
 import voluptuous as vol
 
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_TEMPERATURE
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -29,6 +29,16 @@ SERVICE_SET_PROGRAM_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): str,
         vol.Required(ATTR_PROGRAM_ID): cv.positive_int,
+    },
+)
+
+SERVICE_SET_PROGRAM_OVEN = "set_program_oven"
+SERVICE_SET_PROGRAM_OVEN_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): str,
+        vol.Required(ATTR_PROGRAM_ID): cv.positive_int,
+        vol.Optional(ATTR_DURATION): cv.positive_int,
+        vol.Optional(ATTR_TEMPERATURE): cv.positive_int,
     },
 )
 
@@ -96,6 +106,35 @@ async def set_program(call: ServiceCall) -> None:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="set_program_error",
+            translation_placeholders={
+                "status": str(ex.status),
+                "message": ex.message,
+            },
+        ) from ex
+
+
+async def set_program_oven(call: ServiceCall) -> None:
+    """Set a program on a Miele oven."""
+
+    _LOGGER.debug("Set program call: %s", call)
+    config_entry = await _extract_config_entry(call)
+    api = config_entry.runtime_data.api
+
+    serial_number = await _get_serial_number(call)
+    data = {"programId": call.data[ATTR_PROGRAM_ID]}
+    if call.data.get(ATTR_DURATION) is not None:
+        data["duration"] = [
+            call.data[ATTR_DURATION] // 60,
+            call.data[ATTR_DURATION] % 60,
+        ]
+    if call.data.get(ATTR_TEMPERATURE) is not None:
+        data["temperature"] = call.data[ATTR_TEMPERATURE]
+    try:
+        await api.set_program(serial_number, data)
+    except aiohttp.ClientResponseError as ex:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="set_program_oven_error",
             translation_placeholders={
                 "status": str(ex.status),
                 "message": ex.message,
@@ -172,7 +211,17 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services."""
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_PROGRAM, set_program, SERVICE_SET_PROGRAM_SCHEMA
+        DOMAIN,
+        SERVICE_SET_PROGRAM,
+        set_program,
+        SERVICE_SET_PROGRAM_SCHEMA,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_PROGRAM_OVEN,
+        set_program_oven,
+        SERVICE_SET_PROGRAM_OVEN_SCHEMA,
     )
 
     hass.services.async_register(
