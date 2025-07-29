@@ -47,8 +47,7 @@ def test_set_open_file_descriptor_limit_default(
         set_open_file_descriptor_limit()
 
     assert mock_setrlimit.call_args_list == expected_calls
-    if should_log_already_sufficient:
-        assert f"Current soft limit ({original_soft}) is already" in caplog.text
+    assert f"Current soft limit ({original_soft}) is already" in caplog.text is should_log_already_sufficient
 
 
 @pytest.mark.parametrize(
@@ -84,8 +83,7 @@ def test_set_open_file_descriptor_limit_environment_variable(
         set_open_file_descriptor_limit()
 
     assert mock_setrlimit.call_args_list == expected_calls
-    if should_log_already_sufficient:
-        assert f"Current soft limit ({original_soft}) is already" in caplog.text
+    assert f"Current soft limit ({original_soft}) is already" in caplog.text is should_log_already_sufficient
 
 
 def test_set_open_file_descriptor_limit_exceeds_hard_limit(
