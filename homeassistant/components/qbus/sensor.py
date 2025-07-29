@@ -59,6 +59,7 @@ _WEATHER_DESCRIPTIONS = (
     QbusWeatherDescription(
         key="daylight",
         property="dayLight",
+        translation_key="daylight",
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=LIGHT_LUX,
@@ -73,6 +74,7 @@ _WEATHER_DESCRIPTIONS = (
     QbusWeatherDescription(
         key="light_east",
         property="lightEast",
+        translation_key="light_east",
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=LIGHT_LUX,
@@ -80,6 +82,7 @@ _WEATHER_DESCRIPTIONS = (
     QbusWeatherDescription(
         key="light_south",
         property="lightSouth",
+        translation_key="light_south",
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=LIGHT_LUX,
@@ -87,6 +90,7 @@ _WEATHER_DESCRIPTIONS = (
     QbusWeatherDescription(
         key="light_west",
         property="lightWest",
+        translation_key="light_west",
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=LIGHT_LUX,
@@ -335,7 +339,6 @@ class QbusThermoSensor(QbusEntity, SensorEntity):
     _state_cls = QbusMqttThermoState
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_name = None
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_state_class = SensorStateClass.MEASUREMENT
 
@@ -363,8 +366,6 @@ class QbusWeatherSensor(QbusEntity, SensorEntity):
 
     _state_cls = QbusMqttWeatherState
 
-    _attr_name = None
-
     entity_description: QbusWeatherDescription
 
     def __init__(
@@ -375,6 +376,11 @@ class QbusWeatherSensor(QbusEntity, SensorEntity):
         super().__init__(mqtt_output, id_suffix=description.key)
 
         self.entity_description = description
+
+        if description.key == "temperature":
+            self._attr_name = None
+        else:
+            self._attr_translation_key = description.key
 
     async def _handle_state_received(self, state: QbusMqttWeatherState) -> None:
         if value := state.read_property(self.entity_description.property, None):
