@@ -226,3 +226,25 @@ async def test_form_invalid_prefix(
     assert result.get("description_placeholders") == {
         "allowed_prefix": "test/",
     }
+
+
+async def test_form_unknown_error(
+    hass: HomeAssistant,
+    b2_fixture: BackblazeFixture,
+) -> None:
+    """Test config flow when an unexpected error occurs."""
+    with patch(
+        "b2sdk.v2.RawSimulator.authorize_account",
+        side_effect=RuntimeError(
+            "A completely unexpected error occurred!"
+        ),  # Raise a generic Exception
+    ):
+        result = await _async_start_flow(
+            hass,
+            b2_fixture.key_id,
+            b2_fixture.application_key,
+            USER_INPUT,
+        )
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("errors") == {"base": "unknown"}
