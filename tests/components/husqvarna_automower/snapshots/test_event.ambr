@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_event[event.test_mower_1_message-entry]
+# name: test_event_snapshot[event.test_mower_1_message-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -159,7 +159,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_event[event.test_mower_1_message-state]
+# name: test_event_snapshot[event.test_mower_1_message-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'date_time': HAFakeDatetime(2025, 7, 13, 15, 30, tzinfo=datetime.timezone.utc),
@@ -298,6 +298,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2023-06-05T12:08:00.000+00:00',
+    'state': '2023-06-05T12:00:00.000+00:00',
   })
 # ---
