@@ -51,9 +51,5 @@ set_program_oven:
     duration:
       required: false
       selector:
-        number:
-          min: 1
-          max: 1440
-          unit_of_measurement: "min"
-          mode: box
-      example: 60
+        duration:
+      example: 1:15:00

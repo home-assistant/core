@@ -1,5 +1,6 @@
 """Tests the services provided by the miele integration."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
 
 from aiohttp import ClientResponseError
@@ -59,11 +60,15 @@ async def test_services(
             {"programId": 24},
         ),
         (
-            {ATTR_PROGRAM_ID: 25, ATTR_DURATION: 75},
+            {ATTR_PROGRAM_ID: 25, ATTR_DURATION: timedelta(minutes=75)},
             {"programId": 25, "duration": [1, 15]},
         ),
         (
-            {ATTR_PROGRAM_ID: 26, ATTR_DURATION: 135, ATTR_TEMPERATURE: 180},
+            {
+                ATTR_PROGRAM_ID: 26,
+                ATTR_DURATION: timedelta(minutes=135),
+                ATTR_TEMPERATURE: 180,
+            },
             {"programId": 26, "duration": [2, 15], "temperature": 180},
         ),
     ],

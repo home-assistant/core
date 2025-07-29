@@ -1,5 +1,6 @@
 """Services for Miele integration."""
 
+from datetime import timedelta
 import logging
 from typing import cast
 
@@ -37,8 +38,11 @@ SERVICE_SET_PROGRAM_OVEN_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DEVICE_ID): str,
         vol.Required(ATTR_PROGRAM_ID): cv.positive_int,
-        vol.Optional(ATTR_DURATION): cv.positive_int,
         vol.Optional(ATTR_TEMPERATURE): cv.positive_int,
+        vol.Optional(ATTR_DURATION): vol.All(
+            cv.time_period,
+            vol.Range(min=timedelta(minutes=1), max=timedelta(hours=12)),
+        ),
     },
 )
 
@@ -123,9 +127,10 @@ async def set_program_oven(call: ServiceCall) -> None:
     serial_number = await _get_serial_number(call)
     data = {"programId": call.data[ATTR_PROGRAM_ID]}
     if call.data.get(ATTR_DURATION) is not None:
+        td = call.data[ATTR_DURATION]
         data["duration"] = [
-            call.data[ATTR_DURATION] // 60,
-            call.data[ATTR_DURATION] % 60,
+            td.seconds // 3600,  # hours
+            (td.seconds // 60) % 60,  # minutes
         ]
     if call.data.get(ATTR_TEMPERATURE) is not None:
         data["temperature"] = call.data[ATTR_TEMPERATURE]
