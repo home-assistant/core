@@ -189,7 +189,7 @@
       "message": "The provided API key is invalid. Please check your API key."
     },
     "station_update_failed": {
-      "message": "Failed to update station data of station {station_ids}. Please check your network connection."
+      "message": "Failed to update station data for station(s) {station_ids}. Please check your network connection."
     }
   }
 }
