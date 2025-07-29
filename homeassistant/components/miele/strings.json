@@ -1102,7 +1102,7 @@
     },
     "set_program_oven": {
       "name": "Set program on oven",
-      "description": "Sets and starts a program on the appliance.",
+      "description": "[%key:component::miele::services::set_program::description%]",
       "fields": {
         "device_id": {
           "description": "[%key:component::miele::services::set_program::fields::device_id::description%]",
