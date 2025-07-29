@@ -5,8 +5,6 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Final, Literal, TypedDict
 
-from mysensors import get_const
-
 from homeassistant.const import Platform
 
 ATTR_DEVICES: Final = "devices"
@@ -38,9 +36,6 @@ MYSENSORS_DISCOVERY: str = "mysensors_discovery_{}_{}"
 MYSENSORS_NODE_DISCOVERY: str = "mysensors_node_discovery"
 TYPE: Final = "type"
 UPDATE_DELAY: float = 0.1
-
-# Support for new V_TILT value type introduced in MySensors protocol
-HAS_V_TILT: Final = hasattr(get_const("2.3").SetReq, "V_TILT")
 
 
 class DiscoveryInfo(TypedDict):
@@ -99,7 +94,7 @@ COVER_TYPES: dict[SensorType, set[ValueType]] = {
         "V_PERCENTAGE",
         "V_LIGHT",
         "V_STATUS",
-        *(["V_TILT"] if HAS_V_TILT else []),
+        "V_TILT",
     }
 }
 
