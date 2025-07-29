@@ -57,7 +57,7 @@
         "name": "Lightning last strike"
       },
       "precip_accum_last_1hr": {
-        "name": "Rain last 1 hr"
+        "name": "Rain last hour"
       },
 
       "precip_accum_local_day": {
