@@ -44,20 +44,13 @@ PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
-class QbusGaugeDescription:
-    """Custom description for sensors.
-
-    This description does not have a `key` property.
-    """
-
-    device_class: SensorDeviceClass | None = None
-    unit: str | None = None
-    state_class: SensorStateClass | str | None = None
+class QbusGaugeDescription(SensorEntityDescription):
+    """Description for Qbus gauges."""
 
 
 @dataclass(frozen=True, kw_only=True)
 class QbusWeatherDescription(SensorEntityDescription):
-    """Description for Qbus entities with properties."""
+    """Description for Qbus weather entities."""
 
     property: str
 
@@ -116,98 +109,117 @@ _WEATHER_DESCRIPTIONS = (
 
 _GAUGE_VARIANT_DESCRIPTIONS = {
     "AIRPRESSURE": QbusGaugeDescription(
+        key="airpressure",
         device_class=SensorDeviceClass.PRESSURE,
-        unit=UnitOfPressure.MBAR,
+        native_unit_of_measurement=UnitOfPressure.MBAR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "AIRQUALITY": QbusGaugeDescription(
+        key="airquality",
         device_class=SensorDeviceClass.CO2,
-        unit=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "CURRENT": QbusGaugeDescription(
+        key="current",
         device_class=SensorDeviceClass.CURRENT,
-        unit=UnitOfElectricCurrent.AMPERE,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "ENERGY": QbusGaugeDescription(
+        key="energy",
         device_class=SensorDeviceClass.ENERGY,
-        unit=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL,
     ),
     "GAS": QbusGaugeDescription(
+        key="gas",
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
-        unit=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "GASFLOW": QbusGaugeDescription(
+        key="gasflow",
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
-        unit=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "HUMIDITY": QbusGaugeDescription(
+        key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
-        unit=PERCENTAGE,
+        native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "LIGHT": QbusGaugeDescription(
+        key="light",
         device_class=SensorDeviceClass.ILLUMINANCE,
-        unit=LIGHT_LUX,
+        native_unit_of_measurement=LIGHT_LUX,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "LOUDNESS": QbusGaugeDescription(
+        key="loudness",
         device_class=SensorDeviceClass.SOUND_PRESSURE,
-        unit=UnitOfSoundPressure.DECIBEL,
+        native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "POWER": QbusGaugeDescription(
+        key="power",
         device_class=SensorDeviceClass.POWER,
-        unit=UnitOfPower.KILO_WATT,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "PRESSURE": QbusGaugeDescription(
+        key="pressure",
         device_class=SensorDeviceClass.PRESSURE,
-        unit=UnitOfPressure.KPA,
+        native_unit_of_measurement=UnitOfPressure.KPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "TEMPERATURE": QbusGaugeDescription(
+        key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        unit=UnitOfTemperature.CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "VOLTAGE": QbusGaugeDescription(
+        key="voltage",
         device_class=SensorDeviceClass.VOLTAGE,
-        unit=UnitOfElectricPotential.VOLT,
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "VOLUME": QbusGaugeDescription(
+        key="volume",
         device_class=SensorDeviceClass.VOLUME_STORAGE,
-        unit=UnitOfVolume.LITERS,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "WATER": QbusGaugeDescription(
+        key="water",
         device_class=SensorDeviceClass.WATER,
-        unit=UnitOfVolume.LITERS,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
         state_class=SensorStateClass.TOTAL,
     ),
     "WATERFLOW": QbusGaugeDescription(
+        key="waterflow",
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
-        unit=UnitOfVolumeFlowRate.LITERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "WATERLEVEL": QbusGaugeDescription(
+        key="waterlevel",
         device_class=SensorDeviceClass.DISTANCE,
-        unit=UnitOfLength.METERS,
+        native_unit_of_measurement=UnitOfLength.METERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "WATERPRESSURE": QbusGaugeDescription(
+        key="waterpressure",
         device_class=SensorDeviceClass.PRESSURE,
-        unit=UnitOfPressure.MBAR,
+        native_unit_of_measurement=UnitOfPressure.MBAR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "WIND": QbusGaugeDescription(
+        key="wind",
         device_class=SensorDeviceClass.WIND_SPEED,
-        unit=UnitOfSpeed.KILOMETERS_PER_HOUR,
+        native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
@@ -289,17 +301,15 @@ class QbusGaugeVariantSensor(QbusEntity, SensorEntity):
     _attr_name = None
     _attr_suggested_display_precision = 2
 
+    entity_description: QbusGaugeDescription
+
     def __init__(self, mqtt_output: QbusMqttOutput) -> None:
         """Initialize sensor entity."""
 
         super().__init__(mqtt_output)
 
         variant = str(mqtt_output.variant)
-        description = _GAUGE_VARIANT_DESCRIPTIONS[variant.upper()]
-
-        self._attr_device_class = description.device_class
-        self._attr_native_unit_of_measurement = description.unit
-        self._attr_state_class = description.state_class
+        self.entity_description = _GAUGE_VARIANT_DESCRIPTIONS[variant.upper()]
 
     async def _handle_state_received(self, state: QbusMqttGaugeState) -> None:
         self._attr_native_value = state.read_value(GaugeStateProperty.CURRENT_VALUE)
