@@ -324,14 +324,14 @@ def validate_user_input(
 
 
 TEMPLATE_TYPES = [
-    "alarm_control_panel",
-    "binary_sensor",
-    "button",
-    "image",
-    "number",
-    "select",
-    "sensor",
-    "switch",
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.IMAGE,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 CONFIG_FLOW = {
