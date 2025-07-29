@@ -76,13 +76,13 @@
         "name": "Precip type yesterday"
       },
       "precip_minutes_local_day": {
-        "name": "Precip min today"
+        "name": "Precip duration today"
       },
       "precip_minutes_local_yesterday": {
-        "name": "Precip min yesterday"
+        "name": "Precip duration yesterday"
       },
       "precip_minutes_local_yesterday_final": {
-        "name": "Nearcast precip min yesterday"
+        "name": "Nearcast precip duration yesterday"
       },
       "sea_level_pressure": {
         "name": "Pressure sea level"
