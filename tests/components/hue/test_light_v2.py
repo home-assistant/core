@@ -528,6 +528,8 @@ async def test_grouped_lights(
     assert test_light.attributes["brightness"] == 255
     assert test_light.attributes["xy_color"] == (0.123, 0.123)
 
+    # While we have a group on, test the colour aggregation logic
+
     # Turn off one of the bulbs in the group
     # "hue_light_with_color_and_color_temperature_1" corresponds to "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1"
     mock_bridge_v2.mock_requests.clear()
@@ -548,13 +550,13 @@ async def test_grouped_lights(
     mock_bridge_v2.api.emit_event("update", event)
     await hass.async_block_till_done()
 
-    # The group should still show the same xy_color since other lights maintain their color
+    # The group should still show the same xy_color since other lights maintain their colour
     test_light = hass.states.get(test_light_id)
     assert test_light is not None
     assert test_light.state == "on"
     assert test_light.attributes["xy_color"] == (0.123, 0.123)
 
-    # Turn the light back on with a white color (different from the rest of the group)
+    # Turn the light back on with a white colour (different from the rest of the group)
     await hass.services.async_call(
         "light",
         "turn_on",
@@ -562,7 +564,7 @@ async def test_grouped_lights(
         blocking=True,
     )
 
-    # Simulate the individual light turning on with white color
+    # Simulate the individual light turning on with a white colour
     event = {
         "id": "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
         "type": "light",
@@ -585,7 +587,7 @@ async def test_grouped_lights(
     assert test_light is not None
     assert test_light.state == "on"
 
-    # Check that the group color is now the average of all lights
+    # Check that the group colour is now the average of all lights
     group_x, group_y = test_light.attributes["xy_color"]
     assert abs(group_x - expected_x) < 0.001  # Allow small floating point differences
     assert abs(group_y - expected_y) < 0.001
@@ -611,7 +613,7 @@ async def test_grouped_lights(
 
     # Now only two lights are on:
     # Light 1: (0.3127, 0.3290) - white
-    # Light 3: (0.123, 0.123) - original color
+    # Light 3: (0.123, 0.123) - original colour
     # Average of remaining lights: ((0.3127 + 0.123) / 2, (0.3290 + 0.123) / 2)
     expected_x_two_lights = round((0.3127 + 0.123) / 2, 4)
     expected_y_two_lights = round((0.3290 + 0.123) / 2, 4)
@@ -619,12 +621,12 @@ async def test_grouped_lights(
     test_light = hass.states.get(test_light_id)
     assert test_light is not None
     assert test_light.state == "on"
-    # Check that the group color is now the average of only the two remaining lights
+    # Check that the group colour is now the average of only the two remaining lights
     group_x, group_y = test_light.attributes["xy_color"]
     assert abs(group_x - expected_x_two_lights) < 0.001
     assert abs(group_y - expected_y_two_lights) < 0.001
 
-    # Group light left on so we can now test the turn off service on a grouped light
+    # Group light left on so continue test the turn off service on a grouped light
 
     # Test calling the turn off service on a grouped light.
     mock_bridge_v2.mock_requests.clear()
