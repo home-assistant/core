@@ -1171,7 +1171,7 @@
     "datadog": {
       "name": "Datadog",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "ddwrt": {
@@ -7002,6 +7002,12 @@
     "ubiquiti": {
       "name": "Ubiquiti",
       "integrations": {
+        "airos": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Ubiquiti airOS"
+        },
         "unifi": {
           "integration_type": "hub",
           "config_flow": true,
@@ -7266,6 +7272,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "volvo": {
+      "name": "Volvo",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "volvooncall": {
       "name": "Volvo On Call",
@@ -7659,6 +7671,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "zbox_hub": {
+      "name": "Z-Box Hub",
+      "integration_type": "virtual",
+      "supported_by": "fibaro"
     },
     "zengge": {
       "name": "Zengge",
