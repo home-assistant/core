@@ -7,17 +7,19 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import PlaystationNetworkCoordinator
+from .coordinator import PlayStationNetworkBaseCoordinator
 
 
-class PlaystationNetworkServiceEntity(CoordinatorEntity[PlaystationNetworkCoordinator]):
+class PlaystationNetworkServiceEntity(
+    CoordinatorEntity[PlayStationNetworkBaseCoordinator]
+):
     """Common entity class for PlayStationNetwork Service entities."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: PlaystationNetworkCoordinator,
+        coordinator: PlayStationNetworkBaseCoordinator,
         entity_description: EntityDescription,
     ) -> None:
         """Initialize PlayStation Network Service Entity."""
@@ -30,7 +32,7 @@ class PlaystationNetworkServiceEntity(CoordinatorEntity[PlaystationNetworkCoordi
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
-            name=coordinator.data.username,
+            name=coordinator.psn.user.online_id,
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="Sony Interactive Entertainment",
         )

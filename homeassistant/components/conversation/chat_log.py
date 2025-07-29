@@ -8,6 +8,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import asdict, dataclass, field, replace
 import logging
+from pathlib import Path
 from typing import Any, Literal, TypedDict
 
 import voluptuous as vol
@@ -136,6 +137,21 @@ class UserContent:
 
     role: Literal["user"] = field(init=False, default="user")
     content: str
+    attachments: list[Attachment] | None = field(default=None)
+
+
+@dataclass(frozen=True)
+class Attachment:
+    """Attachment for a chat message."""
+
+    media_content_id: str
+    """Media content ID of the attachment."""
+
+    mime_type: str
+    """MIME type of the attachment."""
+
+    path: Path
+    """Path to the attachment on disk."""
 
 
 @dataclass(frozen=True)
@@ -180,6 +196,7 @@ class ChatLog:
     extra_system_prompt: str | None = None
     llm_api: llm.APIInstance | None = None
     delta_listener: Callable[[ChatLog, dict], None] | None = None
+    llm_input_provided_index = 0
 
     @property
     def continue_conversation(self) -> bool:
@@ -480,6 +497,7 @@ class ChatLog:
 
         prompt = "\n".join(prompt_parts)
 
+        self.llm_input_provided_index = len(self.content)
         self.llm_api = llm_api
         self.extra_system_prompt = extra_system_prompt
         self.content[0] = SystemContent(content=prompt)

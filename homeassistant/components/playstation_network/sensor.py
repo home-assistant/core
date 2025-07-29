@@ -18,7 +18,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from .coordinator import PlaystationNetworkConfigEntry, PlaystationNetworkData
+from .coordinator import (
+    PlaystationNetworkConfigEntry,
+    PlaystationNetworkData,
+    PlaystationNetworkUserDataCoordinator,
+)
 from .entity import PlaystationNetworkServiceEntity
 
 PARALLEL_UPDATES = 0
@@ -131,7 +135,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.user_data
     async_add_entities(
         PlaystationNetworkSensorEntity(coordinator, description)
         for description in SENSOR_DESCRIPTIONS
@@ -145,6 +149,7 @@ class PlaystationNetworkSensorEntity(
     """Representation of a PlayStation Network sensor entity."""
 
     entity_description: PlaystationNetworkSensorEntityDescription
+    coordinator: PlaystationNetworkUserDataCoordinator
 
     @property
     def native_value(self) -> StateType | datetime:

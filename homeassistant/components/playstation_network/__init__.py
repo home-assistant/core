@@ -6,12 +6,20 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_NPSSO
-from .coordinator import PlaystationNetworkConfigEntry, PlaystationNetworkCoordinator
+from .coordinator import (
+    PlaystationNetworkConfigEntry,
+    PlaystationNetworkGroupsUpdateCoordinator,
+    PlaystationNetworkRuntimeData,
+    PlaystationNetworkTrophyTitlesCoordinator,
+    PlaystationNetworkUserDataCoordinator,
+)
 from .helpers import PlaystationNetwork
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.IMAGE,
     Platform.MEDIA_PLAYER,
+    Platform.NOTIFY,
     Platform.SENSOR,
 ]
 
@@ -23,9 +31,17 @@ async def async_setup_entry(
 
     psn = PlaystationNetwork(hass, entry.data[CONF_NPSSO])
 
-    coordinator = PlaystationNetworkCoordinator(hass, psn, entry)
+    coordinator = PlaystationNetworkUserDataCoordinator(hass, psn, entry)
     await coordinator.async_config_entry_first_refresh()
-    entry.runtime_data = coordinator
+
+    trophy_titles = PlaystationNetworkTrophyTitlesCoordinator(hass, psn, entry)
+
+    groups = PlaystationNetworkGroupsUpdateCoordinator(hass, psn, entry)
+    await groups.async_config_entry_first_refresh()
+
+    entry.runtime_data = PlaystationNetworkRuntimeData(
+        coordinator, trophy_titles, groups
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
