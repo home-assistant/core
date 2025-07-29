@@ -9,7 +9,6 @@ import pytest
 
 from homeassistant.components.backup import AgentBackup, BackupAgentError
 
-# Import the classes and functions under test.
 from homeassistant.components.backup_sftp.client import (
     AsyncFileIterator,
     BackupAgentClient,
