@@ -8,9 +8,10 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platfor
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .const import PLATFORMS
 from .coordinator import AirOSConfigEntry, AirOSDataUpdateCoordinator
 
-_PLATFORMS: list[Platform] = [Platform.SENSOR]
+_PLATFORMS: list[Platform] = PLATFORMS
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> bool:
