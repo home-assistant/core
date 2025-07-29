@@ -142,7 +142,7 @@ async def test_event(
     assert state is not None
     assert state.attributes[ATTR_EVENT_TYPE] == "battery_problem"
     seen_mowers = await get_seen_mowers(hass)
-    assert "1234" in seen_mowers
+    assert "1234" in seen_mowers["message_event_seen"]
 
     values_copy = deepcopy(values)
     values_copy.pop("1234")
@@ -163,7 +163,7 @@ async def test_event(
     assert state is None
 
     seen_mowers = await get_seen_mowers(hass)
-    assert "1234" not in seen_mowers
+    assert "1234" not in seen_mowers["message_event_seen"]
 
 
 @pytest.mark.freeze_time(datetime(2023, 6, 5, 12))

@@ -35,6 +35,8 @@ EVENT_DESCRIPTIONS = [
     )
 ]
 
+STORAGE_KEY = DOMAIN
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -48,12 +50,17 @@ async def async_setup_entry(
     based on the messages received from the API.
     """
     coordinator: AutomowerDataUpdateCoordinator = entry.runtime_data
-    store: Store[dict[str, bool]] = Store(hass, 1, STORAGE_KEY)
-    seen_mowers = await store.async_load() or {}
+    store: Store[dict[str, dict[str, bool]]] = Store(hass, 1, STORAGE_KEY)
+    raw: dict[str, dict[str, bool]] = await store.async_load() or {}
+    seen_mowers: dict[str, bool] = raw.get("message_event_seen", {})
+
+    def _save() -> None:
+        payload = {"message_event_seen": seen_mowers}
+        hass.async_create_task(store.async_save(payload))
 
     def _add_for_mower(mower_id: str) -> None:
         seen_mowers[mower_id] = True
-        hass.async_create_task(store.async_save(seen_mowers))
+        _save()
         entities = [
             AutomowerMessageEventEntity(mower_id, coordinator, desc)
             for desc in EVENT_DESCRIPTIONS
@@ -65,8 +72,8 @@ async def async_setup_entry(
         if mower_id in coordinator.data:
             _add_for_mower(mower_id)
         else:
-            del seen_mowers[mower_id]
-            hass.async_create_task(store.async_save(seen_mowers))
+            seen_mowers.pop(mower_id, None)
+            _save()
 
     @callback
     def _on_single_message(msg: SingleMessageData) -> None:
