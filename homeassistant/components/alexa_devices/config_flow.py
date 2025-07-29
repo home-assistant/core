@@ -28,6 +28,14 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_CODE): cv.string,
     }
 )
+STEP_RECONFIGURE = vol.Schema(
+    {
+        vol.Required(CONF_COUNTRY): CountrySelector(),
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_CODE): cv.string,
+    }
+)
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -129,5 +137,47 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             description_placeholders={CONF_USERNAME: entry_data[CONF_USERNAME]},
             data_schema=STEP_REAUTH_DATA_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the device."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        if not user_input:
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=STEP_RECONFIGURE,
+            )
+
+        updated_username = user_input[CONF_USERNAME]
+
+        self._async_abort_entries_match({CONF_USERNAME: updated_username})
+
+        errors: dict[str, str] = {}
+
+        try:
+            data = await validate_input(self.hass, user_input)
+        except CannotConnect:
+            errors["base"] = "cannot_connect"
+        except CannotAuthenticate:
+            errors["base"] = "invalid_auth"
+        except CannotRetrieveData:
+            errors["base"] = "cannot_retrieve_data"
+        except WrongCountry:
+            errors["base"] = "wrong_country"
+        else:
+            return self.async_update_reload_and_abort(
+                reconfigure_entry,
+                data_updates={
+                    CONF_USERNAME: updated_username,
+                    CONF_LOGIN_DATA: data,
+                },
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=STEP_RECONFIGURE,
             errors=errors,
         )

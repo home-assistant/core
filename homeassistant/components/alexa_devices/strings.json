@@ -32,6 +32,20 @@
           "password": "[%key:component::alexa_devices::common::data_description_password%]",
           "code": "[%key:component::alexa_devices::common::data_description_code%]"
         }
+      },
+      "reconfigure": {
+        "data": {
+          "country": "[%key:common::config_flow::data::country%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "code": "[%key:component::alexa_devices::common::data_code%]"
+        },
+        "data_description": {
+          "country": "[%key:component::alexa_devices::common::data_description_country%]",
+          "username": "[%key:component::alexa_devices::common::data_description_username%]",
+          "password": "[%key:component::alexa_devices::common::data_description_password%]",
+          "code": "[%key:component::alexa_devices::common::data_description_code%]"
+        }
       }
     },
     "abort": {
@@ -39,6 +53,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
