@@ -98,7 +98,7 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
                 VacuumCommands.POW_LEVEL,
                 parameters=VACUUM_FAN_SPEED_TO_SWITCHBOT_FAN_SPEED[fan_speed],
             )
-        self.async_write_ha_state()
+            await self.coordinator.async_request_refresh()
 
     async def async_pause(self) -> None:
         """Pause the cleaning task."""
@@ -108,12 +108,12 @@ class SwitchBotCloudVacuum(SwitchBotCloudEntity, StateVacuumEntity):
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
         await self.send_api_command(VacuumCommands.DOCK)
-        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
 
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
         await self.send_api_command(VacuumCommands.START)
-        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
 
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
@@ -143,17 +143,17 @@ class SwitchBotCloudVacuumK20PlusPro(SwitchBotCloudVacuum):
                 "times": 1,
             },
         )
-        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
 
     async def async_pause(self) -> None:
         """Pause the cleaning task."""
         await self.send_api_command(VacuumCleanerV2Commands.PAUSE)
-        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
         await self.send_api_command(VacuumCleanerV2Commands.DOCK)
-        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
 
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
@@ -173,7 +173,7 @@ class SwitchBotCloudVacuumK20PlusPro(SwitchBotCloudVacuum):
                 },
             },
         )
-        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
 
 
 class SwitchBotCloudVacuumK10PlusProCombo(SwitchBotCloudVacuumK20PlusPro):
@@ -191,7 +191,7 @@ class SwitchBotCloudVacuumK10PlusProCombo(SwitchBotCloudVacuumK20PlusPro):
                     "times": 1,
                 },
             )
-        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
 
 
 class SwitchBotCloudVacuumV3(SwitchBotCloudVacuumK20PlusPro):
@@ -208,7 +208,7 @@ class SwitchBotCloudVacuumV3(SwitchBotCloudVacuumK20PlusPro):
                 "times": 1,
             },
         )
-        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
 
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""
@@ -228,7 +228,7 @@ class SwitchBotCloudVacuumV3(SwitchBotCloudVacuumK20PlusPro):
                 },
             },
         )
-        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
 
 
 @callback
