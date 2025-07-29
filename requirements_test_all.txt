@@ -192,7 +192,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2.1.0
+aioautomower==2.1.1
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.1
@@ -1341,7 +1341,7 @@ oauth2client==4.1.3
 objgraph==3.5.0
 
 # homeassistant.components.garages_amsterdam
-odp-amsterdam==6.1.1
+odp-amsterdam==6.1.2
 
 # homeassistant.components.ohme
 ohme==1.5.1
@@ -1359,7 +1359,7 @@ ondilo==0.5.0
 onedrive-personal-sdk==0.0.14
 
 # homeassistant.components.onvif
-onvif-zeep-async==4.0.1
+onvif-zeep-async==4.0.2
 
 # homeassistant.components.opengarage
 open-garage==0.2.0
@@ -2176,7 +2176,7 @@ pyzerproc==0.4.8
 qbittorrent-api==2024.9.67
 
 # homeassistant.components.qbus
-qbusmqttapi==1.3.0
+qbusmqttapi==1.4.2
 
 # homeassistant.components.qingping
 qingping-ble==0.10.0
@@ -2647,7 +2647,7 @@ zeversolar==0.3.2
 zha==0.0.62
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.66.0
+zwave-js-server-python==0.67.0
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3
