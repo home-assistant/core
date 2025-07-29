@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from aioautomower.model import Message, SingleMessageData
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
+from homeassistant.const import ATTR_TIME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.storage import Store
@@ -124,6 +125,7 @@ class AutomowerMessageEventEntity(AutomowerBaseEntity, EventEntity):
                 ATTR_SEVERITY: message.severity,
                 ATTR_LATITUDE: message.latitude,
                 ATTR_LONGITUDE: message.longitude,
+                ATTR_TIME: message.time,
             },
         )
         self.async_write_ha_state()

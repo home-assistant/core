@@ -291,6 +291,7 @@
       'latitude': 49.0,
       'longitude': 10.0,
       'severity': <Severity.ERROR: 'error'>,
+      'time': HAFakeDatetime(2025, 7, 13, 15, 30, tzinfo=datetime.timezone.utc),
     }),
     'context': <ANY>,
     'entity_id': 'event.test_mower_1_message',
