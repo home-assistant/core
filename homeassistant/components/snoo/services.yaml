@@ -1,0 +1,27 @@
+# Describes the format for available Snoo services
+log_diaper_change:
+  fields:
+    baby_id:
+      required: true
+      example: "35235211235dfasdf32523"
+      selector:
+        text:
+    diaper_types:
+      required: true
+      example: ["Wet", "Dirty"]
+      selector:
+        select:
+          multiple: true
+          options:
+            - "Wet"
+            - "Dirty"
+    note:
+      required: false
+      example: "Wet diaper"
+      selector:
+        text:
+    start_time:
+      required: false
+      example: "2024-01-15T10:30:00"
+      selector:
+        datetime:

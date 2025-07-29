@@ -32,6 +32,30 @@
       "message": "Turning {name} off failed"
     }
   },
+  "services": {
+    "log_diaper_change": {
+      "name": "Log Diaper Change",
+      "description": "Log a diaper change for a Snoo baby",
+      "fields": {
+        "baby_id": {
+          "name": "Baby ID",
+          "description": "Baby ID to log the diaper change for. Check the Snoo app or logs to find your baby ID, or just try something in developer tools to get an error message."
+        },
+        "diaper_types": {
+          "name": "Diaper Types",
+          "description": "What was in the diaper"
+        },
+        "note": {
+          "name": "Note",
+          "description": "Optional note about the diaper change"
+        },
+        "start_time": {
+          "name": "Start Time",
+          "description": "Date and time for the diaper change (defaults to current time, uses local timezone)"
+        }
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
       "left_clip": {
