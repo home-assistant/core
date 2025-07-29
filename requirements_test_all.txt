@@ -1800,7 +1800,7 @@ pymodbus==3.9.2
 pymonoprice==0.4
 
 # homeassistant.components.mysensors
-pymysensors==0.25.0
+pymysensors==0.26.0
 
 # homeassistant.components.iron_os
 pynecil==4.1.1
