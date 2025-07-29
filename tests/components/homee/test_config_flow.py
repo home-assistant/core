@@ -1,15 +1,18 @@
 """Test the Homee config flow."""
 
+from ipaddress import ip_address
 from unittest.mock import AsyncMock
 
 from pyHomee import HomeeAuthFailedException, HomeeConnectionFailedException
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components.homee.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .conftest import (
     HOMEE_ID,
@@ -138,6 +141,35 @@ async def test_flow_already_configured(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_zeroconf_success(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test zeroconf discovery flow."""
+    service_info = ZeroconfServiceInfo(
+        name=f"homee-{HOMEE_ID}._ssh._tcp.local.",
+        hostname=f"homee-{HOMEE_ID}.local.",
+        host=HOMEE_IP,
+        ip_address=ip_address(HOMEE_IP),
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=service_info
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf"
+    assert result["title"] == f"{HOMEE_NAME} ({HOMEE_IP})"
+    assert result["data"] == {
+        CONF_HOST: HOMEE_IP,
+        CONF_USERNAME: TESTUSER,
+        CONF_PASSWORD: TESTPASS,
+    }
+    assert result["result"].unique_id == HOMEE_ID
+
+    mock_setup_entry.assert_called_once()
 
 
 @pytest.mark.usefixtures("mock_homee", "mock_setup_entry")
