@@ -26,6 +26,23 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "port_forwarding": {
+        "name": "Port forwarding active"
+      },
+      "dhcp_client": {
+        "name": "DHCP client"
+      },
+      "dhcp_server": {
+        "name": "DHCP server"
+      },
+      "dhcp6_server": {
+        "name": "DHCPv6 server"
+      },
+      "pppoe": {
+        "name": "PPPoE"
+      }
+    },
     "sensor": {
       "host_cpuload": {
         "name": "CPU load"
