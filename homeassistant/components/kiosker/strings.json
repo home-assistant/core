@@ -44,15 +44,28 @@
           "ssl": "Connect to the Kiosker App using HTTPS. The Kiosker API has to be configured for SSL.",
           "ssl_verify": "Verify SSL certificate. Enable for valid certificates only."
         }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate Kiosker",
+        "description": "Authentication failed. This may be caused by an invalid API token or changed IP filtering settings. Please update the API token, or the IP filter in the Kiosker App.",
+        "data": {
+          "api_token": "API Token"
+        },
+        "data_description": {
+          "api_token": "Enter the new API token for the Kiosker App. This can be generated in the app API settings."
+        }
       }
     },
     "error": {
-      "cannot_connect": "Failed to connect to Kiosker device",
+      "cannot_connect": "Failed to connect to Kiosker device.",
+      "invalid_auth": "Authentication failed.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "reauth_successful": "Reauthentication was successful",
+      "reauth_failed": "Reauthentication failed"
     }
   },
   "entity": {

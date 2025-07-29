@@ -1,6 +1,14 @@
 {
   "permissions": {
-    "allow": ["mcp__ide__getDiagnostics", "Bash(rg:*)", "Bash(find:*)"],
+    "allow": [
+      "mcp__ide__getDiagnostics",
+      "Bash(rg:*)",
+      "Bash(find:*)",
+      "WebFetch(domain:developers.home-assistant.io)",
+      "WebFetch(domain:pypi.org)",
+      "WebFetch(domain:docs.kiosker.io)",
+      "Bash(python:*)"
+    ],
     "deny": []
   }
 }
