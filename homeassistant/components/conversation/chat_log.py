@@ -325,15 +325,10 @@ class ChatLog:
                 if delta_thinking_content := delta.get("thinking_content"):
                     current_thinking_content += delta_thinking_content
                 if delta_native := delta.get("native"):
-                    # For repeated native content, yield the previous one
-                    # to avoid overwriting
                     if current_native is not None:
-                        content = AssistantContent(
-                            agent_id=agent_id,
-                            native=current_native,
+                        raise RuntimeError(
+                            "Native content already set, cannot overwrite"
                         )
-                        self.async_add_assistant_content_without_tools(content)
-                        yield content
                     current_native = delta_native
                 if delta_tool_calls := delta.get("tool_calls"):
                     if self.llm_api is None:

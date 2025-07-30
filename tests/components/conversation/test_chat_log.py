@@ -533,12 +533,6 @@ async def test_tool_call_exception(
             {"role": "assistant"},
             {"native": {"type": "test", "value": "Test Native"}},
         ],
-        # With 2 native content
-        [
-            {"role": "assistant"},
-            {"native": "Test 1"},
-            {"native": "Test 2"},
-        ],
         # With native object content
         [
             {"role": "assistant"},
@@ -660,6 +654,20 @@ async def test_add_delta_content_stream_errors(
                     stream([{"role": role}]),
                 ):
                     pass
+
+        # Second native content
+        with pytest.raises(RuntimeError):
+            async for _tool_result_content in chat_log.async_add_delta_content_stream(
+                "mock-agent-id",
+                stream(
+                    [
+                        {"role": "assistant"},
+                        {"native": "Test Native"},
+                        {"native": "Test Native 2"},
+                    ]
+                ),
+            ):
+                pass
 
 
 async def test_chat_log_reuse(
