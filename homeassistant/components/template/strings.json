@@ -336,7 +336,7 @@
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",
           "state": "Defines a template to get the state of the sensor. If the sensor is numeric, i.e. it has a `state_class` or a `unit_of_measurement`, the state template must render to a number or to `none`. The state template must not render to a string, including `unknown` or `unavailable`. An `availability` template may be defined to suppress rendering of the state template.",
-          "unit_of_measurement": "Defines the units of measurement of the sensor, if any. This will also display the value based on the user profile Number Format setting and influence the graphical presentation in the history visualization as a continuous value."
+          "unit_of_measurement": "Defines the units of measurement of the sensor, if any. This will also display the value based on the number format setting in the user profile and influence the graphical presentation in the history visualization as a continuous value."
         },
         "sections": {
           "advanced_options": {
