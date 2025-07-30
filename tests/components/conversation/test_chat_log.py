@@ -533,6 +533,12 @@ async def test_tool_call_exception(
             {"role": "assistant"},
             {"native": {"type": "test", "value": "Test Native"}},
         ],
+        # With 2 native content
+        [
+            {"role": "assistant"},
+            {"native": "Test 1"},
+            {"native": "Test 2"},
+        ],
         # With native object content
         [
             {"role": "assistant"},
