@@ -121,7 +121,6 @@ async def test_send_text_service(
 )
 async def test_invalid_parameters(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     sound: str,
