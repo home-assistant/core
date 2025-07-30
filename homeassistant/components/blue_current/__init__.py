@@ -15,27 +15,26 @@ from bluecurrent_api.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_TOKEN, Platform
-from homeassistant.const import CONF_DEVICE_ID
-from homeassistant.core import HomeAssistant
-from homeassistant.core import ServiceCall
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.const import CONF_API_TOKEN, CONF_DEVICE_ID, Platform
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
     ServiceValidationError,
 )
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+
 from .const import (
     BCU_APP,
+    CHARGEPOINT_SETTINGS,
+    CHARGEPOINT_STATUS,
     CHARGING_CARD_ID,
     DOMAIN,
     EVSE_ID,
     LOGGER,
-    MODEL_TYPE,
-    START_CHARGE_SESSION,
-    CHARGEPOINT_SETTINGS,
-    CHARGEPOINT_STATUS,
     PLUG_AND_CHARGE,
+    START_CHARGE_SESSION,
     VALUE,
 )
 

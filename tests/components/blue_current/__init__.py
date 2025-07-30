@@ -9,10 +9,9 @@ from unittest.mock import MagicMock, patch
 
 from bluecurrent_api import Client
 
-from homeassistant.components.blue_current.const import UID
-from homeassistant.const import CONF_ID
 from homeassistant.components.blue_current import EVSE_ID, PLUG_AND_CHARGE
-from homeassistant.components.blue_current.const import PUBLIC_CHARGING
+from homeassistant.components.blue_current.const import PUBLIC_CHARGING, UID
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -97,7 +96,8 @@ def create_client_mock(
                 "default_card": {UID: "BCU-APP", CONF_ID: "BCU-APP"},
                 "cards": [{UID: "MOCK-CARD", CONF_ID: "MOCK-CARD", "valid": 1}],
             }
-          
+        )
+
     async def update_charge_point(
         evse_id: str, event_object: str, settings: dict[str, Any]
     ) -> None:
