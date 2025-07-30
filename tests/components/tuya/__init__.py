@@ -335,6 +335,10 @@ DEVICE_MOCKS = {
         Platform.CLIMATE,
         Platform.SWITCH,
     ],
+    "wg2_nwxr8qcu4seltoro": [
+        # https://github.com/orgs/home-assistant/discussions/430
+        Platform.BINARY_SENSOR,
+    ],
     "wk_fi6dne5tu4t1nm6j": [
         # https://github.com/orgs/home-assistant/discussions/243
         Platform.CLIMATE,
