@@ -6,7 +6,7 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from psnawp_api.core.psnawp_exceptions import (
     PSNAWPAuthenticationError,
@@ -29,7 +29,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_ACCOUNT_ID, DOMAIN
+from .const import DOMAIN
 from .helpers import PlaystationNetwork, PlaystationNetworkData
 
 _LOGGER = logging.getLogger(__name__)
@@ -176,7 +176,9 @@ class PlaystationNetworkFriendDataCoordinator(
 
     def _setup(self) -> None:
         """Set up the coordinator."""
-        self.user = self.psn.psn.user(account_id=self.subentry.data[CONF_ACCOUNT_ID])
+        if TYPE_CHECKING:
+            assert self.subentry.unique_id
+        self.user = self.psn.psn.user(account_id=self.subentry.unique_id)
         self.profile = self.user.profile()
 
     async def _async_setup(self) -> None:
