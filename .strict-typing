@@ -53,6 +53,7 @@ homeassistant.components.air_quality.*
 homeassistant.components.airgradient.*
 homeassistant.components.airly.*
 homeassistant.components.airnow.*
+homeassistant.components.airos.*
 homeassistant.components.airq.*
 homeassistant.components.airthings.*
 homeassistant.components.airthings_ble.*
@@ -547,6 +548,7 @@ homeassistant.components.valve.*
 homeassistant.components.velbus.*
 homeassistant.components.vlc_telnet.*
 homeassistant.components.vodafone_station.*
+homeassistant.components.volvo.*
 homeassistant.components.wake_on_lan.*
 homeassistant.components.wake_word.*
 homeassistant.components.wallbox.*

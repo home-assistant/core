@@ -62,6 +62,7 @@ from .helpers import (
 from .template_entity import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
+    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
     TemplateEntity,
     make_template_entity_common_modern_schema,
 )
@@ -143,6 +144,8 @@ LIGHT_COMMON_SCHEMA = vol.Schema(
         vol.Optional(CONF_MIN_MIREDS): cv.template,
         vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
         vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_RGB_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_RGB): cv.template,
         vol.Optional(CONF_RGBW_ACTION): cv.SCRIPT_SCHEMA,
@@ -157,8 +160,8 @@ LIGHT_COMMON_SCHEMA = vol.Schema(
 )
 
 LIGHT_YAML_SCHEMA = LIGHT_COMMON_SCHEMA.extend(
-    make_template_entity_common_modern_schema(DEFAULT_NAME).schema
-)
+    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
+).extend(make_template_entity_common_modern_schema(DEFAULT_NAME).schema)
 
 LIGHT_LEGACY_YAML_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
@@ -263,6 +266,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
     """Representation of a template lights features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
+    _optimistic_entity = True
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
@@ -272,7 +276,6 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         """Initialize the features."""
 
         # Template attributes
-        self._template = config.get(CONF_STATE)
         self._level_template = config.get(CONF_LEVEL)
         self._temperature_template = config.get(CONF_TEMPERATURE)
         self._hs_template = config.get(CONF_HS)
@@ -397,7 +400,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         Returns True if any attribute was updated.
         """
         optimistic_set = False
-        if self._template is None:
+        if self._attr_assumed_state:
             self._state = True
             optimistic_set = True
 
@@ -1114,7 +1117,7 @@ class StateLightEntity(TemplateEntity, AbstractTemplateLight):
             )
         else:
             await self.async_run_script(off_script, context=self._context)
-        if self._template is None:
+        if self._attr_assumed_state:
             self._state = False
             self.async_write_ha_state()
 
@@ -1253,6 +1256,6 @@ class TriggerLightEntity(TriggerEntity, AbstractTemplateLight):
             )
         else:
             await self.async_run_script(off_script, context=self._context)
-        if self._template is None:
+        if self._attr_assumed_state:
             self._state = False
             self.async_write_ha_state()

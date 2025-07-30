@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import patch
 
 from tuya_sharing import CustomerDevice
 
-from homeassistant.components.tuya import ManagerCompat
+from homeassistant.components.tuya import DeviceListener, ManagerCompat
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -148,6 +149,11 @@ DEVICE_MOCKS = {
         Platform.SELECT,
         Platform.SWITCH,
     ],
+    "wk_air_conditioner": [
+        # https://github.com/home-assistant/core/issues/146263
+        Platform.CLIMATE,
+        Platform.SWITCH,
+    ],
     "ydkt_dolceclima_unsupported": [
         # https://github.com/orgs/home-assistant/discussions/288
         # unsupported device - no platforms
@@ -173,6 +179,29 @@ DEVICE_MOCKS = {
         Platform.SENSOR,
     ],
 }
+
+
+class MockDeviceListener(DeviceListener):
+    """Mocked DeviceListener for testing."""
+
+    async def async_send_device_update(
+        self,
+        hass: HomeAssistant,
+        device: CustomerDevice,
+        updated_status_properties: dict[str, Any] | None = None,
+    ) -> None:
+        """Mock update device method."""
+        property_list: list[str] = []
+        if updated_status_properties:
+            for key, value in updated_status_properties.items():
+                if key not in device.status:
+                    raise ValueError(
+                        f"Property {key} not found in device status: {device.status}"
+                    )
+                device.status[key] = value
+                property_list.append(key)
+        self.update_device(device, property_list)
+        await hass.async_block_till_done()
 
 
 async def initialize_entry(

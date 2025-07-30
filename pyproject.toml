@@ -28,7 +28,7 @@ dependencies = [
   # change behavior based on presence of supervisor. Deprecated with #127228
   # Lib can be removed with 2025.11
   "aiohasupervisor==0.3.1",
-  "aiohttp==3.12.14",
+  "aiohttp==3.12.15",
   "aiohttp_cors==0.8.1",
   "aiohttp-fast-zlib==0.3.0",
   "aiohttp-asyncmdnsresolver==0.1.1",
@@ -647,7 +647,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.11.0"
+required-version = ">=0.12.1"
 
 [tool.ruff.lint]
 select = [
