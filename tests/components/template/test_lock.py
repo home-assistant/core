@@ -1141,6 +1141,55 @@ async def test_emtpy_action_config(hass: HomeAssistant) -> None:
     assert state.state == LockState.LOCKED
 
 
+@pytest.mark.parametrize(
+    ("count", "lock_config"),
+    [
+        (
+            1,
+            {
+                "name": TEST_OBJECT_ID,
+                "lock": [],
+                "unlock": [],
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_lock")
+async def test_optimistic(hass: HomeAssistant) -> None:
+    """Test configuration with optimistic state."""
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == LockState.UNLOCKED
+
+    # Ensure Trigger template entities update.
+    hass.states.async_set(TEST_STATE_ENTITY_ID, "anything")
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        lock.DOMAIN,
+        lock.SERVICE_LOCK,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == LockState.LOCKED
+
+    await hass.services.async_call(
+        lock.DOMAIN,
+        lock.SERVICE_UNLOCK,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == LockState.UNLOCKED
+
+
 async def test_setup_config_entry(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,

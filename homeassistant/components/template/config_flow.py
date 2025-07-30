@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.button import ButtonDeviceClass
+from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASS_STATE_CLASSES,
@@ -61,6 +62,32 @@ from .const import (
     CONF_TURN_OFF,
     CONF_TURN_ON,
     DOMAIN,
+)
+from .cover import (
+    CLOSE_ACTION,
+    CONF_OPEN_AND_CLOSE,
+    CONF_POSITION,
+    OPEN_ACTION,
+    POSITION_ACTION,
+    STOP_ACTION,
+    async_create_preview_cover,
+)
+from .fan import (
+    CONF_OFF_ACTION,
+    CONF_ON_ACTION,
+    CONF_PERCENTAGE,
+    CONF_SET_PERCENTAGE_ACTION,
+    CONF_SPEED_COUNT,
+    async_create_preview_fan,
+)
+from .light import (
+    CONF_HS,
+    CONF_HS_ACTION,
+    CONF_LEVEL,
+    CONF_LEVEL_ACTION,
+    CONF_TEMPERATURE,
+    CONF_TEMPERATURE_ACTION,
+    async_create_preview_light,
 )
 from .lock import CONF_LOCK, CONF_OPEN, CONF_UNLOCK, async_create_preview_lock
 from .number import (
@@ -144,18 +171,63 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                 )
             }
 
-    if domain == Platform.LOCK:
+    if domain == Platform.COVER:
         schema |= _SCHEMA_STATE | {
-            vol.Required(CONF_LOCK): selector.ActionSelector(),
-            vol.Required(CONF_UNLOCK): selector.ActionSelector(),
-            vol.Optional(CONF_CODE_FORMAT): selector.TemplateSelector(),
-            vol.Optional(CONF_OPEN): selector.ActionSelector(),
+            vol.Inclusive(OPEN_ACTION, CONF_OPEN_AND_CLOSE): selector.ActionSelector(),
+            vol.Inclusive(CLOSE_ACTION, CONF_OPEN_AND_CLOSE): selector.ActionSelector(),
+            vol.Optional(STOP_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_POSITION): selector.TemplateSelector(),
+            vol.Optional(POSITION_ACTION): selector.ActionSelector(),
+        }
+        if flow_type == "config":
+            schema |= {
+                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[cls.value for cls in CoverDeviceClass],
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                        translation_key="cover_device_class",
+                        sort=True,
+                    ),
+                )
+            }
+
+    if domain == Platform.FAN:
+        schema |= _SCHEMA_STATE | {
+            vol.Required(CONF_ON_ACTION): selector.ActionSelector(),
+            vol.Required(CONF_OFF_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_PERCENTAGE): selector.TemplateSelector(),
+            vol.Optional(CONF_SET_PERCENTAGE_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_SPEED_COUNT): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=1, max=100, step=1, mode=selector.NumberSelectorMode.BOX
+                ),
+            ),
         }
 
     if domain == Platform.IMAGE:
         schema |= {
             vol.Required(CONF_URL): selector.TemplateSelector(),
             vol.Optional(CONF_VERIFY_SSL, default=True): selector.BooleanSelector(),
+        }
+
+    if domain == Platform.LIGHT:
+        schema |= _SCHEMA_STATE | {
+            vol.Required(CONF_TURN_ON): selector.ActionSelector(),
+            vol.Required(CONF_TURN_OFF): selector.ActionSelector(),
+            vol.Optional(CONF_LEVEL): selector.TemplateSelector(),
+            vol.Optional(CONF_LEVEL_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_HS): selector.TemplateSelector(),
+            vol.Optional(CONF_HS_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_TEMPERATURE): selector.TemplateSelector(),
+            vol.Optional(CONF_TEMPERATURE_ACTION): selector.ActionSelector(),
+        }
+
+    if domain == Platform.LOCK:
+        schema |= _SCHEMA_STATE | {
+            vol.Required(CONF_LOCK): selector.ActionSelector(),
+            vol.Required(CONF_UNLOCK): selector.ActionSelector(),
+            vol.Optional(CONF_CODE_FORMAT): selector.TemplateSelector(),
+            vol.Optional(CONF_OPEN): selector.ActionSelector(),
         }
 
     if domain == Platform.NUMBER:
@@ -336,8 +408,11 @@ TEMPLATE_TYPES = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
-    Platform.LOCK,
+    Platform.COVER,
+    Platform.FAN,
     Platform.IMAGE,
+    Platform.LIGHT,
+    Platform.LOCK,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
@@ -360,10 +435,25 @@ CONFIG_FLOW = {
         config_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
     ),
+    Platform.COVER: SchemaFlowFormStep(
+        config_schema(Platform.COVER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.COVER),
+    ),
+    Platform.FAN: SchemaFlowFormStep(
+        config_schema(Platform.FAN),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.FAN),
+    ),
     Platform.IMAGE: SchemaFlowFormStep(
         config_schema(Platform.IMAGE),
         preview="template",
         validate_user_input=validate_user_input(Platform.IMAGE),
+    ),
+    Platform.LIGHT: SchemaFlowFormStep(
+        config_schema(Platform.LIGHT),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.LIGHT),
     ),
     Platform.LOCK: SchemaFlowFormStep(
         config_schema(Platform.LOCK),
@@ -409,10 +499,25 @@ OPTIONS_FLOW = {
         options_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
     ),
+    Platform.COVER: SchemaFlowFormStep(
+        options_schema(Platform.COVER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.COVER),
+    ),
+    Platform.FAN: SchemaFlowFormStep(
+        options_schema(Platform.FAN),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.FAN),
+    ),
     Platform.IMAGE: SchemaFlowFormStep(
         options_schema(Platform.IMAGE),
         preview="template",
         validate_user_input=validate_user_input(Platform.IMAGE),
+    ),
+    Platform.LIGHT: SchemaFlowFormStep(
+        options_schema(Platform.LIGHT),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.LIGHT),
     ),
     Platform.LOCK: SchemaFlowFormStep(
         options_schema(Platform.LOCK),
@@ -447,6 +552,9 @@ CREATE_PREVIEW_ENTITY: dict[
 ] = {
     Platform.ALARM_CONTROL_PANEL: async_create_preview_alarm_control_panel,
     Platform.BINARY_SENSOR: async_create_preview_binary_sensor,
+    Platform.COVER: async_create_preview_cover,
+    Platform.FAN: async_create_preview_fan,
+    Platform.LIGHT: async_create_preview_light,
     Platform.LOCK: async_create_preview_lock,
     Platform.NUMBER: async_create_preview_number,
     Platform.SELECT: async_create_preview_select,
