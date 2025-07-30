@@ -99,17 +99,17 @@ class DPCode(StrEnum):
     AIR_QUALITY = "air_quality"
     AIR_QUALITY_INDEX = "air_quality_index"
     ALARM_DELAY_TIME = "alarm_delay_time"
-    ALARM_MESSAGE = "alarm_message"
-    ALARM_MSG = "alarm_msg"
     ALARM_SWITCH = "alarm_switch"  # Alarm switch
     ALARM_TIME = "alarm_time"  # Alarm time
     ALARM_VOLUME = "alarm_volume"  # Alarm volume
+    ALARM_MESSAGE = "alarm_message"
+    ALARM_MSG = "alarm_msg"
     ANGLE_HORIZONTAL = "angle_horizontal"
     ANGLE_VERTICAL = "angle_vertical"
     ANION = "anion"  # Ionizer unit
     ARM_DOWN_PERCENT = "arm_down_percent"
     ARM_UP_PERCENT = "arm_up_percent"
-    BACKUP_RESERVE = "backup_reserve"  # Backup reserve percentage
+    BACKUP_RESERVE = "backup_reserve"
     BASIC_ANTI_FLICKER = "basic_anti_flicker"
     BASIC_DEVICE_VOLUME = "basic_device_volume"
     BASIC_FLIP = "basic_flip"
@@ -119,9 +119,9 @@ class DPCode(StrEnum):
     BASIC_PRIVATE = "basic_private"
     BASIC_WDR = "basic_wdr"
     BATTERY = "battery"  # Used by non-standard contact sensor implementations
-    BATTERY_CAPACITY = "battery_capacity"  # Battery capacity
+    BATTERY_CAPACITY = "battery_capacity"
     BATTERY_PERCENTAGE = "battery_percentage"  # Battery percentage
-    BATTERY_POWER = "battery_power"  # Battery power
+    BATTERY_POWER = "battery_power"
     BATTERY_STATE = "battery_state"  # Battery state
     BATTERY_VALUE = "battery_value"  # Battery value
     BRIGHT_CONTROLLER = "bright_controller"
@@ -147,8 +147,8 @@ class DPCode(StrEnum):
     CLEAN_AREA = "clean_area"
     CLEAN_TIME = "clean_time"
     CLICK_SUSTAIN_TIME = "click_sustain_time"
-    CLOSED_OPENED_KIT = "closed_opened_kit"
     CLOUD_RECIPE_NUMBER = "cloud_recipe_number"
+    CLOSED_OPENED_KIT = "closed_opened_kit"
     CO_STATE = "co_state"
     CO_STATUS = "co_status"
     CO_VALUE = "co_value"
@@ -159,23 +159,23 @@ class DPCode(StrEnum):
     COLOUR_DATA = "colour_data"  # Colored light mode
     COLOUR_DATA_HSV = "colour_data_hsv"  # Colored light mode
     COLOUR_DATA_V2 = "colour_data_v2"  # Colored light mode
+    COOK_TEMPERATURE = "cook_temperature"
+    COOK_TIME = "cook_time"
     CONCENTRATION_SET = "concentration_set"  # Concentration setting
     CONTROL = "control"
     CONTROL_2 = "control_2"
     CONTROL_3 = "control_3"
     CONTROL_BACK = "control_back"
     CONTROL_BACK_MODE = "control_back_mode"
-    COOK_TEMPERATURE = "cook_temperature"
-    COOK_TIME = "cook_time"
     COUNTDOWN = "countdown"  # Countdown
     COUNTDOWN_LEFT = "countdown_left"
     COUNTDOWN_SET = "countdown_set"  # Countdown setting
     CRY_DETECTION_SWITCH = "cry_detection_switch"
+    CUML_E_EXPORT_OFFGRID1 = "cuml_e_export_offgrid1"
     CUMULATIVE_ENERGY_CHARGED = "cumulative_energy_charged"
     CUMULATIVE_ENERGY_DISCHARGED = "cumulative_energy_discharged"
     CUMULATIVE_ENERGY_GENERATED_PV = "cumulative_energy_generated_pv"
     CUMULATIVE_ENERGY_OUTPUT_INV = "cumulative_energy_output_inv"
-    CUML_E_EXPORT_OFFGRID1 = "cuml_e_export_offgrid1"
     CUP_NUMBER = "cup_number"  # NUmber of cups
     CUR_CURRENT = "cur_current"  # Actual current
     CUR_NEUTRAL = "cur_neutral"  # Total reverse energy
@@ -200,11 +200,11 @@ class DPCode(StrEnum):
     FAN_COOL = "fan_cool"  # Cool wind
     FAN_DIRECTION = "fan_direction"  # Fan direction
     FAN_HORIZONTAL = "fan_horizontal"  # Horizontal swing flap angle
-    FAN_MODE = "fan_mode"
     FAN_SPEED = "fan_speed"
     FAN_SPEED_ENUM = "fan_speed_enum"  # Speed mode
     FAN_SPEED_PERCENT = "fan_speed_percent"  # Stepless speed
     FAN_SWITCH = "fan_switch"
+    FAN_MODE = "fan_mode"
     FAN_VERTICAL = "fan_vertical"  # Vertical swing flap angle
     FAR_DETECTION = "far_detection"
     FAULT = "fault"
@@ -239,10 +239,10 @@ class DPCode(StrEnum):
     LIGHT = "light"  # Light
     LIGHT_MODE = "light_mode"
     LOCK = "lock"  # Lock / Child lock
-    MACH_OPERATE = "mach_operate"
-    MANUAL_FEED = "manual_feed"
     MASTER_MODE = "master_mode"  # alarm mode
     MASTER_STATE = "master_state"  # alarm state
+    MACH_OPERATE = "mach_operate"
+    MANUAL_FEED = "manual_feed"
     MATERIAL = "material"  # Material
     MODE = "mode"  # Working mode / Mode
     MOODLIGHTING = "moodlighting"  # Mood light
@@ -255,7 +255,6 @@ class DPCode(StrEnum):
     NEAR_DETECTION = "near_detection"
     OPPOSITE = "opposite"
     OUTPUT_POWER_LIMIT = "output_power_limit"
-    OXYGEN = "oxygen"  # Oxygen bar
     PAUSE = "pause"
     PERCENT_CONTROL = "percent_control"
     PERCENT_CONTROL_2 = "percent_control_2"
@@ -263,6 +262,7 @@ class DPCode(StrEnum):
     PERCENT_STATE = "percent_state"
     PERCENT_STATE_2 = "percent_state_2"
     PERCENT_STATE_3 = "percent_state_3"
+    POSITION = "position"
     PHASE_A = "phase_a"
     PHASE_B = "phase_b"
     PHASE_C = "phase_c"
@@ -272,14 +272,13 @@ class DPCode(StrEnum):
     PM25 = "pm25"
     PM25_STATE = "pm25_state"
     PM25_VALUE = "pm25_value"
-    POSITION = "position"
     POWDER_SET = "powder_set"  # Powder
     POWER = "power"
     POWER_GO = "power_go"
-    POWER_TOTAL = "power_total"
     PREHEAT = "preheat"
     PREHEAT_1 = "preheat_1"
     PREHEAT_2 = "preheat_2"
+    POWER_TOTAL = "power_total"
     PRESENCE_STATE = "presence_state"
     PRESSURE_STATE = "pressure_state"
     PRESSURE_VALUE = "pressure_value"
@@ -289,6 +288,7 @@ class DPCode(StrEnum):
     PV_POWER_CHANNEL_1 = "pv_power_channel_1"
     PV_POWER_CHANNEL_2 = "pv_power_channel_2"
     PV_POWER_TOTAL = "pv_power_total"
+    OXYGEN = "oxygen"  # Oxygen bar
     RECORD_MODE = "record_mode"
     RECORD_SWITCH = "record_switch"  # Recording switch
     RELAY_STATUS = "relay_status"
@@ -372,13 +372,13 @@ class DPCode(StrEnum):
     TEMP_CONTROLLER = "temp_controller"
     TEMP_CORRECTION = "temp_correction"
     TEMP_CURRENT = "temp_current"  # Current temperature in °C
+    TEMP_CURRENT_F = "temp_current_f"  # Current temperature in °F
     TEMP_CURRENT_EXTERNAL = (
         "temp_current_external"  # Current external temperature in Celsius
     )
     TEMP_CURRENT_EXTERNAL_F = (
         "temp_current_external_f"  # Current external temperature in Fahrenheit
     )
-    TEMP_CURRENT_F = "temp_current_f"  # Current temperature in °F
     TEMP_INDOOR = "temp_indoor"  # Indoor temperature in °C
     TEMP_SET = "temp_set"  # Set the temperature in °C
     TEMP_SET_F = "temp_set_f"  # Set the temperature in °F
@@ -392,9 +392,9 @@ class DPCode(StrEnum):
     TOTAL_CLEAN_COUNT = "total_clean_count"
     TOTAL_CLEAN_TIME = "total_clean_time"
     TOTAL_FORWARD_ENERGY = "total_forward_energy"
+    TOTAL_TIME = "total_time"
     TOTAL_PM = "total_pm"
     TOTAL_POWER = "total_power"
-    TOTAL_TIME = "total_time"
     TVOC = "tvoc"
     UPPER_TEMP = "upper_temp"
     UPPER_TEMP_F = "upper_temp_f"
@@ -411,10 +411,10 @@ class DPCode(StrEnum):
     WARM = "warm"  # Heat preservation
     WARM_TIME = "warm_time"  # Heat preservation time
     WATER = "water"
-    WATER_LEVEL = "water_level"
     WATER_RESET = "water_reset"  # Resetting of water usage days
     WATER_SET = "water_set"  # Water level
     WATER_TIME = "water_time"  # Water usage duration
+    WATER_LEVEL = "water_level"
     WATERSENSOR_STATE = "watersensor_state"
     WEATHER_DELAY = "weather_delay"
     WET = "wet"  # Humidification
