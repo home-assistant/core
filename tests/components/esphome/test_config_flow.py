@@ -28,7 +28,7 @@ from homeassistant.components.esphome.const import (
     DOMAIN,
 )
 from homeassistant.components.esphome.encryption_key_storage import (
-    async_get_encryption_key_storage,
+    ENCRYPTION_KEY_STORAGE_KEY,
 )
 from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
@@ -48,11 +48,17 @@ from tests.common import MockConfigEntry
 async def test_retrieve_encryption_key_from_storage_with_device_mac(
     hass: HomeAssistant,
     mock_client: APIClient,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test key successfully retrieved from storage."""
 
-    storage = await async_get_encryption_key_storage(hass)
-    await storage.async_store_key("11:22:33:44:55:aa", VALID_NOISE_PSK)
+    # Mock the encryption key storage
+    hass_storage[ENCRYPTION_KEY_STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": ENCRYPTION_KEY_STORAGE_KEY,
+        "data": {"keys": {"11:22:33:44:55:aa": VALID_NOISE_PSK}},
+    }
 
     mock_client.device_info.side_effect = [
         RequiresEncryptionAPIError,
@@ -86,8 +92,17 @@ async def test_retrieve_encryption_key_from_storage_with_device_mac(
 async def test_reauth_fixed_from_from_storage(
     hass: HomeAssistant,
     mock_client: APIClient,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test reauth fixed automatically via storage."""
+
+    # Mock the encryption key storage
+    hass_storage[ENCRYPTION_KEY_STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": ENCRYPTION_KEY_STORAGE_KEY,
+        "data": {"keys": {"11:22:33:44:55:aa": VALID_NOISE_PSK}},
+    }
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -104,9 +119,6 @@ async def test_reauth_fixed_from_from_storage(
     mock_client.device_info.return_value = DeviceInfo(
         uses_password=False, name="test", mac_address="11:22:33:44:55:aa"
     )
-
-    storage = await async_get_encryption_key_storage(hass)
-    await storage.async_store_key("11:22:33:44:55:aa", VALID_NOISE_PSK)
 
     result = await entry.start_reauth_flow(hass)
 
