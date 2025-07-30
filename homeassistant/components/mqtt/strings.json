@@ -812,7 +812,7 @@
                 "min_humidity": "The minimum target humidity that can be set.",
                 "target_humidity_command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to compose the payload to be published at the humidity command topic.",
                 "target_humidity_command_topic": "The MQTT topic to publish commands to change the climate target humidity. [Learn more.]({url}#humidity_command_topic)",
-                "target_humidity_state_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to render the value received on the humidity state topic with.",
+                "target_humidity_state_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to render the value received on the target humidity state topic with.",
                 "target_humidity_state_topic": "The MQTT topic to subscribe for changes of the target humidity. [Learn more.]({url}#humidity_state_topic)"
               }
             },
