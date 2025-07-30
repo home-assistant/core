@@ -213,7 +213,7 @@
           "state": "The light is `on` if the template evaluates as `True`, `yes`, `on`, `enable` or a positive number. Any other value will render it as `off`.",
           "turn_off": "Defines actions to run when the light is turned off.",
           "turn_on": "Defines actions to run when the light is turned on.",
-          "level": "Defines a template to get the brightness of the light.  Valid values are 0 to 255.",
+          "level": "Defines a template to get the brightness of the light. Valid values are 0 to 255.",
           "set_level": "Defines actions to run when the light is given a brightness command. The script will only be called if the turn_on call only has `brightness`, and optionally `transition`. Receives variables `brightness` and, optionally, `transition`.",
           "hs": "Defines a template to get the HS color of the light. Must render a tuple (hue, saturation).",
           "set_hs": "Defines actions to run when the light is given a hs color command. Available variables: `hs` as a tuple, `h` and `s`.",
