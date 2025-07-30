@@ -148,7 +148,7 @@ class MySensorsCover(MySensorsChildEntity, CoverEntity):
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         set_req = self.gateway.const.SetReq
-        position = kwargs.get(ATTR_TILT_POSITION)
+        position = kwargs[ATTR_TILT_POSITION]
         self.gateway.set_child_value(
             self.node_id, self.child_id, set_req.V_TILT, position, ack=1
         )
