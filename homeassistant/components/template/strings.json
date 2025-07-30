@@ -97,7 +97,7 @@
           "turn_off": "Defines actions to run when the fan is turned off.",
           "turn_on": "Defines actions to run when the fan is turned on.",
           "percentage": "Defines a template to get the speed percentage of the fan.",
-          "set_percentage": "Defines actions to run when the fan is given a speed percentage command..",
+          "set_percentage": "Defines actions to run when the fan is given a speed percentage command.",
           "speed_count": "The number of speeds the fan supports. Used to calculate the percentage step for the `fan.increase_speed` and `fan.decrease_speed` actions."
         },
         "sections": {
