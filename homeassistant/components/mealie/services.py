@@ -173,7 +173,7 @@ async def _async_get_recipe(call: ServiceCall) -> ServiceResponse:
 async def _async_get_recipes(call: ServiceCall) -> ServiceResponse:
     """Get recipes."""
     entry = _async_get_entry(call)
-    search_terms = call.data.get(ATTR_SEARCH_TERMS, None)
+    search_terms = call.data.get(ATTR_SEARCH_TERMS)
     result_limit = call.data.get(ATTR_RESULT_LIMIT, 10)
     client = entry.runtime_data.client
     try:
