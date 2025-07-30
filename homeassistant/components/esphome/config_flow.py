@@ -316,7 +316,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             # Don't call _fetch_device_info() for ignored entries
             raise AbortFlow("already_configured")
         configured_host: str | None = entry.data.get(CONF_HOST)
-        configured_port: int | None = entry.data.get(CONF_PORT)
+        configured_port: int = entry.data.get(CONF_PORT, DEFAULT_PORT)
         # When port is None (from DHCP discovery), only compare hosts
         if configured_host == host and (port is None or configured_port == port):
             # Don't probe to verify the mac is correct since
