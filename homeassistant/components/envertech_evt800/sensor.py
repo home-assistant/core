@@ -37,7 +37,6 @@ from .const import (
 SENSORS: dict[str, SensorEntityDescription] = {
     "timestamp": SensorEntityDescription(
         key="timestamp",
-        name="Timestamp",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
         entity_registry_enabled_default=False,
@@ -46,28 +45,24 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "id_1": SensorEntityDescription(
         key="id_1",
-        name="MPTT ID 1",
         entity_registry_enabled_default=False,
         entity_registry_visible_default=True,
         translation_key="mptt_id_1",
     ),
     "id_2": SensorEntityDescription(
         key="id_2",
-        name="MPTT ID 2",
         entity_registry_enabled_default=False,
         entity_registry_visible_default=True,
         translation_key="mptt_id_2",
     ),
     "sw-version": SensorEntityDescription(
         key="sw-version",
-        name="Software Version",
         entity_registry_enabled_default=False,
         entity_registry_visible_default=True,
         translation_key="software_version",
     ),
     "input_voltage_1": SensorEntityDescription(
         key="input_voltage_1",
-        name="Input Voltage 1",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -76,7 +71,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "input_voltage_2": SensorEntityDescription(
         key="input_voltage_2",
-        name="Input Voltage 2",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -85,7 +79,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "power_1": SensorEntityDescription(
         key="power_1",
-        name="Power 1",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
@@ -94,7 +87,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "power_2": SensorEntityDescription(
         key="power_2",
-        name="Power 2",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
@@ -103,7 +95,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "current_1": SensorEntityDescription(
         key="current_1",
-        name="Current 1",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
@@ -112,7 +103,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "current_2": SensorEntityDescription(
         key="current_2",
-        name="Current 2",
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CURRENT,
@@ -121,7 +111,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "ac_frequency_1": SensorEntityDescription(
         key="ac_frequency_1",
-        name="AC Frequency 1",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.FREQUENCY,
@@ -130,7 +119,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "ac_frequency_2": SensorEntityDescription(
         key="ac_frequency_2",
-        name="AC Frequency 2",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.FREQUENCY,
@@ -139,7 +127,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "ac_voltage_1": SensorEntityDescription(
         key="ac_voltage_1",
-        name="AC Voltage 1",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -148,7 +135,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "ac_voltage_2": SensorEntityDescription(
         key="ac_voltage_2",
-        name="AC Voltage 2",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLTAGE,
@@ -157,7 +143,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "temperature_1": SensorEntityDescription(
         key="temperature_1",
-        name="Temperature 1",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -166,7 +151,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "temperature_2": SensorEntityDescription(
         key="temperature_2",
-        name="Temperature 2",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -175,7 +159,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "total_energy_1": SensorEntityDescription(
         key="total_energy_1",
-        name="Total Energy 1",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.ENERGY,
@@ -184,7 +167,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
     ),
     "total_energy_2": SensorEntityDescription(
         key="total_energy_2",
-        name="Total Energy 2",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.ENERGY,

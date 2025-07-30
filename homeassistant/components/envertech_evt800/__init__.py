@@ -105,7 +105,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         data = hass.data[DOMAIN].pop(entry.entry_id)
-        await data[ENVERTECH_EVT800_OBJECT].stop()
-        data[ENVERTECH_EVT800_REMOVE_LISTENER]()
+        if data[ENVERTECH_EVT800_OBJECT] is not None:
+            await data[ENVERTECH_EVT800_OBJECT].stop()
+        if data[ENVERTECH_EVT800_REMOVE_LISTENER] is not None:
+            data[ENVERTECH_EVT800_REMOVE_LISTENER]()
 
     return unload_ok
