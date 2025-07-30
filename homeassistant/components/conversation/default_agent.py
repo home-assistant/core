@@ -735,11 +735,13 @@ class DefaultAgent(ConversationEntity):
                     (maybe_result is None)  # first result
                     or (
                         # More literal text matched
-                        result.text_chunks_matched > maybe_result.text_chunks_matched
+                        result.text_chunks_matched
+                        > maybe_result.text_chunks_matched
                     )
                     or (
                         # More entities matched
-                        num_matched_entities > best_num_matched_entities
+                        num_matched_entities
+                        > best_num_matched_entities
                     )
                     or (
                         # Fewer unmatched entities
@@ -1229,8 +1231,7 @@ class DefaultAgent(ConversationEntity):
         }
 
         # Reload fuzzy matchers with new slot lists
-        # await self.hass.async_add_executor_job(self._load_fuzzy_matchers)
-        self._load_fuzzy_matchers()
+        await self.hass.async_add_executor_job(self._load_fuzzy_matchers)
 
         self._listen_clear_slot_list()
 
@@ -1244,9 +1245,12 @@ class DefaultAgent(ConversationEntity):
     def _load_fuzzy_matchers(self) -> None:
         """Reload fuzzy matchers for all loaded languages."""
         for lang_intents in self._lang_intents.values():
-            if (lang_matcher := lang_intents.fuzzy_matcher) is None:
+            if (not isinstance(lang_intents, LanguageIntents)) or (
+                lang_intents.fuzzy_matcher is None
+            ):
                 continue
 
+            lang_matcher = lang_intents.fuzzy_matcher
             lang_intents.fuzzy_matcher = FuzzyNgramMatcher(
                 intents=lang_matcher.intents,
                 intent_models=lang_matcher.intent_models,
