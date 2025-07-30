@@ -131,6 +131,7 @@ def _async_create_update_entity(
             hass,
             session,
             NABU_CASA_FIRMWARE_RELEASES_URL,
+            config_entry,
         ),
         entity_description=entity_description,
     )
