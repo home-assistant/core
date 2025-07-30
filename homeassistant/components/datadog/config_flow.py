@@ -36,13 +36,13 @@ class DatadogConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle user config flow."""
         errors: dict[str, str] = {}
         if user_input:
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
             # Validate connection to Datadog Agent
             success = await validate_datadog_connection(
                 self.hass,
                 user_input,
-            )
-            self._async_abort_entries_match(
-                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
             )
             if not success:
                 errors["base"] = "cannot_connect"
@@ -58,7 +58,6 @@ class DatadogConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_RATE: user_input[CONF_RATE],
                     },
                 )
-
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
@@ -107,7 +106,26 @@ class DatadogOptionsFlowHandler(OptionsFlow):
         options = self.config_entry.options
 
         if user_input is None:
-            user_input = {}
+            return self.async_show_form(
+                step_id="init",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(
+                            CONF_PREFIX,
+                            default=options.get(
+                                CONF_PREFIX, data.get(CONF_PREFIX, DEFAULT_PREFIX)
+                            ),
+                        ): str,
+                        vol.Required(
+                            CONF_RATE,
+                            default=options.get(
+                                CONF_RATE, data.get(CONF_RATE, DEFAULT_RATE)
+                            ),
+                        ): int,
+                    }
+                ),
+                errors={},
+            )
 
         success = await validate_datadog_connection(
             self.hass,

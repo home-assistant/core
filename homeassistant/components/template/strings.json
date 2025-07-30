@@ -17,13 +17,13 @@
           "device_id": "[%key:common::config_flow::data::device%]",
           "value_template": "[%key:component::template::common::state%]",
           "name": "[%key:common::config_flow::data::name%]",
-          "disarm": "Disarm action",
-          "arm_away": "Arm away action",
-          "arm_custom_bypass": "Arm custom bypass action",
-          "arm_home": "Arm home action",
-          "arm_night": "Arm night action",
-          "arm_vacation": "Arm vacation action",
-          "trigger": "Trigger action",
+          "disarm": "Actions on disarm",
+          "arm_away": "Actions on arm away",
+          "arm_custom_bypass": "Actions on arm custom bypass",
+          "arm_home": "Actions on arm home",
+          "arm_night": "Actions on arm night",
+          "arm_vacation": "Actions on arm vacation",
+          "trigger": "Actions on trigger",
           "code_arm_required": "Code arm required",
           "code_format": "[%key:component::template::common::code_format%]"
         },
@@ -80,6 +80,67 @@
         },
         "title": "Template button"
       },
+      "cover": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "device_class": "[%key:component::template::common::device_class%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "[%key:component::template::common::state%]",
+          "open_cover": "Actions on open",
+          "close_cover": "Actions on close",
+          "stop_cover": "Actions on stop",
+          "position": "Position",
+          "set_cover_position": "Actions on set position"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "state": "Defines a template to get the state of the cover. Valid output values from the template are `open`, `opening`, `closing` and `closed` which are directly mapped to the corresponding states.  If both a state and a position are specified, only `opening` and `closing` are set from the state template.",
+          "open_cover": "Defines actions to run when the cover is opened.",
+          "close_cover": "Defines actions to run when the cover is closed.",
+          "stop_cover": "Defines actions to run when the cover is stopped.",
+          "position": "Defines a template to get the position of the cover. Value values are numbers between `0` (`closed`) and `100` (`open`).",
+          "set_cover_position": "Defines actions to run when the cover is given a `set_cover_position` command."
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::common::advanced_options%]",
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            }
+          }
+        },
+        "title": "Template cover"
+      },
+      "fan": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "[%key:component::template::common::state%]",
+          "turn_off": "[%key:component::template::common::turn_off%]",
+          "turn_on": "[%key:component::template::common::turn_on%]",
+          "percentage": "Percentage",
+          "set_percentage": "Actions on set percentage",
+          "speed_count": "Speed count"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "state": "Defines a template to get the state of the fan. Valid values: `on`, `off`.",
+          "turn_off": "Defines actions to run when the fan is turned off.",
+          "turn_on": "Defines actions to run when the fan is turned on.",
+          "percentage": "Defines a template to get the speed percentage of the fan.",
+          "set_percentage": "Defines actions to run when the fan is given a speed percentage command.",
+          "speed_count": "The number of speeds the fan supports. Used to calculate the percentage step for the `fan.increase_speed` and `fan.decrease_speed` actions."
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::common::advanced_options%]",
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            }
+          }
+        },
+        "title": "Template fan"
+      },
       "image": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
@@ -99,6 +160,33 @@
           }
         },
         "title": "Template image"
+      },
+      "light": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "[%key:component::template::common::state%]",
+          "turn_off": "[%key:component::template::common::turn_off%]",
+          "turn_on": "[%key:component::template::common::turn_on%]",
+          "level": "Brightness level",
+          "set_level": "Actions on set level",
+          "hs": "HS color",
+          "set_hs": "Actions on set HS color",
+          "temperature": "Color temperature",
+          "set_temperature": "Actions on set color temperature"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::common::advanced_options%]",
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            }
+          }
+        },
+        "title": "Template light"
       },
       "number": {
         "data": {
@@ -173,7 +261,10 @@
           "alarm_control_panel": "Template an alarm control panel",
           "binary_sensor": "Template a binary sensor",
           "button": "Template a button",
+          "cover": "Template a cover",
+          "fan": "Template a fan",
           "image": "Template an image",
+          "light": "Template a light",
           "number": "Template a number",
           "select": "Template a select",
           "sensor": "Template a sensor",
@@ -299,6 +390,65 @@
         },
         "title": "[%key:component::template::config::step::button::title%]"
       },
+
+      "cover": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "state": "[%key:component::template::common::state%]",
+          "open_cover": "[%key:component::template::config::step::cover::data::open_cover%]",
+          "close_cover": "[%key:component::template::config::step::cover::data::close_cover%]",
+          "stop_cover": "[%key:component::template::config::step::cover::data::stop_cover%]",
+          "position": "[%key:component::template::config::step::cover::data::position%]",
+          "set_cover_position": "[%key:component::template::config::step::cover::data::set_cover_position%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "state": "[%key:component::template::config::step::cover::data_description::state%]",
+          "open_cover": "[%key:component::template::config::step::cover::data_description::open_cover%]",
+          "close_cover": "[%key:component::template::config::step::cover::data_description::close_cover%]",
+          "stop_cover": "[%key:component::template::config::step::cover::data_description::stop_cover%]",
+          "position": "[%key:component::template::config::step::cover::data_description::position%]",
+          "set_cover_position": "[%key:component::template::config::step::cover::data_description::set_cover_position%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::common::advanced_options%]",
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            }
+          }
+        },
+        "title": "[%key:component::template::config::step::cover::title%]"
+      },
+      "fan": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "state": "[%key:component::template::common::state%]",
+          "turn_off": "[%key:component::template::common::turn_off%]",
+          "turn_on": "[%key:component::template::common::turn_on%]",
+          "percentage": "[%key:component::template::config::step::fan::data::percentage%]",
+          "set_percentage": "[%key:component::template::config::step::fan::data::set_percentage%]",
+          "speed_count": "[%key:component::template::config::step::fan::data::speed_count%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "state": "[%key:component::template::config::step::fan::data_description::state%]",
+          "turn_off": "[%key:component::template::config::step::fan::data_description::turn_off%]",
+          "turn_on": "[%key:component::template::config::step::fan::data_description::turn_on%]",
+          "percentage": "[%key:component::template::config::step::fan::data_description::percentage%]",
+          "set_percentage": "[%key:component::template::config::step::fan::data_description::set_percentage%]",
+          "speed_count": "[%key:component::template::config::step::fan::data_description::speed_count%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::common::advanced_options%]",
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            }
+          }
+        },
+        "title": "[%key:component::template::config::step::fan::title%]"
+      },
       "image": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
@@ -317,6 +467,33 @@
           }
         },
         "title": "[%key:component::template::config::step::image::title%]"
+      },
+      "light": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "[%key:component::template::common::state%]",
+          "turn_off": "[%key:component::template::common::turn_off%]",
+          "turn_on": "[%key:component::template::common::turn_on%]",
+          "level": "[%key:component::template::config::step::light::data::level%]",
+          "set_level": "[%key:component::template::config::step::light::data::set_level%]",
+          "hs": "[%key:component::template::config::step::light::data::hs%]",
+          "set_hs": "[%key:component::template::config::step::light::data::set_hs%]",
+          "temperature": "[%key:component::template::config::step::light::data::temperature%]",
+          "set_temperature": "[%key:component::template::config::step::light::data::set_temperature%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::common::advanced_options%]",
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            }
+          }
+        },
+        "title": "[%key:component::template::config::step::light::title%]"
       },
       "number": {
         "data": {
@@ -480,6 +657,20 @@
         "identify": "[%key:component::button::entity_component::identify::name%]",
         "restart": "[%key:common::action::restart%]",
         "update": "[%key:component::button::entity_component::update::name%]"
+      }
+    },
+    "cover_device_class": {
+      "options": {
+        "awning": "[%key:component::cover::entity_component::awning::name%]",
+        "blind": "[%key:component::cover::entity_component::blind::name%]",
+        "curtain": "[%key:component::cover::entity_component::curtain::name%]",
+        "damper": "[%key:component::cover::entity_component::damper::name%]",
+        "door": "[%key:component::cover::entity_component::door::name%]",
+        "garage": "[%key:component::cover::entity_component::garage::name%]",
+        "gate": "[%key:component::cover::entity_component::gate::name%]",
+        "shade": "[%key:component::cover::entity_component::shade::name%]",
+        "shutter": "[%key:component::cover::entity_component::shutter::name%]",
+        "window": "[%key:component::cover::entity_component::window::name%]"
       }
     },
     "sensor_device_class": {
