@@ -160,6 +160,16 @@ BINARY_SENSOR_OPTIONS = {
             {},
         ),
         (
+            "light",
+            {"state": "{{ states('light.one') }}"},
+            "on",
+            {"one": "on", "two": "off"},
+            {},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
+            {},
+        ),
+        (
             "number",
             {"state": "{{ states('number.one') }}"},
             "30.0",
@@ -329,6 +339,12 @@ async def test_config_flow(
             },
             {"verify_ssl": True},
             {"verify_ssl": True},
+        ),
+        (
+            "light",
+            {"state": "{{ states('light.one') }}"},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
         ),
         (
             "number",
@@ -534,6 +550,16 @@ async def test_config_flow_device(
                 "verify_ssl": True,
             },
             "url",
+        ),
+        (
+            "light",
+            {"state": "{{ states('light.one') }}"},
+            {"state": "{{ states('light.two') }}"},
+            ["on", "off"],
+            {"one": "on", "two": "off"},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
+            "state",
         ),
         (
             "number",
@@ -1373,6 +1399,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             },
             {},
             {},
+        ),
+        (
+            "light",
+            {"state": "{{ states('light.one') }}"},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
         ),
         (
             "number",
