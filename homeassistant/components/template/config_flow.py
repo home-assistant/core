@@ -89,6 +89,7 @@ from .light import (
     CONF_TEMPERATURE_ACTION,
     async_create_preview_light,
 )
+from .lock import CONF_LOCK, CONF_OPEN, CONF_UNLOCK, async_create_preview_lock
 from .number import (
     CONF_MAX,
     CONF_MIN,
@@ -231,6 +232,14 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(CONF_HS_ACTION): selector.ActionSelector(),
             vol.Optional(CONF_TEMPERATURE): selector.TemplateSelector(),
             vol.Optional(CONF_TEMPERATURE_ACTION): selector.ActionSelector(),
+        }
+
+    if domain == Platform.LOCK:
+        schema |= _SCHEMA_STATE | {
+            vol.Required(CONF_LOCK): selector.ActionSelector(),
+            vol.Required(CONF_UNLOCK): selector.ActionSelector(),
+            vol.Optional(CONF_CODE_FORMAT): selector.TemplateSelector(),
+            vol.Optional(CONF_OPEN): selector.ActionSelector(),
         }
 
     if domain == Platform.NUMBER:
@@ -435,6 +444,7 @@ TEMPLATE_TYPES = [
     Platform.FAN,
     Platform.IMAGE,
     Platform.LIGHT,
+    Platform.LOCK,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
@@ -477,6 +487,11 @@ CONFIG_FLOW = {
         config_schema(Platform.LIGHT),
         preview="template",
         validate_user_input=validate_user_input(Platform.LIGHT),
+    ),
+    Platform.LOCK: SchemaFlowFormStep(
+        config_schema(Platform.LOCK),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.LOCK),
     ),
     Platform.NUMBER: SchemaFlowFormStep(
         config_schema(Platform.NUMBER),
@@ -542,6 +557,11 @@ OPTIONS_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.LIGHT),
     ),
+    Platform.LOCK: SchemaFlowFormStep(
+        options_schema(Platform.LOCK),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.LOCK),
+    ),
     Platform.NUMBER: SchemaFlowFormStep(
         options_schema(Platform.NUMBER),
         preview="template",
@@ -578,6 +598,7 @@ CREATE_PREVIEW_ENTITY: dict[
     Platform.COVER: async_create_preview_cover,
     Platform.FAN: async_create_preview_fan,
     Platform.LIGHT: async_create_preview_light,
+    Platform.LOCK: async_create_preview_lock,
     Platform.NUMBER: async_create_preview_number,
     Platform.SELECT: async_create_preview_select,
     Platform.SENSOR: async_create_preview_sensor,
