@@ -9,15 +9,14 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
-from .const import (
-    ATTR_SOUND,
-    ATTR_SOUND_VARIANT,
-    ATTR_TEXT_COMMAND,
-    DOMAIN,
-    SERVICE_SOUND_NOTIFICATION,
-    SERVICE_TEXT_COMMAND,
-)
+from .const import DOMAIN
 from .coordinator import AmazonConfigEntry
+
+ATTR_TEXT_COMMAND = "text_command"
+ATTR_SOUND = "sound"
+ATTR_SOUND_VARIANT = "sound_variant"
+SERVICE_TEXT_COMMAND = "send_text_command"
+SERVICE_SOUND_NOTIFICATION = "send_sound"
 
 SCHEMA_SOUND_SERVICE = vol.Schema(
     {
@@ -78,7 +77,7 @@ async def _async_execute_action(call: ServiceCall, attribute: str) -> None:
     if attribute == ATTR_SOUND:
         variant: int = call.data[ATTR_SOUND_VARIANT]
         pad = "_" if variant > 10 else "_0"
-        file = value + pad + str(variant)
+        file = f"{value}{pad}{variant!s}"
         if value not in SOUNDS_LIST or variant > SOUNDS_LIST[value]:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -88,7 +87,7 @@ async def _async_execute_action(call: ServiceCall, attribute: str) -> None:
         await coordinator.api.call_alexa_sound(
             coordinator.data[device.serial_number], file
         )
-    if attribute == ATTR_TEXT_COMMAND:
+    elif attribute == ATTR_TEXT_COMMAND:
         await coordinator.api.call_alexa_text_command(
             coordinator.data[device.serial_number], value
         )
@@ -104,7 +103,8 @@ async def async_send_text_command(call: ServiceCall) -> None:
     await _async_execute_action(call, ATTR_TEXT_COMMAND)
 
 
-async def async_setup_services(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Amazon Devices integration."""
     for service_name, method, schema in (
         (

@@ -20,8 +20,8 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Overseerr component."""
-    await async_setup_services(hass)
+    """Set up the Alexa Devices component."""
+    async_setup_services(hass)
     return True
 
 

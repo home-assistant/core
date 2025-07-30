@@ -5,13 +5,11 @@ from unittest.mock import AsyncMock
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.alexa_devices.const import (
+from homeassistant.components.alexa_devices.const import DOMAIN
+from homeassistant.components.alexa_devices.services import (
     ATTR_SOUND,
     ATTR_SOUND_VARIANT,
     ATTR_TEXT_COMMAND,
-    DOMAIN,
-)
-from homeassistant.components.alexa_devices.services import (
     SERVICE_SOUND_NOTIFICATION,
     SERVICE_TEXT_COMMAND,
 )
