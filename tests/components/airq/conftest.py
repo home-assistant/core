@@ -5,6 +5,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from .common import TEST_DEVICE_DATA, TEST_DEVICE_INFO
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
@@ -13,3 +15,19 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.airq.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+def patch_airq_api(path: str) -> Generator[AsyncMock]:
+    """Reusable helper to patch the AirQ object and return a mock instance."""
+    with patch(path, autospec=True) as mock_airq_class:
+        airq = mock_airq_class.return_value
+        # Pre-configure default mock values for setup
+        airq.fetch_device_info = AsyncMock(return_value=TEST_DEVICE_INFO)
+        airq.get_latest_data = AsyncMock(return_value=TEST_DEVICE_DATA)
+        yield airq
+
+
+@pytest.fixture
+def mock_coordinator_airq():
+    """Mock the aioairq.AirQ object imported by the coordinator."""
+    yield from patch_airq_api("homeassistant.components.airq.coordinator.AirQ")
