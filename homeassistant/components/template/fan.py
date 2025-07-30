@@ -52,6 +52,7 @@ from .helpers import (
 from .template_entity import (
     TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
     TemplateEntity,
     make_template_entity_common_modern_schema,
 )
@@ -108,7 +109,7 @@ FAN_COMMON_SCHEMA = vol.Schema(
     }
 )
 
-FAN_YAML_SCHEMA = FAN_COMMON_SCHEMA.extend(
+FAN_YAML_SCHEMA = FAN_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
     make_template_entity_common_modern_schema(DEFAULT_NAME).schema
 )
 
@@ -198,13 +199,12 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
     """Representation of a template fan features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
+    _optimistic_entity = True
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
     def __init__(self, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
-
-        self._template = config.get(CONF_STATE)
         self._percentage_template = config.get(CONF_PERCENTAGE)
         self._preset_mode_template = config.get(CONF_PRESET_MODE)
         self._oscillating_template = config.get(CONF_OSCILLATING)
@@ -221,7 +221,6 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
 
         # List of valid preset modes
         self._preset_modes: list[str] | None = config.get(CONF_PRESET_MODES)
-        self._attr_assumed_state = self._template is None
 
         self._attr_supported_features |= (
             FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
@@ -383,7 +382,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         if percentage is not None:
             await self.async_set_percentage(percentage)
 
-        if self._template is None:
+        if self._attr_assumed_state:
             self._state = True
             self.async_write_ha_state()
 
@@ -393,7 +392,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
             self._action_scripts[CONF_OFF_ACTION], context=self._context
         )
 
-        if self._template is None:
+        if self._attr_assumed_state:
             self._state = False
             self.async_write_ha_state()
 
@@ -408,10 +407,10 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
                 context=self._context,
             )
 
-        if self._template is None:
+        if self._attr_assumed_state:
             self._state = percentage != 0
 
-        if self._template is None or self._percentage_template is None:
+        if self._attr_assumed_state or self._percentage_template is None:
             self.async_write_ha_state()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -425,10 +424,10 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
                 context=self._context,
             )
 
-        if self._template is None:
+        if self._attr_assumed_state:
             self._state = True
 
-        if self._template is None or self._preset_mode_template is None:
+        if self._attr_assumed_state or self._preset_mode_template is None:
             self.async_write_ha_state()
 
     async def async_oscillate(self, oscillating: bool) -> None:
