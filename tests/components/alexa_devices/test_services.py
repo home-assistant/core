@@ -110,7 +110,7 @@ async def test_send_text_service(
         ),
         (
             "wrong_sound_name",
-            None,
+            TEST_DEVICE_ID,
             "invalid_sound_value",
             {
                 "sound": "wrong_sound_name",
@@ -125,7 +125,7 @@ async def test_invalid_parameters(
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     sound: str,
-    device_id: str | None,
+    device_id: str,
     translation_key: str,
     translation_placeholders: dict[str, str],
 ) -> None:
@@ -139,13 +139,6 @@ async def test_invalid_parameters(
         {device_entry.id: device_entry},
     )
     await setup_integration(hass, mock_config_entry)
-
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_SERIAL_NUMBER)}
-    )
-    assert device_entry
-
-    device_id = device_id or device_entry.id
 
     # Call Service
     with pytest.raises(ServiceValidationError) as exc_info:
