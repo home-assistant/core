@@ -40,7 +40,6 @@ RPC_TEXT_ENTITIES: Final = {
     "text": RpcTextDescription(
         key="text",
         sub_key="value",
-        has_entity_name=True,
     ),
 }
 

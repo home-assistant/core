@@ -149,21 +149,21 @@ class WyomingConversationEntity(
                         not_recognized = NotRecognized.from_event(event)
                         intent_response.async_set_error(
                             intent.IntentResponseErrorCode.NO_INTENT_MATCH,
-                            not_recognized.text,
+                            not_recognized.text or "",
                         )
                         break
 
                     if Handled.is_type(event.type):
                         # Success
                         handled = Handled.from_event(event)
-                        intent_response.async_set_speech(handled.text)
+                        intent_response.async_set_speech(handled.text or "")
                         break
 
                     if NotHandled.is_type(event.type):
                         not_handled = NotHandled.from_event(event)
                         intent_response.async_set_error(
                             intent.IntentResponseErrorCode.FAILED_TO_HANDLE,
-                            not_handled.text,
+                            not_handled.text or "",
                         )
                         break
 

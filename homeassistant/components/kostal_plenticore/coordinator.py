@@ -30,6 +30,8 @@ from .helper import get_hostname_id
 
 _LOGGER = logging.getLogger(__name__)
 
+type PlenticoreConfigEntry = ConfigEntry[Plenticore]
+
 
 class Plenticore:
     """Manages the Plenticore API."""
@@ -166,12 +168,12 @@ class DataUpdateCoordinatorMixin:
 class PlenticoreUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Base implementation of DataUpdateCoordinator for Plenticore data."""
 
-    config_entry: ConfigEntry
+    config_entry: PlenticoreConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: PlenticoreConfigEntry,
         logger: logging.Logger,
         name: str,
         update_inverval: timedelta,
@@ -248,12 +250,12 @@ class SettingDataUpdateCoordinator(
 class PlenticoreSelectUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Base implementation of DataUpdateCoordinator for Plenticore data."""
 
-    config_entry: ConfigEntry
+    config_entry: PlenticoreConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: PlenticoreConfigEntry,
         logger: logging.Logger,
         name: str,
         update_inverval: timedelta,

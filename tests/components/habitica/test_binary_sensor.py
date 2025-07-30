@@ -13,7 +13,7 @@ from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, load_fixture, snapshot_platform
+from tests.common import MockConfigEntry, async_load_fixture, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -62,7 +62,7 @@ async def test_pending_quest_states(
     """Test states of pending quest sensor."""
 
     habitica.get_user.return_value = HabiticaUserResponse.from_json(
-        load_fixture(f"{fixture}.json", DOMAIN)
+        await async_load_fixture(hass, f"{fixture}.json", DOMAIN)
     )
 
     config_entry.add_to_hass(hass)

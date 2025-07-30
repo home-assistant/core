@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.deconz.const import (
     CONF_BRIDGE_ID,
     CONF_MASTER_GATEWAY,
-    DOMAIN as DECONZ_DOMAIN,
+    DOMAIN,
 )
 from homeassistant.components.deconz.deconz_event import CONF_DECONZ_EVENT
 from homeassistant.components.deconz.services import (
@@ -45,7 +45,7 @@ async def test_configure_service_with_field(
     aioclient_mock = mock_put_request("/lights/2")
 
     await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data, blocking=True
+        DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data, blocking=True
     )
     assert aioclient_mock.mock_calls[1][2] == {"on": True, "attr1": 10, "attr2": 20}
 
@@ -74,7 +74,7 @@ async def test_configure_service_with_entity(
     aioclient_mock = mock_put_request("/lights/0")
 
     await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data, blocking=True
+        DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data, blocking=True
     )
     assert aioclient_mock.mock_calls[1][2] == {"on": True, "attr1": 10, "attr2": 20}
 
@@ -104,7 +104,7 @@ async def test_configure_service_with_entity_and_field(
     aioclient_mock = mock_put_request("/lights/0/state")
 
     await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data, blocking=True
+        DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data, blocking=True
     )
     assert aioclient_mock.mock_calls[1][2] == {"on": True, "attr1": 10, "attr2": 20}
 
@@ -122,9 +122,7 @@ async def test_configure_service_with_faulty_bridgeid(
         SERVICE_DATA: {"on": True},
     }
 
-    await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
-    )
+    await hass.services.async_call(DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data)
     await hass.async_block_till_done()
 
     assert len(aioclient_mock.mock_calls) == 0
@@ -137,7 +135,7 @@ async def test_configure_service_with_faulty_field(hass: HomeAssistant) -> None:
 
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
-            DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
+            DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
         )
 
 
@@ -153,9 +151,7 @@ async def test_configure_service_with_faulty_entity(
         SERVICE_DATA: {},
     }
 
-    await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
-    )
+    await hass.services.async_call(DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data)
     await hass.async_block_till_done()
 
     assert len(aioclient_mock.mock_calls) == 0
@@ -174,9 +170,7 @@ async def test_calling_service_with_no_master_gateway_fails(
         SERVICE_DATA: {"on": True},
     }
 
-    await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data
-    )
+    await hass.services.async_call(DOMAIN, SERVICE_CONFIGURE_DEVICE, service_data=data)
     await hass.async_block_till_done()
 
     assert len(aioclient_mock.mock_calls) == 0
@@ -227,7 +221,7 @@ async def test_service_refresh_devices(
     mock_requests()
 
     await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_DEVICE_REFRESH, service_data={CONF_BRIDGE_ID: BRIDGE_ID}
+        DOMAIN, SERVICE_DEVICE_REFRESH, service_data={CONF_BRIDGE_ID: BRIDGE_ID}
     )
     await hass.async_block_till_done()
 
@@ -293,7 +287,7 @@ async def test_service_refresh_devices_trigger_no_state_update(
     mock_requests()
 
     await hass.services.async_call(
-        DECONZ_DOMAIN, SERVICE_DEVICE_REFRESH, service_data={CONF_BRIDGE_ID: BRIDGE_ID}
+        DOMAIN, SERVICE_DEVICE_REFRESH, service_data={CONF_BRIDGE_ID: BRIDGE_ID}
     )
     await hass.async_block_till_done()
 
@@ -349,7 +343,7 @@ async def test_remove_orphaned_entries_service(
 
     entity_registry.async_get_or_create(
         SENSOR_DOMAIN,
-        DECONZ_DOMAIN,
+        DOMAIN,
         "12345",
         suggested_object_id="Orphaned sensor",
         config_entry=config_entry_setup,
@@ -366,7 +360,7 @@ async def test_remove_orphaned_entries_service(
     )
 
     await hass.services.async_call(
-        DECONZ_DOMAIN,
+        DOMAIN,
         SERVICE_REMOVE_ORPHANED_ENTRIES,
         service_data={CONF_BRIDGE_ID: BRIDGE_ID},
     )

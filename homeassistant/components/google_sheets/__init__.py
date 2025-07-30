@@ -2,48 +2,33 @@
 
 from __future__ import annotations
 
-from datetime import datetime
-
 import aiohttp
-from google.auth.exceptions import RefreshError
-from google.oauth2.credentials import Credentials
-from gspread import Client
-from gspread.exceptions import APIError
-from gspread.utils import ValueInputOption
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    HomeAssistantError,
-)
+from homeassistant.const import CONF_TOKEN
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
-from homeassistant.helpers.selector import ConfigEntrySelector
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DEFAULT_ACCESS, DOMAIN
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type GoogleSheetsConfigEntry = ConfigEntry[OAuth2Session]
 
-DATA = "data"
-DATA_CONFIG_ENTRY = "config_entry"
-WORKSHEET = "worksheet"
 
-SERVICE_APPEND_SHEET = "append_sheet"
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Activate the Google Sheets component."""
 
-SHEET_SERVICE_SCHEMA = vol.All(
-    {
-        vol.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Optional(WORKSHEET): cv.string,
-        vol.Required(DATA): vol.Any(cv.ensure_list, [dict]),
-    },
-)
+    async_setup_services(hass)
+
+    return True
 
 
 async def async_setup_entry(
@@ -67,8 +52,6 @@ async def async_setup_entry(
         raise ConfigEntryAuthFailed("Required scopes are not present, reauth required")
     entry.runtime_data = session
 
-    await async_setup_service(hass)
-
     return True
 
 
@@ -81,55 +64,4 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: GoogleSheetsConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        for service_name in hass.services.async_services_for_domain(DOMAIN):
-            hass.services.async_remove(DOMAIN, service_name)
-
     return True
-
-
-async def async_setup_service(hass: HomeAssistant) -> None:
-    """Add the services for Google Sheets."""
-
-    def _append_to_sheet(call: ServiceCall, entry: GoogleSheetsConfigEntry) -> None:
-        """Run append in the executor."""
-        service = Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))  # type: ignore[no-untyped-call]
-        try:
-            sheet = service.open_by_key(entry.unique_id)
-        except RefreshError:
-            entry.async_start_reauth(hass)
-            raise
-        except APIError as ex:
-            raise HomeAssistantError("Failed to write data") from ex
-
-        worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
-        columns: list[str] = next(iter(worksheet.get_values("A1:ZZ1")), [])
-        now = str(datetime.now())
-        rows = []
-        for d in call.data[DATA]:
-            row_data = {"created": now} | d
-            row = [row_data.get(column, "") for column in columns]
-            for key, value in row_data.items():
-                if key not in columns:
-                    columns.append(key)
-                    worksheet.update_cell(1, len(columns), key)
-                    row.append(value)
-            rows.append(row)
-        worksheet.append_rows(rows, value_input_option=ValueInputOption.user_entered)
-
-    async def append_to_sheet(call: ServiceCall) -> None:
-        """Append new line of data to a Google Sheets document."""
-        entry: GoogleSheetsConfigEntry | None = hass.config_entries.async_get_entry(
-            call.data[DATA_CONFIG_ENTRY]
-        )
-        if not entry or not hasattr(entry, "runtime_data"):
-            raise ValueError(f"Invalid config entry: {call.data[DATA_CONFIG_ENTRY]}")
-        await entry.runtime_data.async_ensure_token_valid()
-        await hass.async_add_executor_job(_append_to_sheet, call, entry)
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_APPEND_SHEET,
-        append_to_sheet,
-        schema=SHEET_SERVICE_SCHEMA,
-    )

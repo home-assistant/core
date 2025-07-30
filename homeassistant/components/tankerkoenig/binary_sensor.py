@@ -17,6 +17,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import TankerkoenigConfigEntry, TankerkoenigDataUpdateCoordinator
 from .entity import TankerkoenigCoordinatorEntity
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 _LOGGER = logging.getLogger(__name__)
 
 

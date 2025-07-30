@@ -92,7 +92,7 @@ async def test_number(hass: HomeAssistant, setup_zha, zigpy_device_mock) -> None
 
     assert (
         hass.states.get(entity_id).attributes.get("friendly_name")
-        == "FakeManufacturer FakeModel Number PWM1"
+        == "FakeManufacturer FakeModel PWM1"
     )
 
     # change value from device

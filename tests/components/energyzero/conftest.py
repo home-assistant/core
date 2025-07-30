@@ -1,7 +1,6 @@
 """Fixtures for EnergyZero integration tests."""
 
-from collections.abc import Generator
-import json
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from energyzero import Electricity, Gas
@@ -10,7 +9,7 @@ import pytest
 from homeassistant.components.energyzero.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.fixture
@@ -35,17 +34,17 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_energyzero() -> Generator[MagicMock]:
+async def mock_energyzero(hass: HomeAssistant) -> AsyncGenerator[MagicMock]:
     """Return a mocked EnergyZero client."""
     with patch(
         "homeassistant.components.energyzero.coordinator.EnergyZero", autospec=True
     ) as energyzero_mock:
         client = energyzero_mock.return_value
         client.energy_prices.return_value = Electricity.from_dict(
-            json.loads(load_fixture("today_energy.json", DOMAIN))
+            await async_load_json_object_fixture(hass, "today_energy.json", DOMAIN)
         )
         client.gas_prices.return_value = Gas.from_dict(
-            json.loads(load_fixture("today_gas.json", DOMAIN))
+            await async_load_json_object_fixture(hass, "today_gas.json", DOMAIN)
         )
         yield client
 

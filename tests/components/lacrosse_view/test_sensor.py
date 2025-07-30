@@ -6,7 +6,7 @@ from unittest.mock import patch
 from lacrosse_view import Sensor
 import pytest
 
-from homeassistant.components.lacrosse_view import DOMAIN
+from homeassistant.components.lacrosse_view.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -46,7 +46,6 @@ async def test_entities_added(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.data[DOMAIN]
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
@@ -103,7 +102,6 @@ async def test_field_not_supported(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.data[DOMAIN]
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
@@ -144,7 +142,6 @@ async def test_field_types(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.data[DOMAIN]
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
@@ -172,7 +169,6 @@ async def test_no_field(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.data[DOMAIN]
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
@@ -200,7 +196,6 @@ async def test_field_data_missing(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.data[DOMAIN]
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
@@ -228,7 +223,6 @@ async def test_no_readings(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert hass.data[DOMAIN]
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1

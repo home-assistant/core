@@ -280,7 +280,7 @@ async def async_setup_entry(
         except TimeoutError as err:
             _LOGGER.error("Timeout connecting to Tibber home: %s ", err)
             raise PlatformNotReady from err
-        except aiohttp.ClientError as err:
+        except (tibber.RetryableHttpExceptionError, aiohttp.ClientError) as err:
             _LOGGER.error("Error connecting to Tibber home: %s ", err)
             raise PlatformNotReady from err
 
