@@ -14,7 +14,7 @@ from homeassistant.util.hass_dict import HassKey
 _LOGGER = logging.getLogger(__name__)
 
 ENCRYPTION_KEY_STORAGE_VERSION = 1
-ENCRYPTION_KEY_STORAGE_KEY = "esphome_encryption_keys"
+ENCRYPTION_KEY_STORAGE_KEY = "esphome.encryption_keys"
 
 
 class EncryptionKeyData(TypedDict):
@@ -74,8 +74,9 @@ class ESPHomeEncryptionKeyStorage:
         """Remove encryption key for a MAC address."""
         await self.async_load()
         assert self._data is not None
-        if mac_address.lower() in self._data["keys"]:
-            del self._data["keys"][mac_address.lower()]
+        lower_mac_address = mac_address.lower()
+        if lower_mac_address in self._data["keys"]:
+            del self._data["keys"][lower_mac_address]
             await self.async_save()
             _LOGGER.debug(
                 "Removed encryption key for device with MAC %s",

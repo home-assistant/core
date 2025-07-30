@@ -791,8 +791,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             # In reauth flow, get MAC from the existing entry's unique_id
             mac_address = self._reauth_entry.unique_id
 
-        if mac_address is None:
-            return False
+        assert mac_address is not None
 
         storage = await async_get_encryption_key_storage(self.hass)
         if stored_key := await storage.async_get_key(mac_address):

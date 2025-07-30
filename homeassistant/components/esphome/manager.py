@@ -661,9 +661,6 @@ class ESPHomeManager:
         If a device reports it supports encryption, but we connected without a key,
         we need to generate and store one.
         """
-        if not self.entry.unique_id:
-            return  # guard
-
         noise_psk: str | None = self.entry.data.get(CONF_NOISE_PSK)
         if noise_psk:
             # we're already connected with a noise PSK - nothing to do
@@ -679,19 +676,10 @@ class ESPHomeManager:
             "Generating new encryption key for device %s", self.entry.unique_id
         )
         storage = await async_get_encryption_key_storage(self.hass)
+        new_key = base64.b64encode(secrets.token_bytes(32))
         try:
-            new_key = base64.b64encode(secrets.token_bytes(32))
-
             # Store the key on the device using the existing connection
             result = await self.cli.noise_encryption_set_key(new_key)
-            if not result:
-                _LOGGER.error(
-                    "Failed to set dynamic encryption key on device %s (%s)",
-                    self.entry.data.get(CONF_DEVICE_NAME, self.host),
-                    self.entry.unique_id,
-                )
-                return
-
         except APIConnectionError as ex:
             _LOGGER.error(
                 "Connection error while storing encryption key for device %s (%s): %s",
@@ -700,8 +688,17 @@ class ESPHomeManager:
                 ex,
             )
             return
+        else:
+            if not result:
+                _LOGGER.error(
+                    "Failed to set dynamic encryption key on device %s (%s)",
+                    self.entry.data.get(CONF_DEVICE_NAME, self.host),
+                    self.entry.unique_id,
+                )
+                return
 
         # Key stored successfully on device, save it locally and update config entry
+        assert self.entry.unique_id is not None
         new_key_str = new_key.decode("utf-8")
         await storage.async_store_key(self.entry.unique_id, new_key_str)
         self.hass.config_entries.async_update_entry(
