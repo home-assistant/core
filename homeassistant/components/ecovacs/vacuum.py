@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 from deebot_client.capabilities import Capabilities, DeviceType
 from deebot_client.device import Device
-from deebot_client.events import BatteryEvent, FanSpeedEvent, RoomsEvent, StateEvent
+from deebot_client.events import FanSpeedEvent, RoomsEvent, StateEvent
 from deebot_client.models import CleanAction, CleanMode, Room, State
 import sucks
 
@@ -216,7 +216,6 @@ class EcovacsVacuum(
         VacuumEntityFeature.PAUSE
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.RETURN_HOME
-        | VacuumEntityFeature.BATTERY
         | VacuumEntityFeature.SEND_COMMAND
         | VacuumEntityFeature.LOCATE
         | VacuumEntityFeature.STATE
@@ -243,10 +242,6 @@ class EcovacsVacuum(
         """Set up the event listeners now that hass is ready."""
         await super().async_added_to_hass()
 
-        async def on_battery(event: BatteryEvent) -> None:
-            self._attr_battery_level = event.value
-            self.async_write_ha_state()
-
         async def on_rooms(event: RoomsEvent) -> None:
             self._rooms = event.rooms
             self.async_write_ha_state()
@@ -255,7 +250,6 @@ class EcovacsVacuum(
             self._attr_activity = _STATE_TO_VACUUM_STATE[event.state]
             self.async_write_ha_state()
 
-        self._subscribe(self._capability.battery.event, on_battery)
         self._subscribe(self._capability.state.event, on_status)
 
         if self._capability.fan_speed:
