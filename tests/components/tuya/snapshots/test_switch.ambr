@@ -464,7 +464,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'socket_1',
+    'translation_key': 'indexed_socket',
     'unique_id': 'tuya.eb0c772dabbb19d653ssi5switch_1',
     'unit_of_measurement': None,
   })
@@ -513,7 +513,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'socket_2',
+    'translation_key': 'indexed_socket',
     'unique_id': 'tuya.eb0c772dabbb19d653ssi5switch_2',
     'unit_of_measurement': None,
   })
@@ -658,7 +658,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_1',
+    'translation_key': 'indexed_switch',
     'unique_id': 'tuya.0665305284f3ebe9fdc1switch_1',
     'unit_of_measurement': None,
   })
@@ -995,7 +995,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_1',
+    'translation_key': 'indexed_switch',
     'unique_id': 'tuya.bf082711d275c0c883vb4pswitch_1',
     'unit_of_measurement': None,
   })
@@ -1044,7 +1044,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_2',
+    'translation_key': 'indexed_switch',
     'unique_id': 'tuya.bf082711d275c0c883vb4pswitch_2',
     'unit_of_measurement': None,
   })
@@ -1093,7 +1093,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_3',
+    'translation_key': 'indexed_switch',
     'unique_id': 'tuya.bf082711d275c0c883vb4pswitch_3',
     'unit_of_measurement': None,
   })
@@ -1142,7 +1142,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_4',
+    'translation_key': 'indexed_switch',
     'unique_id': 'tuya.bf082711d275c0c883vb4pswitch_4',
     'unit_of_measurement': None,
   })
@@ -1159,6 +1159,54 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[wk_air_conditioner][switch.clima_cucina_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.clima_cucina_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': 'tuya.bf6fc1645146455a2efrexchild_lock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[wk_air_conditioner][switch.clima_cucina_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Clima cucina Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.clima_cucina_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_platform_setup_and_discovery[wk_wifi_smart_gas_boiler_thermostat][switch.wifi_smart_gas_boiler_thermostat_child_lock-entry]

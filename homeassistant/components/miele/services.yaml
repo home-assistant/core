@@ -1,5 +1,13 @@
 # Services descriptions for Miele integration
 
+get_programs:
+  fields:
+    device_id:
+      selector:
+        device:
+          integration: miele
+      required: true
+
 set_program:
   fields:
     device_id:
@@ -15,3 +23,33 @@ set_program:
           max: 99999
           mode: box
       example: 24
+
+set_program_oven:
+  fields:
+    device_id:
+      selector:
+        device:
+          integration: miele
+      required: true
+    program_id:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 99999
+          mode: box
+      example: 24
+    temperature:
+      required: false
+      selector:
+        number:
+          min: 30
+          max: 300
+          unit_of_measurement: "°C"
+          mode: box
+      example: 180
+    duration:
+      required: false
+      selector:
+        duration:
+      example: 1:15:00
