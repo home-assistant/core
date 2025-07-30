@@ -143,9 +143,9 @@ def _mock_async_create_update_entity(
         config_entry=config_entry,
         update_coordinator=FirmwareUpdateCoordinator(
             hass,
+            config_entry,
             session,
             TEST_FIRMWARE_RELEASES_URL,
-            config_entry,
         ),
         entity_description=entity_description,
     )
@@ -594,9 +594,9 @@ async def test_update_entity_graceful_firmware_type_callback_errors(
         config_entry=update_config_entry,
         update_coordinator=FirmwareUpdateCoordinator(
             hass,
+            update_config_entry,
             session,
             TEST_FIRMWARE_RELEASES_URL,
-            update_config_entry,
         ),
         entity_description=TEST_FIRMWARE_ENTITY_DESCRIPTIONS[ApplicationType.EZSP],
     )
