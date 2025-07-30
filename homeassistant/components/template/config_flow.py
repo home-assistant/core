@@ -72,6 +72,14 @@ from .cover import (
     STOP_ACTION,
     async_create_preview_cover,
 )
+from .fan import (
+    CONF_OFF_ACTION,
+    CONF_ON_ACTION,
+    CONF_PERCENTAGE,
+    CONF_SET_PERCENTAGE_ACTION,
+    CONF_SPEED_COUNT,
+    async_create_preview_fan,
+)
 from .light import (
     CONF_HS,
     CONF_HS_ACTION,
@@ -181,6 +189,19 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                     ),
                 )
             }
+
+    if domain == Platform.FAN:
+        schema |= _SCHEMA_STATE | {
+            vol.Required(CONF_ON_ACTION): selector.ActionSelector(),
+            vol.Required(CONF_OFF_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_PERCENTAGE): selector.TemplateSelector(),
+            vol.Optional(CONF_SET_PERCENTAGE_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_SPEED_COUNT): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=1, max=100, step=1, mode=selector.NumberSelectorMode.BOX
+                ),
+            ),
+        }
 
     if domain == Platform.IMAGE:
         schema |= {
@@ -379,6 +400,7 @@ TEMPLATE_TYPES = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.COVER,
+    Platform.FAN,
     Platform.IMAGE,
     Platform.LIGHT,
     Platform.NUMBER,
@@ -407,6 +429,11 @@ CONFIG_FLOW = {
         config_schema(Platform.COVER),
         preview="template",
         validate_user_input=validate_user_input(Platform.COVER),
+    ),
+    Platform.FAN: SchemaFlowFormStep(
+        config_schema(Platform.FAN),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.FAN),
     ),
     Platform.IMAGE: SchemaFlowFormStep(
         config_schema(Platform.IMAGE),
@@ -462,6 +489,11 @@ OPTIONS_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.COVER),
     ),
+    Platform.FAN: SchemaFlowFormStep(
+        options_schema(Platform.FAN),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.FAN),
+    ),
     Platform.IMAGE: SchemaFlowFormStep(
         options_schema(Platform.IMAGE),
         preview="template",
@@ -501,6 +533,7 @@ CREATE_PREVIEW_ENTITY: dict[
     Platform.ALARM_CONTROL_PANEL: async_create_preview_alarm_control_panel,
     Platform.BINARY_SENSOR: async_create_preview_binary_sensor,
     Platform.COVER: async_create_preview_cover,
+    Platform.FAN: async_create_preview_fan,
     Platform.LIGHT: async_create_preview_light,
     Platform.NUMBER: async_create_preview_number,
     Platform.SELECT: async_create_preview_select,
