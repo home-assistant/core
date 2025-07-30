@@ -8,6 +8,26 @@
     dict({
       'agent_id': 'mock-agent-id',
       'content': None,
+      'native': 'Test 1',
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+    dict({
+      'agent_id': 'mock-agent-id',
+      'content': None,
+      'native': 'Test 2',
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_add_delta_content_stream[deltas11]
+  list([
+    dict({
+      'agent_id': 'mock-agent-id',
+      'content': None,
       'native': object(
       ),
       'role': 'assistant',
