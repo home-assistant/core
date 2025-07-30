@@ -14,7 +14,6 @@ IP_REDACT = ["addr", "ipaddr", "ip6addr", "lastip"]  # IP related
 HW_REDACT = ["apmac", "hwaddr", "mac"]  # MAC address
 TO_REDACT_HA = [CONF_HOST, CONF_PASSWORD]
 TO_REDACT_AIROS = [
-    "device_id",
     "hostname",  # Prevent leaking device naming
     "essid",  # Network SSID
     "lat",  # GPS latitude to prevent exposing location data.
