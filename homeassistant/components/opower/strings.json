@@ -16,7 +16,7 @@
           "login_service_url": "URL of the Opower Login Service"
         },
         "data_description": {
-          "login_service_url": "For example: `http://7ef69028-opower-login-service` if you are running the [add-on](https://github.com/tronikos/opower-login-service), or `http://host-or-ip:7937` if you are running the service manually"
+          "login_service_url": "For example: `http://7ef69028-opower-login-service:7937` if you are running the [add-on](https://github.com/tronikos/opower-login-service), or `http://host-or-ip:7937` if you are running the service manually"
         }
       },
       "credentials": {
