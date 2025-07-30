@@ -268,7 +268,8 @@
           "number": "Template a number",
           "select": "Template a select",
           "sensor": "Template a sensor",
-          "switch": "Template a switch"
+          "switch": "Template a switch",
+          "weather": "Template a weather"
         },
         "title": "Template helper"
       },
@@ -293,7 +294,37 @@
           }
         },
         "title": "Template switch"
+      },
+      "weather": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "condition": "Condition",
+          "humidity": "Humidity",
+          "temperature": "Temperature",
+          "temperature_unit": "Temperature unit",
+          "forecast_daily": "Forecast daily",
+          "forecast_hourly": "Forecast hourly"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::common::advanced_options%]",
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            }
+          }
+        },
+        "title": "Template weather"
       }
+    }
+  },
+  "issues": {
+    "deprecated_weather_options": {
+      "title": "Deprecation: Legacy options in {entity_name}",
+      "description": "The legacy options for template weather are being removed in 2026.1.\n\nPlease update the following YAML options for {entity_id} ({entity_name}): \n\n{changes}"
     }
   },
   "options": {
@@ -552,6 +583,30 @@
           }
         },
         "title": "[%key:component::template::config::step::switch::title%]"
+      },
+      "weather": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "condition": "[%key:component::template::config::step::weather::data::condition%]",
+          "humidity": "[%key:component::template::config::step::weather::data::humidity%]",
+          "temperature": "[%key:component::template::config::step::weather::data::temperature%]",
+          "temperature_unit": "[%key:component::template::config::step::weather::data::temperature_unit%]",
+          "forecast_daily": "[%key:component::template::config::step::weather::data::forecast_daily%]",
+          "forecast_hourly": "[%key:component::template::config::step::weather::data::forecast_hourly%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::common::advanced_options%]",
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            }
+          }
+        },
+        "title": "[%key:component::template::config::step::weather::title%]"
       }
     }
   },
