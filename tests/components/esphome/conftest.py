@@ -732,3 +732,10 @@ async def mock_esphome_device(
         )
 
     return _mock_device
+
+
+@pytest.fixture(autouse=False)
+def mock_setup_entry():
+    """Mock setting up a config entry."""
+    with patch("homeassistant.components.esphome.async_setup_entry", return_value=True):
+        yield
