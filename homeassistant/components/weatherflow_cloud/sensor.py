@@ -75,11 +75,6 @@ class WeatherFlowCloudSensorEntityDescriptionWebsocketObservation(
     value_fn: Callable[[WebsocketObservation], StateType | datetime]
 
 
-def map_precip_type(value: int) -> str | None:
-    """Map precipitation type to string."""
-    return PRECIPITATION_TYPE.get(value)
-
-
 WEBSOCKET_WIND_SENSORS: tuple[
     WeatherFlowCloudSensorEntityDescriptionWebsocketWind, ...
 ] = (
