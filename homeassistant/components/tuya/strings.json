@@ -744,86 +744,26 @@
       "switch": {
         "name": "Switch"
       },
+      "indexed_switch": {
+        "name": "Switch {index}"
+      },
       "socket": {
         "name": "Socket"
+      },
+      "indexed_socket": {
+        "name": "Socket {index}"
       },
       "radio": {
         "name": "Radio"
       },
-      "alarm_1": {
-        "name": "Alarm 1"
-      },
-      "alarm_2": {
-        "name": "Alarm 2"
-      },
-      "alarm_3": {
-        "name": "Alarm 3"
-      },
-      "alarm_4": {
-        "name": "Alarm 4"
+      "indexed_alarm": {
+        "name": "Alarm {index}"
       },
       "sleep_aid": {
         "name": "Sleep aid"
       },
-      "switch_1": {
-        "name": "Switch 1"
-      },
-      "switch_2": {
-        "name": "Switch 2"
-      },
-      "switch_3": {
-        "name": "Switch 3"
-      },
-      "switch_4": {
-        "name": "Switch 4"
-      },
-      "switch_5": {
-        "name": "Switch 5"
-      },
-      "switch_6": {
-        "name": "Switch 6"
-      },
-      "switch_7": {
-        "name": "Switch 7"
-      },
-      "switch_8": {
-        "name": "Switch 8"
-      },
-      "usb_1": {
-        "name": "USB 1"
-      },
-      "usb_2": {
-        "name": "USB 2"
-      },
-      "usb_3": {
-        "name": "USB 3"
-      },
-      "usb_4": {
-        "name": "USB 4"
-      },
-      "usb_5": {
-        "name": "USB 5"
-      },
-      "usb_6": {
-        "name": "USB 6"
-      },
-      "socket_1": {
-        "name": "Socket 1"
-      },
-      "socket_2": {
-        "name": "Socket 2"
-      },
-      "socket_3": {
-        "name": "Socket 3"
-      },
-      "socket_4": {
-        "name": "Socket 4"
-      },
-      "socket_5": {
-        "name": "Socket 5"
-      },
-      "socket_6": {
-        "name": "Socket 6"
+      "indexed_usb": {
+        "name": "USB {index}"
       },
       "ionizer": {
         "name": "Ionizer"
