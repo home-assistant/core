@@ -152,6 +152,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     """Onkyo Receiver Media Player (one per each zone)."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     _supports_volume: bool = False
     # None means no technical possibility of support

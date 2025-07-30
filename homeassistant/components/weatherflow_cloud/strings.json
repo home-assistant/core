@@ -56,6 +56,34 @@
       "lightning_strike_last_epoch": {
         "name": "Lightning last strike"
       },
+      "precip_accum_last_1hr": {
+        "name": "Rain last hour"
+      },
+
+      "precip_accum_local_day": {
+        "name": "Precipitation today"
+      },
+      "precip_accum_local_day_final": {
+        "name": "Nearcast precipitation today"
+      },
+      "precip_accum_local_yesterday": {
+        "name": "Precipitation yesterday"
+      },
+      "precip_accum_local_yesterday_final": {
+        "name": "Nearcast precipitation yesterday"
+      },
+      "precip_analysis_type_yesterday": {
+        "name": "Precipitation type yesterday"
+      },
+      "precip_minutes_local_day": {
+        "name": "Precipitation duration today"
+      },
+      "precip_minutes_local_yesterday": {
+        "name": "Precipitation duration yesterday"
+      },
+      "precip_minutes_local_yesterday_final": {
+        "name": "Nearcast precipitation duration yesterday"
+      },
       "sea_level_pressure": {
         "name": "Pressure sea level"
       },
