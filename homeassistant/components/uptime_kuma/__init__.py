@@ -6,7 +6,7 @@ from pythonkuma.update import UpdateChecker
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.hass_dict import HassKey
 
@@ -19,7 +19,6 @@ from .coordinator import (
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.UPDATE]
 
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 UPTIME_KUMA_KEY: HassKey[UptimeKumaSoftwareUpdateCoordinator] = HassKey(DOMAIN)
 
 
