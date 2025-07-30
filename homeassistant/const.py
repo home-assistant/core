@@ -24,8 +24,8 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2025
-MINOR_VERSION: Final = 7
-PATCH_VERSION: Final = "4"
+MINOR_VERSION: Final = 8
+PATCH_VERSION: Final = "0b0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
 REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 13, 2)
@@ -245,6 +245,7 @@ CONF_PLATFORM: Final = "platform"
 CONF_PORT: Final = "port"
 CONF_PREFIX: Final = "prefix"
 CONF_PROFILE_NAME: Final = "profile_name"
+CONF_PROMPT: Final = "prompt"
 CONF_PROTOCOL: Final = "protocol"
 CONF_PROXY_SSL: Final = "proxy_ssl"
 CONF_QUOTE: Final = "quote"
@@ -910,6 +911,7 @@ class UnitOfPrecipitationDepth(StrEnum):
 
 
 # Concentration units
+CONCENTRATION_GRAMS_PER_CUBIC_METER: Final = "g/m³"
 CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
 CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = "mg/m³"
 CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = "μg/ft³"

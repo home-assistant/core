@@ -2,6 +2,7 @@
 # name: test_function_call
   list([
     dict({
+      'attachments': None,
       'content': 'Please call the test function',
       'role': 'user',
     }),
@@ -58,6 +59,7 @@
 # name: test_function_call_without_reasoning
   list([
     dict({
+      'attachments': None,
       'content': 'Please call the test function',
       'role': 'user',
     }),

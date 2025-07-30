@@ -2,8 +2,9 @@
 
 from unittest.mock import MagicMock
 
-from eheimdigital.types import EheimDeviceType
+from eheimdigital.types import EheimDeviceType, EheimDigitalClientError
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -54,3 +55,15 @@ async def test_remove_device(
         device_entry.id, mock_config_entry.entry_id
     )
     assert response["success"]
+
+
+async def test_entry_setup_error(
+    hass: HomeAssistant,
+    eheimdigital_hub_mock: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test errors on setting up the config entry."""
+
+    eheimdigital_hub_mock.return_value.connect.side_effect = EheimDigitalClientError()
+    await init_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

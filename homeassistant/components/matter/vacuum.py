@@ -17,6 +17,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity
@@ -67,20 +68,31 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     entity_description: StateVacuumEntityDescription
     _platform_translation_key = "vacuum"
 
+    def _get_run_mode_by_tag(
+        self, tag: ModeTag
+    ) -> clusters.RvcRunMode.Structs.ModeOptionStruct | None:
+        """Get the run mode by tag."""
+        supported_run_modes = self._supported_run_modes or {}
+        for mode in supported_run_modes.values():
+            for t in mode.modeTags:
+                if t.value == tag.value:
+                    return mode
+        return None
+
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
         # We simply set the RvcRunMode to the first runmode
         # that has the idle tag to stop the vacuum cleaner.
         # this is compatible with both Matter 1.2 and 1.3+ devices.
-        supported_run_modes = self._supported_run_modes or {}
-        for mode in supported_run_modes.values():
-            for tag in mode.modeTags:
-                if tag.value == ModeTag.IDLE:
-                    # stop the vacuum by changing the run mode to idle
-                    await self.send_device_command(
-                        clusters.RvcRunMode.Commands.ChangeToMode(newMode=mode.mode)
-                    )
-                    return
+        mode = self._get_run_mode_by_tag(ModeTag.IDLE)
+        if mode is None:
+            raise HomeAssistantError(
+                "No supported run mode found to stop the vacuum cleaner."
+            )
+
+        await self.send_device_command(
+            clusters.RvcRunMode.Commands.ChangeToMode(newMode=mode.mode)
+        )
 
     async def async_return_to_base(self, **kwargs: Any) -> None:
         """Set the vacuum cleaner to return to the dock."""
@@ -110,14 +122,15 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         # We simply set the RvcRunMode to the first runmode
         # that has the cleaning tag to start the vacuum cleaner.
         # this is compatible with both Matter 1.2 and 1.3+ devices.
-        supported_run_modes = self._supported_run_modes or {}
-        for mode in supported_run_modes.values():
-            for tag in mode.modeTags:
-                if tag.value == ModeTag.CLEANING:
-                    await self.send_device_command(
-                        clusters.RvcRunMode.Commands.ChangeToMode(newMode=mode.mode)
-                    )
-                    return
+        mode = self._get_run_mode_by_tag(ModeTag.CLEANING)
+        if mode is None:
+            raise HomeAssistantError(
+                "No supported run mode found to start the vacuum cleaner."
+            )
+
+        await self.send_device_command(
+            clusters.RvcRunMode.Commands.ChangeToMode(newMode=mode.mode)
+        )
 
     async def async_pause(self) -> None:
         """Pause the cleaning task."""

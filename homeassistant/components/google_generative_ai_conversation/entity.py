@@ -2,15 +2,21 @@
 
 from __future__ import annotations
 
+import asyncio
 import codecs
 from collections.abc import AsyncGenerator, Callable
 from dataclasses import replace
-from typing import Any, cast
+import mimetypes
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, cast
 
+from google.genai import Client
 from google.genai.errors import APIError, ClientError
 from google.genai.types import (
     AutomaticFunctionCallingConfig,
     Content,
+    File,
+    FileState,
     FunctionDeclaration,
     GenerateContentConfig,
     GenerateContentResponse,
@@ -21,10 +27,12 @@ from google.genai.types import (
     Schema,
     Tool,
 )
+import voluptuous as vol
 from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.config_entries import ConfigSubentry
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
@@ -41,6 +49,7 @@ from .const import (
     CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
     DOMAIN,
+    FILE_POLLING_INTERVAL_SECONDS,
     LOGGER,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_HARM_BLOCK_THRESHOLD,
@@ -48,7 +57,11 @@ from .const import (
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_K,
     RECOMMENDED_TOP_P,
+    TIMEOUT_MILLIS,
 )
+
+if TYPE_CHECKING:
+    from . import GoogleGenerativeAIConfigEntry
 
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
@@ -303,7 +316,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: GoogleGenerativeAIConfigEntry,
         subentry: ConfigSubentry,
         default_model: str = RECOMMENDED_CHAT_MODEL,
     ) -> None:
@@ -324,6 +337,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
     async def _async_handle_chat_log(
         self,
         chat_log: conversation.ChatLog,
+        structure: vol.Schema | None = None,
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
@@ -402,6 +416,18 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         generateContentConfig.automatic_function_calling = (
             AutomaticFunctionCallingConfig(disable=True, maximum_remote_calls=None)
         )
+        if structure:
+            generateContentConfig.response_mime_type = "application/json"
+            generateContentConfig.response_schema = _format_schema(
+                convert(
+                    structure,
+                    custom_serializer=(
+                        chat_log.llm_api.custom_serializer
+                        if chat_log.llm_api
+                        else llm.selector_serializer
+                    ),
+                )
+            )
 
         if not supports_system_instruction:
             messages = [
@@ -415,6 +441,14 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         user_message = chat_log.content[-1]
         assert isinstance(user_message, conversation.UserContent)
         chat_request: str | list[Part] = user_message.content
+        if user_message.attachments:
+            files = await async_prepare_files_for_prompt(
+                self.hass,
+                self._genai_client,
+                [a.path for a in user_message.attachments],
+            )
+            chat_request = [chat_request, *files]
+
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
@@ -480,3 +514,68 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 ),
             ],
         )
+
+
+async def async_prepare_files_for_prompt(
+    hass: HomeAssistant, client: Client, files: list[Path]
+) -> list[File]:
+    """Upload files so they can be attached to a prompt.
+
+    Caller needs to ensure that the files are allowed.
+    """
+
+    def upload_files() -> list[File]:
+        prompt_parts: list[File] = []
+        for filename in files:
+            if not filename.exists():
+                raise HomeAssistantError(f"`{filename}` does not exist")
+            mimetype = mimetypes.guess_type(filename)[0]
+            prompt_parts.append(
+                client.files.upload(
+                    file=filename,
+                    config={
+                        "mime_type": mimetype,
+                        "display_name": filename.name,
+                    },
+                )
+            )
+        return prompt_parts
+
+    async def wait_for_file_processing(uploaded_file: File) -> None:
+        """Wait for file processing to complete."""
+        first = True
+        while uploaded_file.state in (
+            FileState.STATE_UNSPECIFIED,
+            FileState.PROCESSING,
+        ):
+            if first:
+                first = False
+            else:
+                LOGGER.debug(
+                    "Waiting for file `%s` to be processed, current state: %s",
+                    uploaded_file.name,
+                    uploaded_file.state,
+                )
+                await asyncio.sleep(FILE_POLLING_INTERVAL_SECONDS)
+
+            uploaded_file = await client.aio.files.get(
+                name=uploaded_file.name,
+                config={"http_options": {"timeout": TIMEOUT_MILLIS}},
+            )
+
+        if uploaded_file.state == FileState.FAILED:
+            raise HomeAssistantError(
+                f"File `{uploaded_file.name}` processing failed, reason: {uploaded_file.error.message}"
+            )
+
+    prompt_parts = await hass.async_add_executor_job(upload_files)
+
+    tasks = [
+        asyncio.create_task(wait_for_file_processing(part))
+        for part in prompt_parts
+        if part.state != FileState.ACTIVE
+    ]
+    async with asyncio.timeout(TIMEOUT_MILLIS / 1000):
+        await asyncio.gather(*tasks)
+
+    return prompt_parts

@@ -8,6 +8,7 @@ import logging
 from typing import Any
 
 import ollama
+import voluptuous as vol
 from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
@@ -105,9 +106,18 @@ def _convert_content(
             ],
         )
     if isinstance(chat_content, conversation.UserContent):
+        images: list[ollama.Image] = []
+        for attachment in chat_content.attachments or ():
+            if not attachment.mime_type.startswith("image/"):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="unsupported_attachment_type",
+                )
+            images.append(ollama.Image(value=attachment.path))
         return ollama.Message(
             role=MessageRole.USER.value,
             content=chat_content.content,
+            images=images or None,
         )
     if isinstance(chat_content, conversation.SystemContent):
         return ollama.Message(
@@ -160,11 +170,13 @@ async def _transform_stream(
 class OllamaBaseLLMEntity(Entity):
     """Ollama base LLM entity."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, entry: OllamaConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the entity."""
         self.entry = entry
         self.subentry = subentry
-        self._attr_name = subentry.title
         self._attr_unique_id = subentry.subentry_id
 
         model, _, version = subentry.data[CONF_MODEL].partition(":")
@@ -180,6 +192,7 @@ class OllamaBaseLLMEntity(Entity):
     async def _async_handle_chat_log(
         self,
         chat_log: conversation.ChatLog,
+        structure: vol.Schema | None = None,
     ) -> None:
         """Generate an answer for the chat log."""
         settings = {**self.entry.data, **self.subentry.data}
@@ -200,6 +213,17 @@ class OllamaBaseLLMEntity(Entity):
         max_messages = int(settings.get(CONF_MAX_HISTORY, DEFAULT_MAX_HISTORY))
         self._trim_history(message_history, max_messages)
 
+        output_format: dict[str, Any] | None = None
+        if structure:
+            output_format = convert(
+                structure,
+                custom_serializer=(
+                    chat_log.llm_api.custom_serializer
+                    if chat_log.llm_api
+                    else llm.selector_serializer
+                ),
+            )
+
         # Get response
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
@@ -214,6 +238,7 @@ class OllamaBaseLLMEntity(Entity):
                     keep_alive=f"{settings.get(CONF_KEEP_ALIVE, DEFAULT_KEEP_ALIVE)}s",
                     options={CONF_NUM_CTX: settings.get(CONF_NUM_CTX, DEFAULT_NUM_CTX)},
                     think=settings.get(CONF_THINK),
+                    format=output_format,
                 )
             except (ollama.RequestError, ollama.ResponseError) as err:
                 _LOGGER.error("Unexpected error talking to Ollama server: %s", err)
