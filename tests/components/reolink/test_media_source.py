@@ -89,7 +89,7 @@ async def test_platform_loads_before_config_entry(
 
 async def test_resolve(
     hass: HomeAssistant,
-    reolink_connect: MagicMock,
+    reolink_host: MagicMock,
     config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -99,7 +99,7 @@ async def test_resolve(
     caplog.set_level(logging.DEBUG)
 
     file_id = f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}|{TEST_START}|{TEST_END}"
-    reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE_MP4, TEST_URL)
+    reolink_host.get_vod_source.return_value = (TEST_MIME_TYPE_MP4, TEST_URL)
 
     play_media = await async_resolve_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
@@ -107,14 +107,14 @@ async def test_resolve(
     assert play_media.mime_type == TEST_MIME_TYPE_MP4
 
     file_id = f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME_MP4}|{TEST_START}|{TEST_END}"
-    reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE_MP4, TEST_URL2)
+    reolink_host.get_vod_source.return_value = (TEST_MIME_TYPE_MP4, TEST_URL2)
 
     play_media = await async_resolve_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
     )
     assert play_media.mime_type == TEST_MIME_TYPE_MP4
 
-    reolink_connect.is_nvr = False
+    reolink_host.is_nvr = False
 
     play_media = await async_resolve_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
@@ -122,7 +122,7 @@ async def test_resolve(
     assert play_media.mime_type == TEST_MIME_TYPE_MP4
 
     file_id = f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}|{TEST_START}|{TEST_END}"
-    reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE, TEST_URL)
+    reolink_host.get_vod_source.return_value = (TEST_MIME_TYPE, TEST_URL)
 
     play_media = await async_resolve_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
@@ -132,16 +132,16 @@ async def test_resolve(
 
 async def test_browsing(
     hass: HomeAssistant,
-    reolink_connect: MagicMock,
+    reolink_host: MagicMock,
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test browsing the Reolink three."""
     entry_id = config_entry.entry_id
-    reolink_connect.supported.return_value = 1
-    reolink_connect.model = "Reolink TrackMix PoE"
-    reolink_connect.is_nvr = False
+    reolink_host.supported.return_value = 1
+    reolink_host.model = "Reolink TrackMix PoE"
+    reolink_host.is_nvr = False
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
         assert await hass.config_entries.async_setup(entry_id) is True
@@ -184,7 +184,7 @@ async def test_browsing(
     mock_status.year = TEST_YEAR
     mock_status.month = TEST_MONTH
     mock_status.days = (TEST_DAY, TEST_DAY2)
-    reolink_connect.request_vod_files.return_value = ([mock_status], [])
+    reolink_host.request_vod_files.return_value = ([mock_status], [])
 
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_sub_id}")
     assert browse.domain == DOMAIN
@@ -223,7 +223,7 @@ async def test_browsing(
     mock_vod_file.duration = timedelta(minutes=5)
     mock_vod_file.file_name = TEST_FILE_NAME
     mock_vod_file.triggers = VOD_trigger.PERSON
-    reolink_connect.request_vod_files.return_value = ([mock_status], [mock_vod_file])
+    reolink_host.request_vod_files.return_value = ([mock_status], [mock_vod_file])
 
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_day_0_id}")
 
@@ -236,7 +236,7 @@ async def test_browsing(
     )
     assert browse.identifier == browse_files_id
     assert browse.children[0].identifier == browse_file_id
-    reolink_connect.request_vod_files.assert_called_with(
+    reolink_host.request_vod_files.assert_called_with(
         int(TEST_CHANNEL),
         TEST_START_TIME,
         TEST_END_TIME,
@@ -245,10 +245,10 @@ async def test_browsing(
         trigger=None,
     )
 
-    reolink_connect.model = TEST_HOST_MODEL
+    reolink_host.model = TEST_HOST_MODEL
 
     # browse event trigger person on a NVR
-    reolink_connect.is_nvr = True
+    reolink_host.is_nvr = True
     browse_event_person_id = f"EVE|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}|{VOD_trigger.PERSON.name}"
 
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_day_0_id}")
@@ -265,7 +265,7 @@ async def test_browsing(
     )
     assert browse.identifier == browse_files_id
     assert browse.children[0].identifier == browse_file_id
-    reolink_connect.request_vod_files.assert_called_with(
+    reolink_host.request_vod_files.assert_called_with(
         int(TEST_CHANNEL),
         TEST_START_TIME,
         TEST_END_TIME,
@@ -274,16 +274,15 @@ async def test_browsing(
         trigger=VOD_trigger.PERSON,
     )
 
-    reolink_connect.is_nvr = False
-
 
 async def test_browsing_h265_encoding(
     hass: HomeAssistant,
-    reolink_connect: MagicMock,
+    reolink_host: MagicMock,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test browsing a Reolink camera with h265 stream encoding."""
     entry_id = config_entry.entry_id
+    reolink_host.is_nvr = True
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
         assert await hass.config_entries.async_setup(entry_id) is True
@@ -295,10 +294,10 @@ async def test_browsing_h265_encoding(
     mock_status.year = TEST_YEAR
     mock_status.month = TEST_MONTH
     mock_status.days = (TEST_DAY, TEST_DAY2)
-    reolink_connect.request_vod_files.return_value = ([mock_status], [])
-    reolink_connect.time.return_value = None
-    reolink_connect.get_encoding.return_value = "h265"
-    reolink_connect.supported.return_value = False
+    reolink_host.request_vod_files.return_value = ([mock_status], [])
+    reolink_host.time.return_value = None
+    reolink_host.get_encoding.return_value = "h265"
+    reolink_host.supported.return_value = False
 
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_root_id}")
 
@@ -330,7 +329,7 @@ async def test_browsing_h265_encoding(
 
 async def test_browsing_rec_playback_unsupported(
     hass: HomeAssistant,
-    reolink_connect: MagicMock,
+    reolink_host: MagicMock,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test browsing a Reolink camera which does not support playback of recordings."""
@@ -341,7 +340,7 @@ async def test_browsing_rec_playback_unsupported(
             return False
         return True
 
-    reolink_connect.supported = test_supported
+    reolink_host.supported = test_supported
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -355,12 +354,10 @@ async def test_browsing_rec_playback_unsupported(
     assert browse.identifier is None
     assert browse.children == []
 
-    reolink_connect.supported = lambda ch, key: True  # Reset supported function
-
 
 async def test_browsing_errors(
     hass: HomeAssistant,
-    reolink_connect: MagicMock,
+    reolink_host: MagicMock,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test browsing a Reolink camera errors."""
@@ -377,7 +374,7 @@ async def test_browsing_errors(
 
 async def test_browsing_not_loaded(
     hass: HomeAssistant,
-    reolink_connect: MagicMock,
+    reolink_host: MagicMock,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test browsing a Reolink camera integration which is not loaded."""
@@ -385,7 +382,7 @@ async def test_browsing_not_loaded(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    reolink_connect.get_host_data.side_effect = ReolinkError("Test error")
+    reolink_host.get_host_data.side_effect = ReolinkError("Test error")
     config_entry2 = MockConfigEntry(
         domain=DOMAIN,
         unique_id=format_mac(TEST_MAC2),
@@ -413,5 +410,3 @@ async def test_browsing_not_loaded(
     assert browse.title == "Reolink"
     assert browse.identifier is None
     assert len(browse.children) == 1
-
-    reolink_connect.get_host_data.side_effect = None

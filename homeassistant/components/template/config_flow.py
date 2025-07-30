@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.button import ButtonDeviceClass
+from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASS_STATE_CLASSES,
@@ -30,6 +31,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import section
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, selector
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -53,7 +55,32 @@ from .alarm_control_panel import (
     async_create_preview_alarm_control_panel,
 )
 from .binary_sensor import async_create_preview_binary_sensor
-from .const import CONF_PRESS, CONF_TURN_OFF, CONF_TURN_ON, DOMAIN
+from .const import (
+    CONF_ADVANCED_OPTIONS,
+    CONF_AVAILABILITY,
+    CONF_PRESS,
+    CONF_TURN_OFF,
+    CONF_TURN_ON,
+    DOMAIN,
+)
+from .cover import (
+    CLOSE_ACTION,
+    CONF_OPEN_AND_CLOSE,
+    CONF_POSITION,
+    OPEN_ACTION,
+    POSITION_ACTION,
+    STOP_ACTION,
+    async_create_preview_cover,
+)
+from .light import (
+    CONF_HS,
+    CONF_HS_ACTION,
+    CONF_LEVEL,
+    CONF_LEVEL_ACTION,
+    CONF_TEMPERATURE,
+    CONF_TEMPERATURE_ACTION,
+    async_create_preview_light,
+)
 from .number import (
     CONF_MAX,
     CONF_MIN,
@@ -135,10 +162,42 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                 )
             }
 
+    if domain == Platform.COVER:
+        schema |= _SCHEMA_STATE | {
+            vol.Inclusive(OPEN_ACTION, CONF_OPEN_AND_CLOSE): selector.ActionSelector(),
+            vol.Inclusive(CLOSE_ACTION, CONF_OPEN_AND_CLOSE): selector.ActionSelector(),
+            vol.Optional(STOP_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_POSITION): selector.TemplateSelector(),
+            vol.Optional(POSITION_ACTION): selector.ActionSelector(),
+        }
+        if flow_type == "config":
+            schema |= {
+                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[cls.value for cls in CoverDeviceClass],
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                        translation_key="cover_device_class",
+                        sort=True,
+                    ),
+                )
+            }
+
     if domain == Platform.IMAGE:
         schema |= {
             vol.Required(CONF_URL): selector.TemplateSelector(),
             vol.Optional(CONF_VERIFY_SSL, default=True): selector.BooleanSelector(),
+        }
+
+    if domain == Platform.LIGHT:
+        schema |= _SCHEMA_STATE | {
+            vol.Required(CONF_TURN_ON): selector.ActionSelector(),
+            vol.Required(CONF_TURN_OFF): selector.ActionSelector(),
+            vol.Optional(CONF_LEVEL): selector.TemplateSelector(),
+            vol.Optional(CONF_LEVEL_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_HS): selector.TemplateSelector(),
+            vol.Optional(CONF_HS_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_TEMPERATURE): selector.TemplateSelector(),
+            vol.Optional(CONF_TEMPERATURE_ACTION): selector.ActionSelector(),
         }
 
     if domain == Platform.NUMBER:
@@ -214,7 +273,17 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(CONF_TURN_OFF): selector.ActionSelector(),
         }
 
-    schema[vol.Optional(CONF_DEVICE_ID)] = selector.DeviceSelector()
+    schema |= {
+        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
+        vol.Optional(CONF_ADVANCED_OPTIONS): section(
+            vol.Schema(
+                {
+                    vol.Optional(CONF_AVAILABILITY): selector.TemplateSelector(),
+                }
+            ),
+            {"collapsed": True},
+        ),
+    }
 
     return vol.Schema(schema)
 
@@ -306,14 +375,16 @@ def validate_user_input(
 
 
 TEMPLATE_TYPES = [
-    "alarm_control_panel",
-    "binary_sensor",
-    "button",
-    "image",
-    "number",
-    "select",
-    "sensor",
-    "switch",
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.COVER,
+    Platform.IMAGE,
+    Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 CONFIG_FLOW = {
@@ -332,10 +403,20 @@ CONFIG_FLOW = {
         config_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
     ),
+    Platform.COVER: SchemaFlowFormStep(
+        config_schema(Platform.COVER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.COVER),
+    ),
     Platform.IMAGE: SchemaFlowFormStep(
         config_schema(Platform.IMAGE),
         preview="template",
         validate_user_input=validate_user_input(Platform.IMAGE),
+    ),
+    Platform.LIGHT: SchemaFlowFormStep(
+        config_schema(Platform.LIGHT),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.LIGHT),
     ),
     Platform.NUMBER: SchemaFlowFormStep(
         config_schema(Platform.NUMBER),
@@ -376,10 +457,20 @@ OPTIONS_FLOW = {
         options_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
     ),
+    Platform.COVER: SchemaFlowFormStep(
+        options_schema(Platform.COVER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.COVER),
+    ),
     Platform.IMAGE: SchemaFlowFormStep(
         options_schema(Platform.IMAGE),
         preview="template",
         validate_user_input=validate_user_input(Platform.IMAGE),
+    ),
+    Platform.LIGHT: SchemaFlowFormStep(
+        options_schema(Platform.LIGHT),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.LIGHT),
     ),
     Platform.NUMBER: SchemaFlowFormStep(
         options_schema(Platform.NUMBER),
@@ -409,6 +500,8 @@ CREATE_PREVIEW_ENTITY: dict[
 ] = {
     Platform.ALARM_CONTROL_PANEL: async_create_preview_alarm_control_panel,
     Platform.BINARY_SENSOR: async_create_preview_binary_sensor,
+    Platform.COVER: async_create_preview_cover,
+    Platform.LIGHT: async_create_preview_light,
     Platform.NUMBER: async_create_preview_number,
     Platform.SELECT: async_create_preview_select,
     Platform.SENSOR: async_create_preview_sensor,
@@ -530,7 +623,11 @@ def ws_start_preview(
         )
         return
 
-    preview_entity = CREATE_PREVIEW_ENTITY[template_type](hass, name, msg["user_input"])
+    config: dict = msg["user_input"]
+    advanced_options = config.pop(CONF_ADVANCED_OPTIONS, {})
+    preview_entity = CREATE_PREVIEW_ENTITY[template_type](
+        hass, name, {**config, **advanced_options}
+    )
     preview_entity.hass = hass
     preview_entity.registry_entry = entity_registry_entry
 

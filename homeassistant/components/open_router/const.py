@@ -2,13 +2,12 @@
 
 import logging
 
-from homeassistant.const import CONF_LLM_HASS_API
+from homeassistant.const import CONF_LLM_HASS_API, CONF_PROMPT
 from homeassistant.helpers import llm
 
 DOMAIN = "open_router"
 LOGGER = logging.getLogger(__package__)
 
-CONF_PROMPT = "prompt"
 CONF_RECOMMENDED = "recommended"
 
 RECOMMENDED_CONVERSATION_OPTIONS = {
