@@ -9,10 +9,11 @@ from yarl import URL
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
+
+from tests.common import MockConfigEntry
 
 
 async def test_firmware_update_coordinator_fetching(
@@ -21,7 +22,7 @@ async def test_firmware_update_coordinator_fetching(
     """Test the firmware update coordinator loads manifests."""
     session = async_get_clientsession(hass)
 
-    mock_config_entry = Mock(spec=ConfigEntry)
+    mock_config_entry = MockConfigEntry()
 
     manifest = FirmwareManifest(
         url=URL("https://example.org/firmware"),
@@ -38,7 +39,7 @@ async def test_firmware_update_coordinator_fetching(
         return_value=mock_client,
     ):
         coordinator = FirmwareUpdateCoordinator(
-            hass, session, "https://example.org/firmware", mock_config_entry
+            hass, mock_config_entry, session, "https://example.org/firmware"
         )
 
     listener = Mock()

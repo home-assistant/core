@@ -28,9 +28,9 @@ class FirmwareUpdateCoordinator(DataUpdateCoordinator[FirmwareManifest]):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         session: ClientSession,
         url: str,
-        config_entry: ConfigEntry,
     ) -> None:
         """Initialize the firmware update coordinator."""
         super().__init__(

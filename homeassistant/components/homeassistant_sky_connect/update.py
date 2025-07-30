@@ -124,9 +124,9 @@ def _async_create_update_entity(
         config_entry=config_entry,
         update_coordinator=FirmwareUpdateCoordinator(
             hass,
+            config_entry,
             session,
             NABU_CASA_FIRMWARE_RELEASES_URL,
-            config_entry,
         ),
         entity_description=entity_description,
     )
