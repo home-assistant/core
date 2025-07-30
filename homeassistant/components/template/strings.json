@@ -80,6 +80,57 @@
         },
         "title": "Template button"
       },
+      "cover": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "device_class": "[%key:component::template::common::device_class%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "state": "[%key:component::template::common::state%]",
+          "open_cover": "Actions on open",
+          "close_cover": "Actions on close",
+          "stop_cover": "Actions on stop",
+          "position": "Position",
+          "set_cover_position": "Actions on set position"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "state": "Defines a template to get the state of the cover. Valid output values from the template are `open`, `opening`, `closing` and `closed` which are directly mapped to the corresponding states.  If both a state and a position are specified, only `opening` and `closing` are set from the state template.",
+          "open_cover": "Defines actions to run when the cover is opened.",
+          "close_cover": "Defines actions to run when the cover is closed.",
+          "stop_cover": "Defines actions to run when the cover is stopped.",
+          "position": "Defines a template to get the position of the cover. Value values are numbers between `0` (`closed`) and `100` (`open`).",
+          "set_cover_position": "Defines actions to run when the cover is given a `set_cover_position` command."
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::common::advanced_options%]",
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            }
+          }
+        },
+        "title": "Template cover"
+      },
+      "image": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::common::advanced_options%]",
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            }
+          }
+        },
+        "title": "Template image"
+      },
       "light": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
@@ -106,26 +157,6 @@
           }
         },
         "title": "Template light"
-      },
-      "image": {
-        "data": {
-          "device_id": "[%key:common::config_flow::data::device%]",
-          "name": "[%key:common::config_flow::data::name%]",
-          "url": "[%key:common::config_flow::data::url%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
-        },
-        "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
-        },
-        "sections": {
-          "advanced_options": {
-            "name": "[%key:component::template::common::advanced_options%]",
-            "data": {
-              "availability": "[%key:component::template::common::availability%]"
-            }
-          }
-        },
-        "title": "Template image"
       },
       "number": {
         "data": {
@@ -200,6 +231,7 @@
           "alarm_control_panel": "Template an alarm control panel",
           "binary_sensor": "Template a binary sensor",
           "button": "Template a button",
+          "cover": "Template a cover",
           "image": "Template an image",
           "light": "Template a light",
           "number": "Template a number",
@@ -298,6 +330,55 @@
         },
         "title": "[%key:component::template::config::step::button::title%]"
       },
+
+      "cover": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "state": "[%key:component::template::common::state%]",
+          "open_cover": "[%key:component::template::config::step::cover::data::open_cover%]",
+          "close_cover": "[%key:component::template::config::step::cover::data::close_cover%]",
+          "stop_cover": "[%key:component::template::config::step::cover::data::stop_cover%]",
+          "position": "[%key:component::template::config::step::cover::data::position%]",
+          "set_cover_position": "[%key:component::template::config::step::cover::data::set_cover_position%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "state": "[%key:component::template::config::step::cover::data_description::state%]",
+          "open_cover": "[%key:component::template::config::step::cover::data_description::open_cover%]",
+          "close_cover": "[%key:component::template::config::step::cover::data_description::close_cover%]",
+          "stop_cover": "[%key:component::template::config::step::cover::data_description::stop_cover%]",
+          "position": "[%key:component::template::config::step::cover::data_description::position%]",
+          "set_cover_position": "[%key:component::template::config::step::cover::data_description::set_cover_position%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::common::advanced_options%]",
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            }
+          }
+        },
+        "title": "[%key:component::template::config::step::cover::title%]"
+      },
+      "image": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::common::advanced_options%]",
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            }
+          }
+        },
+        "title": "[%key:component::template::config::step::image::title%]"
+      },
       "light": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
@@ -324,25 +405,6 @@
           }
         },
         "title": "[%key:component::template::config::step::light::title%]"
-      },
-      "image": {
-        "data": {
-          "device_id": "[%key:common::config_flow::data::device%]",
-          "url": "[%key:common::config_flow::data::url%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
-        },
-        "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
-        },
-        "sections": {
-          "advanced_options": {
-            "name": "[%key:component::template::common::advanced_options%]",
-            "data": {
-              "availability": "[%key:component::template::common::availability%]"
-            }
-          }
-        },
-        "title": "[%key:component::template::config::step::image::title%]"
       },
       "number": {
         "data": {
@@ -478,6 +540,20 @@
         "identify": "[%key:component::button::entity_component::identify::name%]",
         "restart": "[%key:common::action::restart%]",
         "update": "[%key:component::button::entity_component::update::name%]"
+      }
+    },
+    "cover_device_class": {
+      "options": {
+        "awning": "[%key:component::cover::entity_component::awning::name%]",
+        "blind": "[%key:component::cover::entity_component::blind::name%]",
+        "curtain": "[%key:component::cover::entity_component::curtain::name%]",
+        "damper": "[%key:component::cover::entity_component::damper::name%]",
+        "door": "[%key:component::cover::entity_component::door::name%]",
+        "garage": "[%key:component::cover::entity_component::garage::name%]",
+        "gate": "[%key:component::cover::entity_component::gate::name%]",
+        "shade": "[%key:component::cover::entity_component::shade::name%]",
+        "shutter": "[%key:component::cover::entity_component::shutter::name%]",
+        "window": "[%key:component::cover::entity_component::window::name%]"
       }
     },
     "sensor_device_class": {
