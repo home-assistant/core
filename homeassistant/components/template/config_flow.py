@@ -67,11 +67,9 @@ from .cover import (
     CLOSE_ACTION,
     CONF_OPEN_AND_CLOSE,
     CONF_POSITION,
-    CONF_TILT,
     OPEN_ACTION,
     POSITION_ACTION,
     STOP_ACTION,
-    TILT_ACTION,
     async_create_preview_cover,
 )
 from .number import (
@@ -162,8 +160,6 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(STOP_ACTION): selector.ActionSelector(),
             vol.Optional(CONF_POSITION): selector.TemplateSelector(),
             vol.Optional(POSITION_ACTION): selector.ActionSelector(),
-            vol.Optional(CONF_TILT): selector.TemplateSelector(),
-            vol.Optional(TILT_ACTION): selector.ActionSelector(),
         }
         if flow_type == "config":
             schema |= {

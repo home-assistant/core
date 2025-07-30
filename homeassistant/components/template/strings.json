@@ -90,12 +90,16 @@
           "close_cover": "Actions on close",
           "stop_cover": "Actions on stop",
           "position": "Position",
-          "set_cover_position": "Actions on set position",
-          "tilt": "Tilt position",
-          "set_cover_tilt_position": "Actions on set tilt position"
+          "set_cover_position": "Actions on set position"
         },
         "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "state": "Defines a template to get the state of the cover. Valid output values from the template are `open`, `opening`, `closing` and `closed` which are directly mapped to the corresponding states.  If both a state and a position are specified, only `opening` and `closing` are set from the state template.",
+          "open_cover": "Defines actions to run when the cover is opened.",
+          "close_cover": "Defines actions to run when the cover is closed.",
+          "stop_cover": "Defines actions to run when the cover is stopped.",
+          "position": "Defines a template to get the position of the cover. Value values are numbers between `0` (`closed`) and `100` (`open`).",
+          "set_cover_position": "Defines actions to run when the cover is given a `set_cover_position` command."
         },
         "sections": {
           "advanced_options": {
@@ -307,12 +311,16 @@
           "close_cover": "[%key:component::template::config::step::cover::data::close_cover%]",
           "stop_cover": "[%key:component::template::config::step::cover::data::stop_cover%]",
           "position": "[%key:component::template::config::step::cover::data::position%]",
-          "set_cover_position": "[%key:component::template::config::step::cover::data::set_cover_position%]",
-          "tilt": "[%key:component::template::config::step::cover::data::tilt%]",
-          "set_cover_tilt_position": "[%key:component::template::config::step::cover::data::set_cover_tilt_position%]"
+          "set_cover_position": "[%key:component::template::config::step::cover::data::set_cover_position%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "state": "[%key:component::template::config::step::cover::data_description::state%]",
+          "open_cover": "[%key:component::template::config::step::cover::data_description::open_cover%]",
+          "close_cover": "[%key:component::template::config::step::cover::data_description::close_cover%]",
+          "stop_cover": "[%key:component::template::config::step::cover::data_description::stop_cover%]",
+          "position": "[%key:component::template::config::step::cover::data_description::position%]",
+          "set_cover_position": "[%key:component::template::config::step::cover::data_description::set_cover_position%]"
         },
         "sections": {
           "advanced_options": {
