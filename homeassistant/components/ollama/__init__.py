@@ -28,6 +28,7 @@ from .const import (
     CONF_NUM_CTX,
     CONF_PROMPT,
     CONF_THINK,
+    DEFAULT_AI_TASK_NAME,
     DEFAULT_NAME,
     DEFAULT_TIMEOUT,
     DOMAIN,
@@ -47,7 +48,7 @@ __all__ = [
 ]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-PLATFORMS = (Platform.CONVERSATION,)
+PLATFORMS = (Platform.AI_TASK, Platform.CONVERSATION)
 
 type OllamaConfigEntry = ConfigEntry[ollama.AsyncClient]
 
@@ -70,6 +71,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> bo
 
     entry.runtime_data = client
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    entry.async_on_unload(entry.add_update_listener(async_update_options))
+
     return True
 
 
@@ -78,6 +82,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False
     return True
+
+
+async def async_update_options(hass: HomeAssistant, entry: OllamaConfigEntry) -> None:
+    """Update options."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_migrate_integration(hass: HomeAssistant) -> None:
@@ -110,6 +119,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
         parent_entry = api_keys_entries[entry.data[CONF_URL]]
 
         hass.config_entries.async_add_subentry(parent_entry, subentry)
+
         conversation_entity = entity_registry.async_get_entity_id(
             "conversation",
             DOMAIN,
@@ -199,6 +209,31 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OllamaConfigEntry) -> 
             version=3,
             minor_version=1,
         )
+
+    if entry.version == 3 and entry.minor_version == 1:
+        # Add AI Task subentry with default options. We can only create a new
+        # subentry if we can find an existing model in the entry. The model
+        # was removed in the previous migration step, so we need to
+        # check the subentries for an existing model.
+        existing_model = next(
+            iter(
+                model
+                for subentry in entry.subentries.values()
+                if (model := subentry.data.get(CONF_MODEL)) is not None
+            ),
+            None,
+        )
+        if existing_model:
+            hass.config_entries.async_add_subentry(
+                entry,
+                ConfigSubentry(
+                    data=MappingProxyType({CONF_MODEL: existing_model}),
+                    subentry_type="ai_task_data",
+                    title=DEFAULT_AI_TASK_NAME,
+                    unique_id=None,
+                ),
+            )
+        hass.config_entries.async_update_entry(entry, minor_version=2)
 
     _LOGGER.debug(
         "Migration to version %s:%s successful", entry.version, entry.minor_version

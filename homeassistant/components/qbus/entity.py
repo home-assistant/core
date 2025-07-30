@@ -48,11 +48,8 @@ def add_new_outputs(
 
 def format_ref_id(ref_id: str) -> str | None:
     """Format the Qbus ref_id."""
-    matches: list[str] = re.findall(_REFID_REGEX, ref_id)
-
-    if len(matches) > 0:
-        if ref_id := matches[0]:
-            return ref_id.replace("/", "-")
+    if match := _REFID_REGEX.search(ref_id):
+        return match.group(1).replace("/", "-")
 
     return None
 

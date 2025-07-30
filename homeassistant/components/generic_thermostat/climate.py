@@ -48,7 +48,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import ConditionError
 from homeassistant.helpers import condition, config_validation as cv
-from homeassistant.helpers.device import async_device_info_to_link_from_entity
+from homeassistant.helpers.device import async_entity_id_to_device
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -182,23 +182,23 @@ async def _async_setup_config(
         [
             GenericThermostat(
                 hass,
-                name,
-                heater_entity_id,
-                sensor_entity_id,
-                min_temp,
-                max_temp,
-                target_temp,
-                ac_mode,
-                min_cycle_duration,
-                cold_tolerance,
-                hot_tolerance,
-                keep_alive,
-                initial_hvac_mode,
-                presets,
-                precision,
-                target_temperature_step,
-                unit,
-                unique_id,
+                name=name,
+                heater_entity_id=heater_entity_id,
+                sensor_entity_id=sensor_entity_id,
+                min_temp=min_temp,
+                max_temp=max_temp,
+                target_temp=target_temp,
+                ac_mode=ac_mode,
+                min_cycle_duration=min_cycle_duration,
+                cold_tolerance=cold_tolerance,
+                hot_tolerance=hot_tolerance,
+                keep_alive=keep_alive,
+                initial_hvac_mode=initial_hvac_mode,
+                presets=presets,
+                precision=precision,
+                target_temperature_step=target_temperature_step,
+                unit=unit,
+                unique_id=unique_id,
             )
         ]
     )
@@ -212,6 +212,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     def __init__(
         self,
         hass: HomeAssistant,
+        *,
         name: str,
         heater_entity_id: str,
         sensor_entity_id: str,
@@ -234,7 +235,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         self._attr_name = name
         self.heater_entity_id = heater_entity_id
         self.sensor_entity_id = sensor_entity_id
-        self._attr_device_info = async_device_info_to_link_from_entity(
+        self.device_entry = async_entity_id_to_device(
             hass,
             heater_entity_id,
         )

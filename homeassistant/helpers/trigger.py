@@ -8,6 +8,7 @@ from collections import defaultdict
 from collections.abc import Callable, Coroutine, Iterable
 from dataclasses import dataclass, field
 import functools
+import inspect
 import logging
 from typing import TYPE_CHECKING, Any, Protocol, TypedDict, cast
 
@@ -18,6 +19,7 @@ from homeassistant.const import (
     CONF_ENABLED,
     CONF_ID,
     CONF_PLATFORM,
+    CONF_SELECTOR,
     CONF_VARIABLES,
 )
 from homeassistant.core import (
@@ -40,8 +42,9 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
 from homeassistant.util.yaml.loader import JSON_TYPE
 
-from . import config_validation as cv
+from . import config_validation as cv, selector
 from .integration_platform import async_process_integration_platforms
+from .selector import TargetSelector
 from .template import Template
 from .typing import ConfigType, TemplateVarsType
 
@@ -72,12 +75,15 @@ TRIGGERS: HassKey[dict[str, str]] = HassKey("triggers")
 # Basic schemas to sanity check the trigger descriptions,
 # full validation is done by hassfest.triggers
 _FIELD_SCHEMA = vol.Schema(
-    {},
+    {
+        vol.Optional(CONF_SELECTOR): selector.validate_selector,
+    },
     extra=vol.ALLOW_EXTRA,
 )
 
 _TRIGGER_SCHEMA = vol.Schema(
     {
+        vol.Optional("target"): vol.Any(TargetSelector.CONFIG_SCHEMA, None),
         vol.Optional("fields"): vol.Schema({str: _FIELD_SCHEMA}),
     },
     extra=vol.ALLOW_EXTRA,
@@ -147,11 +153,15 @@ async def _register_trigger_platform(
         )
         return
 
-    tasks: list[asyncio.Task[None]] = [
-        create_eager_task(listener(new_triggers))
-        for listener in hass.data[TRIGGER_PLATFORM_SUBSCRIPTIONS]
-    ]
-    await asyncio.gather(*tasks)
+    # We don't use gather here because gather adds additional overhead
+    # when wrapping each coroutine in a task, and we expect our listeners
+    # to call trigger.async_get_all_descriptions which will only yield
+    # the first time it's called, after that it returns cached data.
+    for listener in hass.data[TRIGGER_PLATFORM_SUBSCRIPTIONS]:
+        try:
+            await listener(new_triggers)
+        except Exception:
+            _LOGGER.exception("Error while notifying trigger platform listener")
 
 
 class Trigger(abc.ABC):
@@ -403,7 +413,7 @@ def _trigger_action_wrapper(
         check_func = check_func.func
 
     wrapper_func: Callable[..., Any] | Callable[..., Coroutine[Any, Any, Any]]
-    if asyncio.iscoroutinefunction(check_func):
+    if inspect.iscoroutinefunction(check_func):
         async_action = cast(Callable[..., Coroutine[Any, Any, Any]], action)
 
         @functools.wraps(async_action)

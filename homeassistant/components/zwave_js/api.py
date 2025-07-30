@@ -7,7 +7,7 @@ from collections.abc import Callable, Coroutine
 from contextlib import suppress
 import dataclasses
 from functools import partial, wraps
-from typing import Any, Concatenate, Literal, cast
+from typing import TYPE_CHECKING, Any, Concatenate, Literal, cast
 
 from aiohttp import web, web_exceptions, web_request
 import voluptuous as vol
@@ -70,7 +70,7 @@ from homeassistant.components.websocket_api import (
     ERR_UNKNOWN_ERROR,
     ActiveConnection,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -86,7 +86,6 @@ from .const import (
     ATTR_WAIT_FOR_RESULT,
     CONF_DATA_COLLECTION_OPTED_IN,
     CONF_INSTALLER_MODE,
-    DATA_CLIENT,
     DOMAIN,
     DRIVER_READY_TIMEOUT,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
@@ -101,6 +100,10 @@ from .helpers import (
     async_get_version_info,
     get_device_id,
 )
+
+if TYPE_CHECKING:
+    from .models import ZwaveJSConfigEntry
+
 
 DATA_UNSUBSCRIBE = "unsubs"
 
@@ -254,7 +257,7 @@ async def _async_get_entry(
     connection: ActiveConnection,
     msg: dict[str, Any],
     entry_id: str,
-) -> tuple[ConfigEntry, Client, Driver] | tuple[None, None, None]:
+) -> tuple[ZwaveJSConfigEntry, Client, Driver] | tuple[None, None, None]:
     """Get config entry and client from message data."""
     entry = hass.config_entries.async_get_entry(entry_id)
     if entry is None:
@@ -269,7 +272,7 @@ async def _async_get_entry(
         )
         return None, None, None
 
-    client: Client = entry.runtime_data[DATA_CLIENT]
+    client = entry.runtime_data.client
 
     if client.driver is None:
         connection.send_error(
@@ -284,7 +287,14 @@ async def _async_get_entry(
 
 def async_get_entry(
     orig_func: Callable[
-        [HomeAssistant, ActiveConnection, dict[str, Any], ConfigEntry, Client, Driver],
+        [
+            HomeAssistant,
+            ActiveConnection,
+            dict[str, Any],
+            ZwaveJSConfigEntry,
+            Client,
+            Driver,
+        ],
         Coroutine[Any, Any, None],
     ],
 ) -> Callable[
@@ -726,7 +736,7 @@ async def websocket_add_node(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -903,7 +913,7 @@ async def websocket_cancel_secure_bootstrap_s2(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -926,7 +936,7 @@ async def websocket_subscribe_s2_inclusion(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -979,7 +989,7 @@ async def websocket_grant_security_classes(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -1007,7 +1017,7 @@ async def websocket_validate_dsk_and_enter_pin(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -1077,7 +1087,7 @@ async def websocket_provision_smart_start_node(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -1162,7 +1172,7 @@ async def websocket_unprovision_smart_start_node(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -1212,7 +1222,7 @@ async def websocket_get_provisioning_entries(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -1236,7 +1246,7 @@ async def websocket_parse_qr_code_string(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -1262,7 +1272,7 @@ async def websocket_try_parse_dsk_from_qr_code_string(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -1291,7 +1301,7 @@ async def websocket_lookup_device(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -1323,7 +1333,7 @@ async def websocket_supports_feature(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -1349,7 +1359,7 @@ async def websocket_stop_inclusion(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -1376,7 +1386,7 @@ async def websocket_stop_exclusion(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -1404,7 +1414,7 @@ async def websocket_remove_node(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -1692,7 +1702,7 @@ async def websocket_begin_rebuilding_routes(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -1719,7 +1729,7 @@ async def websocket_subscribe_rebuild_routes_progress(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -1772,7 +1782,7 @@ async def websocket_stop_rebuilding_routes(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -2100,7 +2110,7 @@ async def websocket_subscribe_log_updates(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -2187,7 +2197,7 @@ async def websocket_update_log_config(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -2211,7 +2221,7 @@ async def websocket_get_log_config(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -2238,7 +2248,7 @@ async def websocket_update_data_collection_preference(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -2273,7 +2283,7 @@ async def websocket_data_collection_status(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -2507,7 +2517,7 @@ async def websocket_is_any_ota_firmware_update_in_progress(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -2602,7 +2612,7 @@ async def websocket_check_for_config_updates(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -2631,7 +2641,7 @@ async def websocket_install_config_update(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -2670,7 +2680,7 @@ async def websocket_subscribe_controller_statistics(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -2823,7 +2833,7 @@ async def websocket_hard_reset_controller(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -3000,7 +3010,7 @@ async def websocket_backup_nvm(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
@@ -3062,7 +3072,7 @@ async def websocket_restore_nvm(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
-    entry: ConfigEntry,
+    entry: ZwaveJSConfigEntry,
     client: Client,
     driver: Driver,
 ) -> None:
