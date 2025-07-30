@@ -21,7 +21,6 @@ async def test_firmware_update_coordinator_fetching(
     """Test the firmware update coordinator loads manifests."""
     session = async_get_clientsession(hass)
 
-    # Create a mock config entry
     mock_config_entry = Mock(spec=ConfigEntry)
 
     manifest = FirmwareManifest(
