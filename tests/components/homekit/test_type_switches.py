@@ -664,7 +664,7 @@ async def test_button_switch(
 async def test_valve_switch_with_set_duration_characteristic(
     hass: HomeAssistant, hk_driver, events: list[Event]
 ) -> None:
-    """Test valve accessory with set duration characteristic."""
+    """Test valve switch with set duration characteristic."""
     entity_id = "switch.sprinkler"
 
     hass.states.async_set(entity_id, STATE_OFF)
@@ -709,7 +709,7 @@ async def test_valve_switch_with_set_duration_characteristic(
 async def test_valve_switch_with_remaining_duration_characteristic(
     hass: HomeAssistant, hk_driver, events: list[Event]
 ) -> None:
-    """Test valve accessory with remaining duration characteristic."""
+    """Test valve switch with remaining duration characteristic."""
     entity_id = "switch.sprinkler"
 
     hass.states.async_set(entity_id, STATE_OFF)
@@ -727,6 +727,7 @@ async def test_valve_switch_with_remaining_duration_characteristic(
     acc.run()
     await hass.async_block_till_done()
 
+    # Assert initial state is synced
     assert acc.get_remaining_duration() == 0
 
     # Simulate remaining duration update from Home Assistant
@@ -736,6 +737,8 @@ async def test_valve_switch_with_remaining_duration_characteristic(
             (dt_util.utcnow() + timedelta(seconds=90)).isoformat(),
         )
         await hass.async_block_till_done()
+
+        # Assert remaining duration is calculated correctly based on end time
         assert acc.get_remaining_duration() == 90
 
     # Test fallback if no state is set
@@ -744,15 +747,15 @@ async def test_valve_switch_with_remaining_duration_characteristic(
     assert acc.get_remaining_duration() == 0
 
 
-async def test_valve_switch_with_duration_characteristics_edge_cases(
+async def test_valve_switch_with_duration_characteristics(
     hass: HomeAssistant, hk_driver, events: list[Event]
 ) -> None:
-    """Test edge cases for valve duration characteristics."""
+    """Test valve switch with set duration and remaining duration characteristics."""
     entity_id = "switch.sprinkler"
 
-    # Test with both duration and end time entities linked
+    # Test with duration and end time entities linked
     hass.states.async_set(entity_id, STATE_OFF)
-    hass.states.async_set("input_number.valve_duration", "60")
+    hass.states.async_set("input_number.valve_duration", "300")
     hass.states.async_set("sensor.valve_end_time", dt_util.utcnow().isoformat())
     await hass.async_block_till_done()
 
@@ -775,24 +778,24 @@ async def test_valve_switch_with_duration_characteristics_edge_cases(
     with freeze_time(dt_util.utcnow()):
         hass.states.async_set(
             "sensor.valve_end_time",
-            (dt_util.utcnow() + timedelta(seconds=30)).isoformat(),
+            (dt_util.utcnow() + timedelta(seconds=60)).isoformat(),
         )
         await hass.async_block_till_done()
         acc.update_duration_chars()
-        assert acc.char_set_duration.value == 60
-        assert acc.get_remaining_duration() == 30
+        assert acc.char_set_duration.value == 300
+        assert acc.get_remaining_duration() == 60
 
-    # Test get_duration with invalid state
+    # Test get_duration fallback with invalid state
     hass.states.async_set("input_number.valve_duration", "invalid")
     await hass.async_block_till_done()
     assert acc.get_duration() == 0
 
-    # Test get_remaining_duration with invalid state
+    # Test get_remaining_duration fallback with invalid state
     hass.states.async_set("sensor.valve_end_time", "invalid")
     await hass.async_block_till_done()
     assert acc.get_remaining_duration() == 0
 
-    # Test get_remaining_duration with past end time
+    # Test get_remaining_duration with end time in the past
     hass.states.async_set(
         "sensor.valve_end_time",
         (dt_util.utcnow() - timedelta(seconds=10)).isoformat(),
@@ -814,15 +817,16 @@ async def test_valve_switch_with_duration_characteristics_edge_cases(
 async def test_valve_with_duration_characteristics(
     hass: HomeAssistant, hk_driver, events: list[Event]
 ) -> None:
-    """Test valve entity (instead of switch) with duration characteristics."""
+    """Test valve with set duration and remaining duration characteristics."""
     entity_id = "switch.sprinkler"
 
-    # Test with both duration and end time entities linked
+    # Test with duration and end time entities linked
     hass.states.async_set(entity_id, STATE_OFF)
-    hass.states.async_set("input_number.valve_duration", "60")
+    hass.states.async_set("input_number.valve_duration", "900")
     hass.states.async_set("sensor.valve_end_time", dt_util.utcnow().isoformat())
     await hass.async_block_till_done()
 
+    # Using Valve instead of ValveSwitch
     acc = Valve(
         hass,
         hk_driver,
@@ -840,8 +844,8 @@ async def test_valve_with_duration_characteristics(
     with freeze_time(dt_util.utcnow()):
         hass.states.async_set(
             "sensor.valve_end_time",
-            (dt_util.utcnow() + timedelta(seconds=30)).isoformat(),
+            (dt_util.utcnow() + timedelta(seconds=600)).isoformat(),
         )
         await hass.async_block_till_done()
-        assert acc.get_duration() == 60
-        assert acc.get_remaining_duration() == 30
+        assert acc.get_duration() == 900
+        assert acc.get_remaining_duration() == 600
