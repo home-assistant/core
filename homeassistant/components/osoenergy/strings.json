@@ -211,7 +211,7 @@
     },
     "turn_away_mode_on": {
       "name": "Set away mode",
-      "description": "Turns away mode on for the heater",
+      "description": "Turns on away mode for the water heater",
       "fields": {
         "duration_days": {
           "name": "Duration in days",
