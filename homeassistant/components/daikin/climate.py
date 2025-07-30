@@ -101,7 +101,7 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
     _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = list(HA_STATE_TO_DAIKIN)
-    _attr_target_temperature_step = 1
+    _attr_target_temperature_step = 0.5
     _attr_fan_modes: list[str]
     _attr_swing_modes: list[str]
 
