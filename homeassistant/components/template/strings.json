@@ -2,6 +2,7 @@
   "common": {
     "advanced_options": "Advanced options",
     "availability": "Availability template",
+    "availability_description": "Defines a template to get the `available` state of the entity. If the template either fails to render or returns `True`, `\"1\"`, `\"true\"`, `\"yes\"`, `\"on\"`, `\"enable\"`, or a non-zero number, the entity will be `available`. If the template returns any other value, the entity will be `unavailable`. If not configured, the entity will always be `available`. Note that the string comparison is not case sensitive; `\"TrUe\"` and `\"yEs\"` are allowed.",
     "code_format": "Code format",
     "device_class": "Device class",
     "device_id_description": "Select a device to link to this entity.",
@@ -28,13 +29,26 @@
           "code_format": "[%key:component::template::common::code_format%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "value_template": "Defines a template to set the state of the alarm panel. Valid output values from the template are `armed_away`, `armed_home`, `armed_night`, `armed_vacation`, `arming`, `disarmed`, `pending`, and `triggered`.",
+          "disarm": "Defines actions to run when the alarm control panel is disarmed. Receives variable `code`.",
+          "arm_away": "Defines actions to run when the alarm control panel is armed to `arm_away`. Receives variable `code`.",
+          "arm_custom_bypass": "Defines actions to run when the alarm control panel is armed to `arm_custom_bypass`. Receives variable `code`.",
+          "arm_home": "Defines actions to run when the alarm control panel is armed to `arm_home`. Receives variable `code`.",
+          "arm_night": "Defines actions to run when the alarm control panel is armed to `arm_night`. Receives variable `code`.",
+          "arm_vacation": "Defines actions to run when the alarm control panel is armed to `arm_vacation`. Receives variable `code`.",
+          "trigger": "Defines actions to run when the alarm control panel is triggered. Receives variable `code`.",
+          "code_arm_required": "If true, the code is required to arm the alarm.",
+          "code_format": "One of number, text or no_code. Format for the code used to arm/disarm the alarm."
         },
         "sections": {
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -48,13 +62,17 @@
           "state": "[%key:component::template::common::state%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "state": "The sensor is `on` if the template evaluates as `True`, `yes`, `on`, `enable` or a positive number. Any other value will render it as `off`."
         },
         "sections": {
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -68,13 +86,17 @@
           "press": "Actions on press"
         },
         "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "press": "Defines actions to run button is pressed."
         },
         "sections": {
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -99,13 +121,16 @@
           "close_cover": "Defines actions to run when the cover is closed.",
           "stop_cover": "Defines actions to run when the cover is stopped.",
           "position": "Defines a template to get the position of the cover. Value values are numbers between `0` (`closed`) and `100` (`open`).",
-          "set_cover_position": "Defines actions to run when the cover is given a `set_cover_position` command."
+          "set_cover_position": "Defines actions to run when the cover is given a `set_cover_position` command. Receives variable `position`."
         },
         "sections": {
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -124,11 +149,11 @@
         },
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",
-          "state": "Defines a template to get the state of the fan. Valid values: `on`, `off`.",
+          "state": "The fan is `on` if the template evaluates as `True`, `yes`, `on`, `enable` or a positive number. Any other value will render it as `off`.",
           "turn_off": "Defines actions to run when the fan is turned off.",
-          "turn_on": "Defines actions to run when the fan is turned on.",
+          "turn_on": "Defines actions to run when the fan is turned on. Receives variables `percentage` and/or `preset_mode`.",
           "percentage": "Defines a template to get the speed percentage of the fan.",
-          "set_percentage": "Defines actions to run when the fan is given a speed percentage command.",
+          "set_percentage": "Defines actions to run when the fan is given a speed percentage command.  Receives variable `percentage`.",
           "speed_count": "The number of speeds the fan supports. Used to calculate the percentage step for the `fan.increase_speed` and `fan.decrease_speed` actions."
         },
         "sections": {
@@ -136,6 +161,9 @@
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -149,13 +177,18 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "url": "Defines a template to get the URL on which the image is served.",
+          "verify_ssl": "Enable or disable SSL certificate verification. Set to false to use an http-only URL, or you have a self-signed SSL certificate and haven’t installed the CA certificate to enable verification."
         },
         "sections": {
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -176,13 +209,25 @@
           "set_temperature": "Actions on set color temperature"
         },
         "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "state": "The light is `on` if the template evaluates as `True`, `yes`, `on`, `enable` or a positive number. Any other value will render it as `off`.",
+          "turn_off": "Defines actions to run when the light is turned off.",
+          "turn_on": "Defines actions to run when the light is turned on.",
+          "level": "Defines a template to get the brightness of the light.  Valid values are 0 to 255.",
+          "set_level": "Defines actions to run when the light is given a brightness command. The script will only be called if the turn_on call only has `brightness`, and optionally `transition`. Receives variables `brightness` and, optionally, `transition`.",
+          "hs": "Defines a template to get the HS color of the light. Must render a tuple (hue, saturation).",
+          "set_hs": "Defines actions to run when the light is given a hs color command. Available variables: `hs` as a tuple, `h` and `s`.",
+          "temperature": "Defines a template to get the color temperature of the light.",
+          "set_temperature": "Defines actions to run when the light is given a color temperature command. Receives variable `color_temp_kelvin`. May also receive variables `brightness` and/or `transition`."
         },
         "sections": {
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -199,13 +244,21 @@
           "open": "Actions on open"
         },
         "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "state": "Defines a template to set the state of the lock.  The lock is locked if the template evaluates to `True`, `true`, `on`, or `locked`.  The lock is unlocked if the template evaluates to `False`, `false`, `off`, or `unlocked`.  Other valid states are `jammed`, `opening`, `locking`, `open`, and `unlocking`.",
+          "lock": "Defines actions to run when the lock is locked.",
+          "unlock": "Defines actions to run when the lock is unlocked.",
+          "code_format": "Defines a template to get the `code_format` attribute of the lock.",
+          "open": "Defines actions to run when the lock is opened."
         },
         "sections": {
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -223,13 +276,22 @@
           "unit_of_measurement": "[%key:component::template::common::unit_of_measurement%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "state": "Template for the number's current value.",
+          "step": "Template for the number's increment/decrement step.",
+          "set_value": "Defines actions to run when the number is set to a value. Receives variable `value`.",
+          "max": "Template for the number's maximum value.",
+          "min": "Template for the number's minimum value.",
+          "unit_of_measurement": "Defines the units of measurement of the number, if any."
         },
         "sections": {
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -244,13 +306,19 @@
           "options": "Available options"
         },
         "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "state": "Template for the select’s current value.",
+          "select_option": "Defines actions to run to select an `option` from the `options` list. Receives variable `option`.",
+          "options": "Template for the select’s available options."
         },
         "sections": {
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -266,13 +334,18 @@
           "unit_of_measurement": "[%key:component::template::common::unit_of_measurement%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "state": "Defines a template to get the state of the sensor. If the sensor is numeric, i.e. it has a `state_class` or a `unit_of_measurement`, the state template must render to a number or to `none`. The state template must not render to a string, including `unknown` or `unavailable`. An `availability` template may be defined to suppress rendering of the state template.",
+          "unit_of_measurement": "Defines the units of measurement of the sensor, if any. This will also display the value based on the user profile Number Format setting and influence the graphical presentation in the history visualization as a continuous value."
         },
         "sections": {
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -307,13 +380,18 @@
         },
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",
-          "value_template": "Defines a template to set the state of the switch. If not defined, the switch will optimistically assume all commands are successful."
+          "value_template": "Defines a template to set the state of the switch. If not defined, the switch will optimistically assume all commands are successful.",
+          "turn_off": "Defines actions to run when the switch is turned off.",
+          "turn_on": "Defines actions to run when the switch is turned on."
         },
         "sections": {
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -324,24 +402,37 @@
           "device_id": "[%key:common::config_flow::data::device%]",
           "name": "[%key:common::config_flow::data::name%]",
           "state": "[%key:component::template::common::state%]",
-          "start": "Actions on turn off",
+          "start": "Actions on start",
           "fan_speed": "Fan speed",
           "fan_speeds": "Fan speeds",
           "set_fan_speed": "Actions on set fan speed",
           "stop": "Actions on stop",
           "pause": "Actions on pause",
-          "return_to_base": "Actions on return to base",
+          "return_to_base": "Actions on return to dock",
           "clean_spot": "Actions on clean spot",
           "locate": "Actions on locate"
         },
         "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "state": "Defines a template to get the state of the vacuum. Valid values are `cleaning`, `docked`, `idle`, `paused`, `returning`, and `error`.",
+          "start": "Defines actions to run when the vacuum is started.",
+          "fan_speed": "Defines a template to get the fan speed of the vacuum.",
+          "fan_speeds": "List of fan speeds supported by the vacuum.",
+          "set_fan_speed": "Defines actions to run when the vacuum is given a command to set the fan speed. Receives variable `fan_speed`",
+          "stop": "Defines actions to run when the vacuum is stopped.",
+          "pause": "Defines actions to run when the vacuum is paused.",
+          "return_to_base": "Defines actions to run when the vacuum is given the return to dock command.",
+          "clean_spot": "Defines actions to run when the vacuum is given a clean spot command.",
+          "locate": "Defines actions to run when the vacuum is given a locate command."
         },
         "sections": {
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -366,13 +457,26 @@
           "code_format": "[%key:component::template::common::code_format%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "value_template": "[%key:component::template::config::step::alarm_control_panel::data_description::value_template%]",
+          "disarm": "[%key:component::template::config::step::alarm_control_panel::data_description::disarm%]",
+          "arm_away": "[%key:component::template::config::step::alarm_control_panel::data_description::arm_away%]",
+          "arm_custom_bypass": "[%key:component::template::config::step::alarm_control_panel::data_description::arm_custom_bypass%]",
+          "arm_home": "[%key:component::template::config::step::alarm_control_panel::data_description::arm_home%]",
+          "arm_night": "[%key:component::template::config::step::alarm_control_panel::data_description::arm_night%]",
+          "arm_vacation": "[%key:component::template::config::step::alarm_control_panel::data_description::arm_vacation%]",
+          "trigger": "[%key:component::template::config::step::alarm_control_panel::data_description::trigger%]",
+          "code_arm_required": "[%key:component::template::config::step::alarm_control_panel::data_description::code_arm_required%]",
+          "code_format": "[%key:component::template::config::step::alarm_control_panel::data_description::code_format%]"
         },
         "sections": {
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -384,13 +488,17 @@
           "state": "[%key:component::template::common::state%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "state": "[%key:component::template::config::step::binary_sensor::data_description::state%]"
         },
         "sections": {
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -402,13 +510,17 @@
           "press": "[%key:component::template::config::step::button::data::press%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "press": "[%key:component::template::config::step::button::data_description::press%]"
         },
         "sections": {
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -439,6 +551,9 @@
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -468,6 +583,9 @@
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -480,13 +598,18 @@
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "url": "[%key:component::template::config::step::image::data_description::url%]",
+          "verify_ssl": "[%key:component::template::config::step::image::data_description::verify_ssl%]"
         },
         "sections": {
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -507,13 +630,25 @@
           "set_temperature": "[%key:component::template::config::step::light::data::set_temperature%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "state": "[%key:component::template::config::step::light::data_description::state%]",
+          "turn_off": "[%key:component::template::config::step::light::data_description::turn_off%]",
+          "turn_on": "[%key:component::template::config::step::light::data_description::turn_on%]",
+          "level": "[%key:component::template::config::step::light::data_description::level%]",
+          "set_level": "[%key:component::template::config::step::light::data_description::set_level%]",
+          "hs": "[%key:component::template::config::step::light::data_description::hs%]",
+          "set_hs": "[%key:component::template::config::step::light::data_description::set_hs%]",
+          "temperature": "[%key:component::template::config::step::light::data_description::temperature%]",
+          "set_temperature": "[%key:component::template::config::step::light::data_description::set_temperature%]"
         },
         "sections": {
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -529,13 +664,21 @@
           "open": "[%key:component::template::config::step::lock::data::open%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "state": "[%key:component::template::config::step::lock::data_description::state%]",
+          "lock": "[%key:component::template::config::step::lock::data_description::lock%]",
+          "unlock": "[%key:component::template::config::step::lock::data_description::unlock%]",
+          "code_format": "[%key:component::template::config::step::lock::data_description::code_format%]",
+          "open": "[%key:component::template::config::step::lock::data_description::open%]"
         },
         "sections": {
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -552,13 +695,21 @@
           "min": "[%key:component::template::config::step::number::data::min%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "state": "[%key:component::template::config::step::number::data_description::state%]",
+          "step": "[%key:component::template::config::step::number::data_description::step%]",
+          "set_value": "[%key:component::template::config::step::number::data_description::set_value%]",
+          "max": "[%key:component::template::config::step::number::data_description::max%]",
+          "min": "[%key:component::template::config::step::number::data_description::min%]"
         },
         "sections": {
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -573,13 +724,19 @@
           "options": "[%key:component::template::config::step::select::data::options%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "state": "[%key:component::template::config::step::select::data_description::state%]",
+          "select_option": "[%key:component::template::config::step::select::data_description::select_option%]",
+          "options": "[%key:component::template::config::step::select::data_description::options%]"
         },
         "sections": {
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -594,13 +751,18 @@
           "unit_of_measurement": "[%key:component::template::common::unit_of_measurement%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "state": "[%key:component::template::config::step::sensor::data_description::state%]",
+          "unit_of_measurement": "[%key:component::template::config::step::sensor::data_description::state%]"
         },
         "sections": {
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -616,13 +778,18 @@
         },
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",
-          "value_template": "[%key:component::template::config::step::switch::data_description::value_template%]"
+          "value_template": "[%key:component::template::config::step::switch::data_description::value_template%]",
+          "turn_off": "[%key:component::template::config::step::switch::data_description::turn_off%]",
+          "turn_on": "[%key:component::template::config::step::switch::data_description::turn_on%]"
         },
         "sections": {
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
@@ -644,17 +811,30 @@
           "locate": "[%key:component::template::config::step::vacuum::data::locate%]"
         },
         "data_description": {
-          "device_id": "[%key:component::template::common::device_id_description%]"
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "state": "[%key:component::template::config::step::vacuum::data_description::state%]",
+          "start": "[%key:component::template::config::step::vacuum::data_description::start%]",
+          "fan_speed": "[%key:component::template::config::step::vacuum::data_description::fan_speed%]",
+          "fan_speeds": "[%key:component::template::config::step::vacuum::data_description::fan_speeds%]",
+          "set_fan_speed": "[%key:component::template::config::step::vacuum::data_description::set_fan_speed%]",
+          "stop": "[%key:component::template::config::step::vacuum::data_description::stop%]",
+          "pause": "[%key:component::template::config::step::vacuum::data_description::pause%]",
+          "return_to_base": "[%key:component::template::config::step::vacuum::data_description::return_to_base%]",
+          "clean_spot": "[%key:component::template::config::step::vacuum::data_description::clean_spot%]",
+          "locate": "[%key:component::template::config::step::vacuum::data_description::locate%]"
         },
         "sections": {
           "advanced_options": {
             "name": "[%key:component::template::common::advanced_options%]",
             "data": {
               "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
             }
           }
         },
-        "title": "Template vacuum"
+        "title": "[%key:component::template::config::step::vacuum::title%]"
       }
     }
   },
