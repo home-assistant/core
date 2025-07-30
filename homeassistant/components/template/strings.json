@@ -421,9 +421,9 @@
           "set_fan_speed": "Defines actions to run when the vacuum is given a command to set the fan speed. Receives variable `fan_speed`",
           "stop": "Defines actions to run when the vacuum is stopped.",
           "pause": "Defines actions to run when the vacuum is paused.",
-          "return_to_base": "Defines actions to run when the vacuum is given the return to dock command.",
-          "clean_spot": "Defines actions to run when the vacuum is given a clean spot command.",
-          "locate": "Defines actions to run when the vacuum is given a locate command."
+          "return_to_base": "Defines actions to run when the vacuum is given a 'Return to dock' command.",
+          "clean_spot": "Defines actions to run when the vacuum is given a 'Clean spot' command.",
+          "locate": "Defines actions to run when the vacuum is given a 'Locate' command."
         },
         "sections": {
           "advanced_options": {
