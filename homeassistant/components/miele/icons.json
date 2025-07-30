@@ -105,7 +105,13 @@
     }
   },
   "services": {
+    "get_programs": {
+      "service": "mdi:stack-overflow"
+    },
     "set_program": {
+      "service": "mdi:arrow-right-circle-outline"
+    },
+    "set_program_oven": {
       "service": "mdi:arrow-right-circle-outline"
     }
   }

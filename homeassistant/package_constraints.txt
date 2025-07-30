@@ -6,7 +6,7 @@ aiodns==3.5.0
 aiohasupervisor==0.3.1
 aiohttp-asyncmdnsresolver==0.1.1
 aiohttp-fast-zlib==0.3.0
-aiohttp==3.12.14
+aiohttp==3.12.15
 aiohttp_cors==0.8.1
 aiousbwatcher==1.1.1
 aiozoneinfo==0.2.3
@@ -35,17 +35,17 @@ fnv-hash-fast==1.5.0
 go2rtc-client==0.2.1
 ha-ffmpeg==3.2.2
 habluetooth==4.0.1
-hass-nabucasa==0.108.0
+hass-nabucasa==0.110.0
 hassil==2.2.3
 home-assistant-bluetooth==1.13.1
-home-assistant-frontend==20250702.3
-home-assistant-intents==2025.6.23
+home-assistant-frontend==20250730.0
+home-assistant-intents==2025.7.30
 httpx==0.28.1
 ifaddr==0.2.0
 Jinja2==3.1.6
 lru-dict==1.3.0
 mutagen==1.47.0
-orjson==3.11.0
+orjson==3.11.1
 packaging>=23.1
 paho-mqtt==2.1.0
 Pillow==11.3.0
@@ -118,7 +118,7 @@ httpcore==1.0.9
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==2.3.0
+numpy==2.3.2
 pandas==2.3.0
 
 # Constrain multidict to avoid typing issues
