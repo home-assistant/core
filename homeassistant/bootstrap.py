@@ -627,7 +627,7 @@ async def async_enable_logging(
             # it even on Supervisor
             if os.path.isfile(default_log_path):
                 with contextlib.suppress(OSError):
-                    os.remove(default_log_path)
+                    os.rename(default_log_path, f"{default_log_path}.old")
             err_log_path = None
         else:
             err_log_path = default_log_path

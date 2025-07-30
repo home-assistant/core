@@ -38,15 +38,15 @@ from .common import (
 
 VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
 
-CONFIG_LOG_FILE_PATTERN = get_test_config_dir("home-assistant.log*")
-ARG_LOG_FILE_PATTERN = "test.log*"
+CONFIG_LOG_FILE = get_test_config_dir("home-assistant.log")
+ARG_LOG_FILE = "test.log"
 
 
 def cleanup_log_files() -> None:
     """Remove all log files."""
-    for f in glob.glob(CONFIG_LOG_FILE_PATTERN):
+    for f in glob.glob(f"{CONFIG_LOG_FILE}*"):
         os.remove(f)
-    for f in glob.glob(ARG_LOG_FILE_PATTERN):
+    for f in glob.glob(f"{ARG_LOG_FILE}*"):
         os.remove(f)
 
 
@@ -99,8 +99,8 @@ async def test_async_enable_logging(
 
     # Ensure we start with a clean slate
     cleanup_log_files()
-    assert len(glob.glob(CONFIG_LOG_FILE_PATTERN)) == 0
-    assert len(glob.glob(ARG_LOG_FILE_PATTERN)) == 0
+    assert len(glob.glob(CONFIG_LOG_FILE)) == 0
+    assert len(glob.glob(ARG_LOG_FILE)) == 0
 
     with (
         patch("logging.getLogger"),
@@ -114,7 +114,7 @@ async def test_async_enable_logging(
     ):
         await bootstrap.async_enable_logging(hass)
         mock_async_activate_log_queue_handler.assert_called_once()
-        assert len(glob.glob(CONFIG_LOG_FILE_PATTERN)) > 0
+        assert len(glob.glob(CONFIG_LOG_FILE)) > 0
 
         mock_async_activate_log_queue_handler.reset_mock()
         await bootstrap.async_enable_logging(
@@ -123,7 +123,7 @@ async def test_async_enable_logging(
             log_file="test.log",
         )
         mock_async_activate_log_queue_handler.assert_called_once()
-        assert len(glob.glob(ARG_LOG_FILE_PATTERN)) > 0
+        assert len(glob.glob(ARG_LOG_FILE)) > 0
 
     assert "Error rolling over log file" in caplog.text
 
@@ -137,8 +137,8 @@ async def test_async_enable_logging_supervisor(
 
     # Ensure we start with a clean slate
     cleanup_log_files()
-    assert len(glob.glob(CONFIG_LOG_FILE_PATTERN)) == 0
-    assert len(glob.glob(ARG_LOG_FILE_PATTERN)) == 0
+    assert len(glob.glob(CONFIG_LOG_FILE)) == 0
+    assert len(glob.glob(ARG_LOG_FILE)) == 0
 
     with (
         patch.dict(os.environ, {"SUPERVISOR": "1"}),
@@ -148,11 +148,11 @@ async def test_async_enable_logging_supervisor(
         patch("logging.getLogger"),
     ):
         await bootstrap.async_enable_logging(hass)
-        assert len(glob.glob(CONFIG_LOG_FILE_PATTERN)) == 0
+        assert len(glob.glob(CONFIG_LOG_FILE)) == 0
         mock_async_activate_log_queue_handler.assert_called_once()
         mock_async_activate_log_queue_handler.reset_mock()
 
-        # Check that if the log file exists, it is removed
+        # Check that if the log file exists, it is renamed
         def write_log_file():
             with open(
                 get_test_config_dir("home-assistant.log"), "w", encoding="utf8"
@@ -160,9 +160,11 @@ async def test_async_enable_logging_supervisor(
                 f.write("test")
 
         await hass.async_add_executor_job(write_log_file)
-        assert len(glob.glob(CONFIG_LOG_FILE_PATTERN)) == 1
+        assert len(glob.glob(CONFIG_LOG_FILE)) == 1
+        assert len(glob.glob(f"{CONFIG_LOG_FILE}.old")) == 0
         await bootstrap.async_enable_logging(hass)
-        assert len(glob.glob(CONFIG_LOG_FILE_PATTERN)) == 0
+        assert len(glob.glob(CONFIG_LOG_FILE)) == 0
+        assert len(glob.glob(f"{CONFIG_LOG_FILE}.old")) == 1
         mock_async_activate_log_queue_handler.assert_called_once()
         mock_async_activate_log_queue_handler.reset_mock()
 
@@ -173,7 +175,7 @@ async def test_async_enable_logging_supervisor(
         )
         mock_async_activate_log_queue_handler.assert_called_once()
         # Even on Supervisor, the log file should be created if it is explicitly specified
-        assert len(glob.glob(ARG_LOG_FILE_PATTERN)) > 0
+        assert len(glob.glob(ARG_LOG_FILE)) > 0
 
     cleanup_log_files()
 
