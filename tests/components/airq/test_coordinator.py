@@ -3,7 +3,6 @@
 import logging
 from unittest.mock import patch
 
-from aioairq import DeviceInfo as AirQDeviceInfo
 import pytest
 
 from homeassistant.components.airq import AirQCoordinator
@@ -11,6 +10,8 @@ from homeassistant.components.airq.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
+
+from .common import TEST_DEVICE_DATA, TEST_DEVICE_INFO
 
 from tests.common import MockConfigEntry
 
@@ -23,14 +24,6 @@ MOCKED_ENTRY = MockConfigEntry(
     unique_id="123-456",
 )
 
-TEST_DEVICE_INFO = AirQDeviceInfo(
-    id="id",
-    name="name",
-    model="model",
-    sw_version="sw",
-    hw_version="hw",
-)
-TEST_DEVICE_DATA = {"co2": 500.0, "Status": "OK"}
 STATUS_WARMUP = {
     "co": "co sensor still in warm up phase; waiting time = 18 s",
     "tvoc": "tvoc sensor still in warm up phase; waiting time = 18 s",
