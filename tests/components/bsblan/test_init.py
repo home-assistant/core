@@ -3,14 +3,13 @@
 from unittest.mock import MagicMock
 
 from bsblan import BSBLANAuthError, BSBLANConnectionError
-import pytest
+from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.bsblan.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_load_unload_config_entry(
@@ -53,6 +52,7 @@ async def test_config_entry_auth_failed_triggers_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_bsblan: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that BSBLANAuthError during coordinator update triggers reauth flow."""
     # First, set up the integration successfully
@@ -62,17 +62,16 @@ async def test_config_entry_auth_failed_triggers_reauth(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    # Get the coordinator
-    coordinator = mock_config_entry.runtime_data.coordinator
-
     # Mock BSBLANAuthError during next update
     mock_bsblan.initialize.side_effect = BSBLANAuthError("Authentication failed")
 
-    # Manually trigger coordinator update which should raise ConfigEntryAuthFailed
-    try:
-        await coordinator._async_update_data()
-        pytest.fail("Expected ConfigEntryAuthFailed to be raised")
-    except ConfigEntryAuthFailed:
-        # This is expected - the coordinator should catch BSBLANAuthError
-        # and re-raise it as ConfigEntryAuthFailed to trigger reauth
-        pass
+    # Advance time by the coordinator's update interval to trigger update
+    freezer.tick(delta=20)  # Advance beyond the 12 second scan interval + random offset
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Check that a reauth flow has been started
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == "reauth"
+    assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
