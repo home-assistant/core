@@ -180,6 +180,16 @@ BINARY_SENSOR_OPTIONS = {
             {},
         ),
         (
+            "lock",
+            {"state": "{{ states('lock.one') }}"},
+            "locked",
+            {"one": "locked", "two": "unlocked"},
+            {},
+            {"lock": [], "unlock": []},
+            {"lock": [], "unlock": []},
+            {},
+        ),
+        (
             "number",
             {"state": "{{ states('number.one') }}"},
             "30.0",
@@ -227,6 +237,16 @@ BINARY_SENSOR_OPTIONS = {
             {},
             {},
             {},
+            {},
+        ),
+        (
+            "vacuum",
+            {"state": "{{ states('vacuum.one') }}"},
+            "docked",
+            {"one": "docked", "two": "cleaning"},
+            {},
+            {"start": []},
+            {"start": []},
             {},
         ),
     ],
@@ -363,6 +383,12 @@ async def test_config_flow(
             {"turn_on": [], "turn_off": []},
         ),
         (
+            "lock",
+            {"state": "{{ states('lock.one') }}"},
+            {"lock": [], "unlock": []},
+            {"lock": [], "unlock": []},
+        ),
+        (
             "number",
             {"state": "{{ states('number.one') }}"},
             {
@@ -397,6 +423,12 @@ async def test_config_flow(
             {"state": "{{ states('select.one') }}"},
             {"options": "{{ ['off', 'on', 'auto'] }}"},
             {"options": "{{ ['off', 'on', 'auto'] }}"},
+        ),
+        (
+            "vacuum",
+            {"state": "{{ states('vacuum.one') }}"},
+            {"start": []},
+            {"start": []},
         ),
     ],
 )
@@ -588,6 +620,16 @@ async def test_config_flow_device(
             "state",
         ),
         (
+            "lock",
+            {"state": "{{ states('lock.one') }}"},
+            {"state": "{{ states('lock.two') }}"},
+            ["locked", "unlocked"],
+            {"one": "locked", "two": "unlocked"},
+            {"lock": [], "unlock": []},
+            {"lock": [], "unlock": []},
+            "state",
+        ),
+        (
             "number",
             {"state": "{{ states('number.one') }}"},
             {"state": "{{ states('number.two') }}"},
@@ -646,6 +688,16 @@ async def test_config_flow_device(
             {},
             {},
             "value_template",
+        ),
+        (
+            "vacuum",
+            {"state": "{{ states('vacuum.one') }}"},
+            {"state": "{{ states('vacuum.two') }}"},
+            ["docked", "cleaning"],
+            {"one": "docked", "two": "cleaning"},
+            {"start": []},
+            {"start": []},
+            "state",
         ),
     ],
 )
@@ -1439,6 +1491,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {"turn_on": [], "turn_off": []},
         ),
         (
+            "lock",
+            {"state": "{{ states('lock.one') }}"},
+            {"lock": [], "unlock": []},
+            {"lock": [], "unlock": []},
+        ),
+        (
             "number",
             {"state": "{{ states('number.one') }}"},
             {
@@ -1479,6 +1537,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {"value_template": "{{ false }}"},
             {},
             {},
+        ),
+        (
+            "vacuum",
+            {"state": "{{ states('vacuum.one') }}"},
+            {"start": []},
+            {"start": []},
         ),
     ],
 )
