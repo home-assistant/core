@@ -192,3 +192,33 @@ async def test_attribute_partial_high_low_temperature(hass: HomeAssistant) -> No
         ATTR_TARGET_TEMP_HIGH: 30.1,
         ATTR_TARGET_TEMP_LOW: 20.2,
     }
+
+
+async def test_all_temperature_attributes_none(hass: HomeAssistant) -> None:
+    """Test that set_temperature service is not called when all temperature attributes are None."""
+    calls_temp = async_mock_service(hass, DOMAIN, SERVICE_SET_TEMPERATURE)
+    calls_hvac = async_mock_service(hass, DOMAIN, SERVICE_SET_HVAC_MODE)
+
+    await async_reproduce_states(
+        hass,
+        [
+            State(
+                ENTITY_1,
+                HVACMode.OFF,
+                {
+                    ATTR_TEMPERATURE: None,
+                    ATTR_TARGET_TEMP_HIGH: None,
+                    ATTR_TARGET_TEMP_LOW: None,
+                },
+            )
+        ],
+    )
+
+    await hass.async_block_till_done()
+
+    # Should call set_hvac_mode with OFF but not call set_temperature
+    assert len(calls_hvac) == 1
+    assert calls_hvac[0].data == {"entity_id": ENTITY_1, "hvac_mode": HVACMode.OFF}
+    
+    # Should NOT call set_temperature when all temperature attributes are None
+    assert len(calls_temp) == 0
