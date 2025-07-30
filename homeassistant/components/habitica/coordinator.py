@@ -28,6 +28,7 @@ from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
     HomeAssistantError,
+    ServiceValidationError,
 )
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -130,18 +131,21 @@ class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
         else:
             return HabiticaData(user=user, tasks=tasks + completed_todos)
 
-    async def execute(
-        self, func: Callable[[HabiticaDataUpdateCoordinator], Any]
-    ) -> None:
+    async def execute(self, func: Callable[[Habitica], Any]) -> None:
         """Execute an API call."""
 
         try:
-            await func(self)
+            await func(self.habitica)
         except TooManyRequestsError as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="setup_rate_limit_exception",
                 translation_placeholders={"retry_after": str(e.retry_after)},
+            ) from e
+        except NotAuthorizedError as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_unallowed",
             ) from e
         except HabiticaException as e:
             raise HomeAssistantError(

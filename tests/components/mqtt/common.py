@@ -94,6 +94,117 @@ MOCK_SUBENTRY_BUTTON_COMPONENT = {
         "entity_picture": "https://example.com/365d05e6607c4dfb8ae915cff71a954b",
     },
 }
+MOCK_SUBENTRY_CLIMATE_COMPONENT = {
+    "b085c09efba7ec76acd94e2e0f851386": {
+        "platform": "climate",
+        "name": "Cooler",
+        "entity_category": None,
+        "entity_picture": "https://example.com/b085c09efba7ec76acd94e2e0f851386",
+        "temperature_unit": "C",
+        "mode_command_topic": "mode-command-topic",
+        "mode_command_template": "{{ value }}",
+        "mode_state_topic": "mode-state-topic",
+        "mode_state_template": "{{ value_json.mode }}",
+        "modes": ["off", "heat", "cool", "auto"],
+        # single target temperature
+        "temperature_command_topic": "temperature-command-topic",
+        "temperature_command_template": "{{ value }}",
+        "temperature_state_topic": "temperature-state-topic",
+        "temperature_state_template": "{{ value_json.temperature }}",
+        "min_temp": 8,
+        "max_temp": 28,
+        "precision": "0.1",
+        "temp_step": 1.0,
+        "initial": 19.0,
+        # power settings
+        "power_command_topic": "power-command-topic",
+        "power_command_template": "{{ value }}",
+        "payload_on": "ON",
+        "payload_off": "OFF",
+        # current action settings
+        "action_topic": "action-topic",
+        "action_template": "{{ value_json.current_action }}",
+        # target humidity
+        "target_humidity_command_topic": "target-humidity-command-topic",
+        "target_humidity_command_template": "{{ value }}",
+        "target_humidity_state_topic": "target-humidity-state-topic",
+        "target_humidity_state_template": "{{ value_json.target_humidity }}",
+        "min_humidity": 20,
+        "max_humidity": 80,
+        # current temperature
+        "current_temperature_topic": "current-temperature-topic",
+        "current_temperature_template": "{{ value_json.temperature }}",
+        # current humidity
+        "current_humidity_topic": "current-humidity-topic",
+        "current_humidity_template": "{{ value_json.humidity }}",
+        # preset mode
+        "preset_mode_command_topic": "preset-mode-command-topic",
+        "preset_mode_command_template": "{{ value }}",
+        "preset_mode_state_topic": "preset-mode-state-topic",
+        "preset_mode_value_template": "{{ value_json.preset_mode }}",
+        "preset_modes": ["auto", "eco"],
+        # fan mode
+        "fan_mode_command_topic": "fan-mode-command-topic",
+        "fan_mode_command_template": "{{ value }}",
+        "fan_mode_state_topic": "fan-mode-state-topic",
+        "fan_mode_state_template": "{{ value_json.fan_mode }}",
+        "fan_modes": ["off", "low", "medium", "high"],
+        # swing mode
+        "swing_mode_command_topic": "swing-mode-command-topic",
+        "swing_mode_command_template": "{{ value }}",
+        "swing_mode_state_topic": "swing-mode-state-topic",
+        "swing_mode_state_template": "{{ value_json.swing_mode }}",
+        "swing_modes": ["off", "on"],
+        # swing horizontal mode
+        "swing_horizontal_mode_command_topic": "swing-horizontal-mode-command-topic",
+        "swing_horizontal_mode_command_template": "{{ value }}",
+        "swing_horizontal_mode_state_topic": "swing-horizontal-mode-state-topic",
+        "swing_horizontal_mode_state_template": "{{ value_json.swing_horizontal_mode }}",
+        "swing_horizontal_modes": ["off", "on"],
+    },
+}
+MOCK_SUBENTRY_CLIMATE_HIGH_LOW_COMPONENT = {
+    "b085c09efba7ec76acd94e2e0f851387": {
+        "platform": "climate",
+        "name": "Cooler",
+        "entity_category": None,
+        "entity_picture": "https://example.com/b085c09efba7ec76acd94e2e0f851387",
+        "temperature_unit": "C",
+        "mode_command_topic": "mode-command-topic",
+        "mode_command_template": "{{ value }}",
+        "mode_state_topic": "mode-state-topic",
+        "mode_state_template": "{{ value_json.mode }}",
+        "modes": ["off", "heat", "cool", "auto"],
+        # high/low target temperature
+        "temperature_low_command_topic": "temperature-low-command-topic",
+        "temperature_low_command_template": "{{ value }}",
+        "temperature_low_state_topic": "temperature-low-state-topic",
+        "temperature_low_state_template": "{{ value_json.temperature_low }}",
+        "temperature_high_command_topic": "temperature-high-command-topic",
+        "temperature_high_command_template": "{{ value }}",
+        "temperature_high_state_topic": "temperature-high-state-topic",
+        "temperature_high_state_template": "{{ value_json.temperature_high }}",
+        "min_temp": 8,
+        "max_temp": 28,
+        "precision": "0.1",
+        "temp_step": 1.0,
+        "initial": 19.0,
+    },
+}
+MOCK_SUBENTRY_CLIMATE_NO_TARGET_TEMP_COMPONENT = {
+    "b085c09efba7ec76acd94e2e0f851388": {
+        "platform": "climate",
+        "name": "Cooler",
+        "entity_category": None,
+        "entity_picture": "https://example.com/b085c09efba7ec76acd94e2e0f851388",
+        "temperature_unit": "C",
+        "mode_command_topic": "mode-command-topic",
+        "mode_command_template": "{{ value }}",
+        "mode_state_topic": "mode-state-topic",
+        "mode_state_template": "{{ value_json.mode }}",
+        "modes": ["off", "heat", "cool", "auto"],
+    },
+}
 MOCK_SUBENTRY_COVER_COMPONENT = {
     "b37acf667fa04c688ad7dfb27de2178b": {
         "platform": "cover",
@@ -311,6 +422,18 @@ MOCK_BINARY_SENSOR_SUBENTRY_DATA_SINGLE = {
 MOCK_BUTTON_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
     "components": MOCK_SUBENTRY_BUTTON_COMPONENT,
+}
+MOCK_CLIMATE_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_CLIMATE_COMPONENT,
+}
+MOCK_CLIMATE_HIGH_LOW_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},
+    "components": MOCK_SUBENTRY_CLIMATE_HIGH_LOW_COMPONENT,
+}
+MOCK_CLIMATE_NO_TARGET_TEMP_SUBENTRY_DATA_SINGLE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
+    "components": MOCK_SUBENTRY_CLIMATE_NO_TARGET_TEMP_COMPONENT,
 }
 MOCK_COVER_SUBENTRY_DATA_SINGLE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
