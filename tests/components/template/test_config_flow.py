@@ -150,6 +150,16 @@ BINARY_SENSOR_OPTIONS = {
             {},
         ),
         (
+            "fan",
+            {"state": "{{ states('fan.one') }}"},
+            "on",
+            {"one": "on", "two": "off"},
+            {},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
+            {},
+        ),
+        (
             "image",
             {"url": "{{ states('sensor.one') }}"},
             "2024-07-09T00:00:00+00:00",
@@ -160,8 +170,8 @@ BINARY_SENSOR_OPTIONS = {
             {},
         ),
         (
-            "fan",
-            {"state": "{{ states('fan.one') }}"},
+            "light",
+            {"state": "{{ states('light.one') }}"},
             "on",
             {"one": "on", "two": "off"},
             {},
@@ -333,6 +343,12 @@ async def test_config_flow(
             {"set_cover_position": []},
         ),
         (
+            "fan",
+            {"state": "{{ states('fan.one') }}"},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
+        ),
+        (
             "image",
             {
                 "url": "{{ states('sensor.one') }}",
@@ -341,8 +357,8 @@ async def test_config_flow(
             {"verify_ssl": True},
         ),
         (
-            "fan",
-            {"state": "{{ states('fan.one') }}"},
+            "light",
+            {"state": "{{ states('light.one') }}"},
             {"turn_on": [], "turn_off": []},
             {"turn_on": [], "turn_off": []},
         ),
@@ -535,6 +551,16 @@ async def test_config_flow_device(
             "state",
         ),
         (
+            "fan",
+            {"state": "{{ states('fan.one') }}"},
+            {"state": "{{ states('fan.two') }}"},
+            ["on", "off"],
+            {"one": "on", "two": "off"},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
+            "state",
+        ),
+        (
             "image",
             {
                 "url": "{{ states('sensor.one') }}",
@@ -552,9 +578,9 @@ async def test_config_flow_device(
             "url",
         ),
         (
-            "fan",
-            {"state": "{{ states('fan.one') }}"},
-            {"state": "{{ states('fan.two') }}"},
+            "light",
+            {"state": "{{ states('light.one') }}"},
+            {"state": "{{ states('light.two') }}"},
             ["on", "off"],
             {"one": "on", "two": "off"},
             {"turn_on": [], "turn_off": []},
@@ -1392,6 +1418,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {"set_cover_position": []},
         ),
         (
+            "fan",
+            {"state": "{{ states('fan.one') }}"},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
+        ),
+        (
             "image",
             {
                 "url": "{{ states('sensor.one') }}",
@@ -1401,8 +1433,8 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {},
         ),
         (
-            "fan",
-            {"state": "{{ states('fan.one') }}"},
+            "light",
+            {"state": "{{ states('light.one') }}"},
             {"turn_on": [], "turn_off": []},
             {"turn_on": [], "turn_off": []},
         ),
