@@ -1381,7 +1381,7 @@ openhomedevice==2.2.0
 openwebifpy==4.3.1
 
 # homeassistant.components.opower
-opower==0.12.4
+opower==0.13.1
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6

@@ -3,27 +3,53 @@
     "step": {
       "user": {
         "data": {
-          "utility": "Utility name",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "utility": "Utility name"
         },
         "data_description": {
-          "utility": "The name of your utility provider",
-          "username": "The username for your utility account",
-          "password": "The password for your utility account"
+          "utility": "The name of your utility provider"
         }
       },
-      "mfa": {
-        "description": "The TOTP secret below is not one of the 6-digit time-based numeric codes. It is a string of around 16 characters containing the shared secret that enables your authenticator app to generate the correct time-based code at the appropriate time. See the documentation.",
+      "login_service": {
+        "title": "Opower Login Service",
+        "description": "This utility requires the [Opower Login Service/Add-on](https://github.com/tronikos/opower-login-service). Enter the URL to your already running service. If you do not have the Opower Login Service running, you should install it first.",
+        "data": {
+          "login_service_url": "URL of the Opower Login Service"
+        },
+        "data_description": {
+          "login_service_url": "For example: `http://7ef69028-opower-login-service` if you are running the [add-on](https://github.com/tronikos/opower-login-service), or `http://host-or-ip:7937` if you are running the service manually"
+        }
+      },
+      "credentials": {
+        "title": "Enter Credentials",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "totp_secret": "TOTP secret"
         },
         "data_description": {
-          "username": "[%key:component::opower::config::step::user::data_description::username%]",
-          "password": "[%key:component::opower::config::step::user::data_description::password%]",
-          "totp_secret": "The TOTP secret for your utility account, used for multi-factor authentication (MFA)."
+          "username": "The username for your utility account",
+          "password": "The password for your utility account",
+          "totp_secret": "This is not a 6-digit code. It is a string of around 16 characters containing the shared secret that enables your authenticator app to generate the correct time-based code at the appropriate time. See the documentation."
+        }
+      },
+      "mfa_options": {
+        "title": "Multi-Factor Authentication",
+        "description": "Your account requires multi-factor authentication (MFA). Select a method to receive your security code.",
+        "data": {
+          "mfa_method": "MFA Method"
+        },
+        "data_description": {
+          "mfa_method": "How to receive your security code"
+        }
+      },
+      "mfa_code": {
+        "title": "Enter Security Code",
+        "description": "A security code has been sent via your selected method. Please enter it below to complete login.",
+        "data": {
+          "mfa_code": "Security Code"
+        },
+        "data_description": {
+          "mfa_code": "Typically a 6-digit code"
         }
       },
       "reauth_confirm": {
@@ -31,25 +57,51 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "totp_secret": "[%key:component::opower::config::step::mfa::data::totp_secret%]"
+          "totp_secret": "[%key:component::opower::config::step::credentials::data::totp_secret%]"
         },
         "data_description": {
-          "username": "[%key:component::opower::config::step::user::data_description::username%]",
-          "password": "[%key:component::opower::config::step::user::data_description::password%]",
-          "totp_secret": "The TOTP secret for your utility account, used for multi-factor authentication (MFA)."
+          "username": "[%key:component::opower::config::step::credentials::data_description::username%]",
+          "password": "[%key:component::opower::config::step::credentials::data_description::password%]",
+          "totp_secret": "[%key:component::opower::config::step::credentials::data_description::totp_secret%]"
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "cannot_connect_login_service": "Failed to connect to the Opower Login Service. Please ensure the URL is correct and the service is running.",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_mfa_code": "The security code is incorrect. Please try again."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "[%key:component::opower::config::step::login_service::title%]",
+        "description": "[%key:component::opower::config::step::login_service::description%]",
+        "data": {
+          "login_service_url": "[%key:component::opower::config::step::login_service::data::login_service_url%]"
+        },
+        "data_description": {
+          "login_service_url": "[%key:component::opower::config::step::login_service::data_description::login_service_url%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect_login_service": "[%key:component::opower::config::error::cannot_connect_login_service%]"
+    },
+    "abort": {
+      "no_login_service_required": "Your utility does not require the [Opower Login Service/Add-on](https://github.com/tronikos/opower-login-service), so there are no options to configure."
+    }
+  },
   "issues": {
+    "login_service_url_missing": {
+      "title": "Missing Opower Login Service configuration for {utility_name}",
+      "description": "Your utility requires the [Opower Login Service/Add-on](https://github.com/tronikos/opower-login-service).\n\nPlease go to the [configure options](/config/integrations/integration/opower) to configure it."
+    },
     "return_to_grid_migration": {
       "title": "Return to grid statistics for account: {utility_account_id}",
       "description": "We found negative values in your existing consumption statistics, likely because you have solar. We split those in separate return statistics for a better experience in the Energy dashboard.\n\nPlease visit the [Energy configuration page]({energy_settings}) to add the following statistics in the **Return to grid** section:\n\n{target_ids}\n\nOnce you have added them, ignore this issue."
