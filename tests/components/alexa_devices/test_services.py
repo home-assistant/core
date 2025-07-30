@@ -20,9 +20,9 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-from .const import TEST_SERIAL_NUMBER
+from .const import TEST_DEVICE_ID, TEST_SERIAL_NUMBER
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_device_registry
 
 
 async def test_setup_services(
@@ -131,6 +131,13 @@ async def test_invalid_parameters(
 ) -> None:
     """Test invalid service parameters."""
 
+    device_entry = dr.DeviceEntry(
+        id=TEST_DEVICE_ID, identifiers={(DOMAIN, TEST_SERIAL_NUMBER)}
+    )
+    mock_device_registry(
+        hass,
+        {device_entry.id: device_entry},
+    )
     await setup_integration(hass, mock_config_entry)
 
     device_entry = device_registry.async_get_device(
