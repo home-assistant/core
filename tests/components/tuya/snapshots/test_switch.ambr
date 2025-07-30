@@ -464,7 +464,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'socket_1',
+    'translation_key': 'indexed_socket',
     'unique_id': 'tuya.eb0c772dabbb19d653ssi5switch_1',
     'unit_of_measurement': None,
   })
@@ -513,7 +513,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'socket_2',
+    'translation_key': 'indexed_socket',
     'unique_id': 'tuya.eb0c772dabbb19d653ssi5switch_2',
     'unit_of_measurement': None,
   })
@@ -658,7 +658,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_1',
+    'translation_key': 'indexed_switch',
     'unique_id': 'tuya.0665305284f3ebe9fdc1switch_1',
     'unit_of_measurement': None,
   })
@@ -995,7 +995,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_1',
+    'translation_key': 'indexed_switch',
     'unique_id': 'tuya.bf082711d275c0c883vb4pswitch_1',
     'unit_of_measurement': None,
   })
@@ -1044,7 +1044,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_2',
+    'translation_key': 'indexed_switch',
     'unique_id': 'tuya.bf082711d275c0c883vb4pswitch_2',
     'unit_of_measurement': None,
   })
@@ -1093,7 +1093,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_3',
+    'translation_key': 'indexed_switch',
     'unique_id': 'tuya.bf082711d275c0c883vb4pswitch_3',
     'unit_of_measurement': None,
   })
@@ -1142,7 +1142,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_4',
+    'translation_key': 'indexed_switch',
     'unique_id': 'tuya.bf082711d275c0c883vb4pswitch_4',
     'unit_of_measurement': None,
   })

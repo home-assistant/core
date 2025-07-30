@@ -147,6 +147,7 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+MIN_CONTROLLER_FIRMWARE_SDK_VERSION = AwesomeVersion("6.50.0")
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -799,11 +800,19 @@ class NodeEvents:
             node.on("notification", self.async_on_notification)
         )
 
-        # Create a firmware update entity for each non-controller device that
+        # Create a firmware update entity for each device that
         # supports firmware updates
-        if not node.is_controller_node and any(
-            cc.id == CommandClass.FIRMWARE_UPDATE_MD.value
-            for cc in node.command_classes
+        controller = self.controller_events.driver_events.driver.controller
+        if (
+            not (is_controller_node := node.is_controller_node)
+            and any(
+                cc.id == CommandClass.FIRMWARE_UPDATE_MD.value
+                for cc in node.command_classes
+            )
+        ) or (
+            is_controller_node
+            and (sdk_version := controller.sdk_version) is not None
+            and sdk_version >= MIN_CONTROLLER_FIRMWARE_SDK_VERSION
         ):
             async_dispatcher_send(
                 self.hass,
