@@ -1,0 +1,2038 @@
+# serializer version: 1
+# name: test_sensors[battery_monitor][sensor.battery_monitor_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'low_voltage',
+        'high_voltage',
+        'low_soc',
+        'low_starter_voltage',
+        'high_starter_voltage',
+        'low_temperature',
+        'high_temperature',
+        'mid_voltage',
+        'overload',
+        'dc_ripple',
+        'low_v_ac_out',
+        'high_v_ac_out',
+        'short_circuit',
+        'bms_lockout',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.battery_monitor_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Alarm',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm',
+    'unique_id': '01:02:03:04:05:07-alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[battery_monitor][sensor.battery_monitor_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Battery Monitor Alarm',
+      'options': list([
+        'low_voltage',
+        'high_voltage',
+        'low_soc',
+        'low_starter_voltage',
+        'high_starter_voltage',
+        'low_temperature',
+        'high_temperature',
+        'mid_voltage',
+        'overload',
+        'dc_ripple',
+        'low_v_ac_out',
+        'high_v_ac_out',
+        'short_circuit',
+        'bms_lockout',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.battery_monitor_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[battery_monitor][sensor.battery_monitor_aux_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.battery_monitor_aux_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Aux Mode',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'aux_mode',
+    'unique_id': '01:02:03:04:05:07-aux_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[battery_monitor][sensor.battery_monitor_aux_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Battery Monitor Aux Mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.battery_monitor_aux_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disabled',
+  })
+# ---
+# name: test_sensors[battery_monitor][sensor.battery_monitor_consumed_ampere_hours-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.battery_monitor_consumed_ampere_hours',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Consumed Ampere Hours',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:07-consumed_ampere_hours',
+    'unit_of_measurement': <Units.ELECTRIC_CURRENT_FLOW_AMPERE_HOUR: 'Ah'>,
+  })
+# ---
+# name: test_sensors[battery_monitor][sensor.battery_monitor_consumed_ampere_hours-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Battery Monitor Consumed Ampere Hours',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <Units.ELECTRIC_CURRENT_FLOW_AMPERE_HOUR: 'Ah'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.battery_monitor_consumed_ampere_hours',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-50.0',
+  })
+# ---
+# name: test_sensors[battery_monitor][sensor.battery_monitor_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.battery_monitor_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:07-current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensors[battery_monitor][sensor.battery_monitor_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Battery Monitor Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.battery_monitor_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[battery_monitor][sensor.battery_monitor_midpoint_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.battery_monitor_midpoint_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Midpoint Voltage',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:07-midpoint_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[battery_monitor][sensor.battery_monitor_midpoint_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Battery Monitor Midpoint Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.battery_monitor_midpoint_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[battery_monitor][sensor.battery_monitor_remaining_minutes-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.battery_monitor_remaining_minutes',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Remaining Minutes',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:07-remaining_minutes',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensors[battery_monitor][sensor.battery_monitor_remaining_minutes-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Battery Monitor Remaining Minutes',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.battery_monitor_remaining_minutes',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[battery_monitor][sensor.battery_monitor_signal_strength-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.battery_monitor_signal_strength',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Signal Strength',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:07-signal_strength',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_sensors[battery_monitor][sensor.battery_monitor_signal_strength-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Battery Monitor Signal Strength',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.battery_monitor_signal_strength',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-60',
+  })
+# ---
+# name: test_sensors[battery_monitor][sensor.battery_monitor_starter_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.battery_monitor_starter_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Starter Voltage',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:07-starter_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[battery_monitor][sensor.battery_monitor_starter_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Battery Monitor Starter Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.battery_monitor_starter_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[battery_monitor][sensor.battery_monitor_state_of_charge-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.battery_monitor_state_of_charge',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'State Of Charge',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:07-state_of_charge',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[battery_monitor][sensor.battery_monitor_state_of_charge-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Battery Monitor State Of Charge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.battery_monitor_state_of_charge',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '50.0',
+  })
+# ---
+# name: test_sensors[battery_monitor][sensor.battery_monitor_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.battery_monitor_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:07-temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[battery_monitor][sensor.battery_monitor_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Battery Monitor Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.battery_monitor_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[battery_monitor][sensor.battery_monitor_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.battery_monitor_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:07-voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[battery_monitor][sensor.battery_monitor_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Battery Monitor Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.battery_monitor_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12.53',
+  })
+# ---
+# name: test_sensors[dc_energy_meter][sensor.dc_energy_meter_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'low_voltage',
+        'high_voltage',
+        'low_soc',
+        'low_starter_voltage',
+        'high_starter_voltage',
+        'low_temperature',
+        'high_temperature',
+        'mid_voltage',
+        'overload',
+        'dc_ripple',
+        'low_v_ac_out',
+        'high_v_ac_out',
+        'short_circuit',
+        'bms_lockout',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dc_energy_meter_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Alarm',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm',
+    'unique_id': '01:02:03:04:05:09-alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[dc_energy_meter][sensor.dc_energy_meter_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'DC Energy Meter Alarm',
+      'options': list([
+        'low_voltage',
+        'high_voltage',
+        'low_soc',
+        'low_starter_voltage',
+        'high_starter_voltage',
+        'low_temperature',
+        'high_temperature',
+        'mid_voltage',
+        'overload',
+        'dc_ripple',
+        'low_v_ac_out',
+        'high_v_ac_out',
+        'short_circuit',
+        'bms_lockout',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dc_energy_meter_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[dc_energy_meter][sensor.dc_energy_meter_aux_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dc_energy_meter_aux_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Aux Mode',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'aux_mode',
+    'unique_id': '01:02:03:04:05:09-aux_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[dc_energy_meter][sensor.dc_energy_meter_aux_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'DC Energy Meter Aux Mode',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dc_energy_meter_aux_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'starter_voltage',
+  })
+# ---
+# name: test_sensors[dc_energy_meter][sensor.dc_energy_meter_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dc_energy_meter_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:09-current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensors[dc_energy_meter][sensor.dc_energy_meter_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'DC Energy Meter Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dc_energy_meter_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[dc_energy_meter][sensor.dc_energy_meter_meter_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'solar_charger',
+        'wind_charger',
+        'shaft_generator',
+        'alternator',
+        'fuel_cell',
+        'water_generator',
+        'dc_dc_charger',
+        'ac_charger',
+        'generic_source',
+        'generic_load',
+        'electric_drive',
+        'fridge',
+        'water_pump',
+        'bilge_pump',
+        'dc_system',
+        'inverter',
+        'water_heater',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dc_energy_meter_meter_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Meter Type',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'meter_type',
+    'unique_id': '01:02:03:04:05:09-meter_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[dc_energy_meter][sensor.dc_energy_meter_meter_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'DC Energy Meter Meter Type',
+      'options': list([
+        'solar_charger',
+        'wind_charger',
+        'shaft_generator',
+        'alternator',
+        'fuel_cell',
+        'water_generator',
+        'dc_dc_charger',
+        'ac_charger',
+        'generic_source',
+        'generic_load',
+        'electric_drive',
+        'fridge',
+        'water_pump',
+        'bilge_pump',
+        'dc_system',
+        'inverter',
+        'water_heater',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dc_energy_meter_meter_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'dc_dc_charger',
+  })
+# ---
+# name: test_sensors[dc_energy_meter][sensor.dc_energy_meter_signal_strength-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dc_energy_meter_signal_strength',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Signal Strength',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:09-signal_strength',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_sensors[dc_energy_meter][sensor.dc_energy_meter_signal_strength-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'DC Energy Meter Signal Strength',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dc_energy_meter_signal_strength',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-60',
+  })
+# ---
+# name: test_sensors[dc_energy_meter][sensor.dc_energy_meter_starter_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dc_energy_meter_starter_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Starter Voltage',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:09-starter_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[dc_energy_meter][sensor.dc_energy_meter_starter_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'DC Energy Meter Starter Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dc_energy_meter_starter_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-0.01',
+  })
+# ---
+# name: test_sensors[dc_energy_meter][sensor.dc_energy_meter_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dc_energy_meter_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:09-temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[dc_energy_meter][sensor.dc_energy_meter_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'DC Energy Meter Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dc_energy_meter_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[dc_energy_meter][sensor.dc_energy_meter_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dc_energy_meter_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:09-voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[dc_energy_meter][sensor.dc_energy_meter_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'DC Energy Meter Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dc_energy_meter_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12.52',
+  })
+# ---
+# name: test_sensors[solar_charger][sensor.solar_charger_battery_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.solar_charger_battery_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Battery Current',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:11-battery_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensors[solar_charger][sensor.solar_charger_battery_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Solar Charger Battery Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.solar_charger_battery_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.4',
+  })
+# ---
+# name: test_sensors[solar_charger][sensor.solar_charger_battery_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.solar_charger_battery_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Battery Voltage',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:11-battery_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[solar_charger][sensor.solar_charger_battery_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Solar Charger Battery Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.solar_charger_battery_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '13.88',
+  })
+# ---
+# name: test_sensors[solar_charger][sensor.solar_charger_charge_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.solar_charger_charge_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Charge State',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_state',
+    'unique_id': '01:02:03:04:05:11-charge_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[solar_charger][sensor.solar_charger_charge_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Solar Charger Charge State',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.solar_charger_charge_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'absorption',
+  })
+# ---
+# name: test_sensors[solar_charger][sensor.solar_charger_external_device_load-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.solar_charger_external_device_load',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'External Device Load',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:11-external_device_load',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensors[solar_charger][sensor.solar_charger_external_device_load-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Solar Charger External Device Load',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.solar_charger_external_device_load',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensors[solar_charger][sensor.solar_charger_signal_strength-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.solar_charger_signal_strength',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Signal Strength',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:11-signal_strength',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_sensors[solar_charger][sensor.solar_charger_signal_strength-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Solar Charger Signal Strength',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.solar_charger_signal_strength',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-60',
+  })
+# ---
+# name: test_sensors[solar_charger][sensor.solar_charger_solar_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.solar_charger_solar_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Solar Power',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:11-solar_power',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[solar_charger][sensor.solar_charger_solar_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Solar Charger Solar Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.solar_charger_solar_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '19',
+  })
+# ---
+# name: test_sensors[solar_charger][sensor.solar_charger_yield_today-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.solar_charger_yield_today',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Yield Today',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:11-yield_today',
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+  })
+# ---
+# name: test_sensors[solar_charger][sensor.solar_charger_yield_today-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Solar Charger Yield Today',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.solar_charger_yield_today',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '30',
+  })
+# ---
+# name: test_sensors[vebus][sensor.inverter_charger_ac_in_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.inverter_charger_ac_in_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Ac In Power',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:06-ac_in_power',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[vebus][sensor.inverter_charger_ac_in_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Inverter Charger Ac In Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inverter_charger_ac_in_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1459',
+  })
+# ---
+# name: test_sensors[vebus][sensor.inverter_charger_ac_in_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'ac_in_1',
+        'ac_in_2',
+        'not_connected',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.inverter_charger_ac_in_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Ac In State',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ac_in_state',
+    'unique_id': '01:02:03:04:05:06-ac_in_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[vebus][sensor.inverter_charger_ac_in_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Inverter Charger Ac In State',
+      'options': list([
+        'ac_in_1',
+        'ac_in_2',
+        'not_connected',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inverter_charger_ac_in_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'ac_in_1',
+  })
+# ---
+# name: test_sensors[vebus][sensor.inverter_charger_ac_out_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.inverter_charger_ac_out_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Ac Out Power',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:06-ac_out_power',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[vebus][sensor.inverter_charger_ac_out_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Inverter Charger Ac Out Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inverter_charger_ac_out_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1046',
+  })
+# ---
+# name: test_sensors[vebus][sensor.inverter_charger_battery_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.inverter_charger_battery_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Battery Current',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:06-battery_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_sensors[vebus][sensor.inverter_charger_battery_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Inverter Charger Battery Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inverter_charger_battery_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '23.2',
+  })
+# ---
+# name: test_sensors[vebus][sensor.inverter_charger_battery_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.inverter_charger_battery_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Battery Temperature',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:06-battery_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensors[vebus][sensor.inverter_charger_battery_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Inverter Charger Battery Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inverter_charger_battery_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '32',
+  })
+# ---
+# name: test_sensors[vebus][sensor.inverter_charger_battery_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.inverter_charger_battery_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Battery Voltage',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:06-battery_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensors[vebus][sensor.inverter_charger_battery_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Inverter Charger Battery Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inverter_charger_battery_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '14.45',
+  })
+# ---
+# name: test_sensors[vebus][sensor.inverter_charger_device_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'off',
+        'low_power',
+        'fault',
+        'bulk',
+        'absorption',
+        'float',
+        'storage',
+        'equalize_manual',
+        'inverting',
+        'power_supply',
+        'starting_up',
+        'repeated_absorption',
+        'recondition',
+        'battery_safe',
+        'active',
+        'external_control',
+        'not_available',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.inverter_charger_device_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Device State',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'device_state',
+    'unique_id': '01:02:03:04:05:06-device_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[vebus][sensor.inverter_charger_device_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Inverter Charger Device State',
+      'options': list([
+        'off',
+        'low_power',
+        'fault',
+        'bulk',
+        'absorption',
+        'float',
+        'storage',
+        'equalize_manual',
+        'inverting',
+        'power_supply',
+        'starting_up',
+        'repeated_absorption',
+        'recondition',
+        'battery_safe',
+        'active',
+        'external_control',
+        'not_available',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inverter_charger_device_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'float',
+  })
+# ---
+# name: test_sensors[vebus][sensor.inverter_charger_signal_strength-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.inverter_charger_signal_strength',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'Signal Strength',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:06-signal_strength',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_sensors[vebus][sensor.inverter_charger_signal_strength-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Inverter Charger Signal Strength',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inverter_charger_signal_strength',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-60',
+  })
+# ---
+# name: test_sensors[vebus][sensor.inverter_charger_state_of_charge-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.inverter_charger_state_of_charge',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'State Of Charge',
+    'platform': 'victron_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '01:02:03:04:05:06-state_of_charge',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensors[vebus][sensor.inverter_charger_state_of_charge-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Inverter Charger State Of Charge',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.inverter_charger_state_of_charge',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

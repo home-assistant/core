@@ -1,7 +1,8 @@
 """Test the Victron Bluetooth Low Energy config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
+from home_assistant_bluetooth import BluetoothServiceInfo
 import pytest
 
 from homeassistant import config_entries
@@ -20,8 +21,6 @@ from .fixtures import (
 )
 
 from tests.common import MockConfigEntry
-
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
 @pytest.fixture(autouse=True)
@@ -53,48 +52,54 @@ async def test_async_step_bluetooth_valid_device(
     assert flow_result.unique_id == VICTRON_VEBUS_SERVICE_INFO.address
 
 
-async def test_async_step_bluetooth_not_victron(hass: HomeAssistant) -> None:
-    """Test discovery via bluetooth not a victron device."""
+@pytest.mark.parametrize(
+    ("source", "service_info", "expected_reason", "test_description"),
+    [
+        (
+            config_entries.SOURCE_BLUETOOTH,
+            NOT_VICTRON_SERVICE_INFO,
+            "not_supported",
+            "not a victron device",
+        ),
+        (
+            config_entries.SOURCE_BLUETOOTH,
+            VICTRON_INVERTER_SERVICE_INFO,
+            "not_supported",
+            "victron device unsupported by library",
+        ),
+        (
+            config_entries.SOURCE_USER,
+            None,
+            "no_devices_found",
+            "no devices found",
+        ),
+    ],
+)
+async def test_abort_scenarios(
+    hass: HomeAssistant,
+    source: str,
+    service_info: BluetoothServiceInfo | None,
+    expected_reason: str,
+    test_description: str,
+) -> None:
+    """Test flows that result in abort."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=NOT_VICTRON_SERVICE_INFO,
+        context={"source": source},
+        data=service_info,
     )
     assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "not_supported"
+    assert result.get("reason") == expected_reason
 
 
-async def test_async_step_bluetooth_unsupported_by_library(hass: HomeAssistant) -> None:
-    """Test discovery via bluetooth of a victron device unsupported by the underlying library."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_BLUETOOTH},
-        data=VICTRON_INVERTER_SERVICE_INFO,
-    )
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "not_supported"
-
-
-async def test_async_step_user_no_devices_found(hass: HomeAssistant) -> None:
-    """Test setup from service info cache with no devices found."""
+async def test_async_step_user_with_devices_found(
+    hass: HomeAssistant, mock_discovered_service_info: AsyncMock
+) -> None:
+    """Test setup from service info cache with devices found."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "no_devices_found"
-
-
-async def test_async_step_user_with_devices_found(hass: HomeAssistant) -> None:
-    """Test setup from service info cache with devices found."""
-    with patch(
-        "homeassistant.components.victron_ble.config_flow.async_discovered_service_info",
-        return_value=[VICTRON_VEBUS_SERVICE_INFO],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
@@ -113,65 +118,47 @@ async def test_async_step_user_with_devices_found(hass: HomeAssistant) -> None:
     assert result3.get("reason") == "invalid_access_token"
 
 
-async def test_async_step_user_device_added_between_steps(hass: HomeAssistant) -> None:
-    """Test the device gets added via another flow between steps."""
-    with patch(
-        "homeassistant.components.victron_ble.config_flow.async_discovered_service_info",
-        return_value=[VICTRON_VEBUS_SERVICE_INFO],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
+async def test_async_step_user_device_added_between_steps(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_discovered_service_info: AsyncMock,
+) -> None:
+    """Test abort when the device gets added via another flow between steps."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+    )
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=VICTRON_VEBUS_SERVICE_INFO.address,
-    )
-    entry.add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.victron_ble.async_setup_entry", return_value=True
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={"address": VICTRON_VEBUS_SERVICE_INFO.address},
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"address": VICTRON_VEBUS_SERVICE_INFO.address},
+    )
     assert result2.get("type") is FlowResultType.ABORT
     assert result2.get("reason") == "already_configured"
 
 
 async def test_async_step_user_with_found_devices_already_setup(
     hass: HomeAssistant,
+    mock_config_entry_added_to_hass: MockConfigEntry,
+    mock_discovered_service_info: AsyncMock,
 ) -> None:
     """Test setup from service info cache with devices found."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=VICTRON_VEBUS_SERVICE_INFO.address,
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
     )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.victron_ble.config_flow.async_discovered_service_info",
-        return_value=[VICTRON_VEBUS_SERVICE_INFO],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "no_devices_found"
 
 
-async def test_async_step_bluetooth_devices_already_setup(hass: HomeAssistant) -> None:
+async def test_async_step_bluetooth_devices_already_setup(
+    hass: HomeAssistant, mock_config_entry_added_to_hass: MockConfigEntry
+) -> None:
     """Test we can't start a flow if there is already a config entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=VICTRON_VEBUS_SERVICE_INFO.address,
-    )
-    entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

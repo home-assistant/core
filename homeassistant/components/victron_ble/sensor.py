@@ -35,6 +35,12 @@ from homeassistant.helpers.sensor import sensor_device_info_to_hass_device_info
 
 LOGGER = logging.getLogger(__name__)
 
+AC_IN_OPTIONS = [
+    "ac_in_1",
+    "ac_in_2",
+    "not_connected",
+]
+
 ALARM_OPTIONS = [
     "low_voltage",
     "high_voltage",
@@ -155,8 +161,8 @@ SENSOR_DESCRIPTIONS = {
     Keys.AC_IN_STATE: SensorEntityDescription(
         key=Keys.AC_IN_STATE,
         device_class=SensorDeviceClass.ENUM,
-        translation_key="device_state",
-        options=DEVICE_STATE_OPTIONS,
+        translation_key="ac_in_state",
+        options=AC_IN_OPTIONS,
     ),
     Keys.AC_OUT_POWER: SensorEntityDescription(
         key=Keys.AC_OUT_POWER,

@@ -37,6 +37,14 @@
       "ac_in_power": {
         "name": "AC-in power"
       },
+      "ac_in_state": {
+        "name": "AC-in state",
+        "state": {
+          "ac_in_1": "AC-in 1",
+          "ac_in_2": "AC-in 2",
+          "not_connected": "Not connected"
+        }
+      },
       "ac_out_power": {
         "name": "AC-out power"
       },
