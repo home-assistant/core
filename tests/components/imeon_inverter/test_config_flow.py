@@ -3,14 +3,17 @@
 from copy import deepcopy
 from unittest.mock import AsyncMock, MagicMock
 
+from aiohttp import ClientError
 import pytest
 
 from homeassistant.components.imeon_inverter.const import DOMAIN
+from homeassistant.components.imeon_inverter.coordinator import InverterCoordinator
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_SERIAL
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .conftest import TEST_DISCOVER, TEST_SERIAL, TEST_USER_INPUT
 
@@ -203,3 +206,30 @@ async def test_ssdp_abort(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+@pytest.mark.parametrize(
+    ("error", "expected"),
+    [
+        (TimeoutError("Timeout"), TimeoutError),
+        (ClientError("Client error"), ClientError),
+        (ValueError("Value error"), ValueError),
+    ],
+)
+async def test_coordinator_update_method_directly(
+    hass: HomeAssistant,
+    mock_imeon_inverter: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    error: Exception,
+    expected: type[Exception],
+) -> None:
+    """Test direct de la méthode d'update du coordinator."""
+    coordinator = InverterCoordinator(hass=hass, entry=mock_config_entry)
+
+    mock_imeon_inverter.update.side_effect = error
+
+    with pytest.raises(UpdateFailed) as exc_info:
+        await coordinator._async_update_data()
+
+    assert isinstance(exc_info.value.__cause__, expected)
+    mock_imeon_inverter.update.reset_mock()
