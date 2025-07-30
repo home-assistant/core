@@ -22,6 +22,9 @@
     "set_v40_min": {
       "service": "mdi:car-coolant-level"
     },
+    "turn_away_mode_on": {
+      "service": "mdi:beach"
+    },
     "turn_off": {
       "service": "mdi:water-boiler-off"
     },

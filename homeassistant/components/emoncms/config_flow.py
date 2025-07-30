@@ -11,7 +11,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import callback
@@ -179,8 +179,49 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconfigure the entry."""
+        errors: dict[str, str] = {}
+        description_placeholders = {}
+        reconfig_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            url = user_input[CONF_URL]
+            api_key = user_input[CONF_API_KEY]
+            emoncms_client = EmoncmsClient(
+                url, api_key, session=async_get_clientsession(self.hass)
+            )
+            result = await get_feed_list(emoncms_client)
+            if not result[CONF_SUCCESS]:
+                errors["base"] = "api_error"
+                description_placeholders = {"details": result[CONF_MESSAGE]}
+            else:
+                await self.async_set_unique_id(await emoncms_client.async_get_uuid())
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconfig_entry,
+                    title=sensor_name(url),
+                    data=user_input,
+                    reload_even_if_entry_is_unchanged=False,
+                )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_URL): str,
+                        vol.Required(CONF_API_KEY): str,
+                    }
+                ),
+                user_input or reconfig_entry.data,
+            ),
+            errors=errors,
+            description_placeholders=description_placeholders,
+        )
 
-class EmoncmsOptionsFlow(OptionsFlow):
+
+class EmoncmsOptionsFlow(OptionsFlowWithReload):
     """Emoncms Options flow handler."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:

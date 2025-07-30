@@ -22,7 +22,9 @@
       }
     },
     "abort": {
-      "already_configured": "This server is already configured"
+      "already_configured": "This server is already configured",
+      "unique_id_mismatch": "This emoncms serial number does not match the previous serial number",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "selector": {

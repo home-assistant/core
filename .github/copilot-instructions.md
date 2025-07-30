@@ -45,6 +45,12 @@ rules:
 
 **When Reviewing/Creating Code**: Always check the integration's quality scale level and exemption status before applying rules.
 
+## Code Review Guidelines
+
+**When reviewing code, do NOT comment on:**
+- **Missing imports** - We use static analysis tooling to catch that
+- **Code formatting** - We have ruff as a formatting tool that will catch those if needed (unless specifically instructed otherwise in these instructions)
+
 ## Python Requirements
 
 - **Compatibility**: Python 3.13+
@@ -1149,7 +1155,7 @@ _LOGGER.debug("Processing data: %s", data)  # Use lazy logging
 ### Validation Commands
 ```bash
 # Check specific integration
-python -m script.hassfest --integration my_integration
+python -m script.hassfest --integration-path homeassistant/components/my_integration
 
 # Validate quality scale
 # Check quality_scale.yaml against current rules

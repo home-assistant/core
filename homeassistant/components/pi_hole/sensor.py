@@ -8,7 +8,7 @@ from typing import Any
 from hole import Hole
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import CONF_API_VERSION, CONF_NAME, PERCENTAGE
+from homeassistant.const import CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -133,7 +133,7 @@ async def async_setup_entry(
             description,
         )
         for description in (
-            SENSOR_TYPES if entry.data[CONF_API_VERSION] == 5 else SENSOR_TYPES_V6
+            SENSOR_TYPES if hole_data.api_version == 5 else SENSOR_TYPES_V6
         )
     ]
     async_add_entities(sensors, True)

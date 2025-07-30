@@ -37,7 +37,7 @@ def _get_mock_push_lock():
     mock_push_lock.wait_for_first_update = AsyncMock()
     mock_push_lock.stop = AsyncMock()
     mock_push_lock.lock_state = LockState(
-        LockStatus.UNLOCKED, DoorStatus.CLOSED, None, None
+        LockStatus.UNLOCKED, DoorStatus.CLOSED, None, None, None, None
     )
     mock_push_lock.lock_status = LockStatus.UNLOCKED
     mock_push_lock.door_status = DoorStatus.CLOSED

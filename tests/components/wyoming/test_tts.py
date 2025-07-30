@@ -52,6 +52,7 @@ async def test_get_tts_audio(
 
     # Verify audio
     audio_events = [
+        AudioStart(rate=16000, width=2, channels=1).event(),
         AudioChunk(audio=audio, rate=16000, width=2, channels=1).event(),
         AudioStop().event(),
     ]
@@ -77,7 +78,10 @@ async def test_get_tts_audio(
         assert wav_file.getframerate() == 16000
         assert wav_file.getsampwidth() == 2
         assert wav_file.getnchannels() == 1
-        assert wav_file.readframes(wav_file.getnframes()) == audio
+
+        # nframes = 0 due to streaming
+        assert len(data) == len(audio) + 44  # WAVE header is 44 bytes
+        assert data[44:] == audio
 
     assert mock_client.written == snapshot
 
@@ -88,6 +92,7 @@ async def test_get_tts_audio_different_formats(
     """Test changing preferred audio format."""
     audio = bytes(16000 * 2 * 1)  # one second
     audio_events = [
+        AudioStart(rate=16000, width=2, channels=1).event(),
         AudioChunk(audio=audio, rate=16000, width=2, channels=1).event(),
         AudioStop().event(),
     ]
@@ -123,6 +128,7 @@ async def test_get_tts_audio_different_formats(
 
     # MP3 is the default
     audio_events = [
+        AudioStart(rate=16000, width=2, channels=1).event(),
         AudioChunk(audio=audio, rate=16000, width=2, channels=1).event(),
         AudioStop().event(),
     ]
@@ -167,6 +173,7 @@ async def test_get_tts_audio_audio_oserror(
     """Test get audio and error raising."""
     audio = bytes(100)
     audio_events = [
+        AudioStart(rate=16000, width=2, channels=1).event(),
         AudioChunk(audio=audio, rate=16000, width=2, channels=1).event(),
         AudioStop().event(),
     ]
@@ -197,6 +204,7 @@ async def test_voice_speaker(
     """Test using a different voice and speaker."""
     audio = bytes(100)
     audio_events = [
+        AudioStart(rate=16000, width=2, channels=1).event(),
         AudioChunk(audio=audio, rate=16000, width=2, channels=1).event(),
         AudioStop().event(),
     ]

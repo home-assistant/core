@@ -685,7 +685,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensors[silabs_evse_charging][binary_sensor.evse_supply_charging_state-entry]
+# name: test_binary_sensors[silabs_evse_charging][binary_sensor.evse_charger_supply_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -698,7 +698,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.evse_supply_charging_state',
+    'entity_id': 'binary_sensor.evse_charger_supply_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -710,24 +710,24 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'Supply charging state',
+    'original_name': 'Charger supply state',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'evse_supply_charging_state',
+    'translation_key': 'evse_supply_state',
     'unique_id': '00000000000004D2-0000000000000017-MatterNodeDevice-1-EnergyEvseSupplyStateSensor-153-1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[silabs_evse_charging][binary_sensor.evse_supply_charging_state-state]
+# name: test_binary_sensors[silabs_evse_charging][binary_sensor.evse_charger_supply_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
-      'friendly_name': 'evse Supply charging state',
+      'friendly_name': 'evse Charger supply state',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.evse_supply_charging_state',
+    'entity_id': 'binary_sensor.evse_charger_supply_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

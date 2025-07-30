@@ -50,9 +50,23 @@
     },
     "update_failed": {
       "message": "Data retrieval failed when trying to access the PlayStation Network."
+    },
+    "group_invalid": {
+      "message": "Failed to send message to group {group_name}. The group is invalid or does not exist."
+    },
+    "send_message_forbidden": {
+      "message": "Failed to send message to group {group_name}. You are not allowed to send messages to this group."
+    },
+    "send_message_failed": {
+      "message": "Failed to send message to group {group_name}. Try again later."
     }
   },
   "entity": {
+    "binary_sensor": {
+      "ps_plus_status": {
+        "name": "Subscribed to PlayStation Plus"
+      }
+    },
     "sensor": {
       "trophy_level": {
         "name": "Trophy level"
@@ -90,6 +104,19 @@
           "availabletocommunicate": "Online on PS App",
           "busy": "Away"
         }
+      }
+    },
+    "image": {
+      "share_profile": {
+        "name": "Share profile"
+      },
+      "avatar": {
+        "name": "Avatar"
+      }
+    },
+    "notify": {
+      "group_message": {
+        "name": "Group: {group_name}"
       }
     }
   }
