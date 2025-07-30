@@ -32,7 +32,7 @@ RUN --mount=from=ghcr.io/astral-sh/uv:0.7.1,source=/uv,target=/bin/uv \
         go2rtc-client==0.2.1 \
         ha-ffmpeg==3.2.2 \
         hassil==2.2.3 \
-        home-assistant-intents==2025.6.23 \
+        home-assistant-intents==2025.7.30 \
         mutagen==1.47.0 \
         pymicro-vad==1.0.1 \
         pyspeex-noise==1.0.2
