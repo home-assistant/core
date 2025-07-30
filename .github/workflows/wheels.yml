@@ -19,9 +19,9 @@ on:
 env:
   DEFAULT_PYTHON: "3.13"
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref_name}}
-  cancel-in-progress: true
+# concurrency:
+#   group: ${{ github.workflow }}-${{ github.ref_name}}
+#   cancel-in-progress: true
 
 jobs:
   init:
