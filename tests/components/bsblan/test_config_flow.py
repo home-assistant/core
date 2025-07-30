@@ -247,24 +247,22 @@ async def test_authentication_error_vs_connection_error(
     # Test connection error first
     mock_bsblan.device.side_effect = BSBLANConnectionError
 
-    result_connection = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+    result = await _init_user_flow(
+        hass,
+        {
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 80,
         },
     )
 
-    assert result_connection.get("errors") == {"base": "cannot_connect"}
+    _assert_form_result(result, "user", {"base": "cannot_connect"})
 
     # Reset and test authentication error
     mock_bsblan.device.side_effect = BSBLANAuthError
 
-    result_auth = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data={
+    result = await _init_user_flow(
+        hass,
+        {
             CONF_HOST: "127.0.0.1",
             CONF_PORT: 80,
             CONF_USERNAME: "admin",
@@ -272,7 +270,7 @@ async def test_authentication_error_vs_connection_error(
         },
     )
 
-    assert result_auth.get("errors") == {"base": "invalid_auth"}
+    _assert_form_result(result, "user", {"base": "invalid_auth"})
 
 
 async def test_user_device_exists_abort(
@@ -676,8 +674,7 @@ async def test_reauth_flow_success(
         },
     )
 
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "reauth_confirm"
+    _assert_form_result(result, "reauth_confirm")
 
     # Check that the form has the correct description placeholder
     assert result.get("description_placeholders") == {"name": "BSBLAN Setup"}
@@ -687,17 +684,17 @@ async def test_reauth_flow_success(
     assert data_schema is not None
 
     # Complete reauth with new credentials
-    result = await hass.config_entries.flow.async_configure(
+    result = await _configure_flow(
+        hass,
         result["flow_id"],
-        user_input={
+        {
             CONF_PASSKEY: "new_passkey",
             CONF_USERNAME: "new_admin",
             CONF_PASSWORD: "new_password",
         },
     )
 
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "reauth_successful"
+    _assert_abort_result(result, "reauth_successful")
 
     # Verify config entry was updated with new credentials
     assert mock_config_entry.data[CONF_PASSKEY] == "new_passkey"
@@ -728,22 +725,20 @@ async def test_reauth_flow_auth_error(
         },
     )
 
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "reauth_confirm"
+    _assert_form_result(result, "reauth_confirm")
 
     # Submit with wrong credentials
-    result = await hass.config_entries.flow.async_configure(
+    result = await _configure_flow(
+        hass,
         result["flow_id"],
-        user_input={
+        {
             CONF_PASSKEY: "wrong_passkey",
             CONF_USERNAME: "wrong_admin",
             CONF_PASSWORD: "wrong_password",
         },
     )
 
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "reauth_confirm"
-    assert result.get("errors") == {"base": "invalid_auth"}
+    _assert_form_result(result, "reauth_confirm", {"base": "invalid_auth"})
 
     # Verify that user input is preserved in the form after error
     data_schema = result.get("data_schema")
@@ -781,22 +776,20 @@ async def test_reauth_flow_connection_error(
         },
     )
 
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "reauth_confirm"
+    _assert_form_result(result, "reauth_confirm")
 
     # Submit credentials but get connection error
-    result = await hass.config_entries.flow.async_configure(
+    result = await _configure_flow(
+        hass,
         result["flow_id"],
-        user_input={
+        {
             CONF_PASSKEY: "1234",
             CONF_USERNAME: "admin",
             CONF_PASSWORD: "admin1234",
         },
     )
 
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "reauth_confirm"
-    assert result.get("errors") == {"base": "cannot_connect"}
+    _assert_form_result(result, "reauth_confirm", {"base": "cannot_connect"})
 
 
 async def test_reauth_flow_preserves_existing_values(
@@ -816,19 +809,18 @@ async def test_reauth_flow_preserves_existing_values(
         },
     )
 
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "reauth_confirm"
+    _assert_form_result(result, "reauth_confirm")
 
     # Submit without changing any credentials (only password is provided)
-    result = await hass.config_entries.flow.async_configure(
+    result = await _configure_flow(
+        hass,
         result["flow_id"],
-        user_input={
+        {
             CONF_PASSWORD: "new_password_only",
         },
     )
 
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "reauth_successful"
+    _assert_abort_result(result, "reauth_successful")
 
     # Verify that existing passkey and username are preserved
     assert mock_config_entry.data[CONF_PASSKEY] == "1234"  # Original value
@@ -854,16 +846,16 @@ async def test_reauth_flow_partial_credentials_update(
     )
 
     # Submit with only username and password changes
-    result = await hass.config_entries.flow.async_configure(
+    result = await _configure_flow(
+        hass,
         result["flow_id"],
-        user_input={
+        {
             CONF_USERNAME: "new_admin",
             CONF_PASSWORD: "new_password",
         },
     )
 
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "reauth_successful"
+    _assert_abort_result(result, "reauth_successful")
 
     # Verify partial update: passkey preserved, username and password updated
     assert mock_config_entry.data[CONF_PASSKEY] == "1234"  # Original preserved
@@ -897,7 +889,8 @@ async def test_zeroconf_discovery_auth_error_during_confirm(
     # Now setup auth error for the confirmation step
     mock_bsblan.device.side_effect = BSBLANAuthError
 
-    result = await hass.config_entries.flow.async_configure(
+    result = await _configure_flow(
+        hass,
         result["flow_id"],
         {
             CONF_PASSKEY: "wrong_key",
