@@ -43,9 +43,7 @@ rules:
   integration-owner: done
   log-when-unavailable: todo
   parallel-updates:
-    status: exempt
-    comment: |
-      This integration uses a coordinator and makes no action calls.
+    status: done
   reauthentication-flow:
     status: todo
   test-coverage: done
