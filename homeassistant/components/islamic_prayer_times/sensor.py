@@ -38,8 +38,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         translation_key="maghrib",
     ),
     SensorEntityDescription(
-        key="Isha",
-        translation_key="isha",
+        key="Ishaa",
+        translation_key="ishaa",
     ),
     SensorEntityDescription(
         key="Midnight",
