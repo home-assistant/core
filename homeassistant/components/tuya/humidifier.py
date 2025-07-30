@@ -21,6 +21,7 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
 from .entity import TuyaEntity
 from .models import IntegerTypeData
+from .util import ActionDPCodeNotFoundError
 
 
 @dataclass(frozen=True)
@@ -169,17 +170,28 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
+        if self._switch_dpcode is None:
+            raise ActionDPCodeNotFoundError(
+                self.device,
+                self.entity_description.dpcode or self.entity_description.key,
+            )
         self._send_command([{"code": self._switch_dpcode, "value": True}])
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
+        if self._switch_dpcode is None:
+            raise ActionDPCodeNotFoundError(
+                self.device,
+                self.entity_description.dpcode or self.entity_description.key,
+            )
         self._send_command([{"code": self._switch_dpcode, "value": False}])
 
     def set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         if self._set_humidity is None:
-            raise RuntimeError(
-                "Cannot set humidity, device doesn't provide methods to set it"
+            raise ActionDPCodeNotFoundError(
+                self.device,
+                self.entity_description.humidity,
             )
 
         self._send_command(

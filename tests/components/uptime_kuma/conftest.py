@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from pythonkuma import MonitorType, UptimeKumaMonitor, UptimeKumaVersion
 from pythonkuma.models import MonitorStatus
+from pythonkuma.update import LatestRelease
 
 from homeassistant.components.uptime_kuma.const import DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
@@ -96,6 +97,25 @@ def mock_pythonkuma() -> Generator[AsyncMock]:
         }
         client.version = UptimeKumaVersion(
             version="2.0.0", major="2", minor="0", patch="0"
+        )
+
+        yield client
+
+
+@pytest.fixture(autouse=True)
+def mock_update_checker() -> Generator[AsyncMock]:
+    """Mock Update checker."""
+
+    with patch(
+        "homeassistant.components.uptime_kuma.UpdateChecker",
+        autospec=True,
+    ) as mock_client:
+        client = mock_client.return_value
+        client.latest_release.return_value = LatestRelease(
+            html_url="https://github.com/louislam/uptime-kuma/releases/tag/2.0.1",
+            name="2.0.1",
+            tag_name="2.0.1",
+            body="**RELEASE_NOTES**",
         )
 
         yield client
