@@ -116,7 +116,13 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
             return self.async_create_entry(
                 title=self.models[user_input[CONF_MODEL]].name, data=user_input
             )
-        await self._get_models()
+        try:
+            await self._get_models()
+        except OpenRouterError:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
         options = [
             SelectOptionDict(value=model.id, label=model.name)
             for model in self.models.values()
@@ -168,7 +174,13 @@ class AITaskDataFlowHandler(OpenRouterSubentryFlowHandler):
             return self.async_create_entry(
                 title=self.models[user_input[CONF_MODEL]].name, data=user_input
             )
-        await self._get_models()
+        try:
+            await self._get_models()
+        except OpenRouterError:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
         options = [
             SelectOptionDict(value=model.id, label=model.name)
             for model in self.models.values()

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Callable
 import json
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import openai
 from openai.types.chat import (
@@ -215,7 +215,9 @@ class OpenRouterEntity(Entity):
             if (m := _convert_content_to_chat_message(content))
         ]
 
-        if structure and structure_name:
+        if structure:
+            if TYPE_CHECKING:
+                assert structure_name is not None
             model_args["response_format"] = ResponseFormatJSONSchema(
                 type="json_schema",
                 json_schema=_format_structured_output(

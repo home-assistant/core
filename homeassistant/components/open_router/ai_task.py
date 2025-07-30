@@ -65,11 +65,6 @@ class OpenRouterAITaskEntity(
         try:
             data = json_loads(text)
         except JSONDecodeError as err:
-            _LOGGER.error(
-                "Failed to parse JSON response: %s. Response: %s",
-                err,
-                text,
-            )
             raise HomeAssistantError(
                 "Error with OpenRouter structured response"
             ) from err

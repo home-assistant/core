@@ -208,3 +208,33 @@ async def test_create_ai_task(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_MODEL: "openai/gpt-4"}
+
+
+@pytest.mark.parametrize(
+    "subentry_type",
+    ["conversation", "ai_task_data"],
+)
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [(OpenRouterError("exception"), "cannot_connect"), (Exception, "unknown")],
+)
+async def test_subentry_exceptions(
+    hass: HomeAssistant,
+    mock_open_router_client: AsyncMock,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    subentry_type: str,
+    exception: Exception,
+    reason: str,
+) -> None:
+    """Test subentry flow exceptions."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_open_router_client.get_models.side_effect = exception
+
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, subentry_type),
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
