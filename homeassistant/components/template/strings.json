@@ -179,7 +179,7 @@
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",
           "url": "Defines a template to get the URL on which the image is served.",
-          "verify_ssl": "Enable or disable SSL certificate verification. Set to false to use an http-only URL, or you have a self-signed SSL certificate and haven’t installed the CA certificate to enable verification."
+          "verify_ssl": "Enable or disable SSL certificate verification. Disable to use an http-only URL, or if you have a self-signed SSL certificate and haven’t installed the CA certificate to enable verification."
         },
         "sections": {
           "advanced_options": {
