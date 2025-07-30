@@ -142,6 +142,14 @@ def _retrieve_link_attenuation_received_state(
     return status.attenuation[1] / 10  # type: ignore[no-any-return]
 
 
+def _retrieve_cpu_temperature_state(
+    status: FritzStatus, last_value: float | None
+) -> float:
+    """Return the first CPU temperature value."""
+    temps = status.get_cpu_temperatures
+    return temps[0]
+
+
 @dataclass(frozen=True, kw_only=True)
 class FritzSensorEntityDescription(SensorEntityDescription, FritzEntityDescription):
     """Describes Fritz sensor entity."""
@@ -273,6 +281,15 @@ SENSOR_TYPES: tuple[FritzSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         value_fn=_retrieve_link_attenuation_received_state,
         is_suitable=lambda info: info.wan_enabled and info.connection == DSL_CONNECTION,
+    ),
+    SensorEntityDescription(
+        key="cpu_temperature",
+        name="CPU Temperature",
+        native_unit_of_measurement="°C",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_retrieve_cpu_temperature_state,
     ),
 )
 
