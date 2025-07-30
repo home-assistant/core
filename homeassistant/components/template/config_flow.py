@@ -72,6 +72,24 @@ from .cover import (
     STOP_ACTION,
     async_create_preview_cover,
 )
+from .fan import (
+    CONF_OFF_ACTION,
+    CONF_ON_ACTION,
+    CONF_PERCENTAGE,
+    CONF_SET_PERCENTAGE_ACTION,
+    CONF_SPEED_COUNT,
+    async_create_preview_fan,
+)
+from .light import (
+    CONF_HS,
+    CONF_HS_ACTION,
+    CONF_LEVEL,
+    CONF_LEVEL_ACTION,
+    CONF_TEMPERATURE,
+    CONF_TEMPERATURE_ACTION,
+    async_create_preview_light,
+)
+from .lock import CONF_LOCK, CONF_OPEN, CONF_UNLOCK, async_create_preview_lock
 from .number import (
     CONF_MAX,
     CONF_MIN,
@@ -86,6 +104,18 @@ from .select import CONF_OPTIONS, CONF_SELECT_OPTION, async_create_preview_selec
 from .sensor import async_create_preview_sensor
 from .switch import async_create_preview_switch
 from .template_entity import TemplateEntity
+from .vacuum import (
+    CONF_FAN_SPEED,
+    CONF_FAN_SPEED_LIST,
+    SERVICE_CLEAN_SPOT,
+    SERVICE_LOCATE,
+    SERVICE_PAUSE,
+    SERVICE_RETURN_TO_BASE,
+    SERVICE_SET_FAN_SPEED,
+    SERVICE_START,
+    SERVICE_STOP,
+    async_create_preview_vacuum,
+)
 
 _SCHEMA_STATE: dict[vol.Marker, Any] = {
     vol.Required(CONF_STATE): selector.TemplateSelector(),
@@ -173,10 +203,43 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                 )
             }
 
+    if domain == Platform.FAN:
+        schema |= _SCHEMA_STATE | {
+            vol.Required(CONF_ON_ACTION): selector.ActionSelector(),
+            vol.Required(CONF_OFF_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_PERCENTAGE): selector.TemplateSelector(),
+            vol.Optional(CONF_SET_PERCENTAGE_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_SPEED_COUNT): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=1, max=100, step=1, mode=selector.NumberSelectorMode.BOX
+                ),
+            ),
+        }
+
     if domain == Platform.IMAGE:
         schema |= {
             vol.Required(CONF_URL): selector.TemplateSelector(),
             vol.Optional(CONF_VERIFY_SSL, default=True): selector.BooleanSelector(),
+        }
+
+    if domain == Platform.LIGHT:
+        schema |= _SCHEMA_STATE | {
+            vol.Required(CONF_TURN_ON): selector.ActionSelector(),
+            vol.Required(CONF_TURN_OFF): selector.ActionSelector(),
+            vol.Optional(CONF_LEVEL): selector.TemplateSelector(),
+            vol.Optional(CONF_LEVEL_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_HS): selector.TemplateSelector(),
+            vol.Optional(CONF_HS_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_TEMPERATURE): selector.TemplateSelector(),
+            vol.Optional(CONF_TEMPERATURE_ACTION): selector.ActionSelector(),
+        }
+
+    if domain == Platform.LOCK:
+        schema |= _SCHEMA_STATE | {
+            vol.Required(CONF_LOCK): selector.ActionSelector(),
+            vol.Required(CONF_UNLOCK): selector.ActionSelector(),
+            vol.Optional(CONF_CODE_FORMAT): selector.TemplateSelector(),
+            vol.Optional(CONF_OPEN): selector.ActionSelector(),
         }
 
     if domain == Platform.NUMBER:
@@ -250,6 +313,26 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(CONF_VALUE_TEMPLATE): selector.TemplateSelector(),
             vol.Optional(CONF_TURN_ON): selector.ActionSelector(),
             vol.Optional(CONF_TURN_OFF): selector.ActionSelector(),
+        }
+
+    if domain == Platform.VACUUM:
+        schema |= _SCHEMA_STATE | {
+            vol.Required(SERVICE_START): selector.ActionSelector(),
+            vol.Optional(CONF_FAN_SPEED): selector.TemplateSelector(),
+            vol.Optional(CONF_FAN_SPEED_LIST): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[],
+                    multiple=True,
+                    custom_value=True,
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            ),
+            vol.Optional(SERVICE_SET_FAN_SPEED): selector.ActionSelector(),
+            vol.Optional(SERVICE_STOP): selector.ActionSelector(),
+            vol.Optional(SERVICE_PAUSE): selector.ActionSelector(),
+            vol.Optional(SERVICE_RETURN_TO_BASE): selector.ActionSelector(),
+            vol.Optional(SERVICE_CLEAN_SPOT): selector.ActionSelector(),
+            vol.Optional(SERVICE_LOCATE): selector.ActionSelector(),
         }
 
     schema |= {
@@ -358,11 +441,15 @@ TEMPLATE_TYPES = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.COVER,
+    Platform.FAN,
     Platform.IMAGE,
+    Platform.LIGHT,
+    Platform.LOCK,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.VACUUM,
 ]
 
 CONFIG_FLOW = {
@@ -386,10 +473,25 @@ CONFIG_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.COVER),
     ),
+    Platform.FAN: SchemaFlowFormStep(
+        config_schema(Platform.FAN),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.FAN),
+    ),
     Platform.IMAGE: SchemaFlowFormStep(
         config_schema(Platform.IMAGE),
         preview="template",
         validate_user_input=validate_user_input(Platform.IMAGE),
+    ),
+    Platform.LIGHT: SchemaFlowFormStep(
+        config_schema(Platform.LIGHT),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.LIGHT),
+    ),
+    Platform.LOCK: SchemaFlowFormStep(
+        config_schema(Platform.LOCK),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.LOCK),
     ),
     Platform.NUMBER: SchemaFlowFormStep(
         config_schema(Platform.NUMBER),
@@ -410,6 +512,11 @@ CONFIG_FLOW = {
         config_schema(Platform.SWITCH),
         preview="template",
         validate_user_input=validate_user_input(Platform.SWITCH),
+    ),
+    Platform.VACUUM: SchemaFlowFormStep(
+        config_schema(Platform.VACUUM),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.VACUUM),
     ),
 }
 
@@ -435,10 +542,25 @@ OPTIONS_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.COVER),
     ),
+    Platform.FAN: SchemaFlowFormStep(
+        options_schema(Platform.FAN),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.FAN),
+    ),
     Platform.IMAGE: SchemaFlowFormStep(
         options_schema(Platform.IMAGE),
         preview="template",
         validate_user_input=validate_user_input(Platform.IMAGE),
+    ),
+    Platform.LIGHT: SchemaFlowFormStep(
+        options_schema(Platform.LIGHT),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.LIGHT),
+    ),
+    Platform.LOCK: SchemaFlowFormStep(
+        options_schema(Platform.LOCK),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.LOCK),
     ),
     Platform.NUMBER: SchemaFlowFormStep(
         options_schema(Platform.NUMBER),
@@ -460,6 +582,11 @@ OPTIONS_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.SWITCH),
     ),
+    Platform.VACUUM: SchemaFlowFormStep(
+        options_schema(Platform.VACUUM),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.VACUUM),
+    ),
 }
 
 CREATE_PREVIEW_ENTITY: dict[
@@ -469,10 +596,14 @@ CREATE_PREVIEW_ENTITY: dict[
     Platform.ALARM_CONTROL_PANEL: async_create_preview_alarm_control_panel,
     Platform.BINARY_SENSOR: async_create_preview_binary_sensor,
     Platform.COVER: async_create_preview_cover,
+    Platform.FAN: async_create_preview_fan,
+    Platform.LIGHT: async_create_preview_light,
+    Platform.LOCK: async_create_preview_lock,
     Platform.NUMBER: async_create_preview_number,
     Platform.SELECT: async_create_preview_select,
     Platform.SENSOR: async_create_preview_sensor,
     Platform.SWITCH: async_create_preview_switch,
+    Platform.VACUUM: async_create_preview_vacuum,
 }
 
 
