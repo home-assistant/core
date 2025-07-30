@@ -63,14 +63,10 @@ from .const import (
     DOMAIN,
 )
 from .light import (
-    CONF_EFFECT,
-    CONF_EFFECT_ACTION,
-    CONF_EFFECT_LIST,
+    CONF_HS,
+    CONF_HS_ACTION,
     CONF_LEVEL,
     CONF_LEVEL_ACTION,
-    CONF_RGBW,
-    CONF_RGBW_ACTION,
-    CONF_SUPPORTS_TRANSITION,
     CONF_TEMPERATURE,
     CONF_TEMPERATURE_ACTION,
     async_create_preview_light,
@@ -168,14 +164,10 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Required(CONF_TURN_OFF): selector.ActionSelector(),
             vol.Optional(CONF_LEVEL): selector.TemplateSelector(),
             vol.Optional(CONF_LEVEL_ACTION): selector.ActionSelector(),
-            vol.Optional(CONF_RGBW): selector.TemplateSelector(),
-            vol.Optional(CONF_RGBW_ACTION): selector.ActionSelector(),
+            vol.Optional(CONF_HS): selector.TemplateSelector(),
+            vol.Optional(CONF_HS_ACTION): selector.ActionSelector(),
             vol.Optional(CONF_TEMPERATURE): selector.TemplateSelector(),
             vol.Optional(CONF_TEMPERATURE_ACTION): selector.ActionSelector(),
-            vol.Inclusive(CONF_EFFECT, "effect"): selector.TemplateSelector(),
-            vol.Inclusive(CONF_EFFECT_LIST, "effect"): selector.TemplateSelector(),
-            vol.Inclusive(CONF_EFFECT_ACTION, "effect"): selector.ActionSelector(),
-            vol.Optional(CONF_SUPPORTS_TRANSITION): selector.BooleanSelector(),
         }
 
     if domain == Platform.NUMBER:

@@ -89,14 +89,10 @@
           "turn_on": "[%key:component::template::common::turn_on%]",
           "level": "Brightness level",
           "set_level": "Actions on set level",
-          "rgbw": "RGBW color",
-          "set_rgbw": "Actions on set RGBW color",
+          "hs": "HS color",
+          "set_hs": "Actions on set HS color",
           "temperature": "Color temperature",
-          "set_temperature": "Actions on set color temperature",
-          "effect": "Effect",
-          "effect_list": "Effect list",
-          "set_effect": "Actions on set effect",
-          "supports_transition": "Supports transition"
+          "set_temperature": "Actions on set color temperature"
         },
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]"
@@ -311,14 +307,10 @@
           "turn_on": "[%key:component::template::common::turn_on%]",
           "level": "[%key:component::template::config::step::light::data::level%]",
           "set_level": "[%key:component::template::config::step::light::data::set_level%]",
-          "rgbw": "[%key:component::template::config::step::light::data::rgbw%]",
-          "set_rgbw": "[%key:component::template::config::step::light::data::set_rgbw%]",
+          "hs": "[%key:component::template::config::step::light::data::hs%]",
+          "set_hs": "[%key:component::template::config::step::light::data::set_hs%]",
           "temperature": "[%key:component::template::config::step::light::data::temperature%]",
-          "set_temperature": "[%key:component::template::config::step::light::data::set_temperature%]",
-          "effect": "[%key:component::template::config::step::light::data::effect%]",
-          "effect_list": "[%key:component::template::config::step::light::data::effect_list%]",
-          "set_effect": "[%key:component::template::config::step::light::data::set_effect%]",
-          "supports_transition": "[%key:component::template::config::step::light::data::supports_transition%]"
+          "set_temperature": "[%key:component::template::config::step::light::data::set_temperature%]"
         },
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]"
