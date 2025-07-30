@@ -639,6 +639,9 @@
       },
       "frost_lock_reset": {
         "name": "Frost lock reset"
+      },
+      "reset_alarm": {
+        "name": "Reset alarm"
       }
     },
     "climate": {
@@ -2006,6 +2009,12 @@
       },
       "auto_relock": {
         "name": "Autorelock"
+      },
+      "distance_tracking": {
+        "name": "Distance tracking"
+      },
+      "water_shortage_auto_close": {
+        "name": "Water shortage auto-close"
       }
     }
   }
