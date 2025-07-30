@@ -1796,9 +1796,9 @@ async def test_sub_device_references_main_device_area(
     assert sub_device_3.suggested_area == "Bedroom"
 
 
-@patch("secrets.token_bytes")
+@patch("homeassistant.components.esphome.manager.secrets.token_bytes")
 async def test_dynamic_encryption_key_generation(
-    mock_token_bytes,
+    mock_token_bytes: Mock,
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
@@ -1991,9 +1991,9 @@ async def test_manager_handle_dynamic_encryption_key_edge_cases(
     mock_client.noise_encryption_set_key.assert_not_called()
 
 
-@patch("secrets.token_bytes")
+@patch("homeassistant.components.esphome.manager.secrets.token_bytes")
 async def test_manager_dynamic_encryption_key_generation_flow(
-    mock_token_bytes,
+    mock_token_bytes: Mock,
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
@@ -2060,9 +2060,9 @@ async def test_manager_dynamic_encryption_key_generation_flow(
     )
 
 
-@patch("secrets.token_bytes")
+@patch("homeassistant.components.esphome.manager.secrets.token_bytes")
 async def test_manager_handle_dynamic_encryption_key_no_existing_key(
-    mock_token_bytes,
+    mock_token_bytes: Mock,
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
@@ -2131,9 +2131,9 @@ async def test_manager_handle_dynamic_encryption_key_no_existing_key(
     )
 
 
-@patch("secrets.token_bytes")
+@patch("homeassistant.components.esphome.manager.secrets.token_bytes")
 async def test_manager_handle_dynamic_encryption_key_device_set_key_fails(
-    mock_token_bytes,
+    mock_token_bytes: Mock,
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
@@ -2201,9 +2201,9 @@ async def test_manager_handle_dynamic_encryption_key_device_set_key_fails(
     assert CONF_NOISE_PSK not in entry.data
 
 
-@patch("secrets.token_bytes")
+@patch("homeassistant.components.esphome.manager.secrets.token_bytes")
 async def test_manager_handle_dynamic_encryption_key_connection_error(
-    mock_token_bytes,
+    mock_token_bytes: Mock,
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
