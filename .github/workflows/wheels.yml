@@ -235,7 +235,7 @@ jobs:
       - name: Create requirements file for custom build
         run: |
           touch requirements_custom.txt
-          echo "rpds_py==0.26.0" >> requirements_custom.txt
+          echo "rpds_py==0.25.1" >> requirements_custom.txt
 
       - name: Build wheels (custom)
         uses: cdce8p/wheels@master
