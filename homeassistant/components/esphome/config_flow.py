@@ -317,9 +317,10 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
             raise AbortFlow("already_configured")
         configured_host: str | None = entry.data.get(CONF_HOST)
         configured_port: int | None = entry.data.get(CONF_PORT)
-        if configured_host == host and configured_port == port:
+        # When port is None (from DHCP discovery), only compare hosts
+        if configured_host == host and (port is None or configured_port == port):
             # Don't probe to verify the mac is correct since
-            # the host and port matches.
+            # the host matches (and port matches if provided).
             raise AbortFlow("already_configured")
         configured_psk: str | None = entry.data.get(CONF_NOISE_PSK)
         await self._fetch_device_info(host, port or configured_port, configured_psk)
