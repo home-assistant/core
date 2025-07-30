@@ -126,7 +126,7 @@ async def get_programs(call: ServiceCall) -> ServiceResponse:
         "programs": [
             {
                 "program_id": item["programId"],
-                "program": item["program"],
+                "program": item["program"].strip(),
                 "parameters": (
                     {
                         "temperature": (
