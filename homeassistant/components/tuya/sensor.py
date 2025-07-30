@@ -1077,6 +1077,18 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
+    # Zigbee gateway
+    # Undocumented
+    "wg2": (
+        TuyaSensorEntityDescription(
+            key=DPCode.MASTER_INFORMATION,
+            translation_key="master_information",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.MASTER_STATE,
+            translation_key="master_state",
+        ),
+    ),
     # Thermostat
     # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
     "wk": (*BATTERY_SENSORS,),
