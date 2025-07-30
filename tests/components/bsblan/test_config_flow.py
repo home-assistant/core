@@ -129,7 +129,7 @@ async def test_full_user_flow_implementation(
     result = await _init_user_flow(hass)
     _assert_form_result(result, "user")
 
-    result2 = await _configure_flow(
+    result = await _configure_flow(
         hass,
         result["flow_id"],
         {
@@ -142,7 +142,7 @@ async def test_full_user_flow_implementation(
     )
 
     _assert_create_entry_result(
-        result2,
+        result,
         format_mac("00:80:41:19:69:90"),
         {
             CONF_HOST: "127.0.0.1",
@@ -307,7 +307,7 @@ async def test_zeroconf_discovery(
     result = await _init_zeroconf_flow(hass, zeroconf_discovery_info)
     _assert_form_result(result, "discovery_confirm")
 
-    result2 = await _configure_flow(
+    result = await _configure_flow(
         hass,
         result["flow_id"],
         {
@@ -318,7 +318,7 @@ async def test_zeroconf_discovery(
     )
 
     _assert_create_entry_result(
-        result2,
+        result,
         format_mac("00:80:41:19:69:90"),
         {
             CONF_HOST: "10.0.2.60",
@@ -375,7 +375,7 @@ async def test_zeroconf_discovery_no_mac_requires_auth(
     # Reset side_effect for the second call to succeed
     mock_bsblan.device.side_effect = None
 
-    result2 = await _configure_flow(
+    result = await _configure_flow(
         hass,
         result["flow_id"],
         {
@@ -385,7 +385,7 @@ async def test_zeroconf_discovery_no_mac_requires_auth(
     )
 
     _assert_create_entry_result(
-        result2,
+        result,
         "00:80:41:19:69:90",  # MAC from fixture file
         {
             CONF_HOST: "10.0.2.60",
@@ -414,10 +414,10 @@ async def test_zeroconf_discovery_no_mac_no_auth_required(
     _assert_form_result(result, "discovery_confirm")
 
     # User confirms the discovery
-    result2 = await _configure_flow(hass, result["flow_id"], {})
+    result = await _configure_flow(hass, result["flow_id"], {})
 
     _assert_create_entry_result(
-        result2,
+        result,
         "00:80:41:19:69:90",  # MAC from fixture file
         {
             CONF_HOST: "10.0.2.60",
@@ -445,7 +445,7 @@ async def test_zeroconf_discovery_connection_error(
     result = await _init_zeroconf_flow(hass, zeroconf_discovery_info)
     _assert_form_result(result, "discovery_confirm")
 
-    result2 = await _configure_flow(
+    result = await _configure_flow(
         hass,
         result["flow_id"],
         {
@@ -455,7 +455,7 @@ async def test_zeroconf_discovery_connection_error(
         },
     )
 
-    _assert_form_result(result2, "discovery_confirm", {"base": "cannot_connect"})
+    _assert_form_result(result, "discovery_confirm", {"base": "cannot_connect"})
 
 
 async def test_zeroconf_discovery_updates_host_port_on_existing_entry(
@@ -535,7 +535,7 @@ async def test_zeroconf_discovery_connection_error_recovery(
     result = await _init_zeroconf_flow(hass, zeroconf_discovery_info)
     _assert_form_result(result, "discovery_confirm")
 
-    result2 = await _configure_flow(
+    result = await _configure_flow(
         hass,
         result["flow_id"],
         {
@@ -545,12 +545,12 @@ async def test_zeroconf_discovery_connection_error_recovery(
         },
     )
 
-    _assert_form_result(result2, "discovery_confirm", {"base": "cannot_connect"})
+    _assert_form_result(result, "discovery_confirm", {"base": "cannot_connect"})
 
     # Second attempt succeeds (connection is fixed)
     mock_bsblan.device.side_effect = None
 
-    result3 = await _configure_flow(
+    result = await _configure_flow(
         hass,
         result["flow_id"],
         {
@@ -561,7 +561,7 @@ async def test_zeroconf_discovery_connection_error_recovery(
     )
 
     _assert_create_entry_result(
-        result3,
+        result,
         format_mac("00:80:41:19:69:90"),
         {
             CONF_HOST: "10.0.2.60",
@@ -603,7 +603,7 @@ async def test_connection_error_recovery(
     # Second attempt succeeds (connection is fixed)
     mock_bsblan.device.side_effect = None
 
-    result2 = await _configure_flow(
+    result = await _configure_flow(
         hass,
         result["flow_id"],
         {
@@ -616,7 +616,7 @@ async def test_connection_error_recovery(
     )
 
     _assert_create_entry_result(
-        result2,
+        result,
         format_mac("00:80:41:19:69:90"),
         {
             CONF_HOST: "127.0.0.1",
@@ -687,7 +687,7 @@ async def test_reauth_flow_success(
     assert data_schema is not None
 
     # Complete reauth with new credentials
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             CONF_PASSKEY: "new_passkey",
@@ -696,8 +696,8 @@ async def test_reauth_flow_success(
         },
     )
 
-    assert result2.get("type") is FlowResultType.ABORT
-    assert result2.get("reason") == "reauth_successful"
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "reauth_successful"
 
     # Verify config entry was updated with new credentials
     assert mock_config_entry.data[CONF_PASSKEY] == "new_passkey"
@@ -732,7 +732,7 @@ async def test_reauth_flow_auth_error(
     assert result.get("step_id") == "reauth_confirm"
 
     # Submit with wrong credentials
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             CONF_PASSKEY: "wrong_passkey",
@@ -741,12 +741,12 @@ async def test_reauth_flow_auth_error(
         },
     )
 
-    assert result2.get("type") is FlowResultType.FORM
-    assert result2.get("step_id") == "reauth_confirm"
-    assert result2.get("errors") == {"base": "invalid_auth"}
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "reauth_confirm"
+    assert result.get("errors") == {"base": "invalid_auth"}
 
     # Verify that user input is preserved in the form after error
-    data_schema = result2.get("data_schema")
+    data_schema = result.get("data_schema")
     assert data_schema is not None
 
     # Check that the form fields contain the previously entered values
@@ -785,7 +785,7 @@ async def test_reauth_flow_connection_error(
     assert result.get("step_id") == "reauth_confirm"
 
     # Submit credentials but get connection error
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             CONF_PASSKEY: "1234",
@@ -794,9 +794,9 @@ async def test_reauth_flow_connection_error(
         },
     )
 
-    assert result2.get("type") is FlowResultType.FORM
-    assert result2.get("step_id") == "reauth_confirm"
-    assert result2.get("errors") == {"base": "cannot_connect"}
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "reauth_confirm"
+    assert result.get("errors") == {"base": "cannot_connect"}
 
 
 async def test_reauth_flow_preserves_existing_values(
@@ -820,15 +820,15 @@ async def test_reauth_flow_preserves_existing_values(
     assert result.get("step_id") == "reauth_confirm"
 
     # Submit without changing any credentials (only password is provided)
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             CONF_PASSWORD: "new_password_only",
         },
     )
 
-    assert result2.get("type") is FlowResultType.ABORT
-    assert result2.get("reason") == "reauth_successful"
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "reauth_successful"
 
     # Verify that existing passkey and username are preserved
     assert mock_config_entry.data[CONF_PASSKEY] == "1234"  # Original value
@@ -854,7 +854,7 @@ async def test_reauth_flow_partial_credentials_update(
     )
 
     # Submit with only username and password changes
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
             CONF_USERNAME: "new_admin",
@@ -862,8 +862,8 @@ async def test_reauth_flow_partial_credentials_update(
         },
     )
 
-    assert result2.get("type") is FlowResultType.ABORT
-    assert result2.get("reason") == "reauth_successful"
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "reauth_successful"
 
     # Verify partial update: passkey preserved, username and password updated
     assert mock_config_entry.data[CONF_PASSKEY] == "1234"  # Original preserved
@@ -897,7 +897,7 @@ async def test_zeroconf_discovery_auth_error_during_confirm(
     # Now setup auth error for the confirmation step
     mock_bsblan.device.side_effect = BSBLANAuthError
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_PASSKEY: "wrong_key",
@@ -907,4 +907,4 @@ async def test_zeroconf_discovery_auth_error_during_confirm(
     )
 
     # Should show the discovery_confirm form again with auth error
-    _assert_form_result(result2, "discovery_confirm", {"base": "invalid_auth"})
+    _assert_form_result(result, "discovery_confirm", {"base": "invalid_auth"})
