@@ -106,7 +106,7 @@ async def async_setup_entry(
         
         # Add optional attributes if present
         optionals = sensors.get("optionals", {})
-        for optional_key in ["powerStatus", "OnlineStatus"]:
+        for optional_key in ("powerStatus", "OnlineStatus"):
             if optional_key in optionals:
                 entities.append(EzvizSensor(coordinator, camera, optional_key))
         
