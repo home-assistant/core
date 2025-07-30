@@ -706,10 +706,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         last_step: bool | None = None,
         preview: str | None = None,
     ) -> _FlowResultT:
-        """Return the definition of a form to gather user input.
-
-        The step_id parameter is deprecated and will be removed in a future release.
-        """
+        """Return the definition of a form to gather user input."""
         flow_result = self._flow_result(
             type=FlowResultType.FORM,
             flow_id=self.flow_id,
@@ -771,10 +768,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         url: str,
         description_placeholders: Mapping[str, str] | None = None,
     ) -> _FlowResultT:
-        """Return the definition of an external step for the user to take.
-
-        The step_id parameter is deprecated and will be removed in a future release.
-        """
+        """Return the definition of an external step for the user to take."""
         flow_result = self._flow_result(
             type=FlowResultType.EXTERNAL_STEP,
             flow_id=self.flow_id,
@@ -805,10 +799,7 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         description_placeholders: Mapping[str, str] | None = None,
         progress_task: asyncio.Task[Any] | None = None,
     ) -> _FlowResultT:
-        """Show a progress message to the user, without user input allowed.
-
-        The step_id parameter is deprecated and will be removed in a future release.
-        """
+        """Show a progress message to the user, without user input allowed."""
         if progress_task is None and not self.__no_progress_task_reported:
             self.__no_progress_task_reported = True
             cls = self.__class__
@@ -868,7 +859,6 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         """Show a navigation menu to the user.
 
         Options dict maps step_id => i18n label
-        The step_id parameter is deprecated and will be removed in a future release.
         """
         flow_result = self._flow_result(
             type=FlowResultType.MENU,
