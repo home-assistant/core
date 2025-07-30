@@ -99,14 +99,12 @@ async def async_setup_entry(
     entities = []
 
     for camera, sensors in coordinator.data.items():
-        # Add normal sensors
         entities.extend(
             EzvizSensor(coordinator, camera, sensor)
             for sensor, value in sensors.items()
             if sensor in SENSOR_TYPES and value is not None
         )
     
-        # Add optional attributes if present
         optionals = sensors.get("optionals", {})
         entities.extend(
             EzvizSensor(coordinator, camera, optional_key)
@@ -114,7 +112,6 @@ async def async_setup_entry(
             if optional_key in optionals
         )
     
-        # Add Record_Mode. This data looks like {"mode" : <value>}
         if "mode" in optionals.get("Record_Mode", {}):
             entities.append(EzvizSensor(coordinator, camera, "mode"))
         
