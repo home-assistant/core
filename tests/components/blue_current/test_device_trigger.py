@@ -1,10 +1,15 @@
 """The tests for Blue Current device triggers."""
 
+import pytest
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
 from homeassistant.components.blue_current import DOMAIN
-from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.blue_current.device_trigger import async_get_triggers
+from homeassistant.components.device_automation import (
+    DeviceAutomationType,
+    InvalidDeviceAutomationConfig,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -223,3 +228,9 @@ async def test_if_vehicle_status_fires_on_state_change(
     await hass.async_block_till_done()
     assert len(service_calls) == 5
     assert service_calls[4].data["some"] == "vehicle_error"
+
+
+async def test_invalid_device_id(hass: HomeAssistant) -> None:
+    """Test if the InvalidDeviceAutomationConfig exception is thrown when the device_id is invalid."""
+    with pytest.raises(InvalidDeviceAutomationConfig):
+        await async_get_triggers(hass, "NON_EXISTING_DEVICE_ID")
