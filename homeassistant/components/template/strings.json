@@ -308,7 +308,7 @@
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",
           "state": "Template for the select’s current value.",
-          "select_option": "Defines actions to run to select an `option` from the `options` list. Receives variable `option`.",
+          "select_option": "Defines actions to run when an `option` from the `options` list is selected. Receives variable `option`.",
           "options": "Template for the select’s available options."
         },
         "sections": {
