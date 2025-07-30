@@ -590,6 +590,7 @@
           }),
         }),
         'file': 'en/beer.yaml',
+        'fuzzy_match': False,
         'intent': dict({
           'name': 'OrderBeer',
         }),

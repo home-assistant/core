@@ -295,6 +295,9 @@ async def init_supporting_components(
     assert await async_setup_component(hass, tts.DOMAIN, {"tts": {"platform": "test"}})
     assert await async_setup_component(hass, stt.DOMAIN, {"stt": {"platform": "test"}})
     assert await async_setup_component(hass, "media_source", {})
+    assert await async_setup_component(
+        hass, "conversation", {"conversation": {"fuzzy_matching": False}}
+    )
 
     config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)

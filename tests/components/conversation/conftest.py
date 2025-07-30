@@ -73,4 +73,6 @@ async def sl_setup(hass: HomeAssistant):
 async def init_components(hass: HomeAssistant):
     """Initialize relevant components with empty configs."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(
+        hass, "conversation", {conversation.DOMAIN: {"fuzzy_matching": False}}
+    )

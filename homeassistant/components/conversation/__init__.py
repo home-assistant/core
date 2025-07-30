@@ -115,9 +115,10 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Optional("intents"): vol.Schema(
                     {cv.string: vol.All(cv.ensure_list, [cv.string])}
-                )
+                ),
+                vol.Optional("fuzzy_matching"): bool,
             }
-        )
+        ),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -268,8 +269,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     entity_component = EntityComponent[ConversationEntity](_LOGGER, DOMAIN, hass)
     hass.data[DATA_COMPONENT] = entity_component
 
+    agent_config = config.get(DOMAIN, {})
     await async_setup_default_agent(
-        hass, entity_component, config.get(DOMAIN, {}).get("intents", {})
+        hass,
+        entity_component,
+        config_intents=agent_config.get("intents", {}),
+        fuzzy_matching=agent_config.get("fuzzy_matching", True),
     )
 
     async def handle_process(service: ServiceCall) -> ServiceResponse:
