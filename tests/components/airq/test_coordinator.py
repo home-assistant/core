@@ -15,7 +15,6 @@ from .common import TEST_DEVICE_DATA, TEST_DEVICE_INFO
 
 from tests.common import MockConfigEntry
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 MOCKED_ENTRY = MockConfigEntry(
     domain=DOMAIN,
     data={
