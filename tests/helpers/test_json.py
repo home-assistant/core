@@ -359,8 +359,8 @@ def test_deprecated_json_loads(caplog: pytest.LogCaptureFixture) -> None:
     """
     json_helper.json_loads("{}")
     assert (
-        "json_loads is a deprecated function which will be removed in "
-        "HA Core 2025.8. Use homeassistant.util.json.json_loads instead"
+        "The deprecated function json_loads was called. It will be removed "
+        "in HA Core 2025.8. Use homeassistant.util.json.json_loads instead"
     ) in caplog.text
 
 

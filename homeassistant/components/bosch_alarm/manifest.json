@@ -11,6 +11,6 @@
   "documentation": "https://www.home-assistant.io/integrations/bosch_alarm",
   "integration_type": "device",
   "iot_class": "local_push",
-  "quality_scale": "bronze",
+  "quality_scale": "platinum",
   "requirements": ["bosch-alarm-mode2==0.4.6"]
 }

@@ -4,7 +4,6 @@ from collections.abc import Generator
 
 import pytest
 
-from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -45,7 +44,7 @@ def register_test_integration(
     ) -> bool:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
-            config_entry, [HUMIDIFIER_DOMAIN]
+            config_entry, [Platform.HUMIDIFIER]
         )
         return True
 

@@ -39,6 +39,7 @@ class BinarySensor(CoilEntity, BinarySensorEntity):
     def __init__(self, coordinator: CoilCoordinator, coil: Coil) -> None:
         """Initialize entity."""
         super().__init__(coordinator, coil, ENTITY_ID_FORMAT)
+        self._on_value = coil.get_mapping_for(1)
 
     def _async_read_coil(self, data: CoilData) -> None:
-        self._attr_is_on = data.value == "ON"
+        self._attr_is_on = data.value == self._on_value

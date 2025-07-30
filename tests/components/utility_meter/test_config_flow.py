@@ -403,11 +403,19 @@ async def test_change_device_source(
     assert await hass.config_entries.async_setup(utility_meter_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Confirm that the configuration entry has been added to the source entity 1 (current) device registry
+    # Confirm that the configuration entry has not been added to the source entity 1 (current) device registry
     current_device = device_registry.async_get(
         device_id=current_entity_source.device_id
     )
-    assert utility_meter_config_entry.entry_id in current_device.config_entries
+    assert utility_meter_config_entry.entry_id not in current_device.config_entries
+
+    # Check that the entities are linked to the expected device
+    for (
+        utility_meter_entity
+    ) in entity_registry.entities.get_entries_for_config_entry_id(
+        utility_meter_config_entry.entry_id
+    ):
+        assert utility_meter_entity.device_id == source_entity_1.device_id
 
     # Change configuration options to use source entity 2 (with a linked device) and reload the integration
     previous_entity_source = source_entity_1
@@ -427,17 +435,25 @@ async def test_change_device_source(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
-    # Confirm that the configuration entry has been removed from the source entity 1 (previous) device registry
+    # Confirm that the configuration entry is not in the source entity 1 (previous) device registry
     previous_device = device_registry.async_get(
         device_id=previous_entity_source.device_id
     )
     assert utility_meter_config_entry.entry_id not in previous_device.config_entries
 
-    # Confirm that the configuration entry has been added to the source entity 2 (current) device registry
+    # Confirm that the configuration entry is not in to the source entity 2 (current) device registry
     current_device = device_registry.async_get(
         device_id=current_entity_source.device_id
     )
-    assert utility_meter_config_entry.entry_id in current_device.config_entries
+    assert utility_meter_config_entry.entry_id not in current_device.config_entries
+
+    # Check that the entities are linked to the expected device
+    for (
+        utility_meter_entity
+    ) in entity_registry.entities.get_entries_for_config_entry_id(
+        utility_meter_config_entry.entry_id
+    ):
+        assert utility_meter_entity.device_id == source_entity_2.device_id
 
     # Change configuration options to use source entity 3 (without a device) and reload the integration
     previous_entity_source = source_entity_2
@@ -457,11 +473,19 @@ async def test_change_device_source(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
-    # Confirm that the configuration entry has been removed from the source entity 2 (previous) device registry
+    # Confirm that the configuration entry has is not in the source entity 2 (previous) device registry
     previous_device = device_registry.async_get(
         device_id=previous_entity_source.device_id
     )
     assert utility_meter_config_entry.entry_id not in previous_device.config_entries
+
+    # Check that the entities are no longer linked to a device
+    for (
+        utility_meter_entity
+    ) in entity_registry.entities.get_entries_for_config_entry_id(
+        utility_meter_config_entry.entry_id
+    ):
+        assert utility_meter_entity.device_id is None
 
     # Confirm that there is no device with the helper configuration entry
     assert (
@@ -489,8 +513,16 @@ async def test_change_device_source(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
 
-    # Confirm that the configuration entry has been added to the source entity 2 (current) device registry
+    # Confirm that the configuration entry is not in the source entity 2 (current) device registry
     current_device = device_registry.async_get(
         device_id=current_entity_source.device_id
     )
-    assert utility_meter_config_entry.entry_id in current_device.config_entries
+    assert utility_meter_config_entry.entry_id not in current_device.config_entries
+
+    # Check that the entities are linked to the expected device
+    for (
+        utility_meter_entity
+    ) in entity_registry.entities.get_entries_for_config_entry_id(
+        utility_meter_config_entry.entry_id
+    ):
+        assert utility_meter_entity.device_id == source_entity_2.device_id

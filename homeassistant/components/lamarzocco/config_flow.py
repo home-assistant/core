@@ -21,7 +21,7 @@ from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -33,7 +33,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -83,7 +83,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 **user_input,
             }
 
-            self._client = async_get_clientsession(self.hass)
+            self._client = async_create_clientsession(self.hass)
             cloud_client = LaMarzoccoCloudClient(
                 username=data[CONF_USERNAME],
                 password=data[CONF_PASSWORD],
@@ -363,7 +363,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         return LmOptionsFlowHandler()
 
 
-class LmOptionsFlowHandler(OptionsFlow):
+class LmOptionsFlowHandler(OptionsFlowWithReload):
     """Handles options flow for the component."""
 
     async def async_step_init(

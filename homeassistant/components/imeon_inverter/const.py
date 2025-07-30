@@ -3,7 +3,7 @@
 from homeassistant.const import Platform
 
 DOMAIN = "imeon_inverter"
-TIMEOUT = 20
+TIMEOUT = 30
 PLATFORMS = [
     Platform.SENSOR,
 ]
