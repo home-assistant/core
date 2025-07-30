@@ -87,7 +87,7 @@
         },
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",
-          "press": "Defines actions to run button is pressed."
+          "press": "Defines actions to run when button is pressed."
         },
         "sections": {
           "advanced_options": {
