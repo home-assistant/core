@@ -30,7 +30,7 @@
       }),
       'host': dict({
         'cpuload': 10.10101,
-        'device_id': '**REDACTED**',
+        'device_id': '03aa0d0b40fed0a47088293584ef5432',
         'devmodel': 'NanoStation 5AC loco',
         'freeram': 16564224,
         'fwversion': 'v8.7.17',
@@ -495,7 +495,7 @@
               ]),
               'compat_11n': 0,
               'cpuload': 43.564301,
-              'device_id': '**REDACTED**',
+              'device_id': 'd4f4cdf82961e619328a8f72f8d7653b',
               'distance': 1,
               'ethlist': list([
                 dict({
