@@ -7,6 +7,12 @@
   "containerEnv": {
     "PYTHONASYNCIODEBUG": "1"
   },
+  "mounts": [
+    "source=${env:SSH_AUTH_SOCK},target=/ssh-agent,type=bind"
+  ],
+  "remoteEnv": {
+    "SSH_AUTH_SOCK": "/ssh-agent"
+  }
   "features": {
     "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
