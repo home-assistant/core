@@ -37,7 +37,6 @@ async def test_setup_and_unload(
     assert entries[0].state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(entries[0].entry_id)
-    await hass.async_block_till_done()
 
     assert entries[0].state is ConfigEntryState.NOT_LOADED
     assert f"Unloading integration: {entries[0].unique_id}" in caplog.messages

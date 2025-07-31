@@ -82,7 +82,6 @@ async def mock_setup_integration(
     async def func() -> None:
         assert await async_setup_component(hass, BACKUP_DOMAIN, {})
         await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
 
     return func
 

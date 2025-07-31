@@ -97,7 +97,6 @@ async def test_already_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -137,7 +136,6 @@ async def test_config_flow_exceptions(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] and result["errors"]["base"] == error_base
@@ -155,7 +153,6 @@ async def test_config_flow_exceptions(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
