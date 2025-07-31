@@ -70,7 +70,8 @@
       "abort": {
         "already_configured_as_entry": "Already configured as a service. This account cannot be added as a friend.",
         "already_configured": "Already configured as a friend in this or another account.",
-        "no_friends": "Looks like your friend list is empty right now. Add friends on PlayStation Network first."
+        "no_friends": "Looks like your friend list is empty right now. Add friends on PlayStation Network first.",
+        "config_entry_disabled": "You can't configure a friend subentry while the parent configuration entry is disabled."
       }
     }
   },

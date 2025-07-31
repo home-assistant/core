@@ -173,6 +173,8 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Subentry user flow."""
         config_entry: PlaystationNetworkConfigEntry = self._get_entry()
+        if config_entry.disabled_by:
+            return self.async_abort(reason="config_entry_disabled")
         friends_list = config_entry.runtime_data.user_data.psn.friends_list
 
         if user_input is not None:
