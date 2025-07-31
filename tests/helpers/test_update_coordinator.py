@@ -944,7 +944,7 @@ async def test_config_entry_custom_integration(
     crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
     assert crd.config_entry is None
     assert (
-        "Detected that integration 'my_integration' relies on ContextVar"
+        "Detected that custom integration 'my_integration' relies on ContextVar"
         not in caplog.text
     )
 
@@ -955,7 +955,7 @@ async def test_config_entry_custom_integration(
     )
     assert crd.config_entry is None
     assert (
-        "Detected that integration 'my_integration' relies on ContextVar"
+        "Detected that custom integration 'my_integration' relies on ContextVar"
         not in caplog.text
     )
 
@@ -966,7 +966,7 @@ async def test_config_entry_custom_integration(
     )
     assert crd.config_entry is entry
     assert (
-        "Detected that integration 'my_integration' relies on ContextVar"
+        "Detected that custom integration 'my_integration' relies on ContextVar"
         not in caplog.text
     )
 
@@ -978,7 +978,7 @@ async def test_config_entry_custom_integration(
     crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
     assert crd.config_entry is entry
     assert (
-        "Detected that integration 'my_integration' relies on ContextVar"
+        "Detected that custom integration 'my_integration' relies on ContextVar"
         not in caplog.text
     )
 
@@ -990,7 +990,7 @@ async def test_config_entry_custom_integration(
     )
     assert crd.config_entry is another_entry
     assert (
-        "Detected that integration 'my_integration' relies on ContextVar"
+        "Detected that custom integration 'my_integration' relies on ContextVar"
         not in caplog.text
     )
 
