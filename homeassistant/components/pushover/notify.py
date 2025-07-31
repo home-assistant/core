@@ -27,6 +27,7 @@ from .const import (
     ATTR_RETRY,
     ATTR_SOUND,
     ATTR_TIMESTAMP,
+    ATTR_TTL,
     ATTR_URL,
     ATTR_URL_TITLE,
     CONF_USER_KEY,
@@ -72,6 +73,7 @@ class PushoverNotificationService(BaseNotificationService):
         priority = data.get(ATTR_PRIORITY)
         retry = data.get(ATTR_RETRY)
         expire = data.get(ATTR_EXPIRE)
+        ttl = data.get(ATTR_TTL)
         callback_url = data.get(ATTR_CALLBACK_URL)
         timestamp = data.get(ATTR_TIMESTAMP)
         sound = data.get(ATTR_SOUND)
@@ -112,6 +114,8 @@ class PushoverNotificationService(BaseNotificationService):
                 timestamp,
                 sound,
                 html,
+                ttl,
             )
+
         except BadAPIRequestError as err:
             raise HomeAssistantError(str(err)) from err
