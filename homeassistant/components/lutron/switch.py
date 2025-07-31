@@ -108,6 +108,6 @@ class LutronLedSwitch(LutronKeypadComponent, SwitchEntity):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return {
-            "keypad": self._lutron_device.keypad.name,
-            "led": self._lutron_device.name,
+            "keypad": self.keypad_name,
+            "led": self.name,
         }
