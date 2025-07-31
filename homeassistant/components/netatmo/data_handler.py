@@ -392,19 +392,9 @@ class NetatmoDataHandler:
         }
         for module in home.modules.values():
             if not module.device_category:
-                _LOGGER.debug(
-                    "Module %s skipped because of missing category", module.name
-                )
                 continue
 
             for signal in netatmo_type_signal_map.get(module.device_category, []):
-                _LOGGER.debug(
-                    "Module %s dispatched as %s category by %s to publisher %s",
-                    module.name,
-                    module.device_category,
-                    signal,
-                    signal_home,
-                )
                 async_dispatcher_send(
                     self.hass,
                     signal,
@@ -416,11 +406,6 @@ class NetatmoDataHandler:
                     ),
                 )
             if module.device_category is NetatmoDeviceCategory.weather:
-                _LOGGER.debug(
-                    "Module %s dispatched as weather category to publisher %s",
-                    module.name,
-                    WEATHER,
-                )
                 async_dispatcher_send(
                     self.hass,
                     NETATMO_CREATE_WEATHER_SENSOR,
@@ -452,7 +437,6 @@ class NetatmoDataHandler:
         """Set up rooms."""
         for room in home.rooms.values():
             if NetatmoDeviceCategory.climate in room.features:
-                _LOGGER.debug("Room %s dispatched", room)
                 async_dispatcher_send(
                     self.hass,
                     NETATMO_CREATE_CLIMATE,
@@ -466,9 +450,6 @@ class NetatmoDataHandler:
 
                 for module in room.modules.values():
                     if module.device_category is NetatmoDeviceCategory.climate:
-                        _LOGGER.debug(
-                            "Battery for climate module %s dispatched", module.name
-                        )
                         async_dispatcher_send(
                             self.hass,
                             NETATMO_CREATE_BATTERY,
@@ -481,7 +462,6 @@ class NetatmoDataHandler:
                         )
 
                 if "humidity" in room.features:
-                    _LOGGER.debug("Humidity for room %s dispatched", room)
                     async_dispatcher_send(
                         self.hass,
                         NETATMO_CREATE_ROOM_SENSOR,
