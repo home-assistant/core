@@ -80,6 +80,7 @@ _STONE_TO_G = _POUND_TO_G * 14  # 14 pounds to a stone
 # Pressure conversion constants
 _STANDARD_GRAVITY = 9.80665
 _MERCURY_DENSITY = 13.5951
+_INH2O_TO_PA = 249.0889083333348  # 1 inH2O = 249.0889083333348 Pa at 4°C
 
 # Volume conversion constants
 _L_TO_CUBIC_METER = 0.001  # 1 L = 0.001 m³
@@ -417,6 +418,7 @@ class PressureConverter(BaseUnitConverter):
         UnitOfPressure.MBAR: 1 / 100,
         UnitOfPressure.INHG: 1
         / (_IN_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
+        UnitOfPressure.INH2O: 1 / _INH2O_TO_PA,
         UnitOfPressure.PSI: 1 / 6894.757,
         UnitOfPressure.MMHG: 1
         / (_MM_TO_M * 1000 * _STANDARD_GRAVITY * _MERCURY_DENSITY),
@@ -429,6 +431,7 @@ class PressureConverter(BaseUnitConverter):
         UnitOfPressure.CBAR,
         UnitOfPressure.MBAR,
         UnitOfPressure.INHG,
+        UnitOfPressure.INH2O,
         UnitOfPressure.PSI,
         UnitOfPressure.MMHG,
     }
