@@ -2,6 +2,12 @@
   "services": {
     "printer_connect": {
       "service": "mdi:lan-connect"
+    },
+    "set_bed_temperature": {
+      "service": "mdi:radiator"
+    },
+    "set_tool_temperature": {
+      "service": "mdi:printer-3d-nozzle-heat"
     }
   }
 }
