@@ -298,8 +298,10 @@ class ConfigFlowContext(FlowContext, total=False):
 class ConfigFlowResult(FlowResult[ConfigFlowContext, str], total=False):
     """Typed result dict for config flow."""
 
+    # Extra keys, only present if type is CREATE_ENTRY
     minor_version: int
     options: Mapping[str, Any]
+    result: ConfigEntry
     subentries: Iterable[ConfigSubentryData]
     version: int
 
@@ -3345,7 +3347,6 @@ class ConfigSubentryFlowManager(
             ),
         )
 
-        result["result"] = True
         return result
 
 
@@ -3508,7 +3509,6 @@ class OptionsFlowManager(
             ):
                 self.hass.config_entries.async_schedule_reload(entry.entry_id)
 
-        result["result"] = True
         return result
 
     async def _async_setup_preview(
