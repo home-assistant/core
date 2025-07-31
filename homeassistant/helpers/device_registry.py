@@ -156,7 +156,7 @@ class _EventDeviceRegistryUpdatedData_Remove(TypedDict):
 
     action: Literal["remove"]
     device_id: str
-    device: DeviceEntry
+    device: dict[str, Any]
 
 
 class _EventDeviceRegistryUpdatedData_Update(TypedDict):
@@ -1319,7 +1319,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self.hass.bus.async_fire_internal(
             EVENT_DEVICE_REGISTRY_UPDATED,
             _EventDeviceRegistryUpdatedData_Remove(
-                action="remove", device_id=device_id, device=device
+                action="remove", device_id=device_id, device=device.dict_repr
             ),
         )
         self.async_schedule_save()
