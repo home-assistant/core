@@ -1,0 +1,48 @@
+[
+  {
+    "mapId": 1,
+    "rooms": [
+      {
+        "name": "Favorite area #2",
+        "roomId": 2
+      },
+      {
+        "name": "Favorite area #5",
+        "roomId": 5
+      },
+      {
+        "name": "Favorite area #6",
+        "roomId": 6
+      }
+    ]
+  },
+  {
+    "mapId": 2,
+    "rooms": [
+      {
+        "name": "Bathroom",
+        "roomId": 2
+      },
+      {
+        "name": "Hallway",
+        "roomId": 1
+      },
+      {
+        "name": "Kitchen",
+        "roomId": 5
+      },
+      {
+        "name": "Livingroom",
+        "roomId": 8
+      },
+      {
+        "name": "Entrance area",
+        "roomId": 12
+      },
+      {
+        "name": "Bedroom",
+        "roomId": 4
+      }
+    ]
+  }
+]
