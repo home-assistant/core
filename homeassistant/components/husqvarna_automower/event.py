@@ -24,8 +24,6 @@ ATTR_LATITUDE = "latitude"
 ATTR_LONGITUDE = "longitude"
 ATTR_DATE_TIME = "date_time"
 
-STORAGE_KEY = f"{DOMAIN}_message_event_seen"
-
 
 EVENT_DESCRIPTIONS = [
     EventEntityDescription(
