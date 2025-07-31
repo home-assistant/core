@@ -155,19 +155,23 @@ async def test_form_shows_with_added_suggested_values(manager: MockFlowManager) 
         async def async_step_init(self, user_input=None):
             data_schema = self.add_suggested_values_to_schema(
                 schema,
-                {
-                    "username": "doej",
-                    "password": "verySecret1",
-                    "section_1": {"full_name": "John Doe"},
-                },
+                user_input,
             )
             return self.async_show_form(
                 step_id="init",
                 data_schema=data_schema,
             )
 
-    form = await manager.async_init("test")
+    form = await manager.async_init(
+        "test",
+        data={
+            "username": "doej",
+            "password": "verySecret1",
+            "section_1": {"full_name": "John Doe"},
+        },
+    )
     assert form["type"] == data_entry_flow.FlowResultType.FORM
+    assert form["data_schema"].schema is not schema.schema
     assert form["data_schema"].schema == schema.schema
     markers = list(form["data_schema"].schema)
     assert len(markers) == 3
@@ -185,6 +189,32 @@ async def test_form_shows_with_added_suggested_values(manager: MockFlowManager) 
     section_markers = list(section_validator.schema.schema)
     assert len(section_markers) == 1
     assert section_markers[0] == "full_name"
+    assert section_markers[0].description == {"suggested_value": "John Doe"}
+
+    # Test again without suggested values to make sure we're not mutating the schema
+    form = await manager.async_init(
+        "test",
+    )
+    assert form["type"] == data_entry_flow.FlowResultType.FORM
+    assert form["data_schema"].schema is not schema.schema
+    assert form["data_schema"].schema == schema.schema
+    markers = list(form["data_schema"].schema)
+    assert len(markers) == 3
+    assert markers[0] == "username"
+    assert markers[0].description is None
+    assert markers[1] == "password"
+    assert markers[1].description is None
+    assert markers[2] == "section_1"
+    section_validator = form["data_schema"].schema["section_1"]
+    assert isinstance(section_validator, data_entry_flow.section)
+    # The section class was not replaced
+    assert section_validator is schema.schema["section_1"]
+    # The section schema was not replaced
+    assert section_validator.schema is schema.schema["section_1"].schema
+    section_markers = list(section_validator.schema.schema)
+    assert len(section_markers) == 1
+    assert section_markers[0] == "full_name"
+    # This is a known bug, which needs to be fixed
     assert section_markers[0].description == {"suggested_value": "John Doe"}
 
 
