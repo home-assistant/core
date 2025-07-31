@@ -500,6 +500,16 @@
           "description": "The Matter device to add to the other Matter network."
         }
       }
+    },
+    "get_rooms": {
+      "name": "Get rooms",
+      "description": "Returns a list of available maps and rooms for robot vacuum cleaners.",
+      "fields": {
+        "device_id": {
+          "name": "[%key:common::config_flow::data::device%]",
+          "description": "The Matter device to add to the other Matter network."
+        }
+      }
     }
   }
 }

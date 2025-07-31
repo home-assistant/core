@@ -135,5 +135,10 @@
         "default": "mdi:ev-station"
       }
     }
+  },
+  "services": {
+    "get_rooms": {
+      "service": "mdi:map"
+    }
   }
 }

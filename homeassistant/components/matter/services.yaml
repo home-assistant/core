@@ -1,0 +1,11 @@
+# Service descriptions for Matter integration
+
+get_rooms:
+  fields:
+    device_id:
+      selector:
+        device:
+          integration: matter
+          entity:
+            domain: vacuum
+      required: true
