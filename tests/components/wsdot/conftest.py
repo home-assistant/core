@@ -8,16 +8,10 @@ import pytest
 from wsdot import TravelTime
 
 from homeassistant.components.wsdot.const import CONF_TRAVEL_TIMES, DOMAIN
-from homeassistant.components.wsdot.sensor import SCAN_INTERVAL
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_time_changed,
-    load_json_object_fixture,
-)
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -51,23 +45,19 @@ def mock_config_entry(mock_config_data) -> MockConfigEntry:
 
 @pytest.fixture
 async def init_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_data: MockConfigEntry,
+    subentries: list[dict[str, Any]],
 ) -> MockConfigEntry:
-    """Set up wsdot integration for testing."""
+    """Set up wsdot integration with subentries for testing."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=mock_config_data,
+        subentries_data=subentries,
+    )
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     return mock_config_entry
-
-
-@pytest.fixture
-async def sync_sensor(
-    hass: HomeAssistant, init_integration: MockConfigEntry
-) -> MockConfigEntry:
-    """Set up wsdot integration and wait for first scan to fire."""
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
-    await hass.async_block_till_done()
-
-    return init_integration

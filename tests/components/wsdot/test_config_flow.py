@@ -10,6 +10,7 @@ from homeassistant.components.wsdot.const import (
     DIALOG_API_KEY,
     DIALOG_NAME,
     DOMAIN,
+    SUBENTRY_TRAVEL_TIMES,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME, CONF_SOURCE, CONF_TYPE
@@ -73,7 +74,16 @@ async def test_create_import_entry(
     assert result[CONF_TYPE] is FlowResultType.CREATE_ENTRY
     assert result[CONF_TITLE] == "wsdot"
     assert result[CONF_DATA][CONF_API_KEY] == "abcd-5678"
-    assert result[CONF_DATA][CONF_TRAVEL_TIMES] == [{"id": 96, "name": "I-90 EB"}]
+    assert result[CONF_DATA][CONF_TRAVEL_TIMES] == [
+        {"id": 96, "name": "Seattle-Bellevue via I-90 (EB AM)"}
+    ]
+
+    route = next(iter(result.get("subentries", [])), None)
+    assert route is not None
+    assert route["subentry_type"] == SUBENTRY_TRAVEL_TIMES
+    assert route[CONF_TITLE] == "I-90 EB"
+    assert route[CONF_DATA][CONF_NAME] == "Seattle-Bellevue via I-90 (EB AM)"
+    assert route[CONF_DATA][CONF_ID] == 96
 
 
 async def test_integration_already_exists(

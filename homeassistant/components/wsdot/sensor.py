@@ -14,9 +14,14 @@ from homeassistant.components.sensor import (
     SensorEntity,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME, UnitOfTime
+from homeassistant.const import (
+    CONF_API_KEY,
+    CONF_ID,
+    CONF_NAME,
+    CONF_SOURCE,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import (
@@ -50,42 +55,44 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Migrate a platform-style wsdot to entry-style."""
-    # old-style config was entered by hand. make sure all values are valid
-    api_key = config[CONF_API_KEY]
-    session = async_get_clientsession(hass)
-    try:
-        # check for valid API Key
-        wsdot_api.WsdotTravelTimes(
-            api_key=api_key, session=session
-        ).get_all_travel_times()
-    except wsdot_api.WsdotTravelError as wsdot_error:
-        raise PlatformNotReady from wsdot_error
+    entries = hass.config_entries.async_entries(DOMAIN)
+    if entries:
+        for entry in entries:
+            _LOGGER.info(
+                "Found already-setup WSDOT entry. Skipping platform setup. Your "
+                'configuration.yaml might contain a "wsdot" entry in `sensor.platfom` '
+                "that is no longer needed"
+            )
+            if entry.data[CONF_API_KEY] != config[CONF_API_KEY]:
+                _LOGGER.warning(
+                    "Lagacy Platform WSDOT entry found but there already exists a WSDOT "
+                    "entry with a different API Key. Skipping migration of this configutation"
+                )
+        return
 
-    for old_entry in hass.config_entries.async_loaded_entries(DOMAIN):
-        await hass.config_entries.async_remove(old_entry.entry_id)
     await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        DOMAIN,
+        context={CONF_SOURCE: SOURCE_IMPORT},
+        data=config,
     )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    add_entities: AddConfigEntryEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the WSDOT sensor."""
-    sensors = []
     session = async_get_clientsession(hass)
     api_key = entry.data[CONF_API_KEY]
-    wsdot_travel = wsdot_api.WsdotTravelTimes(api_key=api_key, session=session)
-    for travel_time in entry.data[CONF_TRAVEL_TIMES]:
-        name = travel_time.get(CONF_NAME) or travel_time.get(CONF_ID)
-        travel_time_id = int(travel_time[CONF_ID])
-        sensors.append(
-            WashingtonStateTravelTimeSensor(name, wsdot_travel, travel_time_id)
+    wsdot_travel_times = wsdot_api.WsdotTravelTimes(api_key=api_key, session=session)
+    for subentry_id, subentry in entry.subentries.items():
+        name = subentry.data[CONF_NAME]
+        travel_time_id = int(subentry.data[CONF_ID])
+        sensor = WashingtonStateTravelTimeSensor(
+            name, wsdot_travel_times, travel_time_id
         )
-
-    add_entities(sensors)
+        async_add_entities([sensor], config_subentry_id=subentry_id)
 
 
 class WashingtonStateTransportSensor(SensorEntity):
@@ -96,6 +103,7 @@ class WashingtonStateTransportSensor(SensorEntity):
     can read them and make them available.
     """
 
+    _attr_attribution = ATTRIBUTION
     _attr_icon = ICON
 
     def __init__(self, name: str) -> None:
@@ -117,7 +125,6 @@ class WashingtonStateTransportSensor(SensorEntity):
 class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     """Travel time sensor from WSDOT."""
 
-    _attr_attribution = ATTRIBUTION
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
 
     def __init__(
@@ -128,6 +135,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
         self._data: wsdot_api.TravelTime | None = None
         self._travel_time_id = travel_time_id
         self._wsdot_travel = wsdot_travel
+        self._attr_unique_id = f"Travel_Time_{travel_time_id}"
 
     async def async_update(self) -> None:
         """Get the latest data from WSDOT."""

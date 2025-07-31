@@ -5,9 +5,40 @@
     },
     "step": {
       "user": {
+        "title": "WSDOT setup",
+        "description": "Set up your Washington State Department of Transportation integration.",
         "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
           "domain": "Domain name"
+        },
+        "data_description": {
+          "api_key": "Your WSDOT API Key."
         }
+      }
+    }
+  },
+  "config_subentries": {
+    "travel_time": {
+      "initiate_flow": {
+        "user": "Travel Time"
+      },
+      "step": {
+        "user": {
+          "title": "WSDOT Travel Time setup",
+          "description": "Select one of the provided the highway routes to monitor estimated driving time along that route",
+          "data": {
+            "name": "Name",
+            "route": "Route"
+          },
+          "data_description": {
+            "name": "A name for this route. Defaults to the WSDOT description of the route.",
+            "route": "A highway segment monitored by the Department of Transportation for average drive time."
+          }
+        },
+        "initiate_flow": {
+          "user": "Add route"
+        },
+        "entry_type": "Travel Time"
       }
     }
   }
