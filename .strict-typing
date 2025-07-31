@@ -107,7 +107,6 @@ homeassistant.components.awair.*
 homeassistant.components.axis.*
 homeassistant.components.azure_storage.*
 homeassistant.components.backup.*
-homeassistant.components.backup_sftp.*
 homeassistant.components.baf.*
 homeassistant.components.bang_olufsen.*
 homeassistant.components.bayesian.*
@@ -459,6 +458,7 @@ homeassistant.components.sensorpush_cloud.*
 homeassistant.components.sensoterra.*
 homeassistant.components.senz.*
 homeassistant.components.sfr_box.*
+homeassistant.components.sftp_storage.*
 homeassistant.components.shell_command.*
 homeassistant.components.shelly.*
 homeassistant.components.shopping_list.*

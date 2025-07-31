@@ -1,24 +1,25 @@
-"""Config flow to configure the SFTP Backup Storage integration."""
+"""Config flow to configure the SFTP Storage integration."""
 
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
-from asyncssh import KeyImportError, SSHClientConnectionOptions, connect
+from asyncssh import connect
 from asyncssh.misc import PermissionDenied
 from asyncssh.sftp import SFTPNoSuchFile, SFTPPermissionDenied
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.selector import (
+    FileSelector,
+    FileSelectorConfig,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
 
 from . import SFTPConfigEntryData
+from .client import get_client_options, save_uploaded_pkey_file
 from .const import (
     CONF_BACKUP_LOCATION,
     CONF_HOST,
@@ -29,18 +30,35 @@ from .const import (
     DOMAIN,
     LOGGER,
 )
+from .exceptions import SFTPStorageInvalidPrivateKey, SFTPStorageMissingPasswordOrPkey
 
 
 class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Handle an SFTP Backup Storage config flow."""
+    """Handle an SFTP Storage config flow."""
 
-    def _check_pkey_and_password(self, user_input: dict[str, Any]) -> dict[str, Any]:
+    def __init__(self) -> None:
+        """Initialize SFTP Storage Flow Handler.
+
+        Initialize _client_keys as an instance variable to ensure each config flow
+        handler instance has its own isolated list of SSH client keys. This prevents
+        key files from previous config flow attempts (especially in tests) from
+        persisting.
+        """
+        self._client_keys: list = []
+
+    async def _check_pkey_and_password(
+        self, user_input: dict[str, Any]
+    ) -> dict[str, Any]:
         """Check if user provided either one of password or private key.
 
         Additionally, check if private key exists and make sure it starts
         with `/config` if full path is not provided by user.
 
         Returns: user_input object with edited private key location, if edited.
+
+        Raises:
+            - SFTPStorageMissingPasswordOrPkey - If user did not provide password nor private key.
+            - SFTPStorageInvalidPrivateKey - If private key is not valid format.
         """
         # If both password AND private key are not provided, error out.
         # We need at least one to perform authentication.
@@ -48,26 +66,15 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
             bool(user_input.get(CONF_PASSWORD)) is False
             and bool(user_input.get(CONF_PRIVATE_KEY_FILE)) is False
         ):
-            raise ConfigEntryError(
-                "Please configure password or private key file location for SFTP Backup Storage."
-            )
+            raise SFTPStorageMissingPasswordOrPkey
 
         if bool(user_input.get(CONF_PRIVATE_KEY_FILE)):
-            # If full path to private key is not provided,
-            # fallback to /config as a main directory to look for pkey.
-            if not user_input[CONF_PRIVATE_KEY_FILE].startswith("/"):
-                user_input[CONF_PRIVATE_KEY_FILE] = (
-                    "/config/" + user_input[CONF_PRIVATE_KEY_FILE]
+            self._client_keys.append(
+                # This will raise SFTPStorageInvalidPrivateKey if private key is invalid.
+                await save_uploaded_pkey_file(
+                    self.hass, cast(str, user_input.get(CONF_PRIVATE_KEY_FILE))
                 )
-
-            # Error out if we did not find the private key file.
-            if not Path(user_input[CONF_PRIVATE_KEY_FILE]).exists():
-                raise ConfigEntryError(
-                    f"Private key file not found in provided path: `{user_input[CONF_PRIVATE_KEY_FILE]}`."
-                    " Place the key file in config or share directory "
-                    "and point to it by specifying path "
-                    "`/config/private_key` or `/share/private_key`.",
-                )
+            )
 
         return user_input
 
@@ -89,7 +96,7 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                 port=user_input.get(CONF_PORT, 22),
                 username=user_input[CONF_USERNAME],
                 password=user_input.get(CONF_PASSWORD),
-                private_key_file=user_input.get(CONF_PRIVATE_KEY_FILE),
+                private_key_file=self._client_keys,
                 backup_location=user_input[CONF_BACKUP_LOCATION],
             )
 
@@ -98,25 +105,21 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
             try:
                 # Performs a username-password entry check
                 # Validates private key location if provided.
-                user_input = self._check_pkey_and_password(user_input)
+                user_input = await self._check_pkey_and_password(user_input)
 
                 # Raises:
                 # - OSError, if host or port are not correct.
-                # - asyncssh.KeyImportError, if private key is not valid format.
+                # - SFTPStorageInvalidPrivateKey, if private key is not valid format.
                 # - asyncssh.misc.PermissionDenied, if credentials are not correct.
+                # - SFTPStorageMissingPasswordOrPkey, if password and private key are not provided.
                 # - asyncssh.sftp.SFTPNoSuchFile, if directory does not exist.
                 # - asyncssh.sftp.SFTPPermissionDenied, if we don't have access to said directory
                 async with (
                     connect(
                         host=user_config.host,
                         port=user_config.port,
-                        options=SSHClientConnectionOptions(
-                            known_hosts=None,
-                            username=user_config.username,
-                            password=user_config.password,
-                            client_keys=[user_config.private_key_file]
-                            if user_config.private_key_file
-                            else None,
+                        options=await self.hass.async_add_executor_job(
+                            get_client_options, user_config
                         ),
                     ) as ssh,
                     ssh.start_sftp_client() as sftp,
@@ -125,23 +128,25 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                     await sftp.listdir()
 
                 LOGGER.debug(
-                    "Will register SFTP Backup Location agent with identifier %s",
+                    "Will register SFTP Storage agent with identifier %s",
                     user_config.unique_id,
                 )
 
             except OSError as e:
+                LOGGER.exception(e)
                 placeholders["error_message"] = str(e)
                 errors["base"] = "os_error"
+            except SFTPStorageInvalidPrivateKey:
+                errors["base"] = "invalid_key"
             except PermissionDenied as e:
                 placeholders["error_message"] = str(e)
                 errors["base"] = "permission_denied"
+            except SFTPStorageMissingPasswordOrPkey:
+                errors["base"] = "key_or_password_needed"
             except SFTPNoSuchFile:
                 errors["base"] = "sftp_no_such_file"
             except SFTPPermissionDenied:
                 errors["base"] = "sftp_permission_denied"
-            except (ConfigEntryError, KeyImportError) as e:
-                placeholders["error_message"] = str(e)
-                errors["base"] = "config_entry_error"
             except Exception as e:  # noqa: BLE001
                 LOGGER.exception(e)
                 placeholders["error_message"] = str(e)
@@ -166,7 +171,9 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_PASSWORD): TextSelector(
                         config=TextSelectorConfig(type=TextSelectorType.PASSWORD)
                     ),
-                    vol.Optional(CONF_PRIVATE_KEY_FILE): str,
+                    vol.Optional(CONF_PRIVATE_KEY_FILE): FileSelector(
+                        FileSelectorConfig(accept="*")
+                    ),
                     vol.Required(CONF_BACKUP_LOCATION): str,
                 }
             ),

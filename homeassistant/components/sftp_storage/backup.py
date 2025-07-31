@@ -1,4 +1,4 @@
-"""Backup platform for the SFTP Backup Storage integration."""
+"""Backup platform for the SFTP Storage integration."""
 
 from __future__ import annotations
 
@@ -47,7 +47,7 @@ def async_register_backup_agents_listener(
 
 
 class SFTPBackupAgent(BackupAgent):
-    """SFTP Backup agent."""
+    """SFTP Backup Storage agent."""
 
     domain = DOMAIN
 
@@ -65,13 +65,11 @@ class SFTPBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> AsyncIterator[bytes]:
         """Download a backup file from SFTP."""
-        LOGGER.debug("Received request to download backup id: %s", backup_id)
-
+        LOGGER.debug(
+            "Establishing SFTP connection to remote host in order to download backup id: %s",
+            backup_id,
+        )
         try:
-            LOGGER.debug(
-                "Establishing SFTP connection to remote host in order to download backup"
-            )
-
             # Will raise BackupAgentError if failure to authenticate or SFTP Permissions
             async with BackupAgentClient(self._entry, self._hass) as client:
                 return await client.iter_file(backup_id)
@@ -106,7 +104,7 @@ class SFTPBackupAgent(BackupAgent):
         backup_id: str,
         **kwargs: Any,
     ) -> None:
-        """Delete a backup file from SFTP Backup Storage."""
+        """Delete a backup file from SFTP Storage."""
         LOGGER.debug("Received request to delete backup id: %s", backup_id)
 
         try:

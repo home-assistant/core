@@ -502,8 +502,8 @@ asyncarve==0.1.1
 # homeassistant.components.sleepiq
 asyncsleepiq==1.5.3
 
-# homeassistant.components.backup_sftp
-asyncssh==2.19.0
+# homeassistant.components.sftp_storage
+asyncssh==2.21.0
 
 # homeassistant.components.aurora
 auroranoaa==0.0.5

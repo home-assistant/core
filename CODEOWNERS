@@ -192,8 +192,6 @@ build.json @home-assistant/supervisor
 /tests/components/azure_storage/ @zweckj
 /homeassistant/components/backup/ @home-assistant/core
 /tests/components/backup/ @home-assistant/core
-/homeassistant/components/backup_sftp/ @maretodoric
-/tests/components/backup_sftp/ @maretodoric
 /homeassistant/components/baf/ @bdraco @jfroy
 /tests/components/baf/ @bdraco @jfroy
 /homeassistant/components/balboa/ @garbled1 @natekspencer
@@ -1388,6 +1386,8 @@ build.json @home-assistant/supervisor
 /tests/components/seventeentrack/ @shaiu
 /homeassistant/components/sfr_box/ @epenet
 /tests/components/sfr_box/ @epenet
+/homeassistant/components/sftp_storage/ @maretodoric
+/tests/components/sftp_storage/ @maretodoric
 /homeassistant/components/sharkiq/ @JeffResc @funkybunch
 /tests/components/sharkiq/ @JeffResc @funkybunch
 /homeassistant/components/shell_command/ @home-assistant/core

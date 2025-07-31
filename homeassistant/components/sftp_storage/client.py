@@ -1,14 +1,17 @@
-"""Client for SFTP Backup Location integration."""
+"""Client for SFTP Storage integration."""
 
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 import json
+from pathlib import Path
+import shutil
 from types import TracebackType
 from typing import TYPE_CHECKING, Self
 
 from asyncssh import (
+    KeyImportError,
     SFTPClient,
     SFTPClientFile,
     SSHClientConnection,
@@ -23,12 +26,60 @@ from homeassistant.components.backup import (
     BackupAgentError,
     suggested_filename,
 )
+from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.storage import STORAGE_DIR
 
-from .const import BUF_SIZE, LOGGER
+from .const import BUF_SIZE, DEFAULT_PKEY_NAME, DOMAIN, LOGGER
+from .exceptions import SFTPStorageInvalidPrivateKey
 
 if TYPE_CHECKING:
-    from . import SFTPConfigEntry
+    from . import SFTPConfigEntry, SFTPConfigEntryData
+
+
+def get_client_keys(hass: HomeAssistant) -> list:
+    """Return a list of private key files usable with `SSHClientConnectionOptions`."""
+    client_keys: list = []
+    storage: Path = Path(hass.config.path(STORAGE_DIR, DOMAIN))
+    pkey: Path = storage.joinpath(DEFAULT_PKEY_NAME)
+    if pkey.exists():
+        client_keys.append(str(pkey))
+    return client_keys
+
+
+def get_client_options(cfg: SFTPConfigEntryData) -> SSHClientConnectionOptions:
+    """Use this function with `hass.async_add_executor_job` to asynchronously get `SSHClientConnectionOptions`."""
+
+    return SSHClientConnectionOptions(
+        known_hosts=None,
+        username=cfg.username,
+        password=cfg.password,
+        client_keys=cfg.private_key_file,
+    )
+
+
+async def save_uploaded_pkey_file(hass: HomeAssistant, uploaded_file_id: str) -> str:
+    """Validate the uploaded private key and move it to the storage directory.
+
+    Return a string representing a path to private key file.
+    Raises SFTPStorageInvalidPrivateKey if the file is invalid.
+    """
+
+    def _process_upload() -> str:
+        with process_uploaded_file(hass, uploaded_file_id) as file_path:
+            try:
+                # Initializing this will verify if private key is in correct format
+                SSHClientConnectionOptions(client_keys=[file_path])
+            except KeyImportError as err:
+                LOGGER.debug(err)
+                raise SFTPStorageInvalidPrivateKey from err
+
+            dest_path = Path(hass.config.path(STORAGE_DIR, DOMAIN))
+            dest_path.mkdir(exist_ok=True)
+            dest_file = dest_path / DEFAULT_PKEY_NAME
+            return str(shutil.move(file_path, dest_file))
+
+    return await hass.async_add_executor_job(_process_upload)
 
 
 class AsyncFileIterator:
@@ -106,7 +157,6 @@ class BackupAgentClient:
         self.cfg: SFTPConfigEntry = config
         self.hass: HomeAssistant = hass
         self._ssh: SSHClientConnection | None = None
-        # self.sftp: SFTPClient | None = None
         LOGGER.debug("Initialized with config: %s", self.cfg.runtime_data)
 
     async def __aenter__(self) -> Self:
@@ -130,24 +180,6 @@ class BackupAgentClient:
 
             await self._ssh.wait_closed()
 
-    def _check_initialized(self, file_path: str | None = None) -> None:
-        """Check if SSH Connection is initialized.
-
-        If `file_path` is provided, also checks if
-        it's not within scope of configured backup location.
-
-        Raises `RuntimeError` if either checks fail.
-        """
-        if self._ssh is None or self.sftp is None:
-            raise RuntimeError("Connection is not initialized.")
-
-        if file_path and not file_path.startswith(
-            self.cfg.runtime_data.backup_location
-        ):
-            raise RuntimeError(
-                f"Attempted to access file outside of configured backup location: {file_path}"
-            )
-
     async def _load_metadata(self, backup_id: str) -> BackupMetadata:
         """Return `BackupMetadata` object`.
 
@@ -157,6 +189,7 @@ class BackupAgentClient:
 
         """
 
+        # Test for metadata file existence.
         metadata_file = (
             f"{self.cfg.runtime_data.backup_location}/.{backup_id}.metadata.json"
         )
@@ -269,7 +302,6 @@ class BackupAgentClient:
 
     async def list_backup_location(self) -> list[str]:
         """Return a list of `*.metadata.json` files located in backup location."""
-        self._check_initialized()
         files = []
         LOGGER.debug(
             "Changing directory to: `%s`", self.cfg.runtime_data.backup_location
@@ -298,13 +330,8 @@ class BackupAgentClient:
             self._ssh = await connect(
                 host=self.cfg.runtime_data.host,
                 port=self.cfg.runtime_data.port,
-                options=SSHClientConnectionOptions(
-                    known_hosts=None,
-                    username=self.cfg.runtime_data.username,
-                    password=self.cfg.runtime_data.password,
-                    client_keys=[self.cfg.runtime_data.private_key_file]
-                    if self.cfg.runtime_data.private_key_file
-                    else None,
+                options=await self.hass.async_add_executor_job(
+                    get_client_options, self.cfg.runtime_data
                 ),
             )
         except (OSError, PermissionDenied) as e:
@@ -315,6 +342,7 @@ class BackupAgentClient:
         # Configure SFTP Client Connection
         try:
             self.sftp = await self._ssh.start_sftp_client()
+            await self.sftp.chdir(self.cfg.runtime_data.backup_location)
         except (SFTPNoSuchFile, SFTPPermissionDenied) as e:
             raise BackupAgentError(
                 "Failed to create SFTP client. Re-installing integration might be required"

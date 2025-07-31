@@ -1,4 +1,4 @@
-"""Constants for the SFTP Backup Storage integration."""
+"""Constants for the SFTP Storage integration."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from typing import Final
 
 from homeassistant.util.hass_dict import HassKey
 
-DOMAIN: Final = "backup_sftp"
+DOMAIN: Final = "sftp_storage"
 
 LOGGER = logging.getLogger(__package__)
 
@@ -24,3 +24,4 @@ BUF_SIZE = 2**20 * 4  # 4MB
 DATA_BACKUP_AGENT_LISTENERS: HassKey[list[Callable[[], None]]] = HassKey(
     f"{DOMAIN}.backup_agent_listeners"
 )
+DEFAULT_PKEY_NAME: str = ".sftp_storage_pkey"

@@ -1,27 +1,30 @@
 """Tests config_flow."""
 
-from collections.abc import Awaitable, Callable, Generator
+from collections.abc import Awaitable, Callable
 from tempfile import NamedTemporaryFile
-from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import patch
 
+from asyncssh import KeyImportError, generate_private_key
 from asyncssh.misc import PermissionDenied
 from asyncssh.sftp import SFTPNoSuchFile, SFTPPermissionDenied
 import pytest
 
-from homeassistant.components.backup_sftp.const import (
+from homeassistant.components.sftp_storage.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PRIVATE_KEY_FILE,
     CONF_USERNAME,
     DOMAIN,
 )
+from homeassistant.components.sftp_storage.exceptions import (
+    SFTPStorageInvalidPrivateKey,
+    SFTPStorageMissingPasswordOrPkey,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import ConfigEntryError
 
-from .conftest import USER_INPUT
+from .conftest import USER_INPUT, SSHClientConnectionMock
 
 from tests.common import MockConfigEntry
 
@@ -29,35 +32,33 @@ type ComponentSetup = Callable[[], Awaitable[None]]
 
 
 @pytest.fixture
-def mock_connect(
-    fake_connect: AsyncMock,
-) -> Generator[tuple[MagicMock, MagicMock, dict[str, Any]]]:
-    """Fixture that yields mocked connect and SSHClientConnectionOptions objects."""
-
+def mock_process_uploaded_file():
+    """Mocks ability to process uploaded private key."""
     with (
         patch(
-            "homeassistant.components.backup_sftp.config_flow.connect",
-            return_value=fake_connect,
-        ) as _mock_connect,
-        patch(
-            "homeassistant.components.backup_sftp.config_flow.SSHClientConnectionOptions",
-            return_value=MagicMock(),
-        ) as _mock_ssh_client_options,
-        NamedTemporaryFile() as tmpfile,
+            "homeassistant.components.sftp_storage.client.process_uploaded_file"
+        ) as mock_process_uploaded_file,
+        patch("pathlib.Path.mkdir"),
+        patch("shutil.move") as mock_shutil_move,
+        NamedTemporaryFile() as f,
     ):
-        user_input = USER_INPUT.copy()
-        user_input[CONF_PRIVATE_KEY_FILE] = tmpfile.name
-        yield (_mock_connect, _mock_ssh_client_options, user_input)
+        pkey = generate_private_key("ssh-rsa")
+        f.write(pkey.export_private_key("pkcs8-pem"))
+        f.flush()
+        mock_process_uploaded_file.return_value.__enter__.return_value = f.name
+        mock_shutil_move.return_value = f.name
+        yield
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("mock_process_uploaded_file")
+@pytest.mark.usefixtures("mock_ssh_connection")
 async def test_backup_sftp_full_flow(
     hass: HomeAssistant,
-    mock_connect: tuple[MagicMock, MagicMock, dict[str, Any]],
 ) -> None:
     """Test the full backup_sftp config flow with valid user input."""
 
-    mock_client, _, user_input = mock_connect
+    user_input = USER_INPUT.copy()
     # Start the configuration flow
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -68,10 +69,8 @@ async def test_backup_sftp_full_flow(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input
     )
-    await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert len(mock_client.mock_calls) == 1
 
     # Verify that a new config entry is created.
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -81,13 +80,13 @@ async def test_backup_sftp_full_flow(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("mock_process_uploaded_file")
+@pytest.mark.usefixtures("mock_ssh_connection")
 async def test_already_configured(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_connect: tuple[MagicMock, MagicMock, dict[str, Any]],
 ) -> None:
     """Test successful failure of already added config entry."""
-    _, _, user_input = mock_connect
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -96,7 +95,7 @@ async def test_already_configured(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input
+        result["flow_id"], USER_INPUT
     )
     await hass.async_block_till_done()
 
@@ -108,25 +107,26 @@ async def test_already_configured(
     ("exception_type", "error_base"),
     [
         (OSError, "os_error"),
+        (SFTPStorageInvalidPrivateKey, "invalid_key"),
         (PermissionDenied, "permission_denied"),
+        (SFTPStorageMissingPasswordOrPkey, "key_or_password_needed"),
         (SFTPNoSuchFile, "sftp_no_such_file"),
         (SFTPPermissionDenied, "sftp_permission_denied"),
-        (ConfigEntryError, "config_entry_error"),
         (Exception, "unknown"),
     ],
 )
 @pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("mock_process_uploaded_file")
 async def test_config_flow_exceptions(
     exception_type: Exception,
     error_base: str,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    mock_connect: tuple[MagicMock, MagicMock, dict[str, Any]],
+    mock_ssh_connection: SSHClientConnectionMock,
 ) -> None:
     """Test successful failure of already added config entry."""
 
-    mock_client, _, user_input = mock_connect
-    mock_client.side_effect = exception_type("Error message.")
+    mock_ssh_connection._sftp._mock_chdir.side_effect = exception_type("Error message.")
 
     # config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
@@ -135,7 +135,7 @@ async def test_config_flow_exceptions(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input
+        result["flow_id"], USER_INPUT
     )
     await hass.async_block_till_done()
 
@@ -143,7 +143,7 @@ async def test_config_flow_exceptions(
     assert result["errors"] and result["errors"]["base"] == error_base
 
     # Recover from the error
-    mock_client.side_effect = None
+    mock_ssh_connection._sftp._mock_chdir.side_effect = None
 
     config_entry.add_to_hass(hass)
 
@@ -153,7 +153,7 @@ async def test_config_flow_exceptions(
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input
+        result["flow_id"], USER_INPUT
     )
     await hass.async_block_till_done()
 
@@ -162,36 +162,31 @@ async def test_config_flow_exceptions(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("mock_process_uploaded_file")
 async def test_config_entry_error(hass: HomeAssistant) -> None:
-    """Test config flow with raised `ConfigEntryError`."""
+    """Test config flow with raised `KeyImportError`."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], USER_INPUT
-    )
-    assert "errors" in result and result["errors"]["base"] == "config_entry_error"
-    assert (
-        "description_placeholders" in result
-        and "error_message" in result["description_placeholders"]
-        and "Private key file not found in provided path:"
-        in result["description_placeholders"]["error_message"]
-    )
+    with (
+        patch(
+            "homeassistant.components.sftp_storage.client.SSHClientConnectionOptions",
+            side_effect=KeyImportError("Invalid key"),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+    assert "errors" in result and result["errors"]["base"] == "invalid_key"
 
     user_input = USER_INPUT.copy()
     user_input[CONF_PASSWORD] = ""
-    user_input[CONF_PRIVATE_KEY_FILE] = ""
+    del user_input[CONF_PRIVATE_KEY_FILE]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input
     )
-    assert "errors" in result and result["errors"]["base"] == "config_entry_error"
-    assert (
-        "description_placeholders" in result
-        and "error_message" in result["description_placeholders"]
-        and "Please configure password or private key"
-        in result["description_placeholders"]["error_message"]
-    )
+    assert "errors" in result and result["errors"]["base"] == "key_or_password_needed"

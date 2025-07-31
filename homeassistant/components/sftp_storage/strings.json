@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Set up remote SFTP backup storage",
+        "description": "Set up remote SFTP Storage",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
@@ -16,13 +16,14 @@
           "port": "Port of your SSH/SFTP server. This is usually 22.",
           "username": "Username to authenticate with.",
           "password": "Password to authenticate with. Provide this or private key file.",
-          "private_key_file": "Location to private key file to authenticate with. File must be uploaded to Home Assistant /config folder. Provide this or password.",
+          "private_key_file": "Upload private key file used for authentication. Provide this or password.",
           "backup_location": "Remote path where to upload backups."
         }
       }
     },
     "error": {
-      "config_entry_error": "{error_message}",
+      "invalid_key": "Invalid key uploaded. Please make sure key corresponds to valid SSH key algorithm.",
+      "key_or_password_needed": "Please configure password or private key file location for SFTP Storage.",
       "os_error": "{error_message}. Please check if host and/or port are correct.",
       "permission_denied": "{error_message}",
       "sftp_no_such_file": "Could not check directory {backup_location}. Make sure directory exists.",

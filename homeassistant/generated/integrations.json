@@ -636,12 +636,6 @@
       "iot_class": "calculated",
       "single_config_entry": true
     },
-    "backup_sftp": {
-      "name": "SFTP Backup Storage",
-      "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "local_polling"
-    },
     "baf": {
       "name": "Big Ass Fans",
       "integration_type": "hub",
@@ -5861,6 +5855,12 @@
     "sfr_box": {
       "name": "SFR Box",
       "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
+    "sftp_storage": {
+      "name": "SFTP Storage",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
