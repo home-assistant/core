@@ -295,6 +295,13 @@ class LIP:
         """Keep alive or reconnect."""
         connection_error = False
         try:
+            if self._socket is None:
+                _LOGGER.error(
+                    "Socket is None, cannot send keep-alive. Attempting reconnect"
+                )
+                await self._async_disconnected()
+                return
+
             await self._socket.async_write_command(LIP_KEEP_ALIVE)
         except (TimeoutError, ConnectionResetError) as ex:
             _LOGGER.debug("Lutron bridge disconnected: %s", ex)
