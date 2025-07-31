@@ -15,6 +15,11 @@ from pyhap.const import (
 )
 
 from homeassistant.components import button, input_button
+from homeassistant.components.input_number import (
+    ATTR_VALUE as INPUT_NUMBER_ATTR_VALUE,
+    DOMAIN as INPUT_NUMBER_DOMAIN,
+    SERVICE_SET_VALUE as INPUT_NUMBER_SERVICE_SET_VALUE,
+)
 from homeassistant.components.input_select import ATTR_OPTIONS, SERVICE_SELECT_OPTION
 from homeassistant.components.lawn_mower import (
     DOMAIN as LAWN_MOWER_DOMAIN,
@@ -351,15 +356,14 @@ class ValveBase(HomeAccessory):
     def set_duration(self, value: int) -> None:
         """Set default duration for how long the valve should remain open."""
         _LOGGER.debug("%s: Set default run time to %s", self.entity_id, value)
-        self.hass.async_create_task(
-            self.hass.services.async_call(
-                "input_number",
-                "set_value",
-                {
-                    ATTR_ENTITY_ID: self.linked_duration_entity,
-                    "value": value,
-                },
-            )
+        self.async_call_service(
+            INPUT_NUMBER_DOMAIN,
+            INPUT_NUMBER_SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: self.linked_duration_entity,
+                INPUT_NUMBER_ATTR_VALUE: value,
+            },
+            value,
         )
 
     def get_duration(self) -> int:
