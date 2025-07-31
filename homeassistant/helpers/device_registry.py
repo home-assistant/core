@@ -1055,7 +1055,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             )
 
         if (
-            suggested_area is not None
+            old.is_new
+            and suggested_area is not None
             and suggested_area is not UNDEFINED
             and suggested_area != ""
             and area_id is UNDEFINED
