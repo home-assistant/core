@@ -309,7 +309,6 @@ async def test_cover_node_tilt(
 
     assert transport_write.call_count == 1
     assert transport_write.call_args == call("1;1;1;1;58;25\n")
-
     receive_message("1;1;1;0;58;25\n")
     await hass.async_block_till_done()
 

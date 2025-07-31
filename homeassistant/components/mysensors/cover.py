@@ -60,6 +60,11 @@ async def async_setup_entry(
 class MySensorsCover(MySensorsChildEntity, CoverEntity):
     """Representation of the value of a MySensors Cover child node."""
 
+    def value_types(self) -> tuple[int, ...]:
+        """Return MySensors value types that trigger a state update."""
+        s = self.gateway.const.SetReq
+        return (s.V_UP, s.V_DOWN, s.V_STOP, s.V_DIMMER, s.V_TILT)
+
     def get_cover_state(self) -> CoverState:
         """Return a CoverState enum representing the state of the cover."""
         set_req = self.gateway.const.SetReq
