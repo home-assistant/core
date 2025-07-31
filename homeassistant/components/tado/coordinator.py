@@ -5,9 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
-from tadoasync import Tado, TadoConnectionError, TadoError
+from tadoasync import Tado, TadoConnectionError, TadoError, TadoReadingError
 from tadoasync.models import (
     Capabilities,
     Device,
@@ -161,7 +161,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[TadoData]):
         """Update the zone data from Tado."""
 
         try:
-            return (await self._tado.get_zone_states())[0].zone_states
+            return await self._tado.get_zone_states()
         except TadoConnectionError as err:
             raise UpdateFailed(f"Error updating Tado zones: {err}") from err
 
@@ -281,24 +281,19 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[TadoData]):
         # except RequestException as err:
         #     raise UpdateFailed(f"Error setting Tado temperature offset: {err}") from err
 
-    async def set_meter_reading(self, reading: int) -> dict[str, Any]:
+    async def set_meter_reading(self, reading: int) -> None:
         """Send meter reading to Tado."""
-        # dt: str = datetime.now().strftime("%Y-%m-%d")
-        # if self._tado is None:
-        #     raise HomeAssistantError("Tado client is not initialized")
-        #
-        # try:
-        #     return await self.hass.async_add_executor_job(
-        #         self._tado.set_eiq_meter_readings, dt, reading
-        #     )
-        # except RequestException as err:
-        #     raise UpdateFailed(f"Error setting Tado meter reading: {err}") from err
-        return {}
+        try:
+            await self._tado.set_meter_readings(reading)
+        except TadoReadingError as err:
+            raise HomeAssistantError(
+                f"Error setting Tado meter reading: {err}"
+            ) from err
 
     async def set_child_lock(self, device_id: str, enabled: bool) -> None:
         """Set child lock of device."""
         try:
-            await self._tado.set_child_lock(device_id, enabled)
+            await self._tado.set_child_lock(device_id, child_lock=enabled)
         except TadoError as exc:
             raise HomeAssistantError(f"Error setting Tado child lock: {exc}") from exc
 
