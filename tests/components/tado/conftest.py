@@ -11,6 +11,7 @@ from tadoasync.models import (
     Device,
     GetMe,
     HomeState,  # codespell:ignore homestate
+    MobileDevice,
     TemperatureOffset,
     Weather,
     Zone,
@@ -69,6 +70,9 @@ async def mock_tado_api(hass: HomeAssistant) -> AsyncGenerator[MagicMock]:
                 hass, "water_heater_zone_capabilities.json", DOMAIN
             )
         )
+        client.get_mobile_devices.return_value = ORJSONDecoder(
+            list[MobileDevice]
+        ).decode(await async_load_fixture(hass, "mobile_devices.json", DOMAIN))
         yield client
 
 
