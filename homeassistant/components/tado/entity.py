@@ -6,7 +6,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_NAME, DOMAIN, TADO_HOME, TADO_ZONE
-from .coordinator import TadoDataUpdateCoordinator
+from .coordinator import TadoDataUpdateCoordinator, TadoDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,21 +21,21 @@ class TadoDeviceEntity(TadoCoordinatorEntity):
     """Base implementation for Tado device."""
 
     def __init__(
-        self, device_info: dict[str, str], coordinator: TadoDataUpdateCoordinator
+        self, device_info: TadoDevice, coordinator: TadoDataUpdateCoordinator
     ) -> None:
         """Initialize a Tado device."""
         super().__init__(coordinator)
         self._device_info = device_info
-        self.device_name = device_info["serialNo"]
-        self.device_id = device_info["shortSerialNo"]
+        self.device_name = device_info.device.serial_no
+        self.device_id = device_info.device.short_serial_no
         self._attr_device_info = DeviceInfo(
             configuration_url=f"https://app.tado.com/en/main/settings/rooms-and-devices/device/{self.device_name}",
             identifiers={(DOMAIN, self.device_id)},
             name=self.device_name,
             manufacturer=DEFAULT_NAME,
-            sw_version=device_info["currentFwVersion"],
-            model=device_info["deviceType"],
-            via_device=(DOMAIN, device_info["serialNo"]),
+            sw_version=device_info.device.current_fw_version,
+            model=device_info.device.device_type,
+            via_device=(DOMAIN, device_info.device.serial_no),
         )
 
 

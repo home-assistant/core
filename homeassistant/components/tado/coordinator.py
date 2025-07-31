@@ -93,7 +93,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[TadoData]):
         self.home_id: int
         self.home_name: str
         self.zones: dict[str, Zone] = {}
-        self.devices: dict[str, TadoDevice] = {}
 
     @property
     def fallback(self) -> str:
@@ -117,7 +116,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[TadoData]):
         self.home_id = home.id
         self.home_name = home.name
 
-        await self._async_update_devices()
+        await self._async_update_devices(devices)
         zones = await self._async_update_zones()
         weather = await self._tado.get_weather()
         geofence = await self._tado.get_home_state()
@@ -136,13 +135,13 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[TadoData]):
         #         data={**self.config_entry.data, CONF_REFRESH_TOKEN: refresh_token},
         #     )
 
-    async def _async_update_devices(self) -> None:
+    async def _async_update_devices(self, devices: dict[str, TadoDevice]) -> None:
         """Update the device data from Tado."""
 
-        if not self.devices:
+        if not devices:
             raise UpdateFailed(f"No linked devices found for home ID {self.home_id}")
 
-        for serial_no, device in self.devices.items():
+        for serial_no, device in devices.items():
             _LOGGER.debug("Updating device %s", serial_no)
             if (
                 INSIDE_TEMPERATURE_MEASUREMENT
