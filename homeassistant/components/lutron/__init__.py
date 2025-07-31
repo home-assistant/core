@@ -212,33 +212,28 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                         button.legacy_uuid,
                         entry_data.controller.guid,
                     )
-
-                    # Associate an LED with a button if there is one
-                    led = next(
-                        (led for led in keypad.leds if led.number == button.number),
-                        None,
-                    )
-
-                    # Add the LED as a light device if is controlled via integration
-                    # RadioRa mode adds all leds as switches
-                    if led is not None and (use_radiora_mode or button.led_logic == 5):
-                        entry_data.leds.append(led)
-                        platform = (
-                            Platform.SWITCH if use_radiora_mode else Platform.LIGHT
-                        )
-
-                        _async_check_entity_unique_id(
-                            hass,
-                            entity_registry,
-                            platform,
-                            led.uuid,
-                            led.legacy_uuid,
-                            entry_data.controller.guid,
-                        )
-
                 else:
                     _LOGGER.debug(
                         "Button without action %s -  %s ", keypad.name, button.engraving
+                    )
+            for led in keypad.leds:
+                is_known_button = not led.button.name.startswith("Unknown")
+
+                # Add the LED as a light device if is controlled via integration
+                # RadioRa mode adds all leds as switches
+                if (use_radiora_mode and is_known_button) or (
+                    not use_radiora_mode or led.button.led_logic == 5
+                ):
+                    entry_data.leds.append(led)
+                    platform = Platform.SWITCH if use_radiora_mode else Platform.LIGHT
+
+                    _async_check_entity_unique_id(
+                        hass,
+                        entity_registry,
+                        platform,
+                        led.uuid,
+                        led.legacy_uuid,
+                        entry_data.controller.guid,
                     )
 
         # exclude occupancy_group not linked to an area

@@ -36,7 +36,7 @@ class LutronXmlDbParser:
         self._occupancy_groups = {}
         self.project_name = None
         self._variables_ids = variable_ids
-        self.lutron_guid = None
+        self.lutron_guid = ""
         self._controller = controller  # Store controller reference
 
     def parse(self):
@@ -199,6 +199,16 @@ class LutronXmlDbParser:
             elif comp_type == "LED":
                 led = self._parse_led(keypad, comp)
                 keypad.add_led(led)
+        # Associate an LED with a button if there is one
+        for button in keypad.buttons:
+            led = next(
+                (led for led in keypad.leds if led.number == button.number),
+                None,
+            )
+            if led:
+                led.button = button
+                led.name = button.name
+
         return keypad
 
     def _parse_button(self, keypad, component_xml):
@@ -266,10 +276,9 @@ class LutronXmlDbParser:
         elif keypad.device_type == "PHANTOM":
             led_base = 2000
         led_num = component_num - led_base
-        name = f"LED {led_num}"
         return Led(
             keypad=keypad,
-            name=name,
+            name="",
             number=led_num,
             component_number=component_num,
             integration_id=keypad.id,
@@ -377,7 +386,7 @@ class Device:
     uuid: str | None
     integration_id: int
     area: Area | None = None
-    legacy_uuid: str | None = field(init=False, default=None)
+    legacy_uuid: str = field(init=False, default="")
 
     LIP_MODE: ClassVar[LIPMode] = LIPMode.UNKNOWN  # Override in subclasses
 
@@ -393,8 +402,6 @@ class Device:
     def _query(
         self,
         action: LIPAction,
-        value: float | None = None,
-        fade_time: str | None = None,
     ) -> LIPCommand:
         """Create a query command."""
         return LIPCommand(
@@ -403,8 +410,6 @@ class Device:
             component_number=None,
             integration_id=self.integration_id,
             action=action,
-            value=value,
-            fade_time=fade_time,
         )
 
     def _execute(
@@ -510,6 +515,9 @@ class KeypadComponent(Device):
     keypad: Any = None
     number: int = 0  # user-friendly number
     component_number: int = 0  # lutron internal number
+    component_name: str = field(
+        init=False, default=""
+    )  # standard name with number e.g., Btn 1
 
     def __post_init__(self):
         """Set the legacy UUID and area for keypad components."""
@@ -519,8 +527,6 @@ class KeypadComponent(Device):
     def _query(
         self,
         action: LIPAction,
-        value: float | None = None,
-        fade_time: str | None = None,
     ) -> LIPCommand:
         """Create a query command with component number."""
         return LIPCommand(
@@ -529,8 +535,6 @@ class KeypadComponent(Device):
             integration_id=self.integration_id,
             component_number=self.component_number,
             action=action,
-            value=value,
-            fade_time=fade_time,
         )
 
     def _execute(
@@ -564,6 +568,7 @@ class Button(KeypadComponent):
     def __post_init__(self):
         """Set if the Button has action."""
         super().__post_init__()
+        self.component_name = f"Btn {self.number}"
         self.has_action = self.button_type in (
             "SingleAction",
             "Toggle",
@@ -583,6 +588,13 @@ class Button(KeypadComponent):
 @dataclass
 class Led(KeypadComponent):
     """Object representing a keypad LED."""
+
+    button: Button | None = field(init=False, default=None)
+
+    def __post_init__(self):
+        """Set if the Button has action."""
+        super().__post_init__()
+        self.component_name = f"Led {self.number}"
 
     def turn_on(self) -> LIPCommand:
         """Return a command to turn on the LED."""

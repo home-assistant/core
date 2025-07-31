@@ -88,7 +88,7 @@ class LutronController:
         self._subscribers: dict[
             tuple[int, int | None], list[Callable[[Any], None]]
         ] = {}  # integration_id, component_number -> list of entities
-        self.guid: str | None = None
+        self.guid: str = "no guid"
         self.areas: list[Any] = []  # List[Area] type
         self.variables: list[Sysvar] = []
         self.name: str | None = None

@@ -7,7 +7,7 @@ from homeassistant.const import ATTR_IDENTIFIERS, ATTR_VIA_DEVICE
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from .aiolip import Button, Device, KeypadComponent, LutronController, Output, Sysvar
+from .aiolip import Device, KeypadComponent, LutronController, Output, Sysvar
 from .const import DOMAIN
 
 
@@ -156,13 +156,11 @@ class LutronKeypadComponent(LutronBaseEntity):
     @property
     def name(self) -> str:
         """Return the name of the entity based on the different conditions."""
-        device = self._lutron_device
 
-        if not self._controller.use_radiora_mode and isinstance(device, Button):
-            name = f"Btn {device.component_number}"
-        else:
-            name = device.name
-        return name
+        if not self._controller.use_radiora_mode:
+            return self._lutron_device.component_name
+
+        return self._lutron_device.name
 
     @property
     def keypad_name(self) -> str:
