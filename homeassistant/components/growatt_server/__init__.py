@@ -63,7 +63,7 @@ def get_device_list_v1(
             f"API error during device list: {e} (Code: {getattr(e, 'error_code', None)}, Message: {getattr(e, 'error_msg', None)})"
         ) from e
     devices = devices_dict.get("devices", [])
-    # Current V1 API only supports MIN devices (type = 7)
+    # Only MIN device (type = 7) support implemented in current V1 API
     supported_devices = [
         {
             "deviceSn": device.get("device_sn", ""),
