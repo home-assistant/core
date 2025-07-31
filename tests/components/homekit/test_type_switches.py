@@ -705,6 +705,9 @@ async def test_valve_switch_with_set_duration_characteristic(
     await hass.async_block_till_done()
     assert acc.get_duration() == 0
 
+    # Test remaining duration fallback if no end time is linked
+    assert acc.get_remaining_duration() == 0
+
 
 async def test_valve_switch_with_remaining_duration_characteristic(
     hass: HomeAssistant, hk_driver, events: list[Event]
