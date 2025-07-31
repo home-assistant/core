@@ -1,6 +1,7 @@
 """The tests for the WSDOT platform."""
 
 from datetime import datetime, timedelta, timezone
+from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
@@ -35,6 +36,7 @@ TRAVEL_TIME_SUBENTRY = {
     [
         [TRAVEL_TIME_SUBENTRY],
     ],
+    ids=[""],
 )
 async def test_travel_sensor_details(
     hass: HomeAssistant,
@@ -87,3 +89,72 @@ async def test_travel_sensor_platform_setup(
     assert state.attributes["TimeUpdated"] == datetime(
         2017, 1, 21, 15, 10, tzinfo=timezone(timedelta(hours=-8))
     )
+
+
+async def test_travel_sensor_platform_setup_bad_routes(
+    hass: HomeAssistant,
+    mock_travel_time: AsyncMock,
+) -> None:
+    """Test the wsdot Travel Time sensor platform upgrade skips unknown route ids."""
+    assert await async_setup_component(
+        hass,
+        Platform.SENSOR,
+        {
+            Platform.SENSOR: [
+                {
+                    CONF_PLATFORM: DOMAIN,
+                    CONF_API_KEY: "foo",
+                    CONF_TRAVEL_TIMES: [{CONF_ID: 4096, CONF_NAME: "Mars Expressway"}],
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    entry = next(iter(hass.config_entries.async_entries(DOMAIN)), None)
+    assert entry is not None
+    assert entry.subentries == {}
+
+
+@pytest.mark.parametrize(
+    "api_key",
+    [
+        "foo",
+        "bar",
+    ],
+    ids=["key-matches-", "key-does-not-match-"],
+)
+@pytest.mark.parametrize(
+    "subentries",
+    [
+        [],
+    ],
+    ids=[""],
+)
+async def test_travel_sensor_platform_setup_skipped(
+    hass: HomeAssistant,
+    mock_travel_time: AsyncMock,
+    mock_config_data: dict[str, Any],
+    init_integration: MockConfigEntry,
+    api_key: str,
+) -> None:
+    """Test the wsdot Travel Time sensor platform upgrade is skipped when already exists."""
+    assert await async_setup_component(
+        hass,
+        Platform.SENSOR,
+        {
+            Platform.SENSOR: [
+                {
+                    CONF_PLATFORM: DOMAIN,
+                    CONF_API_KEY: api_key,
+                    CONF_TRAVEL_TIMES: [{CONF_ID: 96, CONF_NAME: "I90 EB"}],
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    entry = next(iter(hass.config_entries.async_entries(DOMAIN)), None)
+    assert entry is not None
+    assert entry.data[CONF_API_KEY] == mock_config_data[CONF_API_KEY]
+    assert entry.subentries == {}

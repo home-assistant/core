@@ -19,6 +19,7 @@
   },
   "config_subentries": {
     "travel_time": {
+      "entry_type": "Travel Time",
       "initiate_flow": {
         "user": "Travel Time"
       },
@@ -34,11 +35,7 @@
             "name": "A name for this route. Defaults to the WSDOT description of the route.",
             "route": "A highway segment monitored by the Department of Transportation for average drive time."
           }
-        },
-        "initiate_flow": {
-          "user": "Add route"
-        },
-        "entry_type": "Travel Time"
+        }
       }
     }
   }

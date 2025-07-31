@@ -60,13 +60,13 @@ async def async_setup_platform(
         for entry in entries:
             _LOGGER.info(
                 "Found already-setup WSDOT entry. Skipping platform setup. Your "
-                'configuration.yaml might contain a "wsdot" entry in `sensor.platfom` '
+                'configuration.yaml might contain a "wsdot" entry in `sensor.platform` '
                 "that is no longer needed"
             )
             if entry.data[CONF_API_KEY] != config[CONF_API_KEY]:
                 _LOGGER.warning(
-                    "Lagacy Platform WSDOT entry found but there already exists a WSDOT "
-                    "entry with a different API Key. Skipping migration of this configutation"
+                    "Legacy Platform WSDOT entry found but there already exists a WSDOT "
+                    "entry with a different API Key. Skipping migration of this configuration"
                 )
         return
 
