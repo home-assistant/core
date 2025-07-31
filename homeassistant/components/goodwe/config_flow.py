@@ -29,7 +29,10 @@ class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 2
 
     async def async_handle_successful_connection(
-        self, inverter: Inverter, host: str, protocol: str,
+        self,
+        inverter: Inverter,
+        host: str,
+        protocol: str,
     ):
         """Handle a successful connection storing it's values on the entry data."""
         await self.async_set_unique_id(inverter.serial_number)
