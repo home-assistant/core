@@ -519,7 +519,7 @@ async def test_migration_1_1(hass: HomeAssistant, unit_prefix, expect_prefix) ->
     assert config_entry.options.get("unit_prefix") == expect_prefix
 
     assert config_entry.version == 1
-    assert config_entry.minor_version == 3
+    assert config_entry.minor_version == 4
 
 
 async def test_migration_1_2(
@@ -570,7 +570,7 @@ async def test_migration_1_2(
     assert derivative_entity_entry.device_id == sensor_entity_entry.device_id
 
     assert derivative_config_entry.version == 1
-    assert derivative_config_entry.minor_version == 3
+    assert derivative_config_entry.minor_version == 4
 
 
 async def test_migration_from_future_version(
