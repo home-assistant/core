@@ -961,7 +961,7 @@ greeneye_monitor==3.0.3
 gridnet==5.0.1
 
 # homeassistant.components.growatt_server
-growattServer==1.6.0
+growattServer==1.7.1
 
 # homeassistant.components.google_sheets
 gspread==5.5.0
@@ -2592,7 +2592,7 @@ wyoming==1.7.1
 xbox-webapi==2.1.0
 
 # homeassistant.components.xiaomi_ble
-xiaomi-ble==1.1.0
+xiaomi-ble==1.2.0
 
 # homeassistant.components.knx
 xknx==3.8.0
