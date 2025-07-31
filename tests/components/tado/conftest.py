@@ -1,10 +1,11 @@
 """Fixtures for Tado tests."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from mashumaro.codecs.orjson import ORJSONDecoder
 import pytest
+from tadoasync import Tado
 from tadoasync.models import (
     Device,
     GetMe,
@@ -16,12 +17,17 @@ from tadoasync.models import (
 )
 
 from homeassistant.components.tado import CONF_REFRESH_TOKEN, DOMAIN
+from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_load_fixture,
+    async_load_json_object_fixture,
+)
 
 
 @pytest.fixture
-def mock_tado_api() -> Generator[MagicMock]:
+async def mock_tado_api(hass: HomeAssistant) -> AsyncGenerator[MagicMock]:
     """Mock the Tado API."""
     with (
         patch("homeassistant.components.tado.Tado", autospec=True) as mock_tado,
@@ -29,26 +35,32 @@ def mock_tado_api() -> Generator[MagicMock]:
     ):
         client = mock_tado.return_value
         client.get_me.return_value = GetMe.from_dict(
-            load_json_object_fixture("me.json", DOMAIN)
+            await async_load_json_object_fixture(hass, "me.json", DOMAIN)
         )
         client.get_zones.return_value = ORJSONDecoder(list[Zone]).decode(
-            load_fixture("zones.json", DOMAIN)
+            await async_load_fixture(hass, "zones.json", DOMAIN)
         )
         client.get_devices.return_value = ORJSONDecoder(list[Device]).decode(
-            load_fixture("devices.json", DOMAIN)
+            await async_load_fixture(hass, "devices.json", DOMAIN)
         )
         client.get_device_info.return_value = TemperatureOffset.from_dict(
-            load_json_object_fixture("device_temp_offset.json", DOMAIN)
+            await async_load_json_object_fixture(
+                hass, "device_temp_offset.json", DOMAIN
+            )
         )
-        client.get_zone_states.return_value = [
-            ZoneStates.from_dict(load_json_object_fixture("zone_states.json", DOMAIN))
-        ]
+        zone_states = ZoneStates.from_dict(
+            await async_load_json_object_fixture(hass, "zone_states.json", DOMAIN)
+        )
+        tado = Tado("", "")
+        for zone in zone_states.zone_states.values():
+            await tado.update_zone_data(zone)
+        client.get_zone_states.return_value = [zone_states]
         client.get_weather.return_value = Weather.from_dict(
-            load_json_object_fixture("weather.json", DOMAIN)
+            await async_load_json_object_fixture(hass, "weather.json", DOMAIN)
         )
         client.get_home_state.return_value = (
             HomeState.from_dict(  # codespell:ignore homestate
-                load_json_object_fixture("home_state.json", DOMAIN)
+                await async_load_json_object_fixture(hass, "home_state.json", DOMAIN)
             )
         )
         yield client
