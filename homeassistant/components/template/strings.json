@@ -39,7 +39,7 @@
           "arm_vacation": "Defines actions to run when the alarm control panel is armed to `arm_vacation`. Receives variable `code`.",
           "trigger": "Defines actions to run when the alarm control panel is triggered. Receives variable `code`.",
           "code_arm_required": "If true, the code is required to arm the alarm.",
-          "code_format": "One of number, text or no_code. Format for the code used to arm/disarm the alarm."
+          "code_format": "One of `number`, `text` or `no_code`. Format for the code used to arm/disarm the alarm."
         },
         "sections": {
           "advanced_options": {
@@ -179,7 +179,7 @@
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",
           "url": "Defines a template to get the URL on which the image is served.",
-          "verify_ssl": "Enable or disable SSL certificate verification. Disable to use an http-only URL, or if you have a self-signed SSL certificate and haven’t installed the CA certificate to enable verification."
+          "verify_ssl": "Enable or disable SSL certificate verification. Disable to use an http URL, or if you have a self-signed SSL certificate and haven’t installed the CA certificate to enable verification."
         },
         "sections": {
           "advanced_options": {
@@ -282,7 +282,7 @@
           "set_value": "Defines actions to run when the number is set to a value. Receives variable `value`.",
           "max": "Template for the number's maximum value.",
           "min": "Template for the number's minimum value.",
-          "unit_of_measurement": "Defines the units of measurement of the number, if any."
+          "unit_of_measurement": "Defines the unit of measurement of the number, if any."
         },
         "sections": {
           "advanced_options": {
@@ -336,7 +336,7 @@
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",
           "state": "Defines a template to get the state of the sensor. If the sensor is numeric, i.e. it has a `state_class` or a `unit_of_measurement`, the state template must render to a number or to `none`. The state template must not render to a string, including `unknown` or `unavailable`. An `availability` template may be defined to suppress rendering of the state template.",
-          "unit_of_measurement": "Defines the units of measurement of the sensor, if any. This will also display the value based on the number format setting in the user profile and influence the graphical presentation in the history visualization as a continuous value."
+          "unit_of_measurement": "Defines the unit of measurement for the sensor, if any. This will also display the value based on the number format setting in the user profile and influence the graphical presentation in the history visualization as a continuous value."
         },
         "sections": {
           "advanced_options": {
@@ -418,7 +418,7 @@
           "start": "Defines actions to run when the vacuum is started.",
           "fan_speed": "Defines a template to get the fan speed of the vacuum.",
           "fan_speeds": "List of fan speeds supported by the vacuum.",
-          "set_fan_speed": "Defines actions to run when the vacuum is given a command to set the fan speed. Receives variable `fan_speed`",
+          "set_fan_speed": "Defines actions to run when the vacuum is given a command to set the fan speed. Receives variable `fan_speed`.",
           "stop": "Defines actions to run when the vacuum is stopped.",
           "pause": "Defines actions to run when the vacuum is paused.",
           "return_to_base": "Defines actions to run when the vacuum is given a 'Return to dock' command.",
