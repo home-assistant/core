@@ -104,17 +104,17 @@ async def async_setup_entry(
             for sensor, value in sensors.items()
             if sensor in SENSOR_TYPES and value is not None
         )
-    
+
         optionals = sensors.get("optionals", {})
         entities.extend(
             EzvizSensor(coordinator, camera, optional_key)
             for optional_key in ("powerStatus", "OnlineStatus")
             if optional_key in optionals
         )
-    
+
         if "mode" in optionals.get("Record_Mode", {}):
             entities.append(EzvizSensor(coordinator, camera, "mode"))
-        
+
     async_add_entities(entities)
 
 
