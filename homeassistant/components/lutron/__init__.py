@@ -222,7 +222,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 # Add the LED as a light device if is controlled via integration
                 # RadioRa mode adds all leds as switches
                 if (use_radiora_mode and is_known_button) or (
-                    not use_radiora_mode or led.button.led_logic == 5
+                    not use_radiora_mode and led.button.led_logic == 5
                 ):
                     entry_data.leds.append(led)
                     platform = Platform.SWITCH if use_radiora_mode else Platform.LIGHT
