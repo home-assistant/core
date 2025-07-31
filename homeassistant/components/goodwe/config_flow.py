@@ -29,13 +29,7 @@ class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
     VERSION = 2
 
     async def async_handle_successful_connection(
-        self,
-        #: Inverter object for the connection.
-        inverter: Inverter,
-        #: Host address for the connection with the Inverter.
-        host: str,
-        #: Protocol to use for the connection with the Inverter (PROTOCOL_UDP, PROTOCOL_TCP...).
-        protocol: str,
+        self, inverter: Inverter, host: str, protocol: str,
     ):
         """Handle a successful connection storing it's values on the entry data."""
         await self.async_set_unique_id(inverter.serial_number)
@@ -71,7 +65,6 @@ class GoodweFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     async def async_detect_inverter_port(
-        #: Host address for the connection with the Inverter.
         host: str,
     ) -> tuple[Inverter, str]:
         """Detects the port of the Inverter."""
