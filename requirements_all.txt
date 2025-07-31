@@ -2517,9 +2517,6 @@ python-snoo==0.6.6
 # homeassistant.components.songpal
 python-songpal==0.16.2
 
-# homeassistant.components.tado
-python-tado==0.18.15
-
 # homeassistant.components.technove
 python-technove==2.0.0
 
@@ -2883,6 +2880,9 @@ systembridgeconnector==4.1.5
 
 # homeassistant.components.system_bridge
 systembridgemodels==4.2.4
+
+# homeassistant.components.tado
+tadoasync==0.1.21
 
 # homeassistant.components.tailscale
 tailscale==0.6.2
