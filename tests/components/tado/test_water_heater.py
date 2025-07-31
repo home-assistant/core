@@ -1,14 +1,32 @@
 """The sensor tests for the tado platform."""
 
+from unittest.mock import patch
+
+import pytest
+
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .util import async_init_integration
+from . import setup_integration
+
+from tests.common import MockConfigEntry
 
 
-async def test_water_heater_create_sensors(hass: HomeAssistant) -> None:
+@pytest.fixture(autouse=True)
+def loaded_platforms():
+    """Load the binary sensor platform for the tests."""
+    with patch("homeassistant.components.tado.PLATFORMS", [Platform.WATER_HEATER]):
+        yield
+
+
+@pytest.mark.usefixtures("mock_tado_api")
+async def test_water_heater_create_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test creation of water heater."""
 
-    await async_init_integration(hass)
+    await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("water_heater.water_heater")
     assert state.state == "auto"

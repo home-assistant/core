@@ -7,6 +7,7 @@ from mashumaro.codecs.orjson import ORJSONDecoder
 import pytest
 from tadoasync import Tado
 from tadoasync.models import (
+    Capabilities,
     Device,
     GetMe,
     HomeState,  # codespell:ignore homestate
@@ -61,6 +62,11 @@ async def mock_tado_api(hass: HomeAssistant) -> AsyncGenerator[MagicMock]:
         client.get_home_state.return_value = (
             HomeState.from_dict(  # codespell:ignore homestate
                 await async_load_json_object_fixture(hass, "home_state.json", DOMAIN)
+            )
+        )
+        client.get_capabilities.return_value = Capabilities.from_dict(
+            await async_load_json_object_fixture(
+                hass, "water_heater_zone_capabilities.json", DOMAIN
             )
         )
         yield client
