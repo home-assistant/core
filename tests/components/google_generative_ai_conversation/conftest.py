@@ -9,6 +9,7 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_USE_GOOGLE_SEARCH_TOOL,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
+    DEFAULT_STT_NAME,
     DEFAULT_TTS_NAME,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -37,6 +38,13 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
                 "subentry_type": "conversation",
                 "title": DEFAULT_CONVERSATION_NAME,
                 "subentry_id": "ulid-conversation",
+                "unique_id": None,
+            },
+            {
+                "data": {},
+                "subentry_type": "stt",
+                "title": DEFAULT_STT_NAME,
+                "subentry_id": "ulid-stt",
                 "unique_id": None,
             },
             {

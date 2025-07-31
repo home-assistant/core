@@ -36,12 +36,14 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     CONF_PROMPT,
     DEFAULT_AI_TASK_NAME,
+    DEFAULT_STT_NAME,
     DEFAULT_TITLE,
     DEFAULT_TTS_NAME,
     DOMAIN,
     LOGGER,
     RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CHAT_MODEL,
+    RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TTS_OPTIONS,
     TIMEOUT_MILLIS,
 )
@@ -55,6 +57,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = (
     Platform.AI_TASK,
     Platform.CONVERSATION,
+    Platform.STT,
     Platform.TTS,
 )
 
@@ -301,7 +304,7 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
         if not use_existing:
             await hass.config_entries.async_remove(entry.entry_id)
         else:
-            _add_ai_task_subentry(hass, entry)
+            _add_ai_task_and_stt_subentries(hass, entry)
             hass.config_entries.async_update_entry(
                 entry,
                 title=DEFAULT_TITLE,
@@ -350,8 +353,7 @@ async def async_migrate_entry(
         hass.config_entries.async_update_entry(entry, minor_version=2)
 
     if entry.version == 2 and entry.minor_version == 2:
-        # Add AI Task subentry with default options
-        _add_ai_task_subentry(hass, entry)
+        _add_ai_task_and_stt_subentries(hass, entry)
         hass.config_entries.async_update_entry(entry, minor_version=3)
 
     if entry.version == 2 and entry.minor_version == 3:
@@ -393,16 +395,25 @@ async def async_migrate_entry(
     return True
 
 
-def _add_ai_task_subentry(
+def _add_ai_task_and_stt_subentries(
     hass: HomeAssistant, entry: GoogleGenerativeAIConfigEntry
 ) -> None:
-    """Add AI Task subentry to the config entry."""
+    """Add AI Task and STT subentries to the config entry."""
     hass.config_entries.async_add_subentry(
         entry,
         ConfigSubentry(
             data=MappingProxyType(RECOMMENDED_AI_TASK_OPTIONS),
             subentry_type="ai_task_data",
             title=DEFAULT_AI_TASK_NAME,
+            unique_id=None,
+        ),
+    )
+    hass.config_entries.async_add_subentry(
+        entry,
+        ConfigSubentry(
+            data=MappingProxyType(RECOMMENDED_STT_OPTIONS),
+            subentry_type="stt",
+            title=DEFAULT_STT_NAME,
             unique_id=None,
         ),
     )

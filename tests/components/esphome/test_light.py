@@ -56,7 +56,6 @@ async def test_light_on_off(
             object_id="mylight",
             key=1,
             name="my light",
-            unique_id="my_light",
             min_mireds=153,
             max_mireds=400,
             supported_color_modes=[ESPColorMode.ON_OFF],
@@ -98,7 +97,6 @@ async def test_light_brightness(
             object_id="mylight",
             key=1,
             name="my light",
-            unique_id="my_light",
             min_mireds=153,
             max_mireds=400,
             supported_color_modes=[LightColorCapability.BRIGHTNESS],
@@ -226,7 +224,6 @@ async def test_light_legacy_brightness(
             object_id="mylight",
             key=1,
             name="my light",
-            unique_id="my_light",
             min_mireds=153,
             max_mireds=400,
             supported_color_modes=[LightColorCapability.BRIGHTNESS, 2],
@@ -282,7 +279,6 @@ async def test_light_brightness_on_off(
             object_id="mylight",
             key=1,
             name="my light",
-            unique_id="my_light",
             min_mireds=153,
             max_mireds=400,
             supported_color_modes=[ESPColorMode.ON_OFF, ESPColorMode.BRIGHTNESS],
@@ -358,7 +354,6 @@ async def test_light_legacy_white_converted_to_brightness(
             object_id="mylight",
             key=1,
             name="my light",
-            unique_id="my_light",
             min_mireds=153,
             max_mireds=400,
             supported_color_modes=[
@@ -423,7 +418,6 @@ async def test_light_legacy_white_with_rgb(
             object_id="mylight",
             key=1,
             name="my light",
-            unique_id="my_light",
             min_mireds=153,
             max_mireds=400,
             supported_color_modes=[color_mode, color_mode_2],
@@ -478,7 +472,6 @@ async def test_light_brightness_on_off_with_unknown_color_mode(
             object_id="mylight",
             key=1,
             name="my light",
-            unique_id="my_light",
             min_mireds=153,
             max_mireds=400,
             supported_color_modes=[
@@ -555,7 +548,6 @@ async def test_light_on_and_brightness(
             object_id="mylight",
             key=1,
             name="my light",
-            unique_id="my_light",
             min_mireds=153,
             max_mireds=400,
             supported_color_modes=[
@@ -607,7 +599,6 @@ async def test_rgb_color_temp_light(
             object_id="mylight",
             key=1,
             name="my light",
-            unique_id="my_light",
             min_mireds=153,
             max_mireds=400,
             supported_color_modes=color_modes,
@@ -698,7 +689,6 @@ async def test_light_rgb(
             object_id="mylight",
             key=1,
             name="my light",
-            unique_id="my_light",
             supported_color_modes=[
                 LightColorCapability.RGB
                 | LightColorCapability.ON_OFF
@@ -821,7 +811,6 @@ async def test_light_rgbw(
             object_id="mylight",
             key=1,
             name="my light",
-            unique_id="my_light",
             supported_color_modes=[
                 LightColorCapability.RGB
                 | LightColorCapability.WHITE
@@ -991,7 +980,6 @@ async def test_light_rgbww_with_cold_warm_white_support(
             object_id="mylight",
             key=1,
             name="my light",
-            unique_id="my_light",
             min_mireds=153,
             max_mireds=400,
             supported_color_modes=[
@@ -1200,7 +1188,6 @@ async def test_light_rgbww_without_cold_warm_white_support(
             object_id="mylight",
             key=1,
             name="my light",
-            unique_id="my_light",
             min_mireds=153,
             max_mireds=400,
             supported_color_modes=[
@@ -1439,7 +1426,6 @@ async def test_light_color_temp(
             object_id="mylight",
             key=1,
             name="my light",
-            unique_id="my_light",
             min_mireds=153.846161,
             max_mireds=370.370361,
             supported_color_modes=[
@@ -1514,7 +1500,6 @@ async def test_light_color_temp_no_mireds_set(
             object_id="mylight",
             key=1,
             name="my light",
-            unique_id="my_light",
             min_mireds=0,
             max_mireds=0,
             supported_color_modes=[
@@ -1610,7 +1595,6 @@ async def test_light_color_temp_legacy(
             object_id="mylight",
             key=1,
             name="my light",
-            unique_id="my_light",
             min_mireds=153.846161,
             max_mireds=370.370361,
             supported_color_modes=[
@@ -1695,7 +1679,6 @@ async def test_light_rgb_legacy(
             object_id="mylight",
             key=1,
             name="my light",
-            unique_id="my_light",
             min_mireds=153.846161,
             max_mireds=370.370361,
             supported_color_modes=[
@@ -1795,7 +1778,6 @@ async def test_light_effects(
             object_id="mylight",
             key=1,
             name="my light",
-            unique_id="my_light",
             min_mireds=153,
             max_mireds=400,
             effects=["effect1", "effect2"],
@@ -1859,7 +1841,6 @@ async def test_only_cold_warm_white_support(
             object_id="mylight",
             key=1,
             name="my light",
-            unique_id="my_light",
             min_mireds=153,
             max_mireds=400,
             supported_color_modes=[color_modes],
@@ -1955,7 +1936,6 @@ async def test_light_no_color_modes(
             object_id="mylight",
             key=1,
             name="my light",
-            unique_id="my_light",
             min_mireds=153,
             max_mireds=400,
             supported_color_modes=[color_mode],

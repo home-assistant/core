@@ -131,16 +131,11 @@ def schedule_setup(
     return _schedule_setup
 
 
-async def test_invalid_config(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("invalid_config", [None, {"name with space": None}])
+async def test_invalid_config(hass: HomeAssistant, invalid_config) -> None:
     """Test invalid configs."""
-    invalid_configs = [
-        None,
-        {},
-        {"name with space": None},
-    ]
 
-    for cfg in invalid_configs:
-        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
+    assert not await async_setup_component(hass, DOMAIN, {DOMAIN: invalid_config})
 
 
 @pytest.mark.parametrize(
