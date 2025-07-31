@@ -16,6 +16,7 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfPower,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -32,6 +33,8 @@ SENSOR_TYPE_CO2 = "CO2"
 SENSOR_TYPE_POWER = "power"
 SENSOR_TYPE_VOLTAGE = "voltage"
 SENSOR_TYPE_CURRENT = "electricCurrent"
+SENSOR_TYPE_POWER_CONSUMPTION = "weight"
+SENSOR_TYPE_DURATION_OF_USED = "electricityOfDay"
 
 TEMPERATURE_DESCRIPTION = SensorEntityDescription(
     key=SENSOR_TYPE_TEMPERATURE,
@@ -89,6 +92,20 @@ CO2_DESCRIPTION = SensorEntityDescription(
     native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
 )
 
+POWER_CONSUMPTION_DESCRIPTION = SensorEntityDescription(
+    key=SENSOR_TYPE_POWER_CONSUMPTION,
+    device_class=SensorDeviceClass.POWER,
+    state_class=SensorStateClass.MEASUREMENT,
+    native_unit_of_measurement=UnitOfPower.WATT,
+)
+
+DURATION_OF_USED_DESCRIPTION = SensorEntityDescription(
+    key=SENSOR_TYPE_DURATION_OF_USED,
+    device_class=SensorDeviceClass.DURATION,
+    state_class=SensorStateClass.MEASUREMENT,
+    native_unit_of_measurement=UnitOfTime.MINUTES,
+)
+
 SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Bot": (BATTERY_DESCRIPTION,),
     "Battery Circulator Fan": (BATTERY_DESCRIPTION,),
@@ -115,10 +132,14 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Plug Mini (US)": (
         VOLTAGE_DESCRIPTION,
         CURRENT_DESCRIPTION_IN_MA,
+        POWER_CONSUMPTION_DESCRIPTION,
+        DURATION_OF_USED_DESCRIPTION,
     ),
     "Plug Mini (JP)": (
         VOLTAGE_DESCRIPTION,
         CURRENT_DESCRIPTION_IN_MA,
+        POWER_CONSUMPTION_DESCRIPTION,
+        DURATION_OF_USED_DESCRIPTION,
     ),
     "Hub 2": (
         TEMPERATURE_DESCRIPTION,
