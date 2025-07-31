@@ -701,7 +701,7 @@ async def test_valve_switch_with_set_duration_characteristic(
     assert acc.get_duration() == 600
 
     # Test fallback if no state is set
-    hass.states.async_set("input_number.valve_duration", None)
+    hass.states.async_remove("input_number.valve_duration")
     await hass.async_block_till_done()
     assert acc.get_duration() == 0
 
@@ -745,9 +745,12 @@ async def test_valve_switch_with_remaining_duration_characteristic(
         assert acc.get_remaining_duration() == 90
 
     # Test fallback if no state is set
-    hass.states.async_set("sensor.valve_end_time", None)
+    hass.states.async_remove("sensor.valve_end_time")
     await hass.async_block_till_done()
     assert acc.get_remaining_duration() == 0
+
+    # Test get duration fallback if no duration is linked
+    assert acc.get_duration() == 0
 
 
 async def test_valve_switch_with_duration_characteristics(
