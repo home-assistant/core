@@ -182,10 +182,12 @@ async def test_form_shows_with_added_suggested_values(manager: MockFlowManager) 
     assert markers[2] == "section_1"
     section_validator = form["data_schema"].schema["section_1"]
     assert isinstance(section_validator, data_entry_flow.section)
-    # The section class was not replaced
-    assert section_validator is schema.schema["section_1"]
-    # The section schema was not replaced
-    assert section_validator.schema is schema.schema["section_1"].schema
+    # The section instance was copied
+    assert section_validator is not schema.schema["section_1"]
+    assert section_validator == schema.schema["section_1"]
+    # The section schema instance was copied
+    assert section_validator.schema is not schema.schema["section_1"].schema
+    assert section_validator.schema == schema.schema["section_1"].schema
     section_markers = list(section_validator.schema.schema)
     assert len(section_markers) == 1
     assert section_markers[0] == "full_name"
@@ -207,15 +209,14 @@ async def test_form_shows_with_added_suggested_values(manager: MockFlowManager) 
     assert markers[2] == "section_1"
     section_validator = form["data_schema"].schema["section_1"]
     assert isinstance(section_validator, data_entry_flow.section)
-    # The section class was not replaced
+    # The section class is not replaced if there is no suggested value for the section
     assert section_validator is schema.schema["section_1"]
-    # The section schema was not replaced
+    # The section schema is not replaced if there is no suggested value for the section
     assert section_validator.schema is schema.schema["section_1"].schema
     section_markers = list(section_validator.schema.schema)
     assert len(section_markers) == 1
     assert section_markers[0] == "full_name"
-    # This is a known bug, which needs to be fixed
-    assert section_markers[0].description == {"suggested_value": "John Doe"}
+    assert section_markers[0].description is None
 
 
 async def test_abort_removes_instance(manager: MockFlowManager) -> None:
