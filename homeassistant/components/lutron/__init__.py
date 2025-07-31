@@ -188,9 +188,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 # Add the button for the corresponding events
                 # Add the leds if they are controlled by integration in Lutron
 
-                is_known_button = not button.name.startswith("Unknown")
-
-                if button.has_action and (not use_radiora_mode or is_known_button):
+                if button.is_valid_button(use_radiora_mode):
                     entry_data.buttons.append(button)
 
                     _async_check_entity_unique_id(
@@ -217,13 +215,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                         "Button without action %s -  %s ", keypad.name, button.engraving
                     )
             for led in keypad.leds:
-                is_known_button = not led.button.name.startswith("Unknown")
-
-                # Add the LED as a light device if is controlled via integration
-                # RadioRa mode adds all leds as switches
-                if (use_radiora_mode and is_known_button) or (
-                    not use_radiora_mode and led.button.led_logic == 5
-                ):
+                # Add the valid LED as a light device
+                # RadioRa mode adds valid leds as switches
+                if led.is_valid_led(use_radiora_mode):
                     entry_data.leds.append(led)
                     platform = Platform.SWITCH if use_radiora_mode else Platform.LIGHT
 

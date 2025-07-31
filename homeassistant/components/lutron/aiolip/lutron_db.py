@@ -200,6 +200,7 @@ class LutronXmlDbParser:
                 led = self._parse_led(keypad, comp)
                 keypad.add_led(led)
         # Associate an LED with a button if there is one
+        # and assign the same name as the button
         for button in keypad.buttons:
             led = next(
                 (led for led in keypad.leds if led.number == button.number),
@@ -563,13 +564,16 @@ class Button(KeypadComponent):
     button_type: str = ""
     direction: str = ""
     led_logic: int = 0
-    has_action: bool = field(init=False)
 
     def __post_init__(self):
         """Set if the Button has action."""
         super().__post_init__()
         self.component_name = f"Btn {self.number}"
-        self.has_action = self.button_type in (
+
+    def is_valid_button(self, use_radiora_mode: bool) -> bool:
+        """Return True if the button is valid."""
+        is_known_button = not self.name.startswith("Unknown")
+        has_valid_action = self.button_type in (
             "SingleAction",
             "Toggle",
             "SingleSceneRaiseLower",
@@ -579,6 +583,7 @@ class Button(KeypadComponent):
             "AdvancedConditional",
             "SimpleConditional",
         )
+        return has_valid_action and (not use_radiora_mode or is_known_button)
 
     def press(self) -> LIPCommand:
         """Return a command to press the button."""
@@ -595,6 +600,16 @@ class Led(KeypadComponent):
         """Set if the Button has action."""
         super().__post_init__()
         self.component_name = f"Led {self.number}"
+
+    def is_valid_led(self, use_radiora_mode: bool) -> bool:
+        """Return True if the LED is valid."""
+        if not self.button:  # LED must have an associated button
+            return False
+
+        if use_radiora_mode:
+            return self.button.is_valid_button(use_radiora_mode)
+
+        return self.button.led_logic == 5
 
     def turn_on(self) -> LIPCommand:
         """Return a command to turn on the LED."""
