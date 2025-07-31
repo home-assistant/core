@@ -7,6 +7,7 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["aionut"],
+  "quality_scale": "platinum",
   "requirements": ["aionut==4.3.4"],
   "zeroconf": ["_nut._tcp.local."]
 }
