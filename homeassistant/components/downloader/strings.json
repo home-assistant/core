@@ -21,6 +21,18 @@
           "name": "[%key:common::config_flow::data::url%]",
           "description": "The URL of the file to download."
         },
+        "auth_type": {
+          "name": "Authentication type",
+          "description": "Authentication type to use."
+        },
+        "auth_username": {
+          "name": "Authentication username",
+          "description": "Username to use with authentication."
+        },
+        "auth_password": {
+          "name": "Authentication password",
+          "description": "Password to use with authentication."
+        },
         "subdir": {
           "name": "Subdirectory",
           "description": "Relative download path."
@@ -34,6 +46,14 @@
           "description": "Overwrite file if it exists."
         }
       }
+    }
+  },
+  "exceptions": {
+    "invalid_subdir": {
+      "message": "Subdirectory must be valid."
+    },
+    "missing_credentials": {
+      "message": "Username and password are required."
     }
   }
 }
