@@ -136,7 +136,7 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Validate device connection and create entry."""
         try:
-            await self._get_bsblan_info(is_discovery=is_discovery)
+            await self._get_bsblan_info()
         except BSBLANAuthError:
             if is_discovery:
                 return self.async_show_form(
@@ -331,7 +331,6 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
     async def _get_bsblan_info(
         self,
         raise_on_progress: bool = True,
-        is_discovery: bool = False,
         is_reauth: bool = False,
     ) -> None:
         """Get device information from a BSBLAN device."""
