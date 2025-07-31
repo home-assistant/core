@@ -1221,14 +1221,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         ):
             del self.deleted_devices[deleted_device.id]
 
-        # If its only run time attributes (suggested_area)
-        # that do not get saved we do not want to write
-        # to disk or fire an event as we would end up
-        # firing events for data we have nothing to compare
-        # against since its never saved on disk
-        if not old_values:
-            return new
-
         self.async_schedule_save()
 
         data: EventDeviceRegistryUpdatedData
