@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -72,7 +72,7 @@ OVERLAY_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
 OPEN_WINDOW_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
     key="open window",
     state_fn=lambda data: bool(data.open_window or data.open_window_detected),
-    attributes_fn=lambda data: asdict(data.open_window_attr),
+    # attributes_fn=lambda data: asdict(data.open_window),
     device_class=BinarySensorDeviceClass.WINDOW,
 )
 EARLY_START_ENTITY_DESCRIPTION = TadoBinarySensorEntityDescription(
