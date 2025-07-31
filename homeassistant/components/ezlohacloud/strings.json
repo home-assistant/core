@@ -1,0 +1,25 @@
+{
+  "config": {
+    "step": {
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
+  },
+  "options": {
+    "step": {
+      "view_status": {
+        "title": "Subscription Status",
+        "description": "[View subscription details]({url}) — Current Status: {status}"
+      },
+      "redirecting": {
+        "title": "Redirecting to Stripe",
+        "description": "Sign-up successful. Click [here]({url}) to proceed with payment."
+      }
+    }
+  }
+}
