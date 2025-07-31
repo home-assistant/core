@@ -333,54 +333,17 @@ def mock_pysqueezebox_server(
         return mock_lms
 
 
-async def configure_squeezebox_media_player_platform(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    lms: MagicMock,
+async def configure_squeezebox_platform(
+    hass: HomeAssistant, config_entry: MockConfigEntry, lms: MagicMock, platform: str
 ) -> None:
     """Configure a squeezebox config entry with appropriate mocks for media_player."""
     with (
         patch(
             "homeassistant.components.squeezebox.PLATFORMS",
-            [Platform.MEDIA_PLAYER],
+            [platform],
         ),
         patch("homeassistant.components.squeezebox.Server", return_value=lms),
     ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-
-async def configure_squeezebox_media_player_button_platform(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    lms: MagicMock,
-) -> None:
-    """Configure a squeezebox config entry with appropriate mocks for media_player."""
-    with (
-        patch(
-            "homeassistant.components.squeezebox.PLATFORMS",
-            [Platform.BUTTON],
-        ),
-        patch("homeassistant.components.squeezebox.Server", return_value=lms),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-
-async def configure_squeezebox_switch_platform(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    lms: MagicMock,
-) -> None:
-    """Configure a squeezebox config entry with appropriate mocks for switch."""
-    with (
-        patch(
-            "homeassistant.components.squeezebox.PLATFORMS",
-            [Platform.SWITCH],
-        ),
-        patch("homeassistant.components.squeezebox.Server", return_value=lms),
-    ):
-        # Set up the switch platform.
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -404,7 +367,7 @@ async def mock_alarms_player(
             "volume": 50,
         },
     ]
-    await configure_squeezebox_switch_platform(hass, config_entry, lms)
+    await configure_squeezebox_platform(hass, config_entry, lms, Platform.SWITCH)
     return players[0]
 
 
@@ -413,7 +376,7 @@ async def configured_player(
     hass: HomeAssistant, config_entry: MockConfigEntry, lms: MagicMock
 ) -> MagicMock:
     """Fixture mocking calls to pysqueezebox Player from a configured squeezebox."""
-    await configure_squeezebox_media_player_platform(hass, config_entry, lms)
+    await configure_squeezebox_platform(hass, config_entry, lms, Platform.MEDIA_PLAYER)
     return (await lms.async_get_players())[0]
 
 
@@ -422,7 +385,7 @@ async def configured_player_with_button(
     hass: HomeAssistant, config_entry: MockConfigEntry, lms: MagicMock
 ) -> MagicMock:
     """Fixture mocking calls to pysqueezebox Player from a configured squeezebox."""
-    await configure_squeezebox_media_player_button_platform(hass, config_entry, lms)
+    await configure_squeezebox_platform(hass, config_entry, lms, Platform.BUTTON)
     return (await lms.async_get_players())[0]
 
 
@@ -432,5 +395,5 @@ async def configured_players(
 ) -> list[MagicMock]:
     """Fixture mocking calls to two pysqueezebox Players from a configured squeezebox."""
     lms = lms_factory(3, uuid=SERVER_UUIDS[0])
-    await configure_squeezebox_media_player_platform(hass, config_entry, lms)
+    await configure_squeezebox_platform(hass, config_entry, lms, Platform.MEDIA_PLAYER)
     return await lms.async_get_players()
