@@ -88,9 +88,9 @@ class ZHAFirmwareUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disa
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="ZHA firmware update coordinator",
             update_method=self.async_update_data,
-            config_entry=config_entry,
         )
         self.controller_application = controller_application
 
