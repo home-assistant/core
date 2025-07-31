@@ -171,6 +171,7 @@ async def test_form_shows_with_added_suggested_values(manager: MockFlowManager) 
         },
     )
     assert form["type"] == data_entry_flow.FlowResultType.FORM
+    assert form["data_schema"].schema is not schema.schema
     assert form["data_schema"].schema == schema.schema
     markers = list(form["data_schema"].schema)
     assert len(markers) == 3
@@ -195,6 +196,7 @@ async def test_form_shows_with_added_suggested_values(manager: MockFlowManager) 
         "test",
     )
     assert form["type"] == data_entry_flow.FlowResultType.FORM
+    assert form["data_schema"].schema is not schema.schema
     assert form["data_schema"].schema == schema.schema
     markers = list(form["data_schema"].schema)
     assert len(markers) == 3
