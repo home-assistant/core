@@ -33,20 +33,20 @@
         }
       },
       "mfa_options": {
-        "title": "Multi-Factor Authentication",
+        "title": "Multi-factor authentication",
         "description": "Your account requires multi-factor authentication (MFA). Select a method to receive your security code.",
         "data": {
-          "mfa_method": "MFA Method"
+          "mfa_method": "MFA method"
         },
         "data_description": {
           "mfa_method": "How to receive your security code"
         }
       },
       "mfa_code": {
-        "title": "Enter Security Code",
+        "title": "Enter security code",
         "description": "A security code has been sent via your selected method. Please enter it below to complete login.",
         "data": {
-          "mfa_code": "Security Code"
+          "mfa_code": "Security code"
         },
         "data_description": {
           "mfa_code": "Typically a 6-digit code"
