@@ -67,8 +67,6 @@ CONNECTION_ZIGBEE = "zigbee"
 
 ORPHANED_DEVICE_KEEP_SECONDS = 86400 * 30
 
-RUNTIME_ONLY_ATTRS = {"suggested_area"}
-
 CONFIGURATION_URL_SCHEMES = {"http", "https", "homeassistant"}
 
 
@@ -343,7 +341,6 @@ class DeviceEntry:
     name: str | None = attr.ib(default=None)
     primary_config_entry: str | None = attr.ib(default=None)
     serial_number: str | None = attr.ib(default=None)
-    suggested_area: str | None = attr.ib(default=None)
     sw_version: str | None = attr.ib(default=None)
     via_device_id: str | None = attr.ib(default=None)
     # This value is not stored, just used to keep track of events to fire.
@@ -1197,7 +1194,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             ("name", name),
             ("name_by_user", name_by_user),
             ("serial_number", serial_number),
-            ("suggested_area", suggested_area),
             ("sw_version", sw_version),
             ("via_device_id", via_device_id),
         ):
@@ -1211,9 +1207,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if not new_values:
             return old
 
-        if not RUNTIME_ONLY_ATTRS.issuperset(new_values):
-            # Change modified_at if we are changing something that we store
-            new_values["modified_at"] = utcnow()
+        new_values["modified_at"] = utcnow()
 
         self.hass.verify_event_loop_thread("device_registry.async_update_device")
         new = attr.evolve(old, **new_values)
@@ -1232,7 +1226,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # to disk or fire an event as we would end up
         # firing events for data we have nothing to compare
         # against since its never saved on disk
-        if RUNTIME_ONLY_ATTRS.issuperset(new_values):
+        if not old_values:
             return new
 
         self.async_schedule_save()
