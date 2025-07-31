@@ -176,6 +176,7 @@ async def test_device_registry(
     device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     )
+    # Sort by identifier to ensure consistent order in snapshot
     assert sorted(device_entries, key=lambda x: list(x.identifiers)[0][1]) == snapshot
 
     device_parent = device_registry.async_get_device(identifiers={(DOMAIN, "88")})
