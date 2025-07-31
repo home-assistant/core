@@ -63,6 +63,38 @@
           "description": "Baud rate."
         }
       }
+    },
+    "set_bed_temperature": {
+      "name": "Set bed temperature",
+      "description": "Sets the target temperature for the printer's heated bed.",
+      "fields": {
+        "device_id": {
+          "name": "Server",
+          "description": "The server that should connect."
+        },
+        "bed_temperature": {
+          "name": "Bed temperature",
+          "description": "Target temperature for the bed in degrees Celsius. 0 to turn off the bed."
+        }
+      }
+    },
+    "set_tool_temperature": {
+      "name": "Set tool temperature",
+      "description": "Sets the target temperature for the printer's tool (hotend).",
+      "fields": {
+        "device_id": {
+          "name": "Server",
+          "description": "The server that should connect."
+        },
+        "tool_temperature": {
+          "name": "Tool temperature",
+          "description": "Target temperature for the tool in degrees Celsius. 0 to turn off the tool."
+        },
+        "tool_index": {
+          "name": "Tool index",
+          "description": "Index of the tool to set the temperature for. Defaults to 0."
+        }
+      }
     }
   }
 }

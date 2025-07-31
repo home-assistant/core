@@ -25,3 +25,42 @@ printer_connect:
             - "115200"
             - "230400"
             - "250000"
+
+set_bed_temperature:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: octoprint
+    bed_temperature:
+      required: true
+      example: 60
+      selector:
+        number:
+          min: 0
+          step: 1
+          unit_of_measurement: "°C"
+
+set_tool_temperature:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: octoprint
+    tool_temperature:
+      required: true
+      selector:
+        number:
+          min: 0
+          step: 1
+          unit_of_measurement: "°C"
+    tool_index:
+      optional: true
+      example: 0
+      default: 0
+      selector:
+        number:
+          min: 0
+          step: 1

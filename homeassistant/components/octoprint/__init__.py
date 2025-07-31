@@ -33,7 +33,16 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify as util_slugify
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
-from .const import CONF_BAUDRATE, DOMAIN, SERVICE_CONNECT
+from .const import (
+    CONF_BAUDRATE,
+    CONF_BED_TEMPERATURE,
+    CONF_TOOL_TEMPERATURE,
+    CONF_TOOL_INDEX,
+    DOMAIN,
+    SERVICE_CONNECT,
+    SERVICE_SET_BED_TEMPERATURE,
+    SERVICE_SET_TOOL_TEMPERATURE,
+)
 from .coordinator import OctoprintDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -136,6 +145,20 @@ SERVICE_CONNECT_SCHEMA = vol.Schema(
     }
 )
 
+SERVICE_SET_BED_TEMPERATURE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DEVICE_ID): cv.string,
+        vol.Required(CONF_BED_TEMPERATURE): vol.All(vol.Coerce(int), vol.Range(min=0)),
+    }
+)
+
+SERVICE_SET_TOOL_TEMPERATURE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DEVICE_ID): cv.string,
+        vol.Required(CONF_TOOL_TEMPERATURE): vol.All(vol.Coerce(int), vol.Range(min=0)),
+        vol.Optional(CONF_TOOL_INDEX): vol.All(vol.Coerce(int), vol.Range(min=0)),
+    }
+)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the OctoPrint component."""
@@ -220,12 +243,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             baud_rate=call.data.get(CONF_BAUDRATE),
         )
 
+    async def async_set_bed_temperature(call: ServiceCall) -> None:
+        """Set bed temperature."""
+        client = async_get_client_for_service_call(hass, call)
+        await client.set_bed_temperature(call.data[CONF_BED_TEMPERATURE])
+
+    async def async_set_tool_temperature(call: ServiceCall) -> None:
+        """Set tool temperature."""
+        client = async_get_client_for_service_call(hass, call)
+        await client.set_tool_temperature(f"tool{call.data.get(CONF_TOOL_INDEX, 0)}", call.data[CONF_TOOL_TEMPERATURE])
+
     if not hass.services.has_service(DOMAIN, SERVICE_CONNECT):
         hass.services.async_register(
             DOMAIN,
             SERVICE_CONNECT,
             async_printer_connect,
             schema=SERVICE_CONNECT_SCHEMA,
+        )
+
+    if not hass.services.has_service(DOMAIN, SERVICE_SET_BED_TEMPERATURE):
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_SET_BED_TEMPERATURE,
+            async_set_bed_temperature,
+            schema=SERVICE_SET_BED_TEMPERATURE_SCHEMA,
+        )
+
+    if not hass.services.has_service(DOMAIN, SERVICE_SET_TOOL_TEMPERATURE):
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_SET_TOOL_TEMPERATURE,
+            async_set_tool_temperature,
+            schema=SERVICE_SET_TOOL_TEMPERATURE_SCHEMA,
         )
 
     return True
