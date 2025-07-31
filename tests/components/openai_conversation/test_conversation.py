@@ -253,7 +253,9 @@ async def test_function_call(
         (
             # Wait for the model to think
             *create_reasoning_item(
-                id="rs_A", output_index=0, reasoning_summary=["Thinking"]
+                id="rs_A",
+                output_index=0,
+                reasoning_summary=[["Thinking"], ["Thinking ", "more"]],
             ),
             # First tool call
             *create_function_tool_call_item(
@@ -290,16 +292,10 @@ async def test_function_call(
         agent_id="conversation.openai_conversation",
     )
 
-    assert mock_create_stream.call_args.kwargs["input"][2] == {
-        "content": None,
-        "id": "rs_A",
-        "summary": [{"text": "Thinking", "type": "summary_text"}],
-        "type": "reasoning",
-        "encrypted_content": "AAABBB",
-    }
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     # Don't test the prompt, as it's not deterministic
     assert mock_chat_log.content[1:] == snapshot
+    assert mock_create_stream.call_args.kwargs["input"][1:] == snapshot
 
 
 async def test_function_call_without_reasoning(
