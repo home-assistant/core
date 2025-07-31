@@ -79,7 +79,10 @@ class ZHAFirmwareUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disa
     """Firmware update coordinator that broadcasts updates network-wide."""
 
     def __init__(
-        self, hass: HomeAssistant, controller_application: ControllerApplication, config_entry: ConfigEntry
+        self,
+        hass: HomeAssistant,
+        controller_application: ControllerApplication,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
