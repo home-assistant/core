@@ -36,8 +36,8 @@ from homeassistant.util.ssl import get_default_context, get_default_no_verify_co
 from .const import (
     CONF_BAUDRATE,
     CONF_BED_TEMPERATURE,
-    CONF_TOOL_TEMPERATURE,
     CONF_TOOL_INDEX,
+    CONF_TOOL_TEMPERATURE,
     DOMAIN,
     SERVICE_CONNECT,
     SERVICE_SET_BED_TEMPERATURE,
@@ -160,6 +160,7 @@ SERVICE_SET_TOOL_TEMPERATURE_SCHEMA = vol.Schema(
     }
 )
 
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the OctoPrint component."""
     if DOMAIN not in config:
@@ -251,7 +252,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_set_tool_temperature(call: ServiceCall) -> None:
         """Set tool temperature."""
         client = async_get_client_for_service_call(hass, call)
-        await client.set_tool_temperature(f"tool{call.data.get(CONF_TOOL_INDEX, 0)}", call.data[CONF_TOOL_TEMPERATURE])
+        await client.set_tool_temperature(
+            f"tool{call.data.get(CONF_TOOL_INDEX, 0)}", call.data[CONF_TOOL_TEMPERATURE]
+        )
 
     if not hass.services.has_service(DOMAIN, SERVICE_CONNECT):
         hass.services.async_register(
