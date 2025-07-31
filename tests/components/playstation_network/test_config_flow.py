@@ -17,6 +17,7 @@ from homeassistant.components.playstation_network.const import (
 )
 from homeassistant.config_entries import (
     SOURCE_USER,
+    ConfigEntryDisabler,
     ConfigEntryState,
     ConfigSubentry,
     ConfigSubentryData,
@@ -493,3 +494,29 @@ async def test_add_friend_flow_already_configured_as_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured_as_entry"
+
+
+@pytest.mark.usefixtures("mock_psnawpapi")
+async def test_add_friend_disabled_config_entry(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test we abort add friend subentry flow when the parent config entry is disabled."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="test-user",
+        data={
+            CONF_NPSSO: NPSSO_TOKEN,
+        },
+        disabled_by=ConfigEntryDisabler.USER,
+        unique_id=PSN_ID,
+    )
+
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "friend"),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "config_entry_disabled"
