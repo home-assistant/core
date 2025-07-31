@@ -29,8 +29,6 @@ from .entity import WebControlProGenericEntity
 
 SCAN_INTERVAL = timedelta(seconds=10)
 PARALLEL_UPDATES = 1
-SLAT_ROTATION_MIN = -45
-SLAT_ROTATION_MAX = 90
 
 
 async def async_setup_entry(
@@ -145,10 +143,7 @@ class WebControlProSlatRotate(WebControlProSlat):
         """Return current position of cover tilt."""
         action = self._dest.action(self._tilt_action_desc)
         return ranged_value_to_percentage(
-            (
-                max(action.minValue, SLAT_ROTATION_MIN),
-                min(action.maxValue, SLAT_ROTATION_MAX),
-            ),
+            (action.minValue, action.maxValue),
             action["rotation"],
         )
 
@@ -156,10 +151,7 @@ class WebControlProSlatRotate(WebControlProSlat):
         """Set the cover tilt position."""
         action = self._dest.action(self._tilt_action_desc)
         rotation = percentage_to_ranged_value(
-            (
-                max(action.minValue, SLAT_ROTATION_MIN),
-                min(action.maxValue, SLAT_ROTATION_MAX),
-            ),
+            (action.minValue, action.maxValue),
             kwargs[ATTR_TILT_POSITION],
         )
         await action(rotation=rotation)
@@ -167,9 +159,9 @@ class WebControlProSlatRotate(WebControlProSlat):
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         action = self._dest.action(self._tilt_action_desc)
-        await action(rotation=min(action.maxValue, SLAT_ROTATION_MAX))
+        await action(rotation=action.maxValue)
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         action = self._dest.action(self._tilt_action_desc)
-        await action(rotation=max(action.minValue, SLAT_ROTATION_MIN))
+        await action(rotation=action.minValue)
