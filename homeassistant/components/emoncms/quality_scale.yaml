@@ -16,7 +16,7 @@ rules:
       This integration does not provide additional actions.
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: |
@@ -31,7 +31,7 @@ rules:
   # Silver
   action-exceptions: done
   config-entry-unloading: done
-  docs-configuration-parameters: todo
+  docs-configuration-parameters: done
   docs-installation-parameters: done
   entity-unavailable: todo
   integration-owner: done
@@ -45,7 +45,7 @@ rules:
   diagnostics: todo
   discovery-update-info: todo
   discovery: todo
-  docs-data-update: todo
+  docs-data-update: done
   docs-examples:
     status: exempt
     comment: |
@@ -53,7 +53,7 @@ rules:
   docs-known-limitations: todo
   docs-supported-devices: todo
   docs-supported-functions: done
-  docs-troubleshooting: todo
+  docs-troubleshooting: done
   docs-use-cases: todo
   dynamic-devices: todo
   entity-category: todo
