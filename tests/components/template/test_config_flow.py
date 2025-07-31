@@ -150,6 +150,16 @@ BINARY_SENSOR_OPTIONS = {
             {},
         ),
         (
+            "fan",
+            {"state": "{{ states('fan.one') }}"},
+            "on",
+            {"one": "on", "two": "off"},
+            {},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
+            {},
+        ),
+        (
             "image",
             {"url": "{{ states('sensor.one') }}"},
             "2024-07-09T00:00:00+00:00",
@@ -167,6 +177,16 @@ BINARY_SENSOR_OPTIONS = {
             {},
             {"turn_on": [], "turn_off": []},
             {"turn_on": [], "turn_off": []},
+            {},
+        ),
+        (
+            "lock",
+            {"state": "{{ states('lock.one') }}"},
+            "locked",
+            {"one": "locked", "two": "unlocked"},
+            {},
+            {"lock": [], "unlock": []},
+            {"lock": [], "unlock": []},
             {},
         ),
         (
@@ -217,6 +237,16 @@ BINARY_SENSOR_OPTIONS = {
             {},
             {},
             {},
+            {},
+        ),
+        (
+            "vacuum",
+            {"state": "{{ states('vacuum.one') }}"},
+            "docked",
+            {"one": "docked", "two": "cleaning"},
+            {},
+            {"start": []},
+            {"start": []},
             {},
         ),
     ],
@@ -333,6 +363,12 @@ async def test_config_flow(
             {"set_cover_position": []},
         ),
         (
+            "fan",
+            {"state": "{{ states('fan.one') }}"},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
+        ),
+        (
             "image",
             {
                 "url": "{{ states('sensor.one') }}",
@@ -345,6 +381,12 @@ async def test_config_flow(
             {"state": "{{ states('light.one') }}"},
             {"turn_on": [], "turn_off": []},
             {"turn_on": [], "turn_off": []},
+        ),
+        (
+            "lock",
+            {"state": "{{ states('lock.one') }}"},
+            {"lock": [], "unlock": []},
+            {"lock": [], "unlock": []},
         ),
         (
             "number",
@@ -381,6 +423,12 @@ async def test_config_flow(
             {"state": "{{ states('select.one') }}"},
             {"options": "{{ ['off', 'on', 'auto'] }}"},
             {"options": "{{ ['off', 'on', 'auto'] }}"},
+        ),
+        (
+            "vacuum",
+            {"state": "{{ states('vacuum.one') }}"},
+            {"start": []},
+            {"start": []},
         ),
     ],
 )
@@ -535,6 +583,16 @@ async def test_config_flow_device(
             "state",
         ),
         (
+            "fan",
+            {"state": "{{ states('fan.one') }}"},
+            {"state": "{{ states('fan.two') }}"},
+            ["on", "off"],
+            {"one": "on", "two": "off"},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
+            "state",
+        ),
+        (
             "image",
             {
                 "url": "{{ states('sensor.one') }}",
@@ -559,6 +617,16 @@ async def test_config_flow_device(
             {"one": "on", "two": "off"},
             {"turn_on": [], "turn_off": []},
             {"turn_on": [], "turn_off": []},
+            "state",
+        ),
+        (
+            "lock",
+            {"state": "{{ states('lock.one') }}"},
+            {"state": "{{ states('lock.two') }}"},
+            ["locked", "unlocked"],
+            {"one": "locked", "two": "unlocked"},
+            {"lock": [], "unlock": []},
+            {"lock": [], "unlock": []},
             "state",
         ),
         (
@@ -620,6 +688,16 @@ async def test_config_flow_device(
             {},
             {},
             "value_template",
+        ),
+        (
+            "vacuum",
+            {"state": "{{ states('vacuum.one') }}"},
+            {"state": "{{ states('vacuum.two') }}"},
+            ["docked", "cleaning"],
+            {"one": "docked", "two": "cleaning"},
+            {"start": []},
+            {"start": []},
+            "state",
         ),
     ],
 )
@@ -1392,6 +1470,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {"set_cover_position": []},
         ),
         (
+            "fan",
+            {"state": "{{ states('fan.one') }}"},
+            {"turn_on": [], "turn_off": []},
+            {"turn_on": [], "turn_off": []},
+        ),
+        (
             "image",
             {
                 "url": "{{ states('sensor.one') }}",
@@ -1405,6 +1489,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {"state": "{{ states('light.one') }}"},
             {"turn_on": [], "turn_off": []},
             {"turn_on": [], "turn_off": []},
+        ),
+        (
+            "lock",
+            {"state": "{{ states('lock.one') }}"},
+            {"lock": [], "unlock": []},
+            {"lock": [], "unlock": []},
         ),
         (
             "number",
@@ -1447,6 +1537,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {"value_template": "{{ false }}"},
             {},
             {},
+        ),
+        (
+            "vacuum",
+            {"state": "{{ states('vacuum.one') }}"},
+            {"start": []},
+            {"start": []},
         ),
     ],
 )
