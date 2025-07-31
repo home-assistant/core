@@ -21,6 +21,7 @@ from tadoasync.models import (
 
 from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 if TYPE_CHECKING:
@@ -296,14 +297,10 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[TadoData]):
 
     async def set_child_lock(self, device_id: str, enabled: bool) -> None:
         """Set child lock of device."""
-        # try:
-        #     await self.hass.async_add_executor_job(
-        #         self._tado.set_child_lock,
-        #         device_id,
-        #         enabled,
-        #     )
-        # except RequestException as exc:
-        #     raise HomeAssistantError(f"Error setting Tado child lock: {exc}") from exc
+        try:
+            await self._tado.set_child_lock(device_id, enabled)
+        except TadoError as exc:
+            raise HomeAssistantError(f"Error setting Tado child lock: {exc}") from exc
 
 
 class TadoMobileDeviceUpdateCoordinator(DataUpdateCoordinator[dict[str, MobileDevice]]):
