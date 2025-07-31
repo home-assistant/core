@@ -62,36 +62,25 @@ def get_device_list_v1(
         raise ConfigEntryError(
             f"API error during device list: {e} (Code: {getattr(e, 'error_code', None)}, Message: {getattr(e, 'error_msg', None)})"
         ) from e
-    devices = (
-        devices_dict["devices"]
-        if isinstance(devices_dict, dict) and "devices" in devices_dict
-        else []
-    )
-    formatted_devices = []
-    for device in devices:
-        device_type = device.get("type")
-        device_sn = device.get("device_sn", "")
-        if device_type == 7:
-            device_type_str = "tlx"
-        elif device_type == 1:
-            device_type_str = "inverter"
-        elif device_type == 2:
-            device_type_str = "storage"
-        elif device_type == 8:
-            device_type_str = "mix"
-        else:
-            _LOGGER.warning(
-                "Device %s with type %s not supported, skipping",
-                device_sn,
-                device_type,
-            )
-            continue
-        formatted_device = {
-            "deviceSn": device_sn,
-            "deviceType": device_type_str,
+    devices = devices_dict.get("devices", [])
+    # Current V1 API only supports MIN devices (type = 7)
+    supported_devices = [
+        {
+            "deviceSn": device.get("device_sn", ""),
+            "deviceType": "min",
         }
-        formatted_devices.append(formatted_device)
-    return formatted_devices, plant_id
+        for device in devices
+        if device.get("type") == 7
+    ]
+
+    for device in devices:
+        if device.get("type") != 7:
+            _LOGGER.warning(
+                "Device %s with type %s not supported in Open API V1, skipping",
+                device.get("device_sn", ""),
+                device.get("type"),
+            )
+    return supported_devices, plant_id
 
 
 def get_device_list(
@@ -150,7 +139,7 @@ async def async_setup_entry(
             hass, config_entry, device["deviceSn"], device["deviceType"], plant_id
         )
         for device in devices
-        if device["deviceType"] in ["inverter", "tlx", "storage", "mix"]
+        if device["deviceType"] in ["inverter", "tlx", "storage", "mix", "min"]
     }
 
     # Perform the first refresh for the total coordinator

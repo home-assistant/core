@@ -104,21 +104,24 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.data = total_info
         elif self.device_type == "inverter":
             self.data = self.api.inverter_detail(self.device_id)
-        elif self.device_type == "tlx":
-            if self.api_version == "v1":
+        elif self.device_type == "min":
+            # Open API V1: min device
+            try:
                 min_details = self.api.min_detail(self.device_id)
                 min_settings = self.api.min_settings(self.device_id)
                 min_energy = self.api.min_energy(self.device_id)
-
                 min_info = {**min_details, **min_settings, **min_energy}
-
                 self.data = min_info
                 _LOGGER.debug("min_info for device %s: %r", self.device_id, min_info)
-            else:
-                # Classic API: use tlx_detail
-                tlx_info = self.api.tlx_detail(self.device_id)
-                self.data = tlx_info["data"]
-                _LOGGER.debug("tlx_info for device %s: %r", self.device_id, tlx_info)
+            except growattServer.GrowattV1ApiError as err:
+                _LOGGER.error(
+                    "Error fetching min device data for %s: %s", self.device_id, err
+                )
+                raise UpdateFailed(f"Error fetching min device data: {err}") from err
+        elif self.device_type == "tlx":
+            tlx_info = self.api.tlx_detail(self.device_id)
+            self.data = tlx_info["data"]
+            _LOGGER.debug("tlx_info for device %s: %r", self.device_id, tlx_info)
         elif self.device_type == "storage":
             storage_info_detail = self.api.storage_params(self.device_id)
             storage_energy_overview = self.api.storage_energy_overview(
