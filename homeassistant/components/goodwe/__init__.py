@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bo
         # Try to reconfigure the Inverter
         try:
             inverter = await async_reconfigure_entry(hass, entry, host)
-        except InverterError as err:
+        except InverterError:
             raise ConfigEntryNotReady from err
 
     device_info = DeviceInfo(
