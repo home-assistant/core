@@ -66,7 +66,7 @@ class SSHClientConnectionMock:
 class SFTPClientMock:
     """Class that mocks SFTP Client connection."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         """Initialize `SFTPClientMock`."""
         self._mock_chdir = AsyncMock()
         self._mock_listdir = AsyncMock()
