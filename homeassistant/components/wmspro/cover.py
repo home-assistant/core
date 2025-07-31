@@ -47,12 +47,14 @@ async def async_setup_entry(
             WMS_WebControl_pro_API_actionDescription.RollerShutterBlindDrive
         ):
             entities.append(WebControlProRollerShutter(config_entry.entry_id, dest))
-        elif dest.action(
+        elif dest.hasAction(
             WMS_WebControl_pro_API_actionDescription.SlatDrive
-        ) and dest.action(WMS_WebControl_pro_API_actionDescription.SlatRotate):
+        ) and dest.hasAction(WMS_WebControl_pro_API_actionDescription.SlatRotate):
+            entities.append(WebControlProSlatDriveRotate(config_entry.entry_id, dest))
+        elif dest.hasAction(WMS_WebControl_pro_API_actionDescription.SlatRotate):
             entities.append(WebControlProSlatRotate(config_entry.entry_id, dest))
-        elif dest.action(WMS_WebControl_pro_API_actionDescription.SlatDrive):
-            entities.append(WebControlProSlat(config_entry.entry_id, dest))
+        elif dest.hasAction(WMS_WebControl_pro_API_actionDescription.SlatDrive):
+            entities.append(WebControlProSlatDrive(config_entry.entry_id, dest))
 
     async_add_entities(entities)
 
@@ -61,20 +63,22 @@ class WebControlProCover(WebControlProGenericEntity, CoverEntity):
     """Base representation of a WMS based cover."""
 
     _drive_action_desc: WMS_WebControl_pro_API_actionDescription
+    _drive_action_attr = "percentage"
     _attr_name = None
 
     @property
     def current_cover_position(self) -> int | None:
         """Return current position of cover."""
         action = self._dest.action(self._drive_action_desc)
-        if action is None or action["percentage"] is None:
+        if action is None or action[self._drive_action_attr] is None:
             return None
-        return 100 - action["percentage"]
+        return 100 - action[self._drive_action_attr]
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         action = self._dest.action(self._drive_action_desc)
-        await action(percentage=100 - kwargs[ATTR_POSITION])
+        kwargs = {self._drive_action_attr: 100 - kwargs[ATTR_POSITION]}
+        await action(**kwargs)
 
     @property
     def is_closed(self) -> bool | None:
@@ -84,12 +88,14 @@ class WebControlProCover(WebControlProGenericEntity, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         action = self._dest.action(self._drive_action_desc)
-        await action(percentage=0)
+        kwargs = {self._drive_action_attr: 0}
+        await action(**kwargs)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         action = self._dest.action(self._drive_action_desc)
-        await action(percentage=100)
+        kwargs = {self._drive_action_attr: 100}
+        await action(**kwargs)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the device if in motion."""
@@ -116,17 +122,26 @@ class WebControlProRollerShutter(WebControlProCover):
     )
 
 
-class WebControlProSlat(WebControlProCover):
+class WebControlProSlatDrive(WebControlProCover):
     """Representation of a WMS based blind using a slat drive."""
 
     _attr_device_class = CoverDeviceClass.BLIND
     _drive_action_desc = WMS_WebControl_pro_API_actionDescription.SlatDrive
 
 
-class WebControlProSlatRotate(WebControlProSlat):
+class WebControlProSlatRotate(WebControlProCover):
+    """Representation of a WMS based blind using only a slat rotate."""
+
+    _attr_device_class = CoverDeviceClass.BLIND
+    _drive_action_desc = WMS_WebControl_pro_API_actionDescription.SlatRotate
+    _drive_action_attr = "rotation"
+
+
+class WebControlProSlatDriveRotate(WebControlProSlatDrive):
     """Representation of a WMS based blind which supports tilting."""
 
     _tilt_action_desc = WMS_WebControl_pro_API_actionDescription.SlatRotate
+    _tilt_action_attr = "rotation"
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover and tilt like the hub."""
@@ -144,7 +159,7 @@ class WebControlProSlatRotate(WebControlProSlat):
         action = self._dest.action(self._tilt_action_desc)
         return ranged_value_to_percentage(
             (action.minValue, action.maxValue),
-            action["rotation"],
+            action[self._tilt_action_attr],
         )
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
@@ -154,14 +169,17 @@ class WebControlProSlatRotate(WebControlProSlat):
             (action.minValue, action.maxValue),
             kwargs[ATTR_TILT_POSITION],
         )
-        await action(rotation=rotation)
+        kwargs = {self._tilt_action_attr: rotation}
+        await action(**kwargs)
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         action = self._dest.action(self._tilt_action_desc)
-        await action(rotation=action.maxValue)
+        kwargs = {self._tilt_action_attr: action.maxValue}
+        await action(**kwargs)
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         action = self._dest.action(self._tilt_action_desc)
-        await action(rotation=action.minValue)
+        kwargs = {self._tilt_action_attr: action.minValue}
+        await action(**kwargs)
