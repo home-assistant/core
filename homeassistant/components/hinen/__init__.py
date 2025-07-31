@@ -4,25 +4,42 @@ from __future__ import annotations
 
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 
+from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
+    AbstractOAuth2Implementation,
     OAuth2Session,
     async_get_config_entry_implementation,
+    async_register_implementation,
 )
 
+from . import application_credentials
 from .auth_config import AsyncConfigEntryAuth
-from .const import AUTH, COORDINATOR, DOMAIN
+from .const import AUTH, CLIENT_ID, COORDINATOR, DOMAIN
 from .coordinator import HinenDataUpdateCoordinator
+from .models import HinenClient, HinenIntegrationConfigEntry
 
-PLATFORMS = [Platform.SELECT, Platform.SENSOR]
+PLATFORMS = [Platform.NUMBER, Platform.SELECT, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: HinenIntegrationConfigEntry
+) -> bool:
     """Set up the Hello Auth component."""
+    credential: ClientCredential = ClientCredential(CLIENT_ID, "")
+
+    hinen_auth_impl: AbstractOAuth2Implementation = (
+        await application_credentials.async_get_auth_implementation(
+            hass, DOMAIN, credential
+        )
+    )
+
+    async_register_implementation(hass, DOMAIN, hinen_auth_impl)
+
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
     auth = AsyncConfigEntryAuth(hass, session)
@@ -46,6 +63,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         COORDINATOR: coordinator,
         AUTH: auth,
     }
+
+    client = HinenClient(name="aa")
+    entry.runtime_data = client
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

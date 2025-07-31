@@ -8,6 +8,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_DEVICE_NAME, DOMAIN, MANUFACTURER
 from .coordinator import HinenDataUpdateCoordinator
+from .hinen import HinenOpen
 
 
 class HinenDeviceEntity(CoordinatorEntity[HinenDataUpdateCoordinator]):
@@ -18,11 +19,13 @@ class HinenDeviceEntity(CoordinatorEntity[HinenDataUpdateCoordinator]):
     def __init__(
         self,
         coordinator: HinenDataUpdateCoordinator,
+        hinen_open: HinenOpen,
         description: EntityDescription,
         device_id: str,
     ) -> None:
         """Initialize a Hinen entity."""
         super().__init__(coordinator)
+        self.hinen_open = hinen_open
         self.entity_description = description
         self._attr_unique_id = (
             f"{coordinator.config_entry.entry_id}_{device_id}_{description.key}"

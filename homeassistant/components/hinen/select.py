@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import logging
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -11,14 +12,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    ATTR_WORD_MODE,
+    AUTH,
     COORDINATOR,
     DOMAIN,
     WORK_MODE_NONE,
     WORK_MODE_OPTIONS,
-    WORK_MODE_SELF_CONSUMPTION,
 )
 from .coordinator import HinenDataUpdateCoordinator
 from .entity import HinenDeviceEntity
+from .hinen import HinenOpen
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=False)
@@ -45,9 +50,10 @@ async def async_setup_entry(
     coordinator: HinenDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         COORDINATOR
     ]
-    # hinen_open: HinenOpen = hass.data[DOMAIN][entry.entry_id][AUTH].hinen_open
+    hinen_open: HinenOpen = hass.data[DOMAIN][entry.entry_id][AUTH].hinen_open
+
     entities: list = [
-        HinenWorkModeSelect(coordinator, sensor_type, device_id)
+        HinenWorkModeSelect(coordinator, hinen_open, sensor_type, device_id)
         for device_id in coordinator.data
         for sensor_type in SELECT_TYPES
     ]
@@ -56,11 +62,9 @@ async def async_setup_entry(
 
 
 class HinenWorkModeSelect(HinenDeviceEntity, SelectEntity):
-    """工作模式选择器."""
+    """Hinen work mode select."""
 
     entity_description: HinenSelectEntityDescription
-
-    _attr_current_option = "1"
 
     @property
     def available(self) -> bool:
@@ -72,9 +76,8 @@ class HinenWorkModeSelect(HinenDeviceEntity, SelectEntity):
         """Return the current work mode."""
         if not self.coordinator.data:
             return None
-        # 暂时手动造数据
-        # self.coordinator.data[]
-        mode = WORK_MODE_SELF_CONSUMPTION
+        mode = self.coordinator.data[self._device_id][ATTR_WORD_MODE]
+        _LOGGER.debug("current mode_value: %s", mode)
         return WORK_MODE_OPTIONS.get(mode, WORK_MODE_OPTIONS[WORK_MODE_NONE])
 
     async def async_select_option(self, option: str) -> None:
@@ -84,8 +87,8 @@ class HinenWorkModeSelect(HinenDeviceEntity, SelectEntity):
             if value == option:
                 mode_value = key
                 break
-
+        _LOGGER.debug("mode_value: %s", mode_value)
         if mode_value is not None:
-            # 暂时不请求后端更新
-            # await self.hass.data[DOMAIN][self._device_id][COORDINATOR](mode_value)
-            await self.coordinator.async_request_refresh()
+            await self.hinen_open.set_device_work_mode(mode_value, self._device_id)
+            self.coordinator.data[self._device_id][ATTR_WORD_MODE] = mode_value
+            self.async_write_ha_state()

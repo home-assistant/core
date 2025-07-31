@@ -6,7 +6,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from config.custom_components.hinen.enum import DeviceAlertStatus, DeviceStatus
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_SERIAL_NUMBER
@@ -14,9 +13,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import ATTR_ALERT_STATUS, ATTR_DEVICE_NAME, ATTR_STATUS, COORDINATOR, DOMAIN
+from .const import (
+    ATTR_ALERT_STATUS,
+    ATTR_DEVICE_NAME,
+    ATTR_STATUS,
+    AUTH,
+    COORDINATOR,
+    DOMAIN,
+)
 from .coordinator import HinenDataUpdateCoordinator
 from .entity import HinenDeviceEntity
+from .enum import DeviceAlertStatus, DeviceStatus
+from .hinen import HinenOpen
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -59,9 +67,10 @@ async def async_setup_entry(
     coordinator: HinenDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
         COORDINATOR
     ]
-    # hinen_open: HinenOpen = hass.data[DOMAIN][entry.entry_id][AUTH].hinen_open
+    hinen_open: HinenOpen = hass.data[DOMAIN][entry.entry_id][AUTH].hinen_open
+
     entities: list = [
-        HinenSensor(coordinator, sensor_type, device_id)
+        HinenSensor(coordinator, hinen_open, sensor_type, device_id)
         for device_id in coordinator.data
         for sensor_type in SENSOR_TYPES
     ]

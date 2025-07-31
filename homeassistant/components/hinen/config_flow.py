@@ -1,13 +1,13 @@
-"""Config flow for YouTube integration."""
+"""Config flow for Hinen integration."""
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigEntry,
@@ -24,7 +24,19 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import CHANNEL_CREATION_HELP_URL, CONF_DEVICES, DOMAIN, HOST, LOGGER
+from . import application_credentials
+from .auth_config import HinenOAuth2AuthorizeCallbackView
+from .const import (
+    ATTR_AUTH_LANGUAGE,
+    ATTR_REDIRECTION_URL,
+    CHANNEL_CREATION_HELP_URL,
+    CLIENT_ID,
+    CONF_DEVICES,
+    DOMAIN,
+    HOST,
+    LOGGER,
+    SUPPORTED_LANGUAGES,
+)
 from .hinen import HinenOpen
 from .hinen_exception import ForbiddenError
 
@@ -32,7 +44,7 @@ from .hinen_exception import ForbiddenError
 class OAuth2FlowHandler(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
 ):
-    """Config flow to handle Google OAuth2 authentication."""
+    """Config flow to handle hinen OAuth2 authentication."""
 
     _data: dict[str, Any] = {}
     _title: str = ""
@@ -54,19 +66,34 @@ class OAuth2FlowHandler(
         """Return logger."""
         return logging.getLogger(__name__)
 
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Perform reauth upon an API authentication error."""
-        return await self.async_step_reauth_confirm()
+    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
+        """Handle a flow start."""
+        if user_input is not None:
+            self.hass.data[ATTR_AUTH_LANGUAGE] = user_input[ATTR_AUTH_LANGUAGE]
+            self.hass.data[ATTR_REDIRECTION_URL] = user_input[ATTR_REDIRECTION_URL]
+            credential: ClientCredential = ClientCredential(CLIENT_ID, "")
+            self.hass.http.register_view(HinenOAuth2AuthorizeCallbackView())
+            hinen_auth_impl: config_entry_oauth2_flow.AbstractOAuth2Implementation = (
+                await application_credentials.async_get_auth_implementation(
+                    self.hass, DOMAIN, credential
+                )
+            )
 
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Confirm reauth dialog."""
-        if user_input is None:
-            return self.async_show_form(step_id="reauth_confirm")
-        return await self.async_step_user()
+            self.flow_impl = hinen_auth_impl
+            config_entry_oauth2_flow.async_register_implementation(
+                self.hass, DOMAIN, hinen_auth_impl
+            )
+            return await super().async_step_auth()
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(ATTR_AUTH_LANGUAGE): vol.In(dict(SUPPORTED_LANGUAGES)),
+                    vol.Required(ATTR_REDIRECTION_URL): str,
+                }
+            ),
+        )
 
     async def get_resource(self, token: str, host: str) -> HinenOpen:
         """Get Hinen Open resource async."""
@@ -148,17 +175,6 @@ class OAuth2FlowHandler(
             )
             for device_info in device_infos
         ]
-
-        # # Add subscribed channels
-        # selectable_devices.extend(
-        #     [
-        #         SelectOptionDict(
-        #             value=subscription.snippet.channel_id,
-        #             label=subscription.snippet.title,
-        #         )
-        #         async for subscription in youtube.get_user_subscriptions()
-        #     ]
-        # )
 
         if not selectable_devices:
             return self.async_abort(reason="no_device")

@@ -8,6 +8,7 @@ from typing import Any, TypeVar
 from aiohttp import ClientError, ClientResponse, ClientSession
 from yarl import URL
 
+from .const import PROPERTIES
 from .hinen_exception import (
     ForbiddenError,
     HinenAPIError,
@@ -15,7 +16,7 @@ from .hinen_exception import (
     HinenResourceNotFoundError,
     UnauthorizedError,
 )
-from .models import HinenDeviceDetail, HinenDeviceInfo
+from .models import HinenDeviceControl, HinenDeviceDetail, HinenDeviceInfo
 
 T = TypeVar("T")
 
@@ -60,6 +61,7 @@ class HinenOpen:
             ],
         ] = {
             "get": self._api_get_request,
+            "put": self._api_put_request,
         }
 
     async def _api_get_request(
@@ -74,14 +76,29 @@ class HinenOpen:
         response = await session.get(url, headers=headers, json=data)
         return await self._check_request_return(response)
 
+    async def _api_put_request(
+        self,
+        session: ClientSession,
+        url: str,
+        data: dict[str, Any] | None = None,
+    ) -> ClientResponse:
+        """Make post request with authorization."""
+        headers = {"Authorization": f"{self._user_auth_token}"}
+        self.logger.debug("making POST request to %s", url)
+        response = await session.put(url, headers=headers, json=data)
+        return await self._check_request_return(response)
+
     async def _check_request_return(self, response: ClientResponse) -> ClientResponse:
         if response.status == 500:
             msg = "Internal Server Error"
-            raise SystemExit(msg)
+            raise HinenBackendError(msg)
         if response.status == 400:
-            msg = (await response.json()).get("message")
-            raise SystemExit(
-                "Bad Request" + ("" if msg is None else f" - {msg!s}"),
+            msg = (await response.json()).get("msg")
+            traceId = (await response.json()).get("traceId")
+            raise HinenBackendError(
+                "Bad Request"
+                + ("" if msg is None else f" - {msg!s}")
+                + ("" if traceId is None else f" - {traceId!s}"),
             )
         if response.status == 404:
             raise HinenResourceNotFoundError
@@ -97,7 +114,12 @@ class HinenOpen:
             except ClientError as exc:
                 raise HinenAPIError from exc
         if (await response.json()).get("code") != "00000":
-            raise HinenBackendError((await response.json()).get("data").get("message"))
+            msg = (await response.json()).get("msg")
+            traceId = (await response.json()).get("traceId")
+            raise HinenBackendError(
+                ("" if msg is None else f" - {msg!s}")
+                + ("" if traceId is None else f" - {traceId!s}")
+            )
 
         return response
 
@@ -136,8 +158,6 @@ class HinenOpen:
             _url = f"{self.host}{url}"
             if url_params:
                 _url = await self.build_url(_url, url_params)
-
-            self.logger.info("making %s request to %s", req, _url)
             async with asyncio.timeout(self.session_timeout):
                 response = await method(self.session, _url, body_data)
 
@@ -148,7 +168,8 @@ class HinenOpen:
 
             if not isinstance(resp_data, list):
                 resp_data = [resp_data]
-
+            if not return_type:
+                return
             for entry in resp_data:
                 yield return_type(**entry)  # type: ignore[operator]
         except TimeoutError as exc:
@@ -181,6 +202,39 @@ class HinenOpen:
             HinenDeviceDetail,
         ):
             yield item  # type: ignore[misc]
+
+    async def set_device_work_mode(self, work_mode: int, device_id: str):
+        """Set device work mode."""
+        hinen_device_control = HinenDeviceControl(
+            deviceId=device_id, map={"VPPWorkMode": work_mode}
+        )
+
+        async for _ in self._build_generator(
+            "PUT",
+            "/iot-device/open-api/devices/property_set",
+            {},
+            None,
+            hinen_device_control.model_dump(by_alias=True),
+        ):
+            pass
+
+    async def set_property(self, value: Any, device_id: str, key: str):
+        """Set device work mode."""
+        property_identifier = PROPERTIES.get(key)
+        if property_identifier is None:
+            raise ValueError(f"Unknown property key: {key}")
+        hinen_device_control = HinenDeviceControl(
+            deviceId=device_id, map={property_identifier: value}
+        )
+
+        async for _ in self._build_generator(
+            "PUT",
+            "/iot-device/open-api/devices/property_set",
+            {},
+            None,
+            hinen_device_control.model_dump(by_alias=True),
+        ):
+            pass
 
     async def close(self) -> None:
         """Close open client session."""

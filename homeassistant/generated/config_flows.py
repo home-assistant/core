@@ -255,6 +255,7 @@ FLOWS = {
         "harmony",
         "heos",
         "here_travel_time",
+        "hinen",
         "hisense_aehw4a1",
         "hive",
         "hko",

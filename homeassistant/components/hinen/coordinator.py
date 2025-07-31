@@ -16,9 +16,12 @@ from .const import (
     ATTR_ALERT_STATUS,
     ATTR_DEVICE_NAME,
     ATTR_STATUS,
+    ATTR_WORD_MODE,
     CONF_DEVICES,
     DOMAIN,
     LOGGER,
+    PROPERTIES,
+    WORK_MODE,
 )
 from .hinen_exception import HinenBackendError, UnauthorizedError
 
@@ -42,6 +45,7 @@ class HinenDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
+        """Fetch data from Hinen."""
         hinen_open = await self._auth.get_resource()
         res = {}
         device_ids = self.config_entry.options[CONF_DEVICES]
@@ -53,9 +57,32 @@ class HinenDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     ATTR_DEVICE_NAME: device_detail.device_name,
                     ATTR_STATUS: device_detail.status,
                     ATTR_ALERT_STATUS: device_detail.alert_status,
+                    ATTR_WORD_MODE: next(
+                        (
+                            prop.value
+                            for prop in device_detail.properties
+                            if prop.identifier == WORK_MODE
+                        ),
+                        None,
+                    ),
+                    **{
+                        key: next(
+                            (
+                                prop.value
+                                for prop in device_detail.properties
+                                if prop.identifier == identifier
+                            ),
+                            None,
+                        )
+                        for key, identifier in PROPERTIES.items()
+                    },
                 }
         except UnauthorizedError as err:
             raise ConfigEntryAuthFailed from err
         except HinenBackendError as err:
             raise UpdateFailed("Couldn't connect to Hinen") from err
         return res
+
+    async def async_update_data(self) -> dict[str, Any]:
+        """Fetch data from Hinen."""
+        return await self._async_update_data()
