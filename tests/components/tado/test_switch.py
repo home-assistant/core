@@ -1,8 +1,10 @@
 """The switch tests for the tado platform."""
 
 from collections.abc import AsyncGenerator
-from unittest.mock import patch
+from datetime import timedelta
+from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -11,14 +13,13 @@ from homeassistant.components.switch import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.components.tado import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .util import async_init_integration
+from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 CHILD_LOCK_SWITCH_ENTITY = "switch.baseboard_heater_child_lock"
 
@@ -30,35 +31,55 @@ def setup_platforms() -> AsyncGenerator[None]:
         yield
 
 
+async def trigger_update(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
+    """Trigger an update of the Tado integration.
+
+    Since the binary sensor platform doesn't infer a state immediately without extra requests,
+    so adding this here to remove in a follow-up PR.
+    """
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("mock_tado_api")
 async def test_entities(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test creation of switch entities."""
 
-    await async_init_integration(hass)
+    await setup_integration(hass, mock_config_entry)
+    await trigger_update(hass, freezer)
 
-    config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
-
-    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
     ("method", "expected"), [(SERVICE_TURN_ON, True), (SERVICE_TURN_OFF, False)]
 )
-async def test_set_child_lock(hass: HomeAssistant, method, expected) -> None:
+async def test_set_child_lock(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_tado_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    method: str,
+    expected: bool,
+) -> None:
     """Test enable child lock on switch."""
 
-    await async_init_integration(hass)
+    await setup_integration(hass, mock_config_entry)
+    await trigger_update(hass, freezer)
 
-    with patch(
-        "homeassistant.components.tado.PyTado.interface.api.Tado.set_child_lock"
-    ) as mock_set_state:
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            method,
-            {ATTR_ENTITY_ID: CHILD_LOCK_SWITCH_ENTITY},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        method,
+        {ATTR_ENTITY_ID: CHILD_LOCK_SWITCH_ENTITY},
+        blocking=True,
+    )
 
-    mock_set_state.assert_called_once()
-    assert mock_set_state.call_args[0][1] is expected
+    mock_tado_api.set_child_lock.assert_called_once()
+    assert mock_tado_api.set_child_lock.call_args[1]["child_lock"] is expected

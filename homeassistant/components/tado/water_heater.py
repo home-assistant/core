@@ -79,7 +79,7 @@ async def async_setup_entry(
         "set_timer",
     )
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
     manage_water_heater_fallback_issue(
         hass=hass,
@@ -92,28 +92,26 @@ async def _generate_entities(coordinator: TadoDataUpdateCoordinator) -> list:
     """Create all water heater entities."""
     entities = []
 
-    for zone in coordinator.zones:
-        if zone["type"] == TYPE_HOT_WATER:
-            entity = await create_water_heater_entity(
-                coordinator, zone["name"], zone["id"], str(zone["name"])
-            )
+    for zone in coordinator.zones.values():
+        if zone.type == TYPE_HOT_WATER:
+            entity = await create_water_heater_entity(coordinator, zone.name, zone.id)
             entities.append(entity)
 
     return entities
 
 
 async def create_water_heater_entity(
-    coordinator: TadoDataUpdateCoordinator, name: str, zone_id: int, zone: str
+    coordinator: TadoDataUpdateCoordinator, name: str, zone_id: int
 ):
     """Create a Tado water heater device."""
     capabilities = await coordinator.get_capabilities(zone_id)
 
-    supports_temperature_control = capabilities["canSetTemperature"]
+    supports_temperature_control = capabilities.can_set_temperature or False
 
-    if supports_temperature_control and "temperatures" in capabilities:
-        temperatures = capabilities["temperatures"]
-        min_temp = float(temperatures["celsius"]["min"])
-        max_temp = float(temperatures["celsius"]["max"])
+    if supports_temperature_control and capabilities.temperatures is not None:
+        temperatures = capabilities.temperatures
+        min_temp = temperatures.celsius.min
+        max_temp = temperatures.celsius.max
     else:
         min_temp = None
         max_temp = None
@@ -162,9 +160,8 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
         if self._supports_temperature_control:
             self._attr_supported_features |= WaterHeaterEntityFeature.TARGET_TEMPERATURE
 
-        self._current_tado_hvac_mode = CONST_MODE_SMART_SCHEDULE
-        self._overlay_mode = CONST_MODE_SMART_SCHEDULE
-        self._tado_zone_data: Any = None
+        self._current_tado_hvac_mode: str | None = CONST_MODE_SMART_SCHEDULE
+        self._overlay_mode: str | None = CONST_MODE_SMART_SCHEDULE
 
         self._async_update_data()
 
@@ -250,7 +247,7 @@ class TadoWaterHeater(TadoZoneEntity, WaterHeaterEntity):
     def _async_update_data(self) -> None:
         """Load tado data."""
         _LOGGER.debug("Updating water_heater platform for zone %d", self.zone_id)
-        self._tado_zone_data = self.coordinator.data["zone"][self.zone_id]
+        self._tado_zone_data = self.coordinator.data.zones[str(self.zone_id)]
         self._current_tado_hvac_mode = self._tado_zone_data.current_hvac_mode
 
     async def _control_heater(
