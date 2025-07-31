@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import base64
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator, Callable, Iterable
 import json
 from mimetypes import guess_file_type
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal
 
 import openai
 from openai._streaming import AsyncStream
@@ -144,56 +144,67 @@ def _format_tool(
 
 
 def _convert_content_to_param(
-    content: conversation.Content,
+    chat_content: Iterable[conversation.Content],
 ) -> ResponseInputParam:
     """Convert any native chat message for this agent to the native format."""
     messages: ResponseInputParam = []
-    if isinstance(content, conversation.ToolResultContent):
-        return [
-            FunctionCallOutput(
-                type="function_call_output",
-                call_id=content.tool_call_id,
-                output=json.dumps(content.tool_result),
-            )
-        ]
+    reasoning_summary: list[str] = []
 
-    if content.content:
-        role: Literal["user", "assistant", "system", "developer"] = content.role
-        if role == "system":
-            role = "developer"
-        messages.append(
-            EasyInputMessageParam(type="message", role=role, content=content.content)
-        )
-
-    if isinstance(content, conversation.AssistantContent):
-        if content.tool_calls:
-            messages.extend(
-                ResponseFunctionToolCallParam(
-                    type="function_call",
-                    name=tool_call.tool_name,
-                    arguments=json.dumps(tool_call.tool_args),
-                    call_id=tool_call.id,
+    for content in chat_content:
+        if isinstance(content, conversation.ToolResultContent):
+            messages.append(
+                FunctionCallOutput(
+                    type="function_call_output",
+                    call_id=content.tool_call_id,
+                    output=json.dumps(content.tool_result),
                 )
-                for tool_call in content.tool_calls
+            )
+            continue
+
+        if content.content:
+            role: Literal["user", "assistant", "system", "developer"] = content.role
+            if role == "system":
+                role = "developer"
+            messages.append(
+                EasyInputMessageParam(
+                    type="message", role=role, content=content.content
+                )
             )
 
-        if isinstance(content.native, dict):
-            if content.native["type"] == "reasoning":
-                messages.append(
-                    ResponseReasoningItemParam(
-                        type="reasoning",
-                        id=content.native["id"],
-                        summary=[
-                            {"type": "summary_text", "text": content.thinking_content}
-                        ]
-                        if content.thinking_content
-                        else [],
-                        encrypted_content=content.native["encrypted_content"],
+        if isinstance(content, conversation.AssistantContent):
+            if content.tool_calls:
+                messages.extend(
+                    ResponseFunctionToolCallParam(
+                        type="function_call",
+                        name=tool_call.tool_name,
+                        arguments=json.dumps(tool_call.tool_args),
+                        call_id=tool_call.id,
                     )
+                    for tool_call in content.tool_calls
                 )
 
-            if content.native["type"] == "function_call":
-                messages.append(cast(ResponseFunctionToolCallParam, content.native))
+            if content.thinking_content:
+                reasoning_summary.append(content.thinking_content)
+
+            if isinstance(content.native, dict):
+                if content.native["type"] == "reasoning":
+                    messages.append(
+                        ResponseReasoningItemParam(
+                            type="reasoning",
+                            id=content.native["id"],
+                            summary=[
+                                {
+                                    "type": "summary_text",
+                                    "text": summary,
+                                }
+                                for summary in reasoning_summary
+                            ]
+                            if content.thinking_content
+                            else [],
+                            encrypted_content=content.native["encrypted_content"],
+                        )
+                    )
+                    reasoning_summary = []
 
     return messages
 
@@ -203,18 +214,22 @@ async def _transform_stream(
     result: AsyncStream[ResponseStreamEvent],
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     """Transform an OpenAI delta stream into HA format."""
+    last_summary_index = None
+
     async for event in result:
         LOGGER.debug("Received event: %s", event)
 
         if isinstance(event, ResponseOutputItemAddedEvent):
             if isinstance(event.item, ResponseOutputMessage):
                 yield {"role": event.item.role}
+                last_summary_index = None
             elif isinstance(event.item, ResponseFunctionToolCall):
                 # OpenAI has tool calls as individual events
                 # while HA puts tool calls inside the assistant message.
                 # We turn them into individual assistant content for HA
                 # to ensure that tools are called as soon as possible.
                 yield {"role": "assistant"}
+                last_summary_index = None
                 current_tool_call = event.item
         elif isinstance(event, ResponseOutputItemDoneEvent):
             if isinstance(event.item, ResponseReasoningItem):
@@ -229,6 +244,16 @@ async def _transform_stream(
         elif isinstance(event, ResponseTextDeltaEvent):
             yield {"content": event.delta}
         elif isinstance(event, ResponseReasoningSummaryTextDeltaEvent):
+            # OpenAI can output several reasoning summaries
+            # in a single ResponseReasoningItem. We split them as separate
+            # AssistantContent messages. Only last of them will have
+            # the reasoning `native` field set.
+            if (
+                last_summary_index is not None
+                and event.summary_index != last_summary_index
+            ):
+                yield {"role": "assistant"}
+            last_summary_index = event.summary_index
             yield {"thinking_content": event.delta}
         elif isinstance(event, ResponseFunctionCallArgumentsDeltaEvent):
             current_tool_call.arguments += event.delta
@@ -385,11 +410,7 @@ class OpenAIBaseLLMEntity(Entity):
                 "verbosity": options.get(CONF_VERBOSITY, RECOMMENDED_VERBOSITY)
             }
 
-        messages = [
-            m
-            for content in chat_log.content
-            for m in _convert_content_to_param(content)
-        ]
+        messages = _convert_content_to_param(chat_log.content)
 
         last_content = chat_log.content[-1]
 
@@ -428,10 +449,16 @@ class OpenAIBaseLLMEntity(Entity):
             try:
                 result = await client.responses.create(**model_args)
 
-                async for content in chat_log.async_add_delta_content_stream(
-                    self.entity_id, _transform_stream(chat_log, result)
-                ):
-                    messages.extend(_convert_content_to_param(content))
+                messages.extend(
+                    _convert_content_to_param(
+                        [
+                            content
+                            async for content in chat_log.async_add_delta_content_stream(
+                                self.entity_id, _transform_stream(chat_log, result)
+                            )
+                        ]
+                    )
+                )
             except openai.RateLimitError as err:
                 LOGGER.error("Rate limited by OpenAI: %s", err)
                 raise HomeAssistantError("Rate limited or insufficient funds") from err
