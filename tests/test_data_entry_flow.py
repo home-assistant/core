@@ -136,7 +136,7 @@ async def test_show_form(manager: MockFlowManager) -> None:
 async def test_form_shows_with_added_suggested_values(manager: MockFlowManager) -> None:
     """Test that we can show a form with suggested values."""
 
-    def compare_schemas(schema: vol.Schema, expected_schema: vol.Schema) -> bool:
+    def compare_schemas(schema: vol.Schema, expected_schema: vol.Schema) -> None:
         """Compare two schemas."""
         assert schema.schema is not expected_schema.schema
 
@@ -198,7 +198,6 @@ async def test_form_shows_with_added_suggested_values(manager: MockFlowManager) 
     assert isinstance(section_validator, data_entry_flow.section)
     # The section instance was copied
     assert section_validator is not schema.schema["section_1"]
-    assert section_validator.schema == schema.schema["section_1"].schema
     # The section schema instance was copied
     assert section_validator.schema is not schema.schema["section_1"].schema
     assert section_validator.schema == schema.schema["section_1"].schema
