@@ -926,7 +926,3 @@ class section:
     def __call__(self, value: Any) -> Any:
         """Validate input."""
         return self.schema(value)
-
-    def __eq__(self, other: object) -> bool:
-        """Check if two sections are equal."""
-        return isinstance(other, section) and self.schema == other.schema

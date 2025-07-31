@@ -135,6 +135,19 @@ async def test_show_form(manager: MockFlowManager) -> None:
 
 async def test_form_shows_with_added_suggested_values(manager: MockFlowManager) -> None:
     """Test that we can show a form with suggested values."""
+
+    def compare_schemas(schema: vol.Schema, expected_schema: vol.Schema) -> bool:
+        """Compare two schemas."""
+        assert schema.schema is not expected_schema.schema
+
+        assert list(schema.schema) == list(expected_schema.schema)
+
+        for key, validator in schema.schema.items():
+            if isinstance(validator, data_entry_flow.section):
+                assert validator.schema == expected_schema.schema[key].schema
+                continue
+            assert validator == expected_schema.schema[key]
+
     schema = vol.Schema(
         {
             vol.Required("username"): str,
@@ -172,7 +185,8 @@ async def test_form_shows_with_added_suggested_values(manager: MockFlowManager) 
     )
     assert form["type"] == data_entry_flow.FlowResultType.FORM
     assert form["data_schema"].schema is not schema.schema
-    assert form["data_schema"].schema == schema.schema
+    assert form["data_schema"].schema != schema.schema
+    compare_schemas(form["data_schema"], schema)
     markers = list(form["data_schema"].schema)
     assert len(markers) == 3
     assert markers[0] == "username"
@@ -184,7 +198,7 @@ async def test_form_shows_with_added_suggested_values(manager: MockFlowManager) 
     assert isinstance(section_validator, data_entry_flow.section)
     # The section instance was copied
     assert section_validator is not schema.schema["section_1"]
-    assert section_validator == schema.schema["section_1"]
+    assert section_validator.schema == schema.schema["section_1"].schema
     # The section schema instance was copied
     assert section_validator.schema is not schema.schema["section_1"].schema
     assert section_validator.schema == schema.schema["section_1"].schema
