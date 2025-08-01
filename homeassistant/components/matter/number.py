@@ -403,4 +403,18 @@ DISCOVERY_SCHEMAS = [
             custom_clusters.InovelliCluster.Attributes.LEDIndicatorIntensityOn,
         ),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterNumberEntityDescription(
+            key="speaker_setpoint",
+            translation_key="speaker_setpoint",
+            native_max_value=255,
+            native_min_value=0,
+            native_step=1,
+            mode=NumberMode.SLIDER,
+        ),
+        entity_class=MatterLevelControlNumber,
+        required_attributes=(clusters.LevelControl.Attributes.CurrentLevel,),
+        device_type=(device_types.Speaker,),
+    ),
 ]
