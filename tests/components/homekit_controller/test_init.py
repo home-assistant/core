@@ -329,6 +329,8 @@ async def test_snapshots(
         device_dict.pop("modified_at", None)
         device_dict.pop("_cache", None)
         device_dict.pop("_is_restored")
+        # This can be removed when suggested_area is removed from DeviceEntry
+        device_dict.pop("_suggested_area")
 
         devices.append({"device": device_dict, "entities": entities})
 

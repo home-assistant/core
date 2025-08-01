@@ -174,6 +174,8 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             serialized["primary_config_entry"] = ANY
         serialized.pop("_cache")
         serialized.pop("_is_restored")
+        # This can be removed when suggested_area is removed from DeviceEntry
+        serialized.pop("_suggested_area")
         return cls._remove_created_and_modified_at(serialized)
 
     @classmethod

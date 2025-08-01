@@ -32,6 +32,7 @@ from homeassistant.util.json import format_unserializable_data
 
 from . import storage, translation
 from .debounce import Debouncer
+from .deprecation import deprecated_function
 from .frame import ReportBehavior, report_usage
 from .json import JSON_DUMP, find_paths_unserializable_data, json_bytes, json_fragment
 from .registry import BaseRegistry, BaseRegistryItems, RegistryIndexType
@@ -67,6 +68,7 @@ CONNECTION_ZIGBEE = "zigbee"
 
 ORPHANED_DEVICE_KEEP_SECONDS = 86400 * 30
 
+# Can be removed when suggested_area is removed from DeviceEntry
 RUNTIME_ONLY_ATTRS = {"suggested_area"}
 
 CONFIGURATION_URL_SCHEMES = {"http", "https", "homeassistant"}
@@ -156,7 +158,7 @@ class _EventDeviceRegistryUpdatedData_Remove(TypedDict):
 
     action: Literal["remove"]
     device_id: str
-    device: DeviceEntry
+    device: dict[str, Any]
 
 
 class _EventDeviceRegistryUpdatedData_Update(TypedDict):
@@ -343,7 +345,8 @@ class DeviceEntry:
     name: str | None = attr.ib(default=None)
     primary_config_entry: str | None = attr.ib(default=None)
     serial_number: str | None = attr.ib(default=None)
-    suggested_area: str | None = attr.ib(default=None)
+    # Suggested area is deprecated and will be removed from DeviceEntry in 2026.9.
+    _suggested_area: str | None = attr.ib(default=None)
     sw_version: str | None = attr.ib(default=None)
     via_device_id: str | None = attr.ib(default=None)
     # This value is not stored, just used to keep track of events to fire.
@@ -445,6 +448,14 @@ class DeviceEntry:
                 }
             )
         )
+
+    @property
+    @deprecated_function(
+        "code which ignores suggested_area", breaks_in_ha_version="2026.9"
+    )
+    def suggested_area(self) -> str | None:
+        """Return the suggested area for this device entry."""
+        return self._suggested_area
 
 
 @attr.s(frozen=True, slots=True)
@@ -1202,6 +1213,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             ("name", name),
             ("name_by_user", name_by_user),
             ("serial_number", serial_number),
+            # Can be removed when suggested_area is removed from DeviceEntry
             ("suggested_area", suggested_area),
             ("sw_version", sw_version),
             ("via_device_id", via_device_id),
@@ -1218,6 +1230,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if not new_values:
             return old
 
+        # This condition can be removed when suggested_area is removed from DeviceEntry
         if not RUNTIME_ONLY_ATTRS.issuperset(new_values):
             # Change modified_at if we are changing something that we store
             new_values["modified_at"] = utcnow()
@@ -1240,6 +1253,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # firing events for data we have nothing to compare
         # against since its never saved on disk
         if RUNTIME_ONLY_ATTRS.issuperset(new_values):
+            # This can be removed when suggested_area is removed from DeviceEntry
             return new
 
         self.async_schedule_save()
@@ -1326,7 +1340,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self.hass.bus.async_fire_internal(
             EVENT_DEVICE_REGISTRY_UPDATED,
             _EventDeviceRegistryUpdatedData_Remove(
-                action="remove", device_id=device_id, device=device
+                action="remove", device_id=device_id, device=device.dict_repr
             ),
         )
         self.async_schedule_save()

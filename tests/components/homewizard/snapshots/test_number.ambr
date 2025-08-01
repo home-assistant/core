@@ -89,7 +89,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.03',
     'via_device_id': None,
   })
@@ -184,7 +183,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
