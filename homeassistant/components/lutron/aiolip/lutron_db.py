@@ -222,12 +222,11 @@ class LutronXmlDbParser:
 
         component_number = int(component_xml.get("ComponentNumber"))
         button_xml = component_xml.find("Button")
-
         return Button(
             keypad=keypad,
+            component_type="Btn",
             name=button_xml.get("Name"),
             engraving=button_xml.get("Engraving"),
-            number=component_number,
             component_number=component_number,
             button_type=button_xml.get("ButtonType"),
             direction=button_xml.get("Direction"),
@@ -240,18 +239,15 @@ class LutronXmlDbParser:
         """Parse a cci (contact closure input) device that part of a keypad."""
         component_number = int(component_xml.get("ComponentNumber"))
         cci_xml = component_xml.find("CCI")
-        cci_type = cci_xml.get("ButtonType")
-        led_logic = cci_xml.get("LedLogic")
-        name = f"CCI {component_number}"
         return Button(
             keypad=keypad,
-            name=name,
+            component_type="CCI",
+            name="",
             engraving="",
-            number=component_number,
             component_number=component_number,
-            button_type=cci_type,
+            button_type=cci_xml.get("ButtonType"),
             direction="",
-            led_logic=led_logic,
+            led_logic=cci_xml.get("LedLogic"),
             integration_id=keypad.integration_id,
             uuid=cci_xml.get("UUID"),
         )
@@ -261,8 +257,8 @@ class LutronXmlDbParser:
         component_num = int(component_xml.get("ComponentNumber"))
         return Led(
             keypad=keypad,
+            component_type="Led",
             name="",
-            number=0,
             component_number=component_num,
             integration_id=keypad.integration_id,
             uuid=component_xml.find("LED").get("UUID"),
@@ -503,16 +499,20 @@ class KeypadComponent(Device):
     LIP_MODE: ClassVar[LIPMode] = LIPMode.DEVICE
 
     keypad: Any = None
-    number: int = 0  # user-friendly number
+    component_type: str = ""
     component_number: int = 0  # lutron internal number
-    component_name: str = field(
-        init=False, default=""
-    )  # standard name with number e.g., Btn 1
+    number: int = field(init=False, default=0)  # user-friendly number
 
     def __post_init__(self):
         """Set the legacy UUID and area for keypad components."""
         self.area = self.keypad.area
         self.legacy_uuid = f"{self.integration_id}-{self.component_number}"
+        self.number = self.component_number
+
+    @property
+    def component_name(self) -> str:
+        """The standard component name of the keypad component. E.g., Btn 1, Led 1, CCI 1, etc."""
+        return f"{self.component_type} {self.number}"
 
 
 @dataclass
@@ -535,8 +535,6 @@ class Button(KeypadComponent):
         # a button without engraving can be a valid button (e.g., keypad lower/raiser buttons)
         if not self.name:
             self.name = f"Unknown Button {self.component_number}"
-
-        self.component_name = f"Btn {self.number}"
 
     def is_valid_button(self, use_radiora_mode: bool) -> bool:
         """Return True if the button is valid."""
@@ -565,7 +563,7 @@ class Led(KeypadComponent):
     button: Button | None = field(init=False, default=None)
 
     def __post_init__(self):
-        """Assign the ."""
+        """Assign the component number."""
         super().__post_init__()
 
         led_base = 80
@@ -573,9 +571,7 @@ class Led(KeypadComponent):
             led_base = 100
         elif self.keypad.device_type == "PHANTOM":
             led_base = 2000
-        self.number = self.component_num - led_base
-
-        self.component_name = f"Led {self.number}"
+        self.number = self.component_number - led_base
 
     def is_valid_led(self, use_radiora_mode: bool) -> bool:
         """Return True if the LED is valid."""
