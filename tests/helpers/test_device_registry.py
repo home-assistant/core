@@ -2639,6 +2639,7 @@ async def test_update(
         name_by_user="Test Friendly Name",
         name="name",
         serial_number="serial_no",
+        suggested_area="suggested_area",
         sw_version="version",
         via_device_id="98765B",
     )
@@ -2693,6 +2694,7 @@ async def test_update(
             "name": None,
             "name_by_user": None,
             "serial_number": None,
+            "suggested_area": None,
             "sw_version": None,
             "via_device_id": None,
         },
@@ -3248,7 +3250,7 @@ async def test_update_suggested_area(
     assert update_events[1].data == {
         "action": "update",
         "device_id": entry.id,
-        "changes": {"area_id": None},
+        "changes": {"area_id": None, "suggested_area": None},
     }
 
     # Do not save or fire the event if the suggested
@@ -3511,6 +3513,7 @@ async def test_restore_device(
         name="name_new",
         primary_config_entry=entry_id,
         serial_number="serial_no_new",
+        suggested_area="suggested_area_new",
         sw_version="version_new",
     )
 
@@ -3652,6 +3655,7 @@ async def test_restore_shared_device(
         name="name_orig_2",
         primary_config_entry=config_entry_1.entry_id,
         serial_number="serial_no_orig_2",
+        suggested_area="suggested_area_orig_2",
         sw_version="version_orig_2",
     )
 
@@ -3702,6 +3706,7 @@ async def test_restore_shared_device(
         name="name_new_1",
         primary_config_entry=config_entry_1.entry_id,
         serial_number="serial_no_new_1",
+        suggested_area="suggested_area_new_1",
         sw_version="version_new_1",
     )
 
@@ -3758,6 +3763,7 @@ async def test_restore_shared_device(
         name="name_new_2",
         primary_config_entry=config_entry_2.entry_id,
         serial_number="serial_no_new_2",
+        suggested_area="suggested_area_new_2",
         sw_version="version_new_2",
     )
 
@@ -3811,6 +3817,7 @@ async def test_restore_shared_device(
         name="name_new_1",
         primary_config_entry=config_entry_2.entry_id,
         serial_number="serial_no_new_1",
+        suggested_area="suggested_area_new_1",
         sw_version="version_new_1",
     )
 
@@ -3845,6 +3852,7 @@ async def test_restore_shared_device(
             "model_id": "model_id_orig_1",
             "name": "name_orig_1",
             "serial_number": "serial_no_orig_1",
+            "suggested_area": "suggested_area_orig_1",
             "sw_version": "version_orig_1",
         },
     }
@@ -3891,6 +3899,7 @@ async def test_restore_shared_device(
             "model_id": "model_id_new_2",
             "name": "name_new_2",
             "serial_number": "serial_no_new_2",
+            "suggested_area": "suggested_area_new_2",
             "sw_version": "version_new_2",
         },
     }
@@ -4891,3 +4900,36 @@ async def test_connections_validator() -> None:
     """Test checking connections validator."""
     with pytest.raises(ValueError, match="Invalid mac address format"):
         dr.DeviceEntry(connections={(dr.CONNECTION_NETWORK_MAC, "123456ABCDEF")})
+
+
+async def test_suggested_area_deprecation(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Make sure we do not duplicate entries."""
+    entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        sw_version="sw-version",
+        name="name",
+        manufacturer="manufacturer",
+        model="model",
+        suggested_area="Game Room",
+    )
+
+    game_room_area = area_registry.async_get_area_by_name("Game Room")
+    assert game_room_area is not None
+    assert len(area_registry.areas) == 1
+
+    assert len(device_registry.devices) == 1
+    assert entry.area_id == game_room_area.id
+    assert entry.suggested_area == "Game Room"
+
+    assert (
+        "The deprecated function suggested_area was called. It will be removed in "
+        "HA Core 2026.9. Use code which ignores suggested_area instead"
+    ) in caplog.text
