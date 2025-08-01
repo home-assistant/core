@@ -40,14 +40,14 @@ BINARY_SENSORS: tuple[AirOSBinarySensorEntityDescription, ...] = (
     AirOSBinarySensorEntityDescription(
         key="dhcp_client",
         translation_key="dhcp_client",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.services.dhcpc,
     ),
     AirOSBinarySensorEntityDescription(
         key="dhcp_server",
         translation_key="dhcp_server",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.services.dhcpd,
         entity_registry_enabled_default=False,
@@ -55,7 +55,7 @@ BINARY_SENSORS: tuple[AirOSBinarySensorEntityDescription, ...] = (
     AirOSBinarySensorEntityDescription(
         key="dhcp6_server",
         translation_key="dhcp6_server",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.services.dhcp6d_stateful,
         entity_registry_enabled_default=False,
