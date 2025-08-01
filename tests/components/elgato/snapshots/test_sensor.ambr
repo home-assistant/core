@@ -87,7 +87,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
-    'suggested_area': None,
     'sw_version': '1.0.4 (229)',
     'via_device_id': None,
   })
@@ -183,7 +182,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
-    'suggested_area': None,
     'sw_version': '1.0.4 (229)',
     'via_device_id': None,
   })
@@ -279,7 +277,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
-    'suggested_area': None,
     'sw_version': '1.0.4 (229)',
     'via_device_id': None,
   })
@@ -372,7 +369,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
-    'suggested_area': None,
     'sw_version': '1.0.4 (229)',
     'via_device_id': None,
   })
@@ -468,7 +464,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
-    'suggested_area': None,
     'sw_version': '1.0.4 (229)',
     'via_device_id': None,
   })
