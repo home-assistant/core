@@ -39,6 +39,7 @@ set_bed_temperature:
       selector:
         number:
           min: 0
+          max: 999
           step: 1
           unit_of_measurement: "°C"
 
@@ -55,6 +56,7 @@ set_tool_temperature:
       selector:
         number:
           min: 0
+          max: 999
           step: 1
           unit_of_measurement: "°C"
     tool_index:
@@ -64,4 +66,5 @@ set_tool_temperature:
       selector:
         number:
           min: 0
+          max: 999
           step: 1

@@ -148,15 +148,15 @@ SERVICE_CONNECT_SCHEMA = vol.Schema(
 SERVICE_SET_BED_TEMPERATURE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_DEVICE_ID): cv.string,
-        vol.Required(CONF_BED_TEMPERATURE): vol.All(vol.Coerce(int), vol.Range(min=0)),
+        vol.Required(CONF_BED_TEMPERATURE): vol.All(vol.Coerce(int), vol.Range(min=0, max=999)),
     }
 )
 
 SERVICE_SET_TOOL_TEMPERATURE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_DEVICE_ID): cv.string,
-        vol.Required(CONF_TOOL_TEMPERATURE): vol.All(vol.Coerce(int), vol.Range(min=0)),
-        vol.Optional(CONF_TOOL_INDEX): vol.All(vol.Coerce(int), vol.Range(min=0)),
+        vol.Required(CONF_TOOL_TEMPERATURE): vol.All(vol.Coerce(int), vol.Range(min=0, max=999)),
+        vol.Optional(CONF_TOOL_INDEX): vol.All(vol.Coerce(int), vol.Range(min=0, max=999)),
     }
 )
 
