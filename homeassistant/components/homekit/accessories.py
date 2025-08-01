@@ -632,8 +632,12 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         value: Any | None = None,
     ) -> None:
         """Fire event and call service for changes from HomeKit."""
+        if service_data is None:
+            entity_id = self.entity_id
+        else:
+            entity_id = service_data.get(ATTR_ENTITY_ID, self.entity_id)
         event_data = {
-            ATTR_ENTITY_ID: self.entity_id,
+            ATTR_ENTITY_ID: entity_id,
             ATTR_DISPLAY_NAME: self.display_name,
             ATTR_SERVICE: service,
             ATTR_VALUE: value,
