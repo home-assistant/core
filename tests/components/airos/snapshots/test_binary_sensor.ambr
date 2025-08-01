@@ -24,7 +24,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'DHCP Client Connected',
+    'original_name': 'DHCP client connected',
     'platform': 'airos',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -38,7 +38,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
-      'friendly_name': 'NanoStation 5AC ap name DHCP Client Connected',
+      'friendly_name': 'NanoStation 5AC ap name DHCP client connected',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nanostation_5ac_ap_name_dhcp_client_connected',
@@ -73,7 +73,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'DHCP Server Active',
+    'original_name': 'DHCP server active',
     'platform': 'airos',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -87,7 +87,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
-      'friendly_name': 'NanoStation 5AC ap name DHCP Server Active',
+      'friendly_name': 'NanoStation 5AC ap name DHCP server active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nanostation_5ac_ap_name_dhcp_server_active',
@@ -122,7 +122,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
     'original_icon': None,
-    'original_name': 'DHCPv6 Server Active',
+    'original_name': 'DHCPv6 server active',
     'platform': 'airos',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -136,7 +136,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
-      'friendly_name': 'NanoStation 5AC ap name DHCPv6 Server Active',
+      'friendly_name': 'NanoStation 5AC ap name DHCPv6 server active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nanostation_5ac_ap_name_dhcpv6_server_active',
@@ -171,7 +171,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Port Forwarding Enabled',
+    'original_name': 'Port forwarding enabled',
     'platform': 'airos',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -184,7 +184,7 @@
 # name: test_all_entities[binary_sensor.nanostation_5ac_ap_name_port_forwarding_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'NanoStation 5AC ap name Port Forwarding Enabled',
+      'friendly_name': 'NanoStation 5AC ap name Port forwarding enabled',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nanostation_5ac_ap_name_port_forwarding_enabled',
@@ -219,7 +219,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
     'original_icon': None,
-    'original_name': 'PPPoE Link Active',
+    'original_name': 'PPPoE link active',
     'platform': 'airos',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -233,7 +233,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
-      'friendly_name': 'NanoStation 5AC ap name PPPoE Link Active',
+      'friendly_name': 'NanoStation 5AC ap name PPPoE link active',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.nanostation_5ac_ap_name_pppoe_link_active',
