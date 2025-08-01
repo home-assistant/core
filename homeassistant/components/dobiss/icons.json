@@ -1,0 +1,16 @@
+{
+  "services": {
+    "force_update": {
+      "service": "mdi:refresh"
+    },
+    "turn_on": {
+      "service": "mdi:lightbulb-on"
+    },
+    "action_request": {
+      "service": "mdi:gesture-tap-button"
+    },
+    "status_request": {
+      "service": "mdi:information-outline"
+    }
+  }
+}
