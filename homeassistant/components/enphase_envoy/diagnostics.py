@@ -116,7 +116,6 @@ async def async_get_config_entry_diagnostics(
             entities.append({"entity": entity_dict, "state": state_dict})
         device_dict = asdict(device)
         device_dict.pop("_cache", None)
-        device_dict.pop("_is_restored", None)
         # This can be removed when suggested_area is removed from DeviceEntry
         device_dict.pop("_suggested_area")
         device_dict.pop("is_new", None)
