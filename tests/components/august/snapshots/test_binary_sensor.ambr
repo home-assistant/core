@@ -17,7 +17,6 @@
         'tmt100',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'August Home Inc.',

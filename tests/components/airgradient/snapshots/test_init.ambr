@@ -21,7 +21,6 @@
         '84fce612f5b8',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'AirGradient',
@@ -57,7 +56,6 @@
         '84fce612f5b8',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'AirGradient',

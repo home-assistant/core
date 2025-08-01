@@ -17,7 +17,6 @@
         'alfred-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Jäspi',
@@ -49,7 +48,6 @@
         'batman-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Nibe',
@@ -81,7 +79,6 @@
         'robin-r-1234-20240201-123456-aa-bb-cc-dd-ee-ff',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Nibe',

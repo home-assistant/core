@@ -22,7 +22,6 @@
           'abcdef0123456789',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Rainforest Automation, Inc.',

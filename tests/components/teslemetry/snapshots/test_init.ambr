@@ -17,7 +17,6 @@
         '123456',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Tesla',
@@ -49,7 +48,6 @@
         'LRW3F7EK4NC700000',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Tesla',
@@ -81,7 +79,6 @@
         'abd-123',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Tesla',
@@ -113,7 +110,6 @@
         'bcd-234',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Tesla',

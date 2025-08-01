@@ -72,7 +72,6 @@
         '123456789ABCDEFGH',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'TP-Link',

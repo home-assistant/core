@@ -17,7 +17,6 @@
         'E1234567890000000001',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Ecovacs',

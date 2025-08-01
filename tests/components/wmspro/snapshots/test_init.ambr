@@ -17,7 +17,6 @@
         '19239',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -49,7 +48,6 @@
         '58717',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -81,7 +79,6 @@
         '97358',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -113,7 +110,6 @@
         '19239',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -145,7 +141,6 @@
         '58717',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -177,7 +172,6 @@
         '97358',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -209,7 +203,6 @@
         '116682',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -241,7 +234,6 @@
         '172555',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -273,7 +265,6 @@
         '18894',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -305,7 +296,6 @@
         '230952',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -337,7 +327,6 @@
         '284942',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -369,7 +358,6 @@
         '328518',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',

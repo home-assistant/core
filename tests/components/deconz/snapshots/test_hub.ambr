@@ -17,7 +17,6 @@
         '01234E56789A',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Dresden Elektronik',

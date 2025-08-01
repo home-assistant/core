@@ -21,7 +21,6 @@
         '00:40:8c:12:34:56',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Axis Communications AB',
@@ -57,7 +56,6 @@
         '00:40:8c:12:34:56',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Axis Communications AB',
