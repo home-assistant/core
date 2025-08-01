@@ -38,6 +38,7 @@ from .const import (
     CONF_BED_TEMPERATURE,
     CONF_TOOL_INDEX,
     CONF_TOOL_TEMPERATURE,
+    DEFAULT_TOOL_INDEX,
     DOMAIN,
     SERVICE_CONNECT,
     SERVICE_SET_BED_TEMPERATURE,
@@ -156,7 +157,7 @@ SERVICE_SET_TOOL_TEMPERATURE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_DEVICE_ID): cv.string,
         vol.Required(CONF_TOOL_TEMPERATURE): vol.All(vol.Coerce(int), vol.Range(min=0, max=999)),
-        vol.Optional(CONF_TOOL_INDEX): vol.All(vol.Coerce(int), vol.Range(min=0, max=999)),
+        vol.Optional(CONF_TOOL_INDEX, default=DEFAULT_TOOL_INDEX): vol.All(vol.Coerce(int), vol.Range(min=0, max=999)),
     }
 )
 
@@ -253,7 +254,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Set tool temperature."""
         client = async_get_client_for_service_call(hass, call)
         await client.set_tool_temperature(
-            f"tool{call.data.get(CONF_TOOL_INDEX, 0)}", call.data[CONF_TOOL_TEMPERATURE]
+            f"tool{call.data.get(CONF_TOOL_INDEX, DEFAULT_TOOL_INDEX)}", call.data[CONF_TOOL_TEMPERATURE]
         )
 
     if not hass.services.has_service(DOMAIN, SERVICE_CONNECT):

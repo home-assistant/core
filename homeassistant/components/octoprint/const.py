@@ -3,6 +3,7 @@
 DOMAIN = "octoprint"
 
 DEFAULT_NAME = "OctoPrint"
+DEFAULT_TOOL_INDEX = 0
 
 SERVICE_CONNECT = "printer_connect"
 SERVICE_SET_TOOL_TEMPERATURE = "set_tool_temperature"
