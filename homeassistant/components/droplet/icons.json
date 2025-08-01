@@ -2,7 +2,7 @@
   "entity": {
     "sensor": {
       "current_flow_rate": {
-        "default": "mdi:water-circle"
+        "default": "mdi:water"
       },
       "server_connectivity": {
         "default": "mdi:web"
@@ -11,7 +11,7 @@
         "default": "mdi:waveform"
       },
       "volume": {
-        "default": "mdi:cup-water"
+        "default": "mdi:chart-line"
       },
       "daily_volume": {
         "default": "mdi:calendar-today"
