@@ -7,11 +7,11 @@ from aioautomower.model import SingleMessageData
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.storage import Store
 
 from . import AutomowerConfigEntry
-from .const import DOMAIN, ERROR_KEYS
+from .const import ERROR_KEYS
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import AutomowerBaseEntity
 
@@ -33,12 +33,10 @@ EVENT_DESCRIPTIONS = [
     )
 ]
 
-STORAGE_KEY = DOMAIN
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: AutomowerConfigEntry,
+    config_entry: AutomowerConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Automower message event entities.
@@ -47,18 +45,19 @@ async def async_setup_entry(
     only for those that do. The entities are created dynamically
     based on the messages received from the API.
     """
-    coordinator: AutomowerDataUpdateCoordinator = entry.runtime_data
-    store: Store[dict[str, dict[str, bool]]] = Store(hass, 1, STORAGE_KEY)
-    raw: dict[str, dict[str, bool]] = await store.async_load() or {}
-    seen_mowers: dict[str, bool] = raw.get("message_event_seen", {})
+    coordinator: AutomowerDataUpdateCoordinator = config_entry.runtime_data
 
-    def _save() -> None:
-        payload = {"message_event_seen": seen_mowers}
-        hass.async_create_task(store.async_save(payload))
+    entity_registry = er.async_get(hass)
+    entries = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
+
+    seen_mowers = {}
+    for entry in entries:
+        if entry.unique_id.endswith("_message"):
+            mower_id = entry.unique_id.removesuffix("_message")
+            seen_mowers[mower_id] = True
 
     def _add_for_mower(mower_id: str) -> None:
         seen_mowers[mower_id] = True
-        _save()
         entities = [
             AutomowerMessageEventEntity(mower_id, coordinator, desc)
             for desc in EVENT_DESCRIPTIONS
@@ -69,9 +68,6 @@ async def async_setup_entry(
     for mower_id in list(seen_mowers):
         if mower_id in coordinator.data:
             _add_for_mower(mower_id)
-        else:
-            seen_mowers.pop(mower_id, None)
-            _save()
 
     @callback
     def _on_single_message(msg: SingleMessageData) -> None:
