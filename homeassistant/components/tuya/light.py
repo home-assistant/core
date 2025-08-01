@@ -16,6 +16,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityDescription,
+    color_supported,
     filter_supported_color_modes,
 )
 from homeassistant.const import EntityCategory
@@ -567,6 +568,10 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                     self._brightness and self._brightness.max > 255
                 ):
                     self._color_data_type = DEFAULT_COLOR_TYPE_DATA_V2
+
+        if (ColorMode.WHITE in color_modes) and not color_supported(color_modes):
+            # If the light supports white, but not color, we remove WHITE
+            color_modes.remove(ColorMode.WHITE)
 
         self._attr_supported_color_modes = filter_supported_color_modes(color_modes)
         if len(self._attr_supported_color_modes) == 1:
