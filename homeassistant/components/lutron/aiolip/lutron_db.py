@@ -271,16 +271,10 @@ class LutronXmlDbParser:
     def _parse_led(self, keypad, component_xml):
         """Parse an LED device that part of a keypad."""
         component_num = int(component_xml.get("ComponentNumber"))
-        led_base = 80
-        if keypad.device_type == "MAIN_REPEATER":
-            led_base = 100
-        elif keypad.device_type == "PHANTOM":
-            led_base = 2000
-        led_num = component_num - led_base
         return Led(
             keypad=keypad,
             name="",
-            number=led_num,
+            number=0,
             component_number=component_num,
             integration_id=keypad.integration_id,
             uuid=component_xml.find("LED").get("UUID"),
@@ -574,8 +568,16 @@ class Led(KeypadComponent):
     button: Button | None = field(init=False, default=None)
 
     def __post_init__(self):
-        """Set if the Button has action."""
+        """Assign the ."""
         super().__post_init__()
+
+        led_base = 80
+        if self.keypad.device_type == "MAIN_REPEATER":
+            led_base = 100
+        elif self.keypad.device_type == "PHANTOM":
+            led_base = 2000
+        self.number = self.component_num - led_base
+
         self.component_name = f"Led {self.number}"
 
     def is_valid_led(self, use_radiora_mode: bool) -> bool:
