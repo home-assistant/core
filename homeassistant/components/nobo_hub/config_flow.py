@@ -207,7 +207,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
             {
                 vol.Required(CONF_OVERRIDE_TYPE, default=override_type): vol.In(
                     [OVERRIDE_TYPE_CONSTANT, OVERRIDE_TYPE_NOW]
-                ),
+                )
             }
         )
 
