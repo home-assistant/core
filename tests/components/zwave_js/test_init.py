@@ -386,6 +386,47 @@ async def test_listen_done_after_setup(
     assert client.disconnect.call_count == disconnect_call_count
 
 
+async def test_listen_ending_before_cancelling_listen(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    listen_block: asyncio.Event,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test listen ending during unloading before cancelling the listen task."""
+    config_entry = integration
+
+    # We can't easily simulate the race condition where the listen task ends
+    # before getting cancelled by the config entry during unloading.
+    # Use mock_state to provoke the correct condition.
+    config_entry.mock_state(hass, ConfigEntryState.UNLOAD_IN_PROGRESS, None)
+    listen_block.set()
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.UNLOAD_IN_PROGRESS
+    assert not any(record.levelno == logging.ERROR for record in caplog.records)
+
+
+async def test_listen_ending_unrecoverable_config_entry_state(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    listen_block: asyncio.Event,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test listen ending when the config entry has an unrecoverable state."""
+    config_entry = integration
+
+    with patch.object(
+        hass.config_entries, "async_unload_platforms", return_value=False
+    ):
+        await hass.config_entries.async_unload(config_entry.entry_id)
+
+    listen_block.set()
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.FAILED_UNLOAD
+    assert "Disconnected from server. Cannot recover entry" in caplog.text
+
+
 @pytest.mark.usefixtures("client")
 @pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
 async def test_new_entity_on_value_added(
