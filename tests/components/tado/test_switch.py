@@ -1,29 +1,32 @@
-"""The sensor tests for the tado platform."""
+"""The switch tests for the tado platform."""
 
+from collections.abc import AsyncGenerator
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 CHILD_LOCK_SWITCH_ENTITY = "switch.baseboard_heater_child_lock"
 
 
 @pytest.fixture(autouse=True)
-def loaded_platforms():
-    """Load the binary sensor platform for the tests."""
+def setup_platforms() -> AsyncGenerator[None]:
+    """Set up the platforms for the tests."""
     with patch("homeassistant.components.tado.PLATFORMS", [Platform.SWITCH]):
         yield
 
@@ -39,18 +42,19 @@ async def trigger_update(hass: HomeAssistant, freezer: FrozenDateTimeFactory) ->
     await hass.async_block_till_done()
 
 
-@pytest.mark.usefixtures("mock_tado_api")
-async def test_child_lock(
+async def test_entities(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test creation of child lock entity."""
+    """Test creation of switch entities."""
 
     await setup_integration(hass, mock_config_entry)
     await trigger_update(hass, freezer)
-    state = hass.states.get(CHILD_LOCK_SWITCH_ENTITY)
-    assert state.state == STATE_OFF
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(

@@ -1,22 +1,32 @@
-"""The sensor tests for the tado platform."""
+"""The binary sensor tests for the tado platform."""
 
+from collections.abc import AsyncGenerator
 from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
 def loaded_platforms():
     """Load the binary sensor platform for the tests."""
+    with patch("homeassistant.components.tado.PLATFORMS", [Platform.BINARY_SENSOR]):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def setup_platforms() -> AsyncGenerator[None]:
+    """Set up the platforms for the tests."""
     with patch("homeassistant.components.tado.PLATFORMS", [Platform.BINARY_SENSOR]):
         yield
 
@@ -32,88 +42,16 @@ async def trigger_update(hass: HomeAssistant, freezer: FrozenDateTimeFactory) ->
     await hass.async_block_till_done()
 
 
-@pytest.mark.usefixtures("mock_tado_api")
-async def test_air_con_create_binary_sensors(
+async def test_entities(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test creation of aircon sensors."""
+    """Test creation of binary sensor."""
 
     await setup_integration(hass, mock_config_entry)
     await trigger_update(hass, freezer)
 
-    state = hass.states.get("binary_sensor.air_conditioning_power")
-    assert state.state == STATE_ON
-
-    state = hass.states.get("binary_sensor.air_conditioning_connectivity")
-    assert state.state == STATE_ON
-
-    state = hass.states.get("binary_sensor.air_conditioning_overlay")
-    assert state.state == STATE_ON
-
-    state = hass.states.get("binary_sensor.air_conditioning_window")
-    assert state.state == STATE_OFF
-
-
-@pytest.mark.usefixtures("mock_tado_api")
-async def test_heater_create_binary_sensors(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test creation of heater sensors."""
-
-    await setup_integration(hass, mock_config_entry)
-    await trigger_update(hass, freezer)
-
-    state = hass.states.get("binary_sensor.baseboard_heater_power")
-    assert state.state == STATE_ON
-
-    state = hass.states.get("binary_sensor.baseboard_heater_connectivity")
-    assert state.state == STATE_ON
-
-    state = hass.states.get("binary_sensor.baseboard_heater_early_start")
-    assert state.state == STATE_OFF
-
-    state = hass.states.get("binary_sensor.baseboard_heater_overlay")
-    assert state.state == STATE_ON
-
-    state = hass.states.get("binary_sensor.baseboard_heater_window")
-    assert state.state == STATE_OFF
-
-
-@pytest.mark.usefixtures("mock_tado_api")
-async def test_water_heater_create_binary_sensors(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test creation of water heater sensors."""
-
-    await setup_integration(hass, mock_config_entry)
-    await trigger_update(hass, freezer)
-
-    state = hass.states.get("binary_sensor.water_heater_connectivity")
-    assert state.state == STATE_ON
-
-    state = hass.states.get("binary_sensor.water_heater_overlay")
-    assert state.state == STATE_OFF
-
-    state = hass.states.get("binary_sensor.water_heater_power")
-    assert state.state == STATE_ON
-
-
-@pytest.mark.usefixtures("mock_tado_api")
-async def test_home_create_binary_sensors(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test creation of home binary sensors."""
-
-    await setup_integration(hass, mock_config_entry)
-    await trigger_update(hass, freezer)
-
-    state = hass.states.get("binary_sensor.wr1_connection_state")
-    assert state.state == STATE_ON
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
