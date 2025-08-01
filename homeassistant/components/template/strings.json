@@ -278,10 +278,10 @@
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",
           "state": "Template for the number's current value.",
-          "step": "Template for the number's increment/decrement step.",
+          "step": "Defines the number's increment/decrement step.",
           "set_value": "Defines actions to run when the number is set to a value. Receives variable `value`.",
-          "max": "Template for the number's maximum value.",
-          "min": "Template for the number's minimum value.",
+          "max": "Defines the number's maximum value.",
+          "min": "Defines the number's minimum value.",
           "unit_of_measurement": "Defines the unit of measurement of the number, if any."
         },
         "sections": {
