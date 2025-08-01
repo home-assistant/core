@@ -187,11 +187,11 @@ def _convert_content_to_param(
                 reasoning_summary.append(content.thinking_content)
 
             if isinstance(content.native, dict):
-                if content.native["type"] == "reasoning":
+                if content.native.get("type") == "reasoning":
                     messages.append(
                         ResponseReasoningItemParam(
                             type="reasoning",
-                            id=content.native["id"],
+                            id=content.native.get("id", ""),
                             summary=[
                                 {
                                     "type": "summary_text",
@@ -201,7 +201,9 @@ def _convert_content_to_param(
                             ]
                             if content.thinking_content
                             else [],
-                            encrypted_content=content.native["encrypted_content"],
+                            encrypted_content=content.native.get(
+                                "encrypted_content", ""
+                            ),
                         )
                     )
                     reasoning_summary = []
@@ -211,12 +213,12 @@ def _convert_content_to_param(
 
 async def _transform_stream(
     chat_log: conversation.ChatLog,
-    result: AsyncStream[ResponseStreamEvent],
+    stream: AsyncStream[ResponseStreamEvent],
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     """Transform an OpenAI delta stream into HA format."""
     last_summary_index = None
 
-    async for event in result:
+    async for event in stream:
         LOGGER.debug("Received event: %s", event)
 
         if isinstance(event, ResponseOutputItemAddedEvent):
@@ -383,16 +385,18 @@ class OpenAIBaseLLMEntity(Entity):
                 )
             )
 
-        model_args: ResponseCreateParamsStreaming = {
-            "model": options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
-            "input": [],
-            "max_output_tokens": options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
-            "top_p": options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
-            "temperature": options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
-            "user": chat_log.conversation_id,
-            "store": False,
-            "stream": True,
-        }
+        messages = _convert_content_to_param(chat_log.content)
+
+        model_args = ResponseCreateParamsStreaming(
+            model=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
+            input=messages,
+            max_output_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
+            top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
+            temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
+            user=chat_log.conversation_id,
+            store=False,
+            stream=True,
+        )
         if tools:
             model_args["tools"] = tools
 
@@ -409,8 +413,6 @@ class OpenAIBaseLLMEntity(Entity):
             model_args["text"] = {
                 "verbosity": options.get(CONF_VERBOSITY, RECOMMENDED_VERBOSITY)
             }
-
-        messages = _convert_content_to_param(chat_log.content)
 
         last_content = chat_log.content[-1]
 
@@ -444,17 +446,15 @@ class OpenAIBaseLLMEntity(Entity):
 
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
-            model_args["input"] = messages
-
             try:
-                result = await client.responses.create(**model_args)
+                stream = await client.responses.create(**model_args)
 
                 messages.extend(
                     _convert_content_to_param(
                         [
                             content
                             async for content in chat_log.async_add_delta_content_stream(
-                                self.entity_id, _transform_stream(chat_log, result)
+                                self.entity_id, _transform_stream(chat_log, stream)
                             )
                         ]
                     )
