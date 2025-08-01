@@ -56,7 +56,7 @@ async def mock_tado_api(hass: HomeAssistant) -> AsyncGenerator[MagicMock]:
         tado = Tado("", "")
         for zone in zone_states.zone_states.values():
             await tado.update_zone_data(zone)
-        client.get_zone_states.return_value = [zone_states]
+        client.get_zone_states.return_value = dict(zone_states.zone_states.items())
         client.get_weather.return_value = Weather.from_dict(
             await async_load_json_object_fixture(hass, "weather.json", DOMAIN)
         )

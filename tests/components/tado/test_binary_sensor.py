@@ -18,13 +18,6 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 
 
 @pytest.fixture(autouse=True)
-def loaded_platforms():
-    """Load the binary sensor platform for the tests."""
-    with patch("homeassistant.components.tado.PLATFORMS", [Platform.BINARY_SENSOR]):
-        yield
-
-
-@pytest.fixture(autouse=True)
 def setup_platforms() -> AsyncGenerator[None]:
     """Set up the platforms for the tests."""
     with patch("homeassistant.components.tado.PLATFORMS", [Platform.BINARY_SENSOR]):
@@ -42,6 +35,7 @@ async def trigger_update(hass: HomeAssistant, freezer: FrozenDateTimeFactory) ->
     await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("mock_tado_api")
 async def test_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

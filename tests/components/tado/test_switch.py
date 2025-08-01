@@ -42,6 +42,7 @@ async def trigger_update(hass: HomeAssistant, freezer: FrozenDateTimeFactory) ->
     await hass.async_block_till_done()
 
 
+@pytest.mark.usefixtures("mock_tado_api")
 async def test_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

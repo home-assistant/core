@@ -22,6 +22,7 @@ def setup_platforms() -> AsyncGenerator[None]:
         yield
 
 
+@pytest.mark.usefixtures("mock_tado_api")
 async def test_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
