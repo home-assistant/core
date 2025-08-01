@@ -105,21 +105,32 @@ async def async_setup_entry(
 
     async def get_rooms(call: ServiceCall) -> ServiceResponse:
         """Get available rooms from vacuum appliance."""
-        rooms_list: list[dict[str, int | str]] = [
-            {"name": "Bathroom", "roomId": 2},
-            {"name": "Hallway", "roomId": 1},
-            {"name": "Kitchen", "roomId": 5},
-            {"name": "Livingroom", "roomId": 8},
-            {"name": "Entrance area", "roomId": 12},
-            {"name": "Bedroom", "roomId": 4},
+        rooms_list: list[dict[str, Any]] = [
+            {
+                "mapId": 1,
+                "rooms": [
+                    {"name": "Bathroom", "roomId": 2},
+                    {"name": "Hallway", "roomId": 1},
+                    {"name": "Kitchen", "roomId": 5},
+                    {"name": "Livingroom", "roomId": 8},
+                    {"name": "Entrance area", "roomId": 12},
+                    {"name": "Bedroom", "roomId": 4},
+                ],
+            }
         ]
 
         return cast(
             ServiceResponse,
             {
                 "rooms": [
-                    {"room_id": int(room["roomId"]), "name": str(room["name"])}
-                    for room in rooms_list
+                    {
+                        "map_id": map_item["mapId"],
+                        "rooms": [
+                            {"room_id": room["roomId"], "name": room["name"]}
+                            for room in map_item["rooms"]
+                        ],
+                    }
+                    for map_item in rooms_list
                 ],
             },
         )
