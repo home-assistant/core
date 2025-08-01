@@ -197,11 +197,11 @@ async def _register_services(hass: HomeAssistant) -> None:
             background=background_color,
             foreground=foreground_color,
             icon=call.data.get(ATTR_ICON, ""),
-            expire=call.data.get(ATTR_EXPIRE, 0),
+            expire=call.data.get(ATTR_EXPIRE, 60),
             dismissible=call.data.get(ATTR_DISMISSIBLE, False),
-            button_background=button_background_color,
-            button_foreground=button_foreground_color,
-            button_text=call.data.get(ATTR_BUTTON_TEXT, "Dismiss"),
+            buttonBackground=button_background_color,
+            buttonForeground=button_foreground_color,
+            buttonText=call.data.get(ATTR_BUTTON_TEXT, None),
             sound=call.data.get(ATTR_SOUND, 0),
         )
 
