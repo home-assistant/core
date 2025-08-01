@@ -680,7 +680,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "nanoleaf",
     "nasweb",
     "neato",
-    "nederlandse_spoorwegen",
     "ness_alarm",
     "netatmo",
     "netdata",
