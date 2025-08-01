@@ -35,7 +35,6 @@ BINARY_SENSORS: tuple[AirOSBinarySensorEntityDescription, ...] = (
     AirOSBinarySensorEntityDescription(
         key="portfw",
         translation_key="port_forwarding",
-        device_class=BinarySensorDeviceClass.DOOR,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.portfw,
     ),

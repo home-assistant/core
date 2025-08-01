@@ -18,7 +18,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_USERNAME, DOMAIN
+from .const import DOMAIN
 from .coordinator import AirOS
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
+        vol.Required(CONF_USERNAME, default="ubnt"): str,
         vol.Required(CONF_PASSWORD): str,
     }
 )
