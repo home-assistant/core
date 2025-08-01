@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_attributes[alarm_control_panel.test-entry]
+# name: test_entities[alarm_control_panel.test-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -30,11 +30,11 @@
     'suggested_object_id': None,
     'supported_features': <AlarmControlPanelEntityFeature: 7>,
     'translation_key': None,
-    'unique_id': '123456',
+    'unique_id': '1234567',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_attributes[alarm_control_panel.test-state]
+# name: test_entities[alarm_control_panel.test-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'changed_by': None,
@@ -51,7 +51,7 @@
     'state': 'disarmed',
   })
 # ---
-# name: test_attributes[alarm_control_panel.test_partition_2-entry]
+# name: test_entities[alarm_control_panel.test_partition_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -82,11 +82,11 @@
     'suggested_object_id': None,
     'supported_features': <AlarmControlPanelEntityFeature: 7>,
     'translation_key': 'partition',
-    'unique_id': '123456_2',
+    'unique_id': '1234567_2',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_attributes[alarm_control_panel.test_partition_2-state]
+# name: test_entities[alarm_control_panel.test_partition_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'changed_by': None,
