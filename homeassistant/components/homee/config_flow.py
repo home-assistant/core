@@ -15,7 +15,12 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    RESULT_CANNOT_CONNECT,
+    RESULT_INVALID_AUTH,
+    RESULT_UNKNOWN_ERROR,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,12 +49,12 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             await self.homee.get_access_token()
         except HomeeConnectionFailedException:
-            errors["base"] = "cannot_connect"
+            errors["base"] = RESULT_CANNOT_CONNECT
         except HomeeAuthenticationFailedException:
-            errors["base"] = "invalid_auth"
+            errors["base"] = RESULT_INVALID_AUTH
         except Exception:
             _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
+            errors["base"] = RESULT_UNKNOWN_ERROR
         else:
             _LOGGER.info("Got access token for homee")
             self.hass.loop.create_task(self.homee.run())
@@ -116,8 +121,8 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         errors = await self._connect_homee()
         # if this is a reachable homee, we will get an authentication error.
-        if errors["base"] != "invalid_auth":
-            return self.async_abort(reason="cannot_connect")
+        if errors["base"] != RESULT_INVALID_AUTH:
+            return self.async_abort(reason=RESULT_CANNOT_CONNECT)
 
         self.context["title_placeholders"] = {"name": self._name, "host": self._host}
 
@@ -184,12 +189,12 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await self.homee.get_access_token()
             except HomeeConnectionFailedException:
-                errors["base"] = "cannot_connect"
+                errors["base"] = RESULT_CANNOT_CONNECT
             except HomeeAuthenticationFailedException:
-                errors["base"] = "invalid_auth"
+                errors["base"] = RESULT_INVALID_AUTH
             except Exception:
                 _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                errors["base"] = RESULT_UNKNOWN_ERROR
             else:
                 self.hass.loop.create_task(self.homee.run())
                 await self.homee.wait_until_connected()
@@ -237,12 +242,12 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await self.homee.get_access_token()
             except HomeeConnectionFailedException:
-                errors["base"] = "cannot_connect"
+                errors["base"] = RESULT_CANNOT_CONNECT
             except HomeeAuthenticationFailedException:
-                errors["base"] = "invalid_auth"
+                errors["base"] = RESULT_INVALID_AUTH
             except Exception:
                 _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+                errors["base"] = RESULT_UNKNOWN_ERROR
             else:
                 self.hass.loop.create_task(self.homee.run())
                 await self.homee.wait_until_connected()

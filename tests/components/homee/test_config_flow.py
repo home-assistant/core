@@ -7,7 +7,12 @@ from pyHomee import HomeeAuthFailedException, HomeeConnectionFailedException
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.homee.const import DOMAIN
+from homeassistant.components.homee.const import (
+    DOMAIN,
+    RESULT_CANNOT_CONNECT,
+    RESULT_INVALID_AUTH,
+    RESULT_UNKNOWN_ERROR,
+)
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -32,15 +37,15 @@ PARAMETRIZED_ERRORS = (
     [
         (
             HomeeConnectionFailedException("connection timed out"),
-            {"base": "cannot_connect"},
+            {"base": RESULT_CANNOT_CONNECT},
         ),
         (
             HomeeAuthFailedException("wrong username or password"),
-            {"base": "invalid_auth"},
+            {"base": RESULT_INVALID_AUTH},
         ),
         (
             Exception,
-            {"base": "unknown"},
+            {"base": RESULT_UNKNOWN_ERROR},
         ),
     ],
 )
