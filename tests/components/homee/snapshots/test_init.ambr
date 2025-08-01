@@ -21,7 +21,6 @@
         '00055511EECC',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'homee',
@@ -53,7 +52,6 @@
         '00055511EECC-3',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,

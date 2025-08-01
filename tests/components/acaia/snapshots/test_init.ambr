@@ -21,7 +21,6 @@
         'aa:bb:cc:dd:ee:ff',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Acaia',
