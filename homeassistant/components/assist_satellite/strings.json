@@ -95,7 +95,8 @@
     "answers": {
       "fields": {
         "id": "Answer ID",
-        "sentences": "Sentences"
+        "sentences": "Sentences",
+        "actions": "Actions"
       }
     }
   }

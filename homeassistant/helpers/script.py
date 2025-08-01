@@ -38,7 +38,6 @@ from homeassistant.const import (
     CONF_DEFAULT,
     CONF_DELAY,
     CONF_DEVICE_ID,
-    CONF_DOMAIN,
     CONF_ELSE,
     CONF_ENABLED,
     CONF_ERROR,
@@ -53,7 +52,6 @@ from homeassistant.const import (
     CONF_RESPONSE_VARIABLE,
     CONF_SCENE,
     CONF_SEQUENCE,
-    CONF_SERVICE,
     CONF_SERVICE_DATA,
     CONF_SERVICE_DATA_TEMPLATE,
     CONF_SET_CONVERSATION_RESPONSE,
@@ -85,11 +83,15 @@ from homeassistant.util.dt import utcnow
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.signal_type import SignalType, SignalTypeFormat
 
-from . import condition, config_validation as cv, service, template
+from . import condition, config_validation as cv, template
 from .condition import ConditionCheckerType, trace_condition_function
 from .dispatcher import async_dispatcher_connect, async_dispatcher_send_internal
 from .event import async_call_later, async_track_template
 from .script_variables import ScriptRunVariables, ScriptVariables
+from .service import (
+    async_get_domain_service_from_config,
+    async_prepare_call_from_config,
+)
 from .template import Template
 from .trace import (
     TraceElement,
@@ -186,7 +188,7 @@ def action_trace_append(variables: TemplateVarsType, path: str) -> TraceElement:
 @asynccontextmanager
 async def trace_action(
     hass: HomeAssistant,
-    script_run: _ScriptRun,
+    script_run: ScriptRun,
     stop: asyncio.Future[None],
     variables: TemplateVarsType,
 ) -> AsyncGenerator[TraceElement]:
@@ -401,7 +403,7 @@ class _StopScript(_HaltScript):
         self.response = response
 
 
-class _ScriptRun:
+class ScriptRun:
     """Manage Script sequence run."""
 
     _action: dict[str, Any]
@@ -414,6 +416,7 @@ class _ScriptRun:
         context: Context | None,
         log_exceptions: bool,
     ) -> None:
+        """Initialize a script run."""
         self._hass = hass
         self._script = script
         self._variables = variables
@@ -641,6 +644,25 @@ class _ScriptRun:
                 eager_start=True,
             )
         )
+        if result and result.conversation_response is not UNDEFINED:
+            self._conversation_response = result.conversation_response
+
+    async def async_external_run_script(
+        self,
+        script: Script,
+        *,
+        run_variables: Mapping[str, Any] | None = None,
+        parallel: bool = False,
+        path_suffix: str | list[str] = "sequence",
+    ) -> None:
+        """Execute a script."""
+        with trace_path(path_suffix):
+            variables = self._variables.enter_scope(parallel=parallel)
+            if run_variables is not None:
+                for key, value in run_variables.items():
+                    variables.define_local(key, value)
+            result = await script.async_run(variables, self._context)
+
         if result and result.conversation_response is not UNDEFINED:
             self._conversation_response = result.conversation_response
 
@@ -982,32 +1004,40 @@ class _ScriptRun:
         """Call the service specified in the action."""
         self._step_log("call service")
 
-        params = service.async_prepare_call_from_config(
-            self._hass, self._action, self._variables
+        domain, service = async_get_domain_service_from_config(
+            self._action, self._variables
         )
 
         # Validate response data parameters. This check ignores services that do
         # not exist which will raise an appropriate error in the service call below.
         response_variable = self._action.get(CONF_RESPONSE_VARIABLE)
         return_response = response_variable is not None
-        if self._hass.services.has_service(params[CONF_DOMAIN], params[CONF_SERVICE]):
-            supports_response = self._hass.services.supports_response(
-                params[CONF_DOMAIN], params[CONF_SERVICE]
-            )
+        template_exclude_keys: template.ExcludeKeys = None
+        if self._hass.services.has_service(domain, service):
+            supports_response = self._hass.services.supports_response(domain, service)
             if supports_response == SupportsResponse.ONLY and not return_response:
                 raise vol.Invalid(
                     f"Script requires '{CONF_RESPONSE_VARIABLE}' for response data "
-                    f"for service call {params[CONF_DOMAIN]}.{params[CONF_SERVICE]}"
+                    f"for service call {domain}.{service}"
                 )
             if supports_response == SupportsResponse.NONE and return_response:
                 raise vol.Invalid(
                     f"Script does not support '{CONF_RESPONSE_VARIABLE}' for service "
                     f"'{CONF_RESPONSE_VARIABLE}' which does not support response data."
                 )
+            template_exclude_keys = self._hass.services.template_exclude_keys(
+                domain, service
+            )
 
+        params = async_prepare_call_from_config(
+            self._hass,
+            self._action,
+            self._variables,
+            template_exclude_keys=template_exclude_keys,
+        )
         running_script = (
-            params[CONF_DOMAIN] == "automation" and params[CONF_SERVICE] == "trigger"
-        ) or params[CONF_DOMAIN] in ("python_script", "script")
+            domain == "automation" and service == "trigger"
+        ) or domain in ("python_script", "script")
         trace_set_result(params=params, running_script=running_script)
         response_data = await self._async_run_long_action(
             self._hass.async_create_task_internal(
@@ -1016,6 +1046,7 @@ class _ScriptRun:
                     blocking=True,
                     context=self._context,
                     return_response=return_response,
+                    script_run=self,
                 ),
                 eager_start=True,
             )
@@ -1310,7 +1341,7 @@ class _ScriptRun:
         trace_set_result(conversation_response=self._conversation_response)
 
 
-class _QueuedScriptRun(_ScriptRun):
+class _QueuedScriptRun(ScriptRun):
     """Manage queued Script sequence run."""
 
     lock_acquired = False
@@ -1484,7 +1515,7 @@ class Script:
         self.last_action: str | None = None
         self.last_triggered: datetime | None = None
 
-        self._runs: list[_ScriptRun] = []
+        self._runs: list[ScriptRun] = []
         self.max_runs = max_runs
         self._max_exceeded = max_exceeded
         if script_mode == SCRIPT_MODE_QUEUED:
@@ -1811,7 +1842,7 @@ class Script:
             return None
 
         if self.script_mode != SCRIPT_MODE_QUEUED:
-            cls = _ScriptRun
+            cls = ScriptRun
         else:
             cls = _QueuedScriptRun
         run = cls(self._hass, self, variables, context, self._log_exceptions)
@@ -1847,7 +1878,7 @@ class Script:
             self._changed()
 
     async def async_stop(
-        self, update_state: bool = True, spare: _ScriptRun | None = None
+        self, update_state: bool = True, spare: ScriptRun | None = None
     ) -> None:
         """Stop running script."""
         # Collect a list of script runs to stop. This must be done before calling
