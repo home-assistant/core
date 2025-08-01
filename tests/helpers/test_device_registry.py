@@ -3226,7 +3226,7 @@ async def test_update_suggested_area(
     device_area_id: str | None,
     number_of_areas: int,
 ) -> None:
-    """Verify that we can update the suggested area version of a device.
+    """Verify that we can update the suggested area of a device.
 
     Updating the suggested area of a device should not create a new area, nor should
     it change the area_id of the device.
