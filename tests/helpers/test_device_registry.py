@@ -107,7 +107,6 @@ async def test_get_or_create_returns_same_entry(
     assert entry3.model == "model"
     assert entry3.name == "name"
     assert entry3.sw_version == "sw-version"
-    assert entry3.suggested_area == "Game Room"
     assert entry3.area_id == game_room_area.id
 
     await hass.async_block_till_done()
@@ -409,7 +408,6 @@ async def test_loading_from_storage(
         name="name",
         primary_config_entry=mock_config_entry.entry_id,
         serial_number="serial_no",
-        suggested_area=None,  # Not stored
         sw_version="version",
     )
     assert isinstance(entry.config_entries, set)
@@ -2509,13 +2507,13 @@ async def test_loading_saving_data(
 
     # Ensure a save/load cycle does not keep suggested area
     new_kitchen_light = registry2.async_get_device(identifiers={("hue", "999")})
-    assert orig_kitchen_light.suggested_area == "Kitchen"
+    assert orig_kitchen_light.area_id == "kitchen"
 
-    orig_kitchen_light_witout_suggested_area = device_registry.async_update_device(
+    orig_kitchen_light_without_suggested_area = device_registry.async_update_device(
         orig_kitchen_light.id, suggested_area=None
     )
-    assert orig_kitchen_light_witout_suggested_area.suggested_area is None
-    assert orig_kitchen_light_witout_suggested_area == new_kitchen_light
+    assert orig_kitchen_light_without_suggested_area.area_id == "kitchen"
+    assert orig_kitchen_light_without_suggested_area == new_kitchen_light
 
 
 async def test_no_unnecessary_changes(
@@ -3225,7 +3223,6 @@ async def test_update_suggested_area(
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bla", "123")},
     )
-    assert not entry.suggested_area
     assert entry.area_id is None
 
     suggested_area = "Pool"
@@ -3237,7 +3234,6 @@ async def test_update_suggested_area(
 
     assert mock_save.call_count == 1
     assert updated_entry != entry
-    assert updated_entry.suggested_area == suggested_area
 
     pool_area = area_registry.async_get_area_by_name("Pool")
     assert pool_area is not None
@@ -3267,7 +3263,7 @@ async def test_update_suggested_area(
     assert len(update_events) == 2
     assert mock_save_2.call_count == 0
     assert updated_entry != entry
-    assert updated_entry.suggested_area == "Other"
+    assert updated_entry.area_id == pool_area.id
 
 
 async def test_cleanup_device_registry(
@@ -3475,7 +3471,6 @@ async def test_restore_device(
         name=None,
         primary_config_entry=entry_id,
         serial_number=None,
-        suggested_area=None,
         sw_version=None,
     )
     # This will restore the original device, user customizations of
@@ -4905,3 +4900,36 @@ async def test_connections_validator() -> None:
     """Test checking connections validator."""
     with pytest.raises(ValueError, match="Invalid mac address format"):
         dr.DeviceEntry(connections={(dr.CONNECTION_NETWORK_MAC, "123456ABCDEF")})
+
+
+async def test_suggested_area_deprecation(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Make sure we do not duplicate entries."""
+    entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        sw_version="sw-version",
+        name="name",
+        manufacturer="manufacturer",
+        model="model",
+        suggested_area="Game Room",
+    )
+
+    game_room_area = area_registry.async_get_area_by_name("Game Room")
+    assert game_room_area is not None
+    assert len(area_registry.areas) == 1
+
+    assert len(device_registry.devices) == 1
+    assert entry.area_id == game_room_area.id
+    assert entry.suggested_area == "Game Room"
+
+    assert (
+        "The deprecated function suggested_area was called. It will be removed in "
+        "HA Core 2026.9. Use code which ignores suggested_area instead"
+    ) in caplog.text
