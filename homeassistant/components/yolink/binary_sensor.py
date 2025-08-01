@@ -11,6 +11,8 @@ from yolink.const import (
     ATTR_DEVICE_DOOR_SENSOR,
     ATTR_DEVICE_LEAK_SENSOR,
     ATTR_DEVICE_MOTION_SENSOR,
+    ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER,
+    ATTR_DEVICE_SMOKE_ALARM,
     ATTR_DEVICE_VIBRATION_SENSOR,
     ATTR_DEVICE_WATER_METER_CONTROLLER,
 )
@@ -51,6 +53,8 @@ SENSOR_DEVICE_TYPE = [
     ATTR_DEVICE_VIBRATION_SENSOR,
     ATTR_DEVICE_CO_SMOKE_SENSOR,
     ATTR_DEVICE_WATER_METER_CONTROLLER,
+    ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER,
+    ATTR_DEVICE_SMOKE_ALARM,
 ]
 
 
@@ -88,16 +92,24 @@ SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
     YoLinkBinarySensorEntityDescription(
         key="smoke_detected",
         device_class=BinarySensorDeviceClass.SMOKE,
-        value=lambda state: state.get("smokeAlarm"),
-        exists_fn=lambda device: device.device_type == ATTR_DEVICE_CO_SMOKE_SENSOR,
+        value=lambda state: state.get("smokeAlarm") is True
+        or state.get("denseSmokeAlarm") is True,
+        exists_fn=lambda device: device.device_type
+        in [ATTR_DEVICE_CO_SMOKE_SENSOR, ATTR_DEVICE_SMOKE_ALARM],
     ),
     YoLinkBinarySensorEntityDescription(
         key="pipe_leak_detected",
         state_key="alarm",
         device_class=BinarySensorDeviceClass.MOISTURE,
         value=lambda state: state.get("leak") if state is not None else None,
+        # This property will be lost during valve operation.
+        should_update_entity=lambda value: value is not None,
         exists_fn=lambda device: (
-            device.device_type == ATTR_DEVICE_WATER_METER_CONTROLLER
+            device.device_type
+            in [
+                ATTR_DEVICE_WATER_METER_CONTROLLER,
+                ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER,
+            ]
         ),
     ),
     YoLinkBinarySensorEntityDescription(

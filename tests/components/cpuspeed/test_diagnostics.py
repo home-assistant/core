@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 

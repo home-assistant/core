@@ -1,0 +1,98 @@
+# serializer version: 1
+# name: test_entity_registry[switch.none_alarm_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.none_alarm_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Alarm (1)',
+    'platform': 'squeezebox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_alarm_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_registry[switch.none_alarm_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'alarm_id': '1',
+      'friendly_name': 'Alarm (1)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.none_alarm_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_entity_registry[switch.none_alarms_enabled-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.none_alarms_enabled',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Alarms enabled',
+    'platform': 'squeezebox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarms_enabled',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_alarms_enabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entity_registry[switch.none_alarms_enabled-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Alarms enabled',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.none_alarms_enabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

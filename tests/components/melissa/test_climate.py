@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,

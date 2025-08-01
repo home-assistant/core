@@ -5,7 +5,7 @@ from pytest_unordered import unordered
 
 from homeassistant.components import automation
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.netatmo import DOMAIN as NETATMO_DOMAIN
+from homeassistant.components.netatmo import DOMAIN
 from homeassistant.components.netatmo.const import (
     CLIMATE_TRIGGERS,
     INDOOR_CAMERA_TRIGGERS,
@@ -43,7 +43,7 @@ async def test_get_triggers(
     event_types,
 ) -> None:
     """Test we get the expected triggers from a netatmo devices."""
-    config_entry = MockConfigEntry(domain=NETATMO_DOMAIN, data={})
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -51,7 +51,7 @@ async def test_get_triggers(
         model=device_type,
     )
     entity_entry = entity_registry.async_get_or_create(
-        platform, NETATMO_DOMAIN, "5678", device_id=device_entry.id
+        platform, DOMAIN, "5678", device_id=device_entry.id
     )
     expected_triggers = []
     for event_type in event_types:
@@ -59,7 +59,7 @@ async def test_get_triggers(
             expected_triggers.extend(
                 {
                     "platform": "device",
-                    "domain": NETATMO_DOMAIN,
+                    "domain": DOMAIN,
                     "type": event_type,
                     "subtype": subtype,
                     "device_id": device_entry.id,
@@ -72,7 +72,7 @@ async def test_get_triggers(
             expected_triggers.append(
                 {
                     "platform": "device",
-                    "domain": NETATMO_DOMAIN,
+                    "domain": DOMAIN,
                     "type": event_type,
                     "device_id": device_entry.id,
                     "entity_id": entity_entry.id,
@@ -84,7 +84,7 @@ async def test_get_triggers(
         for trigger in await async_get_device_automations(
             hass, DeviceAutomationType.TRIGGER, device_entry.id
         )
-        if trigger["domain"] == NETATMO_DOMAIN
+        if trigger["domain"] == DOMAIN
     ]
     assert triggers == unordered(expected_triggers)
 
@@ -116,16 +116,16 @@ async def test_if_fires_on_event(
     """Test for event triggers firing."""
     mac_address = "12:34:56:AB:CD:EF"
     connection = (dr.CONNECTION_NETWORK_MAC, mac_address)
-    config_entry = MockConfigEntry(domain=NETATMO_DOMAIN, data={})
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={connection},
-        identifiers={(NETATMO_DOMAIN, mac_address)},
+        identifiers={(DOMAIN, mac_address)},
         model=camera_type,
     )
     entity_entry = entity_registry.async_get_or_create(
-        platform, NETATMO_DOMAIN, "5678", device_id=device_entry.id
+        platform, DOMAIN, "5678", device_id=device_entry.id
     )
     events = async_capture_events(hass, "netatmo_event")
 
@@ -137,7 +137,7 @@ async def test_if_fires_on_event(
                 {
                     "trigger": {
                         "platform": "device",
-                        "domain": NETATMO_DOMAIN,
+                        "domain": DOMAIN,
                         "device_id": device_entry.id,
                         "entity_id": entity_entry.id,
                         "type": event_type,
@@ -199,16 +199,16 @@ async def test_if_fires_on_event_legacy(
     """Test for event triggers firing."""
     mac_address = "12:34:56:AB:CD:EF"
     connection = (dr.CONNECTION_NETWORK_MAC, mac_address)
-    config_entry = MockConfigEntry(domain=NETATMO_DOMAIN, data={})
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={connection},
-        identifiers={(NETATMO_DOMAIN, mac_address)},
+        identifiers={(DOMAIN, mac_address)},
         model=camera_type,
     )
     entity_entry = entity_registry.async_get_or_create(
-        platform, NETATMO_DOMAIN, "5678", device_id=device_entry.id
+        platform, DOMAIN, "5678", device_id=device_entry.id
     )
     events = async_capture_events(hass, "netatmo_event")
 
@@ -220,7 +220,7 @@ async def test_if_fires_on_event_legacy(
                 {
                     "trigger": {
                         "platform": "device",
-                        "domain": NETATMO_DOMAIN,
+                        "domain": DOMAIN,
                         "device_id": device_entry.id,
                         "entity_id": entity_entry.entity_id,
                         "type": event_type,
@@ -279,16 +279,16 @@ async def test_if_fires_on_event_with_subtype(
     """Test for event triggers firing."""
     mac_address = "12:34:56:AB:CD:EF"
     connection = (dr.CONNECTION_NETWORK_MAC, mac_address)
-    config_entry = MockConfigEntry(domain=NETATMO_DOMAIN, data={})
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={connection},
-        identifiers={(NETATMO_DOMAIN, mac_address)},
+        identifiers={(DOMAIN, mac_address)},
         model=camera_type,
     )
     entity_entry = entity_registry.async_get_or_create(
-        platform, NETATMO_DOMAIN, "5678", device_id=device_entry.id
+        platform, DOMAIN, "5678", device_id=device_entry.id
     )
     events = async_capture_events(hass, "netatmo_event")
 
@@ -300,7 +300,7 @@ async def test_if_fires_on_event_with_subtype(
                 {
                     "trigger": {
                         "platform": "device",
-                        "domain": NETATMO_DOMAIN,
+                        "domain": DOMAIN,
                         "device_id": device_entry.id,
                         "entity_id": entity_entry.id,
                         "type": event_type,
@@ -358,16 +358,16 @@ async def test_if_invalid_device(
     """Test for event triggers firing."""
     mac_address = "12:34:56:AB:CD:EF"
     connection = (dr.CONNECTION_NETWORK_MAC, mac_address)
-    config_entry = MockConfigEntry(domain=NETATMO_DOMAIN, data={})
+    config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={connection},
-        identifiers={(NETATMO_DOMAIN, mac_address)},
+        identifiers={(DOMAIN, mac_address)},
         model=device_type,
     )
     entity_entry = entity_registry.async_get_or_create(
-        platform, NETATMO_DOMAIN, "5678", device_id=device_entry.id
+        platform, DOMAIN, "5678", device_id=device_entry.id
     )
 
     assert await async_setup_component(
@@ -378,7 +378,7 @@ async def test_if_invalid_device(
                 {
                     "trigger": {
                         "platform": "device",
-                        "domain": NETATMO_DOMAIN,
+                        "domain": DOMAIN,
                         "device_id": device_entry.id,
                         "entity_id": entity_entry.id,
                         "type": event_type,

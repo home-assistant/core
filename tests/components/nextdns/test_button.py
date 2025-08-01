@@ -6,7 +6,7 @@ from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
 from nextdns import ApiError, InvalidApiKeyError
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.nextdns.const import DOMAIN

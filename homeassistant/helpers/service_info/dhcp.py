@@ -12,3 +12,9 @@ class DhcpServiceInfo(BaseServiceInfo):
     ip: str
     hostname: str
     macaddress: str
+    """The MAC address of the device.
+
+    Please note that for historical reason the DHCP service will always format it
+    as a lowercase string without colons.
+    eg. "AA:BB:CC:12:34:56" is stored as "aabbcc123456"
+    """

@@ -23,21 +23,16 @@ from tests.common import MockConfigEntry
 
 async def test_button_event_creation(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_mozart_client: AsyncMock,
+    integration: None,
     entity_registry: EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test button event entities are created."""
 
-    # Load entry
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
     # Add Button Event entity ids
     entity_ids = [
         f"event.beosound_balance_11111111_{underscore(button_type)}".replace(
-            "preset", "favourite_"
+            "preset", "favorite_"
         )
         for button_type in DEVICE_BUTTONS
     ]
@@ -77,14 +72,12 @@ async def test_button_event_creation_beoconnect_core(
 
 async def test_button(
     hass: HomeAssistant,
+    integration: None,
     mock_config_entry: MockConfigEntry,
     mock_mozart_client: AsyncMock,
     entity_registry: EntityRegistry,
 ) -> None:
     """Test button event entity."""
-    # Load entry
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     # Enable the entity
     entity_registry.async_update_entity(TEST_BUTTON_EVENT_ENTITY_ID, disabled_by=None)

@@ -28,10 +28,11 @@ from homeassistant.components.light import (
     LightEntityFeature,
     filter_supported_color_modes,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -39,7 +40,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util import color as color_util
 
-from ..bridge import HueBridge
+from ..bridge import HueConfigEntry
 from ..const import (
     CONF_ALLOW_HUE_GROUPS,
     CONF_ALLOW_UNREACHABLE,
@@ -139,11 +140,15 @@ def create_light(item_class, coordinator, bridge, is_group, rooms, api, item_id)
     )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: HueConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Set up the Hue lights from a config entry."""
-    bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
+    bridge = config_entry.runtime_data
     api_version = tuple(int(v) for v in bridge.api.config.apiversion.split("."))
-    rooms = {}
+    rooms: dict[str, str] = {}
 
     allow_groups = config_entry.options.get(
         CONF_ALLOW_HUE_GROUPS, DEFAULT_ALLOW_HUE_GROUPS

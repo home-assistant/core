@@ -40,7 +40,6 @@ RPC_SELECT_ENTITIES: Final = {
     "enum": RpcSelectDescription(
         key="enum",
         sub_key="value",
-        has_entity_name=True,
     ),
 }
 

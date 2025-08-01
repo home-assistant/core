@@ -45,5 +45,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "api_exception": {
+      "message": "Could not turn on/off monitoring: {error}"
+    }
   }
 }

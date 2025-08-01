@@ -22,6 +22,7 @@ import time
 from typing import Any, cast
 
 from aiohttp import ClientError, ClientResponseError, client, web
+from habluetooth import BluetoothServiceInfoBleak
 import jwt
 import voluptuous as vol
 from yarl import URL
@@ -34,6 +35,9 @@ from homeassistant.util.hass_dict import HassKey
 from . import http
 from .aiohttp_client import async_get_clientsession
 from .network import NoURLAvailableError
+from .service_info.dhcp import DhcpServiceInfo
+from .service_info.ssdp import SsdpServiceInfo
+from .service_info.zeroconf import ZeroconfServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -492,6 +496,45 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
     ) -> config_entries.ConfigFlowResult:
         """Handle a flow start."""
         return await self.async_step_pick_implementation(user_input)
+
+    async def async_step_bluetooth(
+        self, discovery_info: BluetoothServiceInfoBleak
+    ) -> config_entries.ConfigFlowResult:
+        """Handle a flow initialized by Bluetooth discovery."""
+        return await self.async_step_oauth_discovery()
+
+    async def async_step_dhcp(
+        self, discovery_info: DhcpServiceInfo
+    ) -> config_entries.ConfigFlowResult:
+        """Handle a flow initialized by DHCP discovery."""
+        return await self.async_step_oauth_discovery()
+
+    async def async_step_homekit(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> config_entries.ConfigFlowResult:
+        """Handle a flow initialized by Homekit discovery."""
+        return await self.async_step_oauth_discovery()
+
+    async def async_step_ssdp(
+        self, discovery_info: SsdpServiceInfo
+    ) -> config_entries.ConfigFlowResult:
+        """Handle a flow initialized by SSDP discovery."""
+        return await self.async_step_oauth_discovery()
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> config_entries.ConfigFlowResult:
+        """Handle a flow initialized by Zeroconf discovery."""
+        return await self.async_step_oauth_discovery()
+
+    async def async_step_oauth_discovery(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Handle a flow initialized by a discovery method."""
+        if user_input is not None:
+            return await self.async_step_user()
+        await self._async_handle_discovery_without_unique_id()
+        return self.async_show_form(step_id="oauth_discovery")
 
     @classmethod
     def async_register_implementation(

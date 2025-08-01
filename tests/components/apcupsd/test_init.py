@@ -5,7 +5,7 @@ from collections import OrderedDict
 from unittest.mock import patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.apcupsd.const import DOMAIN
 from homeassistant.components.apcupsd.coordinator import UPDATE_INTERVAL

@@ -9,12 +9,11 @@ from homematicip.base.enums import LockState, MotorState
 from homematicip.device import DoorLockDrive
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .entity import HomematicipGenericEntity
+from .hap import HomematicIPConfigEntry
 from .helpers import handle_errors
 
 _LOGGER = logging.getLogger(__name__)
@@ -36,11 +35,11 @@ DEVICE_DLD_ATTRIBUTES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HomematicIPConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP locks from a config entry."""
-    hap = hass.data[DOMAIN][config_entry.unique_id]
+    hap = config_entry.runtime_data
 
     async_add_entities(
         HomematicipDoorLockDrive(hap, device)

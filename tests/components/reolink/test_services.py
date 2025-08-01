@@ -6,7 +6,7 @@ import pytest
 from reolink_aio.api import Chime
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
-from homeassistant.components.reolink.const import DOMAIN as REOLINK_DOMAIN
+from homeassistant.components.reolink.const import DOMAIN
 from homeassistant.components.reolink.services import ATTR_RINGTONE
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID, Platform
@@ -20,8 +20,8 @@ from tests.common import MockConfigEntry
 async def test_play_chime_service_entity(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    reolink_connect: MagicMock,
-    test_chime: Chime,
+    reolink_host: MagicMock,
+    reolink_chime: Chime,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test chime play service."""
@@ -37,46 +37,46 @@ async def test_play_chime_service_entity(
     device_id = entity.device_id
 
     # Test chime play service with device
-    test_chime.play = AsyncMock()
+    reolink_chime.play = AsyncMock()
     await hass.services.async_call(
-        REOLINK_DOMAIN,
+        DOMAIN,
         "play_chime",
         {ATTR_DEVICE_ID: [device_id], ATTR_RINGTONE: "attraction"},
         blocking=True,
     )
-    test_chime.play.assert_called_once()
+    reolink_chime.play.assert_called_once()
 
     # Test errors
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            REOLINK_DOMAIN,
+            DOMAIN,
             "play_chime",
             {ATTR_DEVICE_ID: ["invalid_id"], ATTR_RINGTONE: "attraction"},
             blocking=True,
         )
 
-    test_chime.play = AsyncMock(side_effect=ReolinkError("Test error"))
+    reolink_chime.play = AsyncMock(side_effect=ReolinkError("Test error"))
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            REOLINK_DOMAIN,
+            DOMAIN,
             "play_chime",
             {ATTR_DEVICE_ID: [device_id], ATTR_RINGTONE: "attraction"},
             blocking=True,
         )
 
-    test_chime.play = AsyncMock(side_effect=InvalidParameterError("Test error"))
+    reolink_chime.play = AsyncMock(side_effect=InvalidParameterError("Test error"))
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            REOLINK_DOMAIN,
+            DOMAIN,
             "play_chime",
             {ATTR_DEVICE_ID: [device_id], ATTR_RINGTONE: "attraction"},
             blocking=True,
         )
 
-    reolink_connect.chime.return_value = None
+    reolink_host.chime.return_value = None
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            REOLINK_DOMAIN,
+            DOMAIN,
             "play_chime",
             {ATTR_DEVICE_ID: [device_id], ATTR_RINGTONE: "attraction"},
             blocking=True,
@@ -86,8 +86,8 @@ async def test_play_chime_service_entity(
 async def test_play_chime_service_unloaded(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    reolink_connect: MagicMock,
-    test_chime: Chime,
+    reolink_host: MagicMock,
+    reolink_chime: Chime,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test chime play service when config entry is unloaded."""
@@ -109,7 +109,7 @@ async def test_play_chime_service_unloaded(
     # Test chime play service
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            REOLINK_DOMAIN,
+            DOMAIN,
             "play_chime",
             {ATTR_DEVICE_ID: [device_id], ATTR_RINGTONE: "attraction"},
             blocking=True,

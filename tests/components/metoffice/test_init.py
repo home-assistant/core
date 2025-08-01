@@ -1,129 +1,65 @@
 """Tests for metoffice init."""
 
-from __future__ import annotations
-
 import datetime
+import json
 
 import pytest
 import requests_mock
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.components.metoffice.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr
+from homeassistant.util import utcnow
 
-from .const import DOMAIN, METOFFICE_CONFIG_WAVERTREE, TEST_COORDINATES_WAVERTREE
+from .const import METOFFICE_CONFIG_WAVERTREE
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
 
 
-@pytest.mark.freeze_time(datetime.datetime(2020, 4, 25, 12, tzinfo=datetime.UTC))
-@pytest.mark.parametrize(
-    ("old_unique_id", "new_unique_id", "migration_needed"),
-    [
-        (
-            f"Station Name_{TEST_COORDINATES_WAVERTREE}",
-            f"name_{TEST_COORDINATES_WAVERTREE}",
-            True,
-        ),
-        (
-            f"Weather_{TEST_COORDINATES_WAVERTREE}",
-            f"weather_{TEST_COORDINATES_WAVERTREE}",
-            True,
-        ),
-        (
-            f"Temperature_{TEST_COORDINATES_WAVERTREE}",
-            f"temperature_{TEST_COORDINATES_WAVERTREE}",
-            True,
-        ),
-        (
-            f"Feels Like Temperature_{TEST_COORDINATES_WAVERTREE}",
-            f"feels_like_temperature_{TEST_COORDINATES_WAVERTREE}",
-            True,
-        ),
-        (
-            f"Wind Speed_{TEST_COORDINATES_WAVERTREE}",
-            f"wind_speed_{TEST_COORDINATES_WAVERTREE}",
-            True,
-        ),
-        (
-            f"Wind Direction_{TEST_COORDINATES_WAVERTREE}",
-            f"wind_direction_{TEST_COORDINATES_WAVERTREE}",
-            True,
-        ),
-        (
-            f"Wind Gust_{TEST_COORDINATES_WAVERTREE}",
-            f"wind_gust_{TEST_COORDINATES_WAVERTREE}",
-            True,
-        ),
-        (
-            f"Visibility_{TEST_COORDINATES_WAVERTREE}",
-            f"visibility_{TEST_COORDINATES_WAVERTREE}",
-            True,
-        ),
-        (
-            f"Visibility Distance_{TEST_COORDINATES_WAVERTREE}",
-            f"visibility_distance_{TEST_COORDINATES_WAVERTREE}",
-            True,
-        ),
-        (
-            f"UV Index_{TEST_COORDINATES_WAVERTREE}",
-            f"uv_{TEST_COORDINATES_WAVERTREE}",
-            True,
-        ),
-        (
-            f"Probability of Precipitation_{TEST_COORDINATES_WAVERTREE}",
-            f"precipitation_{TEST_COORDINATES_WAVERTREE}",
-            True,
-        ),
-        (
-            f"Humidity_{TEST_COORDINATES_WAVERTREE}",
-            f"humidity_{TEST_COORDINATES_WAVERTREE}",
-            True,
-        ),
-        (
-            f"name_{TEST_COORDINATES_WAVERTREE}",
-            f"name_{TEST_COORDINATES_WAVERTREE}",
-            False,
-        ),
-        ("abcde", "abcde", False),
-    ],
-)
-async def test_migrate_unique_id(
+@pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+async def test_reauth_on_auth_error(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    old_unique_id: str,
-    new_unique_id: str,
-    migration_needed: bool,
     requests_mock: requests_mock.Mocker,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test unique id migration."""
+    """Test handling authentication errors and reauth flow."""
+    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
+    wavertree_daily = json.dumps(mock_json["wavertree_daily"])
+    wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
+        text=wavertree_daily,
+    )
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/hourly",
+        text=wavertree_hourly,
+    )
 
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=METOFFICE_CONFIG_WAVERTREE,
     )
     entry.add_to_hass(hass)
-
-    entity: er.RegistryEntry = entity_registry.async_get_or_create(
-        suggested_object_id="my_sensor",
-        disabled_by=None,
-        domain=SENSOR_DOMAIN,
-        platform=DOMAIN,
-        unique_id=old_unique_id,
-        config_entry=entry,
-    )
-    assert entity.unique_id == old_unique_id
-
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    if migration_needed:
-        assert (
-            entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, old_unique_id)
-            is None
-        )
+    assert len(device_registry.devices) == 1
 
-    assert (
-        entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, new_unique_id)
-        == "sensor.my_sensor"
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/daily",
+        text="",
+        status_code=401,
     )
+    requests_mock.get(
+        "https://data.hub.api.metoffice.gov.uk/sitespecific/v0/point/hourly",
+        text="",
+        status_code=401,
+    )
+
+    future_time = utcnow() + datetime.timedelta(minutes=40)
+    async_fire_time_changed(hass, future_time)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"

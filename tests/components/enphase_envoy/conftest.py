@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import jwt
+import multidict
 from pyenphase import (
     EnvoyACBPower,
     EnvoyBatteryAggregate,
@@ -101,9 +102,11 @@ async def mock_envoy(
         mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial="1234")
         mock_envoy.serial_number = "1234"
         mock = Mock()
-        mock.status_code = 200
-        mock.text = "Testing request \nreplies."
-        mock.headers = {"Hello": "World"}
+        mock.status = 200
+        aiohttp_text = AsyncMock()
+        aiohttp_text.return_value = "Testing request \nreplies."
+        mock.text = aiohttp_text
+        mock.headers = multidict.MultiDict([("Hello", "World")])
         mock_envoy.request.return_value = mock
 
         # determine fixture file name, default envoy if no request passed

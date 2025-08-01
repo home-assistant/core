@@ -252,7 +252,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         return features
 
     @property
-    def current_humidity(self) -> int | None:
+    def current_humidity(self) -> float | None:
         """Return the current humidity."""
         return self.device_data.humidity
 

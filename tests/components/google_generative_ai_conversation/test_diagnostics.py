@@ -35,10 +35,10 @@ async def test_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
-    mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
+    hass.config_entries.async_update_subentry(
         mock_config_entry,
-        options={
+        next(iter(mock_config_entry.subentries.values())),
+        data={
             CONF_RECOMMENDED: False,
             CONF_PROMPT: "Speak like a pirate",
             CONF_TEMPERATURE: RECOMMENDED_TEMPERATURE,

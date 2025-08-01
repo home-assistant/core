@@ -1,7 +1,5 @@
 """Test configuration for auth."""
 
-from asyncio import AbstractEventLoop
-
 import pytest
 
 from tests.typing import ClientSessionGenerator
@@ -9,7 +7,6 @@ from tests.typing import ClientSessionGenerator
 
 @pytest.fixture
 def aiohttp_client(
-    event_loop: AbstractEventLoop,
     aiohttp_client: ClientSessionGenerator,
     socket_enabled: None,
 ) -> ClientSessionGenerator:

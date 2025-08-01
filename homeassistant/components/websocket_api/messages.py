@@ -109,6 +109,19 @@ def event_message(iden: int, event: Any) -> dict[str, Any]:
     return {"id": iden, "type": "event", "event": event}
 
 
+def construct_event_message(iden: int, event: bytes) -> bytes:
+    """Construct an event message JSON."""
+    return b"".join(
+        (
+            b'{"id":',
+            str(iden).encode(),
+            b',"type":"event","event":',
+            event,
+            b"}",
+        )
+    )
+
+
 def cached_event_message(message_id_as_bytes: bytes, event: Event) -> bytes:
     """Return an event message.
 

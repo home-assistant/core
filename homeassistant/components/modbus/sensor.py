@@ -73,7 +73,9 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
         super().__init__(hass, hub, entry)
         if slave_count:
             self._count = self._count * (slave_count + 1)
-        self._coordinator: DataUpdateCoordinator[list[float] | None] | None = None
+        self._coordinator: DataUpdateCoordinator[list[float | None] | None] | None = (
+            None
+        )
         self._attr_native_unit_of_measurement = entry.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = entry.get(CONF_STATE_CLASS)
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
@@ -120,37 +122,45 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
                 self._coordinator.async_set_updated_data(None)
             self.async_write_ha_state()
             return
-
+        self._attr_available = True
         result = self.unpack_structure_result(raw_result.registers)
         if self._coordinator:
+            result_array: list[float | None] = []
             if result:
-                result_array = list(
-                    map(
-                        float if not self._value_is_int else int,
-                        result.split(","),
-                    )
-                )
+                for i in result.split(","):
+                    if i != "None":
+                        result_array.append(
+                            float(i) if not self._value_is_int else int(i)
+                        )
+                    else:
+                        result_array.append(None)
+
                 self._attr_native_value = result_array[0]
                 self._coordinator.async_set_updated_data(result_array)
             else:
                 self._attr_native_value = None
-                self._coordinator.async_set_updated_data(None)
+                result_array = (self._slave_count + 1) * [None]
+                self._coordinator.async_set_updated_data(result_array)
         else:
             self._attr_native_value = result
-        self._attr_available = self._attr_native_value is not None
         self.async_write_ha_state()
 
 
 class SlaveSensor(
-    CoordinatorEntity[DataUpdateCoordinator[list[float] | None]],
+    CoordinatorEntity[DataUpdateCoordinator[list[float | None] | None]],
     RestoreSensor,
     SensorEntity,
 ):
     """Modbus slave register sensor."""
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._attr_available
+
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[list[float] | None],
+        coordinator: DataUpdateCoordinator[list[float | None] | None],
         idx: int,
         entry: dict[str, Any],
     ) -> None:
@@ -178,4 +188,5 @@ class SlaveSensor(
         """Handle updated data from the coordinator."""
         result = self.coordinator.data
         self._attr_native_value = result[self._idx] if result else None
+        self._attr_available = result is not None
         super()._handle_coordinator_update()

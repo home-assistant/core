@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize(("unit", "temp"), [("C", "5"), ("F", "-15")])
+@pytest.mark.parametrize(("unit", "temp"), [("C", 5), ("F", -15)])
 async def test_outdoor_sensor(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -32,11 +32,11 @@ async def test_outdoor_sensor(
 
     assert temperature_state
     assert humidity_state
-    assert temperature_state.state == temp
-    assert humidity_state.state == "25"
+    assert float(temperature_state.state) == temp
+    assert float(humidity_state.state) == 25
 
 
-@pytest.mark.parametrize(("unit", "temp"), [("C", "5"), ("F", "-15")])
+@pytest.mark.parametrize(("unit", "temp"), [("C", 5), ("F", -15)])
 async def test_indoor_sensor(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -62,5 +62,5 @@ async def test_indoor_sensor(
 
     assert temperature_state
     assert humidity_state
-    assert temperature_state.state == temp
+    assert float(temperature_state.state) == temp
     assert humidity_state.state == "25"

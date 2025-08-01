@@ -3,17 +3,17 @@
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from pylamarzocco.const import SmartStandByType
+from pylamarzocco.const import MachineState, SmartStandByType, WidgetType
 from pylamarzocco.exceptions import RequestNotSuccessful
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -197,3 +197,25 @@ async def test_switch_exceptions(
             blocking=True,
         )
     assert exc_info.value.translation_key == "auto_on_off_error"
+
+
+async def test_switches_unavailable_if_machine_off(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_lamarzocco: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the La Marzocco switches are unavailable when the device is offline."""
+    mock_lamarzocco.dashboard.config[
+        WidgetType.CM_MACHINE_STATUS
+    ].status = MachineState.OFF
+    with patch("homeassistant.components.lamarzocco.PLATFORMS", [Platform.SWITCH]):
+        await async_init_integration(hass, mock_config_entry)
+
+    switches = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    for switch in switches:
+        state = hass.states.get(switch.entity_id)
+        assert state
+        assert state.state == STATE_UNAVAILABLE

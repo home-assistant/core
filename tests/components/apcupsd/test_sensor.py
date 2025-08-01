@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.apcupsd.coordinator import REQUEST_REFRESH_COOLDOWN
 from homeassistant.const import (
