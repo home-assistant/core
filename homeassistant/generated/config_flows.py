@@ -204,6 +204,7 @@ FLOWS = {
         "flipr",
         "flo",
         "flume",
+        "fluss",
         "flux_led",
         "folder_watcher",
         "forecast_solar",
