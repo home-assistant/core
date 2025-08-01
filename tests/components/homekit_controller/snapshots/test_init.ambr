@@ -33,7 +33,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '1234',
-        'suggested_area': None,
         'sw_version': '0.8.16',
       }),
       'entities': list([
@@ -663,7 +662,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'A0000A000000000A',
-        'suggested_area': None,
         'sw_version': '2.1.6',
       }),
       'entities': list([
@@ -744,7 +742,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'A0000A000000000D',
-        'suggested_area': None,
         'sw_version': '1.6.7',
       }),
       'entities': list([
@@ -1001,7 +998,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'A0000A000000000B',
-        'suggested_area': None,
         'sw_version': '1.6.7',
       }),
       'entities': list([
@@ -1258,7 +1254,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'A0000A000000000C',
-        'suggested_area': None,
         'sw_version': '1.6.7',
       }),
       'entities': list([
@@ -1519,7 +1514,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '00aa00000a0',
-        'suggested_area': None,
         'sw_version': '3.3.0',
       }),
       'entities': list([
@@ -1739,7 +1733,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '158d0007c59c6a',
-        'suggested_area': None,
         'sw_version': '0',
       }),
       'entities': list([
@@ -1915,7 +1908,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '0000000123456789',
-        'suggested_area': None,
         'sw_version': '1.4.7',
       }),
       'entities': list([
@@ -2206,7 +2198,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '111a1111a1a111',
-        'suggested_area': None,
         'sw_version': '9',
       }),
       'entities': list([
@@ -2339,7 +2330,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '00A0000000000',
-        'suggested_area': None,
         'sw_version': '1.10.931',
       }),
       'entities': list([
@@ -2852,7 +2842,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '1020301376',
-        'suggested_area': None,
         'sw_version': '1.0.0',
       }),
       'entities': list([
@@ -3323,7 +3312,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'AB3C',
-        'suggested_area': None,
         'sw_version': '1.0.0',
       }),
       'entities': list([
@@ -3497,7 +3485,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '123456789012',
-        'suggested_area': None,
         'sw_version': '4.2.394',
       }),
       'entities': list([
@@ -3978,7 +3965,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'AB1C',
-        'suggested_area': None,
         'sw_version': '1.0.0',
       }),
       'entities': list([
@@ -4152,7 +4138,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'AB2C',
-        'suggested_area': None,
         'sw_version': '1.0.0',
       }),
       'entities': list([
@@ -4330,7 +4315,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '**REDACTED**',
-        'suggested_area': None,
         'sw_version': '1.0.0',
       }),
       'entities': list([
@@ -4595,7 +4579,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '**REDACTED**',
-        'suggested_area': None,
         'sw_version': '1.0.0',
       }),
       'entities': list([
@@ -4853,7 +4836,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '**REDACTED**',
-        'suggested_area': None,
         'sw_version': '1.0.0',
       }),
       'entities': list([
@@ -5111,7 +5093,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '**REDACTED**',
-        'suggested_area': None,
         'sw_version': '1.0.0',
       }),
       'entities': list([
@@ -5369,7 +5350,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '**REDACTED**',
-        'suggested_area': None,
         'sw_version': '1.0.0',
       }),
       'entities': list([
@@ -5627,7 +5607,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '**REDACTED**',
-        'suggested_area': None,
         'sw_version': '1.0.0',
       }),
       'entities': list([
@@ -5892,7 +5871,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '**REDACTED**',
-        'suggested_area': None,
         'sw_version': '1.0.0',
       }),
       'entities': list([
@@ -6150,7 +6128,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '**REDACTED**',
-        'suggested_area': None,
         'sw_version': '1.0.0',
       }),
       'entities': list([
@@ -6408,7 +6385,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '**REDACTED**',
-        'suggested_area': None,
         'sw_version': '1.0.0',
       }),
       'entities': list([
@@ -6673,7 +6649,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '**REDACTED**',
-        'suggested_area': None,
         'sw_version': '1.0.0',
       }),
       'entities': list([
@@ -6931,7 +6906,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '**REDACTED**',
-        'suggested_area': None,
         'sw_version': '4.8.70226',
       }),
       'entities': list([
@@ -7330,7 +7304,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '**REDACTED**',
-        'suggested_area': None,
         'sw_version': '1.0.0',
       }),
       'entities': list([
@@ -7595,7 +7568,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '**REDACTED**',
-        'suggested_area': None,
         'sw_version': '1.0.0',
       }),
       'entities': list([
@@ -7857,7 +7829,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '123456789012',
-        'suggested_area': None,
         'sw_version': '4.2.394',
       }),
       'entities': list([
@@ -8342,7 +8313,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'AB3C',
-        'suggested_area': None,
         'sw_version': '1.0.0',
       }),
       'entities': list([
@@ -8466,7 +8436,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '123456789012',
-        'suggested_area': None,
         'sw_version': '4.2.394',
       }),
       'entities': list([
@@ -8766,7 +8735,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'AB1C',
-        'suggested_area': None,
         'sw_version': '1.0.0',
       }),
       'entities': list([
@@ -8940,7 +8908,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'AB2C',
-        'suggested_area': None,
         'sw_version': '1.0.0',
       }),
       'entities': list([
@@ -9118,7 +9085,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '123456789016',
-        'suggested_area': None,
         'sw_version': '4.7.340214',
       }),
       'entities': list([
@@ -9612,7 +9578,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '111111111111',
-        'suggested_area': None,
         'sw_version': '4.5.130201',
       }),
       'entities': list([
@@ -9922,7 +9887,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'AA00A0A00000',
-        'suggested_area': None,
         'sw_version': '1.2.8',
       }),
       'entities': list([
@@ -10304,7 +10268,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'AA00A0A00000',
-        'suggested_area': None,
         'sw_version': '1.2.9',
       }),
       'entities': list([
@@ -10674,7 +10637,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'C718B3-1',
-        'suggested_area': None,
         'sw_version': '5.0.18',
       }),
       'entities': list([
@@ -10895,7 +10857,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'C718B3-2',
-        'suggested_area': None,
         'sw_version': '5.0.18',
       }),
       'entities': list([
@@ -11022,7 +10983,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'cover.family_door_north',
-        'suggested_area': None,
         'sw_version': '3.6.2',
       }),
       'entities': list([
@@ -11195,7 +11155,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'homekit.bridge',
-        'suggested_area': None,
         'sw_version': '2024.2.0',
       }),
       'entities': list([
@@ -11276,7 +11235,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'cover.kitchen_window',
-        'suggested_area': None,
         'sw_version': '3.6.2',
       }),
       'entities': list([
@@ -11453,7 +11411,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'fan.ceiling_fan',
-        'suggested_area': None,
         'sw_version': '0.104.0.dev0',
       }),
       'entities': list([
@@ -11585,7 +11542,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'homekit.bridge',
-        'suggested_area': None,
         'sw_version': '0.104.0.dev0',
       }),
       'entities': list([
@@ -11666,7 +11622,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'fan.living_room_fan',
-        'suggested_area': None,
         'sw_version': '0.104.0.dev0',
       }),
       'entities': list([
@@ -11803,7 +11758,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'climate.89_living_room',
-        'suggested_area': None,
         'sw_version': '2024.2.0',
       }),
       'entities': list([
@@ -12150,7 +12104,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'homekit.bridge',
-        'suggested_area': None,
         'sw_version': '2024.2.0',
       }),
       'entities': list([
@@ -12235,7 +12188,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'homekit.bridge',
-        'suggested_area': None,
         'sw_version': '2024.2.0',
       }),
       'entities': list([
@@ -12316,7 +12268,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'light.laundry_smoke_ed78',
-        'suggested_area': None,
         'sw_version': '1.4.84',
       }),
       'entities': list([
@@ -12501,7 +12452,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'cover.family_door_north',
-        'suggested_area': None,
         'sw_version': '3.6.2',
       }),
       'entities': list([
@@ -12674,7 +12624,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'homekit.bridge',
-        'suggested_area': None,
         'sw_version': '2024.2.0',
       }),
       'entities': list([
@@ -12755,7 +12704,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'cover.kitchen_window',
-        'suggested_area': None,
         'sw_version': '3.6.2',
       }),
       'entities': list([
@@ -12932,7 +12880,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'fan.ceiling_fan',
-        'suggested_area': None,
         'sw_version': '0.104.0.dev0',
       }),
       'entities': list([
@@ -13064,7 +13011,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'homekit.bridge',
-        'suggested_area': None,
         'sw_version': '0.104.0.dev0',
       }),
       'entities': list([
@@ -13145,7 +13091,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'fan.living_room_fan',
-        'suggested_area': None,
         'sw_version': '0.104.0.dev0',
       }),
       'entities': list([
@@ -13283,7 +13228,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'homekit.bridge',
-        'suggested_area': None,
         'sw_version': '0.104.0.dev0',
       }),
       'entities': list([
@@ -13364,7 +13308,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'fan.living_room_fan',
-        'suggested_area': None,
         'sw_version': '0.104.0.dev0',
       }),
       'entities': list([
@@ -13502,7 +13445,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'climate.89_living_room',
-        'suggested_area': None,
         'sw_version': '2024.2.0',
       }),
       'entities': list([
@@ -13858,7 +13800,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'homekit.bridge',
-        'suggested_area': None,
         'sw_version': '2024.2.0',
       }),
       'entities': list([
@@ -13943,7 +13884,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'homekit.bridge',
-        'suggested_area': None,
         'sw_version': '2024.2.0',
       }),
       'entities': list([
@@ -14024,7 +13964,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'humidifier.humidifier_182a',
-        'suggested_area': None,
         'sw_version': '2024.2.0',
       }),
       'entities': list([
@@ -14216,7 +14155,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'homekit.bridge',
-        'suggested_area': None,
         'sw_version': '2024.2.0',
       }),
       'entities': list([
@@ -14297,7 +14235,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'humidifier.humidifier_182a',
-        'suggested_area': None,
         'sw_version': '2024.2.0',
       }),
       'entities': list([
@@ -14489,7 +14426,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'homekit.bridge',
-        'suggested_area': None,
         'sw_version': '2024.2.0',
       }),
       'entities': list([
@@ -14570,7 +14506,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'light.laundry_smoke_ed78',
-        'suggested_area': None,
         'sw_version': '1.4.84',
       }),
       'entities': list([
@@ -14770,7 +14705,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '00000001',
-        'suggested_area': None,
         'sw_version': '1.0.0',
       }),
       'entities': list([
@@ -14983,7 +14917,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '6623462395276914',
-        'suggested_area': None,
         'sw_version': '1.46.13',
       }),
       'entities': list([
@@ -15129,7 +15062,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '6623462395276939',
-        'suggested_area': None,
         'sw_version': '1.46.13',
       }),
       'entities': list([
@@ -15275,7 +15207,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '6623462403113447',
-        'suggested_area': None,
         'sw_version': '1.46.13',
       }),
       'entities': list([
@@ -15421,7 +15352,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '6623462403233419',
-        'suggested_area': None,
         'sw_version': '1.46.13',
       }),
       'entities': list([
@@ -15567,7 +15497,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '6623462412411853',
-        'suggested_area': None,
         'sw_version': '1.46.13',
       }),
       'entities': list([
@@ -15723,7 +15652,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '6623462412413293',
-        'suggested_area': None,
         'sw_version': '1.46.13',
       }),
       'entities': list([
@@ -15879,7 +15807,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '6623462389072572',
-        'suggested_area': None,
         'sw_version': '45.1.17846',
       }),
       'entities': list([
@@ -16212,7 +16139,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '6623462378982941',
-        'suggested_area': None,
         'sw_version': '1.46.13',
       }),
       'entities': list([
@@ -16345,7 +16271,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '6623462378983942',
-        'suggested_area': None,
         'sw_version': '1.46.13',
       }),
       'entities': list([
@@ -16478,7 +16403,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '6623462379122122',
-        'suggested_area': None,
         'sw_version': '1.46.13',
       }),
       'entities': list([
@@ -16611,7 +16535,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '6623462379123707',
-        'suggested_area': None,
         'sw_version': '1.46.13',
       }),
       'entities': list([
@@ -16744,7 +16667,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '6623462383114163',
-        'suggested_area': None,
         'sw_version': '1.46.13',
       }),
       'entities': list([
@@ -16877,7 +16799,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '6623462383114193',
-        'suggested_area': None,
         'sw_version': '1.46.13',
       }),
       'entities': list([
@@ -17010,7 +16931,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '6623462385996792',
-        'suggested_area': None,
         'sw_version': '1.46.13',
       }),
       'entities': list([
@@ -17143,7 +17063,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '123456',
-        'suggested_area': None,
         'sw_version': '1.32.1932126170',
       }),
       'entities': list([
@@ -17228,7 +17147,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'AAAA011111111111',
-        'suggested_area': None,
         'sw_version': '2.2.15',
       }),
       'entities': list([
@@ -17380,7 +17298,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'EUCP03190xxxxx48',
-        'suggested_area': None,
         'sw_version': '2.3.7',
       }),
       'entities': list([
@@ -17558,7 +17475,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'CNNT061751001372',
-        'suggested_area': None,
         'sw_version': '1.0.3',
       }),
       'entities': list([
@@ -17777,7 +17693,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'XXXXXXXX',
-        'suggested_area': None,
         'sw_version': '3.40.XX',
       }),
       'entities': list([
@@ -18076,7 +17991,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '999AAAAAA999',
-        'suggested_area': None,
         'sw_version': '04.71.04',
       }),
       'entities': list([
@@ -18267,7 +18181,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '39024290',
-        'suggested_area': None,
         'sw_version': '001.005',
       }),
       'entities': list([
@@ -18399,7 +18312,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '12344331',
-        'suggested_area': None,
         'sw_version': '08.08',
       }),
       'entities': list([
@@ -18484,7 +18396,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'HH41234',
-        'suggested_area': None,
         'sw_version': '4.2.3',
       }),
       'entities': list([
@@ -18779,7 +18690,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'BB1121',
-        'suggested_area': None,
         'sw_version': '4.1.9',
       }),
       'entities': list([
@@ -18916,7 +18826,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'AAAAAAA000',
-        'suggested_area': None,
         'sw_version': '2.8.1',
       }),
       'entities': list([
@@ -19265,7 +19174,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'AAAA011111111111',
-        'suggested_area': None,
         'sw_version': '1.4.40',
       }),
       'entities': list([
@@ -19549,7 +19457,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'g738658',
-        'suggested_area': None,
         'sw_version': '80.0.0',
       }),
       'entities': list([
@@ -19859,7 +19766,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '1234',
-        'suggested_area': None,
         'sw_version': '1.0.3',
       }),
       'entities': list([
@@ -20030,7 +19936,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'AAAAAAAAAAAAA',
-        'suggested_area': None,
         'sw_version': '59',
       }),
       'entities': list([
@@ -20355,7 +20260,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '00aa0000aa0a',
-        'suggested_area': None,
         'sw_version': '1.0.4',
       }),
       'entities': list([
@@ -20800,7 +20704,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '1.0.0',
-        'suggested_area': None,
         'sw_version': '3.0.8',
       }),
       'entities': list([
@@ -20973,7 +20876,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '0101.3521.0436',
-        'suggested_area': None,
         'sw_version': '1.3.0',
       }),
       'entities': list([
@@ -21054,7 +20956,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '',
-        'suggested_area': None,
         'sw_version': '',
       }),
       'entities': list([
@@ -21231,7 +21132,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '1.0.0',
-        'suggested_area': None,
         'sw_version': '3.0.8',
       }),
       'entities': list([
@@ -21404,7 +21304,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '1.0.0',
-        'suggested_area': None,
         'sw_version': '3.0.8',
       }),
       'entities': list([
@@ -21577,7 +21476,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '1.0.0',
-        'suggested_area': None,
         'sw_version': '3.0.8',
       }),
       'entities': list([
@@ -21750,7 +21648,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '0401.3521.0679',
-        'suggested_area': None,
         'sw_version': '1.3.0',
       }),
       'entities': list([
@@ -21831,7 +21728,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '1.0.0',
-        'suggested_area': None,
         'sw_version': '3.0.8',
       }),
       'entities': list([
@@ -22008,7 +21904,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'AAAAAAA000',
-        'suggested_area': None,
         'sw_version': '004.027.000',
       }),
       'entities': list([
@@ -22136,7 +22031,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '1234567890abcd',
-        'suggested_area': None,
         'sw_version': '',
       }),
       'entities': list([
@@ -22325,7 +22219,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '**REDACTED**',
-        'suggested_area': None,
         'sw_version': '0.0.0',
       }),
       'entities': list([
@@ -22455,7 +22348,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '**REDACTED**',
-        'suggested_area': None,
         'sw_version': '3.3.0',
       }),
       'entities': list([
@@ -22869,7 +22761,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '**REDACTED**',
-        'suggested_area': None,
         'sw_version': '16.0.0',
       }),
       'entities': list([
@@ -23098,7 +22989,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'a1a11a1',
-        'suggested_area': None,
         'sw_version': '70',
       }),
       'entities': list([
@@ -23179,7 +23069,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'a11b111',
-        'suggested_area': None,
         'sw_version': '16',
       }),
       'entities': list([
@@ -23404,7 +23293,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '1111111a114a111a',
-        'suggested_area': None,
         'sw_version': '48',
       }),
       'entities': list([
@@ -23534,7 +23422,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '**REDACTED**',
-        'suggested_area': None,
         'sw_version': '0.0.0',
       }),
       'entities': list([
@@ -23664,7 +23551,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': '**REDACTED**',
-        'suggested_area': None,
         'sw_version': '15.0.0',
       }),
       'entities': list([
@@ -23793,7 +23679,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'AM01121849000327',
-        'suggested_area': None,
         'sw_version': '3.121.2',
       }),
       'entities': list([
@@ -24113,7 +23998,6 @@
         'name_by_user': None,
         'primary_config_entry': 'TestData',
         'serial_number': 'EU0121203xxxxx07',
-        'suggested_area': None,
         'sw_version': '1.101.2',
       }),
       'entities': list([

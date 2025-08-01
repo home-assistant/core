@@ -26,7 +26,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '10001',
-    'suggested_area': None,
     'sw_version': '9682R7A',
     'via_device_id': None,
   })
@@ -58,7 +57,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '10002',
-    'suggested_area': None,
     'sw_version': '9682R7B',
     'via_device_id': None,
   })
@@ -90,7 +88,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '10003',
-    'suggested_area': None,
     'sw_version': '9682R7C',
     'via_device_id': None,
   })
