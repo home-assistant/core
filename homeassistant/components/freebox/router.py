@@ -14,6 +14,7 @@ from typing import Any
 
 from freebox_api import Freepybox
 from freebox_api.api.call import Call
+from freebox_api.api.fw import Fw as PortForwarding
 from freebox_api.api.home import Home
 from freebox_api.api.wifi import Wifi
 from freebox_api.exceptions import HttpRequestError, NotOpenError
@@ -129,6 +130,7 @@ class FreeboxRouter:
         self.call_list: list[dict[str, Any]] = []
         self.home_granted = True
         self.home_devices: dict[str, Any] = {}
+        self.port_forwarding_config: dict[int, dict[str, Any]] = {}
         self.listeners: list[Callable[[], None]] = []
 
     async def update_all(self, now: datetime | None = None) -> None:
@@ -136,6 +138,7 @@ class FreeboxRouter:
         await self.update_device_trackers()
         await self.update_sensors()
         await self.update_home_devices()
+        await self.update_port_forwarding_configs()
 
     async def update_device_trackers(self) -> None:
         """Update Freebox devices."""
@@ -264,6 +267,16 @@ class FreeboxRouter:
         if new_device:
             async_dispatcher_send(self.hass, self.signal_home_device_new)
 
+    async def update_port_forwarding_configs(self) -> None:
+        """Update port forward config."""
+        all_port_forwarding_config = (
+            await self.port_forwarding.get_all_port_forwarding_configuration()
+        )
+        self.port_forwarding_config = {
+            port_forwarding["id"]: port_forwarding
+            for port_forwarding in all_port_forwarding_config
+        }
+
     async def reboot(self) -> None:
         """Reboot the Freebox."""
         await self._api.system.reboot()
@@ -329,3 +342,8 @@ class FreeboxRouter:
     def home(self) -> Home:
         """Return the home."""
         return self._api.home
+
+    @property
+    def port_forwarding(self) -> PortForwarding:
+        """Return the port forwarding."""
+        return self._api.fw
