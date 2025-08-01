@@ -62,14 +62,9 @@ async def _get_target_coordinators(
     referenced = async_extract_referenced_entity_ids(hass, call, expand_group=True)
     target_device_ids = referenced.referenced_devices
 
-    # If no targets specified, target all kiosker devices
+    # If no targets specified, fail the action
     if not target_device_ids:
-        coordinators.extend(
-            config_entry.runtime_data
-            for config_entry in hass.config_entries.async_entries(DOMAIN)
-            if config_entry.runtime_data
-        )
-        return coordinators
+        raise ValueError("No target devices specified for Kiosker service call")
 
     # Get device registry
     device_registry = dr.async_get(hass)
