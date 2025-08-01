@@ -32,10 +32,10 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
-  entity-unavailable: done
+  entity-unavailable: todo
   integration-owner: done
-  log-when-unavailable: done
-  parallel-updates: done
+  log-when-unavailable: todo
+  parallel-updates: todo
   reauthentication-flow: todo
   test-coverage: done
 
