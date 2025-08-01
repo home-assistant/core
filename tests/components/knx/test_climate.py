@@ -328,6 +328,8 @@ async def test_climate_preset_mode(
                 ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
                 ClimateSchema.CONF_OPERATION_MODE_ADDRESS: "1/2/6",
                 ClimateSchema.CONF_OPERATION_MODE_STATE_ADDRESS: "1/2/7",
+                ClimateSchema.CONF_HEAT_COOL_ADDRESS: "1/2/8",
+                ClimateSchema.CONF_HEAT_COOL_STATE_ADDRESS: "1/2/9",
             }
         }
     )
@@ -340,6 +342,8 @@ async def test_climate_preset_mode(
     await knx.receive_response("1/2/5", RAW_FLOAT_22_0)
     await knx.assert_read("1/2/7")
     await knx.receive_response("1/2/7", (0x01,))  # comfort
+    await knx.assert_read("1/2/9")
+    await knx.receive_response("1/2/9", True)  # heat
 
     knx.assert_state("climate.test", HVACMode.HEAT, preset_mode="comfort")
     # set preset mode
@@ -350,7 +354,7 @@ async def test_climate_preset_mode(
         blocking=True,
     )
     await knx.assert_write("1/2/6", (0x04,))
-    knx.assert_state("climate.test", HVACMode.HEAT, preset_mode="building_protection")
+    knx.assert_state("climate.test", HVACMode.OFF, preset_mode="building_protection")
 
     # set preset mode
     await hass.services.async_call(
@@ -361,6 +365,33 @@ async def test_climate_preset_mode(
     )
     await knx.assert_write("1/2/6", (0x03,))
     knx.assert_state("climate.test", HVACMode.HEAT, preset_mode="economy")
+
+    # turn off
+    await hass.services.async_call(
+        "climate",
+        "turn_off",
+        {"entity_id": "climate.test"},
+        blocking=True,
+    )
+    await knx.assert_write("1/2/6", (0x04,))
+    knx.assert_state(
+        "climate.test",
+        HVACMode.OFF,
+        preset_mode="building_protection",
+        hvac_action="off",
+    )
+
+    # turn on
+    await hass.services.async_call(
+        "climate",
+        "turn_on",
+        {"entity_id": "climate.test"},
+        blocking=True,
+    )
+    await knx.assert_write("1/2/6", (0x01,))
+    knx.assert_state(
+        "climate.test", HVACMode.HEAT, preset_mode="comfort", hvac_action="heating"
+    )
 
     assert len(knx.xknx.devices) == 2
     assert len(knx.xknx.devices[0].device_updated_cbs) == 2
