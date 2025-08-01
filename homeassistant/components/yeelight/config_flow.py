@@ -17,7 +17,7 @@ from homeassistant.config_entries import (
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.core import callback
@@ -298,7 +298,7 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
         return MODEL_UNKNOWN
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle a option flow for Yeelight."""
 
     async def async_step_init(

@@ -27,7 +27,7 @@ from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import ATTR_DOMAIN, BASE_PLATFORMS, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.storage import Store
@@ -75,6 +75,11 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
+
+
+def gen_uuid() -> str:
+    """Generate a new UUID."""
+    return uuid.uuid4().hex
 
 
 @dataclass
@@ -184,7 +189,7 @@ class Analytics:
             return
 
         if self._data.uuid is None:
-            self._data.uuid = uuid.uuid4().hex
+            self._data.uuid = gen_uuid()
             await self._store.async_save(dataclass_asdict(self._data))
 
         if self.supervisor:
@@ -381,3 +386,82 @@ def _domains_from_yaml_config(yaml_configuration: dict[str, Any]) -> set[str]:
     ).values():
         domains.update(platforms)
     return domains
+
+
+async def async_devices_payload(hass: HomeAssistant) -> dict:
+    """Return the devices payload."""
+    integrations_without_model_id: set[str] = set()
+    devices: list[dict[str, Any]] = []
+    dev_reg = dr.async_get(hass)
+    # Devices that need via device info set
+    new_indexes: dict[str, int] = {}
+    via_devices: dict[str, str] = {}
+
+    seen_integrations = set()
+
+    for device in dev_reg.devices.values():
+        # Ignore services
+        if device.entry_type:
+            continue
+
+        if not device.primary_config_entry:
+            continue
+
+        config_entry = hass.config_entries.async_get_entry(device.primary_config_entry)
+
+        if config_entry is None:
+            continue
+
+        seen_integrations.add(config_entry.domain)
+
+        if not device.model_id:
+            integrations_without_model_id.add(config_entry.domain)
+            continue
+
+        if not device.manufacturer:
+            continue
+
+        new_indexes[device.id] = len(devices)
+        devices.append(
+            {
+                "integration": config_entry.domain,
+                "manufacturer": device.manufacturer,
+                "model_id": device.model_id,
+                "model": device.model,
+                "sw_version": device.sw_version,
+                "hw_version": device.hw_version,
+                "has_configuration_url": device.configuration_url is not None,
+                "via_device": None,
+            }
+        )
+        if device.via_device_id:
+            via_devices[device.id] = device.via_device_id
+
+    for from_device, via_device in via_devices.items():
+        if via_device not in new_indexes:
+            continue
+        devices[new_indexes[from_device]]["via_device"] = new_indexes[via_device]
+
+    integrations = {
+        domain: integration
+        for domain, integration in (
+            await async_get_integrations(hass, seen_integrations)
+        ).items()
+        if isinstance(integration, Integration)
+    }
+
+    for device_info in devices:
+        if integration := integrations.get(device_info["integration"]):
+            device_info["is_custom_integration"] = not integration.is_built_in
+
+    return {
+        "version": "home-assistant:1",
+        "no_model_id": sorted(
+            [
+                domain
+                for domain in integrations_without_model_id
+                if domain in integrations and integrations[domain].is_built_in
+            ]
+        ),
+        "devices": devices,
+    }

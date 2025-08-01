@@ -1167,6 +1167,10 @@ def test_vacuum_entity(linter: UnittestLinter, type_hint_checker: BaseChecker) -
     class MyVacuum( #@
         StateVacuumEntity
     ):
+        @property
+        def activity(self) -> VacuumActivity | None:
+            pass
+
         def send_command(
             self,
             command: str,

@@ -29,7 +29,7 @@
   "services": {
     "dismiss": {
       "name": "Dismiss",
-      "description": "Dismisses a html5 notification.",
+      "description": "Dismisses an HTML5 notification.",
       "fields": {
         "target": {
           "name": "Target",

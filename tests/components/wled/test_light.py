@@ -373,6 +373,7 @@ async def test_single_segment_with_keep_main_light(
     hass.config_entries.async_update_entry(
         init_integration, options={CONF_KEEP_MAIN_LIGHT: True}
     )
+    await hass.config_entries.async_reload(init_integration.entry_id)
     await hass.async_block_till_done()
 
     assert (state := hass.states.get("light.wled_rgb_light_main"))

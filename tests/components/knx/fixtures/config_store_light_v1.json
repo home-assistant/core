@@ -1,0 +1,140 @@
+{
+  "version": 1,
+  "minor_version": 1,
+  "key": "knx/config_store.json",
+  "data": {
+    "entities": {
+      "light": {
+        "knx_es_01JWDFHP1ZG6NT62BX6ENR3MG7": {
+          "entity": {
+            "name": "rgbw",
+            "device_info": null,
+            "entity_category": null
+          },
+          "knx": {
+            "_light_color_mode_schema": "default",
+            "ga_switch": {
+              "write": "1/0/1",
+              "state": "1/0/0",
+              "passive": []
+            },
+            "ga_brightness": {
+              "write": "1/1/1",
+              "state": "1/1/0",
+              "passive": []
+            },
+            "ga_color": {
+              "write": "1/2/1",
+              "dpt": "251.600",
+              "state": "1/2/0",
+              "passive": []
+            },
+            "sync_state": true,
+            "color_temp_min": 2700,
+            "color_temp_max": 6000
+          }
+        },
+        "knx_es_01JWDFKBG3PYPPRQDJZ3N3PMCB": {
+          "entity": {
+            "name": "individual colors",
+            "device_info": null,
+            "entity_category": null
+          },
+          "knx": {
+            "_light_color_mode_schema": "individual",
+            "ga_red_switch": {
+              "write": "2/1/1",
+              "state": null,
+              "passive": []
+            },
+            "ga_red_brightness": {
+              "write": "2/1/2",
+              "state": null,
+              "passive": []
+            },
+            "ga_green_switch": {
+              "write": "2/2/1",
+              "state": null,
+              "passive": []
+            },
+            "ga_green_brightness": {
+              "write": "2/2/2",
+              "state": null,
+              "passive": []
+            },
+            "ga_blue_switch": {
+              "write": "2/3/1",
+              "state": null,
+              "passive": []
+            },
+            "ga_blue_brightness": {
+              "write": "2/3/2",
+              "state": null,
+              "passive": []
+            },
+            "sync_state": true,
+            "color_temp_min": 2700,
+            "color_temp_max": 6000
+          }
+        },
+        "knx_es_01JWDFMSYYRDBDJYJR1K29ABEE": {
+          "entity": {
+            "name": "hsv",
+            "device_info": null,
+            "entity_category": null
+          },
+          "knx": {
+            "_light_color_mode_schema": "hsv",
+            "ga_switch": {
+              "write": "3/0/1",
+              "state": null,
+              "passive": []
+            },
+            "ga_brightness": {
+              "write": "3/1/1",
+              "state": null,
+              "passive": []
+            },
+            "ga_hue": {
+              "write": "3/2/1",
+              "state": "3/2/0",
+              "passive": []
+            },
+            "ga_saturation": {
+              "write": "3/3/1",
+              "state": "3/3/0",
+              "passive": []
+            },
+            "sync_state": true,
+            "color_temp_min": 2700,
+            "color_temp_max": 6000
+          }
+        },
+        "knx_es_01JWDFP1RH50JXP5D2SSSRKWWT": {
+          "entity": {
+            "name": "ct",
+            "device_info": null,
+            "entity_category": null
+          },
+          "knx": {
+            "_light_color_mode_schema": "default",
+            "ga_switch": {
+              "write": "4/0/1",
+              "state": "4/0/0",
+              "passive": []
+            },
+            "ga_color_temp": {
+              "write": "4/1/1",
+              "dpt": "7.600",
+              "state": "4/1/0",
+              "passive": []
+            },
+            "color_temp_max": 4788,
+            "sync_state": true,
+            "color_temp_min": 2700
+          }
+        }
+      }
+    }
+  }
+}

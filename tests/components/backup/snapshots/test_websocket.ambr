@@ -6299,20 +6299,3 @@
     'type': 'event',
   })
 # ---
-# name: test_subscribe_event_early
-  dict({
-    'event': dict({
-      'manager_state': 'idle',
-    }),
-    'id': 1,
-    'type': 'event',
-  })
-# ---
-# name: test_subscribe_event_early.1
-  dict({
-    'id': 1,
-    'result': None,
-    'success': True,
-    'type': 'result',
-  })
-# ---

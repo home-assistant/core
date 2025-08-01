@@ -82,6 +82,14 @@ send_photo:
       example: "My image"
       selector:
         text:
+    authentication:
+      selector:
+        select:
+          options:
+            - "basic"
+            - "digest"
+            - "bearer_token"
+          translation_key: "authentication"
     username:
       example: myuser
       selector:
@@ -90,13 +98,6 @@ send_photo:
       example: myuser_pwd
       selector:
         text:
-    authentication:
-      default: digest
-      selector:
-        select:
-          options:
-            - "digest"
-            - "bearer_token"
     target:
       example: "[12345, 67890] or 12345"
       selector:
@@ -109,6 +110,7 @@ send_photo:
             - "markdown"
             - "markdownv2"
             - "plain_text"
+          translation_key: "parse_mode"
     disable_notification:
       selector:
         boolean:
@@ -162,6 +164,14 @@ send_sticker:
       example: CAACAgIAAxkBAAEDDldhZD-hqWclr6krLq-FWSfCrGNmOQAC9gAD9HsZAAFeYY-ltPYnrCEE
       selector:
         text:
+    authentication:
+      selector:
+        select:
+          options:
+            - "basic"
+            - "digest"
+            - "bearer_token"
+          translation_key: "authentication"
     username:
       example: myuser
       selector:
@@ -170,13 +180,6 @@ send_sticker:
       example: myuser_pwd
       selector:
         text:
-    authentication:
-      default: digest
-      selector:
-        select:
-          options:
-            - "digest"
-            - "bearer_token"
     target:
       example: "[12345, 67890] or 12345"
       selector:
@@ -234,6 +237,14 @@ send_animation:
       example: "My animation"
       selector:
         text:
+    authentication:
+      selector:
+        select:
+          options:
+            - "basic"
+            - "digest"
+            - "bearer_token"
+          translation_key: "authentication"
     username:
       example: myuser
       selector:
@@ -242,13 +253,6 @@ send_animation:
       example: myuser_pwd
       selector:
         text:
-    authentication:
-      default: digest
-      selector:
-        select:
-          options:
-            - "digest"
-            - "bearer_token"
     target:
       example: "[12345, 67890] or 12345"
       selector:
@@ -261,6 +265,7 @@ send_animation:
             - "markdown"
             - "markdownv2"
             - "plain_text"
+          translation_key: "parse_mode"
     disable_notification:
       selector:
         boolean:
@@ -314,6 +319,14 @@ send_video:
       example: "My video"
       selector:
         text:
+    authentication:
+      selector:
+        select:
+          options:
+            - "basic"
+            - "digest"
+            - "bearer_token"
+          translation_key: "authentication"
     username:
       example: myuser
       selector:
@@ -322,13 +335,6 @@ send_video:
       example: myuser_pwd
       selector:
         text:
-    authentication:
-      default: digest
-      selector:
-        select:
-          options:
-            - "digest"
-            - "bearer_token"
     target:
       example: "[12345, 67890] or 12345"
       selector:
@@ -341,6 +347,7 @@ send_video:
             - "markdown"
             - "markdownv2"
             - "plain_text"
+          translation_key: "parse_mode"
     disable_notification:
       selector:
         boolean:
@@ -394,6 +401,14 @@ send_voice:
       example: "My microphone recording"
       selector:
         text:
+    authentication:
+      selector:
+        select:
+          options:
+            - "basic"
+            - "digest"
+            - "bearer_token"
+          translation_key: "authentication"
     username:
       example: myuser
       selector:
@@ -402,13 +417,6 @@ send_voice:
       example: myuser_pwd
       selector:
         text:
-    authentication:
-      default: digest
-      selector:
-        select:
-          options:
-            - "digest"
-            - "bearer_token"
     target:
       example: "[12345, 67890] or 12345"
       selector:
@@ -466,6 +474,14 @@ send_document:
       example: Document Title xy
       selector:
         text:
+    authentication:
+      selector:
+        select:
+          options:
+            - "basic"
+            - "digest"
+            - "bearer_token"
+          translation_key: "authentication"
     username:
       example: myuser
       selector:
@@ -474,13 +490,6 @@ send_document:
       example: myuser_pwd
       selector:
         text:
-    authentication:
-      default: digest
-      selector:
-        select:
-          options:
-            - "digest"
-            - "bearer_token"
     target:
       example: "[12345, 67890] or 12345"
       selector:
@@ -493,6 +502,7 @@ send_document:
             - "markdown"
             - "markdownv2"
             - "plain_text"
+          translation_key: "parse_mode"
     disable_notification:
       selector:
         boolean:
@@ -670,6 +680,7 @@ edit_message:
             - "markdown"
             - "markdownv2"
             - "plain_text"
+          translation_key: "parse_mode"
     disable_web_page_preview:
       selector:
         boolean:

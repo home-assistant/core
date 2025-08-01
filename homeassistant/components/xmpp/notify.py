@@ -144,7 +144,8 @@ async def async_send_message(  # noqa: C901
 
             self.loop = hass.loop
 
-            self.force_starttls = use_tls
+            self.enable_starttls = use_tls
+            self.enable_direct_tls = use_tls
             self.use_ipv6 = False
             self.add_event_handler("failed_all_auth", self.disconnect_on_login_fail)
             self.add_event_handler("session_start", self.start)
@@ -163,7 +164,7 @@ async def async_send_message(  # noqa: C901
                 self.register_plugin("xep_0128")  # Service Discovery
                 self.register_plugin("xep_0363")  # HTTP upload
 
-            self.connect(force_starttls=self.force_starttls, use_ssl=False)
+            self.connect()
 
         async def start(self, event):
             """Start the communication and sends the message."""

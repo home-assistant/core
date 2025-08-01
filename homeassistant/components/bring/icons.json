@@ -35,6 +35,9 @@
   "services": {
     "send_message": {
       "service": "mdi:cellphone-message"
+    },
+    "send_reaction": {
+      "service": "mdi:thumb-up"
     }
   }
 }

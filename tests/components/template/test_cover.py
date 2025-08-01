@@ -3,6 +3,7 @@
 from typing import Any
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import cover, template
 from homeassistant.components.cover import (
@@ -32,9 +33,10 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import ConfigurationStyle
+from .conftest import ConfigurationStyle, async_get_flow_preview_state
 
-from tests.common import assert_setup_component
+from tests.common import MockConfigEntry, assert_setup_component
+from tests.typing import WebSocketGenerator
 
 TEST_OBJECT_ID = "test_template_cover"
 TEST_ENTITY_ID = f"cover.{TEST_OBJECT_ID}"
@@ -1604,3 +1606,52 @@ async def test_empty_action_config(
         state.attributes["supported_features"]
         == CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | supported_feature
     )
+
+
+async def test_setup_config_entry(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Tests creating a cover from a config entry."""
+
+    hass.states.async_set(
+        "cover.test_state",
+        "open",
+        {},
+    )
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "state": "{{ states('cover.test_state') }}",
+            "set_cover_position": [],
+            "template_type": COVER_DOMAIN,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("cover.my_template")
+    assert state is not None
+    assert state == snapshot
+
+
+async def test_flow_preview(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the config flow preview."""
+
+    state = await async_get_flow_preview_state(
+        hass,
+        hass_ws_client,
+        cover.DOMAIN,
+        {"name": "My template", "state": "{{ 'open' }}", "set_cover_position": []},
+    )
+
+    assert state["state"] == CoverState.OPEN

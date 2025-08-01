@@ -9,6 +9,7 @@ from datapoint.Forecast import Forecast
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
+    EntityCategory,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -59,6 +60,7 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
         native_attr_name="name",
         name="Station name",
         icon="mdi:label-outline",
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     MetOfficeSensorEntityDescription(
@@ -235,14 +237,13 @@ class MetOfficeCurrentSensor(
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        value = get_attribute(
-            self.coordinator.data.now(), self.entity_description.native_attr_name
-        )
+        native_attr = self.entity_description.native_attr_name
 
-        if (
-            self.entity_description.native_attr_name == "significantWeatherCode"
-            and value is not None
-        ):
+        if native_attr == "name":
+            return str(self.coordinator.data.name)
+
+        value = get_attribute(self.coordinator.data.now(), native_attr)
+        if native_attr == "significantWeatherCode" and value is not None:
             value = CONDITION_MAP.get(value)
 
         return value

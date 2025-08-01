@@ -7,7 +7,6 @@ import voluptuous as vol
 
 from homeassistant.components.velbus.const import (
     CONF_CONFIG_ENTRY,
-    CONF_INTERFACE,
     CONF_MEMO_TEXT,
     DOMAIN,
     SERVICE_CLEAR_CACHE,
@@ -18,55 +17,10 @@ from homeassistant.components.velbus.const import (
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import issue_registry as ir
 
 from . import init_integration
 
 from tests.common import MockConfigEntry
-
-
-async def test_global_services_with_interface(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    issue_registry: ir.IssueRegistry,
-) -> None:
-    """Test services directed at the bus with an interface parameter."""
-    await init_integration(hass, config_entry)
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SCAN,
-        {CONF_INTERFACE: config_entry.data["port"]},
-        blocking=True,
-    )
-    config_entry.runtime_data.controller.scan.assert_called_once_with()
-    assert issue_registry.async_get_issue(DOMAIN, "deprecated_interface_parameter")
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SYNC,
-        {CONF_INTERFACE: config_entry.data["port"]},
-        blocking=True,
-    )
-    config_entry.runtime_data.controller.sync_clock.assert_called_once_with()
-
-    # Test invalid interface
-    with pytest.raises(vol.error.MultipleInvalid):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SCAN,
-            {CONF_INTERFACE: "nonexistent"},
-            blocking=True,
-        )
-
-    # Test missing interface
-    with pytest.raises(vol.error.MultipleInvalid):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SCAN,
-            {},
-            blocking=True,
-        )
 
 
 async def test_global_survices_with_config_entry(

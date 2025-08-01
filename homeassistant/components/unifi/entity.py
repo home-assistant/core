@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Generic, TypeVar
+from typing import TYPE_CHECKING
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import (
@@ -14,7 +14,7 @@ from aiounifi.interfaces.api_handlers import (
     ItemEvent,
     UnsubscribeType,
 )
-from aiounifi.models.api import ApiItemT
+from aiounifi.models.api import ApiItem
 from aiounifi.models.event import Event, EventKey
 
 from homeassistant.core import callback
@@ -32,8 +32,7 @@ from .const import ATTR_MANUFACTURER, DOMAIN
 if TYPE_CHECKING:
     from .hub import UnifiHub
 
-HandlerT = TypeVar("HandlerT", bound=APIHandler)
-SubscriptionT = Callable[[CallbackType, ItemEvent], UnsubscribeType]
+type SubscriptionType = Callable[[CallbackType, ItemEvent], UnsubscribeType]
 
 
 @callback
@@ -95,7 +94,9 @@ def async_client_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
 
 
 @dataclass(frozen=True, kw_only=True)
-class UnifiEntityDescription(EntityDescription, Generic[HandlerT, ApiItemT]):
+class UnifiEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
+    EntityDescription
+):
     """UniFi Entity Description."""
 
     api_handler_fn: Callable[[aiounifi.Controller], HandlerT]
@@ -128,7 +129,7 @@ class UnifiEntityDescription(EntityDescription, Generic[HandlerT, ApiItemT]):
     """If entity needs to do regular checks on state."""
 
 
-class UnifiEntity(Entity, Generic[HandlerT, ApiItemT]):
+class UnifiEntity[HandlerT: APIHandler, ApiItemT: ApiItem](Entity):
     """Representation of a UniFi entity."""
 
     entity_description: UnifiEntityDescription[HandlerT, ApiItemT]

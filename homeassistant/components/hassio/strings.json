@@ -9,6 +9,7 @@
       "healthy": "Healthy",
       "host_os": "Host operating system",
       "installed_addons": "Installed add-ons",
+      "nameservers": "Nameservers",
       "supervisor_api": "Supervisor API",
       "supervisor_version": "Supervisor version",
       "supported": "Supported",
@@ -238,7 +239,7 @@
         "name": "OS Agent version"
       },
       "apparmor_version": {
-        "name": "Apparmor version"
+        "name": "AppArmor version"
       },
       "cpu_percent": {
         "name": "CPU percent"

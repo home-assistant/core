@@ -382,7 +382,7 @@ async def _async_convert_audio(
             assert process.stderr
             stderr_data = await process.stderr.read()
             _LOGGER.error(stderr_data.decode())
-            raise RuntimeError(
+            raise HomeAssistantError(
                 f"Unexpected error while running ffmpeg with arguments: {command}. "
                 "See log for details."
             )
@@ -976,7 +976,7 @@ class SpeechManager:
         if engine_instance.name is None or engine_instance.name is UNDEFINED:
             raise HomeAssistantError("TTS engine name is not set.")
 
-        if isinstance(engine_instance, Provider) or isinstance(message_or_stream, str):
+        if isinstance(engine_instance, Provider):
             if isinstance(message_or_stream, str):
                 message = message_or_stream
             else:
@@ -996,8 +996,18 @@ class SpeechManager:
             data_gen = make_data_generator(data)
 
         else:
+            if isinstance(message_or_stream, str):
+
+                async def gen_stream() -> AsyncGenerator[str]:
+                    yield message_or_stream
+
+                stream = gen_stream()
+
+            else:
+                stream = message_or_stream
+
             tts_result = await engine_instance.internal_async_stream_tts_audio(
-                TTSAudioRequest(language, options, message_or_stream)
+                TTSAudioRequest(language, options, stream)
             )
             extension = tts_result.extension
             data_gen = tts_result.data_gen
@@ -1184,6 +1194,21 @@ class TextToSpeechView(HomeAssistantView):
     def __init__(self, manager: SpeechManager) -> None:
         """Initialize a tts view."""
         self.manager = manager
+
+    async def head(self, request: web.Request, token: str) -> web.StreamResponse:
+        """Start a HEAD request.
+
+        This is sent by some DLNA renderers, like Samsung ones, prior to sending
+        the GET request.
+
+        Check whether the token (file) exists and return its content type.
+        """
+        stream = self.manager.token_to_stream.get(token)
+
+        if stream is None:
+            return web.Response(status=HTTPStatus.NOT_FOUND)
+
+        return web.Response(content_type=stream.content_type)
 
     async def get(self, request: web.Request, token: str) -> web.StreamResponse:
         """Start a get request."""

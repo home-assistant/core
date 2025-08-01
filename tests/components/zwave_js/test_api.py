@@ -2520,7 +2520,7 @@ async def test_subscribe_rebuild_routes_progress(
         {
             "source": "controller",
             "event": "rebuild routes progress",
-            "progress": {67: "pending"},
+            "progress": {"67": "pending"},
         },
     )
     client.driver.controller.receive_event(event)
@@ -2564,7 +2564,7 @@ async def test_subscribe_rebuild_routes_progress_initial_value(
         {
             "source": "controller",
             "event": "rebuild routes progress",
-            "progress": {67: "pending"},
+            "progress": {"67": "pending"},
         },
     )
     client.driver.controller.receive_event(event)
@@ -5649,8 +5649,9 @@ async def test_restore_nvm(
         {
             "command": "controller.restore_nvm",
             "nvmData": "dGVzdA==",
+            "migrateOptions": {"preserveRoutes": False},
         },
-        require_schema=14,
+        require_schema=42,
     )
     assert entry.unique_id == "1234"
 
@@ -5684,8 +5685,9 @@ async def test_restore_nvm(
         {
             "command": "controller.restore_nvm",
             "nvmData": "dGVzdA==",
+            "migrateOptions": {"preserveRoutes": False},
         },
-        require_schema=14,
+        require_schema=42,
     )
     assert (
         "Failed to get server version, cannot update config entry"
@@ -5738,8 +5740,9 @@ async def test_restore_nvm(
         {
             "command": "controller.restore_nvm",
             "nvmData": "dGVzdA==",
+            "migrateOptions": {"preserveRoutes": False},
         },
-        require_schema=14,
+        require_schema=42,
     )
 
     client.async_send_command.reset_mock()

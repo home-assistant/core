@@ -17,7 +17,6 @@
         'XXXXXXXXXXXX',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'APC',
@@ -27,7 +26,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.14.14 (31 May 2016) unknown',
     'via_device_id': None,
   })
@@ -50,7 +48,6 @@
         'XXXX',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'APC',
@@ -60,7 +57,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -83,7 +79,6 @@
         'mocked-config-entry-id',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'APC',
@@ -93,7 +88,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -116,7 +110,6 @@
         'mocked-config-entry-id',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'APC',
@@ -126,7 +119,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })

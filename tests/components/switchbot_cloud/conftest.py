@@ -30,3 +30,12 @@ def mock_get_status():
     """Mock get_status."""
     with patch.object(SwitchBotAPI, "get_status") as mock_get_status:
         yield mock_get_status
+
+
+@pytest.fixture(scope="package", autouse=True)
+def mock_after_command_refresh():
+    """Mock after command refresh."""
+    with patch(
+        "homeassistant.components.switchbot_cloud.const.AFTER_COMMAND_REFRESH", 0
+    ):
+        yield

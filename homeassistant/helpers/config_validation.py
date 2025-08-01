@@ -1537,22 +1537,6 @@ def STATE_CONDITION_SCHEMA(value: Any) -> dict[str, Any]:
     return key_dependency("for", "state")(validated)
 
 
-SUN_CONDITION_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            **CONDITION_BASE_SCHEMA,
-            vol.Required(CONF_CONDITION): "sun",
-            vol.Optional("before"): sun_event,
-            vol.Optional("before_offset"): time_period,
-            vol.Optional("after"): vol.All(
-                vol.Lower, vol.Any(SUN_EVENT_SUNSET, SUN_EVENT_SUNRISE)
-            ),
-            vol.Optional("after_offset"): time_period,
-        }
-    ),
-    has_at_least_one_key("before", "after"),
-)
-
 TEMPLATE_CONDITION_SCHEMA = vol.Schema(
     {
         **CONDITION_BASE_SCHEMA,
@@ -1583,18 +1567,6 @@ TRIGGER_CONDITION_SCHEMA = vol.Schema(
         **CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): "trigger",
         vol.Required(CONF_ID): vol.All(ensure_list, [string]),
-    }
-)
-
-ZONE_CONDITION_SCHEMA = vol.Schema(
-    {
-        **CONDITION_BASE_SCHEMA,
-        vol.Required(CONF_CONDITION): "zone",
-        vol.Required(CONF_ENTITY_ID): entity_ids,
-        vol.Required("zone"): entity_ids,
-        # To support use_trigger_value in automation
-        # Deprecated 2016/04/25
-        vol.Optional("event"): vol.Any("enter", "leave"),
     }
 )
 
@@ -1745,7 +1717,6 @@ BUILT_IN_CONDITIONS: ValueSchemas = {
     "template": TEMPLATE_CONDITION_SCHEMA,
     "time": TIME_CONDITION_SCHEMA,
     "trigger": TRIGGER_CONDITION_SCHEMA,
-    "zone": ZONE_CONDITION_SCHEMA,
 }
 
 

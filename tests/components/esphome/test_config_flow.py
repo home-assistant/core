@@ -27,6 +27,9 @@ from homeassistant.components.esphome.const import (
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
     DOMAIN,
 )
+from homeassistant.components.esphome.encryption_key_storage import (
+    ENCRYPTION_KEY_STORAGE_KEY,
+)
 from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -40,6 +43,118 @@ from . import VALID_NOISE_PSK
 from .conftest import MockGenericDeviceEntryType
 
 from tests.common import MockConfigEntry
+
+
+async def test_retrieve_encryption_key_from_storage_with_device_mac(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test key successfully retrieved from storage."""
+
+    # Mock the encryption key storage
+    hass_storage[ENCRYPTION_KEY_STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": ENCRYPTION_KEY_STORAGE_KEY,
+        "data": {"keys": {"11:22:33:44:55:aa": VALID_NOISE_PSK}},
+    }
+
+    mock_client.device_info.side_effect = [
+        RequiresEncryptionAPIError,
+        InvalidEncryptionKeyAPIError("Wrong key", "test", "11:22:33:44:55:AA"),
+        DeviceInfo(
+            uses_password=False,
+            name="test",
+            mac_address="11:22:33:44:55:AA",
+        ),
+    ]
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USER},
+        data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_HOST: "127.0.0.1",
+        CONF_PORT: 6053,
+        CONF_PASSWORD: "",
+        CONF_NOISE_PSK: VALID_NOISE_PSK,
+        CONF_DEVICE_NAME: "test",
+    }
+
+    assert mock_client.noise_psk == VALID_NOISE_PSK
+
+
+async def test_reauth_fixed_from_from_storage(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test reauth fixed automatically via storage."""
+
+    # Mock the encryption key storage
+    hass_storage[ENCRYPTION_KEY_STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": ENCRYPTION_KEY_STORAGE_KEY,
+        "data": {"keys": {"11:22:33:44:55:aa": VALID_NOISE_PSK}},
+    }
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test",
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    mock_client.device_info.return_value = DeviceInfo(
+        uses_password=False, name="test", mac_address="11:22:33:44:55:aa"
+    )
+
+    result = await entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.ABORT, result
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_NOISE_PSK] == VALID_NOISE_PSK
+
+
+async def test_retrieve_encryption_key_from_storage_no_key_found(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+) -> None:
+    """Test _retrieve_encryption_key_from_storage when no key is found."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test",
+        },
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    mock_client.device_info.return_value = DeviceInfo(
+        uses_password=False, name="test", mac_address="11:22:33:44:55:aa"
+    )
+
+    result = await entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM, result
+    assert result["step_id"] == "reauth_confirm"
+    assert CONF_NOISE_PSK not in entry.data
+
 
 INVALID_NOISE_PSK = "lSYBYEjQI1bVL8s2Vask4YytGMj1f1epNtmoim2yuTM="
 WRONG_NOISE_PSK = "GP+ciK+nVfTQ/gcz6uOdS+oKEdJgesU+jeu8Ssj2how="
@@ -2370,3 +2485,36 @@ async def test_reconfig_name_conflict_overwrite(
         )
         is None
     )
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_discovery_dhcp_no_probe_same_host_port_none(
+    hass: HomeAssistant, mock_client: APIClient
+) -> None:
+    """Test dhcp discovery does not probe when host matches and port is None."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    # DHCP discovery with same MAC and host (WiFi device)
+    service_info = DhcpServiceInfo(
+        ip="192.168.43.183",
+        hostname="test8266",
+        macaddress="11:22:33:44:55:aa",  # Same MAC as configured
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=service_info
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Verify device_info was NOT called (no probing)
+    mock_client.device_info.assert_not_called()
+
+    # Host should remain unchanged
+    assert entry.data[CONF_HOST] == "192.168.43.183"

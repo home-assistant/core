@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 from meater import AuthenticationError, ServiceUnavailableError
 import pytest
 
-from homeassistant.components.meater import DOMAIN
+from homeassistant.components.meater.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
