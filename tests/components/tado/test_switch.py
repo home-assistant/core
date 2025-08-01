@@ -33,7 +33,7 @@ def setup_platforms() -> AsyncGenerator[None]:
 async def test_entities(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
 ) -> None:
-    """Test creation of sensor entities."""
+    """Test creation of switch entities."""
 
     await async_init_integration(hass)
 
