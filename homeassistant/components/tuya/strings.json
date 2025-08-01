@@ -699,6 +699,16 @@
           "charging": "[%key:common::state::charging%]",
           "charge_done": "Charge done"
         }
+      },
+      "master_information": {
+        "name": "Master information"
+      },
+      "master_state": {
+        "name": "Master state",
+        "state": {
+          "normal": "[%key:common::state::normal%]",
+          "alarm": "Alarm"
+        }
       }
     },
     "switch": {

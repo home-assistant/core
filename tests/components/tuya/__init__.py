@@ -158,6 +158,10 @@ DEVICE_MOCKS = {
         # https://github.com/orgs/home-assistant/discussions/288
         # unsupported device - no platforms
     ],
+    "wg2_zigbee_gateway": [
+        # https://github.com/orgs/home-assistant/discussions/430
+        Platform.SENSOR,
+    ],
     "wk_wifi_smart_gas_boiler_thermostat": [
         # https://github.com/orgs/home-assistant/discussions/243
         Platform.CLIMATE,
