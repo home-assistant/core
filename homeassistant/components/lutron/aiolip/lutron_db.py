@@ -212,16 +212,29 @@ class LutronXmlDbParser:
 
         return keypad
 
+    def _parse_button_actions(self, button_xml):
+        """Parse a button to return the list of actions."""
+        actions = button_xml.find("Actions")
+
+        # Extract names of all <Action> elements
+        if actions is not None:
+            return [
+                action.get("Name")
+                for action in actions.findall("Action")
+                if action.get("Name")
+            ]
+        return []
+
     def _parse_button(self, keypad, component_xml):
         """Parse a button device that part of a keypad.
 
         'Name' is Button x, where x is incremental position in the list and not the actual position on the keypad.
         We don't use it. We use component_number instead
         """
-        # we should read button - actions  - action to get available button actions
 
         component_number = int(component_xml.get("ComponentNumber"))
         button_xml = component_xml.find("Button")
+        actions = self._parse_button_actions(button_xml)
         return Button(
             keypad=keypad,
             component_type="Btn",
@@ -232,6 +245,7 @@ class LutronXmlDbParser:
             direction=button_xml.get("Direction"),
             led_logic=int(button_xml.get("LedLogic") or 0),
             integration_id=keypad.integration_id,
+            actions=actions,
             uuid=button_xml.get("UUID"),
         )
 
@@ -239,6 +253,7 @@ class LutronXmlDbParser:
         """Parse a cci (contact closure input) device that part of a keypad."""
         component_number = int(component_xml.get("ComponentNumber"))
         cci_xml = component_xml.find("CCI")
+        actions = self._parse_button_actions(cci_xml)
         return Button(
             keypad=keypad,
             component_type="CCI",
@@ -249,6 +264,7 @@ class LutronXmlDbParser:
             direction="",
             led_logic=cci_xml.get("LedLogic"),
             integration_id=keypad.integration_id,
+            actions=actions,
             uuid=cci_xml.get("UUID"),
         )
 
@@ -523,6 +539,7 @@ class Button(KeypadComponent):
     button_type: str = ""
     direction: str = ""
     led_logic: int = 0
+    actions: list = field(default_factory=list)
 
     def __post_init__(self):
         """Set the button name to engraving if available, otherwise use the button number."""
@@ -536,20 +553,10 @@ class Button(KeypadComponent):
         if not self.name:
             self.name = f"Unknown Button {self.component_number}"
 
-    def is_valid_button(self, use_radiora_mode: bool) -> bool:
-        """Return True if the button is valid."""
-        is_known_button = not self.name.startswith("Unknown")
-        has_valid_action = self.button_type in (
-            "SingleAction",
-            "Toggle",
-            "SingleSceneRaiseLower",
-            "MasterRaiseLower",
-            "DualAction",
-            "AdvancedToggle",
-            "AdvancedConditional",
-            "SimpleConditional",
-        )
-        return has_valid_action and (not use_radiora_mode or is_known_button)
+    @property
+    def has_actions(self) -> bool:
+        """Return True if the button has actions."""
+        return len(self.actions) > 0
 
     def press(self) -> LIPCommand:
         """Return a command to press the button."""
@@ -572,16 +579,6 @@ class Led(KeypadComponent):
         elif self.keypad.device_type == "PHANTOM":
             led_base = 2000
         self.number = self.component_number - led_base
-
-    def is_valid_led(self, use_radiora_mode: bool) -> bool:
-        """Return True if the LED is valid."""
-        if not self.button:  # LED must have an associated button
-            return False
-
-        if use_radiora_mode:
-            return self.button.is_valid_button(use_radiora_mode)
-
-        return self.button.led_logic == 5
 
     def turn_on(self) -> LIPCommand:
         """Return a command to turn on the LED."""
