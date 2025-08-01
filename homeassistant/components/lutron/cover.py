@@ -435,4 +435,6 @@ class LutronCover(LutronOutput, CoverEntity):
         self._attr_is_closed = value < 1
         self._attr_current_cover_position = value
         self.async_write_ha_state()
-        _LOGGER.debug("Lutron ID: %d updated to %f", self._lutron_device.id, value)
+        _LOGGER.debug(
+            "Lutron ID: %d updated to %f", self._lutron_device.integration_id, value
+        )

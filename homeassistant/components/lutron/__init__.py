@@ -231,7 +231,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                     )
 
         # exclude occupancy_group not linked to an area
-        if area.occupancy_group is not None and area.occupancy_group.id != 0:
+        if (
+            area.occupancy_group is not None
+            and area.occupancy_group.integration_id != 0
+        ):
             entry_data.binary_sensors.append(area.occupancy_group)
             platform = Platform.BINARY_SENSOR
             _async_check_entity_unique_id(

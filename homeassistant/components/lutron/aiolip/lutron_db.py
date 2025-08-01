@@ -244,7 +244,7 @@ class LutronXmlDbParser:
             button_type=button_type,
             direction=direction,
             led_logic=led_logic,
-            integration_id=keypad.id,
+            integration_id=keypad.integration_id,
             uuid=button_xml.get("UUID"),
         )
 
@@ -264,7 +264,7 @@ class LutronXmlDbParser:
             button_type=cci_type,
             direction="",
             led_logic=led_logic,
-            integration_id=keypad.id,
+            integration_id=keypad.integration_id,
             uuid=cci_xml.get("UUID"),
         )
 
@@ -282,7 +282,7 @@ class LutronXmlDbParser:
             name="",
             number=led_num,
             component_number=component_num,
-            integration_id=keypad.id,
+            integration_id=keypad.integration_id,
             uuid=component_xml.find("LED").get("UUID"),
         )
 
@@ -436,11 +436,6 @@ class Device(LIPCommandMixin, LIPCommandSupporting):
     def __post_init__(self):
         """Override to Initialize the Lutron entity."""
         self.legacy_uuid = f"{self.integration_id}-0"
-
-    @property
-    def id(self) -> int:
-        """Return the integration ID."""
-        return self.integration_id
 
 
 @dataclass
@@ -657,9 +652,9 @@ class OccupancyGroup(Device):
     def bind_area(self, area):
         """Binds the OccupancyGroup to the Area."""
         self.area = area
-        self.legacy_uuid = f"{self.area.id}-{self.group_number}"
+        self.legacy_uuid = f"{self.area.integration_id}-{self.group_number}"
         self.name = f"Occ {area.name}"
-        self.integration_id = area.id
+        self.integration_id = area.integration_id
 
     def get_state(self) -> LIPCommand:
         """Return a command to get the group state."""

@@ -53,17 +53,19 @@ class LutronBaseEntity(Entity):
     @property
     def device_name(self) -> str:
         """Return the device name including the computed area_name."""
-        if (device := self._lutron_device) is not None:
+        if (lutron_device := self._lutron_device) is not None:
             return (
-                f"{self.area_name} {device.name}"
+                f"{self.area_name} {lutron_device.name}"
                 if self._controller.use_area_for_device_name
-                else device.name
+                else lutron_device.name
             )
         return "No Name"
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        self._controller.subscribe(self._lutron_device.id, None, self._update_callback)
+        self._controller.subscribe(
+            self._lutron_device.integration_id, None, self._update_callback
+        )
 
     async def async_update(self) -> None:
         """Update the entity's state."""
@@ -94,7 +96,7 @@ class LutronBaseEntity(Entity):
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
-        return {"lutron_integration_id": self._lutron_device.id}
+        return {"lutron_integration_id": self._lutron_device.integration_id}
 
     async def _execute_device_command(
         self, command_method: Callable, *args, **kwargs
@@ -138,7 +140,7 @@ class LutronKeypadComponent(LutronBaseEntity):
         super().__init__(lutron_device, controller)
         self._component_number = lutron_device.component_number
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(self._lutron_device.id))},
+            identifiers={(DOMAIN, str(self._lutron_device.integration_id))},
             manufacturer="Lutron",
             name=self.device_name,
             suggested_area=self.area_name,
@@ -171,7 +173,7 @@ class LutronKeypadComponent(LutronBaseEntity):
         """
         if self._controller.use_radiora_mode:
             return self._lutron_device.keypad.name
-        return f"keypad {self._lutron_device.keypad.id}"
+        return f"keypad {self._lutron_device.keypad.integration_id}"
 
     @property
     def device_name(self) -> str:
@@ -187,6 +189,8 @@ class LutronKeypadComponent(LutronBaseEntity):
         """Register the keypad component using also the component_number to get the updates for the components."""
 
         self._controller.subscribe(
-            self._lutron_device.id, self._component_number, self._update_callback
+            self._lutron_device.integration_id,
+            self._component_number,
+            self._update_callback,
         )
         await self._request_state()
