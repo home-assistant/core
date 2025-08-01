@@ -3226,7 +3226,11 @@ async def test_update_suggested_area(
     device_area_id: str | None,
     number_of_areas: int,
 ) -> None:
-    """Verify that we can update the suggested area version of a device."""
+    """Verify that we can update the suggested area version of a device.
+
+    Updating the suggested area of a device should not create a new area, nor should
+    it change the area_id of the device.
+    """
     update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
     entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
@@ -3249,7 +3253,7 @@ async def test_update_suggested_area(
     assert updated_entry.area_id == device_area_id
 
     # Check we did not create an area
-    pool_area = area_registry.async_get_area_by_name("Pool")
+    pool_area = area_registry.async_get_area_by_name(suggested_area)
     assert pool_area is None
     assert updated_entry.area_id == device_area_id
     assert len(area_registry.areas) == number_of_areas
