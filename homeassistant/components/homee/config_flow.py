@@ -114,13 +114,13 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self._name)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
+        # Cause an auth-error to see if homee is reachable.
         self.homee = Homee(
             self._host,
             "dummy_username",
             "dummy_password",
         )
         errors = await self._connect_homee()
-        # if this is a reachable homee, we will get an authentication error.
         if errors["base"] != RESULT_INVALID_AUTH:
             return self.async_abort(reason=RESULT_CANNOT_CONNECT)
 
