@@ -1055,12 +1055,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             )
 
         if (
+            # Note: We don't check area_id or old.area_id here, because
+            # they are irrelevant if old.is_new is True.
             old.is_new
             and suggested_area is not None
             and suggested_area is not UNDEFINED
             and suggested_area != ""
-            and area_id is UNDEFINED
-            and old.area_id is None
         ):
             # Circular dep
             from . import area_registry as ar  # noqa: PLC0415
