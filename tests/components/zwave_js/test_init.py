@@ -196,19 +196,24 @@ async def test_listen_done_during_setup_before_forward_entry(
     hass: HomeAssistant,
     client: MagicMock,
     listen_block: asyncio.Event,
-    listen_result: asyncio.Future[None],
     core_state: CoreState,
     listen_future_result_method: str,
     listen_future_result: Exception | None,
 ) -> None:
     """Test listen task finishing during setup before forward entry."""
+    listen_result = asyncio.Future[None]()
     assert hass.state is CoreState.running
+
+    async def connect():
+        await asyncio.sleep(0)
+        client.connected = True
 
     async def listen(driver_ready: asyncio.Event) -> None:
         await listen_block.wait()
         await listen_result
         async_fire_time_changed(hass, fire_all=True)
 
+    client.connect.side_effect = connect
     client.listen.side_effect = listen
     hass.set_state(core_state)
     listen_block.set()
@@ -229,9 +234,9 @@ async def test_not_connected_during_setup_after_forward_entry(
     hass: HomeAssistant,
     client: MagicMock,
     listen_block: asyncio.Event,
-    listen_result: asyncio.Future[None],
 ) -> None:
     """Test we handle not connected client during setup after forward entry."""
+    listen_result = asyncio.Future[None]()
 
     async def send_command_side_effect(*args: Any, **kwargs: Any) -> None:
         """Mock send command."""
@@ -277,12 +282,12 @@ async def test_listen_done_during_setup_after_forward_entry(
     hass: HomeAssistant,
     client: MagicMock,
     listen_block: asyncio.Event,
-    listen_result: asyncio.Future[None],
     core_state: CoreState,
     listen_future_result_method: str,
     listen_future_result: Exception | None,
 ) -> None:
     """Test listen task finishing during setup after forward entry."""
+    listen_result = asyncio.Future[None]()
     assert hass.state is CoreState.running
 
     original_send_command_side_effect = client.async_send_command.side_effect
@@ -320,16 +325,14 @@ async def test_listen_done_during_setup_after_forward_entry(
 
 
 @pytest.mark.parametrize(
-    ("core_state", "final_config_entry_state", "disconnect_call_count"),
+    ("core_state", "disconnect_call_count"),
     [
         (
             CoreState.running,
-            ConfigEntryState.SETUP_RETRY,
-            2,
-        ),  # the reload will cause a disconnect call too
+            1,
+        ),  # the reload will cause a disconnect
         (
             CoreState.stopping,
-            ConfigEntryState.LOADED,
             0,
         ),  # the home assistant stop event will handle the disconnect
     ],
@@ -345,19 +348,33 @@ async def test_listen_done_during_setup_after_forward_entry(
 async def test_listen_done_after_setup(
     hass: HomeAssistant,
     client: MagicMock,
-    integration: MockConfigEntry,
     listen_block: asyncio.Event,
-    listen_result: asyncio.Future[None],
     core_state: CoreState,
     listen_future_result_method: str,
     listen_future_result: Exception | None,
-    final_config_entry_state: ConfigEntryState,
     disconnect_call_count: int,
 ) -> None:
     """Test listen task finishing after setup."""
-    config_entry = integration
-    assert config_entry.state is ConfigEntryState.LOADED
+    listen_result = asyncio.Future[None]()
+
+    async def listen(driver_ready: asyncio.Event) -> None:
+        driver_ready.set()
+        await listen_block.wait()
+        await listen_result
+
+    client.listen.side_effect = listen
+
+    config_entry = MockConfigEntry(
+        domain="zwave_js",
+        data={"url": "ws://test.org", "data_collection_opted_in": True},
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
     assert hass.state is CoreState.running
+    assert config_entry.state is ConfigEntryState.LOADED
     assert client.disconnect.call_count == 0
 
     hass.set_state(core_state)
@@ -365,7 +382,7 @@ async def test_listen_done_after_setup(
     getattr(listen_result, listen_future_result_method)(listen_future_result)
     await hass.async_block_till_done()
 
-    assert config_entry.state is final_config_entry_state
+    assert config_entry.state is ConfigEntryState.LOADED
     assert client.disconnect.call_count == disconnect_call_count
 
 
