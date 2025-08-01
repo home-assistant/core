@@ -2143,6 +2143,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "frient": {
+      "name": "Frient",
+      "iot_standards": [
+        "zigbee"
+      ]
+    },
     "fritzbox": {
       "name": "FRITZ!Box",
       "integrations": {
@@ -6728,6 +6734,7 @@
     "third_reality": {
       "name": "Third Reality",
       "iot_standards": [
+        "matter",
         "zigbee"
       ]
     },

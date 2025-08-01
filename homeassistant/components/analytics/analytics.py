@@ -430,7 +430,6 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
                 "model": device.model,
                 "sw_version": device.sw_version,
                 "hw_version": device.hw_version,
-                "has_suggested_area": device.suggested_area is not None,
                 "has_configuration_url": device.configuration_url is not None,
                 "via_device": None,
             }
