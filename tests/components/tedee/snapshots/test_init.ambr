@@ -17,7 +17,6 @@
         '0000-0000',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Tedee',
@@ -50,7 +49,6 @@
         '12345',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Tedee',

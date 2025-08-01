@@ -18,7 +18,6 @@
           '1',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Velleman',
@@ -49,7 +48,6 @@
           '88-9',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Velleman',
@@ -80,7 +78,6 @@
           '88-11',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Velleman',
@@ -111,7 +108,6 @@
           '88-10',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Velleman',
@@ -142,7 +138,6 @@
           '88-2',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Velleman',
@@ -173,7 +168,6 @@
           '88',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Velleman',
@@ -204,7 +198,6 @@
           '2',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Velleman',
@@ -235,7 +228,6 @@
           '88-55',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Velleman',

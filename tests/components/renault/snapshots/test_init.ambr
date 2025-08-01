@@ -18,7 +18,6 @@
           'VF1CAPTURFUELVIN',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Renault',
@@ -53,7 +52,6 @@
           'VF1CAPTURPHEVVIN',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Renault',
@@ -88,7 +86,6 @@
           'VF1TWINGOIIIVIN',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Renault',
@@ -123,7 +120,6 @@
           'VF1ZOE40VIN',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Renault',
@@ -158,7 +154,6 @@
           'VF1ZOE50VIN',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Renault',

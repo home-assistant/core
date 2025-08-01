@@ -97,7 +97,6 @@
         '12345',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Twente Milieu',

@@ -17,7 +17,6 @@
         'echo_test_serial_number',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Amazon',

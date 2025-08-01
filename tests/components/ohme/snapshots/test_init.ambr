@@ -17,7 +17,6 @@
         'chargerid',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Ohme',

@@ -17,7 +17,6 @@
         '19264d2dffdbca32',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Tile Inc.',

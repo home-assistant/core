@@ -18,7 +18,6 @@
           'ulid-conversation',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Google',
@@ -49,7 +48,6 @@
           'ulid-stt',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Google',
@@ -80,7 +78,6 @@
           'ulid-ai-task',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Google',
@@ -111,7 +108,6 @@
           'ulid-tts',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Google',

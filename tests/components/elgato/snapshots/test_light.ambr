@@ -102,7 +102,6 @@
         'CN11A1A00001',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Elgato',
@@ -222,7 +221,6 @@
         'CN11A1A00001',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Elgato',
@@ -342,7 +340,6 @@
         'CN11A1A00001',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Elgato',

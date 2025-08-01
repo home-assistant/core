@@ -17,7 +17,6 @@
         '500006',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Lektrico',

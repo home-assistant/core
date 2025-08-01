@@ -17,7 +17,6 @@
         'mock_drive_id',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Microsoft',

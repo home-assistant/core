@@ -173,6 +173,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         if serialized["primary_config_entry"] is not None:
             serialized["primary_config_entry"] = ANY
         serialized.pop("_cache")
+        serialized.pop("is_new")
         return cls._remove_created_and_modified_at(serialized)
 
     @classmethod

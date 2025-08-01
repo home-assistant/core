@@ -21,7 +21,6 @@
         'online_with_doorsense',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Yale Home Inc.',

@@ -50,7 +50,6 @@
               '<<envoyserial>>',
             ]),
           ]),
-          'is_new': False,
           'labels': list([
           ]),
           'manufacturer': 'Enphase',
@@ -298,7 +297,6 @@
               '1',
             ]),
           ]),
-          'is_new': False,
           'labels': list([
           ]),
           'manufacturer': 'Enphase',
@@ -929,7 +927,6 @@
               '<<envoyserial>>',
             ]),
           ]),
-          'is_new': False,
           'labels': list([
           ]),
           'manufacturer': 'Enphase',
@@ -1177,7 +1174,6 @@
               '1',
             ]),
           ]),
-          'is_new': False,
           'labels': list([
           ]),
           'manufacturer': 'Enphase',
@@ -1852,7 +1848,6 @@
               '<<envoyserial>>',
             ]),
           ]),
-          'is_new': False,
           'labels': list([
           ]),
           'manufacturer': 'Enphase',
@@ -2100,7 +2095,6 @@
               '1',
             ]),
           ]),
-          'is_new': False,
           'labels': list([
           ]),
           'manufacturer': 'Enphase',
@@ -2796,7 +2790,6 @@
               '1',
             ]),
           ]),
-          'is_new': False,
           'labels': list([
           ]),
           'manufacturer': 'Enphase',
@@ -3346,7 +3339,6 @@
               '<<envoyserial>>',
             ]),
           ]),
-          'is_new': False,
           'labels': list([
           ]),
           'manufacturer': 'Enphase',

@@ -328,6 +328,7 @@ async def test_snapshots(
         device_dict.pop("created_at", None)
         device_dict.pop("modified_at", None)
         device_dict.pop("_cache", None)
+        device_dict.pop("is_new")
 
         devices.append({"device": device_dict, "entities": entities})
 

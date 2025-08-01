@@ -17,7 +17,6 @@
         'W1122333044455',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Ondilo',
@@ -50,7 +49,6 @@
         'W2233304445566',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Ondilo',

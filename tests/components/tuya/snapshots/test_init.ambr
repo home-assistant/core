@@ -18,7 +18,6 @@
           'mock_device_id',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Tuya',

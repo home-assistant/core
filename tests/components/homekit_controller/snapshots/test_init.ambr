@@ -24,7 +24,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Sleekpoint Innovations',
@@ -655,7 +654,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Anker',
@@ -737,7 +735,6 @@
             '00:00:00:00:00:00:aid:4',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Anker',
@@ -995,7 +992,6 @@
             '00:00:00:00:00:00:aid:2',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Anker',
@@ -1253,7 +1249,6 @@
             '00:00:00:00:00:00:aid:3',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Anker',
@@ -1515,7 +1510,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Aqara',
@@ -1736,7 +1730,6 @@
             '00:00:00:00:00:00:aid:33',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Aqara',
@@ -1913,7 +1906,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Aqara',
@@ -2205,7 +2197,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Aqara',
@@ -2339,7 +2330,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Netgear, Inc',
@@ -2853,7 +2843,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ConnectSense',
@@ -3325,7 +3314,6 @@
             '00:00:00:00:00:00:aid:4',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -3500,7 +3488,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -3982,7 +3969,6 @@
             '00:00:00:00:00:00:aid:2',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -4157,7 +4143,6 @@
             '00:00:00:00:00:00:aid:3',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -4336,7 +4321,6 @@
             '00:00:00:00:00:00:aid:4295608960',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -4602,7 +4586,6 @@
             '00:00:00:00:00:00:aid:4298360914',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -4861,7 +4844,6 @@
             '00:00:00:00:00:00:aid:4298360921',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -5120,7 +5102,6 @@
             '00:00:00:00:00:00:aid:4298527970',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -5379,7 +5360,6 @@
             '00:00:00:00:00:00:aid:4298527962',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -5638,7 +5618,6 @@
             '00:00:00:00:00:00:aid:4295016858',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -5904,7 +5883,6 @@
             '00:00:00:00:00:00:aid:4298360712',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -6163,7 +6141,6 @@
             '00:00:00:00:00:00:aid:4298649931',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -6422,7 +6399,6 @@
             '00:00:00:00:00:00:aid:4295608971',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -6688,7 +6664,6 @@
             '00:00:00:00:00:00:aid:4298584118',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -6947,7 +6922,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -7347,7 +7321,6 @@
             '00:00:00:00:00:00:aid:4295016969',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -7613,7 +7586,6 @@
             '00:00:00:00:00:00:aid:4298568508',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -7876,7 +7848,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -8362,7 +8333,6 @@
             '00:00:00:00:00:00:aid:4',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -8487,7 +8457,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -8788,7 +8757,6 @@
             '00:00:00:00:00:00:aid:2',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -8963,7 +8931,6 @@
             '00:00:00:00:00:00:aid:3',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -9142,7 +9109,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -9637,7 +9603,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'ecobee Inc.',
@@ -9948,7 +9913,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Elgato',
@@ -10331,7 +10295,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Elgato',
@@ -10702,7 +10665,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'José A. Jiménez Campos',
@@ -10924,7 +10886,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'José A. Jiménez Campos',
@@ -11052,7 +11013,6 @@
             '00:00:00:00:00:00:aid:123016423',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'RYSE Inc.',
@@ -11226,7 +11186,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -11308,7 +11267,6 @@
             '00:00:00:00:00:00:aid:878448248',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'RYSE Inc.',
@@ -11486,7 +11444,6 @@
             '00:00:00:00:00:00:aid:766313939',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -11619,7 +11576,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -11701,7 +11657,6 @@
             '00:00:00:00:00:00:aid:1256851357',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -11839,7 +11794,6 @@
             '00:00:00:00:00:00:aid:1233851541',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Lookin',
@@ -12187,7 +12141,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -12273,7 +12226,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -12355,7 +12307,6 @@
             '00:00:00:00:00:00:aid:3982136094',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'FirstAlert',
@@ -12541,7 +12492,6 @@
             '00:00:00:00:00:00:aid:123016423',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'RYSE Inc.',
@@ -12715,7 +12665,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -12797,7 +12746,6 @@
             '00:00:00:00:00:00:aid:878448248',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'RYSE Inc.',
@@ -12975,7 +12923,6 @@
             '00:00:00:00:00:00:aid:766313939',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -13108,7 +13055,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -13190,7 +13136,6 @@
             '00:00:00:00:00:00:aid:1256851357',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -13329,7 +13274,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -13411,7 +13355,6 @@
             '00:00:00:00:00:00:aid:1256851357',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -13550,7 +13493,6 @@
             '00:00:00:00:00:00:aid:1233851541',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Lookin',
@@ -13907,7 +13849,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -13993,7 +13934,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -14075,7 +14015,6 @@
             '00:00:00:00:00:00:aid:293334836',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'switchbot',
@@ -14268,7 +14207,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -14350,7 +14288,6 @@
             '00:00:00:00:00:00:aid:293334836',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'switchbot',
@@ -14543,7 +14480,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Home Assistant',
@@ -14625,7 +14561,6 @@
             '00:00:00:00:00:00:aid:3982136094',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'FirstAlert',
@@ -14826,7 +14761,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Garzola Marco',
@@ -15040,7 +14974,6 @@
             '00:00:00:00:00:00:aid:6623462395276914',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -15187,7 +15120,6 @@
             '00:00:00:00:00:00:aid:6623462395276939',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -15334,7 +15266,6 @@
             '00:00:00:00:00:00:aid:6623462403113447',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -15481,7 +15412,6 @@
             '00:00:00:00:00:00:aid:6623462403233419',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -15628,7 +15558,6 @@
             '00:00:00:00:00:00:aid:6623462412411853',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -15785,7 +15714,6 @@
             '00:00:00:00:00:00:aid:6623462412413293',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -15942,7 +15870,6 @@
             '00:00:00:00:00:00:aid:6623462389072572',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -16276,7 +16203,6 @@
             '00:00:00:00:00:00:aid:6623462378982941',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -16410,7 +16336,6 @@
             '00:00:00:00:00:00:aid:6623462378983942',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -16544,7 +16469,6 @@
             '00:00:00:00:00:00:aid:6623462379122122',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -16678,7 +16602,6 @@
             '00:00:00:00:00:00:aid:6623462379123707',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -16812,7 +16735,6 @@
             '00:00:00:00:00:00:aid:6623462383114163',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -16946,7 +16868,6 @@
             '00:00:00:00:00:00:aid:6623462383114193',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -17080,7 +17001,6 @@
             '00:00:00:00:00:00:aid:6623462385996792',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips',
@@ -17214,7 +17134,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Philips Lighting',
@@ -17300,7 +17219,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Koogeek',
@@ -17453,7 +17371,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Koogeek',
@@ -17632,7 +17549,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Koogeek',
@@ -17852,7 +17768,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Lennox',
@@ -18152,7 +18067,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'LG Electronics',
@@ -18344,7 +18258,6 @@
             '00:00:00:00:00:00:aid:21474836482',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Lutron Electronics Co., Inc',
@@ -18477,7 +18390,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Lutron Electronics Co., Inc',
@@ -18563,7 +18475,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Meross',
@@ -18859,7 +18770,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Meross',
@@ -18997,7 +18907,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Empowered Homes Inc.',
@@ -19347,7 +19256,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Nanoleaf',
@@ -19632,7 +19540,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Netatmo',
@@ -19943,7 +19850,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Netatmo',
@@ -20115,7 +20021,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Netatmo',
@@ -20441,7 +20346,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Green Electronics LLC',
@@ -20887,7 +20791,6 @@
             '00:00:00:00:00:00:aid:2',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'RYSE Inc.',
@@ -21061,7 +20964,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'RYSE Inc.',
@@ -21143,7 +21045,6 @@
             '00:00:00:00:00:00:aid:3',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'RYSE Inc.',
@@ -21321,7 +21222,6 @@
             '00:00:00:00:00:00:aid:4',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'RYSE Inc.',
@@ -21495,7 +21395,6 @@
             '00:00:00:00:00:00:aid:2',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'RYSE Inc.',
@@ -21669,7 +21568,6 @@
             '00:00:00:00:00:00:aid:3',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'RYSE Inc.',
@@ -21843,7 +21741,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'RYSE Inc.',
@@ -21925,7 +21822,6 @@
             '00:00:00:00:00:00:aid:5',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'RYSE Inc.',
@@ -22103,7 +21999,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Schlage ',
@@ -22232,7 +22127,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Hunter Fan',
@@ -22422,7 +22316,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Netatmo',
@@ -22553,7 +22446,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Moen Incorporated',
@@ -22968,7 +22860,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Netatmo',
@@ -23198,7 +23089,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'VELUX',
@@ -23280,7 +23170,6 @@
             '00:00:00:00:00:00:aid:2',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'VELUX',
@@ -23506,7 +23395,6 @@
             '00:00:00:00:00:00:aid:3',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'VELUX',
@@ -23637,7 +23525,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Netatmo',
@@ -23768,7 +23655,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'Netatmo',
@@ -23898,7 +23784,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'VOCOlinc',
@@ -24219,7 +24104,6 @@
             '00:00:00:00:00:00:aid:1',
           ]),
         ]),
-        'is_new': False,
         'labels': list([
         ]),
         'manufacturer': 'VOCOlinc',

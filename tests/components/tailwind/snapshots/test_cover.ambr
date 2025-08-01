@@ -67,7 +67,6 @@
         '_3c_e9_e_6d_21_84_-door1',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Tailwind',
@@ -150,7 +149,6 @@
         '_3c_e9_e_6d_21_84_-door2',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Tailwind',

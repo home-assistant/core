@@ -79,7 +79,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -174,7 +173,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',

@@ -22,7 +22,6 @@
           'be9554b9-c9fb-41f4-8920-22da015376a4',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': None,
@@ -57,7 +56,6 @@
           '123456',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': None,
@@ -96,7 +94,6 @@
           'be9554b9-c9fb-41f4-8920-22da015376a4',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': None,

@@ -116,6 +116,7 @@ async def async_get_config_entry_diagnostics(
             entities.append({"entity": entity_dict, "state": state_dict})
         device_dict = asdict(device)
         device_dict.pop("_cache", None)
+        device_dict.pop("is_new", None)
         device_entities.append({"device": device_dict, "entities": entities})
 
     # remove envoy serial

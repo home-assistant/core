@@ -17,7 +17,6 @@
         '05.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -50,7 +49,6 @@
         '10.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -83,7 +81,6 @@
         '12.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -116,7 +113,6 @@
         '1D.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -149,7 +145,6 @@
         '1F.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -182,7 +177,6 @@
         '20.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -215,7 +209,6 @@
         '22.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -248,7 +241,6 @@
         '26.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -281,7 +273,6 @@
         '28.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -314,7 +305,6 @@
         '28.222222222222',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -347,7 +337,6 @@
         '28.222222222223',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -380,7 +369,6 @@
         '29.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -413,7 +401,6 @@
         '30.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -446,7 +433,6 @@
         '3A.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -479,7 +465,6 @@
         '3B.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -512,7 +497,6 @@
         '42.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -545,7 +529,6 @@
         '7E.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Embedded Data Systems',
@@ -578,7 +561,6 @@
         '7E.222222222222',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Embedded Data Systems',
@@ -611,7 +593,6 @@
         'A6.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -644,7 +625,6 @@
         'EF.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Hobby Boards',
@@ -677,7 +657,6 @@
         'EF.111111111112',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Hobby Boards',
@@ -710,7 +689,6 @@
         'EF.111111111113',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Hobby Boards',
