@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import sensor
 from homeassistant.components.sensor import (
+    AMBIGUOUS_UNITS,
     CONF_STATE_CLASS,
     DEVICE_CLASS_UNITS,
     DEVICE_CLASSES_SCHEMA,
@@ -21,7 +22,6 @@ from homeassistant.components.sensor import (
     SensorExtraStoredData,
     SensorStateClass,
 )
-from homeassistant.components.sensor.recorder import EQUIVALENT_UNITS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -137,7 +137,7 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
     if (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) is None:
         return config
 
-    unit_of_measurement = config[CONF_UNIT_OF_MEASUREMENT] = EQUIVALENT_UNITS.get(
+    unit_of_measurement = config[CONF_UNIT_OF_MEASUREMENT] = AMBIGUOUS_UNITS.get(
         unit_of_measurement, unit_of_measurement
     )
 
