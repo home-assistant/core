@@ -2019,7 +2019,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_numbers[oven][number.mock_oven_temperature_setpoint-entry]
+# name: test_numbers[oven][number.mock_oven_temperature_setpoint_top-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2037,7 +2037,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.mock_oven_temperature_setpoint',
+    'entity_id': 'number.mock_oven_temperature_setpoint_top',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2049,7 +2049,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Temperature setpoint',
+    'original_name': 'Temperature setpoint (Top)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2059,10 +2059,10 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_numbers[oven][number.mock_oven_temperature_setpoint-state]
+# name: test_numbers[oven][number.mock_oven_temperature_setpoint_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Oven Temperature setpoint',
+      'friendly_name': 'Mock Oven Temperature setpoint (Top)',
       'max': 288.0,
       'min': 76.0,
       'mode': <NumberMode.SLIDER: 'slider'>,
@@ -2070,7 +2070,7 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_oven_temperature_setpoint',
+    'entity_id': 'number.mock_oven_temperature_setpoint_top',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
