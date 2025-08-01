@@ -17,7 +17,6 @@
         '12345',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Withings',
@@ -49,7 +48,6 @@
         'f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Withings',

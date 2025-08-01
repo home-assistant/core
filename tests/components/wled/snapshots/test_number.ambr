@@ -78,7 +78,6 @@
         'aabbccddeeff',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WLED',
@@ -171,7 +170,6 @@
         'aabbccddeeff',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WLED',

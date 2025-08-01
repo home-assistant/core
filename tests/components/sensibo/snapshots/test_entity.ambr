@@ -22,7 +22,6 @@
           'ABC999111',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Sensibo',
@@ -56,7 +55,6 @@
           'AAZZAAZZ',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Sensibo',
@@ -90,7 +88,6 @@
           'BBZZBBZZ',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Sensibo',
@@ -120,7 +117,6 @@
           'AABBCC',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Sensibo',

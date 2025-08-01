@@ -17,7 +17,6 @@
         'Dummy_Appliance_1',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Miele',
