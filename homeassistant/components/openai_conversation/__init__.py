@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+import base64
+from datetime import datetime, timedelta
+from functools import partial
+from io import BytesIO
 from pathlib import Path
 from types import MappingProxyType
 
+from aiohttp import web
 import openai
 from openai.types.images_response import ImagesResponse
 from openai.types.responses import (
@@ -14,8 +19,10 @@ from openai.types.responses import (
     ResponseInputParam,
     ResponseInputTextParam,
 )
+from PIL import Image
 import voluptuous as vol
 
+from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import (
@@ -33,9 +40,12 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
+    issue_registry as ir,
     selector,
 )
+from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.network import get_url
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -46,16 +56,20 @@ from .const import (
     CONF_REASONING_EFFORT,
     CONF_TEMPERATURE,
     CONF_TOP_P,
+    DATA_IMAGES,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_NAME,
     DOMAIN,
+    IMAGE_EXPIRY_TIME,
     LOGGER,
+    MAX_IMAGES,
     RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
+    ImageData,
 )
 from .entity import async_prepare_files_for_prompt
 
@@ -68,41 +82,170 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 type OpenAIConfigEntry = ConfigEntry[openai.AsyncClient]
 
 
+def _cleanup_images(image_storage: dict[str, ImageData], num_to_remove: int) -> None:
+    """Remove old images to keep the storage size under the limit."""
+    if num_to_remove <= 0:
+        return
+
+    if num_to_remove >= len(image_storage):
+        image_storage.clear()
+        return
+
+    sorted_images = sorted(
+        image_storage.items(),
+        key=lambda item: item[1].timestamp,
+    )
+
+    for filename, _ in sorted_images[:num_to_remove]:
+        image_storage.pop(filename, None)
+
+
+async def _render_image(call: ServiceCall) -> ServiceResponse:
+    """Render an image."""
+    entry_id = call.data["config_entry"]
+    entry = call.hass.config_entries.async_get_entry(entry_id)
+
+    if entry is None or entry.domain != DOMAIN:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_config_entry",
+            translation_placeholders={"config_entry": entry_id},
+        )
+
+    client: openai.AsyncClient = entry.runtime_data
+
+    model_args = {
+        "model": "gpt-image-1",
+        "prompt": call.data[CONF_PROMPT],
+        "background": call.data["background"],
+        "size": call.data["size"],
+        "quality": call.data["quality"],
+        "moderation": call.data["moderation"],
+        "output_format": "png",
+        "n": 1,
+    }
+    if call.context.user_id:
+        model_args["user"] = call.context.user_id
+
+    repair_issue = False
+    if model_args["size"] == "1024x1792":
+        model_args["size"] = "1024x1536"
+        repair_issue = True
+    elif model_args["size"] == "1792x1024":
+        model_args["size"] = "1536x1024"
+        repair_issue = True
+    if model_args["quality"] == "standard":
+        model_args["quality"] = "medium"
+        repair_issue = True
+    elif model_args["quality"] == "hd":
+        model_args["quality"] = "high"
+        repair_issue = True
+    if "style" in call.data:
+        repair_issue = True
+
+    try:
+        try:
+            response: ImagesResponse = await client.images.generate(**model_args)
+        except openai.PermissionDeniedError as err:
+            if "Verify Organization" not in str(err):
+                raise
+            LOGGER.debug("Permission denied error, fallback to dall-e-3")
+            ir.async_create_issue(
+                call.hass,
+                DOMAIN,
+                "organization_verification_required",
+                is_fixable=False,
+                is_persistent=True,
+                learn_more_url="https://openai.com/index/image-generation-api/#get-started",
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="organization_verification_required",
+                translation_placeholders={
+                    "platform_settings": "https://platform.openai.com/settings/organization/general"
+                },
+            )
+            # Don't raise an issue about deprecated arguments
+            # when there is no permissions for the new model:
+            repair_issue = False
+
+            model_args["model"] = "dall-e-3"
+            model_args["style"] = call.data.get("style", "vivid")
+            model_args["response_format"] = "b64_json"
+            model_args.pop("output_format", None)
+            model_args.pop("background", None)
+            model_args.pop("moderation", None)
+            if call.data["quality"] in ("standard", "hd"):
+                model_args["quality"] = call.data["quality"]
+            elif model_args["quality"] in ("medium", "low"):
+                model_args["quality"] = "standard"
+            elif model_args["quality"] in ("high", "auto"):
+                model_args["quality"] = "hd"
+            if model_args["size"] == "1024x1536":
+                model_args["size"] = "1024x1792"
+            elif model_args["size"] == "1536x1024":
+                model_args["size"] = "1792x1024"
+            elif model_args["size"] == "auto":
+                model_args["size"] = "1024x1024"
+            response = await client.images.generate(**model_args)
+    except openai.OpenAIError as err:
+        raise HomeAssistantError(f"Error generating image: {err}") from err
+
+    if repair_issue:
+        ir.async_create_issue(
+            call.hass,
+            DOMAIN,
+            "generate_image_deprecated_params",
+            is_fixable=False,
+            is_persistent=True,
+            learn_more_url="https://www.home-assistant.io/integrations/openai_conversation/",
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="generate_image_deprecated_params",
+        )
+
+    if not response.data:
+        raise HomeAssistantError("No image data returned")
+
+    IMAGE_STORAGE = call.hass.data.setdefault(DATA_IMAGES, {})
+
+    if len(IMAGE_STORAGE) + len(response.data) > MAX_IMAGES:
+        _cleanup_images(
+            IMAGE_STORAGE, len(response.data) + len(IMAGE_STORAGE) - MAX_IMAGES
+        )
+
+    for idx, response_data in enumerate(response.data):
+        if not response_data.b64_json:
+            raise HomeAssistantError("No image data returned")
+
+        if not response_data.revised_prompt:
+            response_data.revised_prompt = call.data[CONF_PROMPT]
+
+        filename = f"{response.created}_{idx}.{model_args.get('output_format', 'png')}"
+
+        IMAGE_STORAGE[filename] = ImageData(
+            data=base64.b64decode(response_data.b64_json),
+            timestamp=response.created,
+            mime_type=f"image/{model_args.get('output_format', 'png')}",
+            title=response_data.revised_prompt,
+        )
+
+        def _purge_image(filename: str, now: datetime) -> None:
+            """Remove image from storage."""
+            IMAGE_STORAGE.pop(filename, None)
+
+        if IMAGE_EXPIRY_TIME > 0:
+            async_track_point_in_time(
+                call.hass,
+                partial(_purge_image, filename),
+                datetime.now() + timedelta(seconds=IMAGE_EXPIRY_TIME),
+            )
+
+        response_data.url = get_url(call.hass) + f"/api/{DOMAIN}/images/{filename}"
+
+    return response.data[0].model_dump(exclude={"b64_json"})
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up OpenAI Conversation."""
     await async_migrate_integration(hass)
-
-    async def render_image(call: ServiceCall) -> ServiceResponse:
-        """Render an image with dall-e."""
-        entry_id = call.data["config_entry"]
-        entry = hass.config_entries.async_get_entry(entry_id)
-
-        if entry is None or entry.domain != DOMAIN:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_config_entry",
-                translation_placeholders={"config_entry": entry_id},
-            )
-
-        client: openai.AsyncClient = entry.runtime_data
-
-        try:
-            response: ImagesResponse = await client.images.generate(
-                model="dall-e-3",
-                prompt=call.data[CONF_PROMPT],
-                size=call.data["size"],
-                quality=call.data["quality"],
-                style=call.data["style"],
-                response_format="url",
-                n=1,
-            )
-        except openai.OpenAIError as err:
-            raise HomeAssistantError(f"Error generating image: {err}") from err
-
-        if not response.data or not response.data[0].url:
-            raise HomeAssistantError("No image returned")
-
-        return response.data[0].model_dump(exclude={"b64_json"})
 
     async def send_prompt(call: ServiceCall) -> ServiceResponse:
         """Send a prompt to ChatGPT and return the response."""
@@ -210,7 +353,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.services.async_register(
         DOMAIN,
         SERVICE_GENERATE_IMAGE,
-        render_image,
+        _render_image,
         schema=vol.Schema(
             {
                 vol.Required("config_entry"): selector.ConfigEntrySelector(
@@ -219,15 +362,31 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     }
                 ),
                 vol.Required(CONF_PROMPT): cv.string,
-                vol.Optional("size", default="1024x1024"): vol.In(
-                    ("1024x1024", "1024x1792", "1792x1024")
+                vol.Optional("size", default="auto"): vol.In(
+                    (
+                        "1024x1024",
+                        "1536x1024",
+                        "1024x1536",
+                        "auto",
+                        "1024x1792",
+                        "1792x1024",
+                    )
                 ),
-                vol.Optional("quality", default="standard"): vol.In(("standard", "hd")),
-                vol.Optional("style", default="vivid"): vol.In(("vivid", "natural")),
+                vol.Optional("quality", default="auto"): vol.In(
+                    ("auto", "high", "medium", "low", "standard", "hd")
+                ),
+                vol.Optional("background", default="auto"): vol.In(
+                    ("transparent", "opaque", "auto")
+                ),
+                vol.Optional("style"): vol.In(("vivid", "natural")),
+                vol.Optional("moderation", default="auto"): vol.In(("low", "auto")),
             }
         ),
         supports_response=SupportsResponse.ONLY,
     )
+
+    hass.http.register_view(ImageView)
+    hass.http.register_view(ThumbnailView)
 
     return True
 
@@ -262,6 +421,65 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload OpenAI."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+class ImageView(HomeAssistantView):
+    """View to generated images."""
+
+    url = f"/api/{DOMAIN}/images/{{filename}}"
+    name = f"api:{DOMAIN}/images"
+    requires_auth = False
+
+    async def get(
+        self,
+        request: web.Request,
+        filename: str,
+    ) -> web.Response:
+        """Serve image."""
+        hass = request.app[KEY_HASS]
+        IMAGE_STORAGE = hass.data.setdefault(DATA_IMAGES, {})
+        image_data = IMAGE_STORAGE.get(filename)
+
+        if image_data is None:
+            raise web.HTTPNotFound
+
+        return web.Response(
+            body=image_data.data,
+            content_type=image_data.mime_type,
+        )
+
+
+class ThumbnailView(HomeAssistantView):
+    """View to generated images."""
+
+    url = f"/api/{DOMAIN}/thumbnails/{{filename}}"
+    name = f"api:{DOMAIN}/thumbnails"
+    requires_auth = False
+
+    async def get(
+        self,
+        request: web.Request,
+        filename: str,
+    ) -> web.Response:
+        """Serve image."""
+        hass = request.app[KEY_HASS]
+        IMAGE_STORAGE = hass.data.setdefault(DATA_IMAGES, {})
+        image_data = IMAGE_STORAGE.get(filename)
+
+        if image_data is None:
+            raise web.HTTPNotFound
+
+        if image_data.thumbnail is None:
+            image = Image.open(BytesIO(image_data.data))
+            image.thumbnail((256, 256))
+            image_bytes = BytesIO()
+            image.save(image_bytes, format=image_data.mime_type.split("/")[-1].upper())
+            image_data.thumbnail = image_bytes.getvalue()
+
+        return web.Response(
+            body=image_data.thumbnail,
+            content_type=image_data.mime_type,
+        )
 
 
 async def async_update_options(hass: HomeAssistant, entry: OpenAIConfigEntry) -> None:

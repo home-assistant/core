@@ -1,12 +1,31 @@
 """Constants for the OpenAI Conversation integration."""
 
+from dataclasses import dataclass
 import logging
 
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.helpers import llm
+from homeassistant.util.hass_dict import HassKey
 
 DOMAIN = "openai_conversation"
 LOGGER: logging.Logger = logging.getLogger(__package__)
+
+IMAGE_EXPIRY_TIME = 60 * 60  # 1 hour
+MAX_IMAGES = 20
+
+
+@dataclass
+class ImageData:
+    """Image data for stored generated images."""
+
+    data: bytes
+    timestamp: int
+    mime_type: str
+    title: str
+    thumbnail: bytes | None = None
+
+
+DATA_IMAGES: HassKey[dict[str, ImageData]] = HassKey(DOMAIN)
 
 DEFAULT_CONVERSATION_NAME = "OpenAI Conversation"
 DEFAULT_AI_TASK_NAME = "OpenAI AI Task"
