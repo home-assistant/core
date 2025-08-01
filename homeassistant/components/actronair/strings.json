@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "ActronAir OAuth2 Authorization",
+        "description": "To authorize your ActronAir account:\n\n1. Go to: {verification_uri}\n2. Enter code: **{user_code}**\n3. Complete authorization within {expires_minutes} minutes\n\nClick **Submit** after completing authorization.",
+        "data": {}
+      }
+    },
+    "error": {
+      "authorization_pending": "Authorization is still pending. Please complete the authorization process and try again.",
+      "oauth2_error": "Failed to start OAuth2 flow. Please try again later."
+    },
+    "abort": {
+      "oauth2_error": "Failed to start OAuth2 flow",
+      "already_configured": "Account is already configured"
+    }
+  }
+}
