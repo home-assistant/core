@@ -50,6 +50,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
+    area_registry as ar,
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
@@ -1170,6 +1171,7 @@ async def test_esphome_user_services_changes(
 
 async def test_esphome_device_with_suggested_area(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
@@ -1184,11 +1186,12 @@ async def test_esphome_device_with_suggested_area(
     dev = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
     )
-    assert dev.suggested_area == "kitchen"
+    assert dev.area_id == area_registry.async_get_area_by_name("kitchen").id
 
 
 async def test_esphome_device_area_priority(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
@@ -1207,7 +1210,7 @@ async def test_esphome_device_area_priority(
         connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
     )
     # Should use device_info.area.name instead of suggested_area
-    assert dev.suggested_area == "Living Room"
+    assert dev.area_id == area_registry.async_get_area_by_name("Living Room").id
 
 
 async def test_esphome_device_with_project(
@@ -1535,6 +1538,7 @@ async def test_assist_in_progress_issue_deleted(
 
 async def test_sub_device_creation(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
@@ -1571,7 +1575,7 @@ async def test_sub_device_creation(
         connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
     )
     assert main_device is not None
-    assert main_device.suggested_area == "Main Hub"
+    assert main_device.area_id == area_registry.async_get_area_by_name("Main Hub").id
 
     # Check sub devices are created
     sub_device_1 = device_registry.async_get_device(
@@ -1579,7 +1583,9 @@ async def test_sub_device_creation(
     )
     assert sub_device_1 is not None
     assert sub_device_1.name == "Motion Sensor"
-    assert sub_device_1.suggested_area == "Living Room"
+    assert (
+        sub_device_1.area_id == area_registry.async_get_area_by_name("Living Room").id
+    )
     assert sub_device_1.via_device_id == main_device.id
 
     sub_device_2 = device_registry.async_get_device(
@@ -1587,7 +1593,9 @@ async def test_sub_device_creation(
     )
     assert sub_device_2 is not None
     assert sub_device_2.name == "Light Switch"
-    assert sub_device_2.suggested_area == "Living Room"
+    assert (
+        sub_device_2.area_id == area_registry.async_get_area_by_name("Living Room").id
+    )
     assert sub_device_2.via_device_id == main_device.id
 
     sub_device_3 = device_registry.async_get_device(
@@ -1595,7 +1603,7 @@ async def test_sub_device_creation(
     )
     assert sub_device_3 is not None
     assert sub_device_3.name == "Temperature Sensor"
-    assert sub_device_3.suggested_area == "Bedroom"
+    assert sub_device_3.area_id == area_registry.async_get_area_by_name("Bedroom").id
     assert sub_device_3.via_device_id == main_device.id
 
 
@@ -1731,6 +1739,7 @@ async def test_sub_device_with_empty_name(
 
 async def test_sub_device_references_main_device_area(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
@@ -1772,28 +1781,34 @@ async def test_sub_device_references_main_device_area(
         connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
     )
     assert main_device is not None
-    assert main_device.suggested_area == "Main Hub Area"
+    assert (
+        main_device.area_id == area_registry.async_get_area_by_name("Main Hub Area").id
+    )
 
     # Check sub device 1 uses main device's area
     sub_device_1 = device_registry.async_get_device(
         identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
     )
     assert sub_device_1 is not None
-    assert sub_device_1.suggested_area == "Main Hub Area"
+    assert (
+        sub_device_1.area_id == area_registry.async_get_area_by_name("Main Hub Area").id
+    )
 
     # Check sub device 2 uses Living Room
     sub_device_2 = device_registry.async_get_device(
         identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
     )
     assert sub_device_2 is not None
-    assert sub_device_2.suggested_area == "Living Room"
+    assert (
+        sub_device_2.area_id == area_registry.async_get_area_by_name("Living Room").id
+    )
 
     # Check sub device 3 uses Bedroom
     sub_device_3 = device_registry.async_get_device(
         identifiers={(DOMAIN, f"{device.device_info.mac_address}_33333333")}
     )
     assert sub_device_3 is not None
-    assert sub_device_3.suggested_area == "Bedroom"
+    assert sub_device_3.area_id == area_registry.async_get_area_by_name("Bedroom").id
 
 
 @patch("homeassistant.components.esphome.manager.secrets.token_bytes")

@@ -27,7 +27,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.7.1-stable',
     'via_device_id': None,
   })
@@ -60,7 +59,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.7.1-stable',
     'via_device_id': None,
   })

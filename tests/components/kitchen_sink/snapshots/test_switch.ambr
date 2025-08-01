@@ -75,7 +75,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -108,7 +107,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -189,7 +187,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -222,7 +219,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })

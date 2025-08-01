@@ -27,7 +27,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '123456',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -60,7 +59,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'LRW3F7EK4NC700000',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -93,7 +91,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '123',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -126,7 +123,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '234',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
