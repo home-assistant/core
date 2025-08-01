@@ -55,18 +55,53 @@ def catch_matter_error[_R, **P](
 
 
 @dataclass(frozen=True)
-class MatterEntityDescription(EntityDescription):
+class MatterEntityLabels(EntityDescription):
+    """Class to represent a Matter label."""
+
+    # Location of the label in the entity name. Can be "name", "after", "ignore"
+    label_location: str = "after"  # Location of the label in the entity name
+
+    # alternate set of labels to be used for locating the label name
+    # if set, this will override the default label set "label", "button", "orientation", "name", "light"
+    custom_naming_label_list: list[str] | None = None
+
+    def get_entity_label(self, entity: MatterEntity) -> str | None:
+        """Get the label value for a Matter entity."""
+        for attr in (
+            clusters.UserLabel.Attributes.LabelList,
+            clusters.FixedLabel.Attributes.LabelList,
+        ):
+            if not (labels := entity.get_matter_attribute_value(attr)):
+                continue
+            for label in labels:
+                if self.custom_naming_label_list is not None:
+                    # check if the label is in the custom naming label list
+                    # if not, skip it
+                    if label.label.lower() in [
+                        x.lower() for x in self.custom_naming_label_list
+                    ]:
+                        # skip labels that are not in the custom naming label list
+                        return cast(str, label.value)
+                elif label.label.lower() in [
+                    "label",
+                    "button",
+                    "orientation",
+                    "name",
+                    "light",
+                ]:
+                    return cast(str, label.value)
+        # no label found, return None
+        return None
+
+
+@dataclass(frozen=True)
+class MatterEntityDescription(MatterEntityLabels):
     """Describe the Matter entity."""
 
     # convert the value from the primary attribute to the value used by HA
     device_to_ha: Callable[[Any], Any] | None = None
     ha_to_device: Callable[[Any], Any] | None = None
     command_timeout: int | None = None
-    # Location of the label in the entity name. Can be "name", "after", "ignore"
-    label_location: str = "after"  # Location of the label in the entity name
-    # alternate set of labels to be used for locating the label name
-    # if set, this will override the default label set "label", "button", "orientation", "name", "light"
-    custom_naming_label_list: list[str] | None = None
 
 
 class MatterEntity(Entity):
@@ -121,39 +156,16 @@ class MatterEntity(Entity):
         # prefer the label attribute if one exists
         # Matter has a way for users and/or vendors to specify a name for an endpoint
         # which is always preferred over a standard HA (generated) name
-        for attr in (
-            clusters.UserLabel.Attributes.LabelList,
-            clusters.FixedLabel.Attributes.LabelList,
-        ):
-            if not (labels := self.get_matter_attribute_value(attr)):
-                continue
-            for label in labels:
-                if entity_info.entity_description.custom_naming_label_list is not None:
-                    if label.label.lower() not in [
-                        x.lower()
-                        for x in entity_info.entity_description.custom_naming_label_list
-                    ]:
-                        # skip labels that are not in the custom naming label list
-                        continue
-                elif label.label.lower() not in [
-                    "label",
-                    "button",
-                    "orientation",
-                    "name",
-                    "light",
-                ]:
-                    continue
-                # fixed or user label found: use it
-                label_value: str = label.value
-                # in the case the label is only the label id, use it as postfix only
-                if (
-                    entity_info.entity_description.label_location.lower() == "after"
-                    or label_value.isnumeric()
-                ):
-                    self._name_postfix = label_value
-                elif entity_info.entity_description.label_location.lower() == "name":
-                    self._attr_name = label_value
-                break
+        label_value: str | None = entity_info.entity_description.get_entity_label(self)
+        if label_value is not None:
+            # in the case the label is only the label id, use it as postfix only
+            if (
+                entity_info.entity_description.label_location.lower() == "after"
+                or label_value.isnumeric()
+            ):
+                self._name_postfix = label_value
+            elif entity_info.entity_description.label_location.lower() == "name":
+                self._attr_name = label_value
 
         # make sure to update the attributes once
         self._update_from_device()
