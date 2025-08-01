@@ -112,7 +112,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'CN11A1A00001',
-    'suggested_area': None,
     'sw_version': '1.0.3 (192)',
     'via_device_id': None,
   })
@@ -232,7 +231,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'CN11A1A00001',
-    'suggested_area': None,
     'sw_version': '1.0.3 (192)',
     'via_device_id': None,
   })
@@ -352,7 +350,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'CN11A1A00001',
-    'suggested_area': None,
     'sw_version': '1.0.3 (192)',
     'via_device_id': None,
   })
