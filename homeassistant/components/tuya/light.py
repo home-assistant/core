@@ -531,12 +531,6 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 description.brightness_min, dptype=DPType.INTEGER
             )
 
-        if int_type := self.find_dpcode(
-            description.color_temp, dptype=DPType.INTEGER, prefer_function=True
-        ):
-            self._color_temp = int_type
-            color_modes.add(ColorMode.COLOR_TEMP)
-
         if (
             dpcode := self.find_dpcode(description.color_data, prefer_function=True)
         ) and self.get_dptype(dpcode) == DPType.JSON:
@@ -562,10 +556,16 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 ):
                     self._color_data_type = DEFAULT_COLOR_TYPE_DATA_V2
 
-        # If entity has color but does not have color_temp, check if it has work_mode "white"
-        if (
+        # Check if the light has color temperature
+        if int_type := self.find_dpcode(
+            description.color_temp, dptype=DPType.INTEGER, prefer_function=True
+        ):
+            self._color_temp = int_type
+            color_modes.add(ColorMode.COLOR_TEMP)
+        # If light has color but does not have color_temp, check if it has
+        # work_mode "white"
+        elif (
             color_supported(color_modes)
-            and ColorMode.COLOR_TEMP not in color_modes
             and (
                 color_mode_enum := self.find_dpcode(
                     description.color_mode, dptype=DPType.ENUM, prefer_function=True
