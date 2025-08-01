@@ -108,7 +108,7 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
         # Ensure that an IPv4 address is received
         self._host = discovery_info.host
         self._name = discovery_info.hostname[6:18]
-        if discovery_info.ip_address.version != 4:
+        if discovery_info.ip_address.version == 6:
             return self.async_abort(reason="ipv6_address")
 
         await self.async_set_unique_id(self._name)
