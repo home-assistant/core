@@ -28,19 +28,19 @@
   "entity": {
     "binary_sensor": {
       "port_forwarding": {
-        "name": "Port Forwarding Enabled"
+        "name": "Port forwarding enabled"
       },
       "dhcp_client": {
-        "name": "DHCP Client Connected"
+        "name": "DHCP client connected"
       },
       "dhcp_server": {
-        "name": "DHCP Server Active"
+        "name": "DHCP server active"
       },
       "dhcp6_server": {
-        "name": "DHCPv6 Server Active"
+        "name": "DHCPv6 server active"
       },
       "pppoe": {
-        "name": "PPPoE Link Active"
+        "name": "PPPoE link active"
       }
     },
     "sensor": {
