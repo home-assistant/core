@@ -295,14 +295,29 @@
       "preparation": null,
       "setting": {
         "type": "AIR_CONDITIONING",
-        "power": "OFF"
+        "power": "ON",
+        "mode": "HEAT",
+        "temperature": {
+          "celsius": 25.0,
+          "fahrenheit": 77.0
+        },
+        "fanLevel": "LEVEL3",
+        "verticalSwing": "ON",
+        "horizontalSwing": "ON"
       },
       "overlayType": "MANUAL",
       "overlay": {
         "type": "MANUAL",
         "setting": {
           "type": "AIR_CONDITIONING",
-          "power": "OFF"
+          "power": "ON",
+          "mode": "HEAT",
+          "temperature": {
+            "celsius": 25.0,
+            "fahrenheit": 77.0
+          },
+          "fanLevel": "LEVEL3",
+          "verticalSwing": "ON"
         },
         "termination": {
           "type": "MANUAL",
@@ -337,14 +352,14 @@
         "acPower": {
           "timestamp": "2022-07-13T18: 06: 58.183Z",
           "type": "POWER",
-          "value": "OFF"
+          "value": "ON"
         }
       },
       "sensorDataPoints": {
         "insideTemperature": {
-          "celsius": 24.21,
-          "fahrenheit": 75.58,
-          "timestamp": "2024-06-28T21: 43: 51.067Z",
+          "celsius": 24.3,
+          "fahrenheit": 75.74,
+          "timestamp": "2024-06-28T22: 23: 15.679Z",
           "type": "TEMPERATURE",
           "precision": {
             "celsius": 0.1,
@@ -353,8 +368,8 @@
         },
         "humidity": {
           "type": "PERCENTAGE",
-          "percentage": 71.4,
-          "timestamp": "2024-06-28T21: 43: 51.067Z"
+          "percentage": 70.9,
+          "timestamp": "2024-06-28T22: 23: 15.679Z"
         }
       },
       "terminationCondition": {

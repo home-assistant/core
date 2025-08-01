@@ -341,7 +341,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'on',
   })
 # ---
 # name: test_entities[binary_sensor.air_conditioning_with_fanlevel_window-entry]
