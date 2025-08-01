@@ -126,6 +126,7 @@ FLOWS = {
         "coolmaster",
         "cpuspeed",
         "crownstone",
+        "cync_by_ge",
         "daikin",
         "datadog",
         "deako",
