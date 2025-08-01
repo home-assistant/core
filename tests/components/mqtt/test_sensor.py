@@ -917,7 +917,7 @@ async def test_invalid_unit_of_measurement(
                     "name": "test",
                     "state_topic": "test-topic",
                     "device_class": "voltage",
-                    "unit_of_measurement": "\u00b5V",
+                    "unit_of_measurement": "\u00b5V",  # microVolt
                 }
             }
         }
@@ -948,7 +948,7 @@ async def test_device_class_with_equivalent_unit_of_measurement_received(
         "device_class": "voltage",
         "unit_of_measurement": "\u00b5V",
     }
-    # Now discover an invalid sensor
+    # Now discover a sensor with an altarantive mu char
     async_fire_mqtt_message(
         hass, "homeassistant/sensor/bla/config", json.dumps(discovery_payload)
     )

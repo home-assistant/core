@@ -137,7 +137,7 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
     if (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) is None:
         return config
 
-    config[CONF_UNIT_OF_MEASUREMENT] = EQUIVALENT_UNITS.get(
+    unit_of_measurement = config[CONF_UNIT_OF_MEASUREMENT] = EQUIVALENT_UNITS.get(
         unit_of_measurement, unit_of_measurement
     )
 

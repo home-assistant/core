@@ -339,7 +339,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '123-no',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.home_nitrogen_monoxide-state]
@@ -349,7 +349,7 @@
       'device_class': 'nitrogen_monoxide',
       'friendly_name': 'Home Nitrogen monoxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_nitrogen_monoxide',
@@ -396,7 +396,7 @@
     'supported_features': 0,
     'translation_key': 'nox',
     'unique_id': '123-nox',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.home_nitrogen_oxides-state]
@@ -405,7 +405,7 @@
       'attribution': 'Data provided by GIOŚ',
       'friendly_name': 'Home Nitrogen oxides',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.home_nitrogen_oxides',
