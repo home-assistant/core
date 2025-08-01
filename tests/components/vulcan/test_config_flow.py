@@ -15,13 +15,14 @@ from vulcan import (
 from vulcan.model import Student
 
 from homeassistant import config_entries
-from homeassistant.components.vulcan import config_flow, const, register
+from homeassistant.components.vulcan import config_flow, register
 from homeassistant.components.vulcan.config_flow import ClientConnectionError, Keystore
+from homeassistant.components.vulcan.const import DOMAIN
 from homeassistant.const import CONF_PIN, CONF_REGION, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 
 fake_keystore = Keystore("", "", "", "", "")
 fake_account = Account(
@@ -53,10 +54,10 @@ async def test_config_flow_auth_success(
     mock_keystore.return_value = fake_keystore
     mock_account.return_value = fake_account
     mock_student.return_value = [
-        Student.load(load_fixture("fake_student_1.json", "vulcan"))
+        Student.load(await async_load_fixture(hass, "fake_student_1.json", DOMAIN))
     ]
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -90,12 +91,12 @@ async def test_config_flow_auth_success_with_multiple_students(
     mock_student.return_value = [
         Student.load(student)
         for student in (
-            load_fixture("fake_student_1.json", "vulcan"),
-            load_fixture("fake_student_2.json", "vulcan"),
+            await async_load_fixture(hass, "fake_student_1.json", DOMAIN),
+            await async_load_fixture(hass, "fake_student_2.json", DOMAIN),
         )
     ]
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -135,10 +136,10 @@ async def test_config_flow_reauth_success(
     mock_keystore.return_value = fake_keystore
     mock_account.return_value = fake_account
     mock_student.return_value = [
-        Student.load(load_fixture("fake_student_1.json", "vulcan"))
+        Student.load(await async_load_fixture(hass, "fake_student_1.json", DOMAIN))
     ]
     entry = MockConfigEntry(
-        domain=const.DOMAIN,
+        domain=DOMAIN,
         unique_id="0",
         data={"student_id": "0"},
     )
@@ -173,10 +174,10 @@ async def test_config_flow_reauth_without_matching_entries(
     mock_keystore.return_value = fake_keystore
     mock_account.return_value = fake_account
     mock_student.return_value = [
-        Student.load(load_fixture("fake_student_1.json", "vulcan"))
+        Student.load(await async_load_fixture(hass, "fake_student_1.json", DOMAIN))
     ]
     entry = MockConfigEntry(
-        domain=const.DOMAIN,
+        domain=DOMAIN,
         unique_id="0",
         data={"student_id": "1"},
     )
@@ -205,7 +206,7 @@ async def test_config_flow_reauth_with_errors(
     mock_keystore.return_value = fake_keystore
     mock_account.return_value = fake_account
     entry = MockConfigEntry(
-        domain=const.DOMAIN,
+        domain=DOMAIN,
         unique_id="0",
         data={"student_id": "0"},
     )
@@ -303,16 +304,18 @@ async def test_multiple_config_entries(
     mock_keystore.return_value = fake_keystore
     mock_account.return_value = fake_account
     mock_student.return_value = [
-        Student.load(load_fixture("fake_student_1.json", "vulcan"))
+        Student.load(await async_load_fixture(hass, "fake_student_1.json", DOMAIN))
     ]
     MockConfigEntry(
-        domain=const.DOMAIN,
+        domain=DOMAIN,
         unique_id="123456",
-        data=json.loads(load_fixture("fake_config_entry_data.json", "vulcan")),
+        data=json.loads(
+            await async_load_fixture(hass, "fake_config_entry_data.json", DOMAIN)
+        ),
     ).add_to_hass(hass)
     await register.register("token", "region", "000000")
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -348,16 +351,18 @@ async def test_multiple_config_entries_using_saved_credentials(
 ) -> None:
     """Test a successful config flow for multiple config entries using saved credentials."""
     mock_student.return_value = [
-        Student.load(load_fixture("fake_student_1.json", "vulcan"))
+        Student.load(await async_load_fixture(hass, "fake_student_1.json", DOMAIN))
     ]
     MockConfigEntry(
-        domain=const.DOMAIN,
+        domain=DOMAIN,
         unique_id="123456",
-        data=json.loads(load_fixture("fake_config_entry_data.json", "vulcan")),
+        data=json.loads(
+            await async_load_fixture(hass, "fake_config_entry_data.json", DOMAIN)
+        ),
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -384,17 +389,19 @@ async def test_multiple_config_entries_using_saved_credentials_2(
 ) -> None:
     """Test a successful config flow for multiple config entries using saved credentials (different situation)."""
     mock_student.return_value = [
-        Student.load(load_fixture("fake_student_1.json", "vulcan")),
-        Student.load(load_fixture("fake_student_2.json", "vulcan")),
+        Student.load(await async_load_fixture(hass, "fake_student_1.json", DOMAIN)),
+        Student.load(await async_load_fixture(hass, "fake_student_2.json", DOMAIN)),
     ]
     MockConfigEntry(
-        domain=const.DOMAIN,
+        domain=DOMAIN,
         unique_id="123456",
-        data=json.loads(load_fixture("fake_config_entry_data.json", "vulcan")),
+        data=json.loads(
+            await async_load_fixture(hass, "fake_config_entry_data.json", DOMAIN)
+        ),
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -430,24 +437,28 @@ async def test_multiple_config_entries_using_saved_credentials_3(
 ) -> None:
     """Test a successful config flow for multiple config entries using saved credentials."""
     mock_student.return_value = [
-        Student.load(load_fixture("fake_student_1.json", "vulcan"))
+        Student.load(await async_load_fixture(hass, "fake_student_1.json", DOMAIN))
     ]
     MockConfigEntry(
         entry_id="456",
-        domain=const.DOMAIN,
+        domain=DOMAIN,
         unique_id="234567",
-        data=json.loads(load_fixture("fake_config_entry_data.json", "vulcan"))
+        data=json.loads(
+            await async_load_fixture(hass, "fake_config_entry_data.json", DOMAIN)
+        )
         | {"student_id": "456"},
     ).add_to_hass(hass)
     MockConfigEntry(
         entry_id="123",
-        domain=const.DOMAIN,
+        domain=DOMAIN,
         unique_id="123456",
-        data=json.loads(load_fixture("fake_config_entry_data.json", "vulcan")),
+        data=json.loads(
+            await async_load_fixture(hass, "fake_config_entry_data.json", DOMAIN)
+        ),
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -483,25 +494,29 @@ async def test_multiple_config_entries_using_saved_credentials_4(
 ) -> None:
     """Test a successful config flow for multiple config entries using saved credentials (different situation)."""
     mock_student.return_value = [
-        Student.load(load_fixture("fake_student_1.json", "vulcan")),
-        Student.load(load_fixture("fake_student_2.json", "vulcan")),
+        Student.load(await async_load_fixture(hass, "fake_student_1.json", DOMAIN)),
+        Student.load(await async_load_fixture(hass, "fake_student_2.json", DOMAIN)),
     ]
     MockConfigEntry(
         entry_id="456",
-        domain=const.DOMAIN,
+        domain=DOMAIN,
         unique_id="234567",
-        data=json.loads(load_fixture("fake_config_entry_data.json", "vulcan"))
+        data=json.loads(
+            await async_load_fixture(hass, "fake_config_entry_data.json", DOMAIN)
+        )
         | {"student_id": "456"},
     ).add_to_hass(hass)
     MockConfigEntry(
         entry_id="123",
-        domain=const.DOMAIN,
+        domain=DOMAIN,
         unique_id="123456",
-        data=json.loads(load_fixture("fake_config_entry_data.json", "vulcan")),
+        data=json.loads(
+            await async_load_fixture(hass, "fake_config_entry_data.json", DOMAIN)
+        ),
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -546,20 +561,24 @@ async def test_multiple_config_entries_without_valid_saved_credentials(
     """Test a unsuccessful config flow for multiple config entries without valid saved credentials."""
     MockConfigEntry(
         entry_id="456",
-        domain=const.DOMAIN,
+        domain=DOMAIN,
         unique_id="234567",
-        data=json.loads(load_fixture("fake_config_entry_data.json", "vulcan"))
+        data=json.loads(
+            await async_load_fixture(hass, "fake_config_entry_data.json", DOMAIN)
+        )
         | {"student_id": "456"},
     ).add_to_hass(hass)
     MockConfigEntry(
         entry_id="123",
-        domain=const.DOMAIN,
+        domain=DOMAIN,
         unique_id="123456",
-        data=json.loads(load_fixture("fake_config_entry_data.json", "vulcan")),
+        data=json.loads(
+            await async_load_fixture(hass, "fake_config_entry_data.json", DOMAIN)
+        ),
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -594,20 +613,24 @@ async def test_multiple_config_entries_using_saved_credentials_with_connections_
     """Test a unsuccessful config flow for multiple config entries without valid saved credentials."""
     MockConfigEntry(
         entry_id="456",
-        domain=const.DOMAIN,
+        domain=DOMAIN,
         unique_id="234567",
-        data=json.loads(load_fixture("fake_config_entry_data.json", "vulcan"))
+        data=json.loads(
+            await async_load_fixture(hass, "fake_config_entry_data.json", DOMAIN)
+        )
         | {"student_id": "456"},
     ).add_to_hass(hass)
     MockConfigEntry(
         entry_id="123",
-        domain=const.DOMAIN,
+        domain=DOMAIN,
         unique_id="123456",
-        data=json.loads(load_fixture("fake_config_entry_data.json", "vulcan")),
+        data=json.loads(
+            await async_load_fixture(hass, "fake_config_entry_data.json", DOMAIN)
+        ),
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -642,20 +665,24 @@ async def test_multiple_config_entries_using_saved_credentials_with_unknown_erro
     """Test a unsuccessful config flow for multiple config entries without valid saved credentials."""
     MockConfigEntry(
         entry_id="456",
-        domain=const.DOMAIN,
+        domain=DOMAIN,
         unique_id="234567",
-        data=json.loads(load_fixture("fake_config_entry_data.json", "vulcan"))
+        data=json.loads(
+            await async_load_fixture(hass, "fake_config_entry_data.json", DOMAIN)
+        )
         | {"student_id": "456"},
     ).add_to_hass(hass)
     MockConfigEntry(
         entry_id="123",
-        domain=const.DOMAIN,
+        domain=DOMAIN,
         unique_id="123456",
-        data=json.loads(load_fixture("fake_config_entry_data.json", "vulcan")),
+        data=json.loads(
+            await async_load_fixture(hass, "fake_config_entry_data.json", DOMAIN)
+        ),
     ).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -694,19 +721,21 @@ async def test_student_already_exists(
     mock_keystore.return_value = fake_keystore
     mock_account.return_value = fake_account
     mock_student.return_value = [
-        Student.load(load_fixture("fake_student_1.json", "vulcan"))
+        Student.load(await async_load_fixture(hass, "fake_student_1.json", DOMAIN))
     ]
     MockConfigEntry(
-        domain=const.DOMAIN,
+        domain=DOMAIN,
         unique_id="0",
-        data=json.loads(load_fixture("fake_config_entry_data.json", "vulcan"))
+        data=json.loads(
+            await async_load_fixture(hass, "fake_config_entry_data.json", DOMAIN)
+        )
         | {"student_id": "0"},
     ).add_to_hass(hass)
 
     await register.register("token", "region", "000000")
 
     result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -733,7 +762,7 @@ async def test_config_flow_auth_invalid_token(
         side_effect=InvalidTokenException,
     ):
         result = await hass.config_entries.flow.async_init(
-            const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
         assert result["type"] is FlowResultType.FORM
@@ -761,7 +790,7 @@ async def test_config_flow_auth_invalid_region(
         side_effect=InvalidSymbolException,
     ):
         result = await hass.config_entries.flow.async_init(
-            const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
         assert result["type"] is FlowResultType.FORM
@@ -787,7 +816,7 @@ async def test_config_flow_auth_invalid_pin(mock_keystore, hass: HomeAssistant) 
         side_effect=InvalidPINException,
     ):
         result = await hass.config_entries.flow.async_init(
-            const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
         assert result["type"] is FlowResultType.FORM
@@ -815,7 +844,7 @@ async def test_config_flow_auth_expired_token(
         side_effect=ExpiredTokenException,
     ):
         result = await hass.config_entries.flow.async_init(
-            const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
         assert result["type"] is FlowResultType.FORM
@@ -843,7 +872,7 @@ async def test_config_flow_auth_connection_error(
         side_effect=ClientConnectionError,
     ):
         result = await hass.config_entries.flow.async_init(
-            const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
         assert result["type"] is FlowResultType.FORM
@@ -871,7 +900,7 @@ async def test_config_flow_auth_unknown_error(
         side_effect=Exception,
     ):
         result = await hass.config_entries.flow.async_init(
-            const.DOMAIN, context={"source": config_entries.SOURCE_USER}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
         assert result["type"] is FlowResultType.FORM

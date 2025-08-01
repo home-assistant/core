@@ -329,8 +329,8 @@ class JellyfinSource(MediaSource):
         movies = await self._get_children(library_id, ITEM_TYPE_MOVIE)
         movies = sorted(
             movies,
-            # Sort by whether a movies has an name first, then by name
-            # This allows for sorting moveis with, without and with missing names
+            # Sort by whether a movie has a name first, then by name
+            # This allows for sorting movies with, without and with missing names
             key=lambda k: (
                 ITEM_KEY_NAME not in k,
                 k.get(ITEM_KEY_NAME),
@@ -388,7 +388,7 @@ class JellyfinSource(MediaSource):
         series = await self._get_children(library_id, ITEM_TYPE_SERIES)
         series = sorted(
             series,
-            # Sort by whether a seroes has an name first, then by name
+            # Sort by whether a series has a name first, then by name
             # This allows for sorting series with, without and with missing names
             key=lambda k: (
                 ITEM_KEY_NAME not in k,

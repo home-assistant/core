@@ -26,12 +26,11 @@ from .const import (
     SHIX3_1_INPUTS_EVENTS_TYPES,
 )
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
-from .entity import ShellyBlockEntity
+from .entity import ShellyBlockEntity, get_entity_rpc_device_info
 from .utils import (
     async_remove_orphaned_entities,
     async_remove_shelly_entity,
     get_device_entry_gen,
-    get_rpc_device_info,
     get_rpc_entity_name,
     get_rpc_key_instances,
     is_block_momentary_input,
@@ -206,9 +205,7 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
         """Initialize Shelly entity."""
         super().__init__(coordinator)
         self.event_id = int(key.split(":")[-1])
-        self._attr_device_info = get_rpc_device_info(
-            coordinator.device, coordinator.mac, key
-        )
+        self._attr_device_info = get_entity_rpc_device_info(coordinator, key)
         self._attr_unique_id = f"{coordinator.mac}-{key}"
         self._attr_name = get_rpc_entity_name(coordinator.device, key)
         self.entity_description = description

@@ -5,7 +5,6 @@ from typing import Any
 from qbusmqttapi.discovery import QbusMqttOutput
 from qbusmqttapi.state import QbusMqttState, StateAction, StateType
 
-from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.components.scene import Scene
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -61,6 +60,6 @@ class QbusScene(QbusEntity, Scene):
         )
         await self._async_publish_output_state(state)
 
-    async def _state_received(self, msg: ReceiveMessage) -> None:
+    async def _handle_state_received(self, state: QbusMqttState) -> None:
         # Nothing to do
         pass

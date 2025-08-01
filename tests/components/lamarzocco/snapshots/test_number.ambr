@@ -126,7 +126,7 @@
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.mr012345_prebrew_off_time',
@@ -173,7 +173,7 @@
     'supported_features': 0,
     'translation_key': 'prebrew_time_off',
     'unique_id': 'MR012345_prebrew_off',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
 # name: test_prebrew_on[Linea Micra]
@@ -185,7 +185,7 @@
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.mr012345_prebrew_on_time',
@@ -232,7 +232,7 @@
     'supported_features': 0,
     'translation_key': 'prebrew_time_on',
     'unique_id': 'MR012345_prebrew_on',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
 # name: test_preinfusion[Linea Micra]

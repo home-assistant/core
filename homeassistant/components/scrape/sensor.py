@@ -7,8 +7,7 @@ from typing import Any, cast
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import CONF_STATE_CLASS, SensorDeviceClass
-from homeassistant.components.sensor.helpers import async_parse_date_datetime
+from homeassistant.components.sensor import CONF_STATE_CLASS
 from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
@@ -218,17 +217,7 @@ class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEnti
                 self.entity_id, variables, None
             )
 
-        if self.device_class not in {
-            SensorDeviceClass.DATE,
-            SensorDeviceClass.TIMESTAMP,
-        }:
-            self._attr_native_value = value
-            self._process_manual_data(variables)
-            return
-
-        self._attr_native_value = async_parse_date_datetime(
-            value, self.entity_id, self.device_class
-        )
+        self._set_native_value_with_possible_timestamp(value)
         self._process_manual_data(variables)
 
     @property

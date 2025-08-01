@@ -7,7 +7,13 @@ from dataclasses import dataclass, field
 from logging import getLogger
 
 from aiohttp import web
-from switchbot_api import CannotConnect, Device, InvalidAuth, Remote, SwitchBotAPI
+from switchbot_api import (
+    Device,
+    Remote,
+    SwitchBotAPI,
+    SwitchBotAuthenticationError,
+    SwitchBotConnectionError,
+)
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigEntry
@@ -23,6 +29,8 @@ PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
+    Platform.FAN,
+    Platform.LIGHT,
     Platform.LOCK,
     Platform.SENSOR,
     Platform.SWITCH,
@@ -45,6 +53,8 @@ class SwitchbotDevices:
     sensors: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     vacuums: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
     locks: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
+    fans: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
+    lights: list[tuple[Device, SwitchBotCoordinator]] = field(default_factory=list)
 
 
 @dataclass
@@ -90,7 +100,6 @@ async def make_switchbot_devices(
             for device in devices
         ]
     )
-
     return devices_data
 
 
@@ -135,19 +144,27 @@ async def make_device_data(
             hass, entry, api, device, coordinators_by_id
         )
         devices_data.sensors.append((device, coordinator))
-
     if isinstance(device, Device) and device.device_type in [
         "K10+",
         "K10+ Pro",
         "Robot Vacuum Cleaner S1",
         "Robot Vacuum Cleaner S1 Plus",
+        "K20+ Pro",
+        "Robot Vacuum Cleaner K10+ Pro Combo",
+        "Robot Vacuum Cleaner S10",
+        "S20",
     ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id, True
         )
         devices_data.vacuums.append((device, coordinator))
 
-    if isinstance(device, Device) and device.device_type.startswith("Smart Lock"):
+    if isinstance(device, Device) and device.device_type in [
+        "Smart Lock",
+        "Smart Lock Lite",
+        "Smart Lock Pro",
+        "Smart Lock Ultra",
+    ]:
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
         )
@@ -166,6 +183,27 @@ async def make_device_data(
             else:
                 devices_data.switches.append((device, coordinator))
 
+    if isinstance(device, Device) and device.device_type in [
+        "Battery Circulator Fan",
+        "Circulator Fan",
+    ]:
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id
+        )
+        devices_data.fans.append((device, coordinator))
+        devices_data.sensors.append((device, coordinator))
+
+    if isinstance(device, Device) and device.device_type in [
+        "Strip Light",
+        "Strip Light 3",
+        "Floor Lamp",
+        "Color Bulb",
+    ]:
+        coordinator = await coordinator_for_device(
+            hass, entry, api, device, coordinators_by_id
+        )
+        devices_data.lights.append((device, coordinator))
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SwitchBot via API from a config entry."""
@@ -175,12 +213,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api = SwitchBotAPI(token=token, secret=secret)
     try:
         devices = await api.list_devices()
-    except InvalidAuth as ex:
+    except SwitchBotAuthenticationError as ex:
         _LOGGER.error(
             "Invalid authentication while connecting to SwitchBot API: %s", ex
         )
         return False
-    except CannotConnect as ex:
+    except SwitchBotConnectionError as ex:
         raise ConfigEntryNotReady from ex
     _LOGGER.debug("Devices: %s", devices)
     coordinators_by_id: dict[str, SwitchBotCoordinator] = {}

@@ -520,7 +520,7 @@ async def test_thermostat_invalid_hvac_mode(
     assert thermostat.state == HVACMode.OFF
     assert thermostat.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await common.async_set_hvac_mode(hass, HVACMode.DRY)
 
     assert thermostat.state == HVACMode.OFF
@@ -1396,7 +1396,7 @@ async def test_thermostat_unexpected_hvac_status(
     assert ATTR_FAN_MODE not in thermostat.attributes
     assert ATTR_FAN_MODES not in thermostat.attributes
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await common.async_set_hvac_mode(hass, HVACMode.DRY)
     assert thermostat.state == HVACMode.OFF
 

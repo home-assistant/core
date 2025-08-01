@@ -26,7 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import load_fixture
+from tests.common import async_load_fixture
 
 pytestmark = pytest.mark.usefixtures("patch_renault_account", "patch_get_vehicles")
 
@@ -67,7 +67,7 @@ async def test_service_set_ac_cancel(
         "renault_api.renault_vehicle.RenaultVehicle.set_ac_stop",
         return_value=(
             schemas.KamereonVehicleHvacStartActionDataSchema.loads(
-                load_fixture("renault/action.set_ac_stop.json")
+                await async_load_fixture(hass, "action.set_ac_stop.json", DOMAIN)
             )
         ),
     ) as mock_action:
@@ -95,7 +95,7 @@ async def test_service_set_ac_start_simple(
         "renault_api.renault_vehicle.RenaultVehicle.set_ac_start",
         return_value=(
             schemas.KamereonVehicleHvacStartActionDataSchema.loads(
-                load_fixture("renault/action.set_ac_start.json")
+                await async_load_fixture(hass, "action.set_ac_start.json", DOMAIN)
             )
         ),
     ) as mock_action:
@@ -125,7 +125,7 @@ async def test_service_set_ac_start_with_date(
         "renault_api.renault_vehicle.RenaultVehicle.set_ac_start",
         return_value=(
             schemas.KamereonVehicleHvacStartActionDataSchema.loads(
-                load_fixture("renault/action.set_ac_start.json")
+                await async_load_fixture(hass, "action.set_ac_start.json", DOMAIN)
             )
         ),
     ) as mock_action:
@@ -154,14 +154,16 @@ async def test_service_set_charge_schedule(
         patch(
             "renault_api.renault_vehicle.RenaultVehicle.http_get",
             return_value=schemas.KamereonResponseSchema.loads(
-                load_fixture("renault/charging_settings.json")
+                await async_load_fixture(hass, "charging_settings.json", DOMAIN)
             ),
         ),
         patch(
             "renault_api.renault_vehicle.RenaultVehicle.set_charge_schedules",
             return_value=(
                 schemas.KamereonVehicleHvacStartActionDataSchema.loads(
-                    load_fixture("renault/action.set_charge_schedules.json")
+                    await async_load_fixture(
+                        hass, "action.set_charge_schedules.json", DOMAIN
+                    )
                 )
             ),
         ) as mock_action,
@@ -204,14 +206,16 @@ async def test_service_set_charge_schedule_multi(
         patch(
             "renault_api.renault_vehicle.RenaultVehicle.http_get",
             return_value=schemas.KamereonResponseSchema.loads(
-                load_fixture("renault/charging_settings.json")
+                await async_load_fixture(hass, "charging_settings.json", DOMAIN)
             ),
         ),
         patch(
             "renault_api.renault_vehicle.RenaultVehicle.set_charge_schedules",
             return_value=(
                 schemas.KamereonVehicleHvacStartActionDataSchema.loads(
-                    load_fixture("renault/action.set_charge_schedules.json")
+                    await async_load_fixture(
+                        hass, "action.set_charge_schedules.json", DOMAIN
+                    )
                 )
             ),
         ) as mock_action,
@@ -250,14 +254,16 @@ async def test_service_set_ac_schedule(
         patch(
             "renault_api.renault_vehicle.RenaultVehicle.get_hvac_settings",
             return_value=schemas.KamereonVehicleDataResponseSchema.loads(
-                load_fixture("renault/hvac_settings.json")
+                await async_load_fixture(hass, "hvac_settings.json", DOMAIN)
             ).get_attributes(schemas.KamereonVehicleHvacSettingsDataSchema),
         ),
         patch(
             "renault_api.renault_vehicle.RenaultVehicle.set_hvac_schedules",
             return_value=(
                 schemas.KamereonVehicleHvacScheduleActionDataSchema.loads(
-                    load_fixture("renault/action.set_ac_schedules.json")
+                    await async_load_fixture(
+                        hass, "action.set_ac_schedules.json", DOMAIN
+                    )
                 )
             ),
         ) as mock_action,
@@ -299,14 +305,16 @@ async def test_service_set_ac_schedule_multi(
         patch(
             "renault_api.renault_vehicle.RenaultVehicle.get_hvac_settings",
             return_value=schemas.KamereonVehicleDataResponseSchema.loads(
-                load_fixture("renault/hvac_settings.json")
+                await async_load_fixture(hass, "hvac_settings.json", DOMAIN)
             ).get_attributes(schemas.KamereonVehicleHvacSettingsDataSchema),
         ),
         patch(
             "renault_api.renault_vehicle.RenaultVehicle.set_hvac_schedules",
             return_value=(
                 schemas.KamereonVehicleHvacScheduleActionDataSchema.loads(
-                    load_fixture("renault/action.set_ac_schedules.json")
+                    await async_load_fixture(
+                        hass, "action.set_ac_schedules.json", DOMAIN
+                    )
                 )
             ),
         ) as mock_action,
