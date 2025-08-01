@@ -10,10 +10,6 @@
         "data_description": {
           "pairing_code": "Code from the Droplet app."
         }
-      },
-      "user": {
-        "title": "Configure Droplet",
-        "description": "Configure MQTT first."
       }
     },
     "abort": {

@@ -125,7 +125,7 @@ async def test_zeroconf_invalid_discovery(hass: HomeAssistant) -> None:
 async def test_confirm_failed_connect(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test that config flow fails with Droplet can't connect."""
+    """Test that config flow fails when Droplet can't connect."""
     discovery_info = ZeroconfServiceInfo(
         ip_address=IPv4Address("192.168.1.2"),
         ip_addresses=[IPv4Address("192.168.1.2")],

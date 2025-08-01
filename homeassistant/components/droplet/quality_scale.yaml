@@ -33,10 +33,10 @@ rules:
     status: exempt
     comment: |
       No custom actions are defined.
-  config-entry-unloading: todo
+  config-entry-unloading: done
   docs-configuration-parameters: todo
-  docs-installation-parameters: todo
-  entity-unavailable: todo
+  docs-installation-parameters: done
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: todo
   parallel-updates: todo
@@ -46,39 +46,27 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery-update-info: todo
-  discovery: todo
-  docs-data-update: todo
+  discovery-update-info: done
+  discovery: done
+  docs-data-update: done
   docs-examples: todo
   docs-known-limitations: todo
   docs-supported-devices: todo
-  docs-supported-functions: todo
+  docs-supported-functions: done
   docs-troubleshooting: todo
-  docs-use-cases: todo
-  dynamic-devices:
-    status: exempt
-    comment: |
-      Device type integration
-  entity-category: todo
-  entity-device-class: todo
+  docs-use-cases: done
+  dynamic-devices: todo
+  entity-category: done
+  entity-device-class: done
   entity-disabled-by-default: todo
-  entity-translations: todo
+  entity-translations: done
   exception-translations: todo
-  icon-translations: todo
+  icon-translations: done
   reconfiguration-flow: todo
-  repair-issues:
-    status: exempt
-    comment: |
-      No repairs
-  stale-devices:
-    status: exempt
-    comment: |
-      Device type integration
+  repair-issues: todo
+  stale-devices: todo
 
   # Platinum
   async-dependency: todo
-  inject-websession:
-    status: exempt
-    comment: |
-      Integration does not make any HTTP requests.
-  strict-typing: todo
+  inject-websession: done
+  strict-typing: done
