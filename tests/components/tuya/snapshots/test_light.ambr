@@ -56,7 +56,216 @@
     'state': 'on',
   })
 # ---
-# name: test_platform_setup_and_discovery[dj_smart_light_bulb][light.garage_light-entry]
+# name: test_platform_setup_and_discovery[dj_8szt7whdvwpmxglk_smart_light_bulb][light.porch_light_e-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.HS: 'hs'>,
+        <ColorMode.WHITE: 'white'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.porch_light_e',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.eb10549aadfc74b7c8q2tiswitch_led',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[dj_8szt7whdvwpmxglk_smart_light_bulb][light.porch_light_e-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': None,
+      'color_mode': None,
+      'friendly_name': 'Porch light E',
+      'hs_color': None,
+      'rgb_color': None,
+      'supported_color_modes': list([
+        <ColorMode.HS: 'hs'>,
+        <ColorMode.WHITE: 'white'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+      'xy_color': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.porch_light_e',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[dj_hp6orhaqm6as3jnv_led_strip_lights][light.master_bedroom_tv_lights-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max_color_temp_kelvin': 6500,
+      'max_mireds': 500,
+      'min_color_temp_kelvin': 2000,
+      'min_mireds': 153,
+      'supported_color_modes': list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+        <ColorMode.HS: 'hs'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.master_bedroom_tv_lights',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.00450321483fda81c529switch_led',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[dj_hp6orhaqm6as3jnv_led_strip_lights][light.master_bedroom_tv_lights-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': 51,
+      'color_mode': <ColorMode.HS: 'hs'>,
+      'color_temp': None,
+      'color_temp_kelvin': None,
+      'friendly_name': 'Master bedroom TV lights',
+      'hs_color': tuple(
+        26.072,
+        100.0,
+      ),
+      'max_color_temp_kelvin': 6500,
+      'max_mireds': 500,
+      'min_color_temp_kelvin': 2000,
+      'min_mireds': 153,
+      'rgb_color': tuple(
+        255,
+        111,
+        0,
+      ),
+      'supported_color_modes': list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+        <ColorMode.HS: 'hs'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+      'xy_color': tuple(
+        0.632,
+        0.358,
+      ),
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.master_bedroom_tv_lights',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_platform_setup_and_discovery[dj_idnfq7xbx8qewyoa_smart_lamp][light.porch_light_e-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.HS: 'hs'>,
+        <ColorMode.WHITE: 'white'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.porch_light_e',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.eb10549aadfc74b7c8q2tiswitch_led',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[dj_idnfq7xbx8qewyoa_smart_lamp][light.porch_light_e-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': None,
+      'color_mode': None,
+      'friendly_name': 'Porch light E',
+      'hs_color': None,
+      'rgb_color': None,
+      'supported_color_modes': list([
+        <ColorMode.HS: 'hs'>,
+        <ColorMode.WHITE: 'white'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+      'xy_color': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.porch_light_e',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[dj_mki13ie507rlry4r_smart_light_bulb][light.garage_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -96,7 +305,70 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[dj_smart_light_bulb][light.garage_light-state]
+# name: test_platform_setup_and_discovery[dj_mki13ie507rlry4r_smart_light_bulb][light.garage_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': 138,
+      'color_mode': <ColorMode.WHITE: 'white'>,
+      'friendly_name': 'Garage light',
+      'hs_color': None,
+      'rgb_color': None,
+      'supported_color_modes': list([
+        <ColorMode.HS: 'hs'>,
+        <ColorMode.WHITE: 'white'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+      'xy_color': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.garage_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_platform_setup_and_discovery[dj_tmsloaroqavbucgn][light.garage_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'supported_color_modes': list([
+        <ColorMode.HS: 'hs'>,
+        <ColorMode.WHITE: 'white'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.garage_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.REDACTEDswitch_led',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[dj_tmsloaroqavbucgn][light.garage_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': 138,
