@@ -15,29 +15,33 @@ from . import assert_no_messages
     "code",
     [
         pytest.param(
+            # Test using the correct μ-sign \u03bc with annotation
             """
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "μg/m³"  # "μ" == "\u03bc"
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "μg/m³"
         """,
             id="good_const_with_annotation",
         ),
         pytest.param(
+            # Test using the correct μ-sign \u03bc with annotation using unicode encoding
             """
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "\u03bcg/m³"  # "μ" == "\u03bc"
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "\u03bcg/m³"
         """,
             id="good_unicode_const_with_annotation",
         ),
         pytest.param(
+            # Test using the correct μ-sign \u03bc without annotation
             """
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER = "μg/m³"  # "μ" == "\u03bc"
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER = "μg/m³"
         """,
             id="good_const_without_annotation",
         ),
         pytest.param(
+            # Test using the correct μ-sign \u03bc in a StrEnum class
             """
             class UnitOfElectricPotential(StrEnum):
                 \"\"\"Electric potential units.\"\"\"
 
-                MICROVOLT = "μV"  # "μ" == "\u03bc"
+                MICROVOLT = "μV"
                 MILLIVOLT = "mV"
                 VOLT = "V"
                 KILOVOLT = "kV"
@@ -46,13 +50,14 @@ from . import assert_no_messages
             id="good_str_enum",
         ),
         pytest.param(
+            # Test using the correct μ-sign \u03bc in a sensor description dict
             """
             SENSOR_DESCRIPTION = {
                 "radiation_rate": AranetSensorEntityDescription(
                     key="radiation_rate",
                     translation_key="radiation_rate",
                     name="Radiation Dose Rate",
-                    native_unit_of_measurement="μSv/h",  # "μ" == "\u03bc"
+                    native_unit_of_measurement="μSv/h",
                     state_class=SensorStateClass.MEASUREMENT,
                     suggested_display_precision=2,
                     scale=0.001,
@@ -84,14 +89,14 @@ def test_enforce_greek_micro_char(
     "code",
     [
         pytest.param(
-            # Test using the bad Mu-sign \u00b5 instead of "\u03bc" with annotation
+            # Test using the bad μ-sign \u00b5 instead of \u03bc with annotation
             """
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
         """,
             id="bad_const_with_annotation",
         ),
         pytest.param(
-            # Test using the bad Mu-sign \u00b5 instead of "\u03bc" with unicode literal
+            # Test using the bad μ-sign \u00b5 instead of \u03bc with unicode literal
             # and annotation
             """
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "\u00b5g/m³"
@@ -99,14 +104,14 @@ def test_enforce_greek_micro_char(
             id="bad_unicode_const_with_annotation",
         ),
         pytest.param(
-            # Test using the bad Mu-sign \u00b5 instead of "\u03bc" without annotation
+            # Test using the bad μ-sign \u00b5 instead of \u03bc without annotation
             """
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER = "µg/m³"
         """,
             id="bad_const_without_annotation",
         ),
         pytest.param(
-            # Test StrEnum class using the bad Mu-sign \u00b5 instead of "\u03bc"
+            # Test StrEnum class using the bad μ-sign \u00b5 instead of \u03bc
             """
             class UnitOfElectricPotential(StrEnum):
                 \"\"\"Electric potential units.\"\"\"
@@ -120,7 +125,7 @@ def test_enforce_greek_micro_char(
             id="bad_str_enum",
         ),
         pytest.param(
-            # Test sensor description dict using the bad Mu-sign \u00b5 instead of "\u03bc"
+            # Test sensor description dict using the bad μ-sign \u00b5 instead of \u03bc
             """
             SENSOR_DESCRIPTION = {
                 "radiation_rate": AranetSensorEntityDescription(
