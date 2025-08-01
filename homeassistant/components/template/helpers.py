@@ -33,6 +33,7 @@ from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
+    CONF_ADVANCED_OPTIONS,
     CONF_ATTRIBUTE_TEMPLATES,
     CONF_ATTRIBUTES,
     CONF_AVAILABILITY,
@@ -241,12 +242,15 @@ async def async_setup_template_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     state_entity_cls: type[TemplateEntity],
-    config_schema: vol.Schema,
+    config_schema: vol.Schema | vol.All,
     replace_value_template: bool = False,
 ) -> None:
     """Setup the Template from a config entry."""
     options = dict(config_entry.options)
     options.pop("template_type")
+
+    if advanced_options := options.pop(CONF_ADVANCED_OPTIONS, None):
+        options = {**options, **advanced_options}
 
     if replace_value_template and CONF_VALUE_TEMPLATE in options:
         options[CONF_STATE] = options.pop(CONF_VALUE_TEMPLATE)
@@ -263,7 +267,7 @@ def async_setup_template_preview[T: TemplateEntity](
     name: str,
     config: ConfigType,
     state_entity_cls: type[T],
-    schema: vol.Schema,
+    schema: vol.Schema | vol.All,
     replace_value_template: bool = False,
 ) -> T:
     """Setup the Template preview."""
