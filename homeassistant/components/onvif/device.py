@@ -37,6 +37,7 @@ from .const import (
     LOGGER,
     PAN_FACTOR,
     RELATIVE_MOVE,
+    EMULATE_RELATIVE_MOVE,
     STOP_MOVE,
     TILT_FACTOR,
     ZOOM_FACTOR,
@@ -44,6 +45,20 @@ from .const import (
 from .event import EventManager
 from .models import PTZ, Capabilities, DeviceInfo, Profile, Resolution, Video
 
+def calculate_sleep_time(distance: float, full_rotation_time: float) -> float:
+    """
+    Calculate the sleep time based on the given distance and full rotation time.
+
+    Args:
+        distance (float): The distance to be covered.
+        full_rotation_time (float): The time required for a full rotation in seconds.
+
+    Returns:
+        float: The calculated sleep time in seconds.
+    """
+    sleep_time_seconds = distance * full_rotation_time
+
+    return sleep_time_seconds
 
 class ONVIFDevice:
     """Manages an ONVIF device."""
@@ -522,9 +537,17 @@ class ONVIFDevice:
             speed_val,
             preset_val,
         )
+
+        def handle_is_action_not_implemented(error):
+            """Check if the error indicates that the action is not implemented."""
+            return "Action Not Implemented" not in str(error)
+
         try:
-            req = ptz_service.create_type(move_mode)
-            req.ProfileToken = profile.token
+            # list for extra functions in future, home mode as a possibility
+            if move_mode != EMULATE_RELATIVE_MOVE:
+                req = ptz_service.create_type(move_mode)
+                req.ProfileToken = profile.token
+
             if move_mode == CONTINUOUS_MOVE:
                 # Guard against unsupported operation
                 if not profile.ptz or not profile.ptz.continuous:
@@ -542,12 +565,27 @@ class ONVIFDevice:
                 req.Velocity = velocity
 
                 await ptz_service.ContinuousMove(req)
-                await asyncio.sleep(continuous_duration)
-                req = ptz_service.create_type("Stop")
-                req.ProfileToken = profile.token
-                await ptz_service.Stop(
-                    {"ProfileToken": req.ProfileToken, "PanTilt": True, "Zoom": False}
-                )
+                try:
+                    stop_req = ptz_service.create_type("Stop")
+                    stop_req.ProfileToken = profile.token
+
+                    # moved here to avoid waiting if there is an error
+                    await asyncio.sleep(continuous_duration)
+
+                    await ptz_service.Stop(
+                        {"ProfileToken": stop_req.ProfileToken, "PanTilt": True, "Zoom": False}
+                    )
+                except Fault as e:
+                    if handle_is_action_not_implemented(e):
+                        raise
+                    zero_req = ptz_service.create_type(CONTINUOUS_MOVE)
+                    zero_req.ProfileToken = profile.token
+                    velocity_zero = {"PanTilt": {"x": 0, "y": 0}, "Zoom": {"x": 0}}
+                    zero_req.Velocity = velocity_zero
+                    await ptz_service.ContinuousMove(zero_req)
+
+
+
             elif move_mode == RELATIVE_MOVE:
                 # Guard against unsupported operation
                 if not profile.ptz or not profile.ptz.relative:
@@ -565,6 +603,50 @@ class ONVIFDevice:
                     "Zoom": {"x": speed_val},
                 }
                 await ptz_service.RelativeMove(req)
+
+            elif move_mode == EMULATE_RELATIVE_MOVE:
+                # Using continous move, with a set time for an step
+                # Guard against unsupported operation
+                try:
+                    req = ptz_service.create_type(CONTINUOUS_MOVE)
+                    req.ProfileToken = profile.token
+                    if not profile.ptz or not profile.ptz.continuous:
+                        LOGGER.warning(
+                            "ContinuousMove not supported on device '%s'", self.name
+                        )
+                        return
+
+                    # only works if one movement is set, with multiple there is no reponse at least with Arenti camera
+
+                    velocity = {}
+                    if pan is not None or tilt is not None:
+                        velocity["PanTilt"] = {"x": pan_val, "y": tilt_val}
+
+                    # maybe add a loop to accept two movements
+                    if pan is not None and tilt is not None:
+                        LOGGER.warning("ContinuousMove Not supporting two movements")
+
+                    if zoom is not None:
+                        velocity["Zoom"] = {"x": zoom_val}
+
+                    req.Velocity = velocity
+                    time_to_move = calculate_sleep_time(distance, full_rotation_time= 8)
+                    await ptz_service.ContinuousMove(req)
+                    await asyncio.sleep(time_to_move)
+                    velocity = {"PanTilt": {"x": 0, "y": 0}, "Zoom": {"x": 0}}
+                    req.Velocity = velocity
+                    await ptz_service.ContinuousMove(req)
+
+
+                except Fault as fault:
+                    if handle_is_action_not_implemented(fault):
+                        raise
+                    LOGGER.warning(
+                        "ContinuousMove not supported on device '%s', cannot emulate relative move",
+                        self.name
+                    )
+
+
             elif move_mode == ABSOLUTE_MOVE:
                 # Guard against unsupported operation
                 if not profile.ptz or not profile.ptz.absolute:
@@ -577,11 +659,17 @@ class ONVIFDevice:
                     "PanTilt": {"x": pan_val, "y": tilt_val},
                     "Zoom": {"x": zoom_val},
                 }
+
+                speed_pan_val = speed_val if pan else 0
+                speed_tilt_val = speed_val if tilt else 0
+                speed_zoom_val = speed_val if zoom else 0
+
                 req.Speed = {
-                    "PanTilt": {"x": speed_val, "y": speed_val},
-                    "Zoom": {"x": speed_val},
+                    "PanTilt": {"x": speed_pan_val, "y": speed_tilt_val},
+                    "Zoom": {"x": speed_zoom_val},
                 }
                 await ptz_service.AbsoluteMove(req)
+
             elif move_mode == GOTOPRESET_MOVE:
                 # Guard against unsupported operation
                 if not profile.ptz or not profile.ptz.presets:
@@ -607,8 +695,28 @@ class ONVIFDevice:
                     "Zoom": {"x": speed_val},
                 }
                 await ptz_service.GotoPreset(req)
+
             elif move_mode == STOP_MOVE:
-                await ptz_service.Stop(req)
+                try:
+                    await ptz_service.Stop(req)
+                except Fault as e:
+                    if handle_is_action_not_implemented(e):
+                        raise  # re-raise for other errors
+                    if profile.ptz and profile.ptz.continuous:
+                        LOGGER.warning(
+                            "Device doesn't support stop command, using continuous move to stop"
+                        )
+                        req = ptz_service.create_type(CONTINUOUS_MOVE)
+                        req.ProfileToken = profile.token
+                        velocity = {"PanTilt": {"x": 0, "y": 0}, "Zoom": {"x": 0}}
+                        req.Velocity = velocity
+                        await ptz_service.ContinuousMove(req)
+                    else:
+                        LOGGER.warning(
+                            "Device doesn't support stop command and continuous move is not available"
+                        )
+                        raise ONVIFError("Cannot stop PTZ movement")
+
         except ONVIFError as err:
             if "Bad Request" in err.reason:
                 LOGGER.warning("Device '%s' doesn't support PTZ", self.name)
