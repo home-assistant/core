@@ -70,7 +70,6 @@
         'GW24L1A02987',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Elgato',
@@ -155,7 +154,6 @@
         'GW24L1A02987',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Elgato',

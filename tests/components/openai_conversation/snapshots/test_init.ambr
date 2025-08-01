@@ -11,7 +11,6 @@
     'entry_type': <DeviceEntryType.SERVICE: 'service'>,
     'hw_version': None,
     'id': <ANY>,
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'OpenAI',
@@ -37,7 +36,6 @@
     'entry_type': <DeviceEntryType.SERVICE: 'service'>,
     'hw_version': None,
     'id': <ANY>,
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'OpenAI',

@@ -22,7 +22,6 @@
           '98765',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Flo by Moen',
@@ -56,7 +55,6 @@
           '32839',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Flo by Moen',

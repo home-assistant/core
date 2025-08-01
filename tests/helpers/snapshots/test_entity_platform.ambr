@@ -21,7 +21,6 @@
         '1234',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'test-manuf',
@@ -57,7 +56,6 @@
         'efgh',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'test-manuf',

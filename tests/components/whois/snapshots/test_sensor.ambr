@@ -65,7 +65,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -146,7 +145,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -231,7 +229,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -312,7 +309,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -393,7 +389,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -473,7 +468,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -553,7 +547,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -633,7 +626,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -713,7 +705,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -845,7 +836,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
