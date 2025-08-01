@@ -145,9 +145,8 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
     def _serializable_area_registry_entry(cls, data: ar.AreaEntry) -> SerializableData:
         """Prepare a Home Assistant area registry entry for serialization."""
         serialized = AreaRegistryEntrySnapshot(dataclasses.asdict(data) | {"id": ANY})
-        serialized.pop("_cache")
-        serialized.pop("_is_restored")
         serialized.pop("_json_repr")
+        serialized.pop("_cache")
         return serialized
 
     @classmethod
@@ -174,6 +173,7 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         if serialized["primary_config_entry"] is not None:
             serialized["primary_config_entry"] = ANY
         serialized.pop("_cache")
+        serialized.pop("_is_restored")
         return cls._remove_created_and_modified_at(serialized)
 
     @classmethod
