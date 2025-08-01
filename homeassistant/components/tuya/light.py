@@ -536,13 +536,6 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         ):
             self._color_temp = int_type
             color_modes.add(ColorMode.COLOR_TEMP)
-        # If entity does not have color_temp, check if it has work_mode "white"
-        elif color_mode_enum := self.find_dpcode(
-            description.color_mode, dptype=DPType.ENUM, prefer_function=True
-        ):
-            if WorkMode.WHITE.value in color_mode_enum.range:
-                color_modes.add(ColorMode.WHITE)
-                self._white_color_mode = ColorMode.WHITE
 
         if (
             dpcode := self.find_dpcode(description.color_data, prefer_function=True)
@@ -569,10 +562,19 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 ):
                     self._color_data_type = DEFAULT_COLOR_TYPE_DATA_V2
 
-        if (ColorMode.WHITE in color_modes) and not color_supported(color_modes):
-            # If the light supports white, but not color, we cancel WHITE
-            color_modes.remove(ColorMode.WHITE)
-            self._white_color_mode = ColorMode.COLOR_TEMP
+        # Check if it has work_mode "white"
+        if (
+            (
+                color_mode_enum := self.find_dpcode(
+                    description.color_mode, dptype=DPType.ENUM, prefer_function=True
+                )
+            )
+            and WorkMode.WHITE.value in color_mode_enum.range
+            and ColorMode.COLOR_TEMP not in color_modes
+            and color_supported(color_modes)
+        ):
+            color_modes.add(ColorMode.WHITE)
+            self._white_color_mode = ColorMode.WHITE
 
         self._attr_supported_color_modes = filter_supported_color_modes(color_modes)
         if len(self._attr_supported_color_modes) == 1:
