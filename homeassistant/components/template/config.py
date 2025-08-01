@@ -166,7 +166,7 @@ TEMPLATE_BLUEPRINT_SCHEMA = vol.All(
 )
 
 
-async def _async_resolve_blueprints(
+async def _async_resolve_template_config(
     hass: HomeAssistant,
     config: ConfigType,
 ) -> TemplateConfig:
@@ -200,8 +200,44 @@ async def _async_resolve_blueprints(
             # CONF_VARIABLES should not be removed because the variables are always
             # executed between the trigger and action.
             if CONF_TRIGGERS not in config and CONF_VARIABLES in config:
-                config[platform][CONF_VARIABLES] = config.pop(CONF_VARIABLES)
+                section_variables = config.pop(CONF_VARIABLES)
+
+                # State based template entities have 2 layers of variables.  Variables at the section level
+                # and variables at the entity level should be merged together at the entity level.
+                config[platform][CONF_VARIABLES] = (
+                    {
+                        **section_variables,
+                        **config[platform].pop(CONF_VARIABLES),
+                    }
+                    if CONF_VARIABLES in config[platform]
+                    else section_variables
+                )
+
         raw_config = dict(config)
+
+    # For Trigger based template entities CONF_VARIABLES should not be altered because the variables
+    # are always executed between the trigger and action.
+    elif CONF_TRIGGERS not in config and CONF_VARIABLES in config:
+        # State based template entities have 2 layers of variables.  Variables at the section level
+        # and variables at the entity level should be merged together at the entity level.
+        section_variables = config.pop(CONF_VARIABLES)
+        platform_config: list[ConfigType] | ConfigType
+        platforms = [platform for platform in PLATFORMS if platform in config]
+        for platform in platforms:
+            platform_config = config[platform]
+            if platform in PLATFORMS:
+                if isinstance(platform_config, dict):
+                    platform_config = [platform_config]
+
+                for entity_config in platform_config:
+                    entity_config[CONF_VARIABLES] = (
+                        {
+                            **section_variables,
+                            **entity_config.pop(CONF_VARIABLES),
+                        }
+                        if CONF_VARIABLES in entity_config
+                        else section_variables
+                    )
 
     template_config = TemplateConfig(CONFIG_SECTION_SCHEMA(config))
     template_config.raw_blueprint_inputs = raw_blueprint_inputs
@@ -215,7 +251,7 @@ async def async_validate_config_section(
 ) -> TemplateConfig:
     """Validate an entire config section for the template integration."""
 
-    validated_config = await _async_resolve_blueprints(hass, config)
+    validated_config = await _async_resolve_template_config(hass, config)
 
     if CONF_TRIGGERS in validated_config:
         validated_config[CONF_TRIGGERS] = await async_validate_trigger_config(
