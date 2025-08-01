@@ -558,6 +558,7 @@ UNIT_CONVERTERS: dict[NumberDeviceClass, type[BaseUnitConverter]] = {
     NumberDeviceClass.VOLUME_FLOW_RATE: VolumeFlowRateConverter,
 }
 
+# We translate units that were using using the legacy coding of μ \u00b5 to units using recommended coding of μ \u03bc
 AMBIGUOUS_UNITS: dict[str | None, str] = {
     "\u00b5Sv/h": "μSv/h",  # aranet: radiation rate
     "\u00b5S/cm": UnitOfConductivity.MICROSIEMENS_PER_CM,
