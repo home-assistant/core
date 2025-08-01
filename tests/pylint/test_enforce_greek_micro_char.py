@@ -84,29 +84,34 @@ def test_enforce_greek_micro_char(
     "code",
     [
         pytest.param(
+            # Test using the bad Mu-sign \u00b5 instead of "\u03bc" with annotation
             """
-            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"  # "μ" != "\u03bc"
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
         """,
             id="bad_const_with_annotation",
         ),
         pytest.param(
+            # Test using the bad Mu-sign \u00b5 instead of "\u03bc" with unicode literal
+            # and annotation
             """
-            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "\u00b5g/m³"  # "μ" != "\u03bc"
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "\u00b5g/m³"
         """,
             id="bad_unicode_const_with_annotation",
         ),
         pytest.param(
+            # Test using the bad Mu-sign \u00b5 instead of "\u03bc" without annotation
             """
-            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER = "µg/m³"  # "μ" != "\u03bc"
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER = "µg/m³"
         """,
             id="bad_const_without_annotation",
         ),
         pytest.param(
+            # Test StrEnum class using the bad Mu-sign \u00b5 instead of "\u03bc"
             """
             class UnitOfElectricPotential(StrEnum):
                 \"\"\"Electric potential units.\"\"\"
 
-                MICROVOLT = "µV"  # "μ" != "\u03bc"
+                MICROVOLT = "µV"
                 MILLIVOLT = "mV"
                 VOLT = "V"
                 KILOVOLT = "kV"
@@ -115,13 +120,14 @@ def test_enforce_greek_micro_char(
             id="bad_str_enum",
         ),
         pytest.param(
+            # Test sensor description dict using the bad Mu-sign \u00b5 instead of "\u03bc"
             """
             SENSOR_DESCRIPTION = {
                 "radiation_rate": AranetSensorEntityDescription(
                     key="radiation_rate",
                     translation_key="radiation_rate",
                     name="Radiation Dose Rate",
-                    native_unit_of_measurement="µSv/h",  # "μ" != "\u03bc"
+                    native_unit_of_measurement="µSv/h",
                     state_class=SensorStateClass.MEASUREMENT,
                     suggested_display_precision=2,
                     scale=0.001,

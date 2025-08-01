@@ -1,4 +1,4 @@
-"""Plugin for checking correct micro unicode card is used."""
+"""Plugin for checking preferred coding of μ is used."""
 
 from __future__ import annotations
 
