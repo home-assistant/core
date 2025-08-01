@@ -23,6 +23,10 @@ from homeassistant.components.homekit.type_switches import (
     Valve,
     ValveSwitch,
 )
+from homeassistant.components.input_number import (
+    DOMAIN as INPUT_NUMBER_DOMAIN,
+    SERVICE_SET_VALUE as INPUT_NUMBER_SERVICE_SET_VALUE,
+)
 from homeassistant.components.lawn_mower import (
     DOMAIN as LAWN_MOWER_DOMAIN,
     SERVICE_DOCK,
@@ -31,6 +35,7 @@ from homeassistant.components.lawn_mower import (
     LawnMowerEntityFeature,
 )
 from homeassistant.components.select import ATTR_OPTIONS
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_RETURN_TO_BASE,
@@ -671,6 +676,10 @@ async def test_valve_switch_with_set_duration_characteristic(
     hass.states.async_set("input_number.valve_duration", "0")
     await hass.async_block_till_done()
 
+    # Mock switch services to prevent errors
+    async_mock_service(hass, SWITCH_DOMAIN, SERVICE_TURN_ON)
+    async_mock_service(hass, SWITCH_DOMAIN, SERVICE_TURN_OFF)
+
     acc = ValveSwitch(
         hass,
         hk_driver,
@@ -686,7 +695,9 @@ async def test_valve_switch_with_set_duration_characteristic(
     assert acc.get_duration() == 0
 
     # Simulate setting duration from HomeKit
-    call_set_value = async_mock_service(hass, "input_number", "set_value")
+    call_set_value = async_mock_service(
+        hass, INPUT_NUMBER_DOMAIN, INPUT_NUMBER_SERVICE_SET_VALUE
+    )
     acc.char_set_duration.client_update_value(300)
     await hass.async_block_till_done()
     assert call_set_value
@@ -718,6 +729,10 @@ async def test_valve_switch_with_remaining_duration_characteristic(
     hass.states.async_set(entity_id, STATE_OFF)
     hass.states.async_set("sensor.valve_end_time", dt_util.utcnow().isoformat())
     await hass.async_block_till_done()
+
+    # Mock switch services to prevent errors
+    async_mock_service(hass, SWITCH_DOMAIN, SERVICE_TURN_ON)
+    async_mock_service(hass, SWITCH_DOMAIN, SERVICE_TURN_OFF)
 
     acc = ValveSwitch(
         hass,
@@ -765,6 +780,14 @@ async def test_valve_switch_with_duration_characteristics(
     hass.states.async_set("sensor.valve_end_time", dt_util.utcnow().isoformat())
     await hass.async_block_till_done()
 
+    # Mock switch services to prevent errors
+    async_mock_service(hass, SWITCH_DOMAIN, SERVICE_TURN_ON)
+    async_mock_service(hass, SWITCH_DOMAIN, SERVICE_TURN_OFF)
+    # Mock input_number service for set_duration calls
+    call_set_value = async_mock_service(
+        hass, INPUT_NUMBER_DOMAIN, INPUT_NUMBER_SERVICE_SET_VALUE
+    )
+
     acc = ValveSwitch(
         hass,
         hk_driver,
@@ -786,8 +809,8 @@ async def test_valve_switch_with_duration_characteristics(
             "sensor.valve_end_time",
             (dt_util.utcnow() + timedelta(seconds=60)).isoformat(),
         )
+        hass.states.async_set(entity_id, STATE_OFF)
         await hass.async_block_till_done()
-        acc.update_duration_chars()
         assert acc.char_set_duration.value == 300
         assert acc.get_remaining_duration() == 60
 
@@ -813,6 +836,12 @@ async def test_valve_switch_with_duration_characteristics(
     acc.set_duration(-10)
     await hass.async_block_till_done()
     assert acc.get_duration() == 0
+    # Verify the service was called with correct parameters
+    assert len(call_set_value) == 1
+    assert call_set_value[0].data == {
+        "entity_id": "input_number.valve_duration",
+        "value": -10,
+    }
 
     # Test set_duration with negative state
     hass.states.async_set("sensor.valve_duration", -10)

@@ -337,14 +337,14 @@ class ValveBase(HomeAccessory):
     @callback
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
-        self.update_duration_chars()
+        self._update_duration_chars()
         current_state = 1 if new_state.state in self.open_states else 0
         _LOGGER.debug("%s: Set active state to %s", self.entity_id, current_state)
         self.char_active.set_value(current_state)
         _LOGGER.debug("%s: Set in_use state to %s", self.entity_id, current_state)
         self.char_in_use.set_value(current_state)
 
-    def update_duration_chars(self) -> None:
+    def _update_duration_chars(self) -> None:
         """Update valve duration related properties if characteristics are available."""
         if CHAR_SET_DURATION in self.chars:
             duration = self.get_duration()
