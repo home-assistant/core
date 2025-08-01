@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 import logging
-from typing import Any, ClassVar
+from typing import Any, ClassVar, Protocol
 
 import defusedxml.ElementTree as ET
 
@@ -379,8 +379,50 @@ class Area:
         return tuple(self._sensors)
 
 
+class LIPCommandSupporting(Protocol):
+    """Mixin providing LIP command attributes."""
+
+    LIP_MODE: ClassVar[LIPMode]
+    integration_id: int
+    component_number: int | None
+
+
+class LIPCommandMixin:
+    """Mixin providing LIP command creation methods."""
+
+    def _query(
+        self: LIPCommandSupporting,
+        action: LIPAction,
+    ) -> LIPCommand:
+        """Create a query command."""
+        return LIPCommand(
+            operation=LIPOperation.QUERY,
+            mode=self.LIP_MODE,
+            integration_id=self.integration_id,
+            component_number=getattr(self, "component_number", None),
+            action=action,
+        )
+
+    def _execute(
+        self: LIPCommandSupporting,
+        action: LIPAction,
+        value: float | None = None,
+        fade_time: str | None = None,
+    ) -> LIPCommand:
+        """Create an execute command."""
+        return LIPCommand(
+            operation=LIPOperation.EXECUTE,
+            mode=self.LIP_MODE,
+            integration_id=self.integration_id,
+            component_number=getattr(self, "component_number", None),
+            action=action,
+            value=value,
+            fade_time=fade_time,
+        )
+
+
 @dataclass
-class Device:
+class Device(LIPCommandMixin, LIPCommandSupporting):
     """Base class for all the Lutron objects we'd like to manage."""
 
     name: str
@@ -399,36 +441,6 @@ class Device:
     def id(self) -> int:
         """Return the integration ID."""
         return self.integration_id
-
-    def _query(
-        self,
-        action: LIPAction,
-    ) -> LIPCommand:
-        """Create a query command."""
-        return LIPCommand(
-            operation=LIPOperation.QUERY,
-            mode=self.LIP_MODE,
-            component_number=None,
-            integration_id=self.integration_id,
-            action=action,
-        )
-
-    def _execute(
-        self,
-        action: LIPAction,
-        value: float | None = None,
-        fade_time: str | None = None,
-    ) -> LIPCommand:
-        """Create an execute command."""
-        return LIPCommand(
-            operation=LIPOperation.EXECUTE,
-            mode=self.LIP_MODE,
-            integration_id=self.integration_id,
-            component_number=None,
-            action=action,
-            value=value,
-            fade_time=fade_time,
-        )
 
 
 @dataclass
@@ -506,8 +518,8 @@ class KeypadComponent(Device):
     """Base class for keypad components (buttons, LEDs, etc.).
 
     The integration_id is the keypad ID.
-    The lutron component number is referenced in commands and
-    events. This is different from KeypadComponent.number because this property
+    The lutron component_number is referenced in commands and events.
+    This is different from KeypadComponent.number because this property
     is only used for interfacing with the controller.
     """
 
@@ -524,36 +536,6 @@ class KeypadComponent(Device):
         """Set the legacy UUID and area for keypad components."""
         self.area = self.keypad.area
         self.legacy_uuid = f"{self.integration_id}-{self.component_number}"
-
-    def _query(
-        self,
-        action: LIPAction,
-    ) -> LIPCommand:
-        """Create a query command with component number."""
-        return LIPCommand(
-            operation=LIPOperation.QUERY,
-            mode=self.LIP_MODE,
-            integration_id=self.integration_id,
-            component_number=self.component_number,
-            action=action,
-        )
-
-    def _execute(
-        self,
-        action: LIPAction,
-        value: float | None = None,
-        fade_time: str | None = None,
-    ) -> LIPCommand:
-        """Create an execute command with component number."""
-        return LIPCommand(
-            operation=LIPOperation.EXECUTE,
-            mode=self.LIP_MODE,
-            integration_id=self.integration_id,
-            component_number=self.component_number,
-            action=action,
-            value=value,
-            fade_time=fade_time,
-        )
 
 
 @dataclass
