@@ -82,4 +82,4 @@ async def test_set_child_lock(
     )
 
     mock_tado_api.set_child_lock.assert_called_once()
-    assert mock_tado_api.set_child_lock.call_args[0][1] is expected
+    assert mock_tado_api.set_child_lock.call_args[1]["child_lock"] is expected
