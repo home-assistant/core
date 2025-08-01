@@ -277,38 +277,26 @@ async def test_zeroconf_already_configured(
     assert result["reason"] == "already_configured"
 
 
-async def test_zeroconf_ipv6_address(
-    hass: HomeAssistant,
-) -> None:
-    """Test zeroconf discovery flow with an IPv6 address."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_ZEROCONF},
-        data=ZeroconfServiceInfo(
-            name=f"homee-{HOMEE_ID}._ssh._tcp.local.",
-            type="_ssh._tcp.local.",
-            hostname=f"homee-{HOMEE_ID}.local.",
-            ip_address=ip_address("2001:db8::1"),
-            ip_addresses=[ip_address("2001:db8::1")],
-            port=22,
-            properties={},
-        ),
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "ipv6_address"
-
-
 @pytest.mark.parametrize(
-    ("side_eff"),
-    [HomeeConnectionFailedException("connection timed out"), Exception],
+    ("side_eff", "ip", "reason"),
+    [
+        (
+            HomeeConnectionFailedException("connection timed out"),
+            HOMEE_IP,
+            RESULT_CANNOT_CONNECT,
+        ),
+        (Exception, HOMEE_IP, RESULT_CANNOT_CONNECT),
+        (None, "2001:db8::1", "ipv6_address"),
+    ],
 )
-async def test_zeroconf_no_connection(
+async def test_zeroconf_errors(
     hass: HomeAssistant,
     mock_homee: AsyncMock,
     side_eff: Exception,
+    ip: str,
+    reason: str,
 ) -> None:
-    """Test zeroconf discovery flow with no connection."""
+    """Test zeroconf discovery flow with an IPv6 address."""
     mock_homee.get_access_token.side_effect = side_eff
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -317,15 +305,15 @@ async def test_zeroconf_no_connection(
             name=f"homee-{HOMEE_ID}._ssh._tcp.local.",
             type="_ssh._tcp.local.",
             hostname=f"homee-{HOMEE_ID}.local.",
-            ip_address=ip_address(HOMEE_IP),
-            ip_addresses=[ip_address(HOMEE_IP)],
+            ip_address=ip_address(ip),
+            ip_addresses=[ip_address(ip)],
             port=22,
             properties={},
         ),
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == RESULT_CANNOT_CONNECT
+    assert result["reason"] == reason
 
 
 @pytest.mark.usefixtures("mock_homee", "mock_setup_entry")
