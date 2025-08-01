@@ -54,9 +54,11 @@ blackout_set:
       integration: kiosker
   fields:
     visible:
+      default: true
       selector:
         boolean:
     text:
+      default: "Hello, World!"
       selector:
         text:
     background:
@@ -69,6 +71,7 @@ blackout_set:
       selector:
         text:
     expire:
+      default: 60
       selector:
         number:
           min: 0
@@ -88,9 +91,7 @@ blackout_set:
         text:
     sound:
       selector:
-        number:
-          min: 0
-          max: 9999
+        text:
 
 blackout_clear:
   target:
