@@ -247,7 +247,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==37.2.0
+aioesphomeapi==37.2.2
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1458,7 +1458,7 @@ monzopy==1.5.1
 mopeka-iot-ble==0.8.0
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.29
+motionblinds==0.6.30
 
 # homeassistant.components.motionblinds_ble
 motionblindsble==0.1.3
