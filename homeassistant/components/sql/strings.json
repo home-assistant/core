@@ -76,6 +76,7 @@
         "aqi": "[%key:component::sensor::entity_component::aqi::name%]",
         "atmospheric_pressure": "[%key:component::sensor::entity_component::atmospheric_pressure::name%]",
         "battery": "[%key:component::sensor::entity_component::battery::name%]",
+        "blood_glucose_concentration": "[%key:component::sensor::entity_component::blood_glucose_concentration::name%]",
         "carbon_dioxide": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
         "carbon_monoxide": "[%key:component::sensor::entity_component::carbon_monoxide::name%]",
         "conductivity": "[%key:component::sensor::entity_component::conductivity::name%]",
