@@ -198,7 +198,7 @@ async def test_zeroconf_success(
 
 
 @pytest.mark.parametrize(*PARAMETRIZED_ERRORS)
-async def test_zeroconf_errors(
+async def test_zeroconf_confirm_errors(
     hass: HomeAssistant,
     mock_homee: AsyncMock,
     side_eff: Exception,
@@ -252,7 +252,7 @@ async def test_zeroconf_errors(
     assert result["type"] == FlowResultType.CREATE_ENTRY
 
 
-async def test_zeroconf_flow_already_configured(
+async def test_zeroconf_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -297,6 +297,35 @@ async def test_zeroconf_ipv6_address(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "ipv6_address"
+
+
+@pytest.mark.parametrize(
+    ("side_eff"),
+    [HomeeConnectionFailedException("connection timed out"), Exception],
+)
+async def test_zeroconf_no_connection(
+    hass: HomeAssistant,
+    mock_homee: AsyncMock,
+    side_eff: Exception,
+) -> None:
+    """Test zeroconf discovery flow with no connection."""
+    mock_homee.get_access_token.side_effect = side_eff
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            name=f"homee-{HOMEE_ID}._ssh._tcp.local.",
+            type="_ssh._tcp.local.",
+            hostname=f"homee-{HOMEE_ID}.local.",
+            ip_address=ip_address(HOMEE_IP),
+            ip_addresses=[ip_address(HOMEE_IP)],
+            port=22,
+            properties={},
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == RESULT_CANNOT_CONNECT
 
 
 @pytest.mark.usefixtures("mock_homee", "mock_setup_entry")
