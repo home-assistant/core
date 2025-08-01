@@ -4,17 +4,17 @@
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "REDACTED",
-  "name": "Garage light",
+  "id": "bf252b8ee16b2e78bdoxlp",
+  "name": "Pokerlamp 1",
   "category": "dj",
-  "product_id": "mki13ie507rlry4r",
-  "product_name": "Smart Light Bulb",
-  "online": true,
+  "product_id": "tmsloaroqavbucgn",
+  "product_name": "G95-Filament",
+  "online": false,
   "sub": false,
-  "time_zone": "-07:00",
-  "active_time": "2024-06-15T19:53:11+00:00",
-  "create_time": "2024-06-15T19:53:11+00:00",
-  "update_time": "2024-06-15T19:53:11+00:00",
+  "time_zone": "+02:00",
+  "active_time": "2021-06-29T16:12:54+00:00",
+  "create_time": "2021-06-29T16:12:54+00:00",
+  "update_time": "2021-06-29T16:12:54+00:00",
   "function": {
     "switch_led": {
       "type": "Boolean",
@@ -30,36 +30,18 @@
       "type": "Integer",
       "value": {
         "min": 10,
-        "scale": 0,
-        "unit": "",
         "max": 1000,
+        "scale": 0,
         "step": 1
       }
     },
-    "colour_data_v2": {
-      "type": "Json",
+    "temp_value_v2": {
+      "type": "Integer",
       "value": {
-        "h": {
-          "min": 0,
-          "scale": 0,
-          "unit": "",
-          "max": 360,
-          "step": 1
-        },
-        "s": {
-          "min": 0,
-          "scale": 0,
-          "unit": "",
-          "max": 1000,
-          "step": 1
-        },
-        "v": {
-          "min": 0,
-          "scale": 0,
-          "unit": "",
-          "max": 1000,
-          "step": 1
-        }
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
       }
     },
     "scene_data_v2": {
@@ -126,54 +108,10 @@
     "countdown_1": {
       "type": "Integer",
       "value": {
-        "unit": "",
         "min": 0,
         "max": 86400,
         "scale": 0,
         "step": 1
-      }
-    },
-    "music_data": {
-      "type": "Json",
-      "value": {
-        "change_mode": {
-          "range": ["direct", "gradient"]
-        },
-        "bright": {
-          "min": 0,
-          "scale": 0,
-          "unit": "",
-          "max": 1000,
-          "step": 1
-        },
-        "temperature": {
-          "min": 0,
-          "scale": 0,
-          "unit": "",
-          "max": 1000,
-          "step": 1
-        },
-        "h": {
-          "min": 0,
-          "scale": 0,
-          "unit": "",
-          "max": 360,
-          "step": 1
-        },
-        "s": {
-          "min": 0,
-          "scale": 0,
-          "unit": "",
-          "max": 255,
-          "step": 1
-        },
-        "v": {
-          "min": 0,
-          "scale": 0,
-          "unit": "",
-          "max": 255,
-          "step": 1
-        }
       }
     },
     "control_data": {
@@ -218,6 +156,28 @@
           "step": 1
         }
       }
+    },
+    "rhythm_mode": {
+      "type": "Raw",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "sleep_mode": {
+      "type": "Raw",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "wakeup_mode": {
+      "type": "Raw",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "remote_switch": {
+      "type": "Boolean",
+      "value": {}
     }
   },
   "status_range": {
@@ -235,36 +195,18 @@
       "type": "Integer",
       "value": {
         "min": 10,
-        "scale": 0,
-        "unit": "",
         "max": 1000,
+        "scale": 0,
         "step": 1
       }
     },
-    "colour_data_v2": {
-      "type": "Json",
+    "temp_value_v2": {
+      "type": "Integer",
       "value": {
-        "h": {
-          "min": 0,
-          "scale": 0,
-          "unit": "",
-          "max": 360,
-          "step": 1
-        },
-        "s": {
-          "min": 0,
-          "scale": 0,
-          "unit": "",
-          "max": 1000,
-          "step": 1
-        },
-        "v": {
-          "min": 0,
-          "scale": 0,
-          "unit": "",
-          "max": 1000,
-          "step": 1
-        }
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
       }
     },
     "scene_data_v2": {
@@ -331,54 +273,10 @@
     "countdown_1": {
       "type": "Integer",
       "value": {
-        "unit": "",
         "min": 0,
         "max": 86400,
         "scale": 0,
         "step": 1
-      }
-    },
-    "music_data": {
-      "type": "Json",
-      "value": {
-        "change_mode": {
-          "range": ["direct", "gradient"]
-        },
-        "bright": {
-          "min": 0,
-          "scale": 0,
-          "unit": "",
-          "max": 1000,
-          "step": 1
-        },
-        "temperature": {
-          "min": 0,
-          "scale": 0,
-          "unit": "",
-          "max": 1000,
-          "step": 1
-        },
-        "h": {
-          "min": 0,
-          "scale": 0,
-          "unit": "",
-          "max": 360,
-          "step": 1
-        },
-        "s": {
-          "min": 0,
-          "scale": 0,
-          "unit": "",
-          "max": 255,
-          "step": 1
-        },
-        "v": {
-          "min": 0,
-          "scale": 0,
-          "unit": "",
-          "max": 255,
-          "step": 1
-        }
       }
     },
     "control_data": {
@@ -423,17 +321,35 @@
           "step": 1
         }
       }
+    },
+    "rhythm_mode": {
+      "type": "Raw",
+      "value": {
+        "maxlen": "255"
+      }
+    },
+    "sleep_mode": {
+      "type": "Raw",
+      "value": {
+        "maxlen": "255"
+      }
+    },
+    "wakeup_mode": {
+      "type": "Raw",
+      "value": {
+        "maxlen": "255"
+      }
+    },
+    "remote_switch": {
+      "type": "Boolean",
+      "value": {}
     }
   },
   "status": {
     "switch_led": true,
     "work_mode": "white",
-    "bright_value_v2": 546,
-    "colour_data_v2": {
-      "h": 243,
-      "s": 860,
-      "v": 541
-    },
+    "bright_value_v2": 400,
+    "temp_value_v2": 1000,
     "scene_data_v2": {
       "scene_num": 1,
       "scene_units": [
@@ -441,7 +357,7 @@
           "bright": 200,
           "h": 0,
           "s": 0,
-          "temperature": 1000,
+          "temperature": 0,
           "unit_change_mode": "static",
           "unit_gradient_duration": 13,
           "unit_switch_duration": 14,
@@ -450,8 +366,11 @@
       ]
     },
     "countdown_1": 0,
-    "music_data": "",
-    "control_data": ""
+    "control_data": "",
+    "rhythm_mode": "AAAAAAA=",
+    "sleep_mode": "AAA=",
+    "wakeup_mode": "AAA=",
+    "remote_switch": true
   },
   "set_up": true,
   "support_local": true

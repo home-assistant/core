@@ -64,7 +64,7 @@ async def test_platform_setup_no_discovery(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["dj_mki13ie507rlry4r_smart_light_bulb"],
+    ["dj_mki13ie507rlry4r"],
 )
 async def test_turn_on_white(
     hass: HomeAssistant,
@@ -98,7 +98,7 @@ async def test_turn_on_white(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["dj_mki13ie507rlry4r_smart_light_bulb"],
+    ["dj_mki13ie507rlry4r"],
 )
 async def test_turn_off(
     hass: HomeAssistant,

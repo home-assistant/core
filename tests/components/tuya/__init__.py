@@ -75,19 +75,23 @@ DEVICE_MOCKS = {
         Platform.SENSOR,
         Platform.SWITCH,
     ],
-    "dj_8szt7whdvwpmxglk_smart_light_bulb": [
+    "dj_8szt7whdvwpmxglk": [
         # https://github.com/home-assistant/core/issues/149704
         Platform.LIGHT
     ],
-    "dj_hp6orhaqm6as3jnv_led_strip_lights": [
+    "dj_baf9tt9lb8t5uc7z": [
         # https://github.com/home-assistant/core/issues/149704
         Platform.LIGHT
     ],
-    "dj_idnfq7xbx8qewyoa_smart_lamp": [
+    "dj_hp6orhaqm6as3jnv": [
         # https://github.com/home-assistant/core/issues/149704
         Platform.LIGHT
     ],
-    "dj_mki13ie507rlry4r_smart_light_bulb": [
+    "dj_idnfq7xbx8qewyoa": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT
+    ],
+    "dj_mki13ie507rlry4r": [
         # https://github.com/home-assistant/core/pull/126242
         Platform.LIGHT
     ],

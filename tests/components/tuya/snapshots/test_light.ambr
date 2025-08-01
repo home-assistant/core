@@ -56,7 +56,7 @@
     'state': 'on',
   })
 # ---
-# name: test_platform_setup_and_discovery[dj_8szt7whdvwpmxglk_smart_light_bulb][light.porch_light_e-entry]
+# name: test_platform_setup_and_discovery[dj_8szt7whdvwpmxglk][light.porch_light_e-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -96,7 +96,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[dj_8szt7whdvwpmxglk_smart_light_bulb][light.porch_light_e-state]
+# name: test_platform_setup_and_discovery[dj_8szt7whdvwpmxglk][light.porch_light_e-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
@@ -119,7 +119,71 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[dj_hp6orhaqm6as3jnv_led_strip_lights][light.master_bedroom_tv_lights-entry]
+# name: test_platform_setup_and_discovery[dj_baf9tt9lb8t5uc7z][light.pokerlamp_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max_color_temp_kelvin': 6500,
+      'max_mireds': 500,
+      'min_color_temp_kelvin': 2000,
+      'min_mireds': 153,
+      'supported_color_modes': list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'light',
+    'entity_category': None,
+    'entity_id': 'light.pokerlamp_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.40611462e09806c73134switch_led',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[dj_baf9tt9lb8t5uc7z][light.pokerlamp_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Pokerlamp 2',
+      'max_color_temp_kelvin': 6500,
+      'max_mireds': 500,
+      'min_color_temp_kelvin': 2000,
+      'min_mireds': 153,
+      'supported_color_modes': list([
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.pokerlamp_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[dj_hp6orhaqm6as3jnv][light.master_bedroom_tv_lights-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -163,7 +227,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[dj_hp6orhaqm6as3jnv_led_strip_lights][light.master_bedroom_tv_lights-state]
+# name: test_platform_setup_and_discovery[dj_hp6orhaqm6as3jnv][light.master_bedroom_tv_lights-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': 51,
@@ -202,7 +266,7 @@
     'state': 'on',
   })
 # ---
-# name: test_platform_setup_and_discovery[dj_idnfq7xbx8qewyoa_smart_lamp][light.porch_light_e-entry]
+# name: test_platform_setup_and_discovery[dj_idnfq7xbx8qewyoa][light.porch_light_e-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -242,7 +306,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[dj_idnfq7xbx8qewyoa_smart_lamp][light.porch_light_e-state]
+# name: test_platform_setup_and_discovery[dj_idnfq7xbx8qewyoa][light.porch_light_e-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
@@ -265,7 +329,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[dj_mki13ie507rlry4r_smart_light_bulb][light.garage_light-entry]
+# name: test_platform_setup_and_discovery[dj_mki13ie507rlry4r][light.garage_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -305,7 +369,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[dj_mki13ie507rlry4r_smart_light_bulb][light.garage_light-state]
+# name: test_platform_setup_and_discovery[dj_mki13ie507rlry4r][light.garage_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': 138,
@@ -328,15 +392,18 @@
     'state': 'on',
   })
 # ---
-# name: test_platform_setup_and_discovery[dj_tmsloaroqavbucgn][light.garage_light-entry]
+# name: test_platform_setup_and_discovery[dj_tmsloaroqavbucgn][light.pokerlamp_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
+      'max_color_temp_kelvin': 6500,
+      'max_mireds': 500,
+      'min_color_temp_kelvin': 2000,
+      'min_mireds': 153,
       'supported_color_modes': list([
-        <ColorMode.HS: 'hs'>,
-        <ColorMode.WHITE: 'white'>,
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -346,7 +413,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.garage_light',
+    'entity_id': 'light.pokerlamp_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -364,31 +431,29 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.REDACTEDswitch_led',
+    'unique_id': 'tuya.bf252b8ee16b2e78bdoxlpswitch_led',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[dj_tmsloaroqavbucgn][light.garage_light-state]
+# name: test_platform_setup_and_discovery[dj_tmsloaroqavbucgn][light.pokerlamp_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 138,
-      'color_mode': <ColorMode.WHITE: 'white'>,
-      'friendly_name': 'Garage light',
-      'hs_color': None,
-      'rgb_color': None,
+      'friendly_name': 'Pokerlamp 1',
+      'max_color_temp_kelvin': 6500,
+      'max_mireds': 500,
+      'min_color_temp_kelvin': 2000,
+      'min_mireds': 153,
       'supported_color_modes': list([
-        <ColorMode.HS: 'hs'>,
-        <ColorMode.WHITE: 'white'>,
+        <ColorMode.COLOR_TEMP: 'color_temp'>,
       ]),
       'supported_features': <LightEntityFeature: 0>,
-      'xy_color': None,
     }),
     'context': <ANY>,
-    'entity_id': 'light.garage_light',
+    'entity_id': 'light.pokerlamp_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'unavailable',
   })
 # ---
 # name: test_platform_setup_and_discovery[gyd_night_light][light.colorful_pir_night_light-entry]
