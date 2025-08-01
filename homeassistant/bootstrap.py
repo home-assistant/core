@@ -623,7 +623,7 @@ async def async_enable_logging(
         default_log_path = hass.config.path(ERROR_LOG_FILENAME)
         if "SUPERVISOR" in os.environ:
             _LOGGER.info("Running in Supervisor, not logging to file")
-            # Delete the default log file if it exists, since previous versions created
+            # Rename the default log file if it exists, since previous versions created
             # it even on Supervisor
             if os.path.isfile(default_log_path):
                 with contextlib.suppress(OSError):
