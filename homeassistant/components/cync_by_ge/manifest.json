@@ -1,0 +1,14 @@
+{
+  "domain": "cync_by_ge",
+  "name": "Cync by GE",
+  "codeowners": ["@Kinachi249"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/cync_by_ge",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "quality_scale": "bronze",
+  "requirements": ["pycync==0.1.0"],
+  "ssdp": [],
+  "zeroconf": []
+}
