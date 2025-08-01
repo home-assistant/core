@@ -3411,11 +3411,13 @@ async def test_cleanup_entity_registry_change(
         assert len(mock_call.mock_calls) == 2
 
 
+@pytest.mark.parametrize("initial_area", [None, "12345A"])
 @pytest.mark.usefixtures("freezer")
 async def test_restore_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry_with_subentries: MockConfigEntry,
+    initial_area: str | None,
 ) -> None:
     """Make sure device id is stable."""
     entry_id = mock_config_entry_with_subentries.entry_id
@@ -3442,7 +3444,7 @@ async def test_restore_device(
     # Apply user customizations
     entry = device_registry.async_update_device(
         entry.id,
-        area_id="12345A",
+        area_id=initial_area,
         disabled_by=dr.DeviceEntryDisabler.USER,
         labels={"label1", "label2"},
         name_by_user="Test Friendly Name",
@@ -3508,7 +3510,7 @@ async def test_restore_device(
         via_device="via_device_id_new",
     )
     assert entry3 == dr.DeviceEntry(
-        area_id="12345A",
+        area_id=initial_area,
         config_entries={entry_id},
         config_entries_subentries={entry_id: {subentry_id}},
         configuration_url="http://config_url_new.bla",

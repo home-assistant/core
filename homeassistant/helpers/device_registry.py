@@ -348,6 +348,10 @@ class DeviceEntry:
     via_device_id: str | None = attr.ib(default=None)
     # This value is not stored, just used to keep track of events to fire.
     is_new: bool = attr.ib(default=False)
+    # This value is not stored, just used to keep track of whether the entry
+    # was restored from storage. Marked as private because it should only be used
+    # by the DeviceRegistry.
+    _is_restored: bool = attr.ib(default=False)
     _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     @property
@@ -481,7 +485,7 @@ class DeletedDeviceEntry:
             disabled_by=self.disabled_by,
             identifiers=self.identifiers & identifiers,  # type: ignore[arg-type]
             id=self.id,
-            is_new=True,
+            is_restored=True,
             labels=self.labels,  # type: ignore[arg-type]
             name_by_user=self.name_by_user,
         )
@@ -1208,6 +1212,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         if old.is_new:
             new_values["is_new"] = False
+        if old._is_restored:  # noqa: SLF001
+            new_values["is_restored"] = False
 
         if not new_values:
             return old
@@ -1239,7 +1245,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self.async_schedule_save()
 
         data: EventDeviceRegistryUpdatedData
-        if old.is_new:
+        if old.is_new or old._is_restored:  # noqa: SLF001
             data = {"action": "create", "device_id": new.id}
         else:
             data = {"action": "update", "device_id": new.id, "changes": old_values}
