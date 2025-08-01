@@ -175,7 +175,7 @@ def _convert_content(
 
 async def _transform_stream(
     chat_log: conversation.ChatLog,
-    result: AsyncStream[MessageStreamEvent],
+    stream: AsyncStream[MessageStreamEvent],
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     """Transform the response stream into HA format.
 
@@ -206,7 +206,7 @@ async def _transform_stream(
 
     Each message could contain multiple blocks of the same type.
     """
-    if result is None:
+    if stream is None:
         raise TypeError("Expected a stream of messages")
 
     current_tool_block: ToolUseBlockParam | None = None
@@ -215,7 +215,7 @@ async def _transform_stream(
     has_content = False
     has_native = False
 
-    async for response in result:
+    async for response in stream:
         LOGGER.debug("Received response: %s", response)
 
         if isinstance(response, RawMessageStartEvent):
@@ -384,22 +384,22 @@ class AnthropicBaseLLMEntity(Entity):
         for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
                 stream = await client.messages.create(**model_args)
+
+                messages.extend(
+                    _convert_content(
+                        [
+                            content
+                            async for content in chat_log.async_add_delta_content_stream(
+                                self.entity_id,
+                                _transform_stream(chat_log, stream),
+                            )
+                        ]
+                    )
+                )
             except anthropic.AnthropicError as err:
                 raise HomeAssistantError(
                     f"Sorry, I had a problem talking to Anthropic: {err}"
                 ) from err
-
-            messages.extend(
-                _convert_content(
-                    [
-                        content
-                        async for content in chat_log.async_add_delta_content_stream(
-                            self.entity_id,
-                            _transform_stream(chat_log, stream),
-                        )
-                    ]
-                )
-            )
 
             if not chat_log.unresponded_tool_results:
                 break
