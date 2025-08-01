@@ -69,8 +69,8 @@
       "description": "Sets the target temperature for the printer's heated bed.",
       "fields": {
         "device_id": {
-          "name": "Server",
-          "description": "The server that should connect."
+          "name": "[%key:component::octoprint::services::printer_connect::fields::device_id::name%]",
+          "description": "[%key:component::octoprint::services::printer_connect::fields::device_id::description%]"
         },
         "bed_temperature": {
           "name": "Bed temperature",
@@ -83,8 +83,8 @@
       "description": "Sets the target temperature for the printer's tool (hotend).",
       "fields": {
         "device_id": {
-          "name": "Server",
-          "description": "The server that should connect."
+          "name": "[%key:component::octoprint::services::printer_connect::fields::device_id::name%]",
+          "description": "[%key:component::octoprint::services::printer_connect::fields::device_id::description%]"
         },
         "tool_temperature": {
           "name": "Tool temperature",
