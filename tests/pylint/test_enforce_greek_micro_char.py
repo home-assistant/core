@@ -89,29 +89,32 @@ def test_enforce_greek_micro_char(
     "code",
     [
         pytest.param(
-            # Test using the bad μ-sign \u00b5 instead of \u03bc with annotation
+            # Test we can detect the legacy coding of μ \u00b5
+            # instead of recommended coding of μ \u03bc" with annotation
             """
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
         """,
             id="bad_const_with_annotation",
         ),
         pytest.param(
-            # Test using the bad μ-sign \u00b5 instead of \u03bc with unicode literal
-            # and annotation
+            # Test we can detect the unicode variant of the legacy coding of μ \u00b5
+            # instead of recommended coding of μ \u03bc" with annotation
             """
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "\u00b5g/m³"
         """,
             id="bad_unicode_const_with_annotation",
         ),
         pytest.param(
-            # Test using the bad μ-sign \u00b5 instead of \u03bc without annotation
+            # Test we can detect the legacy coding of μ \u00b5
+            # instead of recommended coding of μ \u03bc" without annotation
             """
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER = "µg/m³"
         """,
             id="bad_const_without_annotation",
         ),
         pytest.param(
-            # Test StrEnum class using the bad μ-sign \u00b5 instead of \u03bc
+            # Test we can detect the legacy coding of μ \u00b5
+            # instead of recommended coding of μ \u03bc" in a StrEnum class
             """
             class UnitOfElectricPotential(StrEnum):
                 \"\"\"Electric potential units.\"\"\"
@@ -125,7 +128,8 @@ def test_enforce_greek_micro_char(
             id="bad_str_enum",
         ),
         pytest.param(
-            # Test sensor description dict using the bad μ-sign \u00b5 instead of \u03bc
+            # Test we can detect the legacy coding of μ \u00b5
+            # instead of recommended coding of μ \u03bc" in a sensor description dict
             """
             SENSOR_DESCRIPTION = {
                 "radiation_rate": AranetSensorEntityDescription(
