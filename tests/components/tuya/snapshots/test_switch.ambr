@@ -1257,3 +1257,51 @@
     'state': 'off',
   })
 # ---
+# name: test_platform_setup_and_discovery[xnyjcn_micro_storage_inverter][switch.cbe_pro_2_feed_in_power_limit_enable-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.cbe_pro_2_feed_in_power_limit_enable',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Feed-in power limit enable',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'feedin_power_limit_enable',
+    'unique_id': 'tuya.6cd9ce33d5275082e9inhvfeedin_power_limit_enable',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[xnyjcn_micro_storage_inverter][switch.cbe_pro_2_feed_in_power_limit_enable-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'CBE Pro 2 Feed-in power limit enable',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.cbe_pro_2_feed_in_power_limit_enable',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
