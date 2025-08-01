@@ -1650,7 +1650,7 @@ async def test_removing_config_entries(
     assert update_events[4].data == {
         "action": "remove",
         "device_id": entry3.id,
-        "device": entry3,
+        "device": entry3.dict_repr,
     }
 
 
@@ -1723,12 +1723,12 @@ async def test_deleted_device_removing_config_entries(
     assert update_events[3].data == {
         "action": "remove",
         "device_id": entry.id,
-        "device": entry2,
+        "device": entry2.dict_repr,
     }
     assert update_events[4].data == {
         "action": "remove",
         "device_id": entry3.id,
-        "device": entry3,
+        "device": entry3.dict_repr,
     }
 
     device_registry.async_clear_config_entry(config_entry_1.entry_id)
@@ -1974,7 +1974,7 @@ async def test_removing_config_subentries(
     assert update_events[7].data == {
         "action": "remove",
         "device_id": entry.id,
-        "device": entry,
+        "device": entry.dict_repr,
     }
 
 
@@ -2104,7 +2104,7 @@ async def test_deleted_device_removing_config_subentries(
     assert update_events[4].data == {
         "action": "remove",
         "device_id": entry.id,
-        "device": entry4,
+        "device": entry4.dict_repr,
     }
 
     device_registry.async_clear_config_subentry(config_entry_1.entry_id, None)
@@ -2926,7 +2926,7 @@ async def test_update_remove_config_entries(
     assert update_events[6].data == {
         "action": "remove",
         "device_id": entry3.id,
-        "device": entry3,
+        "device": entry3.dict_repr,
     }
 
 
@@ -3204,7 +3204,7 @@ async def test_update_remove_config_subentries(
     assert update_events[7].data == {
         "action": "remove",
         "device_id": entry_id,
-        "device": entry_before_remove,
+        "device": entry_before_remove.dict_repr,
     }
 
 
@@ -3543,7 +3543,7 @@ async def test_restore_device(
     assert update_events[2].data == {
         "action": "remove",
         "device_id": entry.id,
-        "device": entry,
+        "device": entry.dict_repr,
     }
     assert update_events[3].data == {
         "action": "create",
@@ -3861,7 +3861,7 @@ async def test_restore_shared_device(
     assert update_events[3].data == {
         "action": "remove",
         "device_id": entry.id,
-        "device": updated_device,
+        "device": updated_device.dict_repr,
     }
     assert update_events[4].data == {
         "action": "create",
@@ -3870,7 +3870,7 @@ async def test_restore_shared_device(
     assert update_events[5].data == {
         "action": "remove",
         "device_id": entry.id,
-        "device": entry2,
+        "device": entry2.dict_repr,
     }
     assert update_events[6].data == {
         "action": "create",
