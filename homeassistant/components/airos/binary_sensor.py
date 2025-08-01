@@ -14,7 +14,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
 from .coordinator import AirOSConfigEntry, AirOSData, AirOSDataUpdateCoordinator
 from .entity import AirOSEntity
@@ -28,7 +27,7 @@ PARALLEL_UPDATES = 0
 class AirOSBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describe an AirOS binary sensor."""
 
-    value_fn: Callable[[AirOSData], StateType]
+    value_fn: Callable[[AirOSData], bool]
 
 
 BINARY_SENSORS: tuple[AirOSBinarySensorEntityDescription, ...] = (
@@ -103,6 +102,6 @@ class AirOSBinarySensor(AirOSEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.data.host.device_id}_{description.key}"
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return the state of the binary sensor."""
-        return bool(self.entity_description.value_fn(self.coordinator.data))
+        return self.entity_description.value_fn(self.coordinator.data)
