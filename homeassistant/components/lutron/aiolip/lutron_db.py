@@ -222,28 +222,16 @@ class LutronXmlDbParser:
 
         component_number = int(component_xml.get("ComponentNumber"))
         button_xml = component_xml.find("Button")
-        name = button_xml.get("Engraving")
-        engraving = button_xml.get("Engraving")
-        button_type = button_xml.get("ButtonType")
-        direction = button_xml.get("Direction")
-        led_logic = int(button_xml.get("LedLogic") or 0)
-
-        # Hybrid keypads have dimmer buttons which have no engravings.
-        if button_type == "SingleSceneRaiseLower":
-            name = "Dimmer " + direction
-        # a button without engraving can be a valid button (e.g., keypad lower/raiser buttons)
-        if not name:
-            name = f"Unknown Button {component_number}"
 
         return Button(
             keypad=keypad,
-            name=name,
-            engraving=engraving,
+            name=button_xml.get("Name"),
+            engraving=button_xml.get("Engraving"),
             number=component_number,
             component_number=component_number,
-            button_type=button_type,
-            direction=direction,
-            led_logic=led_logic,
+            button_type=button_xml.get("ButtonType"),
+            direction=button_xml.get("Direction"),
+            led_logic=int(button_xml.get("LedLogic") or 0),
             integration_id=keypad.integration_id,
             uuid=button_xml.get("UUID"),
         )
@@ -537,8 +525,17 @@ class Button(KeypadComponent):
     led_logic: int = 0
 
     def __post_init__(self):
-        """Set if the Button has action."""
+        """Set the button name to engraving if available, otherwise use the button number."""
         super().__post_init__()
+
+        self.name = self.engraving
+        # Hybrid keypads have dimmer buttons which have no engravings.
+        if self.button_type == "SingleSceneRaiseLower":
+            self.name = "Dimmer " + self.direction
+        # a button without engraving can be a valid button (e.g., keypad lower/raiser buttons)
+        if not self.name:
+            self.name = f"Unknown Button {self.component_number}"
+
         self.component_name = f"Btn {self.number}"
 
     def is_valid_button(self, use_radiora_mode: bool) -> bool:
