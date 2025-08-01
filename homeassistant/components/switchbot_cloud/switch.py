@@ -1,5 +1,6 @@
 """Support for SwitchBot switch."""
 
+import asyncio
 from typing import Any
 
 from switchbot_api import CommonCommands, Device, PowerState, Remote, SwitchBotAPI
@@ -76,6 +77,46 @@ class SwitchBotCloudRelaySwitchSwitch(SwitchBotCloudSwitch):
         self._attr_is_on = self.coordinator.data.get("switchStatus") == 1
 
 
+class SwitchBotCloudRelaySwitch2PMSwitch(SwitchBotCloudSwitch):
+    """Representation of a SwitchBot relay switch."""
+
+    def __init__(
+        self,
+        api: SwitchBotAPI,
+        device: Device | Remote,
+        coordinator: SwitchBotCoordinator,
+    ) -> None:
+        """Init SwitchBotCloudRelaySwitch2PMSwitch."""
+        super().__init__(api, device, coordinator)
+        if self._attr_unique_id is not None:
+            self.real_unique_id = self._attr_unique_id.split("-")[0]
+            self.channel = self._attr_unique_id.split("-")[1]
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the device on."""
+        if self._attr_unique_id is not None:
+            await self._api.send_command(
+                self.real_unique_id, command=CommonCommands.ON, parameters=self.channel
+            )
+            await asyncio.sleep(5)
+            await self.coordinator.async_request_refresh()
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the device off."""
+        if self._attr_unique_id is not None:
+            await self._api.send_command(
+                self.real_unique_id, command=CommonCommands.OFF, parameters=self.channel
+            )
+            await asyncio.sleep(5)
+            await self.coordinator.async_request_refresh()
+
+    def _set_attributes(self) -> None:
+        """Set attributes from coordinator data."""
+        if self.coordinator.data is None:
+            return
+        self._attr_is_on = self.coordinator.data.get(f"switch{self.channel}Status") == 1
+
+
 @callback
 def _async_make_entity(
     api: SwitchBotAPI, device: Device | Remote, coordinator: SwitchBotCoordinator
@@ -92,4 +133,8 @@ def _async_make_entity(
         return SwitchBotCloudRelaySwitchSwitch(api, device, coordinator)
     if "Bot" in device.device_type:
         return SwitchBotCloudSwitch(api, device, coordinator)
+    if device.device_type in [
+        "Relay Switch 2PM",
+    ]:
+        return SwitchBotCloudRelaySwitch2PMSwitch(api, device, coordinator)
     raise NotImplementedError(f"Unsupported device type: {device.device_type}")
