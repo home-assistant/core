@@ -51,6 +51,7 @@ set_tool_temperature:
           integration: octoprint
     tool_temperature:
       required: true
+      example: 200
       selector:
         number:
           min: 0
