@@ -4944,3 +4944,11 @@ async def test_suggested_area_deprecation(
         "The deprecated function suggested_area was called. It will be removed in "
         "HA Core 2026.9. Use code which ignores suggested_area instead"
     ) in caplog.text
+
+    device_registry.async_update_device(entry.id, suggested_area="TV Room")
+
+    assert (
+        "Detected code that passes a suggested_area to device_registry.async_update "
+        "device. This will stop working in Home Assistant 2026.9.0, please report "
+        "this issue"
+    ) in caplog.text

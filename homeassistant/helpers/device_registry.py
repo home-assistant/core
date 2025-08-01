@@ -910,7 +910,19 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if device is None:
             deleted_device = self.deleted_devices.get_entry(identifiers, connections)
             if deleted_device is None:
-                device = DeviceEntry(is_new=True)
+                area_id: str | None = None
+                if (
+                    suggested_area is not None
+                    and suggested_area is not UNDEFINED
+                    and suggested_area != ""
+                ):
+                    # Circular dep
+                    from . import area_registry as ar  # noqa: PLC0415
+
+                    area = ar.async_get(self.hass).async_get_or_create(suggested_area)
+                    area_id = area.id
+                device = DeviceEntry(is_new=True, area_id=area_id)
+
             else:
                 self.deleted_devices.pop(deleted_device.id)
                 device = deleted_device.to_device_entry(
@@ -965,7 +977,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             model_id=model_id,
             name=name,
             serial_number=serial_number,
-            suggested_area=suggested_area,
+            _suggested_area=suggested_area,
             sw_version=sw_version,
             via_device_id=via_device_id,
         )
@@ -1004,6 +1016,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         remove_config_entry_id: str | UndefinedType = UNDEFINED,
         remove_config_subentry_id: str | None | UndefinedType = UNDEFINED,
         serial_number: str | None | UndefinedType = UNDEFINED,
+        # _suggested_area is used internally by the device registry and must
+        # not be set by integrations.
+        _suggested_area: str | None | UndefinedType = UNDEFINED,
+        # suggested_area is deprecated and will be removed in 2026.9
         suggested_area: str | None | UndefinedType = UNDEFINED,
         sw_version: str | None | UndefinedType = UNDEFINED,
         via_device_id: str | None | UndefinedType = UNDEFINED,
@@ -1068,20 +1084,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             raise HomeAssistantError(
                 "Cannot define both merge_identifiers and new_identifiers"
             )
-
-        if (
-            # Note: We don't check area_id or old.area_id here, because
-            # they are irrelevant if old.is_new is True.
-            old.is_new
-            and suggested_area is not None
-            and suggested_area is not UNDEFINED
-            and suggested_area != ""
-        ):
-            # Circular dep
-            from . import area_registry as ar  # noqa: PLC0415
-
-            area = ar.async_get(self.hass).async_get_or_create(suggested_area)
-            area_id = area.id
 
         if add_config_entry_id is not UNDEFINED:
             if add_config_subentry_id is UNDEFINED:
@@ -1159,6 +1161,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if config_entries_subentries != old.config_entries_subentries:
             new_values["config_entries_subentries"] = config_entries_subentries
             old_values["config_entries_subentries"] = old.config_entries_subentries
+
+        if suggested_area is not UNDEFINED:
+            report_usage(
+                "passes a suggested_area to device_registry.async_update device",
+                core_behavior=ReportBehavior.LOG,
+                breaks_in_ha_version="2026.9.0",
+            )
+
+        if _suggested_area is not UNDEFINED:
+            suggested_area = _suggested_area
 
         added_connections: set[tuple[str, str]] | None = None
         added_identifiers: set[tuple[str, str]] | None = None
