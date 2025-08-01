@@ -11,6 +11,7 @@ from tuya_sharing import (
     Manager,
     SharingDeviceListener,
     SharingTokenListener,
+    strategy,
 )
 from tuya_sharing.mq import SharingMQ, SharingMQConfig
 
@@ -78,6 +79,65 @@ class ManagerCompat(Manager):
         sharing_mq.start()
         sharing_mq.add_message_listener(self.on_message)
         self.mq = sharing_mq
+
+    def on_message(self, msg: dict):
+        """Handle MQTT message."""
+        LOGGER.debug(f"mq receive-> {msg}")
+        super().on_message(msg)
+
+    def _on_device_report(self, device_id: str, status: list):
+        """Enhanced device report handling with DP timestamps."""
+        device = self.device_map.get(device_id, None)
+        if not device:
+            return
+
+        updated_status_properties = []
+        dp_timestamps = {}
+
+        if device.support_local:
+            for item in status:
+                # [{'dpId': 1, 't': 1752456620499, 'value': 120}]
+                if "dpId" in item and "value" in item:
+                    dp_id_item = device.local_strategy[item["dpId"]]
+                    strategy_name = dp_id_item["value_convert"]
+                    config_item = dp_id_item["config_item"]
+                    dp_item = (dp_id_item["status_code"], item["value"])
+                    code, value = strategy.convert(strategy_name, dp_item, config_item)
+                    device.status[code] = value
+                    updated_status_properties.append(code)
+                    dp_timestamps[code] = item.get(
+                        "t", None
+                    )  # Get timestamp if available
+        else:
+            for item in status:
+                if "code" in item and "value" in item:
+                    code = item["code"]
+                    value = item["value"]
+                    device.status[code] = value
+                    updated_status_properties.append(code)
+                    dp_timestamps[code] = item.get(
+                        "t", None
+                    )  # Get timestamp if available
+
+        # Call enhanced device update method with timestamps
+        self.__update_device_with_timestamps(
+            device, updated_status_properties, dp_timestamps
+        )
+
+    def __update_device_with_timestamps(
+        self,
+        device: CustomerDevice,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict,
+    ):
+        """Update device with timestamp information."""
+        for listener in self.device_listeners:
+            try:
+                # Try new 3-parameter version first
+                listener.update_device(device, updated_status_properties, dp_timestamps)
+            except TypeError:
+                # Fall back to original 2-parameter version if it fails
+                listener.update_device(device, updated_status_properties)
 
 
 class SharingMQCompat(SharingMQ):
@@ -217,19 +277,24 @@ class DeviceListener(SharingDeviceListener):
         self.manager = manager
 
     def update_device(
-        self, device: CustomerDevice, updated_status_properties: list[str] | None
+        self,
+        device: CustomerDevice,
+        updated_status_properties: list[str] | None,
+        dp_timestamps: dict | None = None,
     ) -> None:
-        """Update device status."""
+        """Update device status with optional DP timestamps."""
         LOGGER.debug(
-            "Received update for device %s: %s (updated properties: %s)",
+            "Received update for device %s: %s (updated properties: %s, dp_timestamps: %s)",
             device.id,
             self.manager.device_map[device.id].status,
             updated_status_properties,
+            dp_timestamps,
         )
         dispatcher_send(
             self.hass,
             f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}",
             updated_status_properties,
+            dp_timestamps,
         )
 
     def add_device(self, device: CustomerDevice) -> None:
