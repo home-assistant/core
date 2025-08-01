@@ -347,11 +347,9 @@ class ValveBase(HomeAccessory):
     def _update_duration_chars(self) -> None:
         """Update valve duration related properties if characteristics are available."""
         if CHAR_SET_DURATION in self.chars:
-            duration = self.get_duration()
-            self.char_set_duration.set_value(duration)
+            self.char_set_duration.set_value(self.get_duration())
         if CHAR_REMAINING_DURATION in self.chars:
-            remaining_duration = self.get_remaining_duration()
-            self.char_remaining_duration.set_value(remaining_duration)
+            self.char_remaining_duration.set_value(self.get_remaining_duration())
 
     def set_duration(self, value: int) -> None:
         """Set default duration for how long the valve should remain open."""
