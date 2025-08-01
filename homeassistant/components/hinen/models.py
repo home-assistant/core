@@ -78,7 +78,5 @@ class HinenDeviceControl(BaseModel):
 class HinenClient(BaseModel):
     """hinen client."""
 
-    name: str
-
 
 type HinenIntegrationConfigEntry = ConfigEntry[HinenClient]

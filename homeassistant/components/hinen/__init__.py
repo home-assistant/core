@@ -64,7 +64,7 @@ async def async_setup_entry(
         AUTH: auth,
     }
 
-    client = HinenClient(name="aa")
+    client = HinenClient()
     entry.runtime_data = client
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

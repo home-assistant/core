@@ -94,9 +94,8 @@ class HinenImplementation(AuthImplementation):
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve the authorization code to tokens."""
         _LOGGER.info("Sending token request to %s", external_data)
-        self.client_secret = external_data[ATTR_CLIENT_SECRET]
         request_data: dict = {
-            "clientSecret": self.client_secret,
+            "clientSecret": external_data[ATTR_CLIENT_SECRET],
             "grantType": "1",
             "authorizationCode": external_data["code"],
             "regionCode": external_data[ATTR_REGION_CODE],
@@ -109,8 +108,8 @@ class HinenImplementation(AuthImplementation):
         new_token = await self._token_request(
             {
                 "grantType": "2",
-                "clientSecret": self.client_secret,
-                "regionCode": "CN",
+                "clientSecret": token.get(ATTR_CLIENT_SECRET),
+                "regionCode": token.get(ATTR_REGION_CODE),
                 "refreshToken": token["refresh_token"],
             }
         )
@@ -139,10 +138,16 @@ class HinenImplementation(AuthImplementation):
                 error_trace_id,
             )
         resp.raise_for_status()
-        custom_token = cast(dict[str, Any], await resp.json())
-        _LOGGER.debug("resp: %s", custom_token)
+        custom_token = cast(dict[str, Any], await resp.json()).get("data", {})
+        custom_token.update(
+            {
+                CLIENT_SECRET: data.get(CLIENT_SECRET),
+                REGION_CODE: data.get(REGION_CODE),
+            }
+        )
 
-        return RespUtil.convert_to_snake_case(custom_token.get("data", {}))
+        _LOGGER.debug("resp: %s", custom_token)
+        return RespUtil.convert_to_snake_case(custom_token)
 
 
 class HinenOAuth2AuthorizeCallbackView(http.HomeAssistantView):
