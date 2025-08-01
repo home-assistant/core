@@ -341,39 +341,46 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
 
         timestamp = 0
         try:
+            media_ids = []
+            # Play the preannounce media first if provided
+            if announcement.preannounce_media_id is not None:
+                media_ids.append(announcement.preannounce_media_id)
+            media_ids.append(announcement.media_id)
+
             # Use ffmpeg to convert to raw PCM audio with the appropriate format
-            proc = await asyncio.create_subprocess_exec(
-                self._ffmpeg_manager.binary,
-                "-i",
-                announcement.media_id,
-                "-f",
-                "s16le",
-                "-ac",
-                str(SAMPLE_CHANNELS),
-                "-ar",
-                str(_TTS_SAMPLE_RATE),
-                "-nostats",
-                "pipe:",
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                close_fds=False,  # use posix_spawn in CPython < 3.13
-            )
-            assert proc.stdout is not None
-            while True:
-                chunk_bytes = await proc.stdout.read(_ANNOUNCE_CHUNK_BYTES)
-                if not chunk_bytes:
-                    break
-
-                chunk = AudioChunk(
-                    rate=_TTS_SAMPLE_RATE,
-                    width=SAMPLE_WIDTH,
-                    channels=SAMPLE_CHANNELS,
-                    audio=chunk_bytes,
-                    timestamp=timestamp,
+            for media_id in media_ids:
+                proc = await asyncio.create_subprocess_exec(
+                    self._ffmpeg_manager.binary,
+                    "-i",
+                    media_id,
+                    "-f",
+                    "s16le",
+                    "-ac",
+                    str(SAMPLE_CHANNELS),
+                    "-ar",
+                    str(_TTS_SAMPLE_RATE),
+                    "-nostats",
+                    "pipe:",
+                    stdout=asyncio.subprocess.PIPE,
+                    stderr=asyncio.subprocess.PIPE,
+                    close_fds=False,  # use posix_spawn in CPython < 3.13
                 )
-                await self._client.write_event(chunk.event())
+                assert proc.stdout is not None
+                while True:
+                    chunk_bytes = await proc.stdout.read(_ANNOUNCE_CHUNK_BYTES)
+                    if not chunk_bytes:
+                        break
 
-                timestamp += chunk.milliseconds
+                    chunk = AudioChunk(
+                        rate=_TTS_SAMPLE_RATE,
+                        width=SAMPLE_WIDTH,
+                        channels=SAMPLE_CHANNELS,
+                        audio=chunk_bytes,
+                        timestamp=timestamp,
+                    )
+                    await self._client.write_event(chunk.event())
+
+                    timestamp += chunk.milliseconds
         finally:
             await self._client.write_event(AudioStop().event())
             if timestamp > 0:
