@@ -62,8 +62,10 @@ DEVICE_MOCKS = {
     ],
     "cwwsq_cleverio_pf100": [
         # https://github.com/home-assistant/core/issues/144745
+        Platform.BINARY_SENSOR,
         Platform.NUMBER,
         Platform.SENSOR,
+        Platform.SWITCH,
     ],
     "cwysj_pixi_smart_drinking_fountain": [
         # https://github.com/home-assistant/core/pull/146599

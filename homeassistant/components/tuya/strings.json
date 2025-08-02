@@ -65,6 +65,9 @@
       },
       "wet": {
         "name": "Wet"
+      },
+      "charge_state": {
+        "name": "Charge state"
       }
     },
     "button": {
@@ -854,6 +857,9 @@
       },
       "siren": {
         "name": "Siren"
+      },
+      "light": {
+        "name": "Light"
       }
     }
   },
