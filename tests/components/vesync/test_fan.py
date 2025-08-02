@@ -1,7 +1,7 @@
 """Tests for the fan module."""
 
 from contextlib import nullcontext
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 import requests_mock
@@ -74,7 +74,7 @@ async def test_turn_on_off_success(
     """Test turn_on and turn_off method."""
 
     with (
-        patch(command, return_value=True) as method_mock,
+        patch(command, new_callable=AsyncMock, return_value=True) as method_mock,
     ):
         with patch(
             "homeassistant.components.vesync.fan.VeSyncFanHA.schedule_update_ha_state"
