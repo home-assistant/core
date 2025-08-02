@@ -4,8 +4,13 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.knx.const import KNX_ADDRESS, KNX_MODULE_KEY
+from homeassistant.components.knx.const import (
+    KNX_ADDRESS,
+    KNX_MODULE_KEY,
+    SUPPORTED_PLATFORMS_UI,
+)
 from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
 from homeassistant.components.knx.schema import SwitchSchema
 from homeassistant.const import CONF_NAME
@@ -388,6 +393,22 @@ async def test_knx_subscribe_telegrams_command_project(
     )
     assert res["event"]["direction"] == "Incoming"
     assert res["event"]["timestamp"] is not None
+
+
+@pytest.mark.parametrize("platform", {*SUPPORTED_PLATFORMS_UI, "tts"})
+async def test_knx_get_schema(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    platform: str,
+) -> None:
+    """Test knx/get_schema command returning proper schema data."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "knx/get_schema", "platform": platform})
+    res = await client.receive_json()
+    assert res == snapshot
 
 
 @pytest.mark.parametrize(
