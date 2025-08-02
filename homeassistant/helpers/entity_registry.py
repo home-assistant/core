@@ -1103,13 +1103,13 @@ class EntityRegistry(BaseRegistry):
             entities = async_entries_for_device(
                 self, event.data["device_id"], include_disabled_entities=True
             )
-            removed_device = event.data["device"]
+            removed_device_dict = event.data["device"]
             for entity in entities:
                 config_entry_id = entity.config_entry_id
                 if (
-                    config_entry_id in removed_device.config_entries
+                    config_entry_id in removed_device_dict["config_entries"]
                     and entity.config_subentry_id
-                    in removed_device.config_entries_subentries[config_entry_id]
+                    in removed_device_dict["config_entries_subentries"][config_entry_id]
                 ):
                     self.async_remove(entity.entity_id)
                 else:

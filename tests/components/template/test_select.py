@@ -35,9 +35,10 @@ from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import ConfigurationStyle
+from .conftest import ConfigurationStyle, async_get_flow_preview_state
 
 from tests.common import MockConfigEntry, assert_setup_component, async_capture_events
+from tests.conftest import WebSocketGenerator
 
 _TEST_OBJECT_ID = "template_select"
 _TEST_SELECT = f"select.{_TEST_OBJECT_ID}"
@@ -645,3 +646,19 @@ async def test_availability(hass: HomeAssistant) -> None:
 
     state = hass.states.get(_TEST_SELECT)
     assert state.state == "yes"
+
+
+async def test_flow_preview(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the config flow preview."""
+
+    state = await async_get_flow_preview_state(
+        hass,
+        hass_ws_client,
+        select.DOMAIN,
+        {"name": "My template", **TEST_OPTIONS},
+    )
+
+    assert state["state"] == "test"

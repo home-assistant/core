@@ -67,7 +67,6 @@ async def test_select_generic_entity(
             object_id="myselect",
             key=1,
             name="my select",
-            unique_id="my_select",
             options=["a", "b"],
         )
     ]

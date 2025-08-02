@@ -328,7 +328,6 @@ class WebRTCProvider(CameraWebRTCProvider):
                     # Connection problems to the camera will be logged by the first stream
                     # Therefore setting it to debug will not hide any important logs
                     f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
-                    f"ffmpeg:{camera.entity_id}#video=mjpeg",
                 ],
             )
 

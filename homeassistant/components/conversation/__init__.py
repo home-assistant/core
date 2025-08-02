@@ -61,6 +61,7 @@ from .entity import ConversationEntity
 from .http import async_setup as async_setup_conversation_http
 from .models import AbstractConversationAgent, ConversationInput, ConversationResult
 from .trace import ConversationTraceEventType, async_conversation_trace_append
+from .util import async_get_result_from_chat_log
 
 __all__ = [
     "DOMAIN",
@@ -83,6 +84,7 @@ __all__ = [
     "async_converse",
     "async_get_agent_info",
     "async_get_chat_log",
+    "async_get_result_from_chat_log",
     "async_set_agent",
     "async_setup",
     "async_unset_agent",
