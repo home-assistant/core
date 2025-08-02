@@ -3,6 +3,8 @@
 import logging
 from typing import Any
 
+from pyvesync.base_devices.bulb_base import VeSyncBulb
+from pyvesync.base_devices.switch_base import VeSyncSwitch
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.components.light import (
@@ -17,14 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import color as color_util
 
-from .const import (
-    DEV_TYPE_TO_HA,
-    DOMAIN,
-    VS_COORDINATOR,
-    VS_DEVICES,
-    VS_DISCOVERY,
-    VS_MANAGER,
-)
+from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY, VS_MANAGER
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
@@ -65,10 +60,13 @@ def _setup_entities(
     """Check if device is a light and add entity."""
     entities: list[VeSyncBaseLightHA] = []
     for dev in devices:
-        if DEV_TYPE_TO_HA.get(dev.device_type) in ("walldimmer", "bulb-dimmable"):
+        if isinstance(dev, VeSyncBulb):
+            if dev.supports_color_temp:
+                entities.append(VeSyncTunableWhiteLightHA(dev, coordinator))
+            elif dev.supports_brightness:
+                entities.append(VeSyncDimmableLightHA(dev, coordinator))
+        elif isinstance(dev, VeSyncSwitch) and dev.supports_brightness:
             entities.append(VeSyncDimmableLightHA(dev, coordinator))
-        elif DEV_TYPE_TO_HA.get(dev.device_type) in ("bulb-tunable-white",):
-            entities.append(VeSyncTunableWhiteLightHA(dev, coordinator))
 
     async_add_entities(entities, update_before_add=True)
 

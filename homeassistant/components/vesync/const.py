@@ -56,27 +56,3 @@ FAN_NIGHT_LIGHT_LEVEL_ON = "on"
 HUMIDIFIER_NIGHT_LIGHT_LEVEL_BRIGHT = "bright"
 HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM = "dim"
 HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF = "off"
-
-# need to remove this.  light need it still.
-DEV_TYPE_TO_HA = {
-    "wifi-switch-1.3": "outlet",
-    "ESW03-USA": "outlet",
-    "ESW01-EU": "outlet",
-    "ESW15-USA": "outlet",
-    "ESWL01": "switch",
-    "ESWL03": "switch",
-    "ESO15-TB": "outlet",
-    "LV-PUR131S": "fan",
-    "Core200S": "fan",
-    "Core300S": "fan",
-    "Core400S": "fan",
-    "Core600S": "fan",
-    "EverestAir": "fan",
-    "Vital200S": "fan",
-    "Vital100S": "fan",
-    "SmartTowerFan": "fan",
-    "ESD16": "walldimmer",
-    "ESWD16": "walldimmer",
-    "ESL100": "bulb-dimmable",
-    "ESL100CW": "bulb-tunable-white",
-}
