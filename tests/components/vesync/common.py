@@ -3,7 +3,7 @@
 import json
 from typing import Any
 
-import requests_mock
+from aioresponses import aioresponses
 
 from homeassistant.components.vesync.const import DOMAIN
 from homeassistant.util.json import JsonObjectType
@@ -66,9 +66,7 @@ DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
 }
 
 
-def mock_devices_response(
-    requests_mock: requests_mock.Mocker, device_name: str
-) -> None:
+def mock_devices_response(aio_mock: aioresponses, device_name: str) -> None:
     """Build a response for the Helpers.call_api method."""
     device_list = [
         device
@@ -76,16 +74,16 @@ def mock_devices_response(
         if device["deviceName"] == device_name
     ]
 
-    requests_mock.post(
+    aio_mock.post(
         "https://smartapi.vesync.com/cloud/v1/deviceManaged/devices",
         json={"code": 0, "result": {"list": device_list}},
     )
-    requests_mock.post(
+    aio_mock.post(
         "https://smartapi.vesync.com/cloud/v1/user/login",
         json=load_json_object_fixture("vesync-login.json", DOMAIN),
     )
     for fixture in DEVICE_FIXTURES[device_name]:
-        requests_mock.request(
+        aio_mock.request(
             fixture[0],
             f"https://smartapi.vesync.com{fixture[1]}",
             json=load_json_object_fixture(fixture[2], DOMAIN),
@@ -93,7 +91,7 @@ def mock_devices_response(
 
 
 def mock_multiple_device_responses(
-    requests_mock: requests_mock.Mocker, device_names: list[str]
+    aio_mock: aioresponses, device_names: list[str]
 ) -> None:
     """Build a response for the Helpers.call_api method for multiple devices."""
     device_list = [
@@ -102,29 +100,29 @@ def mock_multiple_device_responses(
         if device["deviceName"] in device_names
     ]
 
-    requests_mock.post(
+    aio_mock.post(
         "https://smartapi.vesync.com/cloud/v1/deviceManaged/devices",
         json={"code": 0, "result": {"list": device_list}},
     )
-    requests_mock.post(
+    aio_mock.post(
         "https://smartapi.vesync.com/cloud/v1/user/login",
         json=load_json_object_fixture("vesync-login.json", DOMAIN),
     )
     for device_name in device_names:
         for fixture in DEVICE_FIXTURES[device_name]:
-            requests_mock.request(
+            aio_mock.request(
                 fixture[0],
                 f"https://smartapi.vesync.com{fixture[1]}",
                 json=load_json_object_fixture(fixture[2], DOMAIN),
             )
 
 
-def mock_air_purifier_400s_update_response(requests_mock: requests_mock.Mocker) -> None:
+def mock_air_purifier_400s_update_response(aio_mock: aioresponses) -> None:
     """Build a response for the Helpers.call_api method for air_purifier_400s with updated data."""
 
     device_name = "Air Purifier 400s"
     for fixture in DEVICE_FIXTURES[device_name]:
-        requests_mock.request(
+        aio_mock.request(
             fixture[0],
             f"https://smartapi.vesync.com{fixture[1]}",
             json=load_json_object_fixture(
@@ -134,7 +132,7 @@ def mock_air_purifier_400s_update_response(requests_mock: requests_mock.Mocker) 
 
 
 def mock_device_response(
-    requests_mock: requests_mock.Mocker, device_name: str, override: Any
+    aio_mock: aioresponses, device_name: str, override: Any
 ) -> None:
     """Build a response for the Helpers.call_api method with updated data."""
 
@@ -152,7 +150,7 @@ def mock_device_response(
     if len(fixtures) > 0:
         item = fixtures[0]
 
-        requests_mock.request(
+        aio_mock.request(
             item[0],
             f"https://smartapi.vesync.com{item[1]}",
             json=load_and_merge(item[2]),
@@ -160,7 +158,7 @@ def mock_device_response(
 
 
 def mock_outlet_energy_response(
-    requests_mock: requests_mock.Mocker, device_name: str, override: Any
+    aio_mock: aioresponses, device_name: str, override: Any
 ) -> None:
     """Build a response for the Helpers.call_api energy request with updated data."""
 
@@ -178,7 +176,7 @@ def mock_outlet_energy_response(
     if len(fixtures) > 1:
         item = fixtures[1]
 
-        requests_mock.request(
+        aio_mock.request(
             item[0],
             f"https://smartapi.vesync.com{item[1]}",
             json=load_and_merge(item[2]),

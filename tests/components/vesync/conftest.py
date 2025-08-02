@@ -23,6 +23,13 @@ from .common import mock_multiple_device_responses
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(autouse=True)
+def patch_vesync_login():
+    """Patch VeSync.login to always be an AsyncMock."""
+    with patch("pyvesync.vesync.VeSync.login", new=AsyncMock(return_value=True)):
+        yield
+
+
 @pytest.fixture(name="config_entry")
 def config_entry_fixture(hass: HomeAssistant, config) -> ConfigEntry:
     """Create a mock VeSync config entry."""
