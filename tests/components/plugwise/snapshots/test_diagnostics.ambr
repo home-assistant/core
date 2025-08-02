@@ -131,6 +131,8 @@
     }),
     '446ac08dd04d4eff8ac57489757b7314': dict({
       'active_preset': 'no_frost',
+      'available_schedules': list([
+      ]),
       'climate_mode': 'heat',
       'control_state': 'idle',
       'dev_class': 'climate',
@@ -143,6 +145,7 @@
         'vacation',
         'no_frost',
       ]),
+      'select_schedule': None,
       'sensors': dict({
         'temperature': 15.6,
       }),
@@ -635,7 +638,6 @@
           'warning': "Node Plug (with MAC address 000D6F000D13CB01, in room 'n.a.') has been unreachable since 23:03 2020-01-18. Please check the connection and restart the device.",
         }),
       }),
-      'select_regulation_mode': 'heating',
       'sensors': dict({
         'outdoor_temperature': 7.81,
       }),
