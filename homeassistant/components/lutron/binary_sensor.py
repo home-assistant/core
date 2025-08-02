@@ -10,10 +10,11 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN, LutronData
-from .aiolip import LIPGroupState, OccupancyGroup
+from .aiolip import LIPGroupState, LutronController, OccupancyGroup
 from .entity import LutronBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,13 +31,17 @@ async def async_setup_entry(
     config_entry as binary_sensor entities.
     """
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities(
-        [
-            LutronOccupancySensor(device, entry_data.controller)
-            for device in entry_data.binary_sensors
-        ],
-        True,
-    )
+
+    # Add occupancy sensors
+    entities: list[BinarySensorEntity] = [
+        LutronOccupancySensor(device, entry_data.controller)
+        for device in entry_data.binary_sensors
+    ]
+
+    # Add controller entity
+    entities.append(LutronControllerConnectivitySensor(entry_data.controller))
+
+    async_add_entities(entities, False)
 
 
 class LutronOccupancySensor(LutronBaseEntity, BinarySensorEntity):
@@ -58,4 +63,48 @@ class LutronOccupancySensor(LutronBaseEntity, BinarySensorEntity):
         self._attr_is_on = (
             None if value == LIPGroupState.UNKNOWN else value == LIPGroupState.OCCUPIED
         )
+        self.async_write_ha_state()
+
+
+class LutronControllerConnectivitySensor(BinarySensorEntity):
+    """Representation of the controller connection status."""
+
+    _attr_should_poll = True
+    _attr_has_entity_name = True
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
+
+    def __init__(self, controller: LutronController) -> None:
+        """Initialize the controller entity."""
+        self._controller = controller
+        self._attr_name = "Connection Status"
+        self._attr_is_on = False
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, controller.guid)},
+            name="Lutron Controller",
+            manufacturer="Lutron",
+            model=controller.lip.controller_type.name.lower(),
+            sw_version="NA",
+        )
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+
+        return self._controller.guid
+
+    def update(self) -> None:
+        """Update the connection status."""
+        if self._controller:
+            self._attr_is_on = self._controller.connected
+        else:
+            self._attr_is_on = False
+
+    async def async_added_to_hass(self) -> None:
+        """Handle when the entity is added to Home Assistant."""
+        await super().async_added_to_hass()
+        self.update()  # Update the status when the entity is first added
+
+    async def async_update(self) -> None:
+        """Periodically update the entity's status."""
+        self.update()
         self.async_write_ha_state()

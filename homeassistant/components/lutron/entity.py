@@ -36,7 +36,7 @@ class LutronBaseEntity(Entity):
             manufacturer="Lutron",
             name=self.device_name,
             suggested_area=self.area_name,
-            via_device=(DOMAIN, controller.guid or "unknown"),
+            via_device=(DOMAIN, controller.guid),
         )
 
     @property
@@ -146,14 +146,9 @@ class LutronKeypadComponent(LutronBaseEntity):
             suggested_area=self.area_name,
         )
         if lutron_device.keypad.device_type == "MAIN_REPEATER":
-            self._attr_device_info[ATTR_IDENTIFIERS].add(
-                (DOMAIN, controller.guid or "unknown")
-            )
+            self._attr_device_info[ATTR_IDENTIFIERS].add((DOMAIN, controller.guid))
         else:
-            self._attr_device_info[ATTR_VIA_DEVICE] = (
-                DOMAIN,
-                controller.guid or "unknown",
-            )
+            self._attr_device_info[ATTR_VIA_DEVICE] = (DOMAIN, controller.guid)
 
     @property
     def name(self) -> str:

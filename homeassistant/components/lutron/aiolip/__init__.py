@@ -44,7 +44,7 @@ from .lutron_db import (
     Output,
     Sysvar,
 )
-from .protocol import LIP
+from .protocol import LIP, LIPConnectionState
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,7 +83,6 @@ class LutronController:
         self.user = user
         self.password = password
         self.lip = LIP()
-        self.connected = False
         self.connect_lock: asyncio.Lock | None = None
         self._subscribers: dict[
             tuple[int, int | None], list[Callable[[Any], None]]
@@ -96,6 +95,13 @@ class LutronController:
         self.use_area_for_device_name = use_area_for_device_name
         self.use_radiora_mode = use_radiora_mode
 
+    @property
+    def connected(self) -> bool:
+        """Return the connection state of the LutronController."""
+        if self.lip is None:
+            return False
+        return self.lip.connection_state == LIPConnectionState.CONNECTED
+
     async def connect(self):
         """Connect to the Lutron controller."""
         if self.connect_lock is None:
@@ -103,9 +109,9 @@ class LutronController:
         async with self.connect_lock:
             if not self.connected:
                 await self.lip.async_connect(self.host)
-                self.connected = True
-                self.hass.loop.create_task(self.lip.async_run())
-                self.lip.set_callback(self._dispatch_message)
+                if self.connected:
+                    self.hass.loop.create_task(self.lip.async_run())
+                    self.lip.set_callback(self._dispatch_message)
 
     def subscribe(self, integration_id, component_number, callback):
         """Subscribe the callable for a specific integration_id. Can be multiple entities for the same integration (e.g. keypad leds)."""
@@ -186,7 +192,6 @@ class LutronController:
         """Stop the connection to the controller."""
         if self.connected:
             await self.lip.async_stop()
-            self.connected = False
 
     async def _ensure_connected(self) -> None:
         """Ensure the controller is connected before sending commands."""

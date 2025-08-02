@@ -178,7 +178,7 @@ class LIP:
     def __init__(self):
         """Create the LIP class."""
         self.connection_state = LIPConnectionState.NOT_CONNECTED
-        self._controller_type = None
+        self.controller_type = None
         self._socket = None
         self._host = None
         self._parser = LIPParser()
@@ -246,11 +246,11 @@ class LIP:
         _verify_expected_response(controller_type, LIP_PROTOCOL_GENERIC_NET)
 
         if LIP_PROTOCOL_QNET in controller_type:
-            self._controller_type = LIPControllerType.HOMEWORKS
+            self.controller_type = LIPControllerType.HOMEWORKS
         elif LIP_PROTOCOL_GNET in controller_type:
-            self._controller_type = LIPControllerType.RADIORA2
+            self.controller_type = LIPControllerType.RADIORA2
         else:
-            self._controller_type = LIPControllerType.UNKNOWN
+            self.controller_type = LIPControllerType.UNKNOWN
             _LOGGER.warning("Unknown controller type: %s", controller_type)
 
         self.connection_state = LIPConnectionState.CONNECTED
@@ -290,6 +290,7 @@ class LIP:
             self._keep_alive_task.cancel()
             self._keep_alive_task = None
         self._socket.close()
+        self.connection_state = LIPConnectionState.NOT_CONNECTED
 
     async def _async_keep_alive_or_reconnect(self):
         """Keep alive or reconnect."""
