@@ -17,6 +17,7 @@ from . import bootstrap
 from .core import callback
 from .helpers.frame import warn_use
 from .util.executor import InterruptibleThreadPoolExecutor
+from .util.resource import set_open_file_descriptor_limit
 from .util.thread import deadlock_safe_shutdown
 
 #
@@ -146,6 +147,7 @@ def _enable_posix_spawn() -> None:
 def run(runtime_config: RuntimeConfig) -> int:
     """Run Home Assistant."""
     _enable_posix_spawn()
+    set_open_file_descriptor_limit()
     asyncio.set_event_loop_policy(HassEventLoopPolicy(runtime_config.debug))
     # Backport of cpython 3.9 asyncio.run with a _cancel_all_tasks that times out
     loop = asyncio.new_event_loop()

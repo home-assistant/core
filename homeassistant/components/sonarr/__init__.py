@@ -65,7 +65,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         host_configuration=host_configuration,
         session=async_get_clientsession(hass),
     )
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     coordinators: dict[str, SonarrDataUpdateCoordinator[Any]] = {
         "upcoming": CalendarDataUpdateCoordinator(
             hass, entry, host_configuration, sonarr
@@ -126,8 +125,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)

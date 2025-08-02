@@ -12,13 +12,17 @@
             }),
             'readings': list([
               dict({
+                'additionalUnit': 'kWh',
                 'additionalValue': '38,0',
                 'type': 'heating',
+                'unit': 'Einheiten',
                 'value': '35',
               }),
               dict({
+                'additionalUnit': 'kWh',
                 'additionalValue': '57,0',
                 'type': 'warmwater',
+                'unit': 'm³',
                 'value': '1,0',
               }),
               dict({
@@ -34,17 +38,22 @@
             }),
             'readings': list([
               dict({
+                'additionalUnit': 'kWh',
                 'additionalValue': '113,0',
                 'type': 'heating',
+                'unit': 'Einheiten',
                 'value': '104',
               }),
               dict({
+                'additionalUnit': 'kWh',
                 'additionalValue': '61,1',
                 'type': 'warmwater',
+                'unit': 'm³',
                 'value': '1,1',
               }),
               dict({
                 'type': 'water',
+                'unit': 'm³',
                 'value': '6,8',
               }),
             ]),
@@ -103,13 +112,17 @@
             }),
             'readings': list([
               dict({
+                'additionalUnit': 'kWh',
                 'additionalValue': '38,0',
                 'type': 'heating',
+                'unit': 'Einheiten',
                 'value': '35',
               }),
               dict({
+                'additionalUnit': 'kWh',
                 'additionalValue': '57,0',
                 'type': 'warmwater',
+                'unit': 'm³',
                 'value': '1,0',
               }),
               dict({
@@ -125,17 +138,22 @@
             }),
             'readings': list([
               dict({
+                'additionalUnit': 'kWh',
                 'additionalValue': '113,0',
                 'type': 'heating',
+                'unit': 'Einheiten',
                 'value': '104',
               }),
               dict({
+                'additionalUnit': 'kWh',
                 'additionalValue': '61,1',
                 'type': 'warmwater',
+                'unit': 'm³',
                 'value': '1,1',
               }),
               dict({
                 'type': 'water',
+                'unit': 'm³',
                 'value': '6,8',
               }),
             ]),

@@ -36,10 +36,10 @@ from .conftest import MockConfigEntry, MockModuleConnection, init_integration
 
 from tests.common import snapshot_platform
 
-COVER_OUTPUTS = "cover.cover_outputs"
-COVER_RELAYS = "cover.cover_relays"
-COVER_RELAYS_BS4 = "cover.cover_relays_bs4"
-COVER_RELAYS_MODULE = "cover.cover_relays_MODULE"
+COVER_OUTPUTS = "cover.testmodule_cover_outputs"
+COVER_RELAYS = "cover.testmodule_cover_relays"
+COVER_RELAYS_BS4 = "cover.testmodule_cover_relays_bs4"
+COVER_RELAYS_MODULE = "cover.testmodule_cover_relays_module"
 
 
 async def test_setup_lcn_cover(

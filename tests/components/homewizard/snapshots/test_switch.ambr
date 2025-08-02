@@ -40,6 +40,7 @@
     'original_name': 'Cloud connection',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
     'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
@@ -68,7 +69,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -78,7 +78,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -124,6 +123,7 @@
     'original_name': 'Cloud connection',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
     'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
@@ -152,7 +152,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -162,7 +161,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -209,6 +207,7 @@
     'original_name': None,
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_power_on',
@@ -237,7 +236,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -247,7 +245,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.03',
     'via_device_id': None,
   })
@@ -293,6 +290,7 @@
     'original_name': 'Cloud connection',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
     'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
@@ -321,7 +319,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -331,7 +328,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.03',
     'via_device_id': None,
   })
@@ -377,6 +373,7 @@
     'original_name': 'Switch lock',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch_lock',
     'unique_id': 'HWE-P1_5c2fafabcdef_switch_lock',
@@ -405,7 +402,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -415,7 +411,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.03',
     'via_device_id': None,
   })
@@ -462,6 +457,7 @@
     'original_name': None,
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_power_on',
@@ -490,7 +486,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -500,7 +495,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -546,6 +540,7 @@
     'original_name': 'Cloud connection',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
     'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
@@ -574,7 +569,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -584,7 +578,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -630,6 +623,7 @@
     'original_name': 'Switch lock',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch_lock',
     'unique_id': 'HWE-P1_5c2fafabcdef_switch_lock',
@@ -658,7 +652,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -668,7 +661,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -714,6 +706,7 @@
     'original_name': 'Cloud connection',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
     'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
@@ -742,7 +735,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -752,7 +744,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '2.03',
     'via_device_id': None,
   })
@@ -798,6 +789,7 @@
     'original_name': 'Cloud connection',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
     'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
@@ -826,7 +818,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -836,7 +827,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -882,6 +872,7 @@
     'original_name': 'Cloud connection',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cloud_connection',
     'unique_id': 'HWE-P1_5c2fafabcdef_cloud_connection',
@@ -910,7 +901,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -920,7 +910,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })

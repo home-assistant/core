@@ -242,7 +242,10 @@ async def test_adam_climate_entity_climate_changes(
         "c50f167537524366a5af7aa3942feb1e", HVACMode.OFF
     )
 
-    with pytest.raises(ServiceValidationError, match="valid modes are"):
+    with pytest.raises(
+        ServiceValidationError,
+        match="HVAC mode dry is not valid. Valid HVAC modes are: auto, heat",
+    ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
@@ -430,13 +433,16 @@ async def test_anna_climate_entity_climate_changes(
         "c784ee9fdab44e1395b8dee7d7a497d5", HVACMode.OFF
     )
 
+    # Mock user deleting last schedule from app or browser
     data = mock_smile_anna.async_update.return_value
-    data["3cb70739631c4d17a86b8b12e8a5161b"].pop("available_schedules")
+    data["3cb70739631c4d17a86b8b12e8a5161b"]["available_schedules"] = []
+    data["3cb70739631c4d17a86b8b12e8a5161b"]["select_schedule"] = None
+    data["3cb70739631c4d17a86b8b12e8a5161b"]["climate_mode"] = "heat_cool"
     with patch(HA_PLUGWISE_SMILE_ASYNC_UPDATE, return_value=data):
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         state = hass.states.get("climate.anna")
-        assert state.state == HVACMode.HEAT
+        assert state.state == HVACMode.HEAT_COOL
         assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.HEAT_COOL]

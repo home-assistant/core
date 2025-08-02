@@ -21,7 +21,7 @@
     ],
     "Capabilities": {
       "PlayableMediaTypes": ["Video"],
-      "SupportedCommands": ["VolumeSet", "Mute"],
+      "SupportedCommands": ["VolumeSet", "Mute", "PlayMediaSource"],
       "SupportsMediaControl": true,
       "SupportsContentUploading": true,
       "MessageCallbackUrl": "string",

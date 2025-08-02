@@ -317,8 +317,7 @@ class TPLinkSensorEntity(CoordinatedTPLinkFeatureEntity, SensorEntity):
             value = self.entity_description.convert_fn(value)
 
         if TYPE_CHECKING:
-            # pylint: disable-next=import-outside-toplevel
-            from datetime import date, datetime
+            from datetime import date, datetime  # noqa: PLC0415
 
             assert isinstance(value, str | int | float | date | datetime | None)
 

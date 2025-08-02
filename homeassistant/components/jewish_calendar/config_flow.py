@@ -10,10 +10,9 @@ from hdate.translator import Language
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_ELEVATION,
@@ -44,6 +43,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
 )
+from .entity import JewishCalendarConfigEntry
 
 OPTIONS_SCHEMA = vol.Schema(
     {
@@ -89,7 +89,7 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: JewishCalendarConfigEntry,
     ) -> JewishCalendarOptionsFlowHandler:
         """Get the options flow for this handler."""
         return JewishCalendarOptionsFlowHandler()
@@ -128,7 +128,7 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_update_reload_and_abort(reconfigure_entry, data=user_input)
 
 
-class JewishCalendarOptionsFlowHandler(OptionsFlow):
+class JewishCalendarOptionsFlowHandler(OptionsFlowWithReload):
     """Handle Jewish Calendar options."""
 
     async def async_step_init(

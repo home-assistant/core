@@ -14,7 +14,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.const import EntityCategory, UnitOfTime
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -113,6 +113,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="floodlight_brightness",
         cmd_key="GetWhiteLed",
+        cmd_id=[289, 438],
         translation_key="floodlight_brightness",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
@@ -121,6 +122,20 @@ NUMBER_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "floodLight"),
         value=lambda api, ch: api.whiteled_brightness(ch),
         method=lambda api, ch, value: api.set_whiteled(ch, brightness=int(value)),
+    ),
+    ReolinkNumberEntityDescription(
+        key="ir_brightness",
+        cmd_key="208",
+        translation_key="ir_brightness",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=100,
+        supported=lambda api, ch: api.supported(ch, "ir_brightness"),
+        value=lambda api, ch: api.baichuan.ir_brightness(ch),
+        method=lambda api, ch, value: (
+            api.baichuan.set_status_led(ch, ir_brightness=int(value))
+        ),
     ),
     ReolinkNumberEntityDescription(
         key="volume",
@@ -257,6 +272,18 @@ NUMBER_ENTITIES = (
         ),
         value=lambda api, ch: api.ai_sensitivity(ch, "dog_cat"),
         method=lambda api, ch, value: api.set_ai_sensitivity(ch, int(value), "dog_cat"),
+    ),
+    ReolinkNumberEntityDescription(
+        key="cry_sensitivity",
+        cmd_key="299",
+        translation_key="cry_sensitivity",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1,
+        native_min_value=1,
+        native_max_value=5,
+        supported=lambda api, ch: api.supported(ch, "ai_cry"),
+        value=lambda api, ch: api.baichuan.cry_sensitivity(ch),
+        method=lambda api, ch, value: api.baichuan.set_cry_detection(ch, int(value)),
     ),
     ReolinkNumberEntityDescription(
         key="ai_face_delay",
@@ -514,6 +541,38 @@ NUMBER_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "isp_hue"),
         value=lambda api, ch: api.image_hue(ch),
         method=lambda api, ch, value: api.set_image(ch, hue=int(value)),
+    ),
+    ReolinkNumberEntityDescription(
+        key="pre_record_time",
+        cmd_key="594",
+        translation_key="pre_record_time",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_min_value=2,
+        native_max_value=10,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        supported=lambda api, ch: api.supported(ch, "pre_record"),
+        value=lambda api, ch: api.baichuan.pre_record_time(ch),
+        method=lambda api, ch, value: api.baichuan.set_pre_recording(
+            ch, time=int(value)
+        ),
+    ),
+    ReolinkNumberEntityDescription(
+        key="pre_record_battery_stop",
+        cmd_key="594",
+        translation_key="pre_record_battery_stop",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_min_value=10,
+        native_max_value=80,
+        native_unit_of_measurement=PERCENTAGE,
+        supported=lambda api, ch: api.supported(ch, "pre_record"),
+        value=lambda api, ch: api.baichuan.pre_record_battery_stop(ch),
+        method=lambda api, ch, value: api.baichuan.set_pre_recording(
+            ch, battery_stop=int(value)
+        ),
     ),
 )
 

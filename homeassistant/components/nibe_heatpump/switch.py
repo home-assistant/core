@@ -41,14 +41,16 @@ class Switch(CoilEntity, SwitchEntity):
     def __init__(self, coordinator: CoilCoordinator, coil: Coil) -> None:
         """Initialize entity."""
         super().__init__(coordinator, coil, ENTITY_ID_FORMAT)
+        self._on_value = coil.get_mapping_for(1)
+        self._off_value = coil.get_mapping_for(0)
 
     def _async_read_coil(self, data: CoilData) -> None:
-        self._attr_is_on = data.value == "ON"
+        self._attr_is_on = data.value == self._on_value
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self._async_write_coil("ON")
+        await self._async_write_coil(self._on_value)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self._async_write_coil("OFF")
+        await self._async_write_coil(self._off_value)

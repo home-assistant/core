@@ -7,7 +7,7 @@ from aiocomelit.api import ComelitSerialBridgeObject
 from aiocomelit.const import CLIMATE, WATT
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.comelit.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.humidifier import (
@@ -91,7 +91,7 @@ async def test_humidifier_data_update(
     freezer: FrozenDateTimeFactory,
     mock_serial_bridge: AsyncMock,
     mock_serial_bridge_config_entry: MockConfigEntry,
-    val: list[Any, Any],
+    val: list[list[Any]],
     mode: str,
     humidity: float,
 ) -> None:
@@ -146,7 +146,7 @@ async def test_humidifier_data_update_bad_data(
             status=0,
             human_status="off",
             type="climate",
-            val="bad_data",
+            val="bad_data",  # type: ignore[arg-type]
             protected=0,
             zone="Living room",
             power=0.0,
@@ -290,3 +290,41 @@ async def test_humidifier_set_status(
 
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == STATE_ON
+
+
+async def test_humidifier_dehumidifier_remove_stale(
+    hass: HomeAssistant,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test removal of stale humidifier/dehumidifier entities."""
+
+    await setup_integration(hass, mock_serial_bridge_config_entry)
+
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_HUMIDITY] == 50.0
+
+    mock_serial_bridge.get_all_devices.return_value[CLIMATE] = {
+        0: ComelitSerialBridgeObject(
+            index=0,
+            name="Climate0",
+            status=0,
+            human_status="off",
+            type="climate",
+            val=[
+                [221, 0, "U", "M", 50, 0, 0, "U"],
+                [0, 0, "O", "A", 0, 0, 0, "N"],
+                [0, 0],
+            ],
+            protected=0,
+            zone="Living room",
+            power=0.0,
+            power_unit=WATT,
+        ),
+    }
+
+    await hass.config_entries.async_reload(mock_serial_bridge_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(ENTITY_ID)) is None

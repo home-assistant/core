@@ -27,6 +27,7 @@
     'original_name': 'TouchGo',
     'platform': 'slide_local',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'touchgo',
     'unique_id': '1234567890ab-touchgo',

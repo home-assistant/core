@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 from advantage_air import ApiError
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.advantage_air.climate import ADVANTAGE_AIR_MYAUTO
 from homeassistant.components.climate import (
@@ -177,7 +177,7 @@ async def test_climate_myzone_zone(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.FAN_ONLY},
+        {ATTR_ENTITY_ID: [entity_id], ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
         blocking=True,
     )
     mock_update.assert_called_once()

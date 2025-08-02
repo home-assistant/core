@@ -30,7 +30,8 @@
     'original_name': None,
     'platform': 'osoenergy',
     'previous_unique_id': None,
-    'supported_features': <WaterHeaterEntityFeature: 9>,
+    'suggested_object_id': None,
+    'supported_features': <WaterHeaterEntityFeature: 13>,
     'translation_key': None,
     'unique_id': 'osoenergy_water_heater',
     'unit_of_measurement': None,
@@ -39,11 +40,12 @@
 # name: test_water_heater[water_heater.test_device-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'away_mode': 'off',
       'current_temperature': 60,
       'friendly_name': 'TEST DEVICE',
       'max_temp': 75,
       'min_temp': 10,
-      'supported_features': <WaterHeaterEntityFeature: 9>,
+      'supported_features': <WaterHeaterEntityFeature: 13>,
       'target_temp_high': 63,
       'target_temp_low': 57,
       'temperature': 60,

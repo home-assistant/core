@@ -9,7 +9,7 @@ from aiounifi.models.event import EventKey
 from aiounifi.models.message import MessageKey
 from freezegun.api import FrozenDateTimeFactory, freeze_time
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
 from homeassistant.components.unifi.const import (
@@ -21,7 +21,7 @@ from homeassistant.components.unifi.const import (
     CONF_TRACK_DEVICES,
     CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_DETECTION_TIME,
-    DOMAIN as UNIFI_DOMAIN,
+    DOMAIN,
 )
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State
@@ -588,14 +588,14 @@ async def test_restoring_client(
     """Verify clients are restored from clients_all if they ever was registered to entity registry."""
     entity_registry.async_get_or_create(  # Make sure unique ID converts to site_id-mac
         TRACKER_DOMAIN,
-        UNIFI_DOMAIN,
+        DOMAIN,
         f"{clients_all_payload[0]['mac']}-site_id",
         suggested_object_id=clients_all_payload[0]["hostname"],
         config_entry=config_entry,
     )
     entity_registry.async_get_or_create(  # Unique ID already follow format site_id-mac
         TRACKER_DOMAIN,
-        UNIFI_DOMAIN,
+        DOMAIN,
         f"site_id-{client_payload[0]['mac']}",
         suggested_object_id=client_payload[0]["hostname"],
         config_entry=config_entry,

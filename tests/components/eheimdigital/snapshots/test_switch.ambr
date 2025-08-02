@@ -27,6 +27,7 @@
     'original_name': None,
     'platform': 'eheimdigital',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_active',
     'unique_id': '00:00:00:00:00:03',

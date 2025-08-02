@@ -7,16 +7,18 @@ from aiohttp import ClientError, ClientResponseError
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from .api import AsyncConfigEntryAuth
 from .const import DOMAIN
 from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
+from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
@@ -28,6 +30,15 @@ PLATFORMS: list[Platform] = [
     Platform.SWITCH,
     Platform.VACUUM,
 ]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up service actions."""
+    await async_setup_services(hass)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> bool:
@@ -55,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> boo
         ) from err
 
     # Setup MieleAPI and coordinator for data fetch
-    coordinator = MieleDataUpdateCoordinator(hass, auth)
+    coordinator = MieleDataUpdateCoordinator(hass, entry, auth)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 

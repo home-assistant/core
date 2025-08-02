@@ -1,0 +1,94 @@
+{
+  "brakeLightCenterWarning": {
+    "value": "NO_WARNING",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "brakeLightLeftWarning": {
+    "value": "NO_WARNING",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "brakeLightRightWarning": {
+    "value": "NO_WARNING",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "fogLightFrontWarning": {
+    "value": "NO_WARNING",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "fogLightRearWarning": {
+    "value": "NO_WARNING",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "positionLightFrontLeftWarning": {
+    "value": "NO_WARNING",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "positionLightFrontRightWarning": {
+    "value": "NO_WARNING",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "positionLightRearLeftWarning": {
+    "value": "NO_WARNING",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "positionLightRearRightWarning": {
+    "value": "NO_WARNING",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "highBeamLeftWarning": {
+    "value": "NO_WARNING",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "highBeamRightWarning": {
+    "value": "NO_WARNING",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "lowBeamLeftWarning": {
+    "value": "NO_WARNING",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "lowBeamRightWarning": {
+    "value": "NO_WARNING",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "daytimeRunningLightLeftWarning": {
+    "value": "NO_WARNING",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "daytimeRunningLightRightWarning": {
+    "value": "NO_WARNING",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "turnIndicationFrontLeftWarning": {
+    "value": "NO_WARNING",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "turnIndicationFrontRightWarning": {
+    "value": "NO_WARNING",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "turnIndicationRearLeftWarning": {
+    "value": "NO_WARNING",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "turnIndicationRearRightWarning": {
+    "value": "NO_WARNING",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "registrationPlateLightWarning": {
+    "value": "NO_WARNING",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "sideMarkLightsWarning": {
+    "value": "NO_WARNING",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "hazardLightsWarning": {
+    "value": "UNSPECIFIED",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  },
+  "reverseLightsWarning": {
+    "value": "UNSPECIFIED",
+    "timestamp": "2024-12-30T14:18:56.849Z"
+  }
+}

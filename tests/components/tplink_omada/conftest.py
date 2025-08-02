@@ -1,6 +1,7 @@
 """Test fixtures for TP-Link Omada integration."""
 
-from collections.abc import AsyncIterable, Generator
+from collections.abc import AsyncGenerator, Generator
+from functools import partial
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -23,7 +24,7 @@ from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 
 
 @pytest.fixture
@@ -53,29 +54,33 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_omada_site_client() -> Generator[AsyncMock]:
+async def mock_omada_site_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMock]:
     """Mock Omada site client."""
     site_client = MagicMock()
 
-    gateway_data = json.loads(load_fixture("gateway-TL-ER7212PC.json", DOMAIN))
+    gateway_data = json.loads(
+        await async_load_fixture(hass, "gateway-TL-ER7212PC.json", DOMAIN)
+    )
     gateway = OmadaGateway(gateway_data)
     site_client.get_gateway = AsyncMock(return_value=gateway)
 
-    switch1_data = json.loads(load_fixture("switch-TL-SG3210XHP-M2.json", DOMAIN))
+    switch1_data = json.loads(
+        await async_load_fixture(hass, "switch-TL-SG3210XHP-M2.json", DOMAIN)
+    )
     switch1 = OmadaSwitch(switch1_data)
     site_client.get_switches = AsyncMock(return_value=[switch1])
 
-    devices_data = json.loads(load_fixture("devices.json", DOMAIN))
+    devices_data = json.loads(await async_load_fixture(hass, "devices.json", DOMAIN))
     devices = [OmadaListDevice(d) for d in devices_data]
     site_client.get_devices = AsyncMock(return_value=devices)
 
     switch1_ports_data = json.loads(
-        load_fixture("switch-ports-TL-SG3210XHP-M2.json", DOMAIN)
+        await async_load_fixture(hass, "switch-ports-TL-SG3210XHP-M2.json", DOMAIN)
     )
     switch1_ports = [OmadaSwitchPortDetails(p) for p in switch1_ports_data]
     site_client.get_switch_ports = AsyncMock(return_value=switch1_ports)
 
-    async def async_empty() -> AsyncIterable:
+    async def async_empty() -> AsyncGenerator:
         for c in ():
             yield c
 
@@ -85,24 +90,30 @@ def mock_omada_site_client() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_omada_clients_only_site_client() -> Generator[AsyncMock]:
+def mock_omada_clients_only_site_client(hass: HomeAssistant) -> Generator[AsyncMock]:
     """Mock Omada site client containing only client connection data."""
     site_client = MagicMock()
 
     site_client.get_switches = AsyncMock(return_value=[])
     site_client.get_devices = AsyncMock(return_value=[])
     site_client.get_switch_ports = AsyncMock(return_value=[])
-    site_client.get_client = AsyncMock(side_effect=_get_mock_client)
+    site_client.get_client = AsyncMock(side_effect=partial(_get_mock_client, hass))
 
-    site_client.get_known_clients.side_effect = _get_mock_known_clients
-    site_client.get_connected_clients.side_effect = _get_mock_connected_clients
+    site_client.get_known_clients.side_effect = partial(_get_mock_known_clients, hass)
+    site_client.get_connected_clients.side_effect = partial(
+        _get_mock_connected_clients, hass
+    )
 
     return site_client
 
 
-async def _get_mock_known_clients() -> AsyncIterable[OmadaNetworkClient]:
+async def _get_mock_known_clients(
+    hass: HomeAssistant,
+) -> AsyncGenerator[OmadaNetworkClient]:
     """Mock known clients of the Omada network."""
-    known_clients_data = json.loads(load_fixture("known-clients.json", DOMAIN))
+    known_clients_data = json.loads(
+        await async_load_fixture(hass, "known-clients.json", DOMAIN)
+    )
     for c in known_clients_data:
         if c["wireless"]:
             yield OmadaWirelessClient(c)
@@ -110,9 +121,13 @@ async def _get_mock_known_clients() -> AsyncIterable[OmadaNetworkClient]:
             yield OmadaWiredClient(c)
 
 
-async def _get_mock_connected_clients() -> AsyncIterable[OmadaConnectedClient]:
+async def _get_mock_connected_clients(
+    hass: HomeAssistant,
+) -> AsyncGenerator[OmadaConnectedClient]:
     """Mock connected clients of the Omada network."""
-    connected_clients_data = json.loads(load_fixture("connected-clients.json", DOMAIN))
+    connected_clients_data = json.loads(
+        await async_load_fixture(hass, "connected-clients.json", DOMAIN)
+    )
     for c in connected_clients_data:
         if c["wireless"]:
             yield OmadaWirelessClient(c)
@@ -120,9 +135,11 @@ async def _get_mock_connected_clients() -> AsyncIterable[OmadaConnectedClient]:
             yield OmadaWiredClient(c)
 
 
-def _get_mock_client(mac: str) -> OmadaNetworkClient:
+async def _get_mock_client(hass: HomeAssistant, mac: str) -> OmadaNetworkClient:
     """Mock an Omada client."""
-    connected_clients_data = json.loads(load_fixture("connected-clients.json", DOMAIN))
+    connected_clients_data = json.loads(
+        await async_load_fixture(hass, "connected-clients.json", DOMAIN)
+    )
 
     for c in connected_clients_data:
         if c["mac"] == mac:

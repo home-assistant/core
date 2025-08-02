@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from voluptuous.error import MultipleInvalid
 
 from homeassistant.components.climate import (
@@ -26,7 +26,7 @@ from homeassistant.components.netatmo.const import (
     ATTR_SCHEDULE_NAME,
     ATTR_TARGET_TEMPERATURE,
     ATTR_TIME_PERIOD,
-    DOMAIN as NETATMO_DOMAIN,
+    DOMAIN,
     SERVICE_CLEAR_TEMPERATURE_SETTING,
     SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
     SERVICE_SET_SCHEDULE,
@@ -64,6 +64,34 @@ async def test_entity(
         entity_registry,
         snapshot,
     )
+
+
+async def test_schedule_update_webhook_event(
+    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+) -> None:
+    """Test schedule update webhook event without schedule_id."""
+
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    climate_entity_livingroom = "climate.livingroom"
+
+    # Save initial state
+    initial_state = hass.states.get(climate_entity_livingroom)
+
+    # Create a schedule update event without a schedule_id (the event is sent when temperature sets of a schedule are changed)
+    response = {
+        "home_id": "91763b24c43d3e344f424e8b",
+        "event_type": "schedule",
+        "push_type": "home_event_changed",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+
+    # State should be unchanged
+    assert hass.states.get(climate_entity_livingroom) == initial_state
 
 
 async def test_webhook_event_handling_thermostats(
@@ -409,7 +437,7 @@ async def test_service_set_temperature_with_end_datetime(
 
     # Test service setting the temperature without an end datetime
     await hass.services.async_call(
-        NETATMO_DOMAIN,
+        DOMAIN,
         SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
         {
             ATTR_ENTITY_ID: climate_entity_livingroom,
@@ -467,7 +495,7 @@ async def test_service_set_temperature_with_time_period(
 
     # Test service setting the temperature without an end datetime
     await hass.services.async_call(
-        NETATMO_DOMAIN,
+        DOMAIN,
         SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
         {
             ATTR_ENTITY_ID: climate_entity_livingroom,
@@ -555,7 +583,7 @@ async def test_service_clear_temperature_setting(
 
     # Test service setting the temperature without an end datetime
     await hass.services.async_call(
-        NETATMO_DOMAIN,
+        DOMAIN,
         SERVICE_CLEAR_TEMPERATURE_SETTING,
         {ATTR_ENTITY_ID: climate_entity_livingroom},
         blocking=True,
@@ -653,6 +681,13 @@ async def test_service_schedule_thermostats(
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     climate_entity_livingroom = "climate.livingroom"
 
+    assert (
+        hass.states.get(climate_entity_livingroom).attributes.get(
+            "selected_schedule_id"
+        )
+        == "591b54a2764ff4d50d8b5795"
+    )
+
     # Test setting a valid schedule
     with patch("pyatmo.home.Home.async_switch_schedule") as mock_switch_schedule:
         await hass.services.async_call(
@@ -678,6 +713,12 @@ async def test_service_schedule_thermostats(
     assert (
         hass.states.get(climate_entity_livingroom).attributes["selected_schedule"]
         == "Winter"
+    )
+    assert (
+        hass.states.get(climate_entity_livingroom).attributes.get(
+            "selected_schedule_id"
+        )
+        == "b1b54a2f45795764f59d50d8"
     )
 
     # Test setting an invalid schedule

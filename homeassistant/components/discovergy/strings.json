@@ -23,6 +23,17 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
+  "exceptions": {
+    "invalid_auth": {
+      "message": "Authentication failed. Please check your inexogy email and password."
+    },
+    "cannot_connect_meters_setup": {
+      "message": "Failed to connect and retrieve meters from inexogy during setup. Please ensure the service is reachable and try again."
+    },
+    "reading_update_failed": {
+      "message": "Error fetching the latest reading for meter {meter_id} from inexogy. The service might be temporarily unavailable or there's a connection issue. Check logs for more details."
+    }
+  },
   "system_health": {
     "info": {
       "api_endpoint_reachable": "inexogy API endpoint reachable"

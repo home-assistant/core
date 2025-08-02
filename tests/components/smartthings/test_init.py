@@ -13,7 +13,7 @@ from pysmartthings import (
     Subscription,
 )
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN, HVACMode
@@ -38,7 +38,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration, trigger_update
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 
 
 async def test_devices(
@@ -57,6 +57,37 @@ async def test_devices(
 
     assert device is not None
     assert device == snapshot
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_device_not_resetting_area(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test device not resetting area."""
+    await setup_integration(hass, mock_config_entry)
+
+    device_id = devices.get_devices.return_value[0].device_id
+
+    device = device_registry.async_get_device({(DOMAIN, device_id)})
+
+    assert device.area_id == "theater"
+
+    device_registry.async_update_device(device_id=device.id, area_id=None)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device({(DOMAIN, device_id)})
+
+    assert device.area_id is None
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device({(DOMAIN, device_id)})
+    assert device.area_id is None
 
 
 @pytest.mark.parametrize("device_fixture", ["button"])
@@ -109,7 +140,9 @@ async def test_create_subscription(
     devices.subscribe.assert_called_once_with(
         "397678e5-9995-4a39-9d9f-ae6ba310236c",
         "5aaaa925-2be1-4e40-b257-e4ef59083324",
-        Subscription.from_json(load_fixture("subscription.json", DOMAIN)),
+        Subscription.from_json(
+            await async_load_fixture(hass, "subscription.json", DOMAIN)
+        ),
     )
 
 
@@ -340,11 +373,11 @@ async def test_hub_via_device(
 ) -> None:
     """Test hub with child devices."""
     mock_smartthings.get_devices.return_value = DeviceResponse.from_json(
-        load_fixture("devices/hub.json", DOMAIN)
+        await async_load_fixture(hass, "devices/hub.json", DOMAIN)
     ).items
     mock_smartthings.get_device_status.side_effect = [
         DeviceStatus.from_json(
-            load_fixture(f"device_status/{fixture}.json", DOMAIN)
+            await async_load_fixture(hass, f"device_status/{fixture}.json", DOMAIN)
         ).components
         for fixture in ("hub", "multipurpose_sensor")
     ]

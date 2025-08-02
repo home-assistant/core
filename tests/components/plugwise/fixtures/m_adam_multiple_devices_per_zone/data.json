@@ -531,6 +531,19 @@
     "vendor": "Plugwise",
     "zigbee_mac_address": "ABCD012345670A11"
   },
+  "e8ef2a01ed3b4139a53bf749204fe6b4": {
+    "dev_class": "switching",
+    "members": [
+      "02cf28bfec924855854c544690a609ef",
+      "4a810418d5394b3f82727340b91ba740"
+    ],
+    "model": "Switchgroup",
+    "name": "Test",
+    "switches": {
+      "relay": true
+    },
+    "vendor": "Plugwise"
+  },
   "f1fee6043d3642a9b0a65297455f008e": {
     "available": true,
     "binary_sensors": {

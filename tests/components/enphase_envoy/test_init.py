@@ -54,7 +54,7 @@ async def test_with_pre_v7_firmware(
     await setup_integration(hass, config_entry)
 
     assert (entity_state := hass.states.get("sensor.inverter_1"))
-    assert entity_state.state == "1"
+    assert entity_state.state == "116"
 
 
 @pytest.mark.freeze_time("2024-07-23 00:00:00+00:00")
@@ -85,7 +85,7 @@ async def test_token_in_config_file(
     await setup_integration(hass, entry)
 
     assert (entity_state := hass.states.get("sensor.inverter_1"))
-    assert entity_state.state == "1"
+    assert entity_state.state == "116"
 
 
 @respx.mock
@@ -128,7 +128,7 @@ async def test_expired_token_in_config(
     await setup_integration(hass, entry)
 
     assert (entity_state := hass.states.get("sensor.inverter_1"))
-    assert entity_state.state == "1"
+    assert entity_state.state == "116"
 
 
 async def test_coordinator_update_error(
@@ -226,7 +226,46 @@ async def test_coordinator_token_refresh_error(
         await setup_integration(hass, entry)
 
     assert (entity_state := hass.states.get("sensor.inverter_1"))
-    assert entity_state.state == "1"
+    assert entity_state.state == "116"
+
+
+@respx.mock
+@pytest.mark.freeze_time("2024-07-23 00:00:00+00:00")
+async def test_coordinator_first_update_auth_error(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+) -> None:
+    """Test coordinator update error handling."""
+    current_token = encode(
+        # some time in future
+        payload={"name": "envoy", "exp": 1927314600},
+        key="secret",
+        algorithm="HS256",
+    )
+
+    # mock envoy with expired token in config
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="45a36e55aaddb2007c5f6602e0c38e72",
+        title="Envoy 1234",
+        unique_id="1234",
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_NAME: "Envoy 1234",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_TOKEN: current_token,
+        },
+    )
+    mock_envoy.auth = EnvoyTokenAuth(
+        "127.0.0.1",
+        token=current_token,
+        envoy_serial="1234",
+        cloud_username="test_username",
+        cloud_password="test_password",
+    )
+    mock_envoy.authenticate.side_effect = EnvoyAuthenticationError("Failing test")
+    await setup_integration(hass, entry, ConfigEntryState.SETUP_ERROR)
 
 
 async def test_config_no_unique_id(
@@ -470,7 +509,7 @@ async def test_coordinator_interface_information(
     # verify first time add of mac to connections is in log
     assert "added connection" in caplog.text
 
-    # trigger integration reload by changing options
+    # update options and reload
     hass.config_entries.async_update_entry(
         config_entry,
         options={
@@ -478,6 +517,7 @@ async def test_coordinator_interface_information(
             OPTION_DISABLE_KEEP_ALIVE: True,
         },
     )
+    await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -510,7 +550,6 @@ async def test_coordinator_interface_information_no_device(
     )
 
     # update device to force no device found in mac verification
-    device_registry = dr.async_get(hass)
     envoy_device = device_registry.async_get_device(
         identifiers={
             (
@@ -531,3 +570,60 @@ async def test_coordinator_interface_information_no_device(
 
     # verify no device found message in log
     assert "No envoy device found in device registry" in caplog.text
+
+
+@respx.mock
+async def test_coordinator_interface_information_mac_also_in_other_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test coordinator interface mac verification with MAC also in other existing device."""
+    await setup_integration(hass, config_entry)
+
+    caplog.set_level(logging.DEBUG)
+    logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
+        logging.DEBUG
+    )
+
+    # add existing device with MAC and sparsely populated i.e. unifi that found envoy
+    other_config_entry = MockConfigEntry(domain="test", data={})
+    other_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=other_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:11:22:33:44:55")},
+        manufacturer="Enphase Energy",
+    )
+
+    envoy_device = device_registry.async_get_device(
+        identifiers={
+            (
+                DOMAIN,
+                mock_envoy.serial_number,
+            )
+        }
+    )
+    assert envoy_device
+
+    # move time forward so interface information is fetched
+    freezer.tick(MAC_VERIFICATION_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # verify mac was added
+    assert "added connection: ('mac', '00:11:22:33:44:55') to Envoy 1234" in caplog.text
+
+    # verify connection is now in envoy device
+    envoy_device_refetched = device_registry.async_get(envoy_device.id)
+    assert envoy_device_refetched
+    assert envoy_device_refetched.name == "Envoy 1234"
+    assert envoy_device_refetched.serial_number == "1234"
+    assert envoy_device_refetched.connections == {
+        (
+            dr.CONNECTION_NETWORK_MAC,
+            "00:11:22:33:44:55",
+        )
+    }

@@ -1,11 +1,11 @@
 """The ONVIF integration."""
 
 import asyncio
-from contextlib import suppress
+from contextlib import AsyncExitStack, suppress
 from http import HTTPStatus
 import logging
 
-from httpx import RequestError
+import aiohttp
 from onvif.exceptions import ONVIFError
 from onvif.util import is_auth_error, stringify_onvif_error
 from zeep.exceptions import Fault, TransportError
@@ -45,50 +45,56 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     device = ONVIFDevice(hass, entry)
 
-    try:
-        await device.async_setup()
-        if not entry.data.get(CONF_SNAPSHOT_AUTH):
-            await async_populate_snapshot_auth(hass, device, entry)
-    except RequestError as err:
-        await device.device.close()
-        raise ConfigEntryNotReady(
-            f"Could not connect to camera {device.device.host}:{device.device.port}: {err}"
-        ) from err
-    except Fault as err:
-        await device.device.close()
-        if is_auth_error(err):
-            raise ConfigEntryAuthFailed(
-                f"Auth Failed: {stringify_onvif_error(err)}"
-            ) from err
-        raise ConfigEntryNotReady(
-            f"Could not connect to camera: {stringify_onvif_error(err)}"
-        ) from err
-    except ONVIFError as err:
-        await device.device.close()
-        raise ConfigEntryNotReady(
-            f"Could not setup camera {device.device.host}:{device.device.port}: {stringify_onvif_error(err)}"
-        ) from err
-    except TransportError as err:
-        await device.device.close()
-        stringified_onvif_error = stringify_onvif_error(err)
-        if err.status_code in (
-            HTTPStatus.UNAUTHORIZED.value,
-            HTTPStatus.FORBIDDEN.value,
-        ):
-            raise ConfigEntryAuthFailed(
-                f"Auth Failed: {stringified_onvif_error}"
-            ) from err
-        raise ConfigEntryNotReady(
-            f"Could not setup camera {device.device.host}:{device.device.port}: {stringified_onvif_error}"
-        ) from err
-    except asyncio.CancelledError as err:
-        # After https://github.com/agronholm/anyio/issues/374 is resolved
-        # this may be able to be removed
-        await device.device.close()
-        raise ConfigEntryNotReady(f"Setup was unexpectedly canceled: {err}") from err
+    async with AsyncExitStack() as stack:
+        # Register cleanup callback for device
+        @stack.push_async_callback
+        async def _cleanup():
+            await _async_stop_device(hass, device)
 
-    if not device.available:
-        raise ConfigEntryNotReady
+        try:
+            await device.async_setup()
+            if not entry.data.get(CONF_SNAPSHOT_AUTH):
+                await async_populate_snapshot_auth(hass, device, entry)
+        except (TimeoutError, aiohttp.ClientError) as err:
+            raise ConfigEntryNotReady(
+                f"Could not connect to camera {device.device.host}:{device.device.port}: {err}"
+            ) from err
+        except Fault as err:
+            if is_auth_error(err):
+                raise ConfigEntryAuthFailed(
+                    f"Auth Failed: {stringify_onvif_error(err)}"
+                ) from err
+            raise ConfigEntryNotReady(
+                f"Could not connect to camera: {stringify_onvif_error(err)}"
+            ) from err
+        except ONVIFError as err:
+            raise ConfigEntryNotReady(
+                f"Could not setup camera {device.device.host}:{device.device.port}: {stringify_onvif_error(err)}"
+            ) from err
+        except TransportError as err:
+            stringified_onvif_error = stringify_onvif_error(err)
+            if err.status_code in (
+                HTTPStatus.UNAUTHORIZED.value,
+                HTTPStatus.FORBIDDEN.value,
+            ):
+                raise ConfigEntryAuthFailed(
+                    f"Auth Failed: {stringified_onvif_error}"
+                ) from err
+            raise ConfigEntryNotReady(
+                f"Could not setup camera {device.device.host}:{device.device.port}: {stringified_onvif_error}"
+            ) from err
+        except asyncio.CancelledError as err:
+            # After https://github.com/agronholm/anyio/issues/374 is resolved
+            # this may be able to be removed
+            raise ConfigEntryNotReady(
+                f"Setup was unexpectedly canceled: {err}"
+            ) from err
+
+        if not device.available:
+            raise ConfigEntryNotReady
+
+        # If we get here, setup was successful - prevent cleanup
+        stack.pop_all()
 
     hass.data[DOMAIN][entry.unique_id] = device
 
@@ -111,17 +117,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-
-    device: ONVIFDevice = hass.data[DOMAIN][entry.unique_id]
-
+async def _async_stop_device(hass: HomeAssistant, device: ONVIFDevice) -> None:
+    """Stop the ONVIF device."""
     if device.capabilities.events and device.events.started:
         try:
             await device.events.async_stop()
-        except (ONVIFError, Fault, RequestError, TransportError):
+        except (TimeoutError, ONVIFError, Fault, aiohttp.ClientError, TransportError):
             LOGGER.warning("Error while stopping events: %s", device.name)
+    await device.device.close()
 
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    device: ONVIFDevice = hass.data[DOMAIN][entry.unique_id]
+    await _async_stop_device(hass, device)
     return await hass.config_entries.async_unload_platforms(entry, device.platforms)
 
 

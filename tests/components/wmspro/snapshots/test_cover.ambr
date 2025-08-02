@@ -17,7 +17,6 @@
         '58717',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -27,7 +26,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '58717',
-    'suggested_area': 'Terrasse',
     'sw_version': None,
     'via_device_id': <ANY>,
   })

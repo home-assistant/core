@@ -1,6 +1,7 @@
 {
   "domain": "onedrive",
   "name": "OneDrive",
+  "after_dependencies": ["cloud"],
   "codeowners": ["@zweckj"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

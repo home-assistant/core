@@ -14,7 +14,13 @@ from tesla_fleet_api.exceptions import (
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.components.teslemetry.models import TeslemetryData
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -72,6 +78,7 @@ async def test_vehicle_refresh_error(
     mock_vehicle_data: AsyncMock,
     side_effect: TeslaFleetError,
     state: ConfigEntryState,
+    mock_legacy: AsyncMock,
 ) -> None:
     """Test coordinator refresh with an error."""
     mock_vehicle_data.side_effect = side_effect
@@ -107,20 +114,7 @@ async def test_energy_site_refresh_error(
     assert entry.state is state
 
 
-# Test Energy History Coordinator
-@pytest.mark.parametrize(("side_effect", "state"), ERRORS)
-async def test_energy_history_refresh_error(
-    hass: HomeAssistant,
-    mock_energy_history: AsyncMock,
-    side_effect: TeslaFleetError,
-    state: ConfigEntryState,
-) -> None:
-    """Test coordinator refresh with an error."""
-    mock_energy_history.side_effect = side_effect
-    entry = await setup_platform(hass)
-    assert entry.state is state
-
-
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_vehicle_stream(
     hass: HomeAssistant,
     mock_add_listener: AsyncMock,
@@ -135,7 +129,7 @@ async def test_vehicle_stream(
     assert state.state == STATE_UNKNOWN
 
     state = hass.states.get("binary_sensor.test_user_present")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNAVAILABLE
 
     mock_add_listener.send(
         {
