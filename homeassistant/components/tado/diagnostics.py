@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import asdict
 from typing import Any
 
 from homeassistant.core import HomeAssistant
@@ -15,6 +16,9 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a Tado config entry."""
 
     return {
-        "data": config_entry.runtime_data.coordinator.data,
-        "mobile_devices": config_entry.runtime_data.mobile_coordinator.data,
+        "data": asdict(config_entry.runtime_data.coordinator.data),
+        "mobile_devices": {
+            identifier: asdict(data)
+            for identifier, data in config_entry.runtime_data.mobile_coordinator.data.items()
+        },
     }
