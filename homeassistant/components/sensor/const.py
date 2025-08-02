@@ -8,6 +8,7 @@ from typing import Final
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONCENTRATION_GRAMS_PER_CUBIC_METER,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
@@ -107,6 +108,12 @@ class SensorDeviceClass(StrEnum):
     """
 
     # Numerical device classes, these should be aligned with NumberDeviceClass
+    ABSOLUTE_HUMIDITY = "absolute_humidity"
+    """Absolute humidity.
+
+    Unit of measurement: `g/m³`, `mg/m³`
+    """
+
     APPARENT_POWER = "apparent_power"
     """Apparent power.
 
@@ -521,6 +528,7 @@ STATE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorStateClass))
 STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
+    SensorDeviceClass.ABSOLUTE_HUMIDITY: MassVolumeConcentrationConverter,
     SensorDeviceClass.AREA: AreaConverter,
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: PressureConverter,
     SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: BloodGlucoseConcentrationConverter,
@@ -554,6 +562,10 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
 }
 
 DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
+    SensorDeviceClass.ABSOLUTE_HUMIDITY: {
+        CONCENTRATION_GRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    },
     SensorDeviceClass.APPARENT_POWER: set(UnitOfApparentPower),
     SensorDeviceClass.AQI: {None},
     SensorDeviceClass.AREA: set(UnitOfArea),
@@ -651,6 +663,7 @@ DEFAULT_PRECISION_LIMIT = 2
 # have 0 decimals, that one should be used and not mW, even though mW also should have
 # 0 decimals. Otherwise the smaller units will have more decimals than expected.
 UNITS_PRECISION = {
+    SensorDeviceClass.ABSOLUTE_HUMIDITY: (CONCENTRATION_GRAMS_PER_CUBIC_METER, 1),
     SensorDeviceClass.APPARENT_POWER: (UnitOfApparentPower.VOLT_AMPERE, 0),
     SensorDeviceClass.AREA: (UnitOfArea.SQUARE_CENTIMETERS, 0),
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: (UnitOfPressure.PA, 0),
@@ -691,6 +704,7 @@ UNITS_PRECISION = {
 }
 
 DEVICE_CLASS_STATE_CLASSES: dict[SensorDeviceClass, set[SensorStateClass]] = {
+    SensorDeviceClass.ABSOLUTE_HUMIDITY: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.APPARENT_POWER: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.AQI: {SensorStateClass.MEASUREMENT},
     SensorDeviceClass.AREA: set(SensorStateClass),

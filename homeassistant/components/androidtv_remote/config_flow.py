@@ -19,7 +19,7 @@ from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import callback
@@ -116,10 +116,10 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
                 pin = user_input["pin"]
                 await self.api.async_finish_pairing(pin)
                 if self.source == SOURCE_REAUTH:
-                    await self.hass.config_entries.async_reload(
-                        self._get_reauth_entry().entry_id
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), reload_even_if_entry_is_unchanged=True
                     )
-                    return self.async_abort(reason="reauth_successful")
+
                 return self.async_create_entry(
                     title=self.name,
                     data={
@@ -243,7 +243,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         return AndroidTVRemoteOptionsFlowHandler(config_entry)
 
 
-class AndroidTVRemoteOptionsFlowHandler(OptionsFlow):
+class AndroidTVRemoteOptionsFlowHandler(OptionsFlowWithReload):
     """Android TV Remote options flow."""
 
     def __init__(self, config_entry: AndroidTVRemoteConfigEntry) -> None:

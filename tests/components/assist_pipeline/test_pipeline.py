@@ -375,7 +375,7 @@ async def test_get_pipelines(hass: HomeAssistant) -> None:
         ("en", "us", "en", "en"),
         ("en", "uk", "en", "en"),
         ("pt", "pt", "pt", "pt"),
-        ("pt", "br", "pt-br", "pt"),
+        ("pt", "br", "pt-BR", "pt"),
     ],
 )
 async def test_default_pipeline_no_stt_tts(
@@ -428,7 +428,7 @@ async def test_default_pipeline_no_stt_tts(
         ("en", "us", "en", "en", "en", "en"),
         ("en", "uk", "en", "en", "en", "en"),
         ("pt", "pt", "pt", "pt", "pt", "pt"),
-        ("pt", "br", "pt-br", "pt", "pt-br", "pt-br"),
+        ("pt", "br", "pt-BR", "pt", "pt-br", "pt-br"),
     ],
 )
 @pytest.mark.usefixtures("init_supporting_components")
@@ -1550,9 +1550,9 @@ async def test_pipeline_language_used_instead_of_conversation_language(
                     "?",
                 ],
             ),
-            # We are not streaming, so 0 chunks via streaming method
-            0,
-            "",
+            # We always stream when possible, so 1 chunk via streaming method
+            1,
+            "hello, how are you?",
         ),
         # Size above STREAM_RESPONSE_CHUNKS
         (

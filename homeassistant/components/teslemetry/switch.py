@@ -147,8 +147,7 @@ async def async_setup_entry(
                 TeslemetryVehiclePollingVehicleSwitchEntity(
                     vehicle, description, entry.runtime_data.scopes
                 )
-                if vehicle.api.pre2021
-                or vehicle.firmware < description.streaming_firmware
+                if vehicle.poll or vehicle.firmware < description.streaming_firmware
                 else TeslemetryStreamingVehicleSwitchEntity(
                     vehicle, description, entry.runtime_data.scopes
                 )

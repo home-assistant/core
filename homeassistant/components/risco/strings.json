@@ -45,7 +45,7 @@
       },
       "risco_to_ha": {
         "title": "Map Risco states to Home Assistant states",
-        "description": "Select what state your Home Assistant alarm will report for every state reported by Risco",
+        "description": "Select what state your Home Assistant alarm control panel will report for every state reported by Risco",
         "data": {
           "arm": "Armed (AWAY)",
           "partial_arm": "Partially Armed (STAY)",
@@ -57,12 +57,12 @@
       },
       "ha_to_risco": {
         "title": "Map Home Assistant states to Risco states",
-        "description": "Select what state to set your Risco alarm to when arming the Home Assistant alarm",
+        "description": "Select what state to set your Risco alarm to when arming the Home Assistant alarm control panel",
         "data": {
-          "armed_away": "Armed Away",
-          "armed_home": "Armed Home",
-          "armed_night": "Armed Night",
-          "armed_custom_bypass": "Armed Custom Bypass"
+          "armed_away": "[%key:component::alarm_control_panel::entity_component::_::state::armed_away%]",
+          "armed_home": "[%key:component::alarm_control_panel::entity_component::_::state::armed_home%]",
+          "armed_night": "[%key:component::alarm_control_panel::entity_component::_::state::armed_night%]",
+          "armed_custom_bypass": "[%key:component::alarm_control_panel::entity_component::_::state::armed_custom_bypass%]"
         }
       }
     }

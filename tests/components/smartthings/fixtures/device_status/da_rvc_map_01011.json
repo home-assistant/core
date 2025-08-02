@@ -878,7 +878,7 @@
           "timestamp": "2025-06-20T14:12:58.012Z"
         },
         "operatingState": {
-          "value": "dryingMop",
+          "value": "charging",
           "timestamp": "2025-07-10T09:52:40.510Z"
         },
         "cleaningStep": {

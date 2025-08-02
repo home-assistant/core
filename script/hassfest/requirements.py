@@ -30,6 +30,7 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "bleak": "SemVer",
     "grpcio": "SemVer",
     "httpx": "SemVer",
+    "lxml": "SemVer",
     "mashumaro": "SemVer",
     "numpy": "SemVer",
     "pandas": "SemVer",
@@ -221,11 +222,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # https://github.com/etsinko/pymonoprice/issues/9
         # pymonoprice > pyserial-asyncio
         "pymonoprice": {"pyserial-asyncio"}
-    },
-    "mystrom": {
-        # https://github.com/home-assistant-ecosystem/python-mystrom/issues/55
-        # python-mystrom > setuptools
-        "python-mystrom": {"setuptools"}
     },
     "nibe_heatpump": {"nibe": {"async-timeout"}},
     "norway_air": {"pymetno": {"async-timeout"}},
