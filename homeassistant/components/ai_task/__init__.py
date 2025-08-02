@@ -20,6 +20,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
 from .const import (
+    ATTR_ATTACHMENTS,
     ATTR_INSTRUCTIONS,
     ATTR_REQUIRED,
     ATTR_STRUCTURE,
@@ -91,6 +92,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 vol.Optional(ATTR_STRUCTURE): vol.All(
                     vol.Schema({str: STRUCTURE_FIELD_SCHEMA}),
                     _validate_structure_fields,
+                ),
+                vol.Optional(ATTR_ATTACHMENTS): vol.All(
+                    cv.ensure_list, [selector.MediaSelector({"accept": ["*/*"]})]
                 ),
             }
         ),

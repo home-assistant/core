@@ -2,11 +2,10 @@
 
 from typing import Literal
 
-from homeassistant.components import assist_pipeline, conversation
+from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import intent
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OpenAIConfigEntry
@@ -57,9 +56,6 @@ class OpenAIConversationEntity(
     async def async_added_to_hass(self) -> None:
         """When entity is added to Home Assistant."""
         await super().async_added_to_hass()
-        assist_pipeline.async_migrate_engine(
-            self.hass, "conversation", self.entry.entry_id, self.entity_id
-        )
         conversation.async_set_agent(self.hass, self.entry, self)
 
     async def async_will_remove_from_hass(self) -> None:
@@ -87,11 +83,4 @@ class OpenAIConversationEntity(
 
         await self._async_handle_chat_log(chat_log)
 
-        intent_response = intent.IntentResponse(language=user_input.language)
-        assert type(chat_log.content[-1]) is conversation.AssistantContent
-        intent_response.async_set_speech(chat_log.content[-1].content or "")
-        return conversation.ConversationResult(
-            response=intent_response,
-            conversation_id=chat_log.conversation_id,
-            continue_conversation=chat_log.continue_conversation,
-        )
+        return conversation.async_get_result_from_chat_log(user_input, chat_log)
