@@ -248,7 +248,9 @@ class MySensorsChildEntity(MySensorNodeEntity):
                 set_req.V_STOP,
             ):
                 self._values[value_type] = STATE_ON if int(value) == 1 else STATE_OFF
-            elif value_type == set_req.V_DIMMER:
+            elif value_type == set_req.V_DIMMER or (
+                hasattr(set_req, "V_TILT") and value_type == set_req.V_TILT
+            ):
                 self._values[value_type] = int(value)
             else:
                 self._values[value_type] = value
