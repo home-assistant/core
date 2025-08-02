@@ -118,7 +118,7 @@ def test_deprecated_unit_of_conductivity_alias() -> None:
     """Test UnitOfConductivity deprecation."""
 
     # Test the deprecated members are aliases
-    assert set(const.UnitOfConductivity) == {"S/cm", "µS/cm", "mS/cm"}
+    assert set(const.UnitOfConductivity) == {"S/cm", "μS/cm", "mS/cm"}
 
 
 def test_deprecated_unit_of_conductivity_members(

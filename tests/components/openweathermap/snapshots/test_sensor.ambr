@@ -86,7 +86,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-co',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor_states[air_pollution][sensor.openweathermap_carbon_monoxide-state]
@@ -96,7 +96,7 @@
       'device_class': 'carbon_monoxide',
       'friendly_name': 'openweathermap Carbon monoxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_carbon_monoxide',
@@ -140,7 +140,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-no2',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor_states[air_pollution][sensor.openweathermap_nitrogen_dioxide-state]
@@ -150,7 +150,7 @@
       'device_class': 'nitrogen_dioxide',
       'friendly_name': 'openweathermap Nitrogen dioxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_nitrogen_dioxide',
@@ -194,7 +194,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-no',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor_states[air_pollution][sensor.openweathermap_nitrogen_monoxide-state]
@@ -204,7 +204,7 @@
       'device_class': 'nitrogen_monoxide',
       'friendly_name': 'openweathermap Nitrogen monoxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_nitrogen_monoxide',
@@ -248,7 +248,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-o3',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor_states[air_pollution][sensor.openweathermap_ozone-state]
@@ -258,7 +258,7 @@
       'device_class': 'ozone',
       'friendly_name': 'openweathermap Ozone',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_ozone',
@@ -302,7 +302,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-pm10',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor_states[air_pollution][sensor.openweathermap_pm10-state]
@@ -312,7 +312,7 @@
       'device_class': 'pm10',
       'friendly_name': 'openweathermap PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_pm10',
@@ -356,7 +356,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-pm2_5',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor_states[air_pollution][sensor.openweathermap_pm2_5-state]
@@ -366,7 +366,7 @@
       'device_class': 'pm25',
       'friendly_name': 'openweathermap PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_pm2_5',
@@ -410,7 +410,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-so2',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor_states[air_pollution][sensor.openweathermap_sulphur_dioxide-state]
@@ -420,7 +420,7 @@
       'device_class': 'sulphur_dioxide',
       'friendly_name': 'openweathermap Sulphur dioxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_sulphur_dioxide',
