@@ -17,19 +17,20 @@ from tests.common import MockConfigEntry, snapshot_platform
 TEST_PLATFORM = CLIMATE_DOMAIN
 pytestmark = [
     pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)]),
-    pytest.mark.parametrize(
-        "load_action_file",
-        ["action_freezer.json"],
-        ids=[
-            "freezer",
-        ],
-    ),
+    # pytest.mark.parametrize(
+    #     "load_action_file",
+    #     ["action_freezer.json"],
+    #     ids=[
+    #         "freezer",
+    #     ],
+    # ),
 ]
 
 ENTITY_ID = "climate.freezer"
 SERVICE_SET_TEMPERATURE = "set_temperature"
 
 
+@pytest.mark.parametrize("load_action_file", ["action_freezer.json"], ids=["freezer"])
 async def test_climate_states(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
@@ -42,7 +43,24 @@ async def test_climate_states(
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
+@pytest.mark.parametrize("load_device_file", ["fridge_freezer.json"])
+@pytest.mark.parametrize(
+    "load_action_file", ["action_fridge_freezer.json"], ids=["fridge_freezer"]
+)
+async def test_climate_states_mulizone(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    setup_platform: MockConfigEntry,
+) -> None:
+    """Test climate entity state."""
+
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("load_action_file", ["action_freezer.json"], ids=["freezer"])
 async def test_climate_states_api_push(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
@@ -56,6 +74,7 @@ async def test_climate_states_api_push(
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
+@pytest.mark.parametrize("load_action_file", ["action_freezer.json"], ids=["freezer"])
 async def test_set_target(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
@@ -74,6 +93,7 @@ async def test_set_target(
     )
 
 
+@pytest.mark.parametrize("load_action_file", ["action_freezer.json"], ids=["freezer"])
 async def test_api_failure(
     hass: HomeAssistant,
     mock_miele_client: MagicMock,
