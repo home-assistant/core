@@ -11,7 +11,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -37,11 +36,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 STEP_TWO_FACTOR_SCHEMA = vol.Schema({vol.Required(CONF_TWO_FACTOR_CODE): str})
 
 
-async def attempt_login(hass: HomeAssistant, cync_auth: Auth) -> User:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
+async def attempt_login(cync_auth: Auth) -> User:
+    """Attempt to log in to Cync using the credentials configured in the Auth parameter."""
 
     try:
         return await cync_auth.login()
@@ -53,13 +49,8 @@ async def attempt_login(hass: HomeAssistant, cync_auth: Auth) -> User:
         raise CannotConnect from CyncError
 
 
-async def attempt_login_with_two_factor(
-    hass: HomeAssistant, cync_auth: Auth, two_factor_code
-) -> User:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_TWO_FACTOR_SCHEMA with values provided by the user.
-    """
+async def attempt_login_with_two_factor(cync_auth: Auth, two_factor_code) -> User:
+    """Attempt to log in to Cync using the cync_auth credentials, along with a two factor code."""
 
     try:
         return await cync_auth.login(two_factor_code)
@@ -93,7 +84,7 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
                 username=user_input[CONF_EMAIL],
                 password=user_input[CONF_PASSWORD],
             )
-            await attempt_login(self.hass, self.cync_auth)
+            await attempt_login(self.cync_auth)
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
@@ -132,10 +123,9 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="two_factor", data_schema=STEP_TWO_FACTOR_SCHEMA, errors=errors
             )
-
         try:
-            user = await attempt_login_with_two_factor(
-                self.hass, self.cync_auth, user_input[CONF_TWO_FACTOR_CODE]
+            await attempt_login_with_two_factor(
+                self.cync_auth, user_input[CONF_TWO_FACTOR_CODE]
             )
         except CannotConnect:
             errors["base"] = "cannot_connect"

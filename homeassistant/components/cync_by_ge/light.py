@@ -1,6 +1,5 @@
 """Support for Cync light entities."""
 
-import logging
 from typing import Any
 
 from pycync import CyncLight
@@ -22,15 +21,13 @@ from homeassistant.util.scaling import scale_ranged_value_to_int_range
 from .coordinator import CyncConfigEntry, CyncCoordinator
 from .entity import CyncBaseEntity
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: CyncConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Cync by GE from a config entry."""
+    """Set up Cync by GE lights from a config entry."""
 
     cync_data = entry.runtime_data
     cync = cync_data.api
@@ -71,8 +68,6 @@ class CyncLightEntity(CyncBaseEntity, LightEntity):
     ) -> None:
         """Set up base attributes."""
         super().__init__(device, coordinator, room_name)
-
-        self._attr_is_on = False
 
         supported_color_modes = {ColorMode.ONOFF}
         if self._device.supports_capability(CyncCapability.CCT_COLOR):
@@ -140,7 +135,7 @@ class CyncLightEntity(CyncBaseEntity, LightEntity):
         return ColorMode.ONOFF
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on the light."""
+        """Process an action on the light."""
         if not kwargs:
             await self._device.turn_on()
 
@@ -190,5 +185,4 @@ class CyncLightEntity(CyncBaseEntity, LightEntity):
 
         if update_data and self._device.device_id in update_data:
             self._device = update_data.get(self._device.device_id)
-
-        self.async_write_ha_state()
+            self.async_write_ha_state()
