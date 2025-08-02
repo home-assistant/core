@@ -241,6 +241,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference="SHORT_POWER_FAILURE_COUNT",
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -249,6 +250,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference="LONG_POWER_FAILURE_COUNT",
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -257,6 +259,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference="VOLTAGE_SAG_L1_COUNT",
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -265,6 +268,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference="VOLTAGE_SAG_L2_COUNT",
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -273,6 +277,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference="VOLTAGE_SAG_L3_COUNT",
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -281,6 +286,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference="VOLTAGE_SWELL_L1_COUNT",
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -289,6 +295,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference="VOLTAGE_SWELL_L2_COUNT",
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -297,6 +304,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         obis_reference="VOLTAGE_SWELL_L3_COUNT",
         dsmr_versions={"2.2", "4", "5", "5L"},
         entity_registry_enabled_default=False,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
@@ -572,7 +580,7 @@ def device_class_and_uom(
 ) -> tuple[SensorDeviceClass | None, str | None]:
     """Get native unit of measurement from telegram,."""
     dsmr_object = getattr(data, entity_description.obis_reference)
-    uom: str | None = getattr(dsmr_object, "unit") or None
+    uom: str | None = dsmr_object.unit or None
     with suppress(ValueError):
         if entity_description.device_class == SensorDeviceClass.GAS and (
             enery_uom := UnitOfEnergy(str(uom))

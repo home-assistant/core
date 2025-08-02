@@ -12,7 +12,8 @@ from synology_dsm.exceptions import SynologyDSMNotLoggedInException
 from homeassistant.const import CONF_MAC, CONF_SCAN_INTERVAL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .common import SynoApi, raise_config_entry_auth_error
 from .const import (
@@ -34,9 +35,19 @@ from .coordinator import (
     SynologyDSMData,
     SynologyDSMSwitchUpdateCoordinator,
 )
-from .service import async_setup_services
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Synology DSM component."""
+
+    async_setup_services(hass)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SynologyDSMConfigEntry) -> bool:
@@ -89,9 +100,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SynologyDSMConfigEntry) 
             details = EXCEPTION_UNKNOWN
         raise ConfigEntryNotReady(details) from err
 
-    # Services
-    await async_setup_services(hass)
-
     # For SSDP compat
     if not entry.data.get(CONF_MAC):
         hass.config_entries.async_update_entry(
@@ -128,7 +136,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SynologyDSMConfigEntry) 
         coordinator_switches=coordinator_switches,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     if entry.options[CONF_BACKUP_SHARE]:
 
@@ -162,13 +169,6 @@ async def async_unload_entry(
         entry_data = entry.runtime_data
         await entry_data.api.async_unload()
     return unload_ok
-
-
-async def _async_update_listener(
-    hass: HomeAssistant, entry: SynologyDSMConfigEntry
-) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_remove_config_entry_device(

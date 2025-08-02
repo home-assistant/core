@@ -51,6 +51,7 @@
     'original_name': 'Coffee target temperature',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'coffee_temp',
     'unique_id': 'GS012345_coffee_temp',
@@ -109,6 +110,7 @@
     'original_name': 'Smart standby time',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'smart_standby_time',
     'unique_id': 'GS012345_smart_standby_time',
@@ -124,7 +126,7 @@
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.mr012345_prebrew_off_time',
@@ -167,10 +169,11 @@
     'original_name': 'Prebrew off time',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'prebrew_time_off',
     'unique_id': 'MR012345_prebrew_off',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
 # name: test_prebrew_on[Linea Micra]
@@ -182,7 +185,7 @@
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
-      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.mr012345_prebrew_on_time',
@@ -225,10 +228,11 @@
     'original_name': 'Prebrew on time',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'prebrew_time_on',
     'unique_id': 'MR012345_prebrew_on',
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
 # name: test_preinfusion[Linea Micra]
@@ -283,6 +287,7 @@
     'original_name': 'Preinfusion time',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'preinfusion_time',
     'unique_id': 'MR012345_preinfusion_off',

@@ -47,8 +47,7 @@ WARNING_STR = "General Warnings"
 
 def color(the_color, *args, reset=None):
     """Color helper."""
-    # pylint: disable-next=import-outside-toplevel
-    from colorlog.escape_codes import escape_codes, parse_colors
+    from colorlog.escape_codes import escape_codes, parse_colors  # noqa: PLC0415
 
     try:
         if not args:

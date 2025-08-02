@@ -50,7 +50,7 @@
     },
     "stop": {
       "name": "[%key:common::action::stop%]",
-      "description": "Stops modbus hub.",
+      "description": "Stops a Modbus hub.",
       "fields": {
         "hub": {
           "name": "[%key:component::modbus::services::write_coil::fields::hub::name%]",
@@ -60,7 +60,7 @@
     },
     "restart": {
       "name": "[%key:common::action::restart%]",
-      "description": "Restarts modbus hub (if running stop then start).",
+      "description": "Restarts a Modbus hub (if running, stops then starts).",
       "fields": {
         "hub": {
           "name": "[%key:component::modbus::services::write_coil::fields::hub::name%]",

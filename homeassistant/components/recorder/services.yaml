@@ -69,7 +69,7 @@ get_statistics:
         - sensor.energy_consumption
         - sensor.temperature
       selector:
-        entity:
+        statistic:
           multiple: true
 
     period:

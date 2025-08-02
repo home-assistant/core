@@ -2,25 +2,24 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable, Coroutine, Iterable
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
-from pydrawise import HydrawiseBase, Zone
+from pydrawise import Controller, HydrawiseBase, Zone
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DEFAULT_WATERING_TIME, DOMAIN
-from .coordinator import HydrawiseUpdateCoordinators
+from .const import DEFAULT_WATERING_TIME
+from .coordinator import HydrawiseConfigEntry
 from .entity import HydrawiseEntity
 
 
@@ -62,17 +61,26 @@ SWITCH_KEYS: list[str] = [desc.key for desc in SWITCH_TYPES]
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HydrawiseConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Hydrawise switch platform."""
-    coordinators: HydrawiseUpdateCoordinators = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities(
-        HydrawiseSwitch(coordinators.main, description, controller, zone_id=zone.id)
-        for controller in coordinators.main.data.controllers.values()
-        for zone in controller.zones
-        for description in SWITCH_TYPES
+    coordinators = config_entry.runtime_data
+
+    def _add_new_zones(zones: Iterable[tuple[Zone, Controller]]) -> None:
+        async_add_entities(
+            HydrawiseSwitch(coordinators.main, description, controller, zone_id=zone.id)
+            for zone, controller in zones
+            for description in SWITCH_TYPES
+        )
+
+    _add_new_zones(
+        [
+            (zone, coordinators.main.data.zone_id_to_controller[zone.id])
+            for zone in coordinators.main.data.zones.values()
+        ]
     )
+    coordinators.main.new_zones_callbacks.append(_add_new_zones)
 
 
 class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):

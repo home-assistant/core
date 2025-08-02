@@ -12,6 +12,7 @@ from homematicip.device import (
     FullFlushShutter,
     GarageDoorModuleTormatic,
     HoermannDrivesModule,
+    WiredDinRailBlind4,
 )
 from homematicip.group import ExtendedLinkedShutterGroup
 
@@ -48,7 +49,7 @@ async def async_setup_entry(
     for device in hap.home.devices:
         if isinstance(device, BlindModule):
             entities.append(HomematicipBlindModule(hap, device))
-        elif isinstance(device, DinRailBlind4):
+        elif isinstance(device, (DinRailBlind4, WiredDinRailBlind4)):
             entities.extend(
                 HomematicipMultiCoverSlats(hap, device, channel=channel)
                 for channel in range(1, 5)

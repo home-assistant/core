@@ -9,9 +9,7 @@ from pynecil import IronOSUpdate, Pynecil
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
@@ -33,8 +31,6 @@ PLATFORMS: list[Platform] = [
     Platform.UPDATE,
 ]
 
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
 
 IRON_OS_KEY: HassKey[IronOSFirmwareUpdateCoordinator] = HassKey(DOMAIN)
 
@@ -42,19 +38,15 @@ IRON_OS_KEY: HassKey[IronOSFirmwareUpdateCoordinator] = HassKey(DOMAIN)
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up IronOS firmware update coordinator."""
-
-    session = async_get_clientsession(hass)
-    github = IronOSUpdate(session)
-
-    hass.data[IRON_OS_KEY] = IronOSFirmwareUpdateCoordinator(hass, github)
-    await hass.data[IRON_OS_KEY].async_request_refresh()
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: IronOSConfigEntry) -> bool:
     """Set up IronOS from a config entry."""
+    if IRON_OS_KEY not in hass.data:
+        session = async_get_clientsession(hass)
+        github = IronOSUpdate(session)
+
+        hass.data[IRON_OS_KEY] = IronOSFirmwareUpdateCoordinator(hass, github)
+        await hass.data[IRON_OS_KEY].async_request_refresh()
+
     if TYPE_CHECKING:
         assert entry.unique_id
 
@@ -77,4 +69,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: IronOSConfigEntry) -> bo
 
 async def async_unload_entry(hass: HomeAssistant, entry: IronOSConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
+        await hass.data[IRON_OS_KEY].async_shutdown()
+        hass.data.pop(IRON_OS_KEY)
+    return unload_ok

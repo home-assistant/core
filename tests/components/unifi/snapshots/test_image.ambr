@@ -27,6 +27,7 @@
     'original_name': 'QR Code',
     'platform': 'unifi',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wlan_qr_code',
     'unique_id': 'qr_code-012345678910111213141516',

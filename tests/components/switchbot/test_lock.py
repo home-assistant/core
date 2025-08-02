@@ -17,7 +17,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import LOCK_SERVICE_INFO, WOLOCKPRO_SERVICE_INFO
+from . import (
+    LOCK_LITE_SERVICE_INFO,
+    LOCK_SERVICE_INFO,
+    LOCK_ULTRA_SERVICE_INFO,
+    WOLOCKPRO_SERVICE_INFO,
+)
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
@@ -25,7 +30,12 @@ from tests.components.bluetooth import inject_bluetooth_service_info
 
 @pytest.mark.parametrize(
     ("sensor_type", "service_info"),
-    [("lock_pro", WOLOCKPRO_SERVICE_INFO), ("lock", LOCK_SERVICE_INFO)],
+    [
+        ("lock_pro", WOLOCKPRO_SERVICE_INFO),
+        ("lock", LOCK_SERVICE_INFO),
+        ("lock_lite", LOCK_LITE_SERVICE_INFO),
+        ("lock_ultra", LOCK_ULTRA_SERVICE_INFO),
+    ],
 )
 @pytest.mark.parametrize(
     ("service", "mock_method"),
@@ -44,10 +54,13 @@ async def test_lock_services(
 
     entry = mock_entry_encrypted_factory(sensor_type=sensor_type)
     entry.add_to_hass(hass)
+    mocked_instance = AsyncMock(return_value=True)
 
-    with patch(
-        f"homeassistant.components.switchbot.lock.switchbot.SwitchbotLock.{mock_method}",
-    ) as mocked_instance:
+    with patch.multiple(
+        "homeassistant.components.switchbot.lock.switchbot.SwitchbotLock",
+        update=AsyncMock(return_value=None),
+        **{mock_method: mocked_instance},
+    ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -65,7 +78,12 @@ async def test_lock_services(
 
 @pytest.mark.parametrize(
     ("sensor_type", "service_info"),
-    [("lock_pro", WOLOCKPRO_SERVICE_INFO), ("lock", LOCK_SERVICE_INFO)],
+    [
+        ("lock_pro", WOLOCKPRO_SERVICE_INFO),
+        ("lock", LOCK_SERVICE_INFO),
+        ("lock_lite", LOCK_LITE_SERVICE_INFO),
+        ("lock_ultra", LOCK_ULTRA_SERVICE_INFO),
+    ],
 )
 @pytest.mark.parametrize(
     ("service", "mock_method"),
@@ -84,12 +102,12 @@ async def test_lock_services_with_night_latch_enabled(
 
     entry = mock_entry_encrypted_factory(sensor_type=sensor_type)
     entry.add_to_hass(hass)
-
     mocked_instance = AsyncMock(return_value=True)
 
     with patch.multiple(
         "homeassistant.components.switchbot.lock.switchbot.SwitchbotLock",
         is_night_latch_enabled=MagicMock(return_value=True),
+        update=AsyncMock(return_value=None),
         **{mock_method: mocked_instance},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
@@ -142,6 +160,7 @@ async def test_exception_handling_lock_service(
     with patch.multiple(
         "homeassistant.components.switchbot.lock.switchbot.SwitchbotLock",
         is_night_latch_enabled=MagicMock(return_value=True),
+        update=AsyncMock(return_value=None),
         **{mock_method: AsyncMock(side_effect=exception)},
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)

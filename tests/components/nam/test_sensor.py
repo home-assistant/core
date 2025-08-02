@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 from nettigo_air_monitor import ApiError
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from tenacity import RetryError
 
 from homeassistant.components.nam.const import DEFAULT_UPDATE_INTERVAL, DOMAIN
@@ -28,7 +28,7 @@ from . import INCOMPLETE_NAM_DATA, init_integration
 
 from tests.common import (
     async_fire_time_changed,
-    load_json_object_fixture,
+    async_load_json_object_fixture,
     snapshot_platform,
 )
 
@@ -103,7 +103,7 @@ async def test_availability(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, exc: Exception
 ) -> None:
     """Ensure that we mark the entities unavailable correctly when device causes an error."""
-    nam_data = load_json_object_fixture("nam/nam_data.json")
+    nam_data = await async_load_json_object_fixture(hass, "nam_data.json", DOMAIN)
 
     await init_integration(hass)
 
@@ -147,7 +147,7 @@ async def test_availability(
 
 async def test_manual_update_entity(hass: HomeAssistant) -> None:
     """Test manual update entity via service homeasasistant/update_entity."""
-    nam_data = load_json_object_fixture("nam/nam_data.json")
+    nam_data = await async_load_json_object_fixture(hass, "nam_data.json", DOMAIN)
 
     await init_integration(hass)
 

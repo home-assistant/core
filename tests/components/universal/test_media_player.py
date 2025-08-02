@@ -24,6 +24,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity import EntityPlatformState
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
@@ -229,9 +230,11 @@ async def mock_states(hass: HomeAssistant) -> Mock:
     result = Mock()
 
     result.mock_mp_1 = MockMediaPlayer(hass, "mock1")
+    result.mock_mp_1._platform_state = EntityPlatformState.ADDED
     result.mock_mp_1.async_schedule_update_ha_state()
 
     result.mock_mp_2 = MockMediaPlayer(hass, "mock2")
+    result.mock_mp_2._platform_state = EntityPlatformState.ADDED
     result.mock_mp_2.async_schedule_update_ha_state()
 
     await hass.async_block_till_done()

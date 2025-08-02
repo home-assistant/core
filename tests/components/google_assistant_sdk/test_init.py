@@ -6,6 +6,7 @@ import time
 from unittest.mock import call, patch
 
 import aiohttp
+from grpc import RpcError
 import pytest
 
 from homeassistant.components import conversation
@@ -13,6 +14,7 @@ from homeassistant.components.google_assistant_sdk import DOMAIN
 from homeassistant.components.google_assistant_sdk.const import SUPPORTED_LANGUAGE_CODES
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -112,6 +114,25 @@ async def test_expired_token_refresh_failure(
     # Verify a transient failure has occurred
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries[0].state is expected_state
+
+
+@pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
+async def test_setup_client_error(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test setup handling aiohttp.ClientError."""
+    aioclient_mock.post(
+        "https://oauth2.googleapis.com/token",
+        exc=aiohttp.ClientError,
+    )
+
+    await setup_integration()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize(
@@ -231,9 +252,32 @@ async def test_send_text_command_expired_token_refresh_failure(
             {"command": "turn on tv"},
             blocking=True,
         )
-    await hass.async_block_till_done()
 
     assert any(entry.async_get_active_flows(hass, {"reauth"})) == requires_reauth
+
+
+async def test_send_text_command_grpc_error(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+) -> None:
+    """Test service call send_text_command when RpcError is raised."""
+    await setup_integration()
+
+    command = "turn on home assistant unsupported device"
+    with (
+        patch(
+            "homeassistant.components.google_assistant_sdk.helpers.TextAssistant.assist",
+            side_effect=RpcError(),
+        ) as mock_assist_call,
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "send_text_command",
+            {"command": command},
+            blocking=True,
+        )
+    mock_assist_call.assert_called_once_with(command)
 
 
 async def test_send_text_command_media_player(

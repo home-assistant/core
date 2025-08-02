@@ -28,6 +28,7 @@ class SyncthruCoordinator(DataUpdateCoordinator[SyncThru]):
             hass,
             _LOGGER,
             name=DOMAIN,
+            config_entry=entry,
             update_interval=timedelta(seconds=30),
         )
         self.syncthru = SyncThru(

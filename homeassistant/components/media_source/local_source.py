@@ -6,7 +6,7 @@ import logging
 import mimetypes
 from pathlib import Path
 import shutil
-from typing import Any
+from typing import Any, cast
 
 from aiohttp import web
 from aiohttp.web_request import FileField
@@ -18,7 +18,7 @@ from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
-from .const import DOMAIN, MEDIA_CLASS_MAP, MEDIA_MIME_TYPES
+from .const import DOMAIN, MEDIA_CLASS_MAP, MEDIA_MIME_TYPES, MEDIA_SOURCE_DATA
 from .error import Unresolvable
 from .models import BrowseMediaSource, MediaSource, MediaSourceItem, PlayMedia
 
@@ -30,7 +30,7 @@ LOGGER = logging.getLogger(__name__)
 def async_setup(hass: HomeAssistant) -> None:
     """Set up local media source."""
     source = LocalSource(hass)
-    hass.data[DOMAIN][DOMAIN] = source
+    hass.data[MEDIA_SOURCE_DATA][DOMAIN] = source
     hass.http.register_view(LocalMediaView(hass, source))
     hass.http.register_view(UploadMediaView(hass, source))
     websocket_api.async_register_command(hass, websocket_remove_media)
@@ -80,7 +80,7 @@ class LocalSource(MediaSource):
         path = self.async_full_path(source_dir_id, location)
         mime_type, _ = mimetypes.guess_type(str(path))
         assert isinstance(mime_type, str)
-        return PlayMedia(f"/media/{item.identifier}", mime_type)
+        return PlayMedia(f"/media/{item.identifier}", mime_type, path=path)
 
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return media."""
@@ -210,10 +210,8 @@ class LocalMediaView(http.HomeAssistantView):
         self.hass = hass
         self.source = source
 
-    async def get(
-        self, request: web.Request, source_dir_id: str, location: str
-    ) -> web.FileResponse:
-        """Start a GET request."""
+    async def _validate_media_path(self, source_dir_id: str, location: str) -> Path:
+        """Validate media path and return it if valid."""
         try:
             raise_if_invalid_path(location)
         except ValueError as err:
@@ -233,6 +231,25 @@ class LocalMediaView(http.HomeAssistantView):
         if not mime_type or mime_type.split("/")[0] not in MEDIA_MIME_TYPES:
             raise web.HTTPNotFound
 
+        return media_path
+
+    async def head(
+        self, request: web.Request, source_dir_id: str, location: str
+    ) -> None:
+        """Handle a HEAD request.
+
+        This is sent by some DLNA renderers, like Samsung ones, prior to sending
+        the GET request.
+
+        Check whether the location exists or not.
+        """
+        await self._validate_media_path(source_dir_id, location)
+
+    async def get(
+        self, request: web.Request, source_dir_id: str, location: str
+    ) -> web.FileResponse:
+        """Handle a GET request."""
+        media_path = await self._validate_media_path(source_dir_id, location)
         return web.FileResponse(media_path)
 
 
@@ -335,7 +352,7 @@ async def websocket_remove_media(
         connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
         return
 
-    source: LocalSource = hass.data[DOMAIN][DOMAIN]
+    source = cast(LocalSource, hass.data[MEDIA_SOURCE_DATA][DOMAIN])
 
     try:
         source_dir_id, location = source.async_parse_identifier(item)

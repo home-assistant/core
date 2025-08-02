@@ -43,7 +43,7 @@ def mock_is_file():
     """Mock is_file."""
     # All files exist except for the old entity registry file
     with patch(
-        "os.path.isfile", lambda path: not path.endswith("entity_registry.yaml")
+        "os.path.isfile", lambda path: not str(path).endswith("entity_registry.yaml")
     ):
         yield
 
@@ -55,7 +55,7 @@ def normalize_yaml_files(check_dict):
 
 
 @pytest.mark.parametrize("hass_config_yaml", [BAD_CORE_CONFIG])
-@pytest.mark.usefixtures("mock_is_file", "event_loop", "mock_hass_config_yaml")
+@pytest.mark.usefixtures("mock_is_file", "mock_hass_config_yaml")
 def test_bad_core_config() -> None:
     """Test a bad core config setup."""
     res = check_config.check(get_test_config_dir())
@@ -65,7 +65,7 @@ def test_bad_core_config() -> None:
 
 
 @pytest.mark.parametrize("hass_config_yaml", [BASE_CONFIG + "light:\n  platform: demo"])
-@pytest.mark.usefixtures("mock_is_file", "event_loop", "mock_hass_config_yaml")
+@pytest.mark.usefixtures("mock_is_file", "mock_hass_config_yaml")
 def test_config_platform_valid() -> None:
     """Test a valid platform setup."""
     res = check_config.check(get_test_config_dir())
@@ -96,7 +96,7 @@ def test_config_platform_valid() -> None:
         ),
     ],
 )
-@pytest.mark.usefixtures("mock_is_file", "event_loop", "mock_hass_config_yaml")
+@pytest.mark.usefixtures("mock_is_file", "mock_hass_config_yaml")
 def test_component_platform_not_found(platforms: set[str], error: str) -> None:
     """Test errors if component or platform not found."""
     # Make sure they don't exist
@@ -121,7 +121,7 @@ def test_component_platform_not_found(platforms: set[str], error: str) -> None:
         }
     ],
 )
-@pytest.mark.usefixtures("mock_is_file", "event_loop", "mock_hass_config_yaml")
+@pytest.mark.usefixtures("mock_is_file", "mock_hass_config_yaml")
 def test_secrets() -> None:
     """Test secrets config checking method."""
     res = check_config.check(get_test_config_dir(), True)
@@ -151,7 +151,7 @@ def test_secrets() -> None:
 @pytest.mark.parametrize(
     "hass_config_yaml", [BASE_CONFIG + '  packages:\n    p1:\n      group: ["a"]']
 )
-@pytest.mark.usefixtures("mock_is_file", "event_loop", "mock_hass_config_yaml")
+@pytest.mark.usefixtures("mock_is_file", "mock_hass_config_yaml")
 def test_package_invalid() -> None:
     """Test an invalid package."""
     res = check_config.check(get_test_config_dir())
@@ -168,7 +168,7 @@ def test_package_invalid() -> None:
 @pytest.mark.parametrize(
     "hass_config_yaml", [BASE_CONFIG + "automation: !include no.yaml"]
 )
-@pytest.mark.usefixtures("event_loop", "mock_hass_config_yaml")
+@pytest.mark.usefixtures("mock_hass_config_yaml")
 def test_bootstrap_error() -> None:
     """Test a valid platform setup."""
     res = check_config.check(get_test_config_dir(YAML_CONFIG_FILE))

@@ -1,0 +1,68 @@
+{
+  "entity": {
+    "media_player": {
+      "playstation": {
+        "default": "mdi:sony-playstation"
+      }
+    },
+    "binary_sensor": {
+      "ps_plus_status": {
+        "default": "mdi:shape-plus-outline"
+      }
+    },
+    "sensor": {
+      "trophy_level": {
+        "default": "mdi:trophy-award"
+      },
+      "trophy_level_progress": {
+        "default": "mdi:trending-up"
+      },
+      "earned_trophies_platinum": {
+        "default": "mdi:trophy"
+      },
+      "earned_trophies_gold": {
+        "default": "mdi:trophy-variant"
+      },
+      "earned_trophies_silver": {
+        "default": "mdi:trophy-variant"
+      },
+      "earned_trophies_bronze": {
+        "default": "mdi:trophy-variant"
+      },
+      "online_id": {
+        "default": "mdi:account"
+      },
+      "last_online": {
+        "default": "mdi:account-clock"
+      },
+      "online_status": {
+        "default": "mdi:account-badge",
+        "state": {
+          "busy": "mdi:account-cancel",
+          "availabletocommunicate": "mdi:cellphone",
+          "offline": "mdi:account-off-outline"
+        }
+      },
+      "now_playing": {
+        "default": "mdi:controller",
+        "state": {
+          "unknown": "mdi:controller-off",
+          "unavailable": "mdi:controller-off"
+        }
+      }
+    },
+    "image": {
+      "share_profile": {
+        "default": "mdi:share-variant"
+      },
+      "avatar": {
+        "default": "mdi:account-circle"
+      }
+    },
+    "notify": {
+      "group_message": {
+        "default": "mdi:forum"
+      }
+    }
+  }
+}

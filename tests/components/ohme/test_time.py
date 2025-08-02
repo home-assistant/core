@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.time import (
     ATTR_TIME,

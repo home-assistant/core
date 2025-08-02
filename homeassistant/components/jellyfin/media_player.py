@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from homeassistant.components.media_player import (
@@ -10,16 +11,20 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
+    SearchMedia,
+    SearchMediaQuery,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import parse_datetime
 
-from .browse_media import build_item_response, build_root_response
+from .browse_media import build_item_response, build_root_response, search_items
 from .client_wrapper import get_artwork_url
 from .const import CONTENT_TYPE_MAP, LOGGER, MAX_IMAGE_WIDTH
 from .coordinator import JellyfinConfigEntry, JellyfinDataUpdateCoordinator
 from .entity import JellyfinClientEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -177,10 +182,15 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         commands: list[str] = self.capabilities.get("SupportedCommands", [])
-        controllable = self.capabilities.get("SupportsMediaControl", False)
+        _LOGGER.debug(
+            "Supported commands for device %s, client %s, %s",
+            self.device_name,
+            self.client_name,
+            commands,
+        )
         features = MediaPlayerEntityFeature(0)
 
-        if controllable:
+        if "PlayMediaSource" in commands:
             features |= (
                 MediaPlayerEntityFeature.BROWSE_MEDIA
                 | MediaPlayerEntityFeature.PLAY_MEDIA
@@ -188,6 +198,7 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
                 | MediaPlayerEntityFeature.PLAY
                 | MediaPlayerEntityFeature.STOP
                 | MediaPlayerEntityFeature.SEEK
+                | MediaPlayerEntityFeature.SEARCH_MEDIA
             )
 
             if "Mute" in commands:
@@ -266,3 +277,13 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
             media_content_type,
             media_content_id,
         )
+
+    async def async_search_media(
+        self,
+        query: SearchMediaQuery,
+    ) -> SearchMedia:
+        """Search the media player."""
+        result = await search_items(
+            self.hass, self.coordinator.api_client, self.coordinator.user_id, query
+        )
+        return SearchMedia(result=result)

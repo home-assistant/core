@@ -7,17 +7,16 @@ from typing import Any
 from pylutron import Button, Keypad, Lutron
 
 from homeassistant.components.scene import Scene
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, LutronData
+from . import LutronConfigEntry
 from .entity import LutronKeypad
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LutronConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Lutron scene platform.
@@ -25,7 +24,7 @@ async def async_setup_entry(
     Adds scenes from the Main Repeater associated with the config_entry as
     scene entities.
     """
-    entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
+    entry_data = config_entry.runtime_data
 
     async_add_entities(
         LutronScene(area_name, keypad, device, entry_data.client)

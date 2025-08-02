@@ -97,7 +97,7 @@ async def _async_find_next_available_port(source: AddressTupleVXType) -> int:
     test_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     for port in range(UPNP_SERVER_MIN_PORT, UPNP_SERVER_MAX_PORT):
-        addr = (source[0],) + (port,) + source[2:]
+        addr = (source[0], port, *source[2:])
         try:
             test_socket.bind(addr)
         except OSError:
@@ -170,11 +170,12 @@ class Server:
         for source_ip in await async_build_source_set(self.hass):
             source_ip_str = str(source_ip)
             if source_ip.version == 6:
+                assert source_ip.scope_id is not None
                 source_tuple: AddressTupleVXType = (
                     source_ip_str,
                     0,
                     0,
-                    int(getattr(source_ip, "scope_id")),
+                    int(source_ip.scope_id),
                 )
             else:
                 source_tuple = (source_ip_str, 0)

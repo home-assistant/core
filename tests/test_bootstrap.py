@@ -85,6 +85,17 @@ async def test_async_enable_logging(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test to ensure logging is migrated to the queue handlers."""
+    config_log_file_pattern = get_test_config_dir("home-assistant.log*")
+    arg_log_file_pattern = "test.log*"
+
+    # Ensure we start with a clean slate
+    for f in glob.glob(arg_log_file_pattern):
+        os.remove(f)
+    for f in glob.glob(config_log_file_pattern):
+        os.remove(f)
+    assert len(glob.glob(config_log_file_pattern)) == 0
+    assert len(glob.glob(arg_log_file_pattern)) == 0
+
     with (
         patch("logging.getLogger"),
         patch(
@@ -97,6 +108,8 @@ async def test_async_enable_logging(
     ):
         await bootstrap.async_enable_logging(hass)
         mock_async_activate_log_queue_handler.assert_called_once()
+        assert len(glob.glob(config_log_file_pattern)) > 0
+
         mock_async_activate_log_queue_handler.reset_mock()
         await bootstrap.async_enable_logging(
             hass,
@@ -104,12 +117,14 @@ async def test_async_enable_logging(
             log_file="test.log",
         )
         mock_async_activate_log_queue_handler.assert_called_once()
-        for f in glob.glob("test.log*"):
-            os.remove(f)
-        for f in glob.glob("testing_config/home-assistant.log*"):
-            os.remove(f)
+        assert len(glob.glob(arg_log_file_pattern)) > 0
 
     assert "Error rolling over log file" in caplog.text
+
+    for f in glob.glob(arg_log_file_pattern):
+        os.remove(f)
+    for f in glob.glob(config_log_file_pattern):
+        os.remove(f)
 
 
 async def test_load_hassio(hass: HomeAssistant) -> None:
@@ -1618,3 +1633,36 @@ async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> 
     assert not problems, (
         f"Integrations that are setup before recorder implement base platforms: {problems}"
     )
+
+
+async def test_recorder_not_promoted(hass: HomeAssistant) -> None:
+    """Verify that recorder is not promoted to earlier than its own stage."""
+    integrations_before_recorder: set[str] = set()
+    for _, integrations, _ in bootstrap.STAGE_0_INTEGRATIONS:
+        if "recorder" in integrations:
+            break
+        integrations_before_recorder |= integrations
+    else:
+        pytest.fail("recorder not in stage 0")
+
+    integrations_or_excs = await loader.async_get_integrations(
+        hass, integrations_before_recorder
+    )
+    integrations: dict[str, Integration] = {}
+    for domain, integration in integrations_or_excs.items():
+        assert not isinstance(integrations_or_excs, Exception)
+        integrations[domain] = integration
+
+    integrations_all_dependencies = (
+        await loader.resolve_integrations_after_dependencies(
+            hass, integrations.values(), ignore_exceptions=True
+        )
+    )
+    all_integrations = integrations.copy()
+    all_integrations.update(
+        (domain, loader.async_get_loaded_integration(hass, domain))
+        for domains in integrations_all_dependencies.values()
+        for domain in domains
+    )
+
+    assert "recorder" not in all_integrations

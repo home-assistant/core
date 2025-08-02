@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_DOMAIN, CONF_NAME
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -13,6 +12,7 @@ from .helpers import (
     AddressType,
     DeviceConnectionType,
     InputType,
+    LcnConfigEntry,
     generate_unique_id,
     get_device_connection,
     get_resource,
@@ -23,12 +23,13 @@ class LcnEntity(Entity):
     """Parent class for all entities associated with the LCN component."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
     device_connection: DeviceConnectionType
 
     def __init__(
         self,
         config: ConfigType,
-        config_entry: ConfigEntry,
+        config_entry: LcnConfigEntry,
     ) -> None:
         """Initialize the LCN device."""
         self.config = config

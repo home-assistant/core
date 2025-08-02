@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, get_schema_suggested_value
 
 
 @pytest.fixture(autouse=True, name="mock_setup_entry")
@@ -203,6 +203,15 @@ async def test_form_exceptions(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": expected_error}
+    # On error, the form should have the previous user input, except password,
+    # as suggested values.
+    data_schema = result2["data_schema"].schema
+    assert (
+        get_schema_suggested_value(data_schema, "utility")
+        == "Pacific Gas and Electric Company (PG&E)"
+    )
+    assert get_schema_suggested_value(data_schema, "username") == "test-username"
+    assert get_schema_suggested_value(data_schema, "password") is None
     assert mock_login.call_count == 1
 
 
