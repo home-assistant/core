@@ -54,10 +54,10 @@
         "default": "mdi:gauge-empty"
       },
       "distance_to_service": {
-        "default": "mdi:wrench-clock"
+        "default": "mdi:wrench-check"
       },
       "engine_time_to_service": {
-        "default": "mdi:wrench-clock"
+        "default": "mdi:wrench-cog"
       },
       "estimated_charging_time": {
         "default": "mdi:battery-clock"
