@@ -1,0 +1,257 @@
+"""Envertech EVT800 sensor."""
+
+from typing import Any
+
+import pyenvertechevt800
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    UnitOfElectricCurrent,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfFrequency,
+    UnitOfPower,
+    UnitOfTemperature,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
+
+from .const import (
+    DOMAIN,
+    ENVERTECH_EVT800_COORDINATOR,
+    ENVERTECH_EVT800_DEVICE_INFO,
+    ENVERTECH_EVT800_OBJECT,
+)
+
+SENSORS: dict[str, SensorEntityDescription] = {
+    "timestamp": SensorEntityDescription(
+        key="timestamp",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+        entity_registry_visible_default=False,
+        translation_key="timestamp",
+    ),
+    "id_1": SensorEntityDescription(
+        key="id_1",
+        entity_registry_enabled_default=False,
+        entity_registry_visible_default=True,
+        translation_key="mptt_id_1",
+    ),
+    "id_2": SensorEntityDescription(
+        key="id_2",
+        entity_registry_enabled_default=False,
+        entity_registry_visible_default=True,
+        translation_key="mptt_id_2",
+    ),
+    "sw-version": SensorEntityDescription(
+        key="sw-version",
+        entity_registry_enabled_default=False,
+        entity_registry_visible_default=True,
+        translation_key="software_version",
+    ),
+    "input_voltage_1": SensorEntityDescription(
+        key="input_voltage_1",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        suggested_display_precision=2,
+        translation_key="input_voltage_1",
+    ),
+    "input_voltage_2": SensorEntityDescription(
+        key="input_voltage_2",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        suggested_display_precision=2,
+        translation_key="input_voltage_2",
+    ),
+    "power_1": SensorEntityDescription(
+        key="power_1",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        suggested_display_precision=0,
+        translation_key="power_1",
+    ),
+    "power_2": SensorEntityDescription(
+        key="power_2",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        suggested_display_precision=0,
+        translation_key="power_2",
+    ),
+    "current_1": SensorEntityDescription(
+        key="current_1",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        suggested_display_precision=2,
+        translation_key="current_1",
+    ),
+    "current_2": SensorEntityDescription(
+        key="current_2",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.CURRENT,
+        suggested_display_precision=2,
+        translation_key="current_2",
+    ),
+    "ac_frequency_1": SensorEntityDescription(
+        key="ac_frequency_1",
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.FREQUENCY,
+        suggested_display_precision=1,
+        translation_key="ac_frequency_1",
+    ),
+    "ac_frequency_2": SensorEntityDescription(
+        key="ac_frequency_2",
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.FREQUENCY,
+        suggested_display_precision=1,
+        translation_key="ac_frequency_2",
+    ),
+    "ac_voltage_1": SensorEntityDescription(
+        key="ac_voltage_1",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        suggested_display_precision=0,
+        translation_key="ac_voltage_1",
+    ),
+    "ac_voltage_2": SensorEntityDescription(
+        key="ac_voltage_2",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        suggested_display_precision=0,
+        translation_key="ac_voltage_2",
+    ),
+    "temperature_1": SensorEntityDescription(
+        key="temperature_1",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_display_precision=1,
+        translation_key="temperature_1",
+    ),
+    "temperature_2": SensorEntityDescription(
+        key="temperature_2",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_display_precision=1,
+        translation_key="temperature_2",
+    ),
+    "total_energy_1": SensorEntityDescription(
+        key="total_energy_1",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_display_precision=2,
+        translation_key="total_energy_1",
+    ),
+    "total_energy_2": SensorEntityDescription(
+        key="total_energy_2",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL,
+        device_class=SensorDeviceClass.ENERGY,
+        suggested_display_precision=2,
+        translation_key="total_energy_2",
+    ),
+}
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Envertech EVT800 sensors."""
+    envertech_data = hass.data[DOMAIN][config_entry.entry_id]
+
+    evt800: pyenvertechevt800.EnvertechEVT800 = envertech_data[ENVERTECH_EVT800_OBJECT]
+    coordinator: DataUpdateCoordinator = envertech_data[ENVERTECH_EVT800_COORDINATOR]
+    device_info: DeviceInfo = envertech_data[ENVERTECH_EVT800_DEVICE_INFO]
+
+    async_add_entities(
+        EnvertechEVT800Sensor(
+            evt800,
+            coordinator,
+            config_entry.unique_id or f"{evt800.ip_address}-{evt800.port}",
+            SENSORS.get(name),
+            device_info,
+            name,
+            value,
+        )
+        for name, value in evt800.data.items()
+    )
+
+
+class EnvertechEVT800Sensor(CoordinatorEntity, SensorEntity):
+    """Representation of a Envertech EVT800 sensor."""
+
+    def __init__(
+        self,
+        device: pyenvertechevt800.EnvertechEVT800,
+        coordinator: DataUpdateCoordinator,
+        config_entry_unique_id: str,
+        description: SensorEntityDescription | None,
+        device_info: DeviceInfo,
+        name: str,
+        value: Any,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        if description is not None:
+            self.entity_description = description
+        else:
+            self._attr_name = name
+
+        self._value = value
+        self._device = device
+        self._key = name
+
+        self._attr_device_info = device_info
+        self._attr_unique_id = f"{config_entry_unique_id}-{name}"
+        self._attr_native_value = self._device.data[self._key]
+
+    @property
+    def name(self) -> str:
+        """Return the name of the sensor prefixed with the device name."""
+        if self._attr_device_info is None or not (
+            name_prefix := self._attr_device_info.get("name")
+        ):
+            name_prefix = "ENVERTECH EVT800"
+
+        return f"{name_prefix} {super().name}"
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Return the state of the sensor."""
+        self._attr_native_value = self._device.data[self._key]
+        self.async_write_ha_state()
+        super()._handle_coordinator_update()
+
+    @property
+    def available(self) -> bool:
+        """Unavailable if evt800 isn't connected."""
+        return (
+            self._device.online
+            and self._device.data[self._key] is not None
+            and super().available
+        )
