@@ -149,6 +149,12 @@ DEVICE_MOCKS = {
         Platform.SELECT,
         Platform.SWITCH,
     ],
+    "tyndj_pyakuuoc": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
     "wk_air_conditioner": [
         # https://github.com/home-assistant/core/issues/146263
         Platform.CLIMATE,
