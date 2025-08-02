@@ -32,6 +32,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.const import CONF_NAME, ENTITY_MATCH_ALL, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 
 from .common import (
     help_custom_config,
@@ -63,7 +64,7 @@ from .common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import async_fire_mqtt_message
+from tests.common import async_capture_events, async_fire_mqtt_message
 from tests.components.vacuum import common
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
@@ -108,7 +109,7 @@ async def test_default_supported_features(
     entity = hass.states.get("vacuum.mqtttest")
     entity_features = entity.attributes.get(mqttvacuum.CONF_SUPPORTED_FEATURES, 0)
     assert sorted(services_to_strings(entity_features, SERVICE_TO_STRING)) == sorted(
-        ["start", "stop", "return_home", "battery", "clean_spot"]
+        ["start", "stop", "return_home", "clean_spot"]
     )
 
 
@@ -313,8 +314,6 @@ async def test_status(
     async_fire_mqtt_message(hass, "vacuum/state", message)
     state = hass.states.get("vacuum.mqtttest")
     assert state.state == VacuumActivity.CLEANING
-    assert state.attributes.get(ATTR_BATTERY_LEVEL) == 54
-    assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-50"
     assert state.attributes.get(ATTR_FAN_SPEED) == "max"
 
     message = """{
@@ -326,8 +325,6 @@ async def test_status(
     async_fire_mqtt_message(hass, "vacuum/state", message)
     state = hass.states.get("vacuum.mqtttest")
     assert state.state == VacuumActivity.DOCKED
-    assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-charging-60"
-    assert state.attributes.get(ATTR_BATTERY_LEVEL) == 61
     assert state.attributes.get(ATTR_FAN_SPEED) == "min"
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) == ["min", "medium", "high", "max"]
 
@@ -335,6 +332,61 @@ async def test_status(
     async_fire_mqtt_message(hass, "vacuum/state", message)
     state = hass.states.get("vacuum.mqtttest")
     assert state.state == STATE_UNKNOWN
+
+
+# Use of the battery feature was deprecated in HA Core 2025.9
+# and will removed with HA Core 2026.3
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        help_custom_config(
+            vacuum.DOMAIN,
+            DEFAULT_CONFIG,
+            ({mqttvacuum.CONF_SUPPORTED_FEATURES: ["battery"]},),
+        )
+    ],
+)
+async def test_status_with_deprecated_battery_feature(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test status updates from the vacuum with deprecated battery feature."""
+    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
+    await mqtt_mock_entry()
+    state = hass.states.get("vacuum.mqtttest")
+    assert state.state == STATE_UNKNOWN
+
+    message = """{
+        "battery_level": 54,
+        "state": "cleaning"
+    }"""
+    async_fire_mqtt_message(hass, "vacuum/state", message)
+    state = hass.states.get("vacuum.mqtttest")
+    assert state.state == VacuumActivity.CLEANING
+    assert state.attributes.get(ATTR_BATTERY_LEVEL) == 54
+    assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-50"
+
+    message = """{
+        "battery_level": 61,
+        "state": "docked"
+    }"""
+
+    async_fire_mqtt_message(hass, "vacuum/state", message)
+    state = hass.states.get("vacuum.mqtttest")
+    assert state.state == VacuumActivity.DOCKED
+    assert state.attributes.get(ATTR_BATTERY_ICON) == "mdi:battery-charging-60"
+    assert state.attributes.get(ATTR_BATTERY_LEVEL) == 61
+
+    message = '{"state":null}'
+    async_fire_mqtt_message(hass, "vacuum/state", message)
+    state = hass.states.get("vacuum.mqtttest")
+    assert state.state == STATE_UNKNOWN
+    assert (
+        "MQTT vacuum entity vacuum.mqtttest implements "
+        "the battery feature which is deprecated." in caplog.text
+    )
+    assert len(events) == 1
 
 
 @pytest.mark.parametrize(
@@ -346,7 +398,9 @@ async def test_status(
             (
                 {
                     mqttvacuum.CONF_SUPPORTED_FEATURES: services_to_strings(
-                        mqttvacuum.DEFAULT_SERVICES, SERVICE_TO_STRING
+                        mqttvacuum.DEFAULT_SERVICES
+                        | vacuum.VacuumEntityFeature.BATTERY,
+                        SERVICE_TO_STRING,
                     )
                 },
             ),
