@@ -82,7 +82,8 @@ class VerisureAlarm(
                 .get("result")
             )
 
-        await self.coordinator.async_refresh()
+        self._attr_alarm_state = ALARM_STATE_TO_HA.get(state)
+        self.async_write_ha_state()
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
