@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-import datetime
 from enum import IntEnum
 from typing import TYPE_CHECKING, Any, cast
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
-import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
@@ -17,7 +15,7 @@ from homeassistant.components.vacuum import (
     VacuumEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_ID, Platform
+from homeassistant.const import Platform
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -34,18 +32,6 @@ from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
 SERVICE_GET_ROOMS = "get_rooms"
-SERVICE_GET_ROOMS_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_DEVICE_ID): str,
-    },
-)
-SEARCH_ITEMS_SERVICE_NAME = "search_items"
-SEARCH_ITEMS_SCHEMA = vol.Schema(
-    {
-        vol.Required("start"): datetime.datetime,
-        vol.Required("end"): datetime.datetime,
-    }
-)
 
 
 class OperationalState(IntEnum):
@@ -80,29 +66,6 @@ async def async_setup_entry(
     matter = get_matter(hass)
     matter.register_platform_handler(Platform.VACUUM, async_add_entities)
 
-    async def search_items(call: ServiceCall) -> ServiceResponse:
-        """Search in the date range and return the matching items."""
-        # items = await my_client.search(call.data["start"], call.data["end"])
-        items = [
-            {
-                "summary": "Item 1",
-                "description": "Description of item 1",
-            },
-            {
-                "summary": "Item 2",
-                "description": "Description of item 2",
-            },
-        ]
-        return {
-            "items": [
-                {
-                    "summary": item["summary"],
-                    "description": item["description"],
-                }
-                for item in items
-            ],
-        }
-
     async def get_rooms(call: ServiceCall) -> ServiceResponse:
         """Get available rooms from vacuum appliance."""
         rooms_list: list[dict[str, Any]] = [
@@ -135,19 +98,12 @@ async def async_setup_entry(
             },
         )
 
+    # Register the service to get rooms from the vacuum cleaner
     hass.services.async_register(
-        DOMAIN,
-        SEARCH_ITEMS_SERVICE_NAME,
-        search_items,
-        schema=SEARCH_ITEMS_SCHEMA,
-        supports_response=SupportsResponse.ONLY,
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_GET_ROOMS,
-        get_rooms,
-        SERVICE_GET_ROOMS_SCHEMA,
+        domain=DOMAIN,
+        service=SERVICE_GET_ROOMS,
+        service_func=get_rooms,
+        schema=None,
         supports_response=SupportsResponse.ONLY,  # Doesn't perform any actions and always returns response data.
     )
 
