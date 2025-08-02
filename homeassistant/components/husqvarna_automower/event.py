@@ -50,14 +50,14 @@ async def async_setup_entry(
     entity_registry = er.async_get(hass)
     entries = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
 
-    seen_mowers = {}
+    seen_mowers: set[str] = set()
     for entry in entries:
         if entry.unique_id.endswith("_message"):
             mower_id = entry.unique_id.removesuffix("_message")
-            seen_mowers[mower_id] = True
+            seen_mowers.add(mower_id)
 
     def _add_for_mower(mower_id: str) -> None:
-        seen_mowers[mower_id] = True
+        seen_mowers.add(mower_id)
         entities = [
             AutomowerMessageEventEntity(mower_id, coordinator, desc)
             for desc in EVENT_DESCRIPTIONS
@@ -65,7 +65,7 @@ async def async_setup_entry(
         async_add_entities(entities)
 
     # Restore and clean up seen mowers
-    for mower_id in list(seen_mowers):
+    for mower_id in seen_mowers.copy():
         if mower_id in coordinator.data:
             _add_for_mower(mower_id)
 
