@@ -127,6 +127,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
+    # select buttons that should be linked to scenes
+    # this logic is from radiora integration.
+    # "DualAction","AdvancedConditional","SimpleConditional", are excluded
+    RADIORA_VALID_BUTTON_TYPES = [
+        "SingleAction",
+        "Toggle",
+        "SingleSceneRaiseLower",
+        "MasterRaiseLower",
+        "AdvancedToggle",
+    ]
+
     entry_data = LutronData(
         controller=lutron_controller,
         binary_sensors=[],
@@ -191,7 +202,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                 # Add leds controlled by integration as a light device
                 # RadioRa mode adds valid leds as switches
 
-                if button.has_actions:
+                if button.button_type:
                     entry_data.buttons.append(button)
 
                     _async_check_entity_unique_id(
@@ -203,26 +214,27 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                         entry_data.controller.guid,
                     )
 
-                    if not use_radiora_mode or not button.name.startswith("Unknown"):
-                        entry_data.scenes.append(button)
+                if (
+                    not button.name.startswith("Unknown")
+                    and button.button_type in RADIORA_VALID_BUTTON_TYPES
+                ) or not use_radiora_mode:
+                    entry_data.scenes.append(button)
 
-                        _async_check_entity_unique_id(
-                            hass,
-                            entity_registry,
-                            Platform.SCENE,
-                            button.uuid,
-                            button.legacy_uuid,
-                            entry_data.controller.guid,
-                        )
-                else:
-                    _LOGGER.debug(
-                        "Button without action %s -  %s ", keypad.name, button.engraving
+                    _async_check_entity_unique_id(
+                        hass,
+                        entity_registry,
+                        Platform.SCENE,
+                        button.uuid,
+                        button.legacy_uuid,
+                        entry_data.controller.guid,
                     )
 
             for led in keypad.leds:
                 if (
-                    led.button.has_actions and not led.button.name.startswith("Unknown")
-                ) or led.button.led_logic == 5:
+                    use_radiora_mode
+                    and not led.button.name.startswith("Unknown")
+                    and led.button.button_type in RADIORA_VALID_BUTTON_TYPES
+                ) or (not use_radiora_mode and led.button.led_logic == 5):
                     entry_data.leds.append(led)
                     platform = Platform.SWITCH if use_radiora_mode else Platform.LIGHT
 
