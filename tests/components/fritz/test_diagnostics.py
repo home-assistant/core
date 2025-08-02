@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.fritz.const import DOMAIN

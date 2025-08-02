@@ -17,7 +17,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    DOMAIN,
     TYPE_ALLERGY_FORECAST,
     TYPE_ALLERGY_INDEX,
     TYPE_ALLERGY_OUTLOOK,
@@ -145,7 +144,7 @@ async def async_setup_entry(
     sensors.extend(
         [
             IndexSensor(
-                hass.data[DOMAIN][entry.entry_id][
+                entry.runtime_data[
                     API_CATEGORY_MAPPING.get(description.key, description.key)
                 ],
                 entry,
@@ -207,9 +206,7 @@ class ForecastSensor(IQVIAEntity, SensorEntity):
         )
 
         if self.entity_description.key == TYPE_ALLERGY_FORECAST:
-            outlook_coordinator = self.hass.data[DOMAIN][self._entry.entry_id][
-                TYPE_ALLERGY_OUTLOOK
-            ]
+            outlook_coordinator = self._entry.runtime_data[TYPE_ALLERGY_OUTLOOK]
 
             if not outlook_coordinator.last_update_success:
                 return

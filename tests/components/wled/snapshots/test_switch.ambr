@@ -42,6 +42,7 @@
     'original_name': 'Nightlight',
     'platform': 'wled',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'nightlight',
     'unique_id': 'aabbccddeeff_nightlight',
@@ -70,7 +71,6 @@
         'aabbccddeeff',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WLED',
@@ -80,7 +80,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '0.14.4',
     'via_device_id': None,
   })
@@ -126,6 +125,7 @@
     'original_name': 'Reverse',
     'platform': 'wled',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reverse',
     'unique_id': 'aabbccddeeff_reverse_0',
@@ -154,7 +154,6 @@
         'aabbccddeeff',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WLED',
@@ -164,7 +163,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '0.14.4',
     'via_device_id': None,
   })
@@ -211,6 +209,7 @@
     'original_name': 'Sync receive',
     'platform': 'wled',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sync_receive',
     'unique_id': 'aabbccddeeff_sync_receive',
@@ -239,7 +238,6 @@
         'aabbccddeeff',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WLED',
@@ -249,7 +247,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '0.14.4',
     'via_device_id': None,
   })
@@ -296,6 +293,7 @@
     'original_name': 'Sync send',
     'platform': 'wled',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sync_send',
     'unique_id': 'aabbccddeeff_sync_send',
@@ -324,7 +322,6 @@
         'aabbccddeeff',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WLED',
@@ -334,7 +331,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '0.14.4',
     'via_device_id': None,
   })

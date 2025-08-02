@@ -334,11 +334,19 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
     async def async_update(self) -> None:
         """Command device to check for update."""
         if self.available:
-            self._client.update_command(key=self._key, command=UpdateCommand.CHECK)
+            self._client.update_command(
+                key=self._key,
+                command=UpdateCommand.CHECK,
+                device_id=self._static_info.device_id,
+            )
 
     @convert_api_error_ha_error
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Command device to install update."""
-        self._client.update_command(key=self._key, command=UpdateCommand.INSTALL)
+        self._client.update_command(
+            key=self._key,
+            command=UpdateCommand.INSTALL,
+            device_id=self._static_info.device_id,
+        )

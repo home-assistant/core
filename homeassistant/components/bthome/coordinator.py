@@ -45,7 +45,7 @@ class BTHomePassiveBluetoothProcessorCoordinator(
     @property
     def sleepy_device(self) -> bool:
         """Return True if the device is a sleepy device."""
-        return self.entry.data.get(CONF_SLEEPY_DEVICE, self.device_data.sleepy_device)
+        return self.entry.data.get(CONF_SLEEPY_DEVICE, self.device_data.sleepy_device)  # type: ignore[no-any-return]
 
 
 class BTHomePassiveBluetoothDataProcessor[_T](

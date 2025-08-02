@@ -6,6 +6,7 @@ from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_PERFORMANCE,
     WaterHeaterEntity,
+    WaterHeaterEntityFeature,
 )
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
@@ -32,6 +33,7 @@ class AtagWaterHeater(AtagEntity, WaterHeaterEntity):
     """Representation of an ATAG water heater."""
 
     _attr_operation_list = OPERATION_LIST
+    _attr_supported_features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     @property

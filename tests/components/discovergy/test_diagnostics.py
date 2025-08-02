@@ -1,7 +1,7 @@
 """Test Discovergy diagnostics."""
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 

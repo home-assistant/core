@@ -211,10 +211,7 @@ async def test_value_template(
     assert state.state == STATE_OFF
     assert state.attributes.get("installed_version") == "1.9.0"
     assert state.attributes.get("latest_version") == "1.9.0"
-    assert (
-        state.attributes.get("entity_picture")
-        == "https://brands.home-assistant.io/_/mqtt/icon.png"
-    )
+    assert state.attributes.get("entity_picture") is None
 
     async_fire_mqtt_message(hass, latest_version_topic, '{"latest":"2.0.0"}')
 
@@ -324,10 +321,7 @@ async def test_value_template_float(
     assert state.state == STATE_OFF
     assert state.attributes.get("installed_version") == "1.9"
     assert state.attributes.get("latest_version") == "1.9"
-    assert (
-        state.attributes.get("entity_picture")
-        == "https://brands.home-assistant.io/_/mqtt/icon.png"
-    )
+    assert state.attributes.get("entity_picture") is None
 
     async_fire_mqtt_message(hass, latest_version_topic, '{"latest":"2.0"}')
 
@@ -949,9 +943,5 @@ async def test_entity_icon_and_entity_picture(
     domain = update.DOMAIN
     config = DEFAULT_CONFIG
     await help_test_entity_icon_and_entity_picture(
-        hass,
-        mqtt_mock_entry,
-        domain,
-        config,
-        default_entity_picture="https://brands.home-assistant.io/_/mqtt/icon.png",
+        hass, mqtt_mock_entry, domain, config
     )

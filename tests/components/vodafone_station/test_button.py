@@ -9,7 +9,7 @@ from aiovodafone.exceptions import (
     GenericLoginError,
 )
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.vodafone_station.const import DOMAIN

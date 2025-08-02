@@ -4,7 +4,7 @@ from unittest.mock import MagicMock
 
 from aiohttp import ClientError
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import SERVICE_SET_VALUE
 from homeassistant.const import ATTR_ENTITY_ID, Platform

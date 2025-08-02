@@ -15,8 +15,8 @@ from tests.typing import ClientSessionGenerator
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    reolink_connect: MagicMock,
-    test_chime: Chime,
+    reolink_host: MagicMock,
+    reolink_chime: Chime,
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:

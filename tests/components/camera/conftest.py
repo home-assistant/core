@@ -201,7 +201,7 @@ async def mock_test_webrtc_cameras(hass: HomeAssistant) -> None:
     ) -> bool:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
-            config_entry, [camera.DOMAIN]
+            config_entry, [Platform.CAMERA]
         )
         return True
 
@@ -210,7 +210,7 @@ async def mock_test_webrtc_cameras(hass: HomeAssistant) -> None:
     ) -> bool:
         """Unload test config entry."""
         await hass.config_entries.async_forward_entry_unload(
-            config_entry, camera.DOMAIN
+            config_entry, Platform.CAMERA
         )
         return True
 

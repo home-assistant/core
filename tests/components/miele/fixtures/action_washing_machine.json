@@ -9,7 +9,7 @@
     {
       "zone": 1,
       "min": -28,
-      "max": -14
+      "max": 28
     }
   ],
   "deviceName": true,

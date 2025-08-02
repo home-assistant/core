@@ -8,6 +8,7 @@ from typing import Any
 
 from aiohttp.client_exceptions import ClientError
 from hass_nabucasa import Cloud, cloud_api
+from hass_nabucasa.payments_api import PaymentsApiError, SubscriptionInfo
 
 from .client import CloudClient
 from .const import REQUEST_TIMEOUT
@@ -15,21 +16,13 @@ from .const import REQUEST_TIMEOUT
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_subscription_info(cloud: Cloud[CloudClient]) -> dict[str, Any] | None:
+async def async_subscription_info(cloud: Cloud[CloudClient]) -> SubscriptionInfo | None:
     """Fetch the subscription info."""
     try:
         async with asyncio.timeout(REQUEST_TIMEOUT):
-            return await cloud_api.async_subscription_info(cloud)
-    except TimeoutError:
-        _LOGGER.error(
-            (
-                "A timeout of %s was reached while trying to fetch subscription"
-                " information"
-            ),
-            REQUEST_TIMEOUT,
-        )
-    except ClientError:
-        _LOGGER.error("Failed to fetch subscription information")
+            return await cloud.payments.subscription_info()
+    except PaymentsApiError as exception:
+        _LOGGER.error("Failed to fetch subscription information - %s", exception)
 
     return None
 

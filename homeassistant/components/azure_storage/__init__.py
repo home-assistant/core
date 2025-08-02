@@ -2,8 +2,8 @@
 
 from aiohttp import ClientTimeout
 from azure.core.exceptions import (
+    AzureError,
     ClientAuthenticationError,
-    HttpResponseError,
     ResourceNotFoundError,
 )
 from azure.core.pipeline.transport._aiohttp import (
@@ -70,7 +70,7 @@ async def async_setup_entry(
             translation_key="invalid_auth",
             translation_placeholders={CONF_ACCOUNT_NAME: entry.data[CONF_ACCOUNT_NAME]},
         ) from err
-    except HttpResponseError as err:
+    except AzureError as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",

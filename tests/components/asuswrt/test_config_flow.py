@@ -175,7 +175,12 @@ async def test_error_invalid_ssh(hass: HomeAssistant, patch_is_file) -> None:
     config_data = {k: v for k, v in CONFIG_DATA_SSH.items() if k != CONF_PASSWORD}
     config_data[CONF_SSH_KEY] = SSH_KEY
 
-    patch_is_file.return_value = False
+    def mock_is_file(file) -> bool:
+        if str(file).endswith(SSH_KEY):
+            return False
+        return True
+
+    patch_is_file.side_effect = mock_is_file
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER, "show_advanced_options": True},
