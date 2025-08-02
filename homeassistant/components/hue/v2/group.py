@@ -230,6 +230,12 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         all_lights = self.controller.get_lights(self.resource.id)
         lights_in_colortemp_mode = 0
         lights_in_dynamic_mode = 0
+        # accumulate colour values
+        xy_total_x = 0.0
+        xy_total_y = 0.0
+        xy_count = 0
+        temp_total = 0.0
+        temp_count = 0
         # loop through all lights to find capabilities
         for light in all_lights:
             if color_temp := light.color_temperature:
@@ -252,10 +258,19 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
                 )
                 if color_temp.mirek is not None and color_temp.mirek_valid:
                     lights_in_colortemp_mode += 1
+                # accumulate temp colour values
+                if light.on.on and self._attr_color_temp_kelvin is not None:
+                    temp_total += self._attr_color_temp_kelvin
+                    temp_count += 1
             if color := light.color:
                 lights_with_color_support += 1
-                # we assume xy values from the first capable light
+                # default to xy values from the first capable light
                 self._attr_xy_color = (color.xy.x, color.xy.y)
+                # accumulate xy colour values
+                if light.on.on:
+                    xy_total_x += color.xy.x
+                    xy_total_y += color.xy.y
+                    xy_count += 1
             if dimming := light.dimming:
                 lights_with_dimming_support += 1
                 total_brightness += dimming.brightness
@@ -289,8 +304,17 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         # pick a winner for the current colormode
         if lights_with_color_temp_support > 0 and lights_in_colortemp_mode > 0:
             self._attr_color_mode = ColorMode.COLOR_TEMP
+            # set the group temp color as an average of the lights that are on
+            if temp_count > 0:
+                avg_temp = temp_total / temp_count
+                self._attr_color_temp_kelvin = round(avg_temp)
         elif lights_with_color_support > 0:
             self._attr_color_mode = ColorMode.XY
+            # set the group xy color as an average of the lights that are on
+            if xy_count > 0:
+                avg_x = round(xy_total_x / xy_count, 3)
+                avg_y = round(xy_total_y / xy_count, 3)
+                self._attr_xy_color = (avg_x, avg_y)
         elif lights_with_dimming_support > 0:
             self._attr_color_mode = ColorMode.BRIGHTNESS
         else:
