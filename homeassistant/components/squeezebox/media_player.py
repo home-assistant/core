@@ -311,6 +311,11 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
         )
         return None
 
+    async def async_added_to_hass(self) -> None:
+        """Call when entity is added to hass."""
+        await super().async_added_to_hass()
+        await self._browse_data.async_init(self._player, self.browse_limit)
+
     async def async_will_remove_from_hass(self) -> None:
         """Remove from list of known players when removed from hass."""
         self.coordinator.config_entry.runtime_data.known_player_ids.remove(
