@@ -6519,6 +6519,182 @@ async def test_update_subentry_and_abort(
         assert result["reason"] == "reconfigure_successful"
 
 
+@pytest.mark.parametrize(
+    (
+        "kwargs",
+        "expected_title",
+        "expected_unique_id",
+        "expected_data",
+        "raises",
+        "reload",  # True is default
+    ),
+    [
+        (
+            {
+                "unique_id": "5678",
+                "title": "Updated title",
+                "data": {"vendor": "data2"},
+            },
+            "Updated title",
+            "5678",
+            {"vendor": "data2"},
+            None,
+            True,
+        ),
+        (
+            {
+                "unique_id": "1234",
+                "title": "Test",
+                "data": {"vendor": "data"},
+            },
+            "Test",
+            "1234",
+            {"vendor": "data"},
+            None,
+            True,
+        ),
+        (
+            {
+                "unique_id": "1234",
+                "title": "Test",
+                "data": {"vendor": "data"},
+            },
+            "Test",
+            "1234",
+            {"vendor": "data"},
+            None,
+            False,
+        ),
+        (
+            {},
+            "Test",
+            "1234",
+            {"vendor": "data"},
+            None,
+            True,
+        ),
+        (
+            {
+                "data": {"buyer": "me"},
+            },
+            "Test",
+            "1234",
+            {"buyer": "me"},
+            None,
+            True,
+        ),
+        (
+            {"data_updates": {"buyer": "me"}},
+            "Test",
+            "1234",
+            {"vendor": "data", "buyer": "me"},
+            None,
+            True,
+        ),
+        (
+            {
+                "unique_id": "5678",
+                "title": "Updated title",
+                "data": {"vendor": "data2"},
+                "data_updates": {"buyer": "me"},
+            },
+            "Test",
+            "1234",
+            {"vendor": "data"},
+            ValueError,
+            True,
+        ),
+    ],
+    ids=[
+        "changed_entry_default",
+        "unchanged_entry_default",
+        "unchanged_entry_no_reload",
+        "no_kwargs",
+        "replace_data",
+        "update_data",
+        "update_and_data_raises",
+    ],
+)
+async def test_update_subentry_reload_and_abort(
+    hass: HomeAssistant,
+    expected_title: str,
+    expected_unique_id: str,
+    expected_data: dict[str, Any],
+    kwargs: dict[str, Any],
+    raises: type[Exception] | None,
+    reload: bool,
+) -> None:
+    """Test updating an entry and reloading."""
+    subentry_id = "blabla"
+    entry = MockConfigEntry(
+        domain="comp",
+        unique_id="entry_unique_id",
+        title="entry_title",
+        data={},
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={"vendor": "data"},
+                subentry_id=subentry_id,
+                subentry_type="test",
+                unique_id="1234",
+                title="Test",
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+    subentry = entry.subentries[subentry_id]
+
+    setup_entry = AsyncMock(return_value=True)
+
+    comp = MockModule(
+        "comp",
+        async_setup_entry=setup_entry,
+        async_unload_entry=AsyncMock(return_value=True),
+    )
+    mock_integration(hass, comp)
+    mock_platform(hass, "comp.config_flow", None)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    class TestFlow(config_entries.ConfigFlow):
+        class SubentryFlowHandler(config_entries.ConfigSubentryFlow):
+            async def async_step_reconfigure(self, user_input=None):
+                return self.async_update_reload_and_abort(
+                    self._get_entry(),
+                    self._get_reconfigure_subentry(),
+                    **kwargs,
+                    reload_even_if_entry_is_unchanged=reload,
+                )
+
+        @classmethod
+        @callback
+        def async_get_supported_subentry_types(
+            cls, config_entry: config_entries.ConfigEntry
+        ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
+
+    err: Exception
+    with mock_config_flow("comp", TestFlow):
+        try:
+            result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+        except Exception as ex:  # noqa: BLE001
+            err = ex
+
+    await hass.async_block_till_done()
+
+    subentry = entry.subentries[subentry_id]
+    assert subentry.title == expected_title
+    assert subentry.unique_id == expected_unique_id
+    assert subentry.data == expected_data
+    if raises:
+        assert setup_entry.call_count == 1
+        assert isinstance(err, raises)
+    else:
+        assert setup_entry.call_count == 2
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+
+
 async def test_reconfigure_subentry_create_subentry(hass: HomeAssistant) -> None:
     """Test it's not allowed to create a subentry from a subentry reconfigure flow."""
     subentry_id = "blabla"
