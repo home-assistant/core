@@ -14,7 +14,7 @@ from homeassistant.const import CONF_REGION, UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.location import find_coordinates
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.unit_conversion import DistanceConverter
 
 from .const import (
@@ -52,7 +52,7 @@ async def async_get_travel_times(
     units: Literal["metric", "imperial"] = "metric",
     incl_filters: Collection[str] | None = None,
     excl_filters: Collection[str] | None = None,
-) -> list[CalcRoutesResponse] | None:
+) -> list[CalcRoutesResponse]:
     """Get all available routes."""
 
     incl_filters = incl_filters or ()
@@ -130,11 +130,9 @@ async def async_get_travel_times(
             ]
 
         if len(filtered_routes) < 1:
-            _LOGGER.warning("No routes found")
-            return None
+            raise UpdateFailed("No routes found")
     except WRCError as exp:
-        _LOGGER.warning("Error on retrieving data: %s", exp)
-        return None
+        raise UpdateFailed(f"Error on retrieving data: {exp}") from exp
 
     else:
         return filtered_routes
@@ -189,8 +187,7 @@ class WazeTravelTimeData:
             if routes:
                 route = routes[0]
             else:
-                _LOGGER.warning("No routes found")
-                return
+                raise UpdateFailed("No routes found")
 
             self.duration = route.duration
             self.distance = route.distance
