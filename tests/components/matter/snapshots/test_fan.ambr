@@ -267,7 +267,7 @@
     'state': 'off',
   })
 # ---
-# name: test_fans[thermostat][fan.longan_link_hvac-entry]
+# name: test_fans[thermostat][fan.longan_link_hvac_north-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -287,7 +287,7 @@
     'disabled_by': None,
     'domain': 'fan',
     'entity_category': None,
-    'entity_id': 'fan.longan_link_hvac',
+    'entity_id': 'fan.longan_link_hvac_north',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -299,7 +299,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'North',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -309,10 +309,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_fans[thermostat][fan.longan_link_hvac-state]
+# name: test_fans[thermostat][fan.longan_link_hvac_north-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Longan link HVAC',
+      'friendly_name': 'Longan link HVAC North',
       'preset_mode': None,
       'preset_modes': list([
         'low',
@@ -323,7 +323,7 @@
       'supported_features': <FanEntityFeature: 56>,
     }),
     'context': <ANY>,
-    'entity_id': 'fan.longan_link_hvac',
+    'entity_id': 'fan.longan_link_hvac_north',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
