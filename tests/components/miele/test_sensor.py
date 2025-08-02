@@ -1,7 +1,7 @@
 """Tests for miele sensor module."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 from pymiele import MieleDevices
