@@ -33,7 +33,7 @@ class CyncCoordinator(DataUpdateCoordinator):
     """Coordinator to handle updating Cync device states."""
 
     def __init__(self, hass, config_entry, cync: Cync) -> None:
-        """Initialize my coordinator."""
+        """Initialize the Cync coordinator."""
         super().__init__(
             hass,
             _LOGGER,
@@ -50,14 +50,7 @@ class CyncCoordinator(DataUpdateCoordinator):
         self.hass.add_job(self.async_set_updated_data, data)
 
     async def _async_setup(self):
-        """Set up the coordinator.
-
-        This is the place to set up your coordinator,
-        or to load data, that only needs to be loaded once.
-
-        This method will be called automatically during
-        coordinator.async_config_entry_first_refresh.
-        """
+        """Set up the coordinator with initial device states."""
         self.cync.update_device_states()
 
     async def _async_update_data(self):
@@ -73,7 +66,7 @@ class CyncCoordinator(DataUpdateCoordinator):
         self.cync.update_device_states()
 
     async def _async_update_cync_credentials(self):
-        """Attempt to refresh the Cync authentication token."""
+        """Attempt to refresh the Cync user's authentication token."""
         try:
             refreshed_user = await self.cync.refresh_credentials()
         except AuthFailedError as ex:

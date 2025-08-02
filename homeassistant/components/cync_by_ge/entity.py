@@ -23,12 +23,9 @@ class CyncBaseEntity(CoordinatorEntity):
         self._name = device.name
         self._room_name = room_name
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device registry information for this entity."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{self._device.unique_id}")},
-            manufacturer="Cync by Savant",
+            manufacturer="GE Lighting",
             name=self._device.name,
             suggested_area=self._room_name,
         )

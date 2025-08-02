@@ -8,7 +8,7 @@
         },
         "data_description": {
           "email": "Your account's email address",
-          "password": "Your account's email address"
+          "password": "Your account's password"
         }
       },
       "two_factor": {
