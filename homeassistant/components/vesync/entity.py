@@ -1,6 +1,6 @@
 """Common entity for VeSync Component."""
 
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -35,7 +35,7 @@ class VeSyncBaseEntity(CoordinatorEntity[VeSyncDataCoordinator]):
     @property
     def available(self) -> bool:
         """Return True if device is available."""
-        return self.device.connection_status == "online"
+        return self.device.state.connection_status == "online"
 
     @property
     def device_info(self) -> DeviceInfo:
