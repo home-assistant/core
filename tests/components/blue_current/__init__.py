@@ -10,7 +10,8 @@ from unittest.mock import MagicMock, patch
 from bluecurrent_api import Client
 
 from homeassistant.components.blue_current import EVSE_ID, PLUG_AND_CHARGE
-from homeassistant.components.blue_current.const import PUBLIC_CHARGING
+from homeassistant.components.blue_current.const import PUBLIC_CHARGING, UID
+from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -87,6 +88,16 @@ def create_client_mock(
         """Send the grid status to the callback."""
         await client_mock.receiver({"object": "GRID_STATUS", "data": grid})
 
+    async def get_charge_cards() -> None:
+        """Send the charge cards list to the callback."""
+        await client_mock.receiver(
+            {
+                "object": "CHARGE_CARDS",
+                "default_card": {UID: "BCU-APP", CONF_ID: "BCU-APP"},
+                "cards": [{UID: "MOCK-CARD", CONF_ID: "MOCK-CARD", "valid": 1}],
+            }
+        )
+
     async def update_charge_point(
         evse_id: str, event_object: str, settings: dict[str, Any]
     ) -> None:
@@ -100,6 +111,7 @@ def create_client_mock(
     client_mock.get_charge_points.side_effect = get_charge_points
     client_mock.get_status.side_effect = get_status
     client_mock.get_grid_status.side_effect = get_grid_status
+    client_mock.get_charge_cards.side_effect = get_charge_cards
     client_mock.update_charge_point = update_charge_point
 
     return client_mock

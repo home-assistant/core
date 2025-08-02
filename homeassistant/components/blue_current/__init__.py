@@ -15,18 +15,26 @@ from bluecurrent_api.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_TOKEN, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.const import CONF_API_TOKEN, CONF_DEVICE_ID, Platform
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    ServiceValidationError,
+)
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
+    BCU_APP,
     CHARGEPOINT_SETTINGS,
     CHARGEPOINT_STATUS,
+    CHARGING_CARD_ID,
     DOMAIN,
     EVSE_ID,
     LOGGER,
     PLUG_AND_CHARGE,
+    START_CHARGE_SESSION,
     VALUE,
 )
 
@@ -34,6 +42,7 @@ type BlueCurrentConfigEntry = ConfigEntry[Connector]
 
 PLATFORMS = [Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
 CHARGE_POINTS = "CHARGE_POINTS"
+CHARGE_CARDS = "CHARGE_CARDS"
 DATA = "data"
 DELAY = 5
 
@@ -64,6 +73,30 @@ async def async_setup_entry(
     config_entry.runtime_data = connector
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
+    async def start_charge_session(service_call: ServiceCall) -> None:
+        """Start a charge session with the provided device and charge card ID."""
+        # When no charge card is provided, use the default charge card set in the config flow.
+        charging_card_id = service_call.data.get(CHARGING_CARD_ID)
+        device_id = service_call.data.get(CONF_DEVICE_ID)
+        if device_id is None:
+            raise ServiceValidationError
+
+        # Get the device based on the given device ID.
+        device = dr.async_get(hass).devices.get(device_id)
+        if device is None:
+            raise ServiceValidationError
+
+        # Get the evse_id from the identifier of the device.
+        evse_id = list(device.identifiers)[0][1]
+
+        # When no charging card is provided, use no charging card (BCU_APP = no charging card).
+        if charging_card_id is None:
+            charging_card_id = BCU_APP
+
+        await connector.client.start_session(evse_id, charging_card_id)
+
+    hass.services.async_register(DOMAIN, START_CHARGE_SESSION, start_charge_session)
+
     return True
 
 
@@ -87,6 +120,7 @@ class Connector:
         self.client = client
         self.charge_points: dict[str, dict] = {}
         self.grid: dict[str, Any] = {}
+        self.charge_cards: dict[str, dict[str, Any]] = {}
 
     async def on_data(self, message: dict) -> None:
         """Handle received data."""
