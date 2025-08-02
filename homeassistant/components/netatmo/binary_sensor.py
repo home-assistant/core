@@ -1,5 +1,9 @@
 """Support for Netatmo binary sensors."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import cast
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -9,15 +13,42 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 
 from .const import NETATMO_CREATE_WEATHER_SENSOR
 from .data_handler import NetatmoDevice
 from .entity import NetatmoWeatherModuleEntity
 
-BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
-    BinarySensorEntityDescription(
+
+def process_status(status: StateType) -> bool | None:
+    """Process status and return boolean for display."""
+    if not isinstance(status, str):
+        return None
+    return {
+        "open": True,
+        "closed": False,
+    }.get(status)
+
+
+@dataclass(frozen=True, kw_only=True)
+class NetatmoBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes Netatmo binary sensor entity."""
+
+    netatmo_name: str
+    value_fn: Callable[[StateType], StateType] = lambda x: x
+
+
+BINARY_SENSOR_TYPES: tuple[NetatmoBinarySensorEntityDescription, ...] = (
+    NetatmoBinarySensorEntityDescription(
         key="reachable",
+        netatmo_name="reachable",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
+    ),
+    NetatmoBinarySensorEntityDescription(
+        key="status",
+        netatmo_name="status",
+        device_class=BinarySensorDeviceClass.OPENING,
+        value_fn=process_status,
     ),
 )
 
@@ -47,16 +78,27 @@ async def async_setup_entry(
 class NetatmoWeatherBinarySensor(NetatmoWeatherModuleEntity, BinarySensorEntity):
     """Implementation of a Netatmo binary sensor."""
 
+    entity_description: NetatmoBinarySensorEntityDescription
+
     def __init__(
-        self, device: NetatmoDevice, description: BinarySensorEntityDescription
+        self, device: NetatmoDevice, description: NetatmoBinarySensorEntityDescription
     ) -> None:
         """Initialize a Netatmo binary sensor."""
         super().__init__(device)
         self.entity_description = description
+        self._attr_translation_key = description.netatmo_name
         self._attr_unique_id = f"{self.device.entity_id}-{description.key}"
 
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        self._attr_is_on = self.device.reachable
+        value = cast(
+            StateType, getattr(self.device, self.entity_description.netatmo_name)
+        )
+
+        if value is None:
+            self._attr_is_on = None
+        else:
+            self._attr_is_on = bool(self.entity_description.value_fn(value))
+
         self.async_write_ha_state()
