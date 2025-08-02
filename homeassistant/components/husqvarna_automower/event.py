@@ -36,7 +36,7 @@ async def async_setup_entry(
     Entities are created dynamically based on messages received from the API,
     but only for mowers that support message events.
     """
-    coordinator: AutomowerDataUpdateCoordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
     entity_registry = er.async_get(hass)
 
     restored_mowers = {
