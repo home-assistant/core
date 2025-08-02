@@ -1638,6 +1638,7 @@ pyefergy==22.5.0
 pyegps==0.2.5
 
 # homeassistant.components.emoncms
+# homeassistant.components.emoncms_history
 pyemoncms==0.1.2
 
 # homeassistant.components.enphase_envoy
