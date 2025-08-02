@@ -1,8 +1,10 @@
 """Test Habitica sensor platform."""
 
 from collections.abc import Generator
+from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -11,7 +13,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
@@ -30,6 +32,7 @@ async def test_sensors(
     config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test setup of the Habitica sensor platform."""
 
@@ -38,5 +41,8 @@ async def test_sensors(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)

@@ -60,7 +60,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the habitica binary sensors."""
 
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.user
 
     async_add_entities(
         HabiticaBinarySensorEntity(coordinator, description)

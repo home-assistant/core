@@ -249,7 +249,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up buttons from a config entry."""
 
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.user
     skills_added: set[str] = set()
 
     @callback

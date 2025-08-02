@@ -3,13 +3,18 @@
 from habiticalib import Habitica
 
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_API_USER, DOMAIN, X_CLIENT
-from .coordinator import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
+from .coordinator import (
+    HabiticaConfigEntry,
+    HabiticaDataUpdateCoordinator,
+    HabiticaPartyCoordinator,
+    HabiticaRuntimeData,
+)
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -53,9 +58,41 @@ async def async_setup_entry(
     coordinator = HabiticaDataUpdateCoordinator(hass, config_entry, api)
     await coordinator.async_config_entry_first_refresh()
 
-    config_entry.runtime_data = coordinator
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    config_entry.runtime_data = HabiticaRuntimeData(coordinator)
 
+    @callback
+    def add_coordinator() -> None:
+        """Add or remove party coordinator."""
+
+        if (
+            coordinator.data.user.party._id is not None  # noqa: SLF001
+            and config_entry.runtime_data.party is None
+        ):
+            party_coordinator = HabiticaPartyCoordinator(hass, config_entry, api)
+
+            config_entry.async_create_task(
+                hass,
+                party_coordinator.async_config_entry_first_refresh(),
+            )
+
+            config_entry.runtime_data.party = party_coordinator
+
+        elif (
+            coordinator.data.user.party._id is None  # noqa: SLF001
+            and config_entry.runtime_data.party is not None
+        ):
+
+            async def shutdown() -> None:
+                if config_entry.runtime_data.party is not None:
+                    await config_entry.runtime_data.party.async_shutdown()
+                    config_entry.runtime_data.party = None
+
+            config_entry.async_create_task(hass, shutdown())
+
+    coordinator.async_add_listener(add_coordinator)
+    add_coordinator()
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
 
 
