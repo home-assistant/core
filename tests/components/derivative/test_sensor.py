@@ -332,8 +332,8 @@ async def test_data_moving_average_with_zeroes(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    assert len(events[2:]) == len(times)
-    for time, event in zip(times, events[2:], strict=True):
+    assert len(events[1:]) == len(times)
+    for time, event in zip(times, events[1:], strict=True):
         state = event.data["new_state"]
         derivative = round(float(state.state), config["sensor"]["round"])
 
@@ -882,12 +882,12 @@ async def test_unavailable_boot(
                     "sensor.power",
                     restore_state,
                     {
-                        "unit_of_measurement": "W",
+                        "unit_of_measurement": "kWh/s",
                     },
                 ),
                 {
                     "native_value": restore_state,
-                    "native_unit_of_measurement": "W",
+                    "native_unit_of_measurement": "kWh/s",
                 },
             ),
         ],
@@ -917,7 +917,7 @@ async def test_unavailable_boot(
     base = dt_util.utcnow()
     with freeze_time(base) as freezer:
         freezer.move_to(base + timedelta(seconds=1))
-        hass.states.async_set(entity_id, 10, {})
+        hass.states.async_set(entity_id, 10, {"unit_of_measurement": "kWh"})
         await hass.async_block_till_done()
 
         state = hass.states.get("sensor.power")
@@ -927,10 +927,11 @@ async def test_unavailable_boot(
         assert state.state == restore_state
 
         freezer.move_to(base + timedelta(seconds=2))
-        hass.states.async_set(entity_id, 15, {})
+        hass.states.async_set(entity_id, 15, {"unit_of_measurement": "kWh"})
         await hass.async_block_till_done()
 
         state = hass.states.get("sensor.power")
         assert state is not None
         # Now that the source sensor has two valid datapoints, we can calculate derivative
         assert state.state == "5.00"
+        assert state.attributes.get("unit_of_measurement") == "kWh/s"
