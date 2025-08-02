@@ -1000,6 +1000,9 @@ gassist-text==0.0.14
 # homeassistant.components.google
 gcal-sync==8.0.0
 
+# homeassistant.components.aladdin_connect
+genie-partner-sdk==1.0.6
+
 # homeassistant.components.geniushub
 geniushub-client==0.7.1
 

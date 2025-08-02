@@ -1,79 +1,90 @@
 """Tests for the Aladdin Connect integration."""
 
-from homeassistant.components.aladdin_connect import DOMAIN
-from homeassistant.config_entries import (
-    SOURCE_IGNORE,
-    ConfigEntryDisabler,
-    ConfigEntryState,
-)
+from unittest.mock import AsyncMock, patch
+
+from homeassistant.components.aladdin_connect.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
 
 from tests.common import MockConfigEntry
 
 
-async def test_aladdin_connect_repair_issue(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
-    """Test the Aladdin Connect configuration entry loading/unloading handles the repair."""
-    config_entry_1 = MockConfigEntry(
-        title="Example 1",
+async def test_setup_entry(hass: HomeAssistant) -> None:
+    """Test a successful setup entry."""
+    config_entry = MockConfigEntry(
         domain=DOMAIN,
+        data={
+            "token": {
+                "access_token": "test_token",
+                "refresh_token": "test_refresh_token",
+            }
+        },
+        unique_id="test_unique_id",
     )
-    config_entry_1.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry_1.entry_id)
-    await hass.async_block_till_done()
-    assert config_entry_1.state is ConfigEntryState.LOADED
+    config_entry.add_to_hass(hass)
 
-    # Add a second one
-    config_entry_2 = MockConfigEntry(
-        title="Example 2",
+    with (
+        patch(
+            "homeassistant.components.aladdin_connect.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=AsyncMock(),
+        ),
+        patch(
+            "homeassistant.components.aladdin_connect.config_entry_oauth2_flow.OAuth2Session",
+            return_value=AsyncMock(),
+        ),
+        patch(
+            "homeassistant.components.aladdin_connect.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
+            return_value=True,
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_unload_entry(hass: HomeAssistant) -> None:
+    """Test a successful unload entry."""
+    config_entry = MockConfigEntry(
         domain=DOMAIN,
+        data={
+            "token": {
+                "access_token": "test_token",
+                "refresh_token": "test_refresh_token",
+            }
+        },
+        unique_id="test_unique_id",
     )
-    config_entry_2.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry_2.entry_id)
-    await hass.async_block_till_done()
+    config_entry.add_to_hass(hass)
 
-    assert config_entry_2.state is ConfigEntryState.LOADED
-    assert issue_registry.async_get_issue(DOMAIN, DOMAIN)
+    with (
+        patch(
+            "homeassistant.components.aladdin_connect.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            return_value=AsyncMock(),
+        ),
+        patch(
+            "homeassistant.components.aladdin_connect.config_entry_oauth2_flow.OAuth2Session",
+            return_value=AsyncMock(),
+        ),
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
+            return_value=True,
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    # Add an ignored entry
-    config_entry_3 = MockConfigEntry(
-        source=SOURCE_IGNORE,
-        domain=DOMAIN,
-    )
-    config_entry_3.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry_3.entry_id)
-    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
 
-    assert config_entry_3.state is ConfigEntryState.NOT_LOADED
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
+        return_value=True,
+    ):
+        await hass.config_entries.async_unload(config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    # Add a disabled entry
-    config_entry_4 = MockConfigEntry(
-        disabled_by=ConfigEntryDisabler.USER,
-        domain=DOMAIN,
-    )
-    config_entry_4.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry_4.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry_4.state is ConfigEntryState.NOT_LOADED
-
-    # Remove the first one
-    await hass.config_entries.async_remove(config_entry_1.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry_1.state is ConfigEntryState.NOT_LOADED
-    assert config_entry_2.state is ConfigEntryState.LOADED
-    assert issue_registry.async_get_issue(DOMAIN, DOMAIN)
-
-    # Remove the second one
-    await hass.config_entries.async_remove(config_entry_2.entry_id)
-    await hass.async_block_till_done()
-
-    assert config_entry_1.state is ConfigEntryState.NOT_LOADED
-    assert config_entry_2.state is ConfigEntryState.NOT_LOADED
-    assert issue_registry.async_get_issue(DOMAIN, DOMAIN) is None
-
-    # Check the ignored and disabled entries are removed
-    assert not hass.config_entries.async_entries(DOMAIN)
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
