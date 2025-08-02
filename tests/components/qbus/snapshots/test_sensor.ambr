@@ -809,7 +809,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'light',
+    'translation_key': None,
     'unique_id': 'ctd_000001_21007_light',
     'unit_of_measurement': 'lx',
   })
@@ -1024,7 +1024,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'wind',
+    'translation_key': None,
     'unique_id': 'ctd_000001_21007_wind',
     'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
   })
