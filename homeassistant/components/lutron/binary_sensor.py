@@ -10,12 +10,11 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN, LutronData
-from .aiolip import LIPGroupState, LutronController, OccupancyGroup
-from .entity import LutronBaseEntity
+from .aiolip import LIPGroupState, OccupancyGroup
+from .entity import LutronBaseEntity, LutronControllerBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,31 +65,21 @@ class LutronOccupancySensor(LutronBaseEntity, BinarySensorEntity):
         self.async_write_ha_state()
 
 
-class LutronControllerConnectivitySensor(BinarySensorEntity):
+class LutronControllerConnectivitySensor(
+    LutronControllerBaseEntity, BinarySensorEntity
+):
     """Representation of the controller connection status."""
 
     _attr_should_poll = True
-    _attr_has_entity_name = True
+    _attr_name = "Connection Status"
+    _attr_is_on = False
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
-
-    def __init__(self, controller: LutronController) -> None:
-        """Initialize the controller entity."""
-        self._controller = controller
-        self._attr_name = "Connection Status"
-        self._attr_is_on = False
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, controller.guid)},
-            name="Lutron Controller",
-            manufacturer="Lutron",
-            model=controller.lip.controller_type.name.lower(),
-            sw_version="NA",
-        )
 
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
 
-        return self._controller.guid
+        return f"{self._controller.guid} connection_status"
 
     def update(self) -> None:
         """Update the connection status."""

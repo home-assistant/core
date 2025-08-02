@@ -189,3 +189,26 @@ class LutronKeypadComponent(LutronBaseEntity):
             self._update_callback,
         )
         await self._request_state()
+
+
+class LutronControllerBaseEntity(Entity):
+    """Representation of the controller entity."""
+
+    _attr_has_entity_name = True
+
+    def __init__(self, controller: LutronController) -> None:
+        """Initialize the controller entity."""
+        self._controller = controller
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, controller.guid)},
+            name="Lutron Controller",
+            manufacturer="Lutron",
+            model=controller.lip.controller_type.name.lower(),
+            sw_version="NA",
+        )
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+
+        return self._controller.guid
