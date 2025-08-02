@@ -93,8 +93,6 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
 
     _attr_supported_features = HumidifierEntityFeature.MODES
 
-    # device: VeSyncHumidifierDevice
-
     def __init__(
         self,
         device: VeSyncBaseDevice,
