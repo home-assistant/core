@@ -5,5 +5,5 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/emoncms",
   "iot_class": "local_polling",
-  "requirements": ["pyemoncms==0.1.1"]
+  "requirements": ["pyemoncms==0.1.2"]
 }
