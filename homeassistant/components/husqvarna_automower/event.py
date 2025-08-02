@@ -5,7 +5,11 @@ import logging
 
 from aioautomower.model import SingleMessageData
 
-from homeassistant.components.event import EventEntity, EventEntityDescription
+from homeassistant.components.event import (
+    DOMAIN as EVENT_DOMAIN,
+    EventEntity,
+    EventEntityDescription,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -41,40 +45,43 @@ async def async_setup_entry(
 ) -> None:
     """Set up Automower message event entities.
 
-    Not all mowers support message events, so we create entities
-    only for those that do. The entities are created dynamically
-    based on the messages received from the API.
+    Entities are created dynamically based on messages received from the API,
+    but only for mowers that support message events.
     """
     coordinator: AutomowerDataUpdateCoordinator = config_entry.runtime_data
-
     entity_registry = er.async_get(hass)
-    entries = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
 
-    seen_mowers: set[str] = set()
-    for entry in entries:
-        if entry.unique_id.endswith("_message"):
-            mower_id = entry.unique_id.removesuffix("_message")
-            seen_mowers.add(mower_id)
+    restored_mowers = {
+        entry.unique_id.removesuffix("_message")
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if entry.domain == EVENT_DOMAIN
+    }
 
-    def _add_for_mower(mower_id: str) -> None:
-        seen_mowers.add(mower_id)
-        entities = [
+    def create_entities_for_mower(mower_id: str) -> list[AutomowerMessageEventEntity]:
+        return [
             AutomowerMessageEventEntity(mower_id, coordinator, desc)
             for desc in EVENT_DESCRIPTIONS
         ]
-        async_add_entities(entities)
 
-    # Restore and clean up seen mowers
-    for mower_id in seen_mowers.copy():
+    # Restore existing entities
+    entities_to_restore: list[AutomowerMessageEventEntity] = []
+    for mower_id in restored_mowers.copy():
         if mower_id in coordinator.data:
-            _add_for_mower(mower_id)
+            entities_to_restore.extend(create_entities_for_mower(mower_id))
+
+    async_add_entities(entities_to_restore)
 
     @callback
-    def _on_single_message(msg: SingleMessageData) -> None:
-        if msg.id not in seen_mowers:
-            _add_for_mower(msg.id)
+    def _handle_message(msg: SingleMessageData) -> None:
+        if msg.id in restored_mowers:
+            return
 
-    coordinator.api.register_single_message_callback(_on_single_message)
+        restored_mowers.add(msg.id)
+        async_add_entities(create_entities_for_mower(msg.id))
+
+    coordinator.api.register_single_message_callback(_handle_message)
 
 
 class AutomowerMessageEventEntity(AutomowerBaseEntity, EventEntity):

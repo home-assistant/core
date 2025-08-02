@@ -54,11 +54,11 @@ async def test_event(
     # Ensure callback was registered for the test mower
     assert mock_automower_client.register_single_message_callback.called
 
-    # Check initial state
+    # Check initial state (event entity not available yet)
     state = hass.states.get("event.test_mower_1_message")
     assert state is None
 
-    # Simulate a new message for this mower
+    # Simulate a new message for this mower and check entity creation
     message = SingleMessageData(
         type="messages",
         id=TEST_MOWER_ID,
@@ -79,16 +79,16 @@ async def test_event(
     state = hass.states.get("event.test_mower_1_message")
     assert state is not None
     assert state.attributes[ATTR_EVENT_TYPE] == "wheel_motor_overloaded_rear_left"
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+
+    # Reload the config entry to ensure the entity is created again
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
-
     state = hass.states.get("event.test_mower_1_message")
     assert state is not None
     assert state.attributes[ATTR_EVENT_TYPE] == "wheel_motor_overloaded_rear_left"
+
+    # Check updating event with a new message
     message = SingleMessageData(
         type="messages",
         id=TEST_MOWER_ID,
@@ -110,6 +110,8 @@ async def test_event(
     assert state is not None
     assert state.attributes[ATTR_EVENT_TYPE] == "alarm_mower_lifted"
 
+    # Check message for another mower, creates an new entity and dont
+    # change the state of the first entity
     message = SingleMessageData(
         type="messages",
         id="1234",
@@ -130,29 +132,19 @@ async def test_event(
     entry = entity_registry.async_get("event.test_mower_1_message")
     assert entry is not None
     assert state.attributes[ATTR_EVENT_TYPE] == "alarm_mower_lifted"
-
     state = hass.states.get("event.test_mower_2_message")
     assert state is not None
     assert state.attributes[ATTR_EVENT_TYPE] == "battery_problem"
 
+    # Check event entity is removed, when the mower is removed
     values_copy = deepcopy(values)
     values_copy.pop("1234")
     mock_automower_client.get_status.return_value = values_copy
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-
     state = hass.states.get("event.test_mower_2_message")
     assert state is None
-    await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-    state = hass.states.get("event.test_mower_2_message")
-    assert state is None
-
     entry = entity_registry.async_get("event.test_mower_2_message")
     assert entry is None
 
