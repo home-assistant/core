@@ -48,7 +48,7 @@ class LutronBaseEntity(Entity):
                 if not self._controller.use_full_path
                 else f"{area.location} {area.name}"
             )
-        return "No Area"
+        return ""
 
     @property
     def device_name(self) -> str:
@@ -57,6 +57,7 @@ class LutronBaseEntity(Entity):
             return (
                 f"{self.area_name} {lutron_device.name}"
                 if self._controller.use_area_for_device_name
+                and self.area_name is not None
                 else lutron_device.name
             )
         return "No Name"
@@ -117,9 +118,28 @@ class LutronOutput(LutronBaseEntity):
 
 
 class LutronVariable(LutronBaseEntity):
-    """Representation of a Lutron output device entity."""
+    """Representation of a Lutron variable entity.
+
+    It's connected to the controller device.
+    """
 
     _lutron_device: Sysvar
+
+    def __init__(
+        self,
+        lutron_device: Device,
+        controller: LutronController,
+    ) -> None:
+        """Initialize the device. Assign to the controller device."""
+        super().__init__(lutron_device, controller)
+        self._attr_name = lutron_device.name
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, controller.guid)},
+            name="Lutron Controller",
+            manufacturer="Lutron",
+            model=controller.lip.controller_type.name.lower(),
+            sw_version="NA",
+        )
 
 
 class LutronKeypadComponent(LutronBaseEntity):
@@ -176,7 +196,7 @@ class LutronKeypadComponent(LutronBaseEntity):
 
         return (
             f"{self.area_name} {self.keypad_name}"
-            if self._controller.use_area_for_device_name
+            if self._controller.use_area_for_device_name and self.area_name is not None
             else self.keypad_name
         )
 
