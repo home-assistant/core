@@ -1,6 +1,6 @@
 """Test the Teslemetry sensor platform."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -26,6 +26,7 @@ async def test_sensors(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the sensor entities with the legacy polling are correct."""
 
@@ -33,9 +34,7 @@ async def test_sensors(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Force the vehicle to use polling
-    with patch("tesla_fleet_api.teslemetry.Vehicle.pre2021", return_value=True):
-        entry = await setup_platform(hass, [Platform.SENSOR])
+    entry = await setup_platform(hass, [Platform.SENSOR])
 
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 

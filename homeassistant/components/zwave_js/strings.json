@@ -108,6 +108,10 @@
       "start_addon": {
         "title": "Configuring add-on"
       },
+      "confirm_usb_migration": {
+        "description": "You are about to migrate your Z-Wave network from the old adapter to the new adapter {usb_title}. This will take a backup of the network from the old adapter and restore the network to the new adapter.\n\nPress Submit to continue with the migration.",
+        "title": "Migrate to a new adapter"
+      },
       "zeroconf_confirm": {
         "description": "Do you want to add the Z-Wave Server with home ID {home_id} found at {url} to Home Assistant?",
         "title": "Discovered Z-Wave Server"
@@ -199,8 +203,8 @@
       }
     },
     "sensor": {
-      "average_background_rssi": {
-        "name": "Average background RSSI (channel {channel})"
+      "avg_signal_noise": {
+        "name": "Avg. signal noise (channel {channel})"
       },
       "can": {
         "name": "Collisions"
@@ -215,9 +219,6 @@
           "ready": "Ready",
           "unresponsive": "Unresponsive"
         }
-      },
-      "current_background_rssi": {
-        "name": "Current background RSSI (channel {channel})"
       },
       "last_seen": {
         "name": "Last seen"
@@ -238,11 +239,14 @@
           "unknown": "Unknown"
         }
       },
-      "rssi": {
-        "name": "RSSI"
-      },
       "rtt": {
         "name": "Round trip time"
+      },
+      "signal_noise": {
+        "name": "Signal noise (channel {channel})"
+      },
+      "signal_strength": {
+        "name": "Signal strength"
       },
       "successful_commands": {
         "name": "Successful commands ({direction})"
@@ -270,7 +274,7 @@
         },
         "step": {
           "init": {
-            "description": "The device configuration file for {device_name} has changed.\n\nZ-Wave discovers a lot of device metadata by interviewing the device. However, some of the information has to be loaded from a configuration file. Some of this information is only evaluated once, during the device interview.\n\nWhen a device config file is updated, this information may be stale and and the device must be re-interviewed to pick up the changes.\n\n This is not a required operation and device functionality will be impacted during the re-interview process, but you may see improvements for your device once it is complete.\n\nIf you decide to proceed with the re-interview, it will take place in the background.",
+            "description": "The device configuration file for {device_name} has changed.\n\nZ-Wave discovers a lot of device metadata by interviewing the device. However, some of the information has to be loaded from a configuration file. Some of this information is only evaluated once, during the device interview.\n\nWhen a device config file is updated, this information may be stale and the device must be re-interviewed to pick up the changes.\n\nThis is not a required operation and device functionality will be impacted during the re-interview process, but you may see improvements for your device once it is complete.\n\nIf you decide to proceed with the re-interview, it will take place in the background.\n\nNote: Battery-powered sleeping devices need to be woken up during re-interview for it to work. How to wake up the device is device-specific and is normally explained in the device manual.",
             "menu_options": {
               "confirm": "Re-interview device",
               "ignore": "Ignore device config update"

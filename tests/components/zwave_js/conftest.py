@@ -538,6 +538,24 @@ def zcombo_smoke_co_alarm_state_fixture() -> NodeDataType:
     )
 
 
+@pytest.fixture(name="nabu_casa_zwa2_state")
+def nabu_casa_zwa2_state_fixture() -> NodeDataType:
+    """Load node with fixture data for Nabu Casa ZWA-2."""
+    return cast(
+        NodeDataType,
+        load_json_object_fixture("nabu_casa_zwa2_state.json", DOMAIN),
+    )
+
+
+@pytest.fixture(name="nabu_casa_zwa2_legacy_state")
+def nabu_casa_zwa2_legacy_state_fixture() -> NodeDataType:
+    """Load node with fixture data for Nabu Casa ZWA-2 (legacy firmware)."""
+    return cast(
+        NodeDataType,
+        load_json_object_fixture("nabu_casa_zwa2_legacy_state.json", DOMAIN),
+    )
+
+
 # model fixtures
 
 
@@ -1356,5 +1374,25 @@ def zcombo_smoke_co_alarm_fixture(
 ) -> Node:
     """Load node for ZCombo-G Smoke/CO Alarm."""
     node = Node(client, zcombo_smoke_co_alarm_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="nabu_casa_zwa2")
+def nabu_casa_zwa2_fixture(
+    client: MagicMock, nabu_casa_zwa2_state: NodeDataType
+) -> Node:
+    """Load node for Nabu Casa ZWA-2."""
+    node = Node(client, nabu_casa_zwa2_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="nabu_casa_zwa2_legacy")
+def nabu_casa_zwa2_legacy_fixture(
+    client: MagicMock, nabu_casa_zwa2_legacy_state: NodeDataType
+) -> Node:
+    """Load node for Nabu Casa ZWA-2 (legacy firmware)."""
+    node = Node(client, nabu_casa_zwa2_legacy_state)
     client.driver.controller.nodes[node.node_id] = node
     return node
