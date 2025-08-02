@@ -613,7 +613,7 @@ def async_wait_for_driver_ready_event(
 
     @callback
     def driver_ready_received(event: dict) -> None:
-        "Receive the driver ready event."
+        """Receive the driver ready event."""
         driver_ready_event_received.set()
 
     unsubscribers.append(driver.once("driver ready", driver_ready_received))
