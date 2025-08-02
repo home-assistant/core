@@ -423,6 +423,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/emoncms/ @borpin @alexandrecuer
 /tests/components/emoncms/ @borpin @alexandrecuer
 /homeassistant/components/emoncms_history/ @alexandrecuer
+/tests/components/emoncms_history/ @alexandrecuer
 /homeassistant/components/emonitor/ @bdraco
 /tests/components/emonitor/ @bdraco
 /homeassistant/components/emulated_hue/ @bdraco @Tho85
