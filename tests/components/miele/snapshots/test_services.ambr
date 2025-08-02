@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_services_with_response
+# name: test_services_with_response[get_programs]
   dict({
     'programs': list([
       dict({
@@ -48,6 +48,58 @@
         }),
         'program': 'Ristretto',
         'program_id': 24000,
+      }),
+    ]),
+  })
+# ---
+# name: test_services_with_response[get_rooms]
+  dict({
+    'rooms': list([
+      dict({
+        'map_id': 1,
+        'rooms': list([
+          dict({
+            'name': 'Favorite area #2',
+            'room_id': 2,
+          }),
+          dict({
+            'name': 'Favorite area #5',
+            'room_id': 5,
+          }),
+          dict({
+            'name': 'Favorite area #6',
+            'room_id': 6,
+          }),
+        ]),
+      }),
+      dict({
+        'map_id': 2,
+        'rooms': list([
+          dict({
+            'name': 'Bathroom',
+            'room_id': 2,
+          }),
+          dict({
+            'name': 'Hallway',
+            'room_id': 1,
+          }),
+          dict({
+            'name': 'Kitchen',
+            'room_id': 5,
+          }),
+          dict({
+            'name': 'Livingroom',
+            'room_id': 8,
+          }),
+          dict({
+            'name': 'Entrance area',
+            'room_id': 12,
+          }),
+          dict({
+            'name': 'Bedroom',
+            'room_id': 4,
+          }),
+        ]),
       }),
     ]),
   })
