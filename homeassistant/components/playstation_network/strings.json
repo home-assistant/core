@@ -158,6 +158,9 @@
     "notify": {
       "group_message": {
         "name": "Group: {group_name}"
+      },
+      "direct_message": {
+        "name": "Direct message"
       }
     }
   }
