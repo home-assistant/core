@@ -252,7 +252,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # Determine fan modes
         self._fan_mode_dp_code: str | None = None
         if enum_type := self.find_dpcode(
-            (DPCode.FAN_SPEED_ENUM, DPCode.WINDSPEED),
+            (DPCode.FAN_SPEED_ENUM, DPCode.LEVEL, DPCode.WINDSPEED),
             dptype=DPType.ENUM,
             prefer_function=True,
         ):
