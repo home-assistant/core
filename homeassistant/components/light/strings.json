@@ -37,6 +37,23 @@
     "field_xy_color_name": "XY-color",
     "section_advanced_fields_name": "Advanced options"
   },
+  "conditions": {
+    "state": {
+      "name": "State",
+      "description": "If lights are in a specific state, such as on or off.",
+      "description_configured": "If light states match",
+      "fields": {
+        "state": {
+          "name": "State",
+          "description": "The state to match."
+        },
+        "behavior": {
+          "name": "Behavior",
+          "description": "How the state should match on the targeted lights."
+        }
+      }
+    }
+  },
   "device_automation": {
     "action_type": {
       "brightness_decrease": "Decrease {entity_name} brightness",

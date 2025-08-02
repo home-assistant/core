@@ -1,4 +1,9 @@
 {
+  "conditions": {
+    "state": {
+      "condition": "mdi:state-machine"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:lightbulb",
