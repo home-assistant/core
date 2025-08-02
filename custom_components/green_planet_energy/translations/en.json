@@ -1,0 +1,51 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "Dienst ist bereits konfiguriert"
+    },
+    "error": {
+      "cannot_connect": "Verbindung zur Green Planet Energy API fehlgeschlagen",
+      "unknown": "Unbekannter Fehler aufgetreten"
+    },
+    "step": {
+      "user": {
+        "description": "Setup f\u00fcr die Green Planet Energy Strompreis-Integration",
+        "title": "Green Planet Energy"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "price_09": {
+        "name": "Strompreis 09:00"
+      },
+      "price_10": {
+        "name": "Strompreis 10:00"
+      },
+      "price_11": {
+        "name": "Strompreis 11:00"
+      },
+      "price_12": {
+        "name": "Strompreis 12:00"
+      },
+      "price_13": {
+        "name": "Strompreis 13:00"
+      },
+      "price_14": {
+        "name": "Strompreis 14:00"
+      },
+      "price_15": {
+        "name": "Strompreis 15:00"
+      },
+      "price_16": {
+        "name": "Strompreis 16:00"
+      },
+      "price_17": {
+        "name": "Strompreis 17:00"
+      },
+      "price_18": {
+        "name": "Strompreis 18:00"
+      }
+    }
+  }
+}

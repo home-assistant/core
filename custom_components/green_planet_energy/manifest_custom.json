@@ -1,0 +1,10 @@
+{
+  "domain": "green_planet_energy",
+  "name": "Green Planet Energy",
+  "version": "1.0.0",
+  "config_flow": true,
+  "documentation": "https://github.com/petschni/home-assistant-green-planet-energy",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "codeowners": ["@petschni"]
+}

@@ -1,0 +1,7 @@
+rules:
+  # Bronze level (mandatory)
+  config-flow: done
+  entity-unique-id: done
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions.

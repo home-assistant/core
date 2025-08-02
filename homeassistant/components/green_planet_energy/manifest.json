@@ -1,0 +1,10 @@
+{
+  "domain": "green_planet_energy",
+  "name": "Green Planet Energy",
+  "codeowners": ["@petschni"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/green_planet_energy",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze"
+}

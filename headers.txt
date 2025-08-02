@@ -1,0 +1,10 @@
+HTTP/2 200 
+accept-ranges: bytes
+cache-control: max-age=0, no-cache, no-store, must-revalidate
+content-type: text/html
+date: Sat, 02 Aug 2025 19:50:34 GMT
+expires: 0
+pragma: no-cache
+server: Apache/2.4.65 (Unix)
+vary: Accept-Encoding
+
