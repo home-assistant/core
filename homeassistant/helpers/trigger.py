@@ -608,10 +608,15 @@ async def async_get_all_descriptions(
     new_descriptions_cache = descriptions_cache.copy()
     for missing_trigger in missing_triggers:
         domain = triggers[missing_trigger]
+        trigger_description_key = (
+            platform_and_sub_type[1]
+            if len(platform_and_sub_type := missing_trigger.split(".")) > 1
+            else missing_trigger
+        )
 
         if (
             yaml_description := new_triggers_descriptions.get(domain, {}).get(  # type: ignore[union-attr]
-                missing_trigger
+                trigger_description_key
             )
         ) is None:
             _LOGGER.debug(
