@@ -836,6 +836,35 @@ class StartTimerIntentHandler(intent.IntentHandler):
             # Fail early if this is not a delayed command
             raise TimersNotSupportedError(intent_obj.device_id)
 
+        # Validate conversation command if provided
+        if conversation_command:
+            from homeassistant.components.conversation import (  # noqa: PLC0415
+                DATA_DEFAULT_ENTITY,
+                ConversationInput,
+            )
+
+            # Create a conversation input to test the command
+            test_input = ConversationInput(
+                text=conversation_command,
+                language=intent_obj.language,
+                device_id=intent_obj.device_id,
+                conversation_id=None,
+                context=intent_obj.context,
+                agent_id=intent_obj.conversation_agent_id
+                or "conversation.home_assistant",
+            )
+
+            # Try to recognize the intent to validate the command
+            default_agent = hass.data[DATA_DEFAULT_ENTITY]
+            recognize_result = await default_agent.async_recognize_intent(
+                test_input, strict_intents_only=True
+            )
+            if recognize_result is None:
+                raise intent.IntentHandleError(
+                    f"Invalid conversation command: {conversation_command}",
+                    "invalid_conversation_command",
+                )
+
         name: str | None = None
         if "name" in slots:
             name = slots["name"]["value"]
