@@ -32,6 +32,8 @@ from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
+ATTR_CURRENT_AREA = "current_area"
+
 
 class OperationalState(IntEnum):
     """Operational State of the vacuum cleaner.
@@ -101,8 +103,18 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     _supported_run_modes: (
         dict[int, clusters.RvcRunMode.Structs.ModeOptionStruct] | None
     ) = None
+    _attr_current_area: int | None = None
     entity_description: StateVacuumEntityDescription
     _platform_translation_key = "vacuum"
+
+    _extra_attrs = {
+        ATTR_CURRENT_AREA: _attr_current_area,
+    }
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes of the entity."""
+        return self._extra_attrs
 
     def _get_run_mode_by_tag(
         self, tag: ModeTag
@@ -260,6 +272,10 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             self._attr_battery_level = self.get_matter_attribute_value(
                 clusters.PowerSource.Attributes.BatPercentRemaining
             )
+        # optional current area
+        self._attr_current_area = self.get_matter_attribute_value(
+            clusters.ServiceArea.Attributes.CurrentArea
+        )
         # derive state from the run mode + operational state
         run_mode_raw: int = self.get_matter_attribute_value(
             clusters.RvcRunMode.Attributes.CurrentMode
@@ -286,7 +302,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
                 state = VacuumActivity.IDLE
             elif ModeTag.MAPPING in tags:
                 state = VacuumActivity.CLEANING
-        self._attr_activity = state
+            self._attr_activity = state
 
     @callback
     def _calculate_features(self) -> None:
@@ -345,7 +361,12 @@ DISCOVERY_SCHEMAS = [
             clusters.RvcRunMode.Attributes.CurrentMode,
             clusters.RvcOperationalState.Attributes.OperationalState,
         ),
-        optional_attributes=(clusters.PowerSource.Attributes.BatPercentRemaining,),
+        optional_attributes=(
+            clusters.PowerSource.Attributes.BatPercentRemaining,
+            clusters.RvcRunMode.Attributes.SupportedModes,
+            clusters.ServiceArea.Attributes.SelectedAreas,
+            clusters.ServiceArea.Attributes.CurrentArea,
+        ),
         device_type=(device_types.RoboticVacuumCleaner,),
         allow_none_value=True,
     ),
