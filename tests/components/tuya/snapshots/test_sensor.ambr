@@ -2122,7 +2122,7 @@
     'state': '0.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_ch1-entry]
+# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2137,7 +2137,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_ch1',
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2149,7 +2149,7 @@
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
-    'original_name': 'Outdoor humidity CH1',
+    'original_name': 'Outdoor humidity channel 1',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2159,23 +2159,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_ch1-state]
+# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Outdoor humidity CH1',
+      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Outdoor humidity channel 1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_ch1',
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '99.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_ch2-entry]
+# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2190,7 +2190,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_ch2',
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2202,7 +2202,7 @@
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
-    'original_name': 'Outdoor humidity CH2',
+    'original_name': 'Outdoor humidity channel 2',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2212,23 +2212,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_ch2-state]
+# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Outdoor humidity CH2',
+      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Outdoor humidity channel 2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_ch2',
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_ch3-entry]
+# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2243,7 +2243,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_ch3',
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2255,7 +2255,7 @@
     }),
     'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
     'original_icon': None,
-    'original_name': 'Outdoor humidity CH3',
+    'original_name': 'Outdoor humidity channel 3',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2265,16 +2265,16 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_ch3-state]
+# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Outdoor humidity CH3',
+      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Outdoor humidity channel 3',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_ch3',
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2393,7 +2393,7 @@
     'state': '-40.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_ch1-entry]
+# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2408,7 +2408,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_ch1',
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2423,7 +2423,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Probe temperature CH1',
+    'original_name': 'Probe temperature channel 1',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2433,23 +2433,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_ch1-state]
+# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Probe temperature CH1',
+      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Probe temperature channel 1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_ch1',
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '19.3',
   })
 # ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_ch2-entry]
+# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2464,7 +2464,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_ch2',
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2479,7 +2479,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Probe temperature CH2',
+    'original_name': 'Probe temperature channel 2',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2489,23 +2489,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_ch2-state]
+# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Probe temperature CH2',
+      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Probe temperature channel 2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_ch2',
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25.2',
   })
 # ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_ch3-entry]
+# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2520,7 +2520,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_ch3',
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2535,7 +2535,7 @@
     }),
     'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Probe temperature CH3',
+    'original_name': 'Probe temperature channel 3',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2545,16 +2545,16 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_ch3-state]
+# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Probe temperature CH3',
+      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Probe temperature channel 3',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_ch3',
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
