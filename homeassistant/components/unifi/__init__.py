@@ -11,7 +11,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, PLATFORMS, UNIFI_WIRELESS_CLIENTS
+from .const import CONF_CLIENT_SOURCE, DOMAIN, PLATFORMS, UNIFI_WIRELESS_CLIENTS
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import UnifiHub, get_unifi_api
 from .services import async_setup_services
@@ -73,13 +73,47 @@ async def async_unload_entry(
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: UnifiConfigEntry, device_entry: DeviceEntry
 ) -> bool:
-    """Remove config entry from a device."""
-    hub = config_entry.runtime_data
-    return not any(
+    """Remove config entry from a device.
+
+    Allow removal of devices to improve user experience.
+    Users should be able to clean up their device registry.
+    The device will be re-discovered if it's still active on the network.
+
+    When a device is removed, also clean up tracking lists to prevent
+    automatic re-addition if track new devices is disabled.
+    """
+    # Get MAC addresses from device connections
+    mac_addresses = {
         identifier
-        for _, identifier in device_entry.connections
-        if identifier in hub.api.clients or identifier in hub.api.devices
-    )
+        for connection_type, identifier in device_entry.connections
+        if connection_type == "mac"
+    }
+
+    if mac_addresses:
+        # Remove from wireless clients tracking
+        wireless_clients = hass.data.get(UNIFI_WIRELESS_CLIENTS)
+        if wireless_clients:
+            wireless_clients.remove_clients(mac_addresses)
+
+        # Remove from client source configuration to prevent re-addition
+        current_options = dict(config_entry.options)
+        client_sources = current_options.get(CONF_CLIENT_SOURCE, [])
+
+        if client_sources:
+            # Remove any matching MAC addresses from the client source list
+            updated_sources = [
+                mac for mac in client_sources if mac not in mac_addresses
+            ]
+
+            if len(updated_sources) != len(client_sources):
+                # Update config entry options if changes were made
+                current_options[CONF_CLIENT_SOURCE] = updated_sources
+                hass.config_entries.async_update_entry(
+                    config_entry, options=current_options
+                )
+
+    # Always allow device removal for better user experience
+    return True
 
 
 class UnifiWirelessClients:
@@ -126,6 +160,13 @@ class UnifiWirelessClients:
         self.wireless_clients.update(
             {client.mac for client in clients if not client.is_wired}
         )
+        self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
+
+    @callback
+    def remove_clients(self, mac_addresses: set[str]) -> None:
+        """Remove clients from tracking and schedule save to file."""
+        for mac in mac_addresses:
+            self.wireless_clients.discard(mac)
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback

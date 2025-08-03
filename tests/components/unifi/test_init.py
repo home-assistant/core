@@ -3,7 +3,6 @@
 from typing import Any
 from unittest.mock import patch
 
-from aiounifi.models.message import MessageKey
 import pytest
 
 from homeassistant.components import unifi
@@ -19,11 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
-from .conftest import (
-    DEFAULT_CONFIG_ENTRY_ID,
-    ConfigEntryFactoryType,
-    WebsocketMessageMock,
-)
+from .conftest import DEFAULT_CONFIG_ENTRY_ID, ConfigEntryFactoryType
 
 from tests.common import flush_store
 from tests.typing import WebSocketGenerator
@@ -169,7 +164,6 @@ async def test_remove_config_entry_device(
     config_entry_factory: ConfigEntryFactoryType,
     client_payload: list[dict[str, Any]],
     device_payload: list[dict[str, Any]],
-    mock_websocket_message: WebsocketMessageMock,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Verify removing a device manually."""
@@ -178,36 +172,44 @@ async def test_remove_config_entry_device(
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
-    # Try to remove an active client from UI: not allowed
+    # Try to remove an active client from UI: now allowed for better UX
     device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])}
     )
+
+    # Add client to tracking configuration first
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={
+            **config_entry.options,
+            "client_source": [client_payload[0]["mac"], "other_mac_address"],
+        },
+    )
+
+    # Verify client is in wireless tracking before removal
+    wireless_clients = hass.data[unifi.UNIFI_WIRELESS_CLIENTS]
+    wireless_clients.wireless_clients.add(client_payload[0]["mac"])
+
     response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
-    assert not response["success"]
-    assert device_registry.async_get_device(
+    assert response["success"]
+    assert not device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])}
     )
 
-    # Try to remove an active device from UI: not allowed
-    device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, device_payload[0]["mac"])}
-    )
-    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
-    assert not response["success"]
-    assert device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, device_payload[0]["mac"])}
-    )
-
-    # Remove a client from Unifi API
-    mock_websocket_message(message=MessageKey.CLIENT_REMOVED, data=[client_payload[1]])
+    # Verify client was removed from tracking configuration
     await hass.async_block_till_done()
+    assert client_payload[0]["mac"] not in config_entry.options.get("client_source", [])
+    assert "other_mac_address" in config_entry.options.get("client_source", [])
 
-    # Try to remove an inactive client from UI: allowed
+    # Verify client was removed from wireless tracking
+    assert client_payload[0]["mac"] not in wireless_clients.wireless_clients
+
+    # Try to remove an active device from UI: now allowed for better UX
     device_entry = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, client_payload[1]["mac"])}
+        connections={(dr.CONNECTION_NETWORK_MAC, device_payload[0]["mac"])}
     )
     response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
     assert response["success"]
     assert not device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, client_payload[1]["mac"])}
+        connections={(dr.CONNECTION_NETWORK_MAC, device_payload[0]["mac"])}
     )
