@@ -843,7 +843,6 @@ class StartTimerIntentHandler(intent.IntentHandler):
                 ConversationInput,
             )
 
-            # Create a conversation input to test the command
             test_input = ConversationInput(
                 text=conversation_command,
                 language=intent_obj.language,
@@ -854,7 +853,6 @@ class StartTimerIntentHandler(intent.IntentHandler):
                 or "conversation.home_assistant",
             )
 
-            # Try to recognize the intent to validate the command
             default_agent = hass.data[DATA_DEFAULT_ENTITY]
             recognize_result = await default_agent.async_recognize_intent(
                 test_input, strict_intents_only=True
