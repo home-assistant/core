@@ -172,7 +172,7 @@ async def test_remove_config_entry_device(
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
-    # Try to remove an active client from UI: now allowed for better UX
+    # Try to remove an active client from UI: removal is now allowed for better UX
     device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])}
     )

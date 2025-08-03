@@ -92,7 +92,7 @@ async def async_remove_config_entry_device(
     if mac_addresses:
         # Remove from wireless clients tracking
         wireless_clients = hass.data.get(UNIFI_WIRELESS_CLIENTS)
-        if wireless_clients:
+        if wireless_clients and hasattr(wireless_clients, "remove_clients"):
             wireless_clients.remove_clients(mac_addresses)
 
         # Remove from client source configuration to prevent re-addition
