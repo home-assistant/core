@@ -80,8 +80,6 @@ class AutomowerMessageEventEntity(AutomowerBaseEntity, EventEntity):
         """Initialize Automower message event entity."""
         super().__init__(mower_id, coordinator)
         self._attr_unique_id = f"{mower_id}_message"
-        self.mower_id = mower_id
-        self._message_cb = self._handle
 
     @callback
     def _handle(self, msg: SingleMessageData) -> None:
@@ -102,8 +100,8 @@ class AutomowerMessageEventEntity(AutomowerBaseEntity, EventEntity):
     async def async_added_to_hass(self) -> None:
         """Register callback when entity is added to hass."""
         await super().async_added_to_hass()
-        self.coordinator.api.register_single_message_callback(self._message_cb)
+        self.coordinator.api.register_single_message_callback(self._handle)
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister WebSocket callback when entity is removed."""
-        self.coordinator.api.unregister_single_message_callback(self._message_cb)
+        self.coordinator.api.unregister_single_message_callback(self._handle)
