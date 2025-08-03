@@ -77,6 +77,15 @@ async def async_setup_entry(
         supports_response=SupportsResponse.ONLY,
     )
 
+    # This will call Entity.clean_area
+    platform.async_register_entity_service(
+        SERVICE_CLEAN_AREA,
+        schema={
+            vol.Required("areas"): vol.All(cv.ensure_list, [cv.positive_int]),
+        },
+        func="clean_area",
+        supports_response=SupportsResponse.ONLY,
+    )
     # This will call Entity.select_areas
     platform.async_register_entity_service(
         SERVICE_SELECT_AREAS,
@@ -226,6 +235,19 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         # Return response indicating selected areas.
         return cast(
             ServiceResponse, {"status": "areas selected", "areas": selected_areas}
+        )
+
+    async def clean_area(self, areas: list[int], **kwargs: Any) -> ServiceResponse:
+        """Start cleaning the specified areas."""
+        # Matter command to the vacuum cleaner to select the areas.
+        await self.send_device_command(
+            clusters.ServiceArea.Commands.SelectAreas(newAreas=areas)
+        )
+        # Start the vacuum cleaner after selecting areas.
+
+        # Return response indicating selected areas.
+        return cast(
+            ServiceResponse, {"status": "cleaning areas selected", "areas": areas}
         )
 
     @callback
