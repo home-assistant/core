@@ -67,8 +67,13 @@ class VerisureAlarm(
         )
         LOGGER.debug("Verisure set arm state %s", state)
         result = None
-        while result is None:
-            await asyncio.sleep(0.5)
+        attempts = 0
+        while result != "OK":
+            if attempts == 30:
+                break
+            if attempts > 1:
+                await asyncio.sleep(0.5)
+            attempts += 1
             transaction = await self.hass.async_add_executor_job(
                 self.coordinator.verisure.request,
                 self.coordinator.verisure.poll_arm_state(
@@ -81,9 +86,10 @@ class VerisureAlarm(
                 .get("armStateChangePollResult", {})
                 .get("result")
             )
-
-        self._attr_alarm_state = ALARM_STATE_TO_HA.get(state)
-        self.async_write_ha_state()
+            LOGGER.debug("Result is %s", result)
+        if result == "OK":
+            self._attr_alarm_state = ALARM_STATE_TO_HA.get(state)
+            self.async_write_ha_state()
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
