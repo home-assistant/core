@@ -503,7 +503,7 @@
         "name": "Probe temperature"
       },
       "indexed_temperature_external": {
-        "name": "Probe temperature CH{index}"
+        "name": "Probe temperature channel {index}"
       },
       "humidity": {
         "name": "[%key:component::sensor::entity_component::humidity::name%]"
@@ -512,10 +512,10 @@
         "name": "Outdoor humidity"
       },
       "indexed_humidity_outdoor": {
-        "name": "Outdoor humidity CH{index}"
+        "name": "Outdoor humidity channel {index}"
       },
       "air_pressure": {
-        "name": "Air Pressure"
+        "name": "Air pressure"
       },
       "pm25": {
         "name": "[%key:component::sensor::entity_component::pm25::name%]"

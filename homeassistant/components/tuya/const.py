@@ -109,7 +109,7 @@ class DPCode(StrEnum):
     ANION = "anion"  # Ionizer unit
     ARM_DOWN_PERCENT = "arm_down_percent"
     ARM_UP_PERCENT = "arm_up_percent"
-    ATMOSPHERIC_PRESSURE = "atmospheric_pressture"  # Typo is in Tuya API
+    ATMOSPHERIC_PRESSTURE = "atmospheric_pressture"  # Typo is in Tuya API
     BASIC_ANTI_FLICKER = "basic_anti_flicker"
     BASIC_DEVICE_VOLUME = "basic_device_volume"
     BASIC_FLIP = "basic_flip"
