@@ -8,57 +8,65 @@ from homeassistant.components.datadog import async_setup_entry
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_LOGBOOK_ENTRY, STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .common import MOCK_DATA, MOCK_OPTIONS, create_mock_state
 
-from tests.common import EVENT_STATE_CHANGED, MockConfigEntry, assert_setup_component
+from tests.common import EVENT_STATE_CHANGED, MockConfigEntry
 
 
 async def test_invalid_config(hass: HomeAssistant) -> None:
     """Test invalid configuration."""
-    with assert_setup_component(0):
-        assert not await async_setup_component(
-            hass, datadog.DOMAIN, {datadog.DOMAIN: {"host1": "host1"}}
-        )
+    entry = MockConfigEntry(
+        domain=datadog.DOMAIN,
+        data={"host1": "host1"},
+    )
+    entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(entry.entry_id)
 
 
 async def test_datadog_setup_full(hass: HomeAssistant) -> None:
     """Test setup with all data."""
-    config = {datadog.DOMAIN: {"host": "host", "port": 123, "rate": 1, "prefix": "foo"}}
-
     with (
-        patch(
-            "homeassistant.components.datadog.config_flow.DogStatsd"
-        ) as mock_dogstatsd,
+        patch("homeassistant.components.datadog.DogStatsd") as mock_dogstatsd,
     ):
-        assert await async_setup_component(hass, datadog.DOMAIN, config)
+        entry = MockConfigEntry(
+            domain=datadog.DOMAIN,
+            data={
+                "host": "host",
+                "port": 123,
+            },
+            options={
+                "rate": 1,
+                "prefix": "foo",
+            },
+        )
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
         assert mock_dogstatsd.call_count == 1
-        assert mock_dogstatsd.call_args == mock.call("host", 123)
+        assert mock_dogstatsd.call_args == mock.call(
+            host="host", port=123, namespace="foo", disable_telemetry=True
+        )
 
 
 async def test_datadog_setup_defaults(hass: HomeAssistant) -> None:
     """Test setup with defaults."""
     with (
-        patch(
-            "homeassistant.components.datadog.config_flow.DogStatsd"
-        ) as mock_dogstatsd,
+        patch("homeassistant.components.datadog.DogStatsd") as mock_dogstatsd,
     ):
-        assert await async_setup_component(
-            hass,
-            datadog.DOMAIN,
-            {
-                datadog.DOMAIN: {
-                    "host": "host",
-                    "port": datadog.DEFAULT_PORT,
-                    "prefix": datadog.DEFAULT_PREFIX,
-                }
-            },
+        entry = MockConfigEntry(
+            domain=datadog.DOMAIN,
+            data=MOCK_DATA,
+            options=MOCK_OPTIONS,
         )
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
 
         assert mock_dogstatsd.call_count == 1
-        assert mock_dogstatsd.call_args == mock.call("host", 8125)
+        assert mock_dogstatsd.call_args == mock.call(
+            host="localhost", port=8125, namespace="hass", disable_telemetry=True
+        )
 
 
 async def test_logbook_entry(hass: HomeAssistant) -> None:
@@ -70,24 +78,24 @@ async def test_logbook_entry(hass: HomeAssistant) -> None:
         ),
     ):
         mock_statsd = mock_statsd_class.return_value
-
-        assert await async_setup_component(
-            hass,
-            datadog.DOMAIN,
-            {
-                datadog.DOMAIN: {
-                    "host": "host",
-                    "port": datadog.DEFAULT_PORT,
-                    "rate": datadog.DEFAULT_RATE,
-                    "prefix": datadog.DEFAULT_PREFIX,
-                }
+        entry = MockConfigEntry(
+            domain=datadog.DOMAIN,
+            data={
+                "host": datadog.DEFAULT_HOST,
+                "port": datadog.DEFAULT_PORT,
+            },
+            options={
+                "rate": datadog.DEFAULT_RATE,
+                "prefix": datadog.DEFAULT_PREFIX,
             },
         )
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
 
         event = {
             "domain": "automation",
             "entity_id": "sensor.foo.bar",
-            "message": "foo bar biz",
+            "message": "foo bar baz",
             "name": "triggered something",
         }
         hass.bus.async_fire(EVENT_LOGBOOK_ENTRY, event)
@@ -110,18 +118,16 @@ async def test_state_changed(hass: HomeAssistant) -> None:
         ),
     ):
         mock_statsd = mock_statsd_class.return_value
-
-        assert await async_setup_component(
-            hass,
-            datadog.DOMAIN,
-            {
-                datadog.DOMAIN: {
-                    "host": "host",
-                    "prefix": "ha",
-                    "rate": datadog.DEFAULT_RATE,
-                }
+        entry = MockConfigEntry(
+            domain=datadog.DOMAIN,
+            data={
+                "host": "host",
+                "port": datadog.DEFAULT_PORT,
             },
+            options={"prefix": "ha", "rate": datadog.DEFAULT_RATE},
         )
+        entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
 
         valid = {"1": 1, "1.0": 1.0, STATE_ON: 1, STATE_OFF: 0}
 
@@ -191,14 +197,18 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
 async def test_state_changed_skips_unknown(hass: HomeAssistant) -> None:
     """Test state_changed_listener skips None and unknown states."""
-    entry = MockConfigEntry(domain=datadog.DOMAIN, data=MOCK_DATA, options=MOCK_OPTIONS)
-    entry.add_to_hass(hass)
-
     with (
         patch(
             "homeassistant.components.datadog.config_flow.DogStatsd"
         ) as mock_dogstatsd,
     ):
+        entry = MockConfigEntry(
+            domain=datadog.DOMAIN,
+            data=MOCK_DATA,
+            options=MOCK_OPTIONS,
+        )
+        entry.add_to_hass(hass)
+
         await async_setup_entry(hass, entry)
 
         # Test None state
