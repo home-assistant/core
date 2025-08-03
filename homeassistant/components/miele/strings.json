@@ -122,6 +122,28 @@
       "name": "Washing machine"
     }
   },
+  "device_automation": {
+    "condition_type": {
+      "autocleaning": "{entity_name} is autocleaning",
+      "failure": "{entity_name} has failed",
+      "idle": "{entity_name} is idle",
+      "not_connected": "{entity_name} is not connected",
+      "off": "{entity_name} is off",
+      "on": "{entity_name} is on",
+      "pause": "{entity_name} is pausing",
+      "program_ended": "{entity_name} has ended program",
+      "program_interrupted": "{entity_name} has interrupted program",
+      "programmed": "{entity_name} is programmed",
+      "rinse_hold": "{entity_name} is in rinse hold",
+      "in_use": "{entity_name} is in use",
+      "service": "{entity_name} is in service",
+      "supercooling": "{entity_name} Supercooling is active",
+      "supercooling_superfreezing": "{entity_name} Supercooling/superfreezing is active",
+      "superfreezing": "{entity_name} Superfreezing is active",
+      "superheating": "{entity_name} Superheating is active",
+      "waiting_to_start": "{entity_name} is waiting to start"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "failure": {
