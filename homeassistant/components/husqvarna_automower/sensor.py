@@ -42,7 +42,6 @@ PARALLEL_UPDATES = 0
 
 ATTR_WORK_AREA_ID_ASSIGNMENT = "work_area_id_assignment"
 
-
 ERROR_KEY_LIST = sorted(
     set(ERROR_KEYS) | {state.lower() for state in ERROR_STATES} | {"no_error"}
 )

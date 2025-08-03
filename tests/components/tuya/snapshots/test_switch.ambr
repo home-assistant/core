@@ -464,7 +464,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'socket_1',
+    'translation_key': 'indexed_socket',
     'unique_id': 'tuya.eb0c772dabbb19d653ssi5switch_1',
     'unit_of_measurement': None,
   })
@@ -513,7 +513,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'socket_2',
+    'translation_key': 'indexed_socket',
     'unique_id': 'tuya.eb0c772dabbb19d653ssi5switch_2',
     'unit_of_measurement': None,
   })
@@ -658,7 +658,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_1',
+    'translation_key': 'indexed_switch',
     'unique_id': 'tuya.0665305284f3ebe9fdc1switch_1',
     'unit_of_measurement': None,
   })
@@ -995,7 +995,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_1',
+    'translation_key': 'indexed_switch',
     'unique_id': 'tuya.bf082711d275c0c883vb4pswitch_1',
     'unit_of_measurement': None,
   })
@@ -1044,7 +1044,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_2',
+    'translation_key': 'indexed_switch',
     'unique_id': 'tuya.bf082711d275c0c883vb4pswitch_2',
     'unit_of_measurement': None,
   })
@@ -1093,7 +1093,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_3',
+    'translation_key': 'indexed_switch',
     'unique_id': 'tuya.bf082711d275c0c883vb4pswitch_3',
     'unit_of_measurement': None,
   })
@@ -1142,7 +1142,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_4',
+    'translation_key': 'indexed_switch',
     'unique_id': 'tuya.bf082711d275c0c883vb4pswitch_4',
     'unit_of_measurement': None,
   })
@@ -1155,6 +1155,54 @@
     }),
     'context': <ANY>,
     'entity_id': 'switch.4_433_switch_4',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[tyndj_pyakuuoc][switch.solar_zijpad_energy_saving-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.solar_zijpad_energy_saving',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Energy saving',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_saving',
+    'unique_id': 'tuya.bfdb773e4ae317e3915h2iswitch_save_energy',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[tyndj_pyakuuoc][switch.solar_zijpad_energy_saving-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Solar zijpad Energy saving',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.solar_zijpad_energy_saving',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
