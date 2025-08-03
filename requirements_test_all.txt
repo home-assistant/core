@@ -292,7 +292,7 @@ aiolookin==1.0.0
 aiolyric==2.0.1
 
 # homeassistant.components.mealie
-aiomealie==0.10.0
+aiomealie==0.10.1
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -1074,7 +1074,7 @@ igloohome-api==0.1.1
 imeon_inverter_api==0.3.14
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.5.1
+imgw_pib==1.5.2
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.9
@@ -2054,7 +2054,7 @@ python-mpd2==3.1.1
 python-mystrom==2.4.0
 
 # homeassistant.components.open_router
-python-open-router==0.3.0
+python-open-router==0.3.1
 
 # homeassistant.components.swiss_public_transport
 python-opendata-transport==0.5.0
