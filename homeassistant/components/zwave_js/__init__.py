@@ -105,7 +105,6 @@ from .const import (
     CONF_USB_PATH,
     CONF_USE_ADDON,
     DOMAIN,
-    DRIVER_READY_TIMEOUT,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     EVENT_VALUE_UPDATED,
     LIB_LOGGER,
@@ -136,6 +135,7 @@ from .models import ZwaveJSConfigEntry, ZwaveJSData
 from .services import async_setup_services
 
 CONNECT_TIMEOUT = 10
+DRIVER_READY_TIMEOUT = 60
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -365,6 +365,16 @@ class DriverEvents:
                 self.controller_events.async_on_node_added(node)
                 for node in controller.nodes.values()
                 if node != controller.own_node
+            )
+        )
+
+        # listen for driver ready event to reload the config entry
+        self.config_entry.async_on_unload(
+            driver.on(
+                "driver ready",
+                lambda _: self.hass.config_entries.async_schedule_reload(
+                    self.config_entry.entry_id
+                ),
             )
         )
 

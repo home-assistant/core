@@ -62,9 +62,12 @@ from .const import (
     CONF_USB_PATH,
     CONF_USE_ADDON,
     DOMAIN,
-    DRIVER_READY_TIMEOUT,
 )
-from .helpers import CannotConnect, async_get_version_info
+from .helpers import (
+    CannotConnect,
+    async_get_version_info,
+    async_wait_for_driver_ready_event,
+)
 from .models import ZwaveJSConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -1396,19 +1399,15 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     event["bytesWritten"] / event["total"] * 0.5 + 0.5
                 )
 
-        @callback
-        def set_driver_ready(event: dict) -> None:
-            "Set the driver ready event."
-            wait_driver_ready.set()
-
         driver = self._get_driver()
         controller = driver.controller
-        wait_driver_ready = asyncio.Event()
         unsubs = [
             controller.on("nvm convert progress", forward_progress),
             controller.on("nvm restore progress", forward_progress),
-            driver.once("driver ready", set_driver_ready),
         ]
+
+        wait_for_driver_ready = async_wait_for_driver_ready_event(config_entry, driver)
+
         try:
             await controller.async_restore_nvm(
                 self.backup_data, {"preserveRoutes": False}
@@ -1417,8 +1416,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             raise AbortFlow(f"Failed to restore network: {err}") from err
         else:
             with suppress(TimeoutError):
-                async with asyncio.timeout(DRIVER_READY_TIMEOUT):
-                    await wait_driver_ready.wait()
+                await wait_for_driver_ready()
             try:
                 version_info = await async_get_version_info(
                     self.hass, config_entry.data[CONF_URL]
@@ -1435,10 +1433,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(
                     config_entry, unique_id=str(version_info.home_id)
                 )
-            await self.hass.config_entries.async_reload(config_entry.entry_id)
 
-            # Reload the config entry two times to clean up
-            # the stale device entry.
+            # The config entry will be also be reloaded when the driver is ready,
+            # by the listener in the package module,
+            # and two reloads are needed to clean up the stale controller device entry.
             # Since both the old and the new controller have the same node id,
             # but different hardware identifiers, the integration
             # will create a new device for the new controller, on the first reload,

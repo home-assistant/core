@@ -2262,3 +2262,38 @@ async def test_entity_available_when_node_dead(
     state = hass.states.get(BULB_6_MULTI_COLOR_LIGHT_ENTITY)
     assert state
     assert state.state != STATE_UNAVAILABLE
+
+
+async def test_driver_ready_event(
+    hass: HomeAssistant,
+    client: MagicMock,
+    integration: MockConfigEntry,
+) -> None:
+    """Test receiving a driver ready event."""
+    config_entry = integration
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    config_entry_state_changes: list[ConfigEntryState] = []
+
+    def on_config_entry_state_change() -> None:
+        """Collect config entry state changes."""
+        config_entry_state_changes.append(config_entry.state)
+
+    config_entry.async_on_state_change(on_config_entry_state_change)
+
+    driver_ready = Event(
+        type="driver ready",
+        data={
+            "source": "driver",
+            "event": "driver ready",
+        },
+    )
+
+    client.driver.receive_event(driver_ready)
+    await hass.async_block_till_done()
+
+    assert len(config_entry_state_changes) == 4
+    assert config_entry_state_changes[0] == ConfigEntryState.UNLOAD_IN_PROGRESS
+    assert config_entry_state_changes[1] == ConfigEntryState.NOT_LOADED
+    assert config_entry_state_changes[2] == ConfigEntryState.SETUP_IN_PROGRESS
+    assert config_entry_state_changes[3] == ConfigEntryState.LOADED
