@@ -6,7 +6,6 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-import aiohttp
 from opower import (
     CannotConnect,
     InvalidAuth,
@@ -19,19 +18,13 @@ from opower import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    SOURCE_REAUTH,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlowWithReload,
-)
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.typing import VolDictType
 
-from .const import CONF_LOGIN_SERVICE_URL, CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
-from .coordinator import OpowerConfigEntry
+from .const import CONF_LOGIN_DATA, CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,8 +34,7 @@ CONF_MFA_METHOD = "mfa_method"
 
 async def _validate_login(
     hass: HomeAssistant,
-    data: Mapping[str, str],
-    options: Mapping[str, str],
+    data: Mapping[str, Any],
 ) -> None:
     """Validate login data and raise exceptions on failure."""
     api = Opower(
@@ -51,30 +43,9 @@ async def _validate_login(
         data[CONF_USERNAME],
         data[CONF_PASSWORD],
         data.get(CONF_TOTP_SECRET),
-        options.get(CONF_LOGIN_SERVICE_URL),
+        data.get(CONF_LOGIN_DATA),
     )
     await api.async_login()
-
-
-async def _validate_login_service(
-    hass: HomeAssistant,
-    user_input: dict[str, str],
-    errors: dict[str, str],
-) -> bool:
-    url = user_input[CONF_LOGIN_SERVICE_URL].rstrip("/")
-    session = async_create_clientsession(hass)
-    try:
-        async with session.get(f"{url}/api/v1/health") as resp:
-            resp.raise_for_status()
-    except aiohttp.ClientError:
-        _LOGGER.warning(
-            "Could not connect to the login service at %s", url, exc_info=True
-        )
-        errors["base"] = "cannot_connect_login_service"
-        return False
-    else:
-        user_input[CONF_LOGIN_SERVICE_URL] = url
-        return True
 
 
 class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -85,7 +56,6 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize a new OpowerConfigFlow."""
         self._data: dict[str, Any] = {}
-        self._options: dict[str, Any] = {}
         self.mfa_handler: MfaHandlerBase | None = None
 
     async def async_step_user(
@@ -94,10 +64,6 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step (select utility)."""
         if user_input is not None:
             self._data[CONF_UTILITY] = user_input[CONF_UTILITY]
-            utility = select_utility(self._data[CONF_UTILITY])
-
-            if utility.requires_headless_login_service():
-                return await self.async_step_login_service()
             return await self.async_step_credentials()
 
         return self.async_show_form(
@@ -105,25 +71,6 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {vol.Required(CONF_UTILITY): vol.In(get_supported_utility_names())}
             ),
-        )
-
-    async def async_step_login_service(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle login service URL step."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            if await _validate_login_service(self.hass, user_input, errors):
-                self._options = user_input
-                return await self.async_step_credentials()
-
-        return self.async_show_form(
-            step_id="login_service",
-            data_schema=self.add_suggested_values_to_schema(
-                vol.Schema({vol.Required(CONF_LOGIN_SERVICE_URL): str}),
-                user_input,
-            ),
-            errors=errors,
         )
 
     async def async_step_credentials(
@@ -144,10 +91,7 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             try:
-                await _validate_login(self.hass, self._data, self._options)
-                return self._async_create_opower_entry(
-                    self._data, options=self._options
-                )
+                await _validate_login(self.hass, self._data)
             except MfaChallenge as exc:
                 self.mfa_handler = exc.handler
                 return await self.async_step_mfa_options()
@@ -155,6 +99,8 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            else:
+                return self._async_create_opower_entry(self._data)
 
         schema_dict: VolDictType = {
             vol.Required(CONF_USERNAME): str,
@@ -182,11 +128,14 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
             method = user_input[CONF_MFA_METHOD]
             try:
                 await self.mfa_handler.async_select_mfa_option(method)
-                return await self.async_step_mfa_code()
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            else:
+                return await self.async_step_mfa_code()
 
         mfa_options = await self.mfa_handler.async_get_mfa_options()
+        if not mfa_options:
+            return await self.async_step_mfa_code()
         return self.async_show_form(
             step_id="mfa_options",
             data_schema=self.add_suggested_values_to_schema(
@@ -205,18 +154,18 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             code = user_input[CONF_MFA_CODE]
             try:
-                await self.mfa_handler.async_submit_mfa_code(code)
-                if self.source == SOURCE_REAUTH:
-                    return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data=self._data
-                    )
-                return self._async_create_opower_entry(
-                    self._data, options=self._options
-                )
+                login_data = await self.mfa_handler.async_submit_mfa_code(code)
             except InvalidAuth:
                 errors["base"] = "invalid_mfa_code"
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            else:
+                self._data[CONF_LOGIN_DATA] = login_data
+                if self.source == SOURCE_REAUTH:
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), data=self._data
+                    )
+                return self._async_create_opower_entry(self._data)
 
         return self.async_show_form(
             step_id="mfa_code",
@@ -258,8 +207,7 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._data.update(user_input)
         try:
-            await _validate_login(self.hass, self._data, reauth_entry.options)
-            return self.async_update_reload_and_abort(reauth_entry, data=self._data)
+            await _validate_login(self.hass, self._data)
         except MfaChallenge as exc:
             self.mfa_handler = exc.handler
             return await self.async_step_mfa_options()
@@ -267,6 +215,8 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except CannotConnect:
             errors["base"] = "cannot_connect"
+        else:
+            return self.async_update_reload_and_abort(reauth_entry, data=self._data)
 
         utility = select_utility(self._data[CONF_UTILITY])
         schema_dict: VolDictType = {
@@ -283,42 +233,4 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
             description_placeholders={CONF_NAME: reauth_entry.title},
-        )
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: OpowerConfigEntry,
-    ) -> OpowerOptionsFlowHandler:
-        """Return the options flow."""
-        return OpowerOptionsFlowHandler()
-
-
-class OpowerOptionsFlowHandler(OptionsFlowWithReload):
-    """Handle Opower options."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        utility = select_utility(self.config_entry.data[CONF_UTILITY])
-        if not utility.requires_headless_login_service():
-            return self.async_abort(reason="no_login_service_required")
-
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            if await _validate_login_service(self.hass, user_input, errors):
-                return self.async_create_entry(title="", data=user_input)
-
-        options_schema = {
-            vol.Required(
-                CONF_LOGIN_SERVICE_URL,
-                default=self.config_entry.options.get(CONF_LOGIN_SERVICE_URL, ""),
-            ): str,
-        }
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(options_schema),
-            errors=errors,
         )

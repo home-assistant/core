@@ -36,7 +36,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_LOGIN_SERVICE_URL, CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
+from .const import CONF_LOGIN_DATA, CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +69,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             config_entry.data[CONF_USERNAME],
             config_entry.data[CONF_PASSWORD],
             config_entry.data.get(CONF_TOTP_SECRET),
-            config_entry.options.get(CONF_LOGIN_SERVICE_URL),
+            config_entry.data.get(CONF_LOGIN_DATA),
         )
 
         @callback

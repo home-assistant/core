@@ -25,9 +25,6 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
             "username": "test-username",
             "password": "test-password",
         },
-        options={
-            "login_service_url": "http://7ef69028-opower-login-service:7937",
-        },
     )
     config_entry.add_to_hass(hass)
     return config_entry

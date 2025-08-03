@@ -1,9 +1,8 @@
 """Test the Opower config flow."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
-import aiohttp
 from opower import CannotConnect, InvalidAuth, MfaChallenge
 import pytest
 
@@ -39,7 +38,7 @@ def mock_unload_entry() -> Generator[AsyncMock]:
 async def test_form(
     recorder_mock: Recorder, hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test we get the form for a utility without special requirements."""
+    """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -49,7 +48,7 @@ async def test_form(
     # Select utility
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"utility": "Enmax Energy"},
+        {"utility": "Pacific Gas and Electric Company (PG&E)"},
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "credentials"
@@ -68,9 +67,9 @@ async def test_form(
         await hass.async_block_till_done()
 
     assert result3["type"] is FlowResultType.CREATE_ENTRY
-    assert result3["title"] == "Enmax Energy (test-username)"
+    assert result3["title"] == "Pacific Gas and Electric Company (PG&E) (test-username)"
     assert result3["data"] == {
-        "utility": "Enmax Energy",
+        "utility": "Pacific Gas and Electric Company (PG&E)",
         "username": "test-username",
         "password": "test-password",
     }
@@ -181,150 +180,6 @@ async def test_form_with_invalid_totp(
     assert mock_login.call_count == 1
 
 
-async def test_form_with_login_service(
-    recorder_mock: Recorder, hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test config flow for a utility that requires the login service."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    # 1. Select utility that requires the login service
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"utility": "Pacific Gas and Electric Company (PG&E)"},
-    )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "login_service"
-
-    # 2. Provide login service URL
-    mock_response = MagicMock()
-    mock_response.raise_for_status = MagicMock()
-    with patch(
-        "aiohttp.ClientSession.get",
-        return_value=AsyncMock(
-            __aenter__=AsyncMock(return_value=mock_response),
-        ),
-    ) as mock_session_get:
-        result3 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"login_service_url": "http://localhost:1234"},
-        )
-        mock_session_get.assert_called_once_with("http://localhost:1234/api/v1/health")
-
-    assert result3["type"] is FlowResultType.FORM
-    assert result3["step_id"] == "credentials"
-
-    # 3. Provide credentials
-    with patch(
-        "homeassistant.components.opower.config_flow.Opower.async_login",
-    ) as mock_login:
-        result4 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result4["type"] is FlowResultType.CREATE_ENTRY
-    assert result4["title"] == "Pacific Gas and Electric Company (PG&E) (test-username)"
-    assert result4["options"] == {"login_service_url": "http://localhost:1234"}
-    assert result4["data"] == {
-        "utility": "Pacific Gas and Electric Company (PG&E)",
-        "username": "test-username",
-        "password": "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-    assert mock_login.call_count == 1
-
-
-async def test_form_login_service_connection_error(
-    recorder_mock: Recorder, hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
-    """Test config flow recovers from a login service connection error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    # 1. Select utility that requires the login service
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {"utility": "Pacific Gas and Electric Company (PG&E)"},
-    )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "login_service"
-
-    # 2. Provide login service URL, but simulate a connection error
-    with patch(
-        "aiohttp.ClientSession.get",
-        side_effect=aiohttp.ClientError,
-    ) as mock_session_get_fail:
-        result3 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"login_service_url": "http://localhost:1234"},
-        )
-        mock_session_get_fail.assert_called_once_with(
-            "http://localhost:1234/api/v1/health"
-        )
-
-    # Assert that the flow shows an error and stays on the same step
-    assert result3["type"] is FlowResultType.FORM
-    assert result3["step_id"] == "login_service"
-    assert result3["errors"] == {"base": "cannot_connect_login_service"}
-
-    # 3. Retry providing the login service URL, this time succeeding
-    mock_response = MagicMock()
-    mock_response.raise_for_status = MagicMock()
-    with patch(
-        "aiohttp.ClientSession.get",
-        return_value=AsyncMock(
-            __aenter__=AsyncMock(return_value=mock_response),
-        ),
-    ) as mock_session_get_success:
-        result4 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"login_service_url": "http://localhost:4321"},
-        )
-        mock_session_get_success.assert_called_once_with(
-            "http://localhost:4321/api/v1/health"
-        )
-
-    # Assert that the flow proceeds to the credentials step
-    assert result4["type"] is FlowResultType.FORM
-    assert result4["step_id"] == "credentials"
-    assert not result4.get("errors")
-
-    # 4. Provide credentials and finish the flow
-    with patch(
-        "homeassistant.components.opower.config_flow.Opower.async_login",
-    ) as mock_login:
-        result5 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                "username": "test-username",
-                "password": "test-password",
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result5["type"] is FlowResultType.CREATE_ENTRY
-    assert result5["title"] == "Pacific Gas and Electric Company (PG&E) (test-username)"
-    assert result5["options"] == {"login_service_url": "http://localhost:4321"}
-    assert result5["data"] == {
-        "utility": "Pacific Gas and Electric Company (PG&E)",
-        "username": "test-username",
-        "password": "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-    assert mock_login.call_count == 1
-
-
 async def test_form_with_mfa_challenge(
     recorder_mock: Recorder, hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -337,23 +192,16 @@ async def test_form_with_mfa_challenge(
         result["flow_id"],
         {"utility": "Pacific Gas and Electric Company (PG&E)"},
     )
-    # The utility requires the login service, so we handle that step first
-    mock_response = MagicMock()
-    mock_response.raise_for_status = MagicMock()
-    with patch(
-        "aiohttp.ClientSession.get",
-        return_value=AsyncMock(
-            __aenter__=AsyncMock(return_value=mock_response),
-        ),
-    ):
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {"login_service_url": "http://localhost:1234"},
-        )
 
     # 2. Trigger an MfaChallenge on login
     mock_mfa_handler = AsyncMock()
-    mock_mfa_handler.async_get_mfa_options.return_value = ["SMS", "Email"]
+    mock_mfa_handler.async_get_mfa_options.return_value = {
+        "Email": "fooxxx@mail.com",
+        "Phone": "xxx-123",
+    }
+    mock_mfa_handler.async_submit_mfa_code.return_value = {
+        "login_data_mock_key": "login_data_mock_value"
+    }
     with patch(
         "homeassistant.components.opower.config_flow.Opower.async_login",
         side_effect=MfaChallenge(message="", handler=mock_mfa_handler),
@@ -375,9 +223,9 @@ async def test_form_with_mfa_challenge(
     # Test CannotConnect on selecting MFA method
     mock_mfa_handler.async_select_mfa_option.side_effect = CannotConnect
     result_mfa_connect_fail = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"mfa_method": "SMS"}
+        result["flow_id"], {"mfa_method": "Email"}
     )
-    mock_mfa_handler.async_select_mfa_option.assert_awaited_once_with("SMS")
+    mock_mfa_handler.async_select_mfa_option.assert_awaited_once_with("Email")
     assert result_mfa_connect_fail["type"] is FlowResultType.FORM
     assert result_mfa_connect_fail["step_id"] == "mfa_options"
     assert result_mfa_connect_fail["errors"] == {"base": "cannot_connect"}
@@ -385,7 +233,7 @@ async def test_form_with_mfa_challenge(
     # Retry selecting MFA method successfully
     mock_mfa_handler.async_select_mfa_option.side_effect = None
     result_mfa_select_ok = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"mfa_method": "SMS"}
+        result["flow_id"], {"mfa_method": "Email"}
     )
     assert mock_mfa_handler.async_select_mfa_option.call_count == 2
     assert result_mfa_select_ok["type"] is FlowResultType.FORM
@@ -431,6 +279,64 @@ async def test_form_with_mfa_challenge(
         "utility": "Pacific Gas and Electric Company (PG&E)",
         "username": "test-username",
         "password": "test-password",
+        "login_data": {"login_data_mock_key": "login_data_mock_value"},
+    }
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_with_mfa_challenge_but_no_mfa_options(
+    recorder_mock: Recorder, hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test the full interactive MFA flow when there are no MFA options."""
+    # 1. Start the flow and get to the credentials step
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"utility": "Pacific Gas and Electric Company (PG&E)"},
+    )
+
+    # 2. Trigger an MfaChallenge on login
+    mock_mfa_handler = AsyncMock()
+    mock_mfa_handler.async_get_mfa_options.return_value = {}
+    mock_mfa_handler.async_submit_mfa_code.return_value = {
+        "login_data_mock_key": "login_data_mock_value"
+    }
+    with patch(
+        "homeassistant.components.opower.config_flow.Opower.async_login",
+        side_effect=MfaChallenge(message="", handler=mock_mfa_handler),
+    ) as mock_login:
+        result_challenge = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+        mock_login.assert_awaited_once()
+
+    # 3. No MFA options. Handle the MFA code step
+    assert result_challenge["type"] is FlowResultType.FORM
+    assert result_challenge["step_id"] == "mfa_code"
+    mock_mfa_handler.async_get_mfa_options.assert_awaited_once()
+    result_final = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"mfa_code": "good-code"}
+    )
+    mock_mfa_handler.async_submit_mfa_code.assert_called_with("good-code")
+
+    # 4. Verify the flow completes and creates the entry
+    assert result_final["type"] is FlowResultType.CREATE_ENTRY
+    assert (
+        result_final["title"]
+        == "Pacific Gas and Electric Company (PG&E) (test-username)"
+    )
+    assert result_final["data"] == {
+        "utility": "Pacific Gas and Electric Company (PG&E)",
+        "username": "test-username",
+        "password": "test-password",
+        "login_data": {"login_data_mock_key": "login_data_mock_value"},
     }
     await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1
@@ -455,7 +361,7 @@ async def test_form_exceptions(
     )
     await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"utility": "Enmax Energy"},
+        {"utility": "Pacific Gas and Electric Company (PG&E)"},
     )
 
     with patch(
@@ -482,25 +388,15 @@ async def test_form_exceptions(
 async def test_form_already_configured(
     recorder_mock: Recorder,
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test user input for config_entry that already exists."""
-    existing_config_entry = MockConfigEntry(
-        title="Enmax Energy (test-username)",
-        domain=DOMAIN,
-        data={
-            "utility": "Enmax Energy",
-            "username": "test-username",
-            "password": "test-password",
-        },
-    )
-    existing_config_entry.add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"utility": "Enmax Energy"},
+        {"utility": "Pacific Gas and Electric Company (PG&E)"},
     )
 
     with patch(
@@ -523,25 +419,15 @@ async def test_form_not_already_configured(
     recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test user input for config_entry different than the existing one."""
-    existing_config_entry = MockConfigEntry(
-        title="Enmax Energy (test-username)",
-        domain=DOMAIN,
-        data={
-            "utility": "Enmax Energy",
-            "username": "test-username",
-            "password": "test-password",
-        },
-    )
-    existing_config_entry.add_to_hass(hass)
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"utility": "Enmax Energy"},
+        {"utility": "Pacific Gas and Electric Company (PG&E)"},
     )
 
     with patch(
@@ -557,9 +443,11 @@ async def test_form_not_already_configured(
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Enmax Energy (test-username2)"
+    assert (
+        result2["title"] == "Pacific Gas and Electric Company (PG&E) (test-username2)"
+    )
     assert result2["data"] == {
-        "utility": "Enmax Energy",
+        "utility": "Pacific Gas and Electric Company (PG&E)",
         "username": "test-username2",
         "password": "test-password",
     }
@@ -738,7 +626,13 @@ async def test_reauth_with_mfa_challenge(
 
     # 4. Trigger the MfaChallenge on the next attempt
     mock_mfa_handler = AsyncMock()
-    mock_mfa_handler.async_get_mfa_options.return_value = ["SMS", "Email"]
+    mock_mfa_handler.async_get_mfa_options.return_value = {
+        "Email": "fooxxx@mail.com",
+        "Phone": "xxx-123",
+    }
+    mock_mfa_handler.async_submit_mfa_code.return_value = {
+        "login_data_mock_key": "login_data_mock_value"
+    }
     with patch(
         "homeassistant.components.opower.config_flow.Opower.async_login",
         side_effect=MfaChallenge(message="", handler=mock_mfa_handler),
@@ -758,9 +652,9 @@ async def test_reauth_with_mfa_challenge(
     mock_mfa_handler.async_get_mfa_options.assert_awaited_once()
 
     result_mfa_code = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"mfa_method": "SMS"}
+        result["flow_id"], {"mfa_method": "Phone"}
     )
-    mock_mfa_handler.async_select_mfa_option.assert_awaited_once_with("SMS")
+    mock_mfa_handler.async_select_mfa_option.assert_awaited_once_with("Phone")
     assert result_mfa_code["type"] is FlowResultType.FORM
     assert result_mfa_code["step_id"] == "mfa_code"
 
@@ -776,60 +670,8 @@ async def test_reauth_with_mfa_challenge(
 
     # Check that data was updated and the entry was reloaded
     assert mock_config_entry.data["password"] == "new-password"
+    assert mock_config_entry.data["login_data"] == {
+        "login_data_mock_key": "login_data_mock_value"
+    }
     assert len(mock_unload_entry.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_options_flow(
-    recorder_mock: Recorder, hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test the options flow for a utility that requires the login service."""
-    # 1. Start the options flow
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    # 2. Simulate a validation failure
-    with patch(
-        "aiohttp.ClientSession.get", side_effect=aiohttp.ClientError
-    ) as mock_get_fail:
-        result_fail = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={"login_service_url": "http://bad-url"},
-        )
-    mock_get_fail.assert_called_once_with("http://bad-url/api/v1/health")
-    assert result_fail["type"] is FlowResultType.FORM
-    assert result_fail["errors"] == {"base": "cannot_connect_login_service"}
-
-    # 3. Simulate a successful validation
-    mock_response = MagicMock()
-    mock_response.raise_for_status = MagicMock()
-    with patch(
-        "aiohttp.ClientSession.get",
-        return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response)),
-    ) as mock_get_success:
-        result_success = await hass.config_entries.options.async_configure(
-            result_fail["flow_id"],
-            user_input={"login_service_url": "http://good-url"},
-        )
-    mock_get_success.assert_called_once_with("http://good-url/api/v1/health")
-
-    # 4. Verify the flow completes and options are updated
-    assert result_success["type"] is FlowResultType.CREATE_ENTRY
-    assert mock_config_entry.options == {"login_service_url": "http://good-url"}
-
-
-async def test_options_flow_no_login_service_required(
-    recorder_mock: Recorder, hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test the options flow aborts for a utility that does not need the login service."""
-    # 1. Update the config entry to use a utility that doesn't need the service
-    hass.config_entries.async_update_entry(
-        mock_config_entry, data={**mock_config_entry.data, "utility": "Enmax Energy"}
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    # 2. Start the options flow and assert that it aborts
-    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_login_service_required"

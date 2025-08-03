@@ -9,7 +9,6 @@ from homeassistant.components.opower.const import DOMAIN
 from homeassistant.components.recorder import Recorder
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
 
 from tests.common import MockConfigEntry
 
@@ -115,45 +114,3 @@ async def test_get_cost_reads_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_entry_missing_login_service_url(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-    mock_opower_api: AsyncMock,
-) -> None:
-    """Test issue is created when login service URL is missing for a utility that requires it."""
-
-    config_entry = MockConfigEntry(
-        title="Pacific Gas & Electric (test-username)",
-        domain=DOMAIN,
-        data={
-            "utility": "Pacific Gas and Electric Company (PG&E)",
-            "username": "test-username",
-            "password": "test-password",
-        },
-        options={},
-    )
-    config_entry.add_to_hass(hass)
-
-    # Setup should fail and create an issue
-    assert not await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
-
-    issue_id = f"login_service_url_missing_{config_entry.entry_id}"
-    issue = ir.async_get(hass).async_get_issue(DOMAIN, issue_id)
-    assert issue
-    assert issue.is_fixable is False
-    assert issue.severity == ir.IssueSeverity.ERROR
-
-    # Now, add the URL via options and re-run setup
-    hass.config_entries.async_update_entry(
-        config_entry, options={"login_service_url": "http://localhost:1234"}
-    )
-    await hass.config_entries.async_reload(config_entry.entry_id)
-
-    # Setup should succeed and the issue should be deleted
-    assert config_entry.state is ConfigEntryState.LOADED
-    issue = ir.async_get(hass).async_get_issue(DOMAIN, issue_id)
-    assert issue is None
