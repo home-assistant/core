@@ -288,7 +288,7 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "home_connect",
-        "hostname": "(siemens|neff)-*",
+        "hostname": "(bosch|neff|siemens)-*",
         "macaddress": "38B4D3*",
     },
     {
@@ -538,6 +538,26 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     {
         "domain": "playstation_network",
         "macaddress": "D44B5E*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "F8D0AC*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "E86E3A*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "FC0FE6*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "9C37CB*",
+    },
+    {
+        "domain": "playstation_network",
+        "macaddress": "84E657*",
     },
     {
         "domain": "powerwall",

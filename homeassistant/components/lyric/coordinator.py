@@ -20,16 +20,18 @@ from .api import OAuth2SessionLyric
 
 _LOGGER = logging.getLogger(__name__)
 
+type LyricConfigEntry = ConfigEntry[LyricDataUpdateCoordinator]
+
 
 class LyricDataUpdateCoordinator(DataUpdateCoordinator[Lyric]):
     """Data update coordinator for Honeywell Lyric."""
 
-    config_entry: ConfigEntry
+    config_entry: LyricConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: LyricConfigEntry,
         oauth_session: OAuth2SessionLyric,
         lyric: Lyric,
     ) -> None:

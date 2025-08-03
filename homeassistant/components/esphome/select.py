@@ -76,7 +76,9 @@ class EsphomeSelect(EsphomeEntity[SelectInfo, SelectState], SelectEntity):
     @convert_api_error_ha_error
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        self._client.select_command(self._key, option)
+        self._client.select_command(
+            self._key, option, device_id=self._static_info.device_id
+        )
 
 
 class EsphomeAssistPipelineSelect(EsphomeAssistEntity, AssistPipelineSelect):

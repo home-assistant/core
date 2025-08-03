@@ -336,7 +336,7 @@ WEATHER_SENSORS: Final[tuple[AemetSensorEntityDescription, ...]] = (
         keys=[AOD_WEATHER, AOD_WIND_DIRECTION],
         name="Wind bearing",
         native_unit_of_measurement=DEGREE,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
         device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     AemetSensorEntityDescription(

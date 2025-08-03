@@ -26,6 +26,7 @@ from homeassistant.const import (
     CONF_SWITCHES,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
@@ -100,7 +101,11 @@ def get_resource(domain_name: str, domain_data: ConfigType) -> str:
         return cast(str, domain_data["setpoint"])
     if domain_name == "scene":
         return f"{domain_data['register']}{domain_data['scene']}"
-    raise ValueError("Unknown domain")
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="invalid_domain",
+        translation_placeholders={CONF_DOMAIN: domain_name},
+    )
 
 
 def generate_unique_id(
@@ -304,6 +309,8 @@ def get_device_config(
 def is_states_string(states_string: str) -> list[str]:
     """Validate the given states string and return states list."""
     if len(states_string) != 8:
-        raise ValueError("Invalid length of states string")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="invalid_length_of_states_string"
+        )
     states = {"1": "ON", "0": "OFF", "T": "TOGGLE", "-": "NOCHANGE"}
     return [states[state_string] for state_string in states_string]

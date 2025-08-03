@@ -44,6 +44,7 @@ class MeaterCoordinator(DataUpdateCoordinator[dict[str, MeaterProbe]]):
         )
         session = async_get_clientsession(hass)
         self.client = MeaterApi(session)
+        self.found_probes: set[str] = set()
 
     async def _async_setup(self) -> None:
         """Set up the Meater Coordinator."""
@@ -73,5 +74,6 @@ class MeaterCoordinator(DataUpdateCoordinator[dict[str, MeaterProbe]]):
             raise UpdateFailed(
                 "Too many requests have been made to the API, rate limiting is in place"
             ) from err
-
-        return {device.id: device for device in devices}
+        res = {device.id: device for device in devices}
+        self.found_probes.update(set(res.keys()))
+        return res

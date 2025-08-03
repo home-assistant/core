@@ -42,5 +42,5 @@ class LaMetricUpdate(LaMetricEntity, UpdateEntity):
     def latest_version(self) -> str | None:
         """Return the latest version of the entity."""
         if not self.coordinator.data.update:
-            return None
+            return self.coordinator.data.os_version
         return self.coordinator.data.update.version

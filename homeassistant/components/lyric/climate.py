@@ -24,7 +24,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
@@ -38,7 +37,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
-    DOMAIN,
     LYRIC_EXCEPTIONS,
     PRESET_HOLD_UNTIL,
     PRESET_NO_HOLD,
@@ -46,7 +44,7 @@ from .const import (
     PRESET_TEMPORARY_HOLD,
     PRESET_VACATION_HOLD,
 )
-from .coordinator import LyricDataUpdateCoordinator
+from .coordinator import LyricConfigEntry, LyricDataUpdateCoordinator
 from .entity import LyricDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -121,11 +119,11 @@ SCHEMA_HOLD_TIME: VolDictType = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: LyricConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Honeywell Lyric climate platform based on a config entry."""
-    coordinator: LyricDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         (

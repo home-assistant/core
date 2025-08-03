@@ -12,7 +12,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import callback
@@ -120,7 +120,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         return await wled.update()
 
 
-class WLEDOptionsFlowHandler(OptionsFlow):
+class WLEDOptionsFlowHandler(OptionsFlowWithReload):
     """Handle WLED options."""
 
     async def async_step_init(
