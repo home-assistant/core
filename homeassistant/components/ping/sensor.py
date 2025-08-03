@@ -72,8 +72,8 @@ SENSORS: tuple[PingSensorEntityDescription, ...] = (
         has_fn=lambda result: "min" in result.data,
     ),
     PingSensorEntityDescription(
-        key="round_trip_time_jitter",
-        translation_key="round_trip_time_jitter",
+        key="jitter",
+        translation_key="jitter",
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DURATION,
