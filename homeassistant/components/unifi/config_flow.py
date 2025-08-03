@@ -20,6 +20,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -130,6 +131,21 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
                 ):
                     return await self.async_step_site({CONF_SITE_ID: reauth_unique_id})
 
+                if (
+                    self.source == SOURCE_RECONFIGURE
+                    and (
+                        (
+                            reconfigure_unique_id
+                            := self._get_reconfigure_entry().unique_id
+                        )
+                        is not None
+                    )
+                    and reconfigure_unique_id in self.sites
+                ):
+                    return await self.async_step_site(
+                        {CONF_SITE_ID: reconfigure_unique_id}
+                    )
+
                 return await self.async_step_site()
 
         if not (host := self.config.get(CONF_HOST, "")) and await _async_discover_unifi(
@@ -168,6 +184,10 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
                 config_entry = self._get_reauth_entry()
                 abort_reason = "reauth_successful"
 
+            if self.source == SOURCE_RECONFIGURE:
+                config_entry = self._get_reconfigure_entry()
+                abort_reason = "reconfigure_successful"
+
             if config_entry:
                 if (
                     config_entry.state is ConfigEntryState.LOADED
@@ -185,6 +205,18 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if len(self.sites.values()) == 1:
             return await self.async_step_site({CONF_SITE_ID: next(iter(self.sites))})
+
+        if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+            # Don't let users change the site. The entry should be
+            # recreated if they want to change the site.
+            # For reauth/reconfigure, use the existing site from the entry
+            if self.source == SOURCE_REAUTH:
+                unique_id = self._get_reauth_entry().unique_id
+            else:  # SOURCE_RECONFIGURE
+                unique_id = self._get_reconfigure_entry().unique_id
+
+            if unique_id and unique_id in self.sites:
+                return await self.async_step_site({CONF_SITE_ID: unique_id})
 
         site_names = {site.site_id: site.description for site in self.sites.values()}
         return self.async_show_form(
@@ -210,6 +242,31 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_PORT, default=reauth_entry.data[CONF_PORT]): int,
             vol.Required(
                 CONF_VERIFY_SSL, default=reauth_entry.data[CONF_VERIFY_SSL]
+            ): bool,
+        }
+
+        return await self.async_step_user()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconfigure the integration."""
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        self.context["title_placeholders"] = {
+            CONF_HOST: reconfigure_entry.data[CONF_HOST],
+            CONF_SITE_ID: reconfigure_entry.title,
+        }
+
+        self.reauth_schema = {
+            vol.Required(CONF_HOST, default=reconfigure_entry.data[CONF_HOST]): str,
+            vol.Required(
+                CONF_USERNAME, default=reconfigure_entry.data[CONF_USERNAME]
+            ): str,
+            vol.Required(CONF_PASSWORD): str,
+            vol.Required(CONF_PORT, default=reconfigure_entry.data[CONF_PORT]): int,
+            vol.Required(
+                CONF_VERIFY_SSL, default=reconfigure_entry.data[CONF_VERIFY_SSL]
             ): bool,
         }
 
