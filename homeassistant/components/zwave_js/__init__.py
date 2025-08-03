@@ -105,7 +105,6 @@ from .const import (
     CONF_USB_PATH,
     CONF_USE_ADDON,
     DOMAIN,
-    DRIVER_READY_TIMEOUT,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     EVENT_VALUE_UPDATED,
     LIB_LOGGER,
@@ -136,6 +135,7 @@ from .models import ZwaveJSConfigEntry, ZwaveJSData
 from .services import async_setup_services
 
 CONNECT_TIMEOUT = 10
+DRIVER_READY_TIMEOUT = 60
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -365,6 +365,16 @@ class DriverEvents:
                 self.controller_events.async_on_node_added(node)
                 for node in controller.nodes.values()
                 if node != controller.own_node
+            )
+        )
+
+        # listen for driver ready event to reload the config entry
+        self.config_entry.async_on_unload(
+            driver.on(
+                "driver ready",
+                lambda _: self.hass.config_entries.async_schedule_reload(
+                    self.config_entry.entry_id
+                ),
             )
         )
 
@@ -1074,23 +1084,32 @@ async def client_listen(
     try:
         await client.listen(driver_ready)
     except BaseZwaveJSServerError as err:
-        if entry.state is not ConfigEntryState.LOADED:
+        if entry.state is ConfigEntryState.SETUP_IN_PROGRESS:
             raise
         LOGGER.error("Client listen failed: %s", err)
     except Exception as err:
         # We need to guard against unknown exceptions to not crash this task.
         LOGGER.exception("Unexpected exception: %s", err)
-        if entry.state is not ConfigEntryState.LOADED:
+        if entry.state is ConfigEntryState.SETUP_IN_PROGRESS:
             raise
+
+    if hass.is_stopping or entry.state is ConfigEntryState.UNLOAD_IN_PROGRESS:
+        return
+
+    if entry.state is ConfigEntryState.SETUP_IN_PROGRESS:
+        raise HomeAssistantError("Listen task ended unexpectedly")
 
     # The entry needs to be reloaded since a new driver state
     # will be acquired on reconnect.
     # All model instances will be replaced when the new state is acquired.
-    if not hass.is_stopping:
-        if entry.state is not ConfigEntryState.LOADED:
-            raise HomeAssistantError("Listen task ended unexpectedly")
+    if entry.state.recoverable:
         LOGGER.debug("Disconnected from server. Reloading integration")
         hass.config_entries.async_schedule_reload(entry.entry_id)
+    else:
+        LOGGER.error(
+            "Disconnected from server. Cannot recover entry %s",
+            entry.title,
+        )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> bool:
