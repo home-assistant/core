@@ -21,7 +21,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -31,7 +30,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.00',
     'via_device_id': None,
   })
@@ -109,7 +107,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -119,7 +116,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.00',
     'via_device_id': None,
   })
@@ -202,7 +198,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -212,7 +207,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.00',
     'via_device_id': None,
   })
@@ -295,7 +289,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -305,7 +298,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.00',
     'via_device_id': None,
   })
@@ -388,7 +380,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -398,7 +389,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.00',
     'via_device_id': None,
   })
@@ -481,7 +471,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -491,7 +480,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.00',
     'via_device_id': None,
   })
@@ -574,7 +562,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -584,7 +571,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.00',
     'via_device_id': None,
   })
@@ -667,7 +653,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -677,7 +662,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.00',
     'via_device_id': None,
   })
@@ -753,7 +737,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -763,7 +746,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.00',
     'via_device_id': None,
   })
@@ -846,7 +828,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -856,7 +837,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.00',
     'via_device_id': None,
   })
@@ -935,7 +915,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -945,7 +924,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.00',
     'via_device_id': None,
   })
@@ -1020,7 +998,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -1030,7 +1007,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -1113,7 +1089,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -1123,7 +1098,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -1206,7 +1180,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -1216,7 +1189,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -1299,7 +1271,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -1309,7 +1280,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -1392,7 +1362,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -1402,7 +1371,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -1485,7 +1453,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -1495,7 +1462,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -1578,7 +1544,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -1588,7 +1553,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -1668,7 +1632,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -1678,7 +1641,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -1761,7 +1723,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -1771,7 +1732,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -1854,7 +1814,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -1864,7 +1823,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -1939,7 +1897,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -1949,7 +1906,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -2028,7 +1984,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -2038,7 +1993,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -2121,7 +2075,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -2131,7 +2084,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -2214,7 +2166,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -2224,7 +2175,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -2307,7 +2257,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -2317,7 +2266,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -2400,7 +2348,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -2410,7 +2357,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -2493,7 +2439,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -2503,7 +2448,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -2586,7 +2530,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -2596,7 +2539,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -2679,7 +2621,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -2689,7 +2630,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -2772,7 +2712,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -2782,7 +2721,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -2865,7 +2803,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -2875,7 +2812,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -2958,7 +2894,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -2968,7 +2903,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -3051,7 +2985,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -3061,7 +2994,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -3144,7 +3076,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -3154,7 +3085,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -3234,7 +3164,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -3244,7 +3173,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -3324,7 +3252,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -3334,7 +3261,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -3414,7 +3340,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -3424,7 +3349,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -3507,7 +3431,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -3517,7 +3440,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -3600,7 +3522,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -3610,7 +3531,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -3693,7 +3613,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -3703,7 +3622,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -3786,7 +3704,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -3796,7 +3713,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -3879,7 +3795,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -3889,7 +3804,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -3972,7 +3886,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -3982,7 +3895,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -4065,7 +3977,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -4075,7 +3986,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -4158,7 +4068,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -4168,7 +4077,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -4251,7 +4159,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -4261,7 +4168,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -4344,7 +4250,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -4354,7 +4259,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -4429,7 +4333,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -4439,7 +4342,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -4518,7 +4420,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -4528,7 +4429,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -4608,7 +4508,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -4618,7 +4517,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -4701,7 +4599,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -4711,7 +4608,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -4794,7 +4690,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -4804,7 +4699,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -4887,7 +4781,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -4897,7 +4790,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -4972,7 +4864,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -4982,7 +4873,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -5065,7 +4955,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -5075,7 +4964,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -5158,7 +5046,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -5168,7 +5055,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -5251,7 +5137,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -5261,7 +5146,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -5344,7 +5228,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -5354,7 +5237,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -5437,7 +5319,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -5447,7 +5328,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -5530,7 +5410,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -5540,7 +5419,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -5623,7 +5501,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -5633,7 +5510,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -5716,7 +5592,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -5726,7 +5601,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -5809,7 +5683,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -5819,7 +5692,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -5902,7 +5774,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -5912,7 +5783,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -5995,7 +5865,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -6005,7 +5874,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -6080,7 +5948,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -6090,7 +5957,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -6170,7 +6036,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -6180,7 +6045,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -6263,7 +6127,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -6273,7 +6136,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -6348,7 +6210,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -6358,7 +6219,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -6441,7 +6301,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -6451,7 +6310,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -6534,7 +6392,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -6544,7 +6401,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -6627,7 +6483,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -6637,7 +6492,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -6712,7 +6566,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -6722,7 +6575,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -6797,7 +6649,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -6807,7 +6658,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -6896,7 +6746,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -6906,7 +6755,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -6989,7 +6837,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -6999,7 +6846,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -7082,7 +6928,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -7092,7 +6937,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -7175,7 +7019,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -7185,7 +7028,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -7268,7 +7110,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -7278,7 +7119,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -7353,7 +7193,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -7363,7 +7202,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -7438,7 +7276,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -7448,7 +7285,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -7523,7 +7359,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -7533,7 +7368,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -7608,7 +7442,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -7618,7 +7451,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -7693,7 +7525,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -7703,7 +7534,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -7778,7 +7608,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -7788,7 +7617,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -7867,7 +7695,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -7877,7 +7704,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -7952,7 +7778,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -7962,7 +7787,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -8037,7 +7861,6 @@
         'gas_meter_G001',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -8047,7 +7870,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'gas_meter_G001',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -8126,7 +7948,6 @@
         'heat_meter_H001',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -8136,7 +7957,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'heat_meter_H001',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -8215,7 +8035,6 @@
         'inlet_heat_meter_IH001',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -8225,7 +8044,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'inlet_heat_meter_IH001',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -8300,7 +8118,6 @@
         'warm_water_meter_WW001',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -8310,7 +8127,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'warm_water_meter_WW001',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -8389,7 +8205,6 @@
         'water_meter_W001',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -8399,7 +8214,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'water_meter_W001',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -8482,7 +8296,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -8492,7 +8305,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -8572,7 +8384,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -8582,7 +8393,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -8665,7 +8475,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -8675,7 +8484,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -8758,7 +8566,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -8768,7 +8575,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -8851,7 +8657,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -8861,7 +8666,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -8936,7 +8740,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -8946,7 +8749,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -9029,7 +8831,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -9039,7 +8840,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -9122,7 +8922,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -9132,7 +8931,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -9215,7 +9013,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -9225,7 +9022,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -9308,7 +9104,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -9318,7 +9113,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -9401,7 +9195,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -9411,7 +9204,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -9494,7 +9286,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -9504,7 +9295,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -9587,7 +9377,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -9597,7 +9386,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -9680,7 +9468,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -9690,7 +9477,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -9773,7 +9559,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -9783,7 +9568,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -9866,7 +9650,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -9876,7 +9659,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -9959,7 +9741,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -9969,7 +9750,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -10044,7 +9824,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -10054,7 +9833,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -10134,7 +9912,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -10144,7 +9921,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -10227,7 +10003,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -10237,7 +10012,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -10312,7 +10086,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -10322,7 +10095,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -10405,7 +10177,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -10415,7 +10186,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -10498,7 +10268,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -10508,7 +10277,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -10591,7 +10359,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -10601,7 +10368,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -10676,7 +10442,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -10686,7 +10451,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -10761,7 +10525,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -10771,7 +10534,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -10860,7 +10622,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -10870,7 +10631,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -10953,7 +10713,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -10963,7 +10722,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -11046,7 +10804,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -11056,7 +10813,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -11139,7 +10895,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -11149,7 +10904,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -11232,7 +10986,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -11242,7 +10995,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -11317,7 +11069,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -11327,7 +11078,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -11402,7 +11152,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -11412,7 +11161,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -11487,7 +11235,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -11497,7 +11244,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -11572,7 +11318,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -11582,7 +11327,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -11657,7 +11401,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -11667,7 +11410,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -11742,7 +11484,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -11752,7 +11493,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -11831,7 +11571,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -11841,7 +11580,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -11916,7 +11654,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -11926,7 +11663,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -12001,7 +11737,6 @@
         'gas_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -12011,7 +11746,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'gas_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -12090,7 +11824,6 @@
         'heat_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -12100,7 +11833,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'heat_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -12179,7 +11911,6 @@
         'inlet_heat_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -12189,7 +11920,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'inlet_heat_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -12264,7 +11994,6 @@
         'warm_water_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -12274,7 +12003,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'warm_water_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -12353,7 +12081,6 @@
         'water_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -12363,7 +12090,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'water_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -12446,7 +12172,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -12456,7 +12181,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -12536,7 +12260,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -12546,7 +12269,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -12629,7 +12351,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -12639,7 +12360,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -12722,7 +12442,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -12732,7 +12451,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -12815,7 +12533,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -12825,7 +12542,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -12908,7 +12624,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -12918,7 +12633,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13001,7 +12715,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -13011,7 +12724,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13094,7 +12806,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -13104,7 +12815,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13187,7 +12897,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -13197,7 +12906,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13280,7 +12988,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -13290,7 +12997,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13373,7 +13079,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -13383,7 +13088,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13466,7 +13170,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -13476,7 +13179,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13559,7 +13261,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -13569,7 +13270,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13652,7 +13352,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -13662,7 +13361,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13745,7 +13443,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -13755,7 +13452,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13838,7 +13534,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -13848,7 +13543,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13923,7 +13617,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -13933,7 +13626,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14016,7 +13708,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -14026,7 +13717,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14101,7 +13791,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -14111,7 +13800,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14194,7 +13882,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -14204,7 +13891,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14287,7 +13973,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -14297,7 +13982,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14380,7 +14064,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -14390,7 +14073,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14473,7 +14155,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -14483,7 +14164,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14566,7 +14246,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -14576,7 +14255,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14659,7 +14337,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -14669,7 +14346,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14752,7 +14428,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -14762,7 +14437,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14837,7 +14511,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -14847,7 +14520,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14922,7 +14594,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -14932,7 +14603,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -15007,7 +14677,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -15017,7 +14686,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -15092,7 +14760,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -15102,7 +14769,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -15177,7 +14843,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -15187,7 +14852,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -15262,7 +14926,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -15272,7 +14935,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -15351,7 +15013,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -15361,7 +15022,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -15436,7 +15096,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -15446,7 +15105,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -15525,7 +15183,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -15535,7 +15192,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.03',
     'via_device_id': None,
   })
@@ -15618,7 +15274,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -15628,7 +15283,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.03',
     'via_device_id': None,
   })
@@ -15711,7 +15365,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -15721,7 +15374,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.03',
     'via_device_id': None,
   })
@@ -15804,7 +15456,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -15814,7 +15465,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.03',
     'via_device_id': None,
   })
@@ -15897,7 +15547,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -15907,7 +15556,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.03',
     'via_device_id': None,
   })
@@ -15982,7 +15630,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -15992,7 +15639,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.03',
     'via_device_id': None,
   })
@@ -16071,7 +15717,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -16081,7 +15726,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -16164,7 +15808,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -16174,7 +15817,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -16257,7 +15899,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -16267,7 +15908,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -16350,7 +15990,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -16360,7 +15999,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -16443,7 +16081,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -16453,7 +16090,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -16536,7 +16172,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -16546,7 +16181,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -16629,7 +16263,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -16639,7 +16272,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -16719,7 +16351,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -16729,7 +16360,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -16812,7 +16442,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -16822,7 +16451,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -16905,7 +16533,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -16915,7 +16542,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -16998,7 +16624,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -17008,7 +16633,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -17083,7 +16707,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -17093,7 +16716,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -17172,7 +16794,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -17182,7 +16803,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '2.03',
     'via_device_id': None,
   })
@@ -17265,7 +16885,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -17275,7 +16894,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '2.03',
     'via_device_id': None,
   })
@@ -17354,7 +16972,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -17364,7 +16981,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '2.03',
     'via_device_id': None,
   })
@@ -17439,7 +17055,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -17449,7 +17064,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '2.03',
     'via_device_id': None,
   })
@@ -17528,7 +17142,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -17538,7 +17151,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -17621,7 +17233,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -17631,7 +17242,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -17714,7 +17324,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -17724,7 +17333,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -17807,7 +17415,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -17817,7 +17424,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -17900,7 +17506,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -17910,7 +17515,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -17993,7 +17597,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -18003,7 +17606,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -18086,7 +17688,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -18096,7 +17697,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -18176,7 +17776,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -18186,7 +17785,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -18269,7 +17867,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -18279,7 +17876,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -18362,7 +17958,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -18372,7 +17967,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -18447,7 +18041,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -18457,7 +18050,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -18536,7 +18128,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -18546,7 +18137,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -18629,7 +18219,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -18639,7 +18228,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -18722,7 +18310,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -18732,7 +18319,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -18815,7 +18401,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -18825,7 +18410,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -18908,7 +18492,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -18918,7 +18501,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -19001,7 +18583,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -19011,7 +18592,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -19094,7 +18674,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -19104,7 +18683,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -19187,7 +18765,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -19197,7 +18774,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -19280,7 +18856,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -19290,7 +18865,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -19373,7 +18947,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -19383,7 +18956,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -19466,7 +19038,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -19476,7 +19047,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -19559,7 +19129,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -19569,7 +19138,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -19652,7 +19220,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -19662,7 +19229,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -19742,7 +19308,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -19752,7 +19317,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -19832,7 +19396,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -19842,7 +19405,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -19922,7 +19484,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -19932,7 +19493,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -20015,7 +19575,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -20025,7 +19584,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -20108,7 +19666,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -20118,7 +19675,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -20201,7 +19757,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -20211,7 +19766,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -20294,7 +19848,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -20304,7 +19857,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -20387,7 +19939,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -20397,7 +19948,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -20480,7 +20030,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -20490,7 +20039,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -20573,7 +20121,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -20583,7 +20130,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -20666,7 +20212,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -20676,7 +20221,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -20759,7 +20303,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -20769,7 +20312,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -20852,7 +20394,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -20862,7 +20403,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -20937,7 +20477,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -20947,7 +20486,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
