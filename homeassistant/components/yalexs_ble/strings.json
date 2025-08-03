@@ -56,6 +56,34 @@
       "secure_mode": {
         "name": "Secure mode"
       }
+    },
+    "select": {
+      "auto_lock_mode": {
+        "name": "Auto lock mode",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "instant": "Instant",
+          "timer": "On a Timer"
+        }
+      },
+      "auto_lock_duration": {
+        "name": "Auto lock duration",
+        "state": {
+          "0": "[%key:common::state::off%]",
+          "10": "0m:10s",
+          "30": "0m:30s",
+          "60": "1m:00s",
+          "90": "1m:30s",
+          "120": "2m:00s",
+          "150": "2m:30s",
+          "180": "3m:00s",
+          "240": "4m:00s",
+          "300": "5m:00s",
+          "600": "10m:00s",
+          "1200": "20m:00s",
+          "1800": "30m:00s"
+        }
+      }
     }
   }
 }

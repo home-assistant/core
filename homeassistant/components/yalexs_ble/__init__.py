@@ -35,6 +35,7 @@ type YALEXSBLEConfigEntry = ConfigEntry[YaleXSBLEData]
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.LOCK,
+    Platform.SELECT,
     Platform.SENSOR,
 ]
 
