@@ -2,17 +2,16 @@
 
 import asyncio
 from collections.abc import Collection
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Literal
 
-import httpx
 from pywaze.route_calculator import CalcRoutesResponse, WazeRouteCalculator, WRCError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_REGION, UnitOfLength
+from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.unit_conversion import DistanceConverter
@@ -138,61 +137,21 @@ async def async_get_travel_times(
         return filtered_routes
 
 
+@dataclass
 class WazeTravelTimeData:
-    """WazeTravelTime Data object."""
+    """WazeTravelTime data class."""
 
-    def __init__(
-        self, region: str, client: httpx.AsyncClient, config_entry: ConfigEntry
-    ) -> None:
-        """Set up WazeRouteCalculator."""
-        self.config_entry = config_entry
-        self.client = WazeRouteCalculator(region=region, client=client)
-        self.origin: str | None = None
-        self.destination: str | None = None
-        self.duration = None
-        self.distance = None
-        self.route = None
-
-    async def async_update(self):
-        """Update WazeRouteCalculator data."""
-        _LOGGER.debug(
-            "Getting update for origin: %s destination: %s",
-            self.origin,
-            self.destination,
-        )
-        if self.origin is not None and self.destination is not None:
-            # Grab options on every update
-            incl_filter = self.config_entry.options[CONF_INCL_FILTER]
-            excl_filter = self.config_entry.options[CONF_EXCL_FILTER]
-            realtime = self.config_entry.options[CONF_REALTIME]
-            vehicle_type = self.config_entry.options[CONF_VEHICLE_TYPE]
-            avoid_toll_roads = self.config_entry.options[CONF_AVOID_TOLL_ROADS]
-            avoid_subscription_roads = self.config_entry.options[
-                CONF_AVOID_SUBSCRIPTION_ROADS
-            ]
-            avoid_ferries = self.config_entry.options[CONF_AVOID_FERRIES]
-            routes = await async_get_travel_times(
-                self.client,
-                self.origin,
-                self.destination,
-                vehicle_type,
-                avoid_toll_roads,
-                avoid_subscription_roads,
-                avoid_ferries,
-                realtime,
-                self.config_entry.options[CONF_UNITS],
-                incl_filter,
-                excl_filter,
-            )
-            route = routes[0]
-
-            self.duration = route.duration
-            self.distance = route.distance
-            self.route = route.name
+    origin: str
+    destination: str
+    duration: float | None
+    distance: float | None
+    route: str
 
 
-class WazeTravelTimeCoordinator(DataUpdateCoordinator[None]):
+class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
     """Waze Travel Time DataUpdateCoordinator."""
+
+    config_entry: ConfigEntry
 
     def __init__(
         self,
@@ -208,26 +167,62 @@ class WazeTravelTimeCoordinator(DataUpdateCoordinator[None]):
             config_entry=config_entry,
             update_interval=SCAN_INTERVAL,
         )
-        self.config_entry = config_entry
         self.client = client
-        self.origin = config_entry.data[CONF_ORIGIN]
-        self.destination = config_entry.data[CONF_DESTINATION]
-        self.region = config_entry.data[CONF_REGION]
-        self.waze_data = WazeTravelTimeData(
-            self.region,
-            get_async_client(hass),
-            config_entry,
-        )
+        self._origin = config_entry.data[CONF_ORIGIN]
+        self._destination = config_entry.data[CONF_DESTINATION]
 
-    async def _async_update_data(self) -> None:
+    async def _async_update_data(self) -> WazeTravelTimeData:
         """Get the latest data from Waze."""
-        self.waze_data.origin = find_coordinates(self.hass, self.origin)
-        self.waze_data.destination = find_coordinates(self.hass, self.destination)
+        origin_coordinates = find_coordinates(self.hass, self._origin)
+        destination_coordinates = find_coordinates(self.hass, self._destination)
 
-        _LOGGER.debug("Fetching Route for %s", self.config_entry.title)  # type: ignore[union-attr]
+        _LOGGER.debug(
+            "Fetching Route for %s, from %s to %s",
+            self.config_entry.title,
+            self._origin,
+            self._destination,
+        )
         await self.hass.data[DOMAIN][SEMAPHORE].acquire()
         try:
-            await self.waze_data.async_update()
+            if origin_coordinates is None or destination_coordinates is None:
+                raise UpdateFailed("Unable to determine origin or destination")
+
+            # Grab options on every update
+            incl_filter = self.config_entry.options[CONF_INCL_FILTER]
+            excl_filter = self.config_entry.options[CONF_EXCL_FILTER]
+            realtime = self.config_entry.options[CONF_REALTIME]
+            vehicle_type = self.config_entry.options[CONF_VEHICLE_TYPE]
+            avoid_toll_roads = self.config_entry.options[CONF_AVOID_TOLL_ROADS]
+            avoid_subscription_roads = self.config_entry.options[
+                CONF_AVOID_SUBSCRIPTION_ROADS
+            ]
+            avoid_ferries = self.config_entry.options[CONF_AVOID_FERRIES]
+            routes = await async_get_travel_times(
+                self.client,
+                origin_coordinates,
+                destination_coordinates,
+                vehicle_type,
+                avoid_toll_roads,
+                avoid_subscription_roads,
+                avoid_ferries,
+                realtime,
+                self.config_entry.options[CONF_UNITS],
+                incl_filter,
+                excl_filter,
+            )
+            route = routes[0]
+
+            travel_data = WazeTravelTimeData(
+                origin=origin_coordinates,
+                destination=destination_coordinates,
+                duration=route.duration,
+                distance=route.distance,
+                route=route.name,
+            )
+
             await asyncio.sleep(SECONDS_BETWEEN_API_CALLS)
+
         finally:
             self.hass.data[DOMAIN][SEMAPHORE].release()
+
+        return travel_data

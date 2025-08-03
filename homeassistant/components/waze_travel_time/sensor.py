@@ -64,22 +64,22 @@ class WazeTravelTimeSensor(CoordinatorEntity[WazeTravelTimeCoordinator], SensorE
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         if (
-            self.coordinator.waze_data is not None
-            and self.coordinator.waze_data.duration is not None
+            self.coordinator.data is not None
+            and self.coordinator.data.duration is not None
         ):
-            return round(self.coordinator.waze_data.duration)
+            return round(self.coordinator.data.duration)
         return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the last update."""
-        if self.coordinator.waze_data is None:
+        if self.coordinator.data is None:
             return None
 
         return {
-            "duration": self.coordinator.waze_data.duration,
-            "distance": self.coordinator.waze_data.distance,
-            "route": self.coordinator.waze_data.route,
-            "origin": self.coordinator.waze_data.origin,
-            "destination": self.coordinator.waze_data.destination,
+            "duration": self.coordinator.data.duration,
+            "distance": self.coordinator.data.distance,
+            "route": self.coordinator.data.route,
+            "origin": self.coordinator.data.origin,
+            "destination": self.coordinator.data.destination,
         }
