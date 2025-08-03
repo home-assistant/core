@@ -27,13 +27,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import SERVICE_CLEAN_AREA, SERVICE_GET_AREAS, SERVICE_SELECT_AREAS
 from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
-
-SERVICE_GET_AREAS = "get_areas"  # get SupportedAreas and SupportedMaps
-SERVICE_SELECT_AREAS = "select_areas"  # Call SelectAreas Matter command
-SERVICE_CLEAN_AREA = "clean_area"  # Call SelectAreas Matter command and start RVC
 
 
 class OperationalState(IntEnum):
@@ -69,30 +66,30 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.VACUUM, async_add_entities)
     platform = entity_platform.async_get_current_platform()
 
-    # This will call Entity.get_areas
+    # This will call Entity.async_handle_get_areas
     platform.async_register_entity_service(
         SERVICE_GET_AREAS,
         schema=None,
-        func="get_areas",
+        func="async_handle_get_areas",
         supports_response=SupportsResponse.ONLY,
     )
 
-    # This will call Entity.clean_area
+    # This will call Entity.async_handle_clean_area
     platform.async_register_entity_service(
         SERVICE_CLEAN_AREA,
         schema={
             vol.Required("areas"): vol.All(cv.ensure_list, [cv.positive_int]),
         },
-        func="clean_area",
+        func="async_handle_clean_area",
         supports_response=SupportsResponse.ONLY,
     )
-    # This will call Entity.select_areas
+    # This will call Entity.async_handle_select_areas
     platform.async_register_entity_service(
         SERVICE_SELECT_AREAS,
         schema={
             vol.Required("areas"): vol.All(cv.ensure_list, [cv.positive_int]),
         },
-        func="select_areas",
+        func="async_handle_select_areas",
         supports_response=SupportsResponse.ONLY,
     )
 
@@ -175,7 +172,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         """Pause the cleaning task."""
         await self.send_device_command(clusters.RvcOperationalState.Commands.Pause())
 
-    async def get_areas(self, **kwargs: Any) -> ServiceResponse:
+    async def async_handle_get_areas(self, **kwargs: Any) -> ServiceResponse:
         """Get available area and map IDs from vacuum appliance."""
 
         supported_areas = self.get_matter_attribute_value(
@@ -225,7 +222,9 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             },
         )
 
-    async def select_areas(self, areas: list[int], **kwargs: Any) -> ServiceResponse:
+    async def async_handle_select_areas(
+        self, areas: list[int], **kwargs: Any
+    ) -> ServiceResponse:
         """Select areas to clean."""
         selected_areas = areas
         # Matter command to the vacuum cleaner to select the areas.
@@ -237,14 +236,16 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             ServiceResponse, {"status": "areas selected", "areas": selected_areas}
         )
 
-    async def clean_area(self, areas: list[int], **kwargs: Any) -> ServiceResponse:
+    async def async_handle_clean_area(
+        self, areas: list[int], **kwargs: Any
+    ) -> ServiceResponse:
         """Start cleaning the specified areas."""
         # Matter command to the vacuum cleaner to select the areas.
         await self.send_device_command(
             clusters.ServiceArea.Commands.SelectAreas(newAreas=areas)
         )
         # Start the vacuum cleaner after selecting areas.
-
+        await self.async_start()
         # Return response indicating selected areas.
         return cast(
             ServiceResponse, {"status": "cleaning areas selected", "areas": areas}
