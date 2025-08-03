@@ -501,13 +501,27 @@
         }
       }
     },
-    "get_rooms": {
-      "name": "Get rooms",
-      "description": "Returns a list of available maps and rooms for robot vacuum cleaners.",
+    "get_areas": {
+      "name": "Get areas",
+      "description": "Returns a list of available areas and maps for robot vacuum cleaners."
+    },
+    "select_areas": {
+      "name": "Select areas",
+      "description": "Selects the specified areas for cleaning. The areas must be specified as a list of area IDs.",
       "fields": {
-        "device_id": {
-          "name": "[%key:common::config_flow::data::device%]",
-          "description": "The Matter device to add to the other Matter network."
+        "areas": {
+          "name": "Areas",
+          "description": "A list of area IDs to select."
+        }
+      }
+    },
+    "clean_area": {
+      "name": "Clean area",
+      "description": "Cleans the specified area on the Matter vacuum cleaner.",
+      "fields": {
+        "areas": {
+          "name": "Areas",
+          "description": "A list of area IDs to select for cleaning."
         }
       }
     }

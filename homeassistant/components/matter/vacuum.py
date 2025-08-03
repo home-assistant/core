@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
+import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     StateVacuumEntity,
@@ -18,20 +19,21 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import (
     HomeAssistant,
-    ServiceCall,
     ServiceResponse,
     SupportsResponse,
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
-SERVICE_GET_ROOMS = "get_rooms"
+SERVICE_GET_AREAS = "get_areas"  # get SupportedAreas and SupportedMaps
+SERVICE_SELECT_AREAS = "select_areas"  # Call SelectAreas Matter command
+SERVICE_CLEAN_AREA = "clean_area"  # Call SelectAreas Matter command and start RVC
 
 
 class OperationalState(IntEnum):
@@ -65,46 +67,24 @@ async def async_setup_entry(
     """Set up Matter vacuum platform from Config Entry."""
     matter = get_matter(hass)
     matter.register_platform_handler(Platform.VACUUM, async_add_entities)
+    platform = entity_platform.async_get_current_platform()
 
-    async def get_rooms(call: ServiceCall) -> ServiceResponse:
-        """Get available rooms from vacuum appliance."""
-        rooms_list: list[dict[str, Any]] = [
-            {
-                "mapId": 1,
-                "rooms": [
-                    {"name": "Bathroom", "roomId": 2},
-                    {"name": "Hallway", "roomId": 1},
-                    {"name": "Kitchen", "roomId": 5},
-                    {"name": "Livingroom", "roomId": 8},
-                    {"name": "Entrance area", "roomId": 12},
-                    {"name": "Bedroom", "roomId": 4},
-                ],
-            }
-        ]
-
-        return cast(
-            ServiceResponse,
-            {
-                "rooms": [
-                    {
-                        "map_id": map_item["mapId"],
-                        "rooms": [
-                            {"room_id": room["roomId"], "name": room["name"]}
-                            for room in map_item["rooms"]
-                        ],
-                    }
-                    for map_item in rooms_list
-                ],
-            },
-        )
-
-    # Register the service to get rooms from the vacuum cleaner
-    hass.services.async_register(
-        domain=DOMAIN,
-        service=SERVICE_GET_ROOMS,
-        service_func=get_rooms,
+    # This will call Entity.get_areas
+    platform.async_register_entity_service(
+        SERVICE_GET_AREAS,
         schema=None,
-        supports_response=SupportsResponse.ONLY,  # Doesn't perform any actions and always returns response data.
+        func="get_areas",
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    # This will call Entity.select_areas
+    platform.async_register_entity_service(
+        SERVICE_SELECT_AREAS,
+        schema={
+            vol.Required("areas"): vol.All(cv.ensure_list, [cv.positive_int]),
+        },
+        func="select_areas",
+        supports_response=SupportsResponse.ONLY,
     )
 
 
@@ -185,6 +165,68 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     async def async_pause(self) -> None:
         """Pause the cleaning task."""
         await self.send_device_command(clusters.RvcOperationalState.Commands.Pause())
+
+    async def get_areas(self, **kwargs: Any) -> ServiceResponse:
+        """Get available area and map IDs from vacuum appliance."""
+
+        supported_areas = self.get_matter_attribute_value(
+            clusters.ServiceArea.Attributes.SupportedAreas
+        )
+        if not supported_areas:
+            raise HomeAssistantError("Can't get areas from the device.")
+
+        # Extract areaID, mapID, and locationName from each area
+        areas = []
+        for area in supported_areas:
+            area_id = getattr(area, "areaID", None)
+            map_id = getattr(area, "mapID", None)
+            location_name = None
+            area_info = getattr(area, "areaInfo", None)
+            if area_info is not None:
+                location_info = getattr(area_info, "locationInfo", None)
+                if location_info is not None:
+                    location_name = getattr(location_info, "locationName", None)
+            areas.append(
+                {
+                    "area_id": area_id,
+                    "map_id": map_id,
+                    "name": location_name,
+                }
+            )
+
+        # Optionally, also extract supported maps if available
+        supported_maps = self.get_matter_attribute_value(
+            clusters.ServiceArea.Attributes.SupportedMaps
+        )
+        maps = []
+        if supported_maps:
+            maps = [
+                {
+                    "map_id": getattr(m, "mapID", None),
+                    "name": getattr(m, "name", None),
+                }
+                for m in supported_maps
+            ]
+
+        return cast(
+            ServiceResponse,
+            {
+                "areas": areas,
+                "maps": maps,
+            },
+        )
+
+    async def select_areas(self, areas: list[int], **kwargs: Any) -> ServiceResponse:
+        """Select areas to clean."""
+        selected_areas = areas
+        # Matter command to the vacuum cleaner to select the areas.
+        await self.send_device_command(
+            clusters.ServiceArea.Commands.SelectAreas(newAreas=selected_areas)
+        )
+        # Return response indicating selected areas.
+        return cast(
+            ServiceResponse, {"status": "areas selected", "areas": selected_areas}
+        )
 
     @callback
     def _update_from_device(self) -> None:

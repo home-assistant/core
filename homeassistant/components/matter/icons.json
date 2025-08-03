@@ -137,7 +137,13 @@
     }
   },
   "services": {
-    "get_rooms": {
+    "clean_area": {
+      "service": "mdi:map"
+    },
+    "get_areas": {
+      "service": "mdi:map"
+    },
+    "select_areas": {
       "service": "mdi:map"
     }
   }
