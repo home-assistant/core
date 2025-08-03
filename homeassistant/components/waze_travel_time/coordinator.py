@@ -184,10 +184,7 @@ class WazeTravelTimeData:
                 incl_filter,
                 excl_filter,
             )
-            if routes:
-                route = routes[0]
-            else:
-                raise UpdateFailed("No routes found")
+            route = routes[0]
 
             self.duration = route.duration
             self.distance = route.distance
