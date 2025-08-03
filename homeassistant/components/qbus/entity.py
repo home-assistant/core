@@ -7,7 +7,7 @@ from collections.abc import Callable
 import re
 from typing import Generic, TypeVar, cast
 
-from qbusmqttapi.discovery import QbusMqttOutput
+from qbusmqttapi.discovery import QbusMqttDevice, QbusMqttOutput
 from qbusmqttapi.factory import QbusMqttMessageFactory, QbusMqttTopicFactory
 from qbusmqttapi.state import QbusMqttState
 
@@ -44,11 +44,15 @@ def determine_new_outputs(
 
     added_ref_ids = {k.ref_id for k in added_outputs}
 
-    new_outputs = [
-        output
-        for output in coordinator.data
-        if filter_fn(output) and output.ref_id not in added_ref_ids
-    ]
+    new_outputs = (
+        [
+            output
+            for output in coordinator.data.outputs
+            if filter_fn(output) and output.ref_id not in added_ref_ids
+        ]
+        if coordinator.data
+        else []
+    )
 
     if new_outputs:
         added_outputs.extend(new_outputs)
@@ -64,9 +68,14 @@ def format_ref_id(ref_id: str) -> str | None:
     return None
 
 
+def create_device_identifier(mqtt_device: QbusMqttDevice) -> tuple[str, str]:
+    """Create the device identifier."""
+    return (DOMAIN, format_mac(mqtt_device.mac))
+
+
 def create_main_device_identifier(mqtt_output: QbusMqttOutput) -> tuple[str, str]:
     """Create the identifier referring to the main device this output belongs to."""
-    return (DOMAIN, format_mac(mqtt_output.device.mac))
+    return create_device_identifier(mqtt_output.device)
 
 
 class QbusEntity(Entity, Generic[StateT], ABC):
