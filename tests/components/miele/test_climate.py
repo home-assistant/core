@@ -15,16 +15,7 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, snapshot_platform
 
 TEST_PLATFORM = CLIMATE_DOMAIN
-pytestmark = [
-    pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)]),
-    # pytest.mark.parametrize(
-    #     "load_action_file",
-    #     ["action_freezer.json"],
-    #     ids=[
-    #         "freezer",
-    #     ],
-    # ),
-]
+pytestmark = pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)])
 
 ENTITY_ID = "climate.freezer"
 SERVICE_SET_TEMPERATURE = "set_temperature"
