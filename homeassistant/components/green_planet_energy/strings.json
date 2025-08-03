@@ -2,48 +2,99 @@
   "config": {
     "step": {
       "user": {
-        "description": "Setup für die Green Planet Energy Strompreis-Integration"
+        "description": "Setup for the Green Planet Energy electricity price integration"
       }
     },
     "error": {
-      "cannot_connect": "Verbindung zur Green Planet Energy API fehlgeschlagen",
-      "unknown": "Unbekannter Fehler aufgetreten"
+      "cannot_connect": "Failed to connect to Green Planet Energy API",
+      "unknown": "Unknown error occurred"
     },
     "abort": {
-      "already_configured": "Dienst ist bereits konfiguriert"
+      "already_configured": "Service is already configured"
     }
   },
   "entity": {
     "sensor": {
+      "price_00": {
+        "name": "Price 00:00"
+      },
+      "price_01": {
+        "name": "Price 01:00"
+      },
+      "price_02": {
+        "name": "Price 02:00"
+      },
+      "price_03": {
+        "name": "Price 03:00"
+      },
+      "price_04": {
+        "name": "Price 04:00"
+      },
+      "price_05": {
+        "name": "Price 05:00"
+      },
+      "price_06": {
+        "name": "Price 06:00"
+      },
+      "price_07": {
+        "name": "Price 07:00"
+      },
+      "price_08": {
+        "name": "Price 08:00"
+      },
       "price_09": {
-        "name": "Strompreis 09:00"
+        "name": "Price 09:00"
       },
       "price_10": {
-        "name": "Strompreis 10:00"
+        "name": "Price 10:00"
       },
       "price_11": {
-        "name": "Strompreis 11:00"
+        "name": "Price 11:00"
       },
       "price_12": {
-        "name": "Strompreis 12:00"
+        "name": "Price 12:00"
       },
       "price_13": {
-        "name": "Strompreis 13:00"
+        "name": "Price 13:00"
       },
       "price_14": {
-        "name": "Strompreis 14:00"
+        "name": "Price 14:00"
       },
       "price_15": {
-        "name": "Strompreis 15:00"
+        "name": "Price 15:00"
       },
       "price_16": {
-        "name": "Strompreis 16:00"
+        "name": "Price 16:00"
       },
       "price_17": {
-        "name": "Strompreis 17:00"
+        "name": "Price 17:00"
       },
       "price_18": {
-        "name": "Strompreis 18:00"
+        "name": "Price 18:00"
+      },
+      "price_19": {
+        "name": "Price 19:00"
+      },
+      "price_20": {
+        "name": "Price 20:00"
+      },
+      "price_21": {
+        "name": "Price 21:00"
+      },
+      "price_22": {
+        "name": "Price 22:00"
+      },
+      "price_23": {
+        "name": "Price 23:00"
+      },
+      "highest_price_today": {
+        "name": "Highest price today"
+      },
+      "lowest_price_today": {
+        "name": "Lowest price today"
+      },
+      "current_price": {
+        "name": "Current price"
       }
     }
   }

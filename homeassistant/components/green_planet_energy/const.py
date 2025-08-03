@@ -15,5 +15,5 @@ AGGREGATS_ZEITRAUM = ""
 AGGREGATS_TYP = ""
 SOURCE = "Portal"
 
-# Sensor keys for each hour (9-18)
-SENSOR_HOURS = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+# Sensor keys for each hour (0-23)
+SENSOR_HOURS = list(range(24))

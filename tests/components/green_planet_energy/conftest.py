@@ -1,5 +1,6 @@
 """Test fixtures for Green Planet Energy integration."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -12,40 +13,37 @@ from tests.common import MockConfigEntry
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Return the default mocked config entry."""
+    """Create a mock config entry."""
     return MockConfigEntry(
-        title="Green Planet Energy",
         domain=DOMAIN,
-        data={},
+        data={
+            "username": "test@example.com",
+            "password": "test_password",
+            "customer_number": "12345",
+            "postal_code": "12345",
+        },
         unique_id="green_planet_energy",
     )
 
 
 @pytest.fixture
-def mock_api():
-    """Mock the Green Planet Energy API."""
-    mock_response_data = {
+def mock_api() -> Generator[MagicMock]:
+    """Create a mocked aiohttp session."""
+    mock_session = MagicMock()
+
+    # Create proper mock response with realistic data
+    mock_response = AsyncMock()
+    mock_response.status = 200
+    mock_response.json.return_value = {
         "result": {
-            "verbrauchspreise": [
-                {"zeitpunkt": "2025-08-01T09:00:00", "preis": 0.25},
-                {"zeitpunkt": "2025-08-01T10:00:00", "preis": 0.30},
-                {"zeitpunkt": "2025-08-01T11:00:00", "preis": 0.28},
-                {"zeitpunkt": "2025-08-01T12:00:00", "preis": 0.32},
-                {"zeitpunkt": "2025-08-01T13:00:00", "preis": 0.29},
-                {"zeitpunkt": "2025-08-01T14:00:00", "preis": 0.27},
-                {"zeitpunkt": "2025-08-01T15:00:00", "preis": 0.31},
-                {"zeitpunkt": "2025-08-01T16:00:00", "preis": 0.33},
-                {"zeitpunkt": "2025-08-01T17:00:00", "preis": 0.35},
-                {"zeitpunkt": "2025-08-01T18:00:00", "preis": 0.30},
-            ]
+            "errorCode": 0,
+            "datum": [f"03.08.25, {hour:02d}:00 Uhr" for hour in range(24)],
+            "wert": [
+                f"{0.20 + (hour * 0.01):.3f}".replace(".", ",") for hour in range(24)
+            ],
         }
     }
 
-    mock_response = AsyncMock()
-    mock_response.status = 200
-    mock_response.json = AsyncMock(return_value=mock_response_data)
-
-    mock_session = MagicMock()
     mock_session.post.return_value.__aenter__.return_value = mock_response
 
     with patch(
@@ -57,9 +55,9 @@ def mock_api():
 
 @pytest.fixture
 async def init_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> MockConfigEntry:
-    """Set up the integration for testing."""
+    """Set up the Green Planet Energy integration for testing."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

@@ -63,19 +63,27 @@ class GreenPlanetEnergyUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "id": 564,
         }
 
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+            "Referer": "https://mein.green-planet-energy.de/dynamischer-tarif/strompreise",
+        }
+
         try:
             async with asyncio.timeout(30):
                 async with self.session.post(
                     self.api_url,
                     json=payload,
-                    headers={"Content-Type": "application/json"},
+                    headers=headers,
                 ) as response:
                     if response.status != 200:
                         raise UpdateFailed(
                             f"API request failed with status {response.status}"
                         )
 
-                    data = await response.json()
+                    data = await response.json(content_type=None)
                     return self._process_response(data)
         except TimeoutError as err:
             raise UpdateFailed("Timeout while communicating with API") from err
@@ -108,9 +116,9 @@ class GreenPlanetEnergyUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.warning("Invalid or missing price data in API response")
             return processed_data
 
-        # Extract hourly prices for hours 9-18
-        for hour in range(9, 19):  # 9-18 inclusive
-            hour_key = f"price_{hour:02d}"
+        # Extract hourly prices for all 24 hours
+        for hour in range(24):  # 0-23 inclusive
+            hour_key = f"gpe_price_{hour:02d}"
             processed_data[hour_key] = None
 
             # Find the matching hour in the data
