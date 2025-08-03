@@ -138,7 +138,7 @@
   },
   "services": {
     "clean_area": {
-      "service": "mdi:map"
+      "service": "mdi:robot-vacuum"
     },
     "get_areas": {
       "service": "mdi:map"
