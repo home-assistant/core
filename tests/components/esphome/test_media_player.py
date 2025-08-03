@@ -27,6 +27,8 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_STOP,
     SERVICE_PLAY_MEDIA,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     BrowseMedia,
@@ -56,6 +58,8 @@ async def test_media_player_entity(
             key=1,
             name="my media_player",
             supports_pause=True,
+            #PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
+            feature_flags=1200653,
         )
     ]
     states = [
@@ -155,6 +159,31 @@ async def test_media_player_entity(
     )
     mock_client.media_player_command.reset_mock()
 
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_TURN_OFF,
+        {
+            ATTR_ENTITY_ID: "media_player.test_my_media_player",
+        },
+        blocking=True,
+    )
+    mock_client.media_player_command.assert_has_calls(
+        [call(1, command=MediaPlayerCommand.TURN_OFF)]
+    )
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "media_player.test_my_media_player",
+        },
+        blocking=True,
+    )
+    mock_client.media_player_command.assert_has_calls(
+        [call(1, command=MediaPlayerCommand.TURN_ON)]
+    )
+    mock_client.media_player_command.reset_mock()
+
 
 async def test_media_player_entity_with_source(
     hass: HomeAssistant,
@@ -202,6 +231,8 @@ async def test_media_player_entity_with_source(
             key=1,
             name="my media_player",
             supports_pause=True,
+            #PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
+            feature_flags=1200653,
         )
     ]
     states = [
@@ -317,6 +348,8 @@ async def test_media_player_proxy(
                 key=1,
                 name="my media_player",
                 supports_pause=True,
+                #PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
+                feature_flags=1200653,
                 supported_formats=[
                     MediaPlayerSupportedFormat(
                         format="flac",
@@ -475,6 +508,8 @@ async def test_media_player_formats_reload_preserves_data(
                 key=1,
                 name="Test Media Player",
                 supports_pause=True,
+                #PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
+                feature_flags=1200653,
                 supported_formats=supported_formats,
             )
         ],
