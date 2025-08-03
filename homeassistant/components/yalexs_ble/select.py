@@ -1,4 +1,4 @@
-"""Support for Yale Access Bluetooth switches."""
+"""Support for Yale Access Bluetooth select entities."""
 
 from __future__ import annotations
 
@@ -58,7 +58,7 @@ class YaleXSBLEAutoLockModeSelect(YALEXSBLEEntity, SelectEntity):
             return "timer"
         if mode == AutoLockMode.INSTANT:
             return "instant"
-        return None  # type: ignore[unreachable]
+        raise ValueError(f"Unknown AutoLockMode: {mode}")
 
     async def async_select_option(self, option: str) -> None:
         """Change the auto lock mode."""
