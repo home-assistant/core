@@ -66,7 +66,9 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.homee.wait_until_disconnected()
             _LOGGER.info("Homee config successfully tested")
 
-            await self.async_set_unique_id(self.homee.settings.uid)
+            await self.async_set_unique_id(
+                self.homee.settings.uid, raise_on_progress=(self.init_step != "user")
+            )
 
             self._abort_if_unique_id_configured()
 
