@@ -332,15 +332,6 @@ def async_prepare_call_from_config(
                 target.update(conf.async_render(variables))
             else:
                 target.update(template.render_complex(conf, variables))
-
-            if CONF_ENTITY_ID in target:
-                registry = entity_registry.async_get(hass)
-                entity_ids = cv.comp_entity_ids_or_uuids(target[CONF_ENTITY_ID])
-                if entity_ids not in (ENTITY_MATCH_ALL, ENTITY_MATCH_NONE):
-                    entity_ids = entity_registry.async_validate_entity_ids(
-                        registry, entity_ids
-                    )
-                target[CONF_ENTITY_ID] = entity_ids
         except TemplateError as ex:
             raise HomeAssistantError(
                 f"Error rendering service target template: {ex}"
@@ -349,6 +340,30 @@ def async_prepare_call_from_config(
             raise HomeAssistantError(
                 f"Template rendered invalid entity IDs: {target[CONF_ENTITY_ID]}"
             ) from ex
+
+    # All config entries but CONF_ENTITY_ID use ensure_list.
+    # Using ensure_list transforms a template value to a singleton list
+    # Since we expect a list of strings, a template that evaluates to
+    # a list will lead to a nested list.
+    # We cannot easily fix this in schema without breaking old configs.
+    # This block flattens nested lists but keeps non-list members as is.
+    for entry, value in target.items():
+        if entry == CONF_ENTITY_ID:
+            registry = entity_registry.async_get(hass)
+            entity_ids = cv.comp_entity_ids_or_uuids(value)
+            if entity_ids not in (ENTITY_MATCH_ALL, ENTITY_MATCH_NONE):
+                entity_ids = entity_registry.async_validate_entity_ids(
+                    registry, entity_ids
+                )
+            target[entry] = entity_ids
+        else:
+            ret = []
+            for elem in value:
+                if isinstance(elem, list):
+                    ret.extend(elem)
+                else:
+                    ret.append(elem)
+            target[entry] = ret
 
     service_data = {}
 
