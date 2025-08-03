@@ -71,10 +71,10 @@ ERROR_KEYS = [
     "cutting_drive_motor_2_defect",
     "cutting_drive_motor_3_defect",
     "cutting_height_blocked",
+    "cutting_height_problem",
     "cutting_height_problem_curr",
     "cutting_height_problem_dir",
     "cutting_height_problem_drive",
-    "cutting_height_problem",
     "cutting_motor_problem",
     "cutting_stopped_slope_too_steep",
     "cutting_system_blocked",
@@ -117,7 +117,6 @@ ERROR_KEYS = [
     "no_accurate_position_from_satellites",
     "no_confirmed_position",
     "no_drive",
-    "no_error",
     "no_loop_signal",
     "no_power_in_charging_station",
     "no_response_from_charger",
@@ -169,8 +168,8 @@ ERROR_KEYS = [
 ]
 
 
-ERROR_KEY_LIST = list(
-    dict.fromkeys(ERROR_KEYS + [state.lower() for state in ERROR_STATES])
+ERROR_KEY_LIST = sorted(
+    set(ERROR_KEYS) | {state.lower() for state in ERROR_STATES} | {"no_error"}
 )
 
 INACTIVE_REASONS: list = [
