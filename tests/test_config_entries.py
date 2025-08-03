@@ -6527,6 +6527,7 @@ async def test_update_subentry_and_abort(
         "expected_data",
         "raises",
         "reload",  # True is default
+        "setup_call_count",
     ),
     [
         (
@@ -6540,6 +6541,7 @@ async def test_update_subentry_and_abort(
             {"vendor": "data2"},
             None,
             True,
+            2,
         ),
         (
             {
@@ -6552,6 +6554,7 @@ async def test_update_subentry_and_abort(
             {"vendor": "data"},
             None,
             True,
+            2,
         ),
         (
             {
@@ -6564,6 +6567,7 @@ async def test_update_subentry_and_abort(
             {"vendor": "data"},
             None,
             False,
+            1,
         ),
         (
             {},
@@ -6572,6 +6576,7 @@ async def test_update_subentry_and_abort(
             {"vendor": "data"},
             None,
             True,
+            2,
         ),
         (
             {
@@ -6582,6 +6587,7 @@ async def test_update_subentry_and_abort(
             {"buyer": "me"},
             None,
             True,
+            2,
         ),
         (
             {"data_updates": {"buyer": "me"}},
@@ -6590,6 +6596,7 @@ async def test_update_subentry_and_abort(
             {"vendor": "data", "buyer": "me"},
             None,
             True,
+            2,
         ),
         (
             {
@@ -6603,6 +6610,7 @@ async def test_update_subentry_and_abort(
             {"vendor": "data"},
             ValueError,
             True,
+            1,
         ),
     ],
     ids=[
@@ -6623,6 +6631,7 @@ async def test_update_subentry_reload_and_abort(
     kwargs: dict[str, Any],
     raises: type[Exception] | None,
     reload: bool,
+    setup_call_count: int,
 ) -> None:
     """Test updating an entry and reloading."""
     subentry_id = "blabla"
@@ -6686,11 +6695,10 @@ async def test_update_subentry_reload_and_abort(
     assert subentry.title == expected_title
     assert subentry.unique_id == expected_unique_id
     assert subentry.data == expected_data
+    assert setup_entry.call_count == setup_call_count
     if raises:
-        assert setup_entry.call_count == 1
         assert isinstance(err, raises)
     else:
-        assert setup_entry.call_count == 2
         assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "reconfigure_successful"
 
