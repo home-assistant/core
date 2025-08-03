@@ -96,26 +96,6 @@ def starts_with_dot(key: str) -> str:
     return key
 
 
-def get_absolute_trigger_key(domain: str, key: str) -> str:
-    """Return the absolute trigger key."""
-    if not key.startswith("_"):
-        return f"{domain}.{key}"
-    key = key[1:]  # Remove leading underscore
-    if not key:
-        return domain
-    return key
-
-
-def get_relative_trigger_key(domain: str, key: str) -> str:
-    """Return the relative trigger key."""
-    platform, *subtype = key.split(".", 1)
-    if platform != domain:
-        return f"_{key}"
-    if not subtype:
-        return "_"
-    return subtype[0]
-
-
 _TRIGGERS_SCHEMA = vol.Schema(
     {
         vol.Remove(vol.All(str, starts_with_dot)): object,
@@ -158,7 +138,9 @@ async def _register_trigger_platform(
 
     if hasattr(platform, "async_get_triggers"):
         for trigger_key in await platform.async_get_triggers(hass):
-            trigger_key = get_absolute_trigger_key(integration_domain, trigger_key)
+            trigger_key = cv.get_absolute_description_key(
+                integration_domain, trigger_key
+            )
             hass.data[TRIGGERS][trigger_key] = integration_domain
             new_triggers.add(trigger_key)
     elif hasattr(platform, "async_validate_trigger_config") or hasattr(
@@ -404,7 +386,7 @@ async def async_validate_trigger_config(
         platform_domain, platform = await _async_get_trigger_platform(hass, trigger_key)
         if hasattr(platform, "async_get_triggers"):
             trigger_descriptors = await platform.async_get_triggers(hass)
-            relative_trigger_key = get_relative_trigger_key(
+            relative_trigger_key = cv.get_relative_description_key(
                 platform_domain, trigger_key
             )
             if not (trigger := trigger_descriptors.get(relative_trigger_key)):
@@ -510,7 +492,7 @@ async def async_initialize_triggers(
         action_wrapper = _trigger_action_wrapper(hass, action, conf)
         if hasattr(platform, "async_get_triggers"):
             trigger_descriptors = await platform.async_get_triggers(hass)
-            relative_trigger_key = get_relative_trigger_key(
+            relative_trigger_key = cv.get_relative_description_key(
                 platform_domain, trigger_key
             )
             trigger = trigger_descriptors[relative_trigger_key](hass, conf)
@@ -580,7 +562,7 @@ def _load_triggers_files(
     """Load trigger files for multiple integrations."""
     return {
         integration.domain: {
-            get_absolute_trigger_key(integration.domain, key): value
+            cv.get_absolute_description_key(integration.domain, key): value
             for key, value in _load_triggers_file(integration).items()
         }
         for integration in integrations

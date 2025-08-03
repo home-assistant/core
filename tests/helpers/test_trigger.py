@@ -28,8 +28,6 @@ from homeassistant.helpers.trigger import (
     _async_get_trigger_platform,
     async_initialize_triggers,
     async_validate_trigger_config,
-    get_absolute_trigger_key,
-    get_relative_trigger_key,
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
@@ -37,34 +35,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml.loader import parse_yaml
 
 from tests.common import MockModule, MockPlatform, mock_integration, mock_platform
-
-
-@pytest.mark.parametrize(
-    ("relative_key", "absolute_key"),
-    [
-        ("turned_on", "homeassistant.turned_on"),
-        ("_", "homeassistant"),
-        ("_state", "state"),
-    ],
-)
-def test_absolute_trigger_key(relative_key: str, absolute_key: str) -> None:
-    """Test absolute trigger key."""
-    DOMAIN = "homeassistant"
-    assert get_absolute_trigger_key(DOMAIN, relative_key) == absolute_key
-
-
-@pytest.mark.parametrize(
-    ("relative_key", "absolute_key"),
-    [
-        ("turned_on", "homeassistant.turned_on"),
-        ("_", "homeassistant"),
-        ("_state", "state"),
-    ],
-)
-def test_relative_trigger_key(relative_key: str, absolute_key: str) -> None:
-    """Test relative trigger key."""
-    DOMAIN = "homeassistant"
-    assert get_relative_trigger_key(DOMAIN, absolute_key) == relative_key
 
 
 async def test_bad_trigger_platform(hass: HomeAssistant) -> None:
