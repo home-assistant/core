@@ -10,3 +10,5 @@ DEFAULT_MAX_ENTRIES: Final[int] = 20
 DEFAULT_SCAN_INTERVAL: Final[timedelta] = timedelta(hours=1)
 
 EVENT_FEEDREADER: Final[str] = "feedreader"
+
+ATTR_CONFIG_ENTRY_ID = "config_entry_id"

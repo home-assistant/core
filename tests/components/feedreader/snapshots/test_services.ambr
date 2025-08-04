@@ -1,0 +1,54 @@
+# serializer version: 1
+# name: test_event_entity
+  dict({
+    'posts': list([
+      FeedParserDict({
+        'content': list([
+          FeedParserDict({
+            'base': '',
+            'language': None,
+            'type': 'text/plain',
+            'value': 'Content 1',
+          }),
+        ]),
+        'feed_url': 'http://some.rss.local/rss_feed.xml',
+        'guidislink': False,
+        'id': 'GUID 1',
+        'link': 'http://www.example.com/link/1',
+        'links': list([
+          FeedParserDict({
+            'href': 'http://www.example.com/link/1',
+            'rel': 'alternate',
+            'type': 'text/html',
+          }),
+        ]),
+        'published': 'Mon, 30 Apr 2018 15:10:00 +1000',
+        'published_parsed': struct_time(
+          2018,
+          4,
+          30,
+          5,
+          10,
+          0,
+          0,
+          120,
+          0,
+        ),
+        'summary': 'Description 1',
+        'summary_detail': FeedParserDict({
+          'base': '',
+          'language': None,
+          'type': 'text/html',
+          'value': 'Description 1',
+        }),
+        'title': 'Title 1',
+        'title_detail': FeedParserDict({
+          'base': '',
+          'language': None,
+          'type': 'text/plain',
+          'value': 'Title 1',
+        }),
+      }),
+    ]),
+  })
+# ---
