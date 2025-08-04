@@ -167,6 +167,24 @@ DEVICE_MOCKS = {
         # https://github.com/home-assistant/core/issues/148116
         Platform.SWITCH,
     ],
+    "sgbj_ulv4nnue7gqp0rjk": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.NUMBER,
+        Platform.SELECT,
+        Platform.SIREN,
+    ],
+    "sp_drezasavompxpcgm": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+        Platform.SELECT,
+        Platform.SWITCH,
+    ],
+    "sp_rjKXWRohlvOTyLBu": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+        Platform.SELECT,
+        Platform.SWITCH,
+    ],
     "tdq_cq1p0nt0a4rixnex": [
         # https://github.com/home-assistant/core/issues/146845
         Platform.SELECT,
@@ -177,6 +195,9 @@ DEVICE_MOCKS = {
         Platform.LIGHT,
         Platform.SENSOR,
         Platform.SWITCH,
+    ],
+    "wfcon_b25mh8sxawsgndck": [
+        # https://github.com/home-assistant/core/issues/149704
     ],
     "wk_aqoouq7x": [
         # https://github.com/home-assistant/core/issues/146263
@@ -202,6 +223,11 @@ DEVICE_MOCKS = {
     "ydkt_jevroj5aguwdbs2e": [
         # https://github.com/orgs/home-assistant/discussions/288
         # unsupported device - no platforms
+    ],
+    "ywbj_gf9dejhmzffgdyfj": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.BINARY_SENSOR,
+        Platform.SENSOR,
     ],
     "zndb_ze8faryrxr0glqnn": [
         # https://github.com/home-assistant/core/issues/138372
