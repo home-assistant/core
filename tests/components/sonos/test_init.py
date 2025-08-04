@@ -102,7 +102,7 @@ async def test_async_poll_manual_hosts_warnings(
         ) as mock_visible_zones,
     ):
         # First call fails, it should be logged as a WARNING message
-        soco.visible_zones.side_effect = OSError()
+        mock_visible_zones.side_effect = OSError()
         caplog.clear()
         await _setup_hass(hass)
         assert [
@@ -325,14 +325,11 @@ async def test_async_poll_manual_hosts_5(
     soco_1 = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
     soco_1.renderingControl = Mock()
     soco_1.renderingControl.GetVolume = Mock()
-    # Unavailable speakers should not be included in all zones
-    soco_1.mock_include_in_all_zones = False
 
     speaker_1_activity = SpeakerActivity(hass, soco_1)
     soco_2 = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
     soco_2.renderingControl = Mock()
     soco_2.renderingControl.GetVolume = Mock()
-    soco_2.mock_include_in_all_zones = False
 
     speaker_2_activity = SpeakerActivity(hass, soco_2)
 

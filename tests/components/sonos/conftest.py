@@ -256,13 +256,12 @@ class SoCoMockFactory:
         self.alarm_clock = alarm_clock
         self.sonos_playlists = sonos_playlists
         self.sonos_queue = sonos_queue
+        self.mock_zones: bool = False
 
     @property
-    def mock_all_zones(self) -> set[MockSoCo]:
-        """Return a set of all mock zones."""
-        return {
-            mock for mock in self.mock_list.values() if mock.mock_include_in_all_zones
-        }
+    def mock_all_zones(self) -> set[MockSoCo] | None:
+        """Return a set of all mock zones, or None if not enabled."""
+        return set(self.mock_list.values()) if self.mock_zones else None
 
     def cache_mock(
         self, mock_soco: MockSoCo, ip_address: str, name: str = "Zone A"
@@ -304,7 +303,6 @@ class SoCoMockFactory:
 
         mock_soco.alarmClock = self.alarm_clock
         mock_soco.get_battery_info.return_value = self.battery_info
-        mock_soco.mock_include_in_all_zones = True
         mock_soco.group.coordinator = mock_soco
         mock_soco.household_id = "test_household_id"
         self.mock_list[ip_address] = mock_soco

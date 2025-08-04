@@ -234,6 +234,7 @@ async def test_alarm_change_device(
     """
 
     # Create the alarm on the soco_lr speaker
+    soco_factory.mock_zones = True
     soco_lr = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
     alarm_dict = copy(alarm_clock.ListAlarms.return_value)
     alarm_dict["CurrentAlarmList"] = alarm_dict["CurrentAlarmList"].replace(
