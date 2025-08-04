@@ -216,6 +216,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
+    _extra_optimistic_options = (CONF_POSITION,)
 
     # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
     # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
