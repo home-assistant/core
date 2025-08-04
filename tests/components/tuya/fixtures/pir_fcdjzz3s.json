@@ -1,0 +1,48 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "terminal_id": "REDACTED",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "id": "bf445324326cbde7c5rg7b",
+  "name": "Motion sensor lidl zigbee",
+  "category": "pir",
+  "product_id": "fcdjzz3s",
+  "product_name": "Motion sensor",
+  "online": false,
+  "sub": true,
+  "time_zone": "+01:00",
+  "active_time": "2022-09-09T07:24:07+00:00",
+  "create_time": "2022-09-09T07:24:07+00:00",
+  "update_time": "2022-09-09T07:24:07+00:00",
+  "function": {},
+  "status_range": {
+    "pir": {
+      "type": "Enum",
+      "value": {
+        "range": ["pir"]
+      }
+    },
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temper_alarm": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "pir": "nopir",
+    "battery_percentage": 85,
+    "temper_alarm": false
+  },
+  "set_up": true,
+  "support_local": true
+}

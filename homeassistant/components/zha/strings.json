@@ -616,6 +616,18 @@
       },
       "water_supply": {
         "name": "Water supply"
+      },
+      "frient_in_1": {
+        "name": "IN1"
+      },
+      "frient_in_2": {
+        "name": "IN2"
+      },
+      "frient_in_3": {
+        "name": "IN3"
+      },
+      "frient_in_4": {
+        "name": "IN4"
       }
     },
     "button": {
@@ -639,6 +651,9 @@
       },
       "frost_lock_reset": {
         "name": "Frost lock reset"
+      },
+      "reset_alarm": {
+        "name": "Reset alarm"
       }
     },
     "climate": {
@@ -1472,6 +1487,9 @@
       "tier6_summation_delivered": {
         "name": "Tier 6 summation delivered"
       },
+      "total_active_power": {
+        "name": "Total power"
+      },
       "summation_received": {
         "name": "Summation received"
       },
@@ -2006,6 +2024,18 @@
       },
       "auto_relock": {
         "name": "Autorelock"
+      },
+      "distance_tracking": {
+        "name": "Distance tracking"
+      },
+      "water_shortage_auto_close": {
+        "name": "Water shortage auto-close"
+      },
+      "frient_com_1": {
+        "name": "COM 1"
+      },
+      "frient_com_2": {
+        "name": "COM 2"
       }
     }
   }

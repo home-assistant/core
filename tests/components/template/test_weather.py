@@ -132,6 +132,7 @@ async def setup_weather(
                 {
                     "platform": "template",
                     "name": "test",
+                    "unique_id": "abc123",
                     "attribution_template": "{{ states('sensor.attribution') }}",
                     "condition_template": "sunny",
                     "temperature_template": "{{ states('sensor.temperature') | float }}",

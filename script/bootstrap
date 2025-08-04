@@ -4,7 +4,7 @@
 # Stop on errors
 set -e
 
-cd "$(dirname "$0")/.."
+cd "$(realpath "$(dirname "$0")/..")"
 
 echo "Installing development dependencies..."
 uv pip install wheel --constraint homeassistant/package_constraints.txt --upgrade

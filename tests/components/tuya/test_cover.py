@@ -67,7 +67,7 @@ async def test_platform_setup_no_discovery(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cl_am43_corded_motor_zigbee_cover"],
+    ["cl_zah67ekd"],
 )
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
 async def test_open_service(
@@ -101,7 +101,7 @@ async def test_open_service(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cl_am43_corded_motor_zigbee_cover"],
+    ["cl_zah67ekd"],
 )
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
 async def test_close_service(
@@ -135,7 +135,7 @@ async def test_close_service(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cl_am43_corded_motor_zigbee_cover"],
+    ["cl_zah67ekd"],
 )
 async def test_set_position(
     hass: HomeAssistant,
@@ -168,7 +168,7 @@ async def test_set_position(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cl_am43_corded_motor_zigbee_cover"],
+    ["cl_zah67ekd"],
 )
 @pytest.mark.parametrize(
     ("percent_control", "percent_state"),
@@ -202,7 +202,7 @@ async def test_percent_state_on_cover(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cl_am43_corded_motor_zigbee_cover"],
+    ["cl_zah67ekd"],
 )
 async def test_set_tilt_position_not_supported(
     hass: HomeAssistant,

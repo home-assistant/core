@@ -21,7 +21,6 @@
         '00:40:8c:12:34:56',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Axis Communications AB',
@@ -31,7 +30,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '00:40:8c:12:34:56',
-    'suggested_area': None,
     'sw_version': '9.10.1',
     'via_device_id': None,
   })
@@ -58,7 +56,6 @@
         '00:40:8c:12:34:56',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Axis Communications AB',
@@ -68,7 +65,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '00:40:8c:12:34:56',
-    'suggested_area': None,
     'sw_version': '9.80.1',
     'via_device_id': None,
   })

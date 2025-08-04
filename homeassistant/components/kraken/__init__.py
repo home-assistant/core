@@ -135,6 +135,7 @@ class KrakenData:
             self._hass,
             _LOGGER,
             name=DOMAIN,
+            config_entry=self._config_entry,
             update_method=self.async_update,
             update_interval=timedelta(
                 seconds=self._config_entry.options[CONF_SCAN_INTERVAL]

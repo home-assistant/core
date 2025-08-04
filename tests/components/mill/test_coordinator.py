@@ -11,11 +11,14 @@ from homeassistant.components.recorder.statistics import statistics_during_perio
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
+from tests.common import MockConfigEntry
 from tests.components.recorder.common import async_wait_recording_done
 
 
 async def test_mill_historic_data(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test historic data from Mill."""
+
+    entry = MockConfigEntry(domain=DOMAIN)
 
     data = {
         dt_util.parse_datetime("2024-12-03T00:00:00+01:00"): 2,
@@ -31,7 +34,7 @@ async def test_mill_historic_data(recorder_mock: Recorder, hass: HomeAssistant) 
     statistic_id = f"{DOMAIN}:energy_dev_id"
 
     coordinator = MillHistoricDataUpdateCoordinator(
-        hass, mill_data_connection=mill_data_connection
+        hass, entry, mill_data_connection=mill_data_connection
     )
     await coordinator._async_update_data()
     await async_wait_recording_done(hass)
@@ -96,6 +99,8 @@ async def test_mill_historic_data_no_heater(
 ) -> None:
     """Test historic data from Mill."""
 
+    entry = MockConfigEntry(domain=DOMAIN)
+
     data = {
         dt_util.parse_datetime("2024-12-03T00:00:00+01:00"): 2,
         dt_util.parse_datetime("2024-12-03T01:00:00+01:00"): 3,
@@ -110,7 +115,7 @@ async def test_mill_historic_data_no_heater(
     statistic_id = f"{DOMAIN}:energy_dev_id"
 
     coordinator = MillHistoricDataUpdateCoordinator(
-        hass, mill_data_connection=mill_data_connection
+        hass, entry, mill_data_connection=mill_data_connection
     )
     await coordinator._async_update_data()
     await async_wait_recording_done(hass)
@@ -133,6 +138,8 @@ async def test_mill_historic_data_no_data(
 ) -> None:
     """Test historic data from Mill."""
 
+    entry = MockConfigEntry(domain=DOMAIN)
+
     data = {
         dt_util.parse_datetime("2024-12-03T00:00:00+01:00"): 2,
         dt_util.parse_datetime("2024-12-03T01:00:00+01:00"): 3,
@@ -145,7 +152,7 @@ async def test_mill_historic_data_no_data(
     mill_data_connection.fetch_historic_energy_usage = AsyncMock(return_value=data)
 
     coordinator = MillHistoricDataUpdateCoordinator(
-        hass, mill_data_connection=mill_data_connection
+        hass, entry, mill_data_connection=mill_data_connection
     )
     await coordinator._async_update_data()
     await async_wait_recording_done(hass)
@@ -168,7 +175,7 @@ async def test_mill_historic_data_no_data(
     mill_data_connection.fetch_historic_energy_usage = AsyncMock(return_value=None)
 
     coordinator = MillHistoricDataUpdateCoordinator(
-        hass, mill_data_connection=mill_data_connection
+        hass, entry, mill_data_connection=mill_data_connection
     )
     await coordinator._async_update_data()
     await async_wait_recording_done(hass)
@@ -192,6 +199,8 @@ async def test_mill_historic_data_invalid_data(
 ) -> None:
     """Test historic data from Mill."""
 
+    entry = MockConfigEntry(domain=DOMAIN)
+
     data = {
         dt_util.parse_datetime("2024-12-03T00:00:00+01:00"): None,
         dt_util.parse_datetime("2024-12-03T01:00:00+01:00"): 3,
@@ -206,7 +215,7 @@ async def test_mill_historic_data_invalid_data(
     statistic_id = f"{DOMAIN}:energy_dev_id"
 
     coordinator = MillHistoricDataUpdateCoordinator(
-        hass, mill_data_connection=mill_data_connection
+        hass, entry, mill_data_connection=mill_data_connection
     )
     await coordinator._async_update_data()
     await async_wait_recording_done(hass)

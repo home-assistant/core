@@ -162,7 +162,11 @@ class UptimeKumaSensorEntity(
             name=coordinator.data[monitor].monitor_name,
             identifiers={(DOMAIN, f"{coordinator.config_entry.entry_id}_{monitor!s}")},
             manufacturer="Uptime Kuma",
-            configuration_url=coordinator.config_entry.data[CONF_URL],
+            configuration_url=(
+                None
+                if "127.0.0.1" in (url := coordinator.config_entry.data[CONF_URL])
+                else url
+            ),
             sw_version=coordinator.api.version.version,
         )
 

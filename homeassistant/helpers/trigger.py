@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_ENABLED,
     CONF_ID,
     CONF_PLATFORM,
+    CONF_SELECTOR,
     CONF_VARIABLES,
 )
 from homeassistant.core import (
@@ -41,8 +42,9 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
 from homeassistant.util.yaml.loader import JSON_TYPE
 
-from . import config_validation as cv
+from . import config_validation as cv, selector
 from .integration_platform import async_process_integration_platforms
+from .selector import TargetSelector
 from .template import Template
 from .typing import ConfigType, TemplateVarsType
 
@@ -73,12 +75,15 @@ TRIGGERS: HassKey[dict[str, str]] = HassKey("triggers")
 # Basic schemas to sanity check the trigger descriptions,
 # full validation is done by hassfest.triggers
 _FIELD_SCHEMA = vol.Schema(
-    {},
+    {
+        vol.Optional(CONF_SELECTOR): selector.validate_selector,
+    },
     extra=vol.ALLOW_EXTRA,
 )
 
 _TRIGGER_SCHEMA = vol.Schema(
     {
+        vol.Optional("target"): vol.Any(TargetSelector.CONFIG_SCHEMA, None),
         vol.Optional("fields"): vol.Schema({str: _FIELD_SCHEMA}),
     },
     extra=vol.ALLOW_EXTRA,

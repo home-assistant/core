@@ -25,6 +25,7 @@ async def mocked_cloud_object(hass: HomeAssistant) -> Cloud:
         payments=Mock(
             spec=payments_api.PaymentsApi,
             subscription_info=AsyncMock(),
+            migrate_paypal_agreement=AsyncMock(),
         ),
     )
 
@@ -52,10 +53,7 @@ async def test_migrate_paypal_agreement_with_timeout_error(
     mocked_cloud: Cloud,
 ) -> None:
     """Test that we handle timeout error."""
-    aioclient_mock.post(
-        "https://accounts.nabucasa.com/payments/migrate_paypal_agreement",
-        exc=TimeoutError(),
-    )
+    mocked_cloud.payments.migrate_paypal_agreement.side_effect = TimeoutError()
 
     assert await async_migrate_paypal_agreement(mocked_cloud) is None
     assert (

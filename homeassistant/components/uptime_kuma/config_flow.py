@@ -23,6 +23,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .const import DOMAIN
 
@@ -47,7 +48,7 @@ async def validate_connection(
     hass: HomeAssistant,
     url: URL | str,
     verify_ssl: bool,
-    api_key: str,
+    api_key: str | None,
 ) -> dict[str, str]:
     """Validate Uptime Kuma connectivity."""
     errors: dict[str, str] = {}
@@ -68,6 +69,8 @@ async def validate_connection(
 
 class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Uptime Kuma."""
+
+    _hassio_discovery: HassioServiceInfo | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -167,4 +170,62 @@ class UptimeKumaConfigFlow(ConfigFlow, domain=DOMAIN):
                 suggested_values=user_input or entry.data,
             ),
             errors=errors,
+        )
+
+    async def async_step_hassio(
+        self, discovery_info: HassioServiceInfo
+    ) -> ConfigFlowResult:
+        """Prepare configuration for Uptime Kuma add-on.
+
+        This flow is triggered by the discovery component.
+        """
+        self._async_abort_entries_match({CONF_URL: discovery_info.config[CONF_URL]})
+        await self.async_set_unique_id(discovery_info.uuid)
+        self._abort_if_unique_id_configured(
+            updates={CONF_URL: discovery_info.config[CONF_URL]}
+        )
+
+        self._hassio_discovery = discovery_info
+        return await self.async_step_hassio_confirm()
+
+    async def async_step_hassio_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm Supervisor discovery."""
+        assert self._hassio_discovery
+        errors: dict[str, str] = {}
+        api_key = user_input[CONF_API_KEY] if user_input else None
+
+        if not (
+            errors := await validate_connection(
+                self.hass,
+                self._hassio_discovery.config[CONF_URL],
+                True,
+                api_key,
+            )
+        ):
+            if user_input is None:
+                self._set_confirm_only()
+                return self.async_show_form(
+                    step_id="hassio_confirm",
+                    description_placeholders={
+                        "addon": self._hassio_discovery.config["addon"]
+                    },
+                )
+            return self.async_create_entry(
+                title=self._hassio_discovery.slug,
+                data={
+                    CONF_URL: self._hassio_discovery.config[CONF_URL],
+                    CONF_VERIFY_SSL: True,
+                    CONF_API_KEY: api_key,
+                },
+            )
+
+        return self.async_show_form(
+            step_id="hassio_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_REAUTH_DATA_SCHEMA, suggested_values=user_input
+            ),
+            description_placeholders={"addon": self._hassio_discovery.config["addon"]},
+            errors=errors if user_input is not None else None,
         )

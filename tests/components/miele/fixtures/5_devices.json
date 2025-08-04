@@ -648,5 +648,129 @@
       },
       "batteryLevel": null
     }
+  },
+  "DummyAppliance_12": {
+    "ident": {
+      "type": {
+        "key_localized": "Device type",
+        "value_raw": 12,
+        "value_localized": "Oven"
+      },
+      "deviceName": "",
+      "protocolVersion": 4,
+      "deviceIdentLabel": {
+        "fabNumber": "**REDACTED**",
+        "fabIndex": "16",
+        "techType": "H7660BP",
+        "matNumber": "11120960",
+        "swids": []
+      },
+      "xkmIdentLabel": {
+        "techType": "EK057",
+        "releaseVersion": "08.32"
+      }
+    },
+    "state": {
+      "ProgramID": {
+        "value_raw": 356,
+        "value_localized": "Defrost",
+        "key_localized": "Program name"
+      },
+      "status": {
+        "value_raw": 5,
+        "value_localized": "In use",
+        "key_localized": "status"
+      },
+      "programType": {
+        "value_raw": 1,
+        "value_localized": "Program",
+        "key_localized": "Program type"
+      },
+      "programPhase": {
+        "value_raw": 3073,
+        "value_localized": "Heating-up phase",
+        "key_localized": "Program phase"
+      },
+      "remainingTime": [0, 5],
+      "startTime": [0, 0],
+      "targetTemperature": [
+        {
+          "value_raw": 2500,
+          "value_localized": 25.0,
+          "unit": "Celsius"
+        },
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        },
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        }
+      ],
+      "coreTargetTemperature": [
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        }
+      ],
+      "temperature": [
+        {
+          "value_raw": 1954,
+          "value_localized": 19.54,
+          "unit": "Celsius"
+        },
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        },
+        {
+          "value_raw": -32768,
+          "value_localized": null,
+          "unit": "Celsius"
+        }
+      ],
+      "coreTemperature": [
+        {
+          "value_raw": 2200,
+          "value_localized": 22.0,
+          "unit": "Celsius"
+        }
+      ],
+      "signalInfo": false,
+      "signalFailure": false,
+      "signalDoor": false,
+      "remoteEnable": {
+        "fullRemoteControl": true,
+        "smartGrid": false,
+        "mobileStart": true
+      },
+      "ambientLight": null,
+      "light": 1,
+      "elapsedTime": [0, 0],
+      "spinningSpeed": {
+        "unit": "rpm",
+        "value_raw": null,
+        "value_localized": null,
+        "key_localized": "Spin speed"
+      },
+      "dryingStep": {
+        "value_raw": null,
+        "value_localized": "",
+        "key_localized": "Drying level"
+      },
+      "ventilationStep": {
+        "value_raw": null,
+        "value_localized": "",
+        "key_localized": "Fan level"
+      },
+      "plateStep": [],
+      "ecoFeedback": null,
+      "batteryLevel": null
+    }
   }
 }

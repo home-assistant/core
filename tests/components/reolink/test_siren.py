@@ -30,7 +30,7 @@ from tests.common import MockConfigEntry
 async def test_siren(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    reolink_connect: MagicMock,
+    reolink_host: MagicMock,
 ) -> None:
     """Test siren entity."""
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SIREN]):
@@ -48,8 +48,8 @@ async def test_siren(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    reolink_connect.set_volume.assert_not_called()
-    reolink_connect.set_siren.assert_called_with(0, True, None)
+    reolink_host.set_volume.assert_not_called()
+    reolink_host.set_siren.assert_called_with(0, True, None)
 
     await hass.services.async_call(
         SIREN_DOMAIN,
@@ -57,8 +57,8 @@ async def test_siren(
         {ATTR_ENTITY_ID: entity_id, ATTR_VOLUME_LEVEL: 0.85, ATTR_DURATION: 2},
         blocking=True,
     )
-    reolink_connect.set_volume.assert_called_with(0, volume=85)
-    reolink_connect.set_siren.assert_called_with(0, True, 2)
+    reolink_host.set_volume.assert_called_with(0, 85)
+    reolink_host.set_siren.assert_called_with(0, True, 2)
 
     # test siren turn off
     await hass.services.async_call(
@@ -67,7 +67,7 @@ async def test_siren(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    reolink_connect.set_siren.assert_called_with(0, False, None)
+    reolink_host.set_siren.assert_called_with(0, False, None)
 
 
 @pytest.mark.parametrize("attr", ["set_volume", "set_siren"])
@@ -87,7 +87,7 @@ async def test_siren(
 async def test_siren_turn_on_errors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    reolink_connect: MagicMock,
+    reolink_host: MagicMock,
     attr: str,
     value: Any,
     expected: Any,
@@ -100,8 +100,8 @@ async def test_siren_turn_on_errors(
 
     entity_id = f"{Platform.SIREN}.{TEST_NVR_NAME}_siren"
 
-    original = getattr(reolink_connect, attr)
-    setattr(reolink_connect, attr, value)
+    original = getattr(reolink_host, attr)
+    setattr(reolink_host, attr, value)
     with pytest.raises(expected):
         await hass.services.async_call(
             SIREN_DOMAIN,
@@ -110,13 +110,13 @@ async def test_siren_turn_on_errors(
             blocking=True,
         )
 
-    setattr(reolink_connect, attr, original)
+    setattr(reolink_host, attr, original)
 
 
 async def test_siren_turn_off_errors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    reolink_connect: MagicMock,
+    reolink_host: MagicMock,
 ) -> None:
     """Test errors when calling siren turn off service."""
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SIREN]):
@@ -126,7 +126,7 @@ async def test_siren_turn_off_errors(
 
     entity_id = f"{Platform.SIREN}.{TEST_NVR_NAME}_siren"
 
-    reolink_connect.set_siren.side_effect = ReolinkError("Test error")
+    reolink_host.set_siren.side_effect = ReolinkError("Test error")
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             SIREN_DOMAIN,
@@ -134,5 +134,3 @@ async def test_siren_turn_off_errors(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
-
-    reolink_connect.set_siren.reset_mock(side_effect=True)

@@ -3,6 +3,7 @@
 from typing import Any
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import template, vacuum
 from homeassistant.components.vacuum import (
@@ -18,10 +19,11 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 
-from .conftest import ConfigurationStyle
+from .conftest import ConfigurationStyle, async_get_flow_preview_state
 
-from tests.common import assert_setup_component
+from tests.common import MockConfigEntry, assert_setup_component
 from tests.components.vacuum import common
+from tests.typing import WebSocketGenerator
 
 TEST_OBJECT_ID = "test_vacuum"
 TEST_ENTITY_ID = f"vacuum.{TEST_OBJECT_ID}"
@@ -1153,3 +1155,164 @@ async def test_empty_action_config(
     assert state.attributes["supported_features"] == (
         VacuumEntityFeature.STATE | VacuumEntityFeature.START | supported_features
     )
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        (
+            1,
+            {"name": TEST_OBJECT_ID, "start": [], **TEMPLATE_VACUUM_ACTIONS},
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("service", "expected"),
+    [
+        (vacuum.SERVICE_START, VacuumActivity.CLEANING),
+        (vacuum.SERVICE_PAUSE, VacuumActivity.PAUSED),
+        (vacuum.SERVICE_STOP, VacuumActivity.IDLE),
+        (vacuum.SERVICE_RETURN_TO_BASE, VacuumActivity.RETURNING),
+        (vacuum.SERVICE_CLEAN_SPOT, VacuumActivity.CLEANING),
+    ],
+)
+@pytest.mark.usefixtures("setup_vacuum")
+async def test_assumed_optimistic(
+    hass: HomeAssistant,
+    service: str,
+    expected: VacuumActivity,
+    calls: list[ServiceCall],
+) -> None:
+    """Test assumed optimistic."""
+
+    await hass.services.async_call(
+        vacuum.DOMAIN,
+        service,
+        {"entity_id": TEST_ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == expected
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        (
+            1,
+            {
+                "name": TEST_OBJECT_ID,
+                "state": "{{ states('sensor.test_state') }}",
+                "start": [],
+                **TEMPLATE_VACUUM_ACTIONS,
+                "optimistic": True,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    ("service", "expected"),
+    [
+        (vacuum.SERVICE_START, VacuumActivity.CLEANING),
+        (vacuum.SERVICE_PAUSE, VacuumActivity.PAUSED),
+        (vacuum.SERVICE_STOP, VacuumActivity.IDLE),
+        (vacuum.SERVICE_RETURN_TO_BASE, VacuumActivity.RETURNING),
+        (vacuum.SERVICE_CLEAN_SPOT, VacuumActivity.CLEANING),
+    ],
+)
+@pytest.mark.usefixtures("setup_vacuum")
+async def test_optimistic_option(
+    hass: HomeAssistant,
+    service: str,
+    expected: VacuumActivity,
+    calls: list[ServiceCall],
+) -> None:
+    """Test optimistic yaml option."""
+    hass.states.async_set(TEST_STATE_SENSOR, VacuumActivity.DOCKED)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == VacuumActivity.DOCKED
+
+    await hass.services.async_call(
+        vacuum.DOMAIN,
+        service,
+        {"entity_id": TEST_ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == expected
+
+    hass.states.async_set(TEST_STATE_SENSOR, VacuumActivity.RETURNING)
+    await hass.async_block_till_done()
+
+    hass.states.async_set(TEST_STATE_SENSOR, VacuumActivity.DOCKED)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == VacuumActivity.DOCKED
+
+
+async def test_setup_config_entry(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Tests creating a vacuum from a config entry."""
+
+    hass.states.async_set(
+        "sensor.test_sensor",
+        "docked",
+        {},
+    )
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "state": "{{ states('sensor.test_sensor') }}",
+            "start": [],
+            "template_type": vacuum.DOMAIN,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("vacuum.my_template")
+    assert state is not None
+    assert state == snapshot
+
+
+async def test_flow_preview(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the config flow preview."""
+
+    state = await async_get_flow_preview_state(
+        hass,
+        hass_ws_client,
+        vacuum.DOMAIN,
+        {
+            "name": "My template",
+            "state": "{{ 'cleaning' }}",
+            "start": [],
+        },
+    )
+
+    assert state["state"] == VacuumActivity.CLEANING

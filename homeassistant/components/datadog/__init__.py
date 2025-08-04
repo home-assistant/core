@@ -75,7 +75,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> b
     prefix = options[CONF_PREFIX]
     sample_rate = options[CONF_RATE]
 
-    statsd_client = DogStatsd(host=host, port=port, namespace=prefix)
+    statsd_client = DogStatsd(
+        host=host, port=port, namespace=prefix, disable_telemetry=True
+    )
     entry.runtime_data = statsd_client
 
     initialize(statsd_host=host, statsd_port=port)

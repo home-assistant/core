@@ -105,7 +105,7 @@
     "abort": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_scripts_support": "Device does not support scripts and cannot be used as a Bluetooth scanner.",
-      "zigbee_enabled": "Device with Zigbee enabled cannot be used as a Bluetooth scanner. Please disable it to use the device as a Bluetooth scanner."
+      "zigbee_firmware": "A device with Zigbee firmware cannot be used as a Bluetooth scanner. Please switch to Matter firmware to use the device as a Bluetooth scanner."
     }
   },
   "selector": {

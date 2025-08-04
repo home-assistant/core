@@ -99,7 +99,7 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                 ),
             }
         )
-        self.add_suggested_values_to_schema(
+        data_schema = self.add_suggested_values_to_schema(
             data_schema,
             {"section_1": {"int": self.config_entry.options.get(CONF_INT, 10)}},
         )
