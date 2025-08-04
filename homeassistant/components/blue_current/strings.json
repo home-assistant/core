@@ -157,7 +157,7 @@
   "services": {
     "start_charge_session": {
       "name": "Start charge session",
-      "description": "Start a new charge session.",
+      "description": "Starts a new charge session on a specified charge point.",
       "fields": {
         "charging_card_id": {
           "name": "Charging card ID",

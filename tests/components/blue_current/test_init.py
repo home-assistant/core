@@ -1,7 +1,7 @@
 """Test Blue Current Init Component."""
 
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from bluecurrent_api.exceptions import (
     BlueCurrentException,
@@ -169,5 +169,23 @@ async def test_start_charging_action_errors(
             DOMAIN,
             "start_charge_session",
             {"device_id": "INVALID"},
+            blocking=True,
+        )
+
+    get_entry_mock = MagicMock()
+    get_entry_mock.state = ConfigEntryState.SETUP_IN_PROGRESS
+
+    with (
+        patch.object(
+            hass.config_entries, "async_get_entry", return_value=get_entry_mock
+        ),
+        pytest.raises(ServiceValidationError),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "start_charge_session",
+            {
+                "device_id": list(dr.async_get(hass).devices)[0],
+            },
             blocking=True,
         )

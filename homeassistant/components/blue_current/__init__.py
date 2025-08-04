@@ -14,7 +14,7 @@ from bluecurrent_api.exceptions import (
     WebsocketError,
 )
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_API_TOKEN, CONF_DEVICE_ID, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import (
@@ -22,8 +22,9 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     ServiceValidationError,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     BCU_APP,
@@ -50,6 +51,8 @@ GRID = "GRID"
 OBJECT = "object"
 VALUE_TYPES = [CHARGEPOINT_STATUS, CHARGEPOINT_SETTINGS]
 
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+
 
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: BlueCurrentConfigEntry
@@ -73,18 +76,35 @@ async def async_setup_entry(
     config_entry.runtime_data = connector
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
+    return True
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Blue Current."""
+
     async def start_charge_session(service_call: ServiceCall) -> None:
         """Start a charge session with the provided device and charge card ID."""
         # When no charge card is provided, use the default charge card set in the config flow.
         charging_card_id = service_call.data.get(CHARGING_CARD_ID)
         device_id = service_call.data.get(CONF_DEVICE_ID)
+
         if device_id is None:
             raise ServiceValidationError
 
         # Get the device based on the given device ID.
         device = dr.async_get(hass).devices.get(device_id)
+
         if device is None:
             raise ServiceValidationError
+
+        config_entry = hass.config_entries.async_get_entry(
+            list(device.config_entries)[0]
+        )
+
+        if config_entry is None or config_entry.state is not ConfigEntryState.LOADED:
+            raise ServiceValidationError
+
+        connector = config_entry.runtime_data
 
         # Get the evse_id from the identifier of the device.
         evse_id = list(device.identifiers)[0][1]
