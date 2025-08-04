@@ -123,6 +123,29 @@ DEVICE_MOCKS = {
         Platform.BINARY_SENSOR,
         Platform.SENSOR,
     ],
+    "pc_t2afic7i3v1bwhfp": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.SWITCH,
+    ],
+    "pc_trjopo1vdlt9q1tg": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.SWITCH,
+    ],
+    "pir_3amxzozho9xp4mkh": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.BINARY_SENSOR,
+        Platform.SENSOR,
+    ],
+    "pir_fcdjzz3s": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.BINARY_SENSOR,
+        Platform.SENSOR,
+    ],
+    "pir_wqz93nrdomectyoz": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.BINARY_SENSOR,
+        Platform.SENSOR,
+    ],
     "qccdz_7bvgooyjhiua1yyq": [
         # https://github.com/home-assistant/core/issues/136207
         Platform.SWITCH,
