@@ -10,7 +10,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_API, CONF_COORDINATOR, DOMAIN
 from .coordinator import PicnicUpdateCoordinator
-from .services import async_register_services
+from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.SENSOR, Platform.TODO]
@@ -19,7 +19,7 @@ PLATFORMS = [Platform.SENSOR, Platform.TODO]
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Picnic integration."""
 
-    await async_register_services(hass)
+    async_setup_services(hass)
 
     return True
 

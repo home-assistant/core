@@ -2,8 +2,8 @@
 
 from typing import Any
 
-from libpyfoscam import FoscamCamera
-from libpyfoscam.foscam import (
+from libpyfoscamcgi import FoscamCamera
+from libpyfoscamcgi.foscamcgi import (
     ERROR_FOSCAM_AUTH,
     ERROR_FOSCAM_UNAVAILABLE,
     FOSCAM_SUCCESS,

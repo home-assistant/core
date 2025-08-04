@@ -27,23 +27,42 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "aiohttp": "SemVer",
     "attrs": "CalVer",
     "awesomeversion": "CalVer",
+    "bleak": "SemVer",
     "grpcio": "SemVer",
     "httpx": "SemVer",
+    "lxml": "SemVer",
     "mashumaro": "SemVer",
+    "numpy": "SemVer",
+    "pandas": "SemVer",
+    "pillow": "SemVer",
     "pydantic": "SemVer",
     "pyjwt": "SemVer",
     "pytz": "CalVer",
+    "requests": "SemVer",
     "typing_extensions": "SemVer",
+    "urllib3": "SemVer",
     "yarl": "SemVer",
+}
+PACKAGE_CHECK_PREPARE_UPDATE: dict[str, int] = {
+    # In the form dict("dependencyX": n+1)
+    # - dependencyX should be the name of the referenced dependency
+    # - current major version +1
+    # Pandas will only fully support Python 3.14 in v3.
+    "pandas": 3,
 }
 PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # In the form dict("domain": {"package": {"dependency1", "dependency2"}})
     # - domain is the integration domain
     # - package is the package (can be transitive) referencing the dependency
     # - dependencyX should be the name of the referenced dependency
-    "mealie": {
-        # https://github.com/joostlek/python-mealie/pull/490
-        "aiomealie": {"awesomeversion"}
+    "geocaching": {
+        # scipy version closely linked to numpy
+        # geocachingapi > reverse_geocode > scipy > numpy
+        "scipy": {"numpy"}
+    },
+    "noaa_tides": {
+        # https://github.com/GClunies/noaa_coops/pull/69
+        "noaa-coops": {"pandas"}
     },
 }
 
@@ -75,6 +94,7 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # - reasonX should be the name of the invalid dependency
     "adax": {"adax": {"async-timeout"}, "adax-local": {"async-timeout"}},
     "airthings": {"airthings-cloud": {"async-timeout"}},
+    "alexa_devices": {"marisa-trie": {"setuptools"}},
     "ampio": {"asmog": {"async-timeout"}},
     "apache_kafka": {"aiokafka": {"async-timeout"}},
     "apple_tv": {"pyatv": {"async-timeout"}},
@@ -88,7 +108,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pyblackbird > pyserial-asyncio
         "pyblackbird": {"pyserial-asyncio"}
     },
-    "bsblan": {"python-bsblan": {"async-timeout"}},
     "cloud": {"hass-nabucasa": {"async-timeout"}, "snitun": {"async-timeout"}},
     "cmus": {
         # https://github.com/mtreinish/pycmus/issues/4
@@ -104,11 +123,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "devialet": {"async-upnp-client": {"async-timeout"}},
     "dlna_dmr": {"async-upnp-client": {"async-timeout"}},
     "dlna_dms": {"async-upnp-client": {"async-timeout"}},
-    "edl21": {
-        # https://github.com/mtdcr/pysml/issues/21
-        # pysml > pyserial-asyncio
-        "pysml": {"pyserial-asyncio", "async-timeout"},
-    },
     "efergy": {
         # https://github.com/tkdrob/pyefergy/issues/46
         # pyefergy > codecov
@@ -220,21 +234,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pymonoprice > pyserial-asyncio
         "pymonoprice": {"pyserial-asyncio"}
     },
-    "mysensors": {
-        # https://github.com/theolind/pymysensors/issues/818
-        # pymysensors > pyserial-asyncio
-        "pymysensors": {"pyserial-asyncio"}
-    },
-    "mystrom": {
-        # https://github.com/home-assistant-ecosystem/python-mystrom/issues/55
-        # python-mystrom > setuptools
-        "python-mystrom": {"setuptools"}
-    },
-    "ness_alarm": {
-        # https://github.com/nickw444/nessclient/issues/73
-        # nessclient > pyserial-asyncio
-        "nessclient": {"pyserial-asyncio"}
-    },
     "nibe_heatpump": {"nibe": {"async-timeout"}},
     "norway_air": {"pymetno": {"async-timeout"}},
     "nx584": {
@@ -255,27 +254,11 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # opower > arrow > types-python-dateutil
         "arrow": {"types-python-dateutil"}
     },
-    "osoenergy": {
-        # https://github.com/osohotwateriot/apyosohotwaterapi/pull/4
-        # pyosoenergyapi > unasync > setuptools
-        "unasync": {"setuptools"}
-    },
-    "ovo_energy": {
-        # https://github.com/timmo001/ovoenergy/issues/132
-        # ovoenergy > incremental > setuptools
-        "incremental": {"setuptools"}
-    },
-    "pi_hole": {"hole": {"async-timeout"}},
     "pvpc_hourly_pricing": {"aiopvpc": {"async-timeout"}},
     "remote_rpi_gpio": {
         # https://github.com/waveform80/colorzero/issues/9
         # gpiozero > colorzero > setuptools
         "colorzero": {"setuptools"}
-    },
-    "rflink": {
-        # https://github.com/aequitas/python-rflink/issues/78
-        # rflink > pyserial-asyncio
-        "rflink": {"pyserial-asyncio", "async-timeout"}
     },
     "ring": {"ring-doorbell": {"async-timeout"}},
     "rmvtransport": {"pyrmvtransport": {"async-timeout"}},
@@ -322,14 +305,6 @@ PYTHON_VERSION_CHECK_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # - domain is the integration domain
     # - package is the package (can be transitive) referencing the dependency
     # - dependencyX should be the name of the referenced dependency
-    "bluetooth": {
-        # https://github.com/hbldh/bleak/pull/1718 (not yet released)
-        "homeassistant": {"bleak"}
-    },
-    "eq3btsmart": {
-        # https://github.com/EuleMitKeule/eq3btsmart/releases/tag/2.0.0
-        "homeassistant": {"eq3btsmart"}
-    },
     "python_script": {
         # Security audits are needed for each Python version
         "homeassistant": {"restrictedpython"}
@@ -530,17 +505,9 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
             continue
 
         # Check for restrictive version limits on Python
-        if (
-            (requires_python := metadata(package)["Requires-Python"])
-            and not all(
-                _is_dependency_version_range_valid(version_part, "SemVer")
-                for version_part in requires_python.split(",")
-            )
-            # "bleak" is a transient dependency of 53 integrations, and we don't
-            # want to add the whole list to PYTHON_VERSION_CHECK_EXCEPTIONS
-            # This extra check can be removed when bleak is updated
-            # https://github.com/hbldh/bleak/pull/1718
-            and (package in packages or package != "bleak")
+        if (requires_python := metadata(package)["Requires-Python"]) and not all(
+            _is_dependency_version_range_valid(version_part, "SemVer")
+            for version_part in requires_python.split(",")
         ):
             needs_python_version_check_exception = True
             integration.add_warning_or_error(
@@ -612,7 +579,7 @@ def check_dependency_version_range(
         version == "Any"
         or (convention := PACKAGE_CHECK_VERSION_RANGE.get(pkg)) is None
         or all(
-            _is_dependency_version_range_valid(version_part, convention)
+            _is_dependency_version_range_valid(version_part, convention, pkg)
             for version_part in version.split(";", 1)[0].split(",")
         )
     ):
@@ -626,14 +593,28 @@ def check_dependency_version_range(
     return False
 
 
-def _is_dependency_version_range_valid(version_part: str, convention: str) -> bool:
+def _is_dependency_version_range_valid(
+    version_part: str, convention: str, pkg: str | None = None
+) -> bool:
+    prepare_update = PACKAGE_CHECK_PREPARE_UPDATE.get(pkg) if pkg else None
     version_match = PIP_VERSION_RANGE_SEPARATOR.match(version_part.strip())
     operator = version_match.group(1)
     version = version_match.group(2)
+    awesome = AwesomeVersion(version)
 
     if operator in (">", ">=", "!="):
         # Lower version binding and version exclusion are fine
         return True
+
+    if prepare_update is not None:
+        if operator in ("==", "~="):
+            # Only current major version allowed which prevents updates to the next one
+            return False
+        # Allow upper constraints for major version + 1
+        if operator == "<" and awesome.section(0) < prepare_update + 1:
+            return False
+        if operator == "<=" and awesome.section(0) < prepare_update:
+            return False
 
     if convention == "SemVer":
         if operator == "==":
@@ -641,7 +622,6 @@ def _is_dependency_version_range_valid(version_part: str, convention: str) -> bo
             # e.g. ==1.* is allowed, but ==1.2.* is not
             return version.endswith(".*") and version.count(".") == 1
 
-        awesome = AwesomeVersion(version)
         if operator in ("<", "<="):
             # Upper version binding only allowed on major version
             # e.g. <=3 is allowed, but <=3.1 is not

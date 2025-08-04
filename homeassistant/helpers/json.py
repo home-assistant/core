@@ -235,10 +235,7 @@ def find_paths_unserializable_data(
 
     This method is slow! Only use for error handling.
     """
-    from homeassistant.core import (  # pylint: disable=import-outside-toplevel
-        Event,
-        State,
-    )
+    from homeassistant.core import Event, State  # noqa: PLC0415
 
     to_process = deque([(bad_data, "$")])
     invalid = {}

@@ -66,7 +66,7 @@ ENTITIES: tuple[LaMarzoccoBinarySensorEntityDescription, ...] = (
                     WidgetType.CM_BACK_FLUSH, BackFlush(status=BackFlushStatus.OFF)
                 ),
             ).status
-            is BackFlushStatus.REQUESTED
+            in (BackFlushStatus.REQUESTED, BackFlushStatus.CLEANING)
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
         supported_fn=lambda coordinator: (

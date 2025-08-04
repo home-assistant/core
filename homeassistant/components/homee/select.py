@@ -14,6 +14,11 @@ from .entity import HomeeEntity
 PARALLEL_UPDATES = 0
 
 SELECT_DESCRIPTIONS: dict[AttributeType, SelectEntityDescription] = {
+    AttributeType.DISPLAY_TEMPERATURE_SELECTION: SelectEntityDescription(
+        key="display_temperature_selection",
+        options=["target", "current"],
+        entity_category=EntityCategory.CONFIG,
+    ),
     AttributeType.REPEATER_MODE: SelectEntityDescription(
         key="repeater_mode",
         options=["off", "level1", "level2"],

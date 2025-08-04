@@ -86,7 +86,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': '12.34-56.78-co',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': 'µg/m³',
   })
 # ---
 # name: test_sensor_states[air_pollution][sensor.openweathermap_carbon_monoxide-state]
@@ -96,7 +96,7 @@
       'device_class': 'carbon_monoxide',
       'friendly_name': 'openweathermap Carbon monoxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppm',
+      'unit_of_measurement': 'µg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openweathermap_carbon_monoxide',
