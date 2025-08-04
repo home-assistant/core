@@ -15,7 +15,6 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from . import init_integration
 
@@ -32,14 +31,13 @@ async def test_button(
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
+@pytest.mark.freeze_time("2023-10-21")
 async def test_button_press(hass: HomeAssistant) -> None:
     """Test button press."""
     await init_integration(hass)
 
-    now = dt_util.utcnow()
     with (
         patch("homeassistant.components.nextdns.NextDns.clear_logs") as mock_clear_logs,
-        patch("homeassistant.core.dt_util.utcnow", return_value=now),
     ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
@@ -53,7 +51,7 @@ async def test_button_press(hass: HomeAssistant) -> None:
 
     state = hass.states.get("button.fake_profile_clear_logs")
     assert state
-    assert state.state == now.isoformat()
+    assert state.state == "2023-10-21T00:00:00+00:00"
 
 
 @pytest.mark.parametrize(
