@@ -1,0 +1,31 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "TuneBlade",
+        "description": "TuneBlade Remote",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "name": "Name"
+        },
+        "data_description": {
+          "host": "IP address of the TuneBlade device",
+          "port": "The port number that TuneBlade exposes its API on",
+          "name": "Friendly name for this TuneBlade instance"
+        }
+      },
+      "confirm": {
+        "title": "Confirm TuneBlade Remote",
+        "description": "TuneBlade was discovered at {ip}. Do you want to add {name}?"
+      }
+    },
+    "abort": {
+      "cannot_connect": "Unable to connect to TuneBlade device.",
+      "already_configured": "TuneBlade is already configured."
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to TuneBlade device."
+    }
+  }
+}
