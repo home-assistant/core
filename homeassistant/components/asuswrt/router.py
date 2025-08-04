@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyasuswrt import AsusWrtError
 
@@ -24,7 +24,6 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util, slugify
 
-from . import AsusWrtConfigEntry
 from .bridge import AsusWrtBridge, WrtDevice
 from .const import (
     CONF_DNSMASQ,
@@ -40,6 +39,9 @@ from .const import (
     KEY_SENSORS,
     SENSORS_CONNECTED_DEVICE,
 )
+
+if TYPE_CHECKING:
+    from . import AsusWrtConfigEntry
 
 CONF_REQ_RELOAD = [CONF_DNSMASQ, CONF_INTERFACE, CONF_REQUIRE_IP]
 
