@@ -46,7 +46,7 @@ def _async_get_entry(
 
 
 async def _async_get_posts(call: ServiceCall) -> ServiceResponse:
-    """Get requests made to Feedreader."""
+    """Get posts from Feedreader."""
     entry = _async_get_entry(call.hass, call.data[ATTR_CONFIG_ENTRY_ID])
 
     return {"posts": cast(list[JsonValueType], entry.runtime_data.data)}
