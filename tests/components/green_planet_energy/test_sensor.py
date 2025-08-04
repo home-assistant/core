@@ -12,12 +12,12 @@ async def test_sensor_setup(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensor setup."""
-    # 28 sensors: 24 hourly sensors + 4 special sensors (highest, lowest_day, lowest_night, current)
-    assert len(entity_registry.entities) == 28
+    # 29 sensors: 24 hourly sensors + 5 special sensors (highest, lowest_day, lowest_night, current, chart_48h)
+    assert len(entity_registry.entities) == 29
 
     # Check that all expected sensors exist
     for hour in range(24):
-        entity_id = f"sensor.price_{hour:02d}_00"
+        entity_id = f"sensor.gpe_price_{hour:02d}"
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.attributes["hour"] == hour
@@ -31,22 +31,22 @@ async def test_sensor_values(
     # Test some specific sensor values based on mock data
     # Mock data generates price = 0.20 + (hour * 0.01)
 
-    state_00 = hass.states.get("sensor.price_00_00")
+    state_00 = hass.states.get("sensor.gpe_price_00")
     assert state_00.state == "0.2"  # Changed from "0.20" to "0.2"
 
-    state_09 = hass.states.get("sensor.price_09_00")
+    state_09 = hass.states.get("sensor.gpe_price_09")
     assert state_09.state == "0.29"
 
-    state_12 = hass.states.get("sensor.price_12_00")
+    state_12 = hass.states.get("sensor.gpe_price_12")
     assert state_12.state == "0.32"
 
-    state_15 = hass.states.get("sensor.price_15_00")
+    state_15 = hass.states.get("sensor.gpe_price_15")
     assert state_15.state == "0.35"
 
-    state_18 = hass.states.get("sensor.price_18_00")
+    state_18 = hass.states.get("sensor.gpe_price_18")
     assert state_18.state == "0.38"
 
-    state_23 = hass.states.get("sensor.price_23_00")
+    state_23 = hass.states.get("sensor.gpe_price_23")
     assert state_23.state == "0.43"
 
 
@@ -56,25 +56,27 @@ async def test_special_sensors(
     """Test the special sensors (highest, day lowest, night lowest, current price)."""
     # Get all entities for the config entry
     entity_registry = er.async_get(hass)
-    entries = er.async_entries_for_config_entry(
-        entity_registry, init_integration.entry_id
-    )
+    _ = er.async_entries_for_config_entry(entity_registry, init_integration.entry_id)
 
     # Find the special sensors by their unique_id pattern
+    # Collect special sensor entities
     highest_entity = None
     lowest_day_entity = None
     lowest_night_entity = None
     current_entity = None
+    chart_entity = None
 
-    for entry in entries:
+    for entry in entity_registry.entities.values():
         if "highest_price_today" in entry.unique_id:
             highest_entity = entry.entity_id
         elif "lowest_price_day" in entry.unique_id:
             lowest_day_entity = entry.entity_id
         elif "lowest_price_night" in entry.unique_id:
             lowest_night_entity = entry.entity_id
-        elif "current_price" in entry.unique_id:
+        elif "current_price" in entry.unique_id and "chart" not in entry.unique_id:
             current_entity = entry.entity_id
+        elif "price_chart_24h" in entry.unique_id:
+            chart_entity = entry.entity_id
 
     # Test highest price sensor
     assert highest_entity is not None
@@ -109,4 +111,23 @@ async def test_special_sensors(
     assert current_state is not None
     # Current price depends on current hour, so we just check it's not None
     assert current_state.state is not None
+
+    # Test 24h chart sensor
+    assert chart_entity is not None
+    chart_state = hass.states.get(chart_entity)
+    assert chart_state is not None
+    # Chart sensor shows current price as value
+    assert chart_state.state is not None
+    # Check that chart_data attribute exists and has 24 data points
+    assert "chart_data" in chart_state.attributes
+    chart_data = chart_state.attributes["chart_data"]
+    assert len(chart_data) == 24  # 24 hours from current time
+    assert chart_state.attributes["data_points"] == 24
+    # Check structure of first data point
+    first_point = chart_data[0]
+    assert "hour" in first_point
+    assert "price" in first_point
+    assert "datetime" in first_point
+    assert "time_slot" in first_point
+    assert "day" in first_point
     assert "current_hour" in current_state.attributes

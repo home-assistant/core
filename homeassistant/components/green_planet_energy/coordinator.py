@@ -116,23 +116,47 @@ class GreenPlanetEnergyUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.warning("Invalid or missing price data in API response")
             return processed_data
 
-        # Extract hourly prices for all 24 hours
-        for hour in range(24):  # 0-23 inclusive
-            hour_key = f"gpe_price_{hour:02d}"
-
-            # Find the matching hour in the data
-            for i, timestamp_str in enumerate(datum_array):
-                try:
-                    # Parse timestamp string like "02.08.25, 09:00 Uhr"
-                    if f"{hour:02d}:00 Uhr" in timestamp_str:
-                        price_str = wert_array[i]
-                        # Convert price string to float (handle German decimal comma)
-                        price_value = float(price_str.replace(",", "."))
-                        processed_data[hour_key] = price_value
-                        break
-                except (ValueError, IndexError) as err:
-                    _LOGGER.debug("Error parsing price data at index %s: %s", i, err)
+        # Process all data points from the API response
+        for i, timestamp_str in enumerate(datum_array):
+            try:
+                # Parse timestamp string like "04.08.25, 09:00 Uhr"
+                # Extract the hour from the timestamp
+                if " Uhr" not in timestamp_str:
                     continue
+
+                # Extract hour part (e.g., "09:00" from "04.08.25, 09:00 Uhr")
+                time_part = timestamp_str.split(", ")[1].replace(" Uhr", "")
+                hour_str = time_part.split(":")[0]
+                hour = int(hour_str)
+
+                # Extract date part (e.g., "04.08.25" from "04.08.25, 09:00 Uhr")
+                date_part = timestamp_str.split(", ")[0]
+
+                # Get today and tomorrow dates in the same format
+                today = date.today()
+                tomorrow = today + timedelta(days=1)
+                today_str = today.strftime("%d.%m.%y")
+                tomorrow_str = tomorrow.strftime("%d.%m.%y")
+
+                # Determine if this is today's or tomorrow's data
+                if date_part == today_str:
+                    # Today's price
+                    hour_key = f"gpe_price_{hour:02d}"
+                elif date_part == tomorrow_str:
+                    # Tomorrow's price
+                    hour_key = f"gpe_price_{hour:02d}_tomorrow"
+                else:
+                    # Unknown date, skip
+                    continue
+
+                # Convert price string to float (handle German decimal comma)
+                price_str = wert_array[i]
+                price_value = float(price_str.replace(",", "."))
+                processed_data[hour_key] = price_value
+
+            except (ValueError, IndexError) as err:
+                _LOGGER.debug("Error parsing price data at index %s: %s", i, err)
+                continue
 
         _LOGGER.debug("Processed electricity prices: %s", processed_data)
         return processed_data

@@ -31,18 +31,30 @@ def mock_api() -> Generator[MagicMock]:
     """Create a mocked aiohttp session."""
     mock_session = MagicMock()
 
-    # Create proper mock response with realistic data
-    mock_response = AsyncMock()
+    # Mock response data in the correct format expected by the coordinator
+    # Format: {"result": {"datum": [...], "wert": [...]}}
+
+    # Create datum array with proper timestamp format
+    # Today's data: "04.08.25, HH:00 Uhr"
+    datum_array = [f"04.08.25, {hour:02d}:00 Uhr" for hour in range(24)]
+    # Tomorrow's data: "05.08.25, HH:00 Uhr"
+    datum_array.extend([f"05.08.25, {hour:02d}:00 Uhr" for hour in range(24)])
+
+    # Create wert array (prices as strings with German decimal comma format)
+    # Today's prices: 0.20 + (hour * 0.01)
+    wert_array = [f"{0.20 + (hour * 0.01):.2f}".replace(".", ",") for hour in range(24)]
+    # Tomorrow's prices: 0.25 + (hour * 0.01) (slightly different for testing)
+    wert_array.extend(
+        [f"{0.25 + (hour * 0.01):.2f}".replace(".", ",") for hour in range(24)]
+    )
+
+    mock_response = MagicMock()
     mock_response.status = 200
-    mock_response.json.return_value = {
-        "result": {
-            "errorCode": 0,
-            "datum": [f"03.08.25, {hour:02d}:00 Uhr" for hour in range(24)],
-            "wert": [
-                f"{0.20 + (hour * 0.01):.3f}".replace(".", ",") for hour in range(24)
-            ],
+    mock_response.json = AsyncMock(
+        return_value={
+            "result": {"errorCode": 0, "datum": datum_array, "wert": wert_array}
         }
-    }
+    )
 
     mock_session.post.return_value.__aenter__.return_value = mock_response
 

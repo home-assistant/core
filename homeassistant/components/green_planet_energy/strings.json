@@ -98,6 +98,9 @@
       },
       "current_price": {
         "name": "Current price"
+      },
+      "price_chart_24h": {
+        "name": "24h price chart data"
       }
     }
   }

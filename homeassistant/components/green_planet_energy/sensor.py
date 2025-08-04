@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -75,6 +76,14 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         suggested_display_precision=4,
         hour=-1,  # Special value to indicate this is not an hourly sensor
     ),
+    GreenPlanetEnergySensorEntityDescription(
+        key="gpe_price_chart_24h",
+        translation_key="price_chart_24h",
+        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
+        device_class=SensorDeviceClass.MONETARY,
+        suggested_display_precision=4,
+        hour=-4,  # Special value for 24h chart data
+    ),
 ]
 
 
@@ -112,6 +121,14 @@ class GreenPlanetEnergySensor(
         # Use fixed unique_id with just the key for predictable entity IDs
         self._attr_unique_id = description.key
 
+        # Set explicit entity_id to ensure gpe_ prefix for all sensors
+        if description.hour >= 0:
+            # For hourly sensors, use gpe_price_XX format
+            self.entity_id = f"sensor.{description.key}"
+        else:
+            # For special sensors, use the full key
+            self.entity_id = f"sensor.{description.key}"
+
         # Set appropriate name based on sensor type
         if description.hour >= 0:
             self._attr_name = f"Price {description.hour:02d}:00"
@@ -134,6 +151,8 @@ class GreenPlanetEnergySensor(
             return self._get_lowest_price_night()
         if self.entity_description.key == "gpe_current_price":
             return self._get_current_price()
+        if self.entity_description.key == "gpe_price_chart_24h":
+            return self._get_current_price()  # Use current price as main value
 
         # Regular hourly sensor
         return self.coordinator.data.get(self.entity_description.key)
@@ -202,6 +221,57 @@ class GreenPlanetEnergySensor(
         current_hour = dt_util.now().hour
         price_key = f"gpe_price_{current_hour:02d}"
         return self.coordinator.data.get(price_key)
+
+    def _get_24h_chart_data(self) -> list[dict[str, Any]]:
+        """Get next 24 hours of price data for charting."""
+        if not self.coordinator.data:
+            return []
+
+        chart_data = []
+        current_hour = dt_util.now().hour
+
+        # Get remaining hours of today (from current hour to 23)
+        for hour in range(current_hour, 24):
+            price_key = f"gpe_price_{hour:02d}"
+            price = self.coordinator.data.get(price_key)
+
+            # Create datetime for this hour
+            hour_datetime = dt_util.now().replace(
+                hour=hour, minute=0, second=0, microsecond=0
+            )
+
+            chart_data.append(
+                {
+                    "hour": hour,
+                    "price": price,
+                    "datetime": hour_datetime.isoformat(),
+                    "time_slot": f"{hour:02d}:00-{hour + 1:02d}:00",
+                    "day": "today",
+                }
+            )
+
+        # Get tomorrow's hours to fill up to 24 hours total
+        hours_needed = 24 - len(chart_data)
+        for hour in range(hours_needed):
+            price_key = f"gpe_price_{hour:02d}_tomorrow"
+            price = self.coordinator.data.get(price_key)
+
+            # Create datetime for tomorrow's hour
+            tomorrow_datetime = (dt_util.now() + timedelta(days=1)).replace(
+                hour=hour, minute=0, second=0, microsecond=0
+            )
+
+            chart_data.append(
+                {
+                    "hour": hour,
+                    "price": price,
+                    "datetime": tomorrow_datetime.isoformat(),
+                    "time_slot": f"{hour:02d}:00-{hour + 1:02d}:00",
+                    "day": "tomorrow",
+                }
+            )
+
+        return chart_data
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -275,6 +345,16 @@ class GreenPlanetEnergySensor(
             return {
                 "current_hour": current_hour,
                 "time_slot": f"{current_hour:02d}:00-{current_hour + 1:02d}:00",
+            }
+        if self.entity_description.key == "gpe_price_chart_24h":
+            chart_data = self._get_24h_chart_data()
+            current_hour = dt_util.now().hour
+            return {
+                "current_hour": current_hour,
+                "time_slot": f"{current_hour:02d}:00-{current_hour + 1:02d}:00",
+                "chart_data": chart_data,
+                "data_points": len(chart_data),
+                "last_updated": dt_util.now().isoformat(),
             }
 
         return None
