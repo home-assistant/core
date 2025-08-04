@@ -42,6 +42,14 @@ async def test_network_speed(
     assert hass.states.get("sensor.freebox_upload_speed").state == "432.1"
 
 
+async def test_ftth_power(hass: HomeAssistant, router: Mock) -> None:
+    """Test FTTH optical power sensors."""
+    await setup_platform(hass, SENSOR_DOMAIN)
+
+    assert hass.states.get("sensor.freebox_sfp_rx_power").state == "-22.25"
+    assert hass.states.get("sensor.freebox_sfp_tx_power").state == "-3.66"
+
+
 async def test_call(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, router: Mock
 ) -> None:

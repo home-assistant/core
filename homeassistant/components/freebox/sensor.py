@@ -11,7 +11,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfDataRate, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfDataRate,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -40,6 +45,25 @@ CONNECTION_SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfDataRate.KILOBYTES_PER_SECOND,
         icon="mdi:upload-network",
+    ),
+)
+
+FTTH_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="sfp_pwr_rx",
+        name="Freebox SFP RX power",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        icon="mdi:arrow-down",
+    ),
+    SensorEntityDescription(
+        key="sfp_pwr_tx",
+        name="Freebox SFP TX power",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        icon="mdi:arrow-up",
     ),
 )
 
@@ -92,6 +116,11 @@ async def async_setup_entry(
 
     entities.extend(
         [FreeboxSensor(router, description) for description in CONNECTION_SENSORS]
+    )
+    entities.extend(
+        FreeboxSensor(router, description)
+        for description in FTTH_SENSORS
+        if description.key in router.sensors_connection
     )
     entities.extend(
         [FreeboxCallSensor(router, description) for description in CALL_SENSORS]

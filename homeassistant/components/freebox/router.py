@@ -190,6 +190,13 @@ class FreeboxRouter:
         for sensor_key in CONNECTION_SENSORS_KEYS:
             self.sensors_connection[sensor_key] = connection_datas[sensor_key]
 
+        if connection_datas.get("media") == "ftth":
+            ftth_datas: dict[str, Any] = await self._api.connection.get_ftth()
+            if (sfp_pwr_rx := ftth_datas.get("sfp_pwr_rx")) is not None:
+                self.sensors_connection["sfp_pwr_rx"] = sfp_pwr_rx / 100
+            if (sfp_pwr_tx := ftth_datas.get("sfp_pwr_tx")) is not None:
+                self.sensors_connection["sfp_pwr_tx"] = sfp_pwr_tx / 100
+
         self._attrs = {
             "IPv4": connection_datas.get("ipv4"),
             "IPv6": connection_datas.get("ipv6"),
