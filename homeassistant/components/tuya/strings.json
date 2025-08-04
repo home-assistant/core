@@ -529,6 +529,9 @@
       "air_pressure": {
         "name": "Air pressure"
       },
+      "wind_direct": {
+        "name": "Wind direction"
+      },
       "pm25": {
         "name": "[%key:component::sensor::entity_component::pm25::name%]"
       },

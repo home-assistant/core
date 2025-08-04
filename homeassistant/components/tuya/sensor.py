@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from tuya_sharing import CustomerDevice, Manager
@@ -35,6 +36,7 @@ from .const import (
     DOMAIN,
     LOGGER,
     TUYA_DISCOVERY_NEW,
+    WIND_DIRECTIONS,
     DPCode,
     DPType,
     UnitOfMeasurement,
@@ -49,6 +51,7 @@ class TuyaSensorEntityDescription(SensorEntityDescription):
 
     complex_type: type[ComplexTypeData] | None = None
     subkey: str | None = None
+    state_conversion: Callable[[StateType], StateType] | None = None
 
 
 # Commonly used battery sensors, that are reused in the sensors down below.
@@ -924,6 +927,13 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.WIND_SPEED,
             state_class=SensorStateClass.MEASUREMENT,
         ),
+        TuyaSensorEntityDescription(
+            key=DPCode.WIND_DIRECT,
+            translation_key="wind_direct",
+            device_class=SensorDeviceClass.WIND_DIRECTION,
+            state_class=SensorStateClass.MEASUREMENT,
+            state_conversion=lambda state: WIND_DIRECTIONS[str(state)],
+        ),
         *BATTERY_SENSORS,
     ),
     # Gas Detector
@@ -1608,6 +1618,10 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         value = self.device.status.get(self.entity_description.key)
         if value is None:
             return None
+
+        # Convert value, if required
+        if (convert := self.entity_description.state_conversion) is not None:
+            return convert(value)
 
         # Scale integer/float value
         if isinstance(self._type_data, IntegerTypeData):
