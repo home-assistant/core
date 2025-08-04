@@ -128,7 +128,7 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
 
         self.authorized = True
 
-        update_manager = get_update_manager(self)
+        update_manager = get_update_manager(self, config)
         coordinator = update_manager.coordinator
         await coordinator.async_config_entry_first_refresh()
 

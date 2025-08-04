@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any, Generic, TypeVar
 import broadlink as blk
 from broadlink.exceptions import AuthorizationError, BroadlinkException
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -21,7 +22,9 @@ _ApiT = TypeVar("_ApiT", bound=blk.Device)
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_update_manager(device: BroadlinkDevice[_ApiT]) -> BroadlinkUpdateManager[_ApiT]:
+def get_update_manager(
+    device: BroadlinkDevice[_ApiT], entry: ConfigEntry
+) -> BroadlinkUpdateManager[_ApiT]:
     """Return an update manager for a given Broadlink device."""
     update_managers: dict[str, type[BroadlinkUpdateManager]] = {
         "A1": BroadlinkA1UpdateManager,
@@ -45,7 +48,7 @@ def get_update_manager(device: BroadlinkDevice[_ApiT]) -> BroadlinkUpdateManager
         "SP4": BroadlinkSP4UpdateManager,
         "SP4B": BroadlinkSP4UpdateManager,
     }
-    return update_managers[device.api.type](device)
+    return update_managers[device.api.type](device, entry)
 
 
 class BroadlinkUpdateManager(ABC, Generic[_ApiT]):
@@ -57,13 +60,14 @@ class BroadlinkUpdateManager(ABC, Generic[_ApiT]):
 
     SCAN_INTERVAL = timedelta(minutes=1)
 
-    def __init__(self, device: BroadlinkDevice[_ApiT]) -> None:
+    def __init__(self, device: BroadlinkDevice[_ApiT], entry: ConfigEntry) -> None:
         """Initialize the update manager."""
         self.device = device
         self.coordinator = DataUpdateCoordinator(
             device.hass,
             _LOGGER,
             name=f"{device.name} ({device.api.model} at {device.api.host[0]})",
+            config_entry=entry,
             update_method=self.async_update,
             update_interval=self.SCAN_INTERVAL,
         )
