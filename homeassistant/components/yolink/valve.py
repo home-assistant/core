@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 from typing import Any
 
 from yolink.client_request import ClientRequest
@@ -11,6 +12,7 @@ from yolink.const import (
     ATTR_DEVICE_MODEL_A,
     ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER,
     ATTR_DEVICE_SPRINKLER,
+    ATTR_DEVICE_SPRINKLER_V2,
     ATTR_DEVICE_WATER_METER_CONTROLLER,
 )
 from yolink.device import YoLinkDevice
@@ -30,6 +32,8 @@ from .const import DEV_MODEL_WATER_METER_YS5007, DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @dataclass(frozen=True)
 class YoLinkValveEntityDescription(ValveEntityDescription):
@@ -39,11 +43,15 @@ class YoLinkValveEntityDescription(ValveEntityDescription):
     value: Callable = lambda state: state
     channel_index: int | None = None
     should_update_entity: Callable = lambda state: True
-    is_available: Callable = lambda state: True
+    is_available: Callable[[YoLinkDevice, dict[str, Any]], bool] = (
+        lambda device, state: True
+    )
 
 
-def sprinkler_valve_available(data: dict[str, Any]) -> bool:
+def sprinkler_valve_available(device: YoLinkDevice, data: dict[str, Any]) -> bool:
     """Check if sprinkler valve is available."""
+    if device.device_type == ATTR_DEVICE_SPRINKLER_V2:
+        return True
     if (state := data.get("state")) is not None:
         if (mode := state.get("mode")) is not None:
             return mode == "manual"
@@ -81,12 +89,13 @@ DEVICE_TYPES: tuple[YoLinkValveEntityDescription, ...] = (
         channel_index=1,
     ),
     YoLinkValveEntityDescription(
-        key="watering",
+        key="valve",
         translation_key="valve",
         icon="mdi:sprinkler-variant",
         device_class=ValveDeviceClass.WATER,
         value=lambda value: value is False if value is not None else None,
-        exists_fn=lambda device: device.device_type == ATTR_DEVICE_SPRINKLER,
+        exists_fn=lambda device: device.device_type
+        in [ATTR_DEVICE_SPRINKLER, ATTR_DEVICE_SPRINKLER_V2],
         should_update_entity=lambda value: value is not None,
         is_available=sprinkler_valve_available,
     ),
@@ -96,6 +105,7 @@ DEVICE_TYPE = [
     ATTR_DEVICE_WATER_METER_CONTROLLER,
     ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER,
     ATTR_DEVICE_SPRINKLER,
+    ATTR_DEVICE_SPRINKLER_V2,
 ]
 
 
@@ -143,13 +153,14 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
     @callback
     def update_entity_state(self, state: dict[str, str | list[str]]) -> None:
         """Update HA Entity State."""
+        _LOGGER.info(state)
         if (
             attr_val := self.entity_description.value(
                 state.get(self.entity_description.key)
             )
         ) is None and self.entity_description.should_update_entity(attr_val) is False:
             return
-        if self.entity_description.is_available(state) is True:
+        if self.entity_description.is_available(self.coordinator.device, state) is True:
             self._attr_is_closed = attr_val
             self._attr_available = True
         else:
@@ -179,6 +190,10 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
                 ClientRequest(
                     "setManualWater", {"state": "start" if state == "open" else "stop"}
                 )
+            )
+        if self.coordinator.device.device_type == ATTR_DEVICE_SPRINKLER_V2:
+            await self.call_device(
+                ClientRequest("setState", {"running": state == "open"})
             )
         else:
             await self.call_device(ClientRequest("setState", {"valve": state}))

@@ -37,7 +37,9 @@ SELECTOR_MAPPINGS: tuple[YoLinkSelectEntityDescription, ...] = (
         options=["auto", "manual", "off"],
         translation_key="sprinkler_mode",
         icon="mdi:auto-mode",
-        value=lambda data: data.get("mode"),
+        value=lambda data: data.get("mode")
+        if data is not None
+        else None,  # watering state report will missing state field
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_SPRINKLER,
         should_update_entity=lambda value: value is not None,
     ),
@@ -111,5 +113,5 @@ class YoLinkSelectEntity(YoLinkEntity, SelectEntity):
                 )
             )
             self._attr_current_option = option
-            sprinkler_message_resolve(data)
+            sprinkler_message_resolve(self.coordinator.device, data, None)
             self.coordinator.async_set_updated_data(data)
