@@ -1975,31 +1975,3 @@ def test_renamed(caplog: pytest.LogCaptureFixture, schema) -> None:
     # Check error handling if data is not a dict
     with pytest.raises(vol.Invalid, match="expected a dictionary"):
         renamed_schema([])
-
-
-@pytest.mark.parametrize(
-    ("relative_key", "absolute_key"),
-    [
-        ("turned_on", "homeassistant.turned_on"),
-        ("_", "homeassistant"),
-        ("_state", "state"),
-    ],
-)
-def test_absolute_description_key(relative_key: str, absolute_key: str) -> None:
-    """Test absolute description key."""
-    DOMAIN = "homeassistant"
-    assert cv.get_absolute_description_key(DOMAIN, relative_key) == absolute_key
-
-
-@pytest.mark.parametrize(
-    ("relative_key", "absolute_key"),
-    [
-        ("turned_on", "homeassistant.turned_on"),
-        ("_", "homeassistant"),
-        ("_state", "state"),
-    ],
-)
-def test_relative_description_key(relative_key: str, absolute_key: str) -> None:
-    """Test relative description key."""
-    DOMAIN = "homeassistant"
-    assert cv.get_relative_description_key(DOMAIN, absolute_key) == relative_key

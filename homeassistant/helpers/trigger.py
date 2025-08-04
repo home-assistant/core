@@ -38,6 +38,10 @@ from homeassistant.loader import (
     async_get_integrations,
 )
 from homeassistant.util.async_ import create_eager_task
+from homeassistant.util.automation import (
+    get_absolute_description_key,
+    get_relative_description_key,
+)
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
 
@@ -138,9 +142,7 @@ async def _register_trigger_platform(
 
     if hasattr(platform, "async_get_triggers"):
         for trigger_key in await platform.async_get_triggers(hass):
-            trigger_key = cv.get_absolute_description_key(
-                integration_domain, trigger_key
-            )
+            trigger_key = get_absolute_description_key(integration_domain, trigger_key)
             hass.data[TRIGGERS][trigger_key] = integration_domain
             new_triggers.add(trigger_key)
     elif hasattr(platform, "async_validate_trigger_config") or hasattr(
@@ -386,7 +388,7 @@ async def async_validate_trigger_config(
         platform_domain, platform = await _async_get_trigger_platform(hass, trigger_key)
         if hasattr(platform, "async_get_triggers"):
             trigger_descriptors = await platform.async_get_triggers(hass)
-            relative_trigger_key = cv.get_relative_description_key(
+            relative_trigger_key = get_relative_description_key(
                 platform_domain, trigger_key
             )
             if not (trigger := trigger_descriptors.get(relative_trigger_key)):
@@ -492,7 +494,7 @@ async def async_initialize_triggers(
         action_wrapper = _trigger_action_wrapper(hass, action, conf)
         if hasattr(platform, "async_get_triggers"):
             trigger_descriptors = await platform.async_get_triggers(hass)
-            relative_trigger_key = cv.get_relative_description_key(
+            relative_trigger_key = get_relative_description_key(
                 platform_domain, trigger_key
             )
             trigger = trigger_descriptors[relative_trigger_key](hass, conf)
@@ -562,7 +564,7 @@ def _load_triggers_files(
     """Load trigger files for multiple integrations."""
     return {
         integration.domain: {
-            cv.get_absolute_description_key(integration.domain, key): value
+            get_absolute_description_key(integration.domain, key): value
             for key, value in _load_triggers_file(integration).items()
         }
         for integration in integrations
