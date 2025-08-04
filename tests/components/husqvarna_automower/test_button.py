@@ -28,7 +28,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 
 
 @pytest.mark.freeze_time(datetime.datetime(2023, 6, 5, tzinfo=datetime.UTC))
-async def test_button_states_and_commands(
+async def test_button_error_confirm(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
@@ -58,32 +58,15 @@ async def test_button_states_and_commands(
     state = hass.states.get(entity_id)
     assert state.state == STATE_UNKNOWN
 
-    await hass.services.async_call(
-        domain="button",
-        service=SERVICE_PRESS,
-        target={ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-    mock_automower_client.commands.error_confirm.assert_called_once_with(TEST_MOWER_ID)
-    await hass.async_block_till_done()
-    state = hass.states.get(entity_id)
-    assert state.state == "2023-06-05T00:16:00+00:00"
-    mock_automower_client.commands.error_confirm.side_effect = ApiError("Test error")
-    with pytest.raises(
-        HomeAssistantError,
-        match="Failed to send command: Test error",
-    ):
-        await hass.services.async_call(
-            domain="button",
-            service=SERVICE_PRESS,
-            target={ATTR_ENTITY_ID: entity_id},
-            blocking=True,
-        )
-
 
 @pytest.mark.parametrize(
     ("entity_id", "name", "expected_command"),
     [
+        (
+            "button.test_mower_1_confirm_error",
+            "Test Mower 1 Confirm error",
+            "error_confirm",
+        ),
         (
             "button.test_mower_1_sync_clock",
             "Test Mower 1 Sync clock",
@@ -107,7 +90,9 @@ async def test_button_commands(
     expected_command: str,
 ) -> None:
     """Test Automower button commands."""
+    values[TEST_MOWER_ID].mower.is_error_confirmable = True
     await setup_integration(hass, mock_config_entry)
+
     state = hass.states.get(entity_id)
     assert state.name == name
 
