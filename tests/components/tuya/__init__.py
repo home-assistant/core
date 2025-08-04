@@ -202,14 +202,25 @@ DEVICE_MOCKS = {
     ],
     "sp_drezasavompxpcgm": [
         # https://github.com/home-assistant/core/issues/149704
+        Platform.CAMERA,
         Platform.LIGHT,
         Platform.SELECT,
         Platform.SWITCH,
     ],
     "sp_rjKXWRohlvOTyLBu": [
         # https://github.com/home-assistant/core/issues/149704
+        Platform.CAMERA,
         Platform.LIGHT,
         Platform.SELECT,
+        Platform.SWITCH,
+    ],
+    "sp_sdd5f5f2dl5wydjf": [
+        # https://github.com/home-assistant/core/issues/144087
+        Platform.CAMERA,
+        Platform.NUMBER,
+        Platform.SENSOR,
+        Platform.SELECT,
+        Platform.SIREN,
         Platform.SWITCH,
     ],
     "tdq_cq1p0nt0a4rixnex": [
