@@ -47,6 +47,7 @@ async def test_form_create_entry(
     assert result["title"] == "Fake Profile"
     assert result["data"][CONF_API_KEY] == "fake_api_key"
     assert result["data"][CONF_PROFILE_ID] == "xyz12"
+    assert result["result"].unique_id == "xyz12"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
