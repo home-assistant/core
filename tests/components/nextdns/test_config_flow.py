@@ -41,7 +41,6 @@ async def test_form_create_entry(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_PROFILE_NAME: "Fake Profile"}
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Fake Profile"
@@ -120,7 +119,6 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input={CONF_API_KEY: "new_api_key"},
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -153,6 +151,5 @@ async def test_reauth_errors(
             result["flow_id"],
             user_input={CONF_API_KEY: "new_api_key"},
         )
-        await hass.async_block_till_done()
 
     assert result["errors"] == {"base": base_error}
