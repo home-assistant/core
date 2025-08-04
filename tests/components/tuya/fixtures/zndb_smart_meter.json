@@ -67,12 +67,23 @@
         "scale": 2,
         "step": 1
       }
+    },
+    "power_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "W",
+        "min": 0,
+        "max": 999999,
+        "scale": 1,
+        "step": 1
+      }
     }
   },
   "status": {
     "energy_month": "GAkYCQAAANQ=",
     "energy_daily": "",
-    "phase_a": "CSIAFfQABKE="
+    "phase_a": "CSIAFfQABKE=",
+    "power_total": 25000
   },
   "set_up": true,
   "support_local": false
