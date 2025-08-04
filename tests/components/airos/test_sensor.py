@@ -4,9 +4,9 @@ from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from airos.exceptions import (
-    ConnectionAuthenticationError,
-    DataMissingError,
-    DeviceConnectionError,
+    AirOSConnectionAuthenticationError,
+    AirOSDataMissingError,
+    AirOSDeviceConnectionError,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -39,10 +39,10 @@ async def test_all_entities(
 @pytest.mark.parametrize(
     ("exception"),
     [
-        ConnectionAuthenticationError,
+        AirOSConnectionAuthenticationError,
         TimeoutError,
-        DeviceConnectionError,
-        DataMissingError,
+        AirOSDeviceConnectionError,
+        AirOSDataMissingError,
     ],
 )
 async def test_sensor_update_exception_handling(

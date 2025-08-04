@@ -70,13 +70,6 @@ SENSORS: tuple[AirOSSensorEntityDescription, ...] = (
         value_fn=lambda data: data.wireless.essid,
     ),
     AirOSSensorEntityDescription(
-        key="wireless_mode",
-        translation_key="wireless_mode",
-        device_class=SensorDeviceClass.ENUM,
-        value_fn=lambda data: data.wireless.mode.value.replace("-", "_").lower(),
-        options=WIRELESS_MODE_OPTIONS,
-    ),
-    AirOSSensorEntityDescription(
         key="wireless_antenna_gain",
         translation_key="wireless_antenna_gain",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
