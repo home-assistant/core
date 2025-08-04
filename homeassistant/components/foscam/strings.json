@@ -27,8 +27,35 @@
   },
   "entity": {
     "switch": {
+      "flip_switch": {
+        "name": "Flip"
+      },
+      "mirror_switch": {
+        "name": "Mirror"
+      },
+      "ir_switch": {
+        "name": "Infrared mode"
+      },
       "sleep_switch": {
-        "name": "Sleep"
+        "name": "Sleep mode"
+      },
+      "white_light_switch": {
+        "name": "White light"
+      },
+      "siren_alarm_switch": {
+        "name": "Siren alarm"
+      },
+      "turn_off_volume_switch": {
+        "name": "Volume muted"
+      },
+      "turn_off_light_switch": {
+        "name": "Light"
+      },
+      "hdr_switch": {
+        "name": "HDR"
+      },
+      "wdr_switch": {
+        "name": "WDR"
       }
     }
   },
