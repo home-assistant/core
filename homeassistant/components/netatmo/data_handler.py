@@ -62,7 +62,7 @@ HOME = "home"
 WEATHER = "weather"
 AIR_CARE = "air_care"
 PUBLIC = NetatmoDeviceType.public
-DOOR_TAG = "opening"
+OPENING = "opening"
 BINARY_SENSOR = BINARY_SENSOR_DOMAIN
 EVENT = "event"
 
@@ -72,7 +72,7 @@ PUBLISHERS = {
     WEATHER: "async_update_weather_stations",
     AIR_CARE: "async_update_air_care",
     PUBLIC: "async_update_public_weather",
-    DOOR_TAG: "async_update_weather_stations",
+    OPENING: "async_update_weather_stations",
     EVENT: "async_update_events",
 }
 
@@ -87,7 +87,7 @@ DEFAULT_INTERVALS = {
     WEATHER: 600,
     AIR_CARE: 300,
     PUBLIC: 600,
-    DOOR_TAG: 60,
+    OPENING: 60,
     EVENT: 600,
 }
 SCAN_INTERVAL = 60
@@ -314,7 +314,7 @@ class NetatmoDataHandler:
         """Dispatch the creation of entities."""
         await self.subscribe(WEATHER, WEATHER, None)
         await self.subscribe(AIR_CARE, AIR_CARE, None)
-        await self.subscribe(DOOR_TAG, DOOR_TAG, None)
+        await self.subscribe(OPENING, OPENING, None)
 
         self.setup_air_care()
 
@@ -365,7 +365,7 @@ class NetatmoDataHandler:
                         self,
                         module,
                         BINARY_SENSOR,
-                        DOOR_TAG,
+                        OPENING,
                     ),
                 )
 
@@ -420,7 +420,7 @@ class NetatmoDataHandler:
                 _LOGGER.debug(
                     "Module %s dispatched as opening category to publisher %s",
                     module.name,
-                    DOOR_TAG,
+                    OPENING,
                 )
                 async_dispatcher_send(
                     self.hass,
@@ -429,7 +429,7 @@ class NetatmoDataHandler:
                         self,
                         module,
                         home.entity_id,
-                        DOOR_TAG,
+                        OPENING,
                     ),
                 )
 
