@@ -164,7 +164,6 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_API_USER: str(login.id),
                         CONF_API_KEY: login.apiToken,
-                        CONF_NAME: user.profile.name,  # needed for api_call action
                         CONF_URL: DEFAULT_URL,
                         CONF_VERIFY_SSL: True,
                     },
@@ -200,7 +199,6 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={
                         **user_input,
                         CONF_URL: user_input.get(CONF_URL, DEFAULT_URL),
-                        CONF_NAME: user.profile.name,  # needed for api_call action
                     },
                 )
 
