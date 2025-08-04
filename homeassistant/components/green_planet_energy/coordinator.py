@@ -41,8 +41,8 @@ class GreenPlanetEnergyUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return await self._fetch_electricity_prices()
         except (ClientError, TimeoutError) as err:
             _LOGGER.warning("Error fetching data from Green Planet Energy API: %s", err)
-            # Returniere leere Daten anstatt einen Fehler zu werfen
-            # Dies verhindert, dass die Integration komplett fehlschlägt
+            # Return empty data instead of raising an error
+            # This prevents the integration from failing completely
             return {}
 
     async def _fetch_electricity_prices(self) -> dict[str, Any]:
@@ -119,7 +119,6 @@ class GreenPlanetEnergyUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Extract hourly prices for all 24 hours
         for hour in range(24):  # 0-23 inclusive
             hour_key = f"gpe_price_{hour:02d}"
-            processed_data[hour_key] = None
 
             # Find the matching hour in the data
             for i, timestamp_str in enumerate(datum_array):

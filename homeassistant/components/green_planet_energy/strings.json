@@ -90,8 +90,11 @@
       "highest_price_today": {
         "name": "Highest price today"
       },
-      "lowest_price_today": {
-        "name": "Lowest price today"
+      "lowest_price_day": {
+        "name": "Lowest price day (06:00-18:00)"
+      },
+      "lowest_price_night": {
+        "name": "Lowest price night (18:00-06:00)"
       },
       "current_price": {
         "name": "Current price"

@@ -12,12 +12,12 @@ async def test_sensor_setup(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensor setup."""
-    # 27 sensors: 24 hourly sensors + 3 special sensors (highest, lowest, current)
-    assert len(entity_registry.entities) == 27
+    # 28 sensors: 24 hourly sensors + 4 special sensors (highest, lowest_day, lowest_night, current)
+    assert len(entity_registry.entities) == 28
 
     # Check that all expected sensors exist
     for hour in range(24):
-        entity_id = f"sensor.preis_{hour:02d}_00"
+        entity_id = f"sensor.price_{hour:02d}_00"
         state = hass.states.get(entity_id)
         assert state is not None
         assert state.attributes["hour"] == hour
@@ -31,32 +31,29 @@ async def test_sensor_values(
     # Test some specific sensor values based on mock data
     # Mock data generates price = 0.20 + (hour * 0.01)
 
-    state_00 = hass.states.get("sensor.preis_00_00")
+    state_00 = hass.states.get("sensor.price_00_00")
     assert state_00.state == "0.2"  # Changed from "0.20" to "0.2"
 
-    state_09 = hass.states.get("sensor.preis_09_00")
+    state_09 = hass.states.get("sensor.price_09_00")
     assert state_09.state == "0.29"
 
-    state_12 = hass.states.get("sensor.preis_12_00")
+    state_12 = hass.states.get("sensor.price_12_00")
     assert state_12.state == "0.32"
 
-    state_15 = hass.states.get("sensor.preis_15_00")
+    state_15 = hass.states.get("sensor.price_15_00")
     assert state_15.state == "0.35"
 
-    state_18 = hass.states.get("sensor.preis_18_00")
+    state_18 = hass.states.get("sensor.price_18_00")
     assert state_18.state == "0.38"
 
-    state_23 = hass.states.get("sensor.preis_23_00")
+    state_23 = hass.states.get("sensor.price_23_00")
     assert state_23.state == "0.43"
 
 
 async def test_special_sensors(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
-    """Test the special sensors (highest, lowest, current price)."""
-    # Test highest price sensor - need to find the actual entity ID
-    # Based on the test output, it should be something like sensor.green_planet_energy_..._highest_price_today
-
+    """Test the special sensors (highest, day lowest, night lowest, current price)."""
     # Get all entities for the config entry
     entity_registry = er.async_get(hass)
     entries = er.async_entries_for_config_entry(
@@ -65,14 +62,17 @@ async def test_special_sensors(
 
     # Find the special sensors by their unique_id pattern
     highest_entity = None
-    lowest_entity = None
+    lowest_day_entity = None
+    lowest_night_entity = None
     current_entity = None
 
     for entry in entries:
         if "highest_price_today" in entry.unique_id:
             highest_entity = entry.entity_id
-        elif "lowest_price_today" in entry.unique_id:
-            lowest_entity = entry.entity_id
+        elif "lowest_price_day" in entry.unique_id:
+            lowest_day_entity = entry.entity_id
+        elif "lowest_price_night" in entry.unique_id:
+            lowest_night_entity = entry.entity_id
         elif "current_price" in entry.unique_id:
             current_entity = entry.entity_id
 
@@ -83,12 +83,25 @@ async def test_special_sensors(
     assert highest_state.state == "0.43"  # Price for hour 23 should be highest
     assert highest_state.attributes["highest_price_hour"] == 23
 
-    # Test lowest price sensor
-    assert lowest_entity is not None
-    lowest_state = hass.states.get(lowest_entity)
-    assert lowest_state is not None
-    assert lowest_state.state == "0.2"  # Price for hour 0 should be lowest
-    assert lowest_state.attributes["lowest_price_hour"] == 0
+    # Test lowest price day sensor (6-18h)
+    assert lowest_day_entity is not None
+    lowest_day_state = hass.states.get(lowest_day_entity)
+    assert lowest_day_state is not None
+    # Day hours (6-17): should find lowest price in range 0.26-0.37
+    assert lowest_day_state.state == "0.26"  # Price for hour 6 should be lowest in day
+    assert lowest_day_state.attributes["lowest_price_hour"] == 6
+    assert lowest_day_state.attributes["period"] == "day (06:00-18:00)"
+
+    # Test lowest price night sensor (18-6h)
+    assert lowest_night_entity is not None
+    lowest_night_state = hass.states.get(lowest_night_entity)
+    assert lowest_night_state is not None
+    # Night hours (18-23, 0-5): should find lowest price, which is hour 0 with 0.2
+    assert (
+        lowest_night_state.state == "0.2"
+    )  # Price for hour 0 should be lowest in night
+    assert lowest_night_state.attributes["lowest_price_hour"] == 0
+    assert lowest_night_state.attributes["period"] == "night (18:00-06:00)"
 
     # Test current price sensor
     assert current_entity is not None

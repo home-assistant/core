@@ -1,3 +1,0 @@
-[codespell]
-skip = .git,*.pdf,*.svg,*.po,*.pot,*.css,*.lock,*.json
-ignore-words-list = ist,als,sie,alle,ordner,oder,unter,sie
