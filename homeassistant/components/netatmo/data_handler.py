@@ -34,12 +34,12 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
     NETATMO_CREATE_BATTERY,
+    NETATMO_CREATE_BINARY_SENSOR,
     NETATMO_CREATE_BUTTON,
     NETATMO_CREATE_CAMERA,
     NETATMO_CREATE_CAMERA_LIGHT,
     NETATMO_CREATE_CLIMATE,
     NETATMO_CREATE_COVER,
-    NETATMO_CREATE_DOOR_TAG,
     NETATMO_CREATE_FAN,
     NETATMO_CREATE_LIGHT,
     NETATMO_CREATE_ROOM_SENSOR,
@@ -334,7 +334,6 @@ class NetatmoDataHandler:
 
         await self.unsubscribe(WEATHER, None)
         await self.unsubscribe(AIR_CARE, None)
-        # await self.unsubscribe(DOOR_TAG, None)
 
     def setup_air_care(self) -> None:
         """Set up home coach/air care modules."""
@@ -351,24 +350,6 @@ class NetatmoDataHandler:
                     ),
                 )
 
-    def setup_door_tag(self) -> None:
-        """Set up home door_tag modules."""
-        for module in self.account.modules.values():
-            if module.device_category is NetatmoDeviceCategory.opening:
-                _LOGGER.debug(
-                    "Module %s dispatched as opening category (door_tag)", module.name
-                )
-                async_dispatcher_send(
-                    self.hass,
-                    NETATMO_CREATE_DOOR_TAG,
-                    NetatmoDevice(
-                        self,
-                        module,
-                        BINARY_SENSOR,
-                        OPENING,
-                    ),
-                )
-
     def setup_modules(self, home: pyatmo.Home, signal_home: str) -> None:
         """Set up modules."""
         netatmo_type_signal_map = {
@@ -376,7 +357,10 @@ class NetatmoDataHandler:
                 NETATMO_CREATE_CAMERA,
                 NETATMO_CREATE_CAMERA_LIGHT,
             ],
-            # NetatmoDeviceCategory.opening: [NETATMO_CREATE_DOOR_TAG],
+            NetatmoDeviceCategory.opening: [
+                NETATMO_CREATE_BINARY_SENSOR,
+                NETATMO_CREATE_SENSOR,
+            ],
             NetatmoDeviceCategory.dimmer: [NETATMO_CREATE_LIGHT],
             NetatmoDeviceCategory.shutter: [
                 NETATMO_CREATE_COVER,
@@ -414,22 +398,6 @@ class NetatmoDataHandler:
                         module,
                         home.entity_id,
                         WEATHER,
-                    ),
-                )
-            if module.device_category is NetatmoDeviceCategory.opening:
-                _LOGGER.debug(
-                    "Module %s dispatched as opening category to publisher %s",
-                    module.name,
-                    OPENING,
-                )
-                async_dispatcher_send(
-                    self.hass,
-                    NETATMO_CREATE_WEATHER_SENSOR,
-                    NetatmoDevice(
-                        self,
-                        module,
-                        home.entity_id,
-                        OPENING,
                     ),
                 )
 

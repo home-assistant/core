@@ -2,7 +2,10 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 from typing import cast
+
+from pyatmo.modules import Module
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -13,42 +16,50 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import StateType
 
-from .const import NETATMO_CREATE_WEATHER_SENSOR
+from .const import NETATMO_CREATE_BINARY_SENSOR
 from .data_handler import NetatmoDevice
-from .entity import NetatmoWeatherModuleEntity
+from .entity import NetatmoModuleEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
-def process_status(status: StateType) -> bool | None:
-    """Process status and return boolean for display."""
-    if not isinstance(status, str):
-        return None
-    return {
-        "open": True,
-        "closed": False,
-    }.get(status)
+def process_opening_status(device: Module) -> bool | None:
+    """Process opening Module status and return bool."""
+    status = device.status  # type: ignore[attr-defined]
+
+    if status == "closed":
+        return False
+    if status in ["open", "not_detected"]:
+        return True
+    return None
 
 
 @dataclass(frozen=True, kw_only=True)
 class NetatmoBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Netatmo binary sensor entity."""
 
-    netatmo_name: str
-    value_fn: Callable[[StateType], StateType] = lambda x: x
+    netatmo_name: str | None = None
+    value_fn: Callable[[Module], bool | None] = lambda device: None
 
 
-BINARY_SENSOR_TYPES: tuple[NetatmoBinarySensorEntityDescription, ...] = (
+NETATMO_BINARY_SENSOR_TYPES: tuple[NetatmoBinarySensorEntityDescription, ...] = (
     NetatmoBinarySensorEntityDescription(
         key="reachable",
-        netatmo_name="reachable",
+        translation_key="reachable",
+        netatmo_name=None,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        value_fn=lambda device: device.reachable,
     ),
+)
+
+OPENING_BINARY_SENSOR_TYPES: tuple[NetatmoBinarySensorEntityDescription, ...] = (
     NetatmoBinarySensorEntityDescription(
-        key="status",
-        netatmo_name="status",
+        key="open_status",
+        translation_key="open_status",
         device_class=BinarySensorDeviceClass.OPENING,
-        value_fn=process_status,
+        netatmo_name="Door Tag",
+        value_fn=process_opening_status,
     ),
 )
 
@@ -61,21 +72,48 @@ async def async_setup_entry(
     """Set up Netatmo binary sensors based on a config entry."""
 
     @callback
-    def _create_weather_binary_sensor_entity(netatmo_device: NetatmoDevice) -> None:
-        async_add_entities(
-            NetatmoWeatherBinarySensor(netatmo_device, description)
-            for description in BINARY_SENSOR_TYPES
-            if description.key in netatmo_device.device.features
+    def _create_binary_sensor_entity(netatmo_device: NetatmoDevice) -> None:
+        """Create new binary sensor entities."""
+        entities = []
+
+        if not hasattr(netatmo_device, "module"):
+            _LOGGER.debug(
+                "Skipping device with no module attribute: %s", netatmo_device
+            )
+            return
+
+        # Logic for creating opening sensors
+        if (
+            hasattr(netatmo_device.module, "name")
+            and netatmo_device.module.name == "Door Tag"
+        ):
+            entities.extend(
+                [
+                    NetatmoBinarySensor(netatmo_device, description)
+                    for description in OPENING_BINARY_SENSOR_TYPES
+                ]
+            )
+
+        # Logic for creating common sensors (like reachable)
+        entities.extend(
+            [
+                NetatmoBinarySensor(netatmo_device, description)
+                for description in NETATMO_BINARY_SENSOR_TYPES
+                if hasattr(netatmo_device, description.key)
+            ]
         )
+
+        if entities:
+            async_add_entities(entities)
 
     entry.async_on_unload(
         async_dispatcher_connect(
-            hass, NETATMO_CREATE_WEATHER_SENSOR, _create_weather_binary_sensor_entity
+            hass, NETATMO_CREATE_BINARY_SENSOR, _create_binary_sensor_entity
         )
     )
 
 
-class NetatmoWeatherBinarySensor(NetatmoWeatherModuleEntity, BinarySensorEntity):
+class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
     """Implementation of a Netatmo binary sensor."""
 
     entity_description: NetatmoBinarySensorEntityDescription
@@ -92,13 +130,6 @@ class NetatmoWeatherBinarySensor(NetatmoWeatherModuleEntity, BinarySensorEntity)
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        value = cast(
-            StateType, getattr(self.device, self.entity_description.netatmo_name)
-        )
-
-        if value is None:
-            self._attr_is_on = None
-        else:
-            self._attr_is_on = bool(self.entity_description.value_fn(value))
-
+        module = cast(Module, getattr(self.device, "module", None))
+        self._attr_is_on = self.entity_description.value_fn(module)
         self.async_write_ha_state()
