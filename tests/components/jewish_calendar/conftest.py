@@ -205,7 +205,11 @@ def get_calendar_events():
     ) -> list[dict[str, str]]:
         """Get calendar events for a date range."""
         if end_date is None:
-            end_date = start_date.replace(hour=23, minute=59, second=59)
+            if isinstance(start_date, dt.date):
+                last_sec = dt.time(hour=23, minute=59, second=59)
+                end_date = dt.datetime.combine(start_date, last_sec)
+            else:
+                end_date = start_date.replace(hour=23, minute=59, second=59)
 
         response = await hass.services.async_call(
             DOMAIN_CALENDAR,
