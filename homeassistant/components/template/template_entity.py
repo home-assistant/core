@@ -12,10 +12,12 @@ import voluptuous as vol
 
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.const import (
+    CONF_DEVICE_ID,
     CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_ICON,
     CONF_ICON_TEMPLATE,
     CONF_NAME,
+    CONF_OPTIMISTIC,
     CONF_PATH,
     CONF_VARIABLES,
     STATE_UNKNOWN,
@@ -30,7 +32,7 @@ from homeassistant.core import (
     validate_state,
 )
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     TrackTemplate,
@@ -46,7 +48,6 @@ from homeassistant.helpers.template import (
     result_as_boolean,
 )
 from homeassistant.helpers.trigger_template_entity import (
-    TEMPLATE_ENTITY_BASE_SCHEMA,
     make_template_entity_base_schema,
 )
 from homeassistant.helpers.typing import ConfigType
@@ -57,6 +58,7 @@ from .const import (
     CONF_AVAILABILITY,
     CONF_AVAILABILITY_TEMPLATE,
     CONF_PICTURE,
+    TEMPLATE_ENTITY_BASE_SCHEMA,
 )
 from .entity import AbstractTemplateEntity
 
@@ -90,6 +92,18 @@ TEMPLATE_ENTITY_COMMON_SCHEMA = (
     .extend(TEMPLATE_ENTITY_BASE_SCHEMA.schema)
     .extend(TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA.schema)
 )
+
+TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.template,
+        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
+    }
+).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
+
+
+TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA = {
+    vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
+}
 
 
 def make_template_entity_common_modern_schema(

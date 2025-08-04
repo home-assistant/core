@@ -52,13 +52,13 @@ from .entity import (
     async_setup_entry_attribute_entities,
     async_setup_entry_rest,
     async_setup_entry_rpc,
+    get_entity_rpc_device_info,
 )
 from .utils import (
     async_remove_orphaned_entities,
     get_blu_trv_device_info,
     get_device_entry_gen,
     get_device_uptime,
-    get_rpc_device_info,
     get_shelly_air_lamp_life,
     get_virtual_component_ids,
     is_rpc_wifi_stations_disabled,
@@ -138,12 +138,8 @@ class RpcEmeterPhaseSensor(RpcSensor):
         """Initialize select."""
         super().__init__(coordinator, key, attribute, description)
 
-        self._attr_device_info = get_rpc_device_info(
-            coordinator.device,
-            coordinator.mac,
-            key,
-            emeter_phase=description.emeter_phase,
-            suggested_area=coordinator.suggested_area,
+        self._attr_device_info = get_entity_rpc_device_info(
+            coordinator, key, emeter_phase=description.emeter_phase
         )
 
 

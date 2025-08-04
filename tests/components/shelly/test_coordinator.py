@@ -864,7 +864,7 @@ async def test_rpc_update_entry_fw_ver(
 
 
 @pytest.mark.parametrize(
-    ("supports_scripts", "zigbee_enabled", "result"),
+    ("supports_scripts", "zigbee_firmware", "result"),
     [
         (True, False, True),
         (True, True, False),
@@ -877,14 +877,14 @@ async def test_rpc_runs_connected_events_when_initialized(
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     supports_scripts: bool,
-    zigbee_enabled: bool,
+    zigbee_firmware: bool,
     result: bool,
 ) -> None:
     """Test RPC runs connected events when initialized."""
     monkeypatch.setattr(
         mock_rpc_device, "supports_scripts", AsyncMock(return_value=supports_scripts)
     )
-    monkeypatch.setattr(mock_rpc_device, "zigbee_enabled", zigbee_enabled)
+    monkeypatch.setattr(mock_rpc_device, "zigbee_firmware", zigbee_firmware)
     monkeypatch.setattr(mock_rpc_device, "initialized", False)
     await init_integration(hass, 2)
 

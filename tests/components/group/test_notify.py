@@ -199,7 +199,8 @@ async def test_send_message_with_data(hass: HomeAssistant, tmp_path: Path) -> No
                     },
                 },
             ),
-        ]
+        ],
+        any_order=True,
     )
 
 

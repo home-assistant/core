@@ -6,7 +6,7 @@ from asyncio import Event as AsyncioEvent
 from collections.abc import Sequence
 from datetime import datetime, timedelta
 import statistics
-from threading import Event
+from threading import Event as ThreadingEvent
 from typing import Any
 from unittest.mock import patch
 
@@ -42,8 +42,9 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -53,6 +54,9 @@ from tests.components.recorder.common import async_wait_recording_done
 VALUES_BINARY = ["on", "off", "on", "off", "on", "off", "on", "off", "on"]
 VALUES_NUMERIC = [17, 20, 15.2, 5, 3.8, 9.2, 6.7, 14, 6]
 VALUES_NUMERIC_LINEAR = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+A1 = {"attr": "value1"}
+A2 = {"attr": "value2"}
 
 
 async def test_unique_id(
@@ -249,7 +253,22 @@ async def test_sensor_defaults_binary(hass: HomeAssistant) -> None:
     assert "age_coverage_ratio" not in state.attributes
 
 
-async def test_sensor_state_reported(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("force_update", [True, False])
+@pytest.mark.parametrize(
+    ("values", "attributes"),
+    [
+        # Fires last reported events
+        ([18, 1, 1, 1, 1, 1, 1, 1, 9], [A1, A1, A1, A1, A1, A1, A1, A1, A1]),
+        # Fires state change events
+        ([18, 1, 1, 1, 1, 1, 1, 1, 9], [A1, A2, A1, A2, A1, A2, A1, A2, A1]),
+    ],
+)
+async def test_sensor_state_updated_reported(
+    hass: HomeAssistant,
+    values: list[float],
+    attributes: list[dict[str, Any]],
+    force_update: bool,
+) -> None:
     """Test the behavior of the sensor with a sequence of identical values.
 
     Forced updates no longer make a difference, since the statistics are now reacting not
@@ -258,7 +277,6 @@ async def test_sensor_state_reported(hass: HomeAssistant) -> None:
     This fixes problems with time based averages and some other functions that behave
     differently when repeating values are reported.
     """
-    repeating_values = [18, 0, 0, 0, 0, 0, 0, 0, 9]
     assert await async_setup_component(
         hass,
         "sensor",
@@ -267,14 +285,7 @@ async def test_sensor_state_reported(hass: HomeAssistant) -> None:
                 {
                     "platform": "statistics",
                     "name": "test_normal",
-                    "entity_id": "sensor.test_monitored_normal",
-                    "state_characteristic": "mean",
-                    "sampling_size": 20,
-                },
-                {
-                    "platform": "statistics",
-                    "name": "test_force",
-                    "entity_id": "sensor.test_monitored_force",
+                    "entity_id": "sensor.test_monitored",
                     "state_characteristic": "mean",
                     "sampling_size": 20,
                 },
@@ -283,27 +294,19 @@ async def test_sensor_state_reported(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    for value in repeating_values:
+    for value, attribute in zip(values, attributes, strict=True):
         hass.states.async_set(
-            "sensor.test_monitored_normal",
+            "sensor.test_monitored",
             str(value),
-            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
-        )
-        hass.states.async_set(
-            "sensor.test_monitored_force",
-            str(value),
-            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
-            force_update=True,
+            {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS} | attribute,
+            force_update=force_update,
         )
     await hass.async_block_till_done()
 
-    state_normal = hass.states.get("sensor.test_normal")
-    state_force = hass.states.get("sensor.test_force")
-    assert state_normal and state_force
-    assert state_normal.state == str(round(sum(repeating_values) / 9, 2))
-    assert state_force.state == str(round(sum(repeating_values) / 9, 2))
-    assert state_normal.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
-    assert state_force.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
+    state = hass.states.get("sensor.test_normal")
+    assert state
+    assert state.state == str(round(sum(values) / 9, 2))
+    assert state.attributes.get("buffer_usage_ratio") == round(9 / 20, 2)
 
 
 async def test_sampling_boundaries_given(hass: HomeAssistant) -> None:
@@ -1739,7 +1742,7 @@ async def test_update_before_load(recorder_mock: Recorder, hass: HomeAssistant) 
         # some synchronisation is needed to prevent that loading from the database finishes too soon
         # we want this to take long enough to be able to try to add a value BEFORE loading is done
         state_changes_during_period_called_evt = AsyncioEvent()
-        state_changes_during_period_stall_evt = Event()
+        state_changes_during_period_stall_evt = ThreadingEvent()
         real_state_changes_during_period = history.state_changes_during_period
 
         def mock_state_changes_during_period(*args, **kwargs):
@@ -1785,12 +1788,49 @@ async def test_update_before_load(recorder_mock: Recorder, hass: HomeAssistant) 
     assert float(hass.states.get("sensor.test").state) == pytest.approx(4.5)
 
 
-async def test_average_linear_unevenly_timed(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("force_update", [True, False])
+@pytest.mark.parametrize(
+    ("values_attributes_and_times", "expected_states"),
+    [
+        (
+            # Fires last reported events
+            [(5.0, A1, 2), (10.0, A1, 1), (10.0, A1, 1), (10.0, A1, 2), (5.0, A1, 1)],
+            ["unavailable", "5.0", "7.5", "8.33", "8.75", "8.33"],
+        ),
+        (  # Fires state change events
+            [(5.0, A1, 2), (10.0, A2, 1), (10.0, A1, 1), (10.0, A2, 2), (5.0, A1, 1)],
+            ["unavailable", "5.0", "7.5", "8.33", "8.75", "8.33"],
+        ),
+        (
+            # Fires last reported events
+            [(10.0, A1, 2), (10.0, A1, 1), (10.0, A1, 1), (10.0, A1, 2), (10.0, A1, 1)],
+            ["unavailable", "10.0", "10.0", "10.0", "10.0", "10.0"],
+        ),
+        (  # Fires state change events
+            [(10.0, A1, 2), (10.0, A2, 1), (10.0, A1, 1), (10.0, A2, 2), (10.0, A1, 1)],
+            ["unavailable", "10.0", "10.0", "10.0", "10.0", "10.0"],
+        ),
+    ],
+)
+async def test_average_linear_unevenly_timed(
+    hass: HomeAssistant,
+    force_update: bool,
+    values_attributes_and_times: list[tuple[float, dict[str, Any], float]],
+    expected_states: list[str],
+) -> None:
     """Test the average_linear state characteristic with unevenly distributed values.
 
     This also implicitly tests the correct timing of repeating values.
     """
-    values_and_times = [[5.0, 2], [10.0, 1], [10.0, 1], [10.0, 2], [5.0, 1]]
+    events: list[Event[EventStateChangedData]] = []
+
+    @callback
+    def _capture_event(event: Event) -> None:
+        events.append(event)
+
+    async_track_state_change_event(
+        hass, "sensor.test_sensor_average_linear", _capture_event
+    )
 
     current_time = dt_util.utcnow()
 
@@ -1814,23 +1854,20 @@ async def test_average_linear_unevenly_timed(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        for value_and_time in values_and_times:
+        for value, extra_attributes, time in values_attributes_and_times:
             hass.states.async_set(
                 "sensor.test_monitored",
-                str(value_and_time[0]),
-                {ATTR_UNIT_OF_MEASUREMENT: DEGREE},
+                str(value),
+                {ATTR_UNIT_OF_MEASUREMENT: DEGREE} | extra_attributes,
+                force_update=force_update,
             )
-            current_time += timedelta(seconds=value_and_time[1])
+            current_time += timedelta(seconds=time)
             freezer.move_to(current_time)
 
         await hass.async_block_till_done()
 
-        state = hass.states.get("sensor.test_sensor_average_linear")
-        assert state is not None
-        assert state.state == "8.33", (
-            "value mismatch for characteristic 'sensor/average_linear' - "
-            f"assert {state.state} == 8.33"
-        )
+    await hass.async_block_till_done()
+    assert [event.data["new_state"].state for event in events] == expected_states
 
 
 async def test_sensor_unit_gets_removed(hass: HomeAssistant) -> None:
