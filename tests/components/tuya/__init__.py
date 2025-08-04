@@ -92,6 +92,11 @@ DEVICE_MOCKS = {
         # https://github.com/home-assistant/core/issues/133173
         Platform.LIGHT,
     ],
+    "hps_2aaelwxk": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.BINARY_SENSOR,
+        Platform.NUMBER,
+    ],
     "kg_gbm9ata1zrzaez4a": [
         # https://github.com/home-assistant/core/issues/148347
         Platform.SWITCH,
