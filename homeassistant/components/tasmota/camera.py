@@ -15,6 +15,7 @@ from homeassistant.components import camera
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_web,
     async_get_clientsession,
@@ -74,9 +75,7 @@ class TasmotaCamera(
 
     def __init__(self, **kwds: Any) -> None:
         """Initialize a MJPEG camera."""
-        super().__init__(
-            **kwds,
-        )
+        super().__init__(**kwds)
         Camera.__init__(self)
 
     async def async_camera_image(
@@ -91,11 +90,15 @@ class TasmotaCamera(
 
                 return await response.read()
 
-        except TimeoutError:
-            _LOGGER.error("Timeout getting camera image from %s", self.name)
+        except TimeoutError as err:
+            raise HomeAssistantError(
+                f"Timeout getting camera image from {self.name}: {err}"
+            ) from err
 
         except aiohttp.ClientError as err:
-            _LOGGER.error("Error getting new camera image from %s: %s", self.name, err)
+            raise HomeAssistantError(
+                f"Error getting new camera image from {self.name}: {err}"
+            ) from err
 
         return None
 
