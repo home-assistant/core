@@ -401,9 +401,10 @@ class SQLSensor(ManualTriggerSensorEntity):
         if data is not None and self._template is not None:
             variables = self._template_variables_with_value(data)
             if self._render_availability_template(variables):
-                self._attr_native_value = self._template.async_render_as_value_template(
+                _value = self._template.async_render_as_value_template(
                     self.entity_id, variables, None
                 )
+                self._set_native_value_with_possible_timestamp(_value)
                 self._process_manual_data(variables)
         else:
             self._attr_native_value = data

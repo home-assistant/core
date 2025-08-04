@@ -1,0 +1,968 @@
+# serializer version: 1
+# name: test_setup[sensor.monitor_1_certificate_expiry-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.monitor_1_certificate_expiry',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Certificate expiry',
+    'platform': 'uptime_kuma',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <UptimeKumaSensor.CERT_DAYS_REMAINING: 'cert_days_remaining'>,
+    'unique_id': '123456789_1_cert_days_remaining',
+    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+  })
+# ---
+# name: test_setup[sensor.monitor_1_certificate_expiry-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Monitor 1 Certificate expiry',
+      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.monitor_1_certificate_expiry',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
+  })
+# ---
+# name: test_setup[sensor.monitor_1_monitor_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'http',
+        'port',
+        'ping',
+        'keyword',
+        'dns',
+        'push',
+        'steam',
+        'mqtt',
+        'sqlserver',
+        'json_query',
+        'group',
+        'docker',
+        'grpc_keyword',
+        'real_browser',
+        'gamedig',
+        'kafka_producer',
+        'postgres',
+        'mysql',
+        'mongodb',
+        'radius',
+        'redis',
+        'tailscale_ping',
+        'smtp',
+        'snmp',
+        'rabbit_mq',
+        'manual',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.monitor_1_monitor_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Monitor type',
+    'platform': 'uptime_kuma',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <UptimeKumaSensor.TYPE: 'type'>,
+    'unique_id': '123456789_1_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[sensor.monitor_1_monitor_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Monitor 1 Monitor type',
+      'options': list([
+        'http',
+        'port',
+        'ping',
+        'keyword',
+        'dns',
+        'push',
+        'steam',
+        'mqtt',
+        'sqlserver',
+        'json_query',
+        'group',
+        'docker',
+        'grpc_keyword',
+        'real_browser',
+        'gamedig',
+        'kafka_producer',
+        'postgres',
+        'mysql',
+        'mongodb',
+        'radius',
+        'redis',
+        'tailscale_ping',
+        'smtp',
+        'snmp',
+        'rabbit_mq',
+        'manual',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.monitor_1_monitor_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'http',
+  })
+# ---
+# name: test_setup[sensor.monitor_1_monitored_url-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.monitor_1_monitored_url',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Monitored URL',
+    'platform': 'uptime_kuma',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <UptimeKumaSensor.URL: 'url'>,
+    'unique_id': '123456789_1_url',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[sensor.monitor_1_monitored_url-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Monitor 1 Monitored URL',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.monitor_1_monitored_url',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'https://example.org',
+  })
+# ---
+# name: test_setup[sensor.monitor_1_response_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.monitor_1_response_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Response time',
+    'platform': 'uptime_kuma',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <UptimeKumaSensor.RESPONSE_TIME: 'response_time'>,
+    'unique_id': '123456789_1_response_time',
+    'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+  })
+# ---
+# name: test_setup[sensor.monitor_1_response_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Monitor 1 Response time',
+      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.monitor_1_response_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '120',
+  })
+# ---
+# name: test_setup[sensor.monitor_1_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'down',
+        'up',
+        'pending',
+        'maintenance',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.monitor_1_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'uptime_kuma',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <UptimeKumaSensor.STATUS: 'status'>,
+    'unique_id': '123456789_1_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[sensor.monitor_1_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Monitor 1 Status',
+      'options': list([
+        'down',
+        'up',
+        'pending',
+        'maintenance',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.monitor_1_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'up',
+  })
+# ---
+# name: test_setup[sensor.monitor_2_monitor_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'http',
+        'port',
+        'ping',
+        'keyword',
+        'dns',
+        'push',
+        'steam',
+        'mqtt',
+        'sqlserver',
+        'json_query',
+        'group',
+        'docker',
+        'grpc_keyword',
+        'real_browser',
+        'gamedig',
+        'kafka_producer',
+        'postgres',
+        'mysql',
+        'mongodb',
+        'radius',
+        'redis',
+        'tailscale_ping',
+        'smtp',
+        'snmp',
+        'rabbit_mq',
+        'manual',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.monitor_2_monitor_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Monitor type',
+    'platform': 'uptime_kuma',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <UptimeKumaSensor.TYPE: 'type'>,
+    'unique_id': '123456789_2_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[sensor.monitor_2_monitor_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Monitor 2 Monitor type',
+      'options': list([
+        'http',
+        'port',
+        'ping',
+        'keyword',
+        'dns',
+        'push',
+        'steam',
+        'mqtt',
+        'sqlserver',
+        'json_query',
+        'group',
+        'docker',
+        'grpc_keyword',
+        'real_browser',
+        'gamedig',
+        'kafka_producer',
+        'postgres',
+        'mysql',
+        'mongodb',
+        'radius',
+        'redis',
+        'tailscale_ping',
+        'smtp',
+        'snmp',
+        'rabbit_mq',
+        'manual',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.monitor_2_monitor_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'port',
+  })
+# ---
+# name: test_setup[sensor.monitor_2_monitored_hostname-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.monitor_2_monitored_hostname',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Monitored hostname',
+    'platform': 'uptime_kuma',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <UptimeKumaSensor.HOSTNAME: 'hostname'>,
+    'unique_id': '123456789_2_hostname',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[sensor.monitor_2_monitored_hostname-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Monitor 2 Monitored hostname',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.monitor_2_monitored_hostname',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[sensor.monitor_2_monitored_port-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.monitor_2_monitored_port',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Monitored port',
+    'platform': 'uptime_kuma',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <UptimeKumaSensor.PORT: 'port'>,
+    'unique_id': '123456789_2_port',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[sensor.monitor_2_monitored_port-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Monitor 2 Monitored port',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.monitor_2_monitored_port',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[sensor.monitor_2_response_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.monitor_2_response_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Response time',
+    'platform': 'uptime_kuma',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <UptimeKumaSensor.RESPONSE_TIME: 'response_time'>,
+    'unique_id': '123456789_2_response_time',
+    'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+  })
+# ---
+# name: test_setup[sensor.monitor_2_response_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Monitor 2 Response time',
+      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.monitor_2_response_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '28',
+  })
+# ---
+# name: test_setup[sensor.monitor_2_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'down',
+        'up',
+        'pending',
+        'maintenance',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.monitor_2_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'uptime_kuma',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <UptimeKumaSensor.STATUS: 'status'>,
+    'unique_id': '123456789_2_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[sensor.monitor_2_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Monitor 2 Status',
+      'options': list([
+        'down',
+        'up',
+        'pending',
+        'maintenance',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.monitor_2_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'up',
+  })
+# ---
+# name: test_setup[sensor.monitor_3_certificate_expiry-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.monitor_3_certificate_expiry',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Certificate expiry',
+    'platform': 'uptime_kuma',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <UptimeKumaSensor.CERT_DAYS_REMAINING: 'cert_days_remaining'>,
+    'unique_id': '123456789_3_cert_days_remaining',
+    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+  })
+# ---
+# name: test_setup[sensor.monitor_3_certificate_expiry-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Monitor 3 Certificate expiry',
+      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.monitor_3_certificate_expiry',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90',
+  })
+# ---
+# name: test_setup[sensor.monitor_3_monitor_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'http',
+        'port',
+        'ping',
+        'keyword',
+        'dns',
+        'push',
+        'steam',
+        'mqtt',
+        'sqlserver',
+        'json_query',
+        'group',
+        'docker',
+        'grpc_keyword',
+        'real_browser',
+        'gamedig',
+        'kafka_producer',
+        'postgres',
+        'mysql',
+        'mongodb',
+        'radius',
+        'redis',
+        'tailscale_ping',
+        'smtp',
+        'snmp',
+        'rabbit_mq',
+        'manual',
+        'unknown',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.monitor_3_monitor_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Monitor type',
+    'platform': 'uptime_kuma',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <UptimeKumaSensor.TYPE: 'type'>,
+    'unique_id': '123456789_3_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[sensor.monitor_3_monitor_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Monitor 3 Monitor type',
+      'options': list([
+        'http',
+        'port',
+        'ping',
+        'keyword',
+        'dns',
+        'push',
+        'steam',
+        'mqtt',
+        'sqlserver',
+        'json_query',
+        'group',
+        'docker',
+        'grpc_keyword',
+        'real_browser',
+        'gamedig',
+        'kafka_producer',
+        'postgres',
+        'mysql',
+        'mongodb',
+        'radius',
+        'redis',
+        'tailscale_ping',
+        'smtp',
+        'snmp',
+        'rabbit_mq',
+        'manual',
+        'unknown',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.monitor_3_monitor_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'json_query',
+  })
+# ---
+# name: test_setup[sensor.monitor_3_monitored_url-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.monitor_3_monitored_url',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Monitored URL',
+    'platform': 'uptime_kuma',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <UptimeKumaSensor.URL: 'url'>,
+    'unique_id': '123456789_3_url',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[sensor.monitor_3_monitored_url-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Monitor 3 Monitored URL',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.monitor_3_monitored_url',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'https://down.example.org',
+  })
+# ---
+# name: test_setup[sensor.monitor_3_response_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.monitor_3_response_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Response time',
+    'platform': 'uptime_kuma',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <UptimeKumaSensor.RESPONSE_TIME: 'response_time'>,
+    'unique_id': '123456789_3_response_time',
+    'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+  })
+# ---
+# name: test_setup[sensor.monitor_3_response_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Monitor 3 Response time',
+      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.monitor_3_response_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '120',
+  })
+# ---
+# name: test_setup[sensor.monitor_3_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'down',
+        'up',
+        'pending',
+        'maintenance',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.monitor_3_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'uptime_kuma',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <UptimeKumaSensor.STATUS: 'status'>,
+    'unique_id': '123456789_3_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[sensor.monitor_3_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Monitor 3 Status',
+      'options': list([
+        'down',
+        'up',
+        'pending',
+        'maintenance',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.monitor_3_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'down',
+  })
+# ---

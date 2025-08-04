@@ -75,8 +75,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> b
         )
     )
 
-    entry.async_on_unload(entry.add_update_listener(async_update_options))
-
     async def async_on_stop(_event: Event) -> None:
         """Unregister callbacks and disconnect."""
         client.clear_state_update_callbacks()
@@ -86,11 +84,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> b
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_on_stop)
     )
     return True
-
-
-async def async_update_options(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> None:
-    """Update options."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> bool:

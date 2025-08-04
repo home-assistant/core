@@ -1,5 +1,103 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][switch.dehumidifier_child_lock-entry]
+# name: test_platform_setup_and_discovery[cs_ka2wfrdoogpvgzfi][switch.dehumidifer_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.dehumidifer_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:account-lock',
+    'original_name': 'Child lock',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': 'tuya.mock_device_idchild_lock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[cs_ka2wfrdoogpvgzfi][switch.dehumidifer_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dehumidifer Child lock',
+      'icon': 'mdi:account-lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.dehumidifer_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[cs_ka2wfrdoogpvgzfi][switch.dehumidifer_ionizer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.dehumidifer_ionizer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:atom',
+    'original_name': 'Ionizer',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ionizer',
+    'unique_id': 'tuya.mock_device_idanion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[cs_ka2wfrdoogpvgzfi][switch.dehumidifer_ionizer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dehumidifer Ionizer',
+      'icon': 'mdi:atom',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.dehumidifer_ionizer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[cs_zibqa9dutqyaxym2][switch.dehumidifier_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -34,7 +132,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cs_arete_two_12l_dehumidifier_air_purifier][switch.dehumidifier_child_lock-state]
+# name: test_platform_setup_and_discovery[cs_zibqa9dutqyaxym2][switch.dehumidifier_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dehumidifier Child lock',
@@ -48,7 +146,55 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][switch.pixi_smart_drinking_fountain_filter_reset-entry]
+# name: test_platform_setup_and_discovery[cwjwq_agwu93lr][switch.smart_odor_eliminator_pro_switch-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.smart_odor_eliminator_pro_switch',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Switch',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch',
+    'unique_id': 'tuya.bf6574iutyikgwkxswitch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[cwjwq_agwu93lr][switch.smart_odor_eliminator_pro_switch-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Smart Odor Eliminator-Pro Switch',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.smart_odor_eliminator_pro_switch',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[cwysj_z3rpyvznfcch99aa][switch.pixi_smart_drinking_fountain_filter_reset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -83,7 +229,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][switch.pixi_smart_drinking_fountain_filter_reset-state]
+# name: test_platform_setup_and_discovery[cwysj_z3rpyvznfcch99aa][switch.pixi_smart_drinking_fountain_filter_reset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'PIXI Smart Drinking Fountain Filter reset',
@@ -96,7 +242,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][switch.pixi_smart_drinking_fountain_power-entry]
+# name: test_platform_setup_and_discovery[cwysj_z3rpyvznfcch99aa][switch.pixi_smart_drinking_fountain_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -131,7 +277,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][switch.pixi_smart_drinking_fountain_power-state]
+# name: test_platform_setup_and_discovery[cwysj_z3rpyvznfcch99aa][switch.pixi_smart_drinking_fountain_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'PIXI Smart Drinking Fountain Power',
@@ -144,7 +290,7 @@
     'state': 'on',
   })
 # ---
-# name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][switch.pixi_smart_drinking_fountain_reset_of_water_usage_days-entry]
+# name: test_platform_setup_and_discovery[cwysj_z3rpyvznfcch99aa][switch.pixi_smart_drinking_fountain_reset_of_water_usage_days-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -179,7 +325,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][switch.pixi_smart_drinking_fountain_reset_of_water_usage_days-state]
+# name: test_platform_setup_and_discovery[cwysj_z3rpyvznfcch99aa][switch.pixi_smart_drinking_fountain_reset_of_water_usage_days-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'PIXI Smart Drinking Fountain Reset of water usage days',
@@ -192,7 +338,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][switch.pixi_smart_drinking_fountain_uv_sterilization-entry]
+# name: test_platform_setup_and_discovery[cwysj_z3rpyvznfcch99aa][switch.pixi_smart_drinking_fountain_uv_sterilization-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -227,7 +373,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][switch.pixi_smart_drinking_fountain_uv_sterilization-state]
+# name: test_platform_setup_and_discovery[cwysj_z3rpyvznfcch99aa][switch.pixi_smart_drinking_fountain_uv_sterilization-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'PIXI Smart Drinking Fountain UV sterilization',
@@ -240,7 +386,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][switch.pixi_smart_drinking_fountain_water_pump_reset-entry]
+# name: test_platform_setup_and_discovery[cwysj_z3rpyvznfcch99aa][switch.pixi_smart_drinking_fountain_water_pump_reset-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -275,7 +421,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cwysj_pixi_smart_drinking_fountain][switch.pixi_smart_drinking_fountain_water_pump_reset-state]
+# name: test_platform_setup_and_discovery[cwysj_z3rpyvznfcch99aa][switch.pixi_smart_drinking_fountain_water_pump_reset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'PIXI Smart Drinking Fountain Water pump reset',
@@ -288,7 +434,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[cz_dual_channel_metering][switch.hvac_meter_socket_1-entry]
+# name: test_platform_setup_and_discovery[cz_2jxesipczks0kdct][switch.hvac_meter_socket_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -318,12 +464,12 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'socket_1',
+    'translation_key': 'indexed_socket',
     'unique_id': 'tuya.eb0c772dabbb19d653ssi5switch_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cz_dual_channel_metering][switch.hvac_meter_socket_1-state]
+# name: test_platform_setup_and_discovery[cz_2jxesipczks0kdct][switch.hvac_meter_socket_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'outlet',
@@ -337,7 +483,7 @@
     'state': 'on',
   })
 # ---
-# name: test_platform_setup_and_discovery[cz_dual_channel_metering][switch.hvac_meter_socket_2-entry]
+# name: test_platform_setup_and_discovery[cz_2jxesipczks0kdct][switch.hvac_meter_socket_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -367,12 +513,12 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'socket_2',
+    'translation_key': 'indexed_socket',
     'unique_id': 'tuya.eb0c772dabbb19d653ssi5switch_2',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cz_dual_channel_metering][switch.hvac_meter_socket_2-state]
+# name: test_platform_setup_and_discovery[cz_2jxesipczks0kdct][switch.hvac_meter_socket_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'outlet',
@@ -386,7 +532,7 @@
     'state': 'on',
   })
 # ---
-# name: test_platform_setup_and_discovery[dlq_earu_electric_eawcpt][switch.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_child_lock-entry]
+# name: test_platform_setup_and_discovery[dlq_0tnvg2xaisqdadcf][switch.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -421,7 +567,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[dlq_earu_electric_eawcpt][switch.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_child_lock-state]
+# name: test_platform_setup_and_discovery[dlq_0tnvg2xaisqdadcf][switch.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': '一路带计量磁保持通断器 Child lock',
@@ -434,7 +580,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[dlq_earu_electric_eawcpt][switch.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_switch-entry]
+# name: test_platform_setup_and_discovery[dlq_0tnvg2xaisqdadcf][switch.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -469,7 +615,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[dlq_earu_electric_eawcpt][switch.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_switch-state]
+# name: test_platform_setup_and_discovery[dlq_0tnvg2xaisqdadcf][switch.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': '一路带计量磁保持通断器 Switch',
@@ -482,7 +628,7 @@
     'state': 'on',
   })
 # ---
-# name: test_platform_setup_and_discovery[kg_smart_valve][switch.qt_switch_switch_1-entry]
+# name: test_platform_setup_and_discovery[kg_gbm9ata1zrzaez4a][switch.qt_switch_switch_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -512,12 +658,12 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_1',
+    'translation_key': 'indexed_switch',
     'unique_id': 'tuya.0665305284f3ebe9fdc1switch_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[kg_smart_valve][switch.qt_switch_switch_1-state]
+# name: test_platform_setup_and_discovery[kg_gbm9ata1zrzaez4a][switch.qt_switch_switch_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'outlet',
@@ -531,7 +677,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[kj_bladeless_tower_fan][switch.bree_power-entry]
+# name: test_platform_setup_and_discovery[kj_yrzylxax1qspdgpp][switch.bree_power-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -566,7 +712,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[kj_bladeless_tower_fan][switch.bree_power-state]
+# name: test_platform_setup_and_discovery[kj_yrzylxax1qspdgpp][switch.bree_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Bree Power',
@@ -579,7 +725,199 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_valve_controller][switch.sprinkler_cesare_switch-entry]
+# name: test_platform_setup_and_discovery[ks_j9fa8ahzac8uvlfl][switch.tower_fan_ca_407g_smart_ionizer-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.tower_fan_ca_407g_smart_ionizer',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Ionizer',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ionizer',
+    'unique_id': 'tuya.mock_device_idanion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[ks_j9fa8ahzac8uvlfl][switch.tower_fan_ca_407g_smart_ionizer-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Tower Fan CA-407G Smart Ionizer',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.tower_fan_ca_407g_smart_ionizer',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[mal_gyitctrjj1kefxp2][switch.multifunction_alarm_arm_beep-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.multifunction_alarm_arm_beep',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Arm beep',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'arm_beep',
+    'unique_id': 'tuya.123123aba12312312dazubswitch_alarm_sound',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[mal_gyitctrjj1kefxp2][switch.multifunction_alarm_arm_beep-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Multifunction alarm Arm beep',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.multifunction_alarm_arm_beep',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_platform_setup_and_discovery[mal_gyitctrjj1kefxp2][switch.multifunction_alarm_siren-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.multifunction_alarm_siren',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Siren',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'siren',
+    'unique_id': 'tuya.123123aba12312312dazubswitch_alarm_light',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[mal_gyitctrjj1kefxp2][switch.multifunction_alarm_siren-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Multifunction alarm Siren',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.multifunction_alarm_siren',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_platform_setup_and_discovery[qccdz_7bvgooyjhiua1yyq][switch.ac_charging_control_box_switch-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.ac_charging_control_box_switch',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Switch',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch',
+    'unique_id': 'tuya.bf83514d9c14b426f0fz5yswitch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[qccdz_7bvgooyjhiua1yyq][switch.ac_charging_control_box_switch-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'AC charging control box Switch',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.ac_charging_control_box_switch',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sfkzq_o6dagifntoafakst][switch.sprinkler_cesare_switch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -614,7 +952,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_valve_controller][switch.sprinkler_cesare_switch-state]
+# name: test_platform_setup_and_discovery[sfkzq_o6dagifntoafakst][switch.sprinkler_cesare_switch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Sprinkler Cesare Switch',
@@ -627,7 +965,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[tdq_4_443][switch.4_433_switch_1-entry]
+# name: test_platform_setup_and_discovery[tdq_cq1p0nt0a4rixnex][switch.4_433_switch_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -657,12 +995,12 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_1',
+    'translation_key': 'indexed_switch',
     'unique_id': 'tuya.bf082711d275c0c883vb4pswitch_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[tdq_4_443][switch.4_433_switch_1-state]
+# name: test_platform_setup_and_discovery[tdq_cq1p0nt0a4rixnex][switch.4_433_switch_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'outlet',
@@ -676,7 +1014,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[tdq_4_443][switch.4_433_switch_2-entry]
+# name: test_platform_setup_and_discovery[tdq_cq1p0nt0a4rixnex][switch.4_433_switch_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -706,12 +1044,12 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_2',
+    'translation_key': 'indexed_switch',
     'unique_id': 'tuya.bf082711d275c0c883vb4pswitch_2',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[tdq_4_443][switch.4_433_switch_2-state]
+# name: test_platform_setup_and_discovery[tdq_cq1p0nt0a4rixnex][switch.4_433_switch_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'outlet',
@@ -725,7 +1063,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[tdq_4_443][switch.4_433_switch_3-entry]
+# name: test_platform_setup_and_discovery[tdq_cq1p0nt0a4rixnex][switch.4_433_switch_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -755,12 +1093,12 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_3',
+    'translation_key': 'indexed_switch',
     'unique_id': 'tuya.bf082711d275c0c883vb4pswitch_3',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[tdq_4_443][switch.4_433_switch_3-state]
+# name: test_platform_setup_and_discovery[tdq_cq1p0nt0a4rixnex][switch.4_433_switch_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'outlet',
@@ -774,7 +1112,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[tdq_4_443][switch.4_433_switch_4-entry]
+# name: test_platform_setup_and_discovery[tdq_cq1p0nt0a4rixnex][switch.4_433_switch_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -804,12 +1142,12 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'switch_4',
+    'translation_key': 'indexed_switch',
     'unique_id': 'tuya.bf082711d275c0c883vb4pswitch_4',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[tdq_4_443][switch.4_433_switch_4-state]
+# name: test_platform_setup_and_discovery[tdq_cq1p0nt0a4rixnex][switch.4_433_switch_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'outlet',
@@ -823,7 +1161,103 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[wk_wifi_smart_gas_boiler_thermostat][switch.wifi_smart_gas_boiler_thermostat_child_lock-entry]
+# name: test_platform_setup_and_discovery[tyndj_pyakuuoc][switch.solar_zijpad_energy_saving-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.solar_zijpad_energy_saving',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Energy saving',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'energy_saving',
+    'unique_id': 'tuya.bfdb773e4ae317e3915h2iswitch_save_energy',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[tyndj_pyakuuoc][switch.solar_zijpad_energy_saving-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Solar zijpad Energy saving',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.solar_zijpad_energy_saving',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[wk_aqoouq7x][switch.clima_cucina_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.clima_cucina_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': 'tuya.bf6fc1645146455a2efrexchild_lock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[wk_aqoouq7x][switch.clima_cucina_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Clima cucina Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.clima_cucina_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[wk_fi6dne5tu4t1nm6j][switch.wifi_smart_gas_boiler_thermostat_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -858,7 +1292,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[wk_wifi_smart_gas_boiler_thermostat][switch.wifi_smart_gas_boiler_thermostat_child_lock-state]
+# name: test_platform_setup_and_discovery[wk_fi6dne5tu4t1nm6j][switch.wifi_smart_gas_boiler_thermostat_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'WiFi Smart Gas Boiler Thermostat  Child lock',

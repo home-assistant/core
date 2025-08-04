@@ -534,6 +534,11 @@ ZEROCONF = {
             "domain": "homekit_controller",
         },
     ],
+    "_heos-audio._tcp.local.": [
+        {
+            "domain": "heos",
+        },
+    ],
     "_homeconnect._tcp.local.": [
         {
             "domain": "home_connect",
@@ -562,6 +567,10 @@ ZEROCONF = {
         {
             "domain": "bosch_shc",
             "name": "bosch shc*",
+        },
+        {
+            "domain": "bsblan",
+            "name": "bsb-lan*",
         },
         {
             "domain": "eheimdigital",

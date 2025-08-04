@@ -125,8 +125,8 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryBinarySensorEntityDescription, ...] = (
         key="charge_state_conn_charge_cable",
         polling=True,
         polling_value_fn=lambda x: x != "<invalid>",
-        streaming_listener=lambda vehicle, callback: vehicle.listen_ChargingCableType(
-            lambda value: callback(value is not None and value != "Unknown")
+        streaming_listener=lambda vehicle, callback: vehicle.listen_DetailedChargeState(
+            lambda value: callback(None if value is None else value != "Disconnected")
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
@@ -542,7 +542,7 @@ async def async_setup_entry(
     for vehicle in entry.runtime_data.vehicles:
         for description in VEHICLE_DESCRIPTIONS:
             if (
-                not vehicle.api.pre2021
+                not vehicle.poll
                 and description.streaming_listener
                 and vehicle.firmware >= description.streaming_firmware
             ):

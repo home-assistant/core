@@ -185,7 +185,7 @@ async def test_generate_data(
     )
     assert result.data == {"characters": ["Mario", "Luigi"]}
 
-    assert len(mock_chat_create.mock_calls) == 4
+    assert len(mock_chat_create.mock_calls) == 3
     config = mock_chat_create.mock_calls[-1][2]["config"]
     assert config.response_mime_type == "application/json"
     assert config.response_schema == {

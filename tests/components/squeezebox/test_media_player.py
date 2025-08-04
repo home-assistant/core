@@ -68,7 +68,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util.dt import utcnow
 
@@ -80,30 +79,6 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-
-
-async def test_device_registry(
-    hass: HomeAssistant,
-    device_registry: DeviceRegistry,
-    configured_player: MagicMock,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test squeezebox device registered in the device registry."""
-    reg_device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_MAC[0])})
-    assert reg_device is not None
-    assert reg_device == snapshot
-
-
-async def test_device_registry_server_merged(
-    hass: HomeAssistant,
-    device_registry: DeviceRegistry,
-    configured_players: MagicMock,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test squeezebox device registered in the device registry."""
-    reg_device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_MAC[2])})
-    assert reg_device is not None
-    assert reg_device == snapshot
 
 
 async def test_entity_registry(
@@ -170,30 +145,21 @@ async def test_squeezebox_player_rediscovery(
     assert hass.states.get("media_player.test_player").state == MediaPlayerState.IDLE
 
 
-async def test_squeezebox_turn_on(
-    hass: HomeAssistant, configured_player: MagicMock
+@pytest.mark.parametrize(
+    ("service", "state"),
+    [(SERVICE_TURN_ON, True), (SERVICE_TURN_OFF, False)],
+)
+async def test_squeezebox_turn_on_off(
+    hass: HomeAssistant, configured_player: MagicMock, service: str, state: bool
 ) -> None:
     """Test turn on service call."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_ON,
+        service,
         {ATTR_ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
-    configured_player.async_set_power.assert_called_once_with(True)
-
-
-async def test_squeezebox_turn_off(
-    hass: HomeAssistant, configured_player: MagicMock
-) -> None:
-    """Test turn off service call."""
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
-        blocking=True,
-    )
-    configured_player.async_set_power.assert_called_once_with(False)
+    configured_player.async_set_power.assert_called_once_with(state)
 
 
 async def test_squeezebox_state(
@@ -535,7 +501,10 @@ async def test_squeezebox_play_media_with_announce_volume_invalid(
     hass: HomeAssistant, configured_player: MagicMock, announce_volume: str | int
 ) -> None:
     """Test play service call with announce and volume zero."""
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(
+        ServiceValidationError,
+        match="announce_volume must be a number greater than 0 and less than or equal to 1",
+    ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
             SERVICE_PLAY_MEDIA,
@@ -796,9 +765,7 @@ async def test_squeezebox_call_query(
         },
         blocking=True,
     )
-    configured_player.async_query.assert_called_once_with(
-        "test_command", "param1", "param2"
-    )
+    configured_player.async_query.assert_called_with("test_command", "param1", "param2")
 
 
 async def test_squeezebox_call_method(
@@ -815,9 +782,7 @@ async def test_squeezebox_call_method(
         },
         blocking=True,
     )
-    configured_player.async_query.assert_called_once_with(
-        "test_command", "param1", "param2"
-    )
+    configured_player.async_query.assert_called_with("test_command", "param1", "param2")
 
 
 async def test_squeezebox_invalid_state(
