@@ -46,8 +46,24 @@ async def test_ftth_power(hass: HomeAssistant, router: Mock) -> None:
     """Test FTTH optical power sensors."""
     await setup_platform(hass, SENSOR_DOMAIN)
 
-    assert hass.states.get("sensor.freebox_sfp_rx_power").state == "-22.25"
-    assert hass.states.get("sensor.freebox_sfp_tx_power").state == "-3.66"
+    state_rx = hass.states.get("sensor.freebox_sfp_rx_power")
+    state_tx = hass.states.get("sensor.freebox_sfp_tx_power")
+
+    assert state_rx.state == "-22.25"
+    assert state_tx.state == "-3.66"
+    assert state_rx.attributes["sfp_model"] == "GPON SFP"
+    assert state_rx.attributes["sfp_vendor"] == "Freebox"
+
+
+async def test_no_ftth_media(hass: HomeAssistant, router: Mock) -> None:
+    """Test that FTTH sensors are not created when media is not FTTH."""
+    data_connection_get_status = deepcopy(DATA_CONNECTION_GET_STATUS)
+    data_connection_get_status["media"] = "dsl"
+    router().connection.get_status.return_value = data_connection_get_status
+    await setup_platform(hass, SENSOR_DOMAIN)
+
+    assert hass.states.get("sensor.freebox_sfp_rx_power") is None
+    assert hass.states.get("sensor.freebox_sfp_tx_power") is None
 
 
 async def test_call(

@@ -126,6 +126,7 @@ class FreeboxRouter:
         self.raids: dict[int, dict[str, Any]] = {}
         self.sensors_temperature: dict[str, int] = {}
         self.sensors_connection: dict[str, float] = {}
+        self.ftth_info: dict[str, str] = {}
         self.call_list: list[dict[str, Any]] = []
         self.home_granted = True
         self.home_devices: dict[str, Any] = {}
@@ -191,11 +192,21 @@ class FreeboxRouter:
             self.sensors_connection[sensor_key] = connection_datas[sensor_key]
 
         if connection_datas.get("media") == "ftth":
-            ftth_datas: dict[str, Any] = await self._api.connection.get_ftth()
-            if (sfp_pwr_rx := ftth_datas.get("sfp_pwr_rx")) is not None:
-                self.sensors_connection["sfp_pwr_rx"] = sfp_pwr_rx / 100
-            if (sfp_pwr_tx := ftth_datas.get("sfp_pwr_tx")) is not None:
-                self.sensors_connection["sfp_pwr_tx"] = sfp_pwr_tx / 100
+            try:
+                ftth_datas: dict[str, Any] = await self._api.connection.get_ftth()
+            except HttpRequestError as err:
+                _LOGGER.debug("Error updating FTTH data: %s", err)
+            else:
+                self.ftth_info = {
+                    "sfp_model": ftth_datas.get("sfp_model"),
+                    "sfp_vendor": ftth_datas.get("sfp_vendor"),
+                }
+                if (sfp_pwr_rx := ftth_datas.get("sfp_pwr_rx")) is not None:
+                    self.sensors_connection["sfp_pwr_rx"] = sfp_pwr_rx / 100
+                if (sfp_pwr_tx := ftth_datas.get("sfp_pwr_tx")) is not None:
+                    self.sensors_connection["sfp_pwr_tx"] = sfp_pwr_tx / 100
+        else:
+            self.ftth_info = {}
 
         self._attrs = {
             "IPv4": connection_datas.get("ipv4"),
