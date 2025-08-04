@@ -40,7 +40,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
-        _LOGGER.error(discovery_info)
         self._droplet_discovery = DropletDiscovery(
             discovery_info.host,
             discovery_info.port,
