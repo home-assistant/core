@@ -223,11 +223,12 @@ class MockSoCo(MagicMock):
 
     @property
     def all_zones(self) -> set[MockSoCo]:
-        """Return a set of all mock zones, or just self if no factory or zones."""
-        if self.factory is not None:
-            if zones := self.factory.mock_all_zones:
-                return zones
-        return {self}
+        """Return all mock zones if a factory is set and enabled, else just self."""
+        return (
+            self.factory.mock_all_zones
+            if self.factory and self.factory.mock_all_zones
+            else {self}
+        )
 
     def set_factory(self, factory: SoCoMockFactory) -> None:
         """Set the factory for this mock."""
