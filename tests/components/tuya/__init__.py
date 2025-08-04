@@ -300,6 +300,11 @@ DEVICE_MOCKS = {
     ],
     "sd_lr33znaodtyarrrz": [
         # https://github.com/home-assistant/core/issues/141278
+        Platform.BUTTON,
+        Platform.NUMBER,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
         Platform.VACUUM,
     ],
     "sfkzq_o6dagifntoafakst": [
