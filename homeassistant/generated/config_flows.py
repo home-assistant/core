@@ -731,6 +731,7 @@ FLOWS = {
         "workday",
         "worldclock",
         "ws66i",
+        "wsdot",
         "wyoming",
         "xbox",
         "xiaomi_aqara",
