@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_event_entity
+# name: test_get_posts
   dict({
     'posts': list([
       FeedParserDict({
