@@ -7,7 +7,8 @@ from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.components.matter.const import DOMAIN, SERVICE_GET_AREAS
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -291,3 +292,33 @@ async def test_vacuum_actions_no_supported_run_modes(
 
     # Ensure no commands were sent to the device
     assert matter_client.send_device_command.call_count == 0
+
+
+@pytest.mark.parametrize("node_fixture", ["vacuum_cleaner"])
+async def test_get_areas(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test that the service for areas correctly outputs areas."""
+    ENTITY_ID = "vacuum.mock_vacuum"
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_AREAS,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "vacuum.mock_vacuum": {
+            "areas": [
+                {"area_id": 7, "map_id": 3, "name": "My Location A"},
+                {"area_id": 1234567, "map_id": 3, "name": "My Location B"},
+                {"area_id": 2290649224, "map_id": 245, "name": "My Location C"},
+            ],
+            "maps": [
+                {"map_id": 3, "name": "My Map XX"},
+                {"map_id": 245, "name": "My Map YY"},
+            ],
+        }
+    }
