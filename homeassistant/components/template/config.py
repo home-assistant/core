@@ -152,7 +152,8 @@ CONFIG_SECTION_SCHEMA = vol.All(
                 cv.ensure_list, [vacuum_platform.VACUUM_YAML_SCHEMA]
             ),
             vol.Optional(DOMAIN_WEATHER): vol.All(
-                cv.ensure_list, [weather_platform.WEATHER_YAML_SCHEMA]
+                cv.ensure_list,
+                [weather_platform.WEATHER_DEPRECATION_YAML_SCHEMA],
             ),
         },
     ),
