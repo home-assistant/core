@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import cast
 
 from qbusmqttapi.discovery import QbusMqttDevice, QbusMqttOutput
+from qbusmqttapi.factory import QbusMqttTopicFactory
 from qbusmqttapi.state import QbusMqttDeviceState, QbusMqttWeatherState
 
 from homeassistant.components.binary_sensor import (
@@ -16,8 +17,14 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import QbusConfigEntry
-from .entity import QbusEntity, create_device_identifier, determine_new_outputs
+from .entity import (
+    QbusEntity,
+    create_device_identifier,
+    create_unique_id,
+    determine_new_outputs,
+)
 
 PARALLEL_UPDATES = 0
 
@@ -109,23 +116,24 @@ class QbusControllerConnectedBinarySensor(BinarySensorEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_should_poll = False
+    _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
     def __init__(self, controller: QbusMqttDevice) -> None:
         """Initialize binary sensor entity."""
         self._controller = controller
 
-        self._attr_unique_id = f"ctd_{controller.serial_number}_connected"
+        self._attr_unique_id = create_unique_id(controller.serial_number, "connected")
         self._attr_device_info = DeviceInfo(
             identifiers={create_device_identifier(controller)}
         )
-        self._attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
+        topic = QbusMqttTopicFactory().get_device_state_topic(self._controller.id)
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"qbus_controller_{self._controller.id}_state",
+                f"{DOMAIN}_{topic}",
                 self._state_received,
             )
         )

@@ -147,9 +147,7 @@ class QbusControllerCoordinator(DataUpdateCoordinator[QbusMqttDevice | None]):
         state = self._message_factory.parse_device_state(msg.payload)
 
         if state and state.properties:
-            async_dispatcher_send(
-                self.hass, f"qbus_controller_{self._controller.id}_state", state
-            )
+            async_dispatcher_send(self.hass, f"{DOMAIN}_{msg.topic}", state)
 
             if not self._controller_activated and state.properties.connectable is False:
                 _LOGGER.debug(
