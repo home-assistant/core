@@ -33,6 +33,7 @@ from annotatedyaml import load_yaml_dict, loader as yaml_loader
 import attr
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from syrupy.types import PropertyFilter
 import voluptuous as vol
 
 from homeassistant import auth, bootstrap, config_entries, loader
@@ -1943,6 +1944,10 @@ async def snapshot_platform(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     config_entry_id: str,
+    *,
+    # exclude gets lost between first and second call,
+    # so we need to pass it as a kwarg
+    snapshot_exclude: PropertyFilter | None = None,
 ) -> None:
     """Snapshot a platform."""
     entity_entries = er.async_entries_for_config_entry(entity_registry, config_entry_id)
@@ -1951,11 +1956,15 @@ async def snapshot_platform(
         "Please limit the loaded platforms to 1 platform."
     )
     for entity_entry in entity_entries:
-        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+        assert entity_entry == snapshot(
+            name=f"{entity_entry.entity_id}-entry", exclude=snapshot_exclude
+        )
         assert entity_entry.disabled_by is None, "Please enable all entities."
         state = hass.states.get(entity_entry.entity_id)
         assert state, f"State not found for {entity_entry.entity_id}"
-        assert state == snapshot(name=f"{entity_entry.entity_id}-state")
+        assert state == snapshot(
+            name=f"{entity_entry.entity_id}-state", exclude=snapshot_exclude
+        )
 
 
 @lru_cache

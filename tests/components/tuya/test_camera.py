@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import paths
 from tuya_sharing import CustomerDevice
 
 from homeassistant.components.tuya import ManagerCompat
@@ -34,7 +35,13 @@ async def test_platform_setup_and_discovery(
     """Test platform setup and discovery."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    await snapshot_platform(
+        hass,
+        entity_registry,
+        snapshot,
+        mock_config_entry.entry_id,
+        snapshot_exclude=paths("attributes.access_token", "attributes.entity_picture"),
+    )
 
 
 @pytest.mark.parametrize(
