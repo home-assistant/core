@@ -5,8 +5,12 @@ state:
   fields:
     state:
       required: true
+      default: "on"
       selector:
-        state:
+        select:
+          options:
+            - "off"
+            - "on"
     behavior:
       required: true
       default: any
