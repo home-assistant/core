@@ -177,12 +177,11 @@ async def _async_resolve_template_config(
     with suppress(ValueError):  # Invalid config
         raw_config = dict(config)
 
+    config = _backward_compat_schema(config)
     if is_blueprint_instance_config(config):
         blueprints = async_get_blueprints(hass)
 
-        blueprint_inputs = await blueprints.async_inputs_from_config(
-            _backward_compat_schema(config)
-        )
+        blueprint_inputs = await blueprints.async_inputs_from_config(config)
         raw_blueprint_inputs = blueprint_inputs.config_with_inputs
 
         config = blueprint_inputs.async_substitute()
