@@ -5,6 +5,7 @@ from unittest.mock import Mock, patch
 
 from aiohttp import ClientError
 from aiohttp.client_exceptions import ClientConnectorError
+from freezegun.api import FrozenDateTimeFactory
 from nextdns import ApiError, InvalidApiKeyError
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -25,7 +26,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.dt import utcnow
 
 from . import init_integration, mock_nextdns
 
@@ -105,7 +105,9 @@ async def test_switch_off(hass: HomeAssistant) -> None:
         TimeoutError,
     ],
 )
-async def test_availability(hass: HomeAssistant, exc: Exception) -> None:
+async def test_availability(
+    hass: HomeAssistant, exc: Exception, freezer: FrozenDateTimeFactory
+) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
     await init_integration(hass)
 
@@ -114,21 +116,21 @@ async def test_availability(hass: HomeAssistant, exc: Exception) -> None:
     assert state.state != STATE_UNAVAILABLE
     assert state.state == STATE_ON
 
-    future = utcnow() + timedelta(minutes=10)
+    freezer.tick(timedelta(minutes=10))
     with patch(
         "homeassistant.components.nextdns.NextDns.get_settings",
         side_effect=exc,
     ):
-        async_fire_time_changed(hass, future)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("switch.fake_profile_web3")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    future = utcnow() + timedelta(minutes=20)
+    freezer.tick(timedelta(minutes=10))
     with mock_nextdns():
-        async_fire_time_changed(hass, future)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("switch.fake_profile_web3")

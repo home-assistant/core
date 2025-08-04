@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from nextdns import ApiError
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -10,7 +11,6 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.dt import utcnow
 
 from . import init_integration, mock_nextdns
 
@@ -32,8 +32,7 @@ async def test_sensor(
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_availability(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
     await init_integration(hass)
@@ -63,7 +62,7 @@ async def test_availability(
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "90"
 
-    future = utcnow() + timedelta(minutes=10)
+    freezer.tick(timedelta(minutes=10))
     with (
         patch(
             "homeassistant.components.nextdns.NextDns.get_analytics_status",
@@ -86,7 +85,7 @@ async def test_availability(
             side_effect=ApiError("API Error"),
         ),
     ):
-        async_fire_time_changed(hass, future)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.fake_profile_dns_queries")
@@ -109,9 +108,9 @@ async def test_availability(
     assert state
     assert state.state == STATE_UNAVAILABLE
 
-    future = utcnow() + timedelta(minutes=20)
+    freezer.tick(timedelta(minutes=10))
     with mock_nextdns():
-        async_fire_time_changed(hass, future)
+        async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get("sensor.fake_profile_dns_queries")
