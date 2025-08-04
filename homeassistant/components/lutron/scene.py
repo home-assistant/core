@@ -27,8 +27,7 @@ async def async_setup_entry(
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
 
     async_add_entities(
-        LutronScene(button, entry_data.controller, config_entry)
-        for button in entry_data.scenes
+        LutronScene(button, entry_data.controller) for button in entry_data.scenes
     )
 
 
@@ -41,11 +40,9 @@ class LutronScene(LutronKeypadComponent, Scene):
         self,
         lutron_device: Button,
         controller: LutronController,
-        config_entry: ConfigEntry,
     ) -> None:
         """Initialize the scene/button."""
         super().__init__(lutron_device, controller)
-        self._config_entry = config_entry
         self._attr_name = self.name
 
     async def async_activate(self, **kwargs: Any) -> None:

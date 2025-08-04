@@ -283,19 +283,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             variable.legacy_uuid,
             entry_data.controller.guid,
         )
-        _async_check_device_identifiers(
-            hass,
-            device_registry,
-            "",
-            variable.legacy_uuid,
-            entry_data.controller.guid,
-        )
 
+    # create the device for the Controller
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, lutron_controller.guid)},
         manufacturer="Lutron",
-        name="Main repeater",
+        name="Lutron Controller",
     )
 
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = entry_data
@@ -314,7 +308,6 @@ def _async_check_entity_unique_id(
     controller_guid: str,
 ) -> None:
     """If uuid becomes available update to use it."""
-
     if not uuid:
         return
 
@@ -336,8 +329,7 @@ def _async_check_device_identifiers(
     legacy_uuid: str,
     controller_guid: str,
 ) -> None:
-    """If uuid becomes available update to use it."""
-
+    """If uuid becomes available, update to use it."""
     if not uuid:
         return
 

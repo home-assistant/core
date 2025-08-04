@@ -89,7 +89,6 @@ class LutronBaseEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-
         if self._lutron_device.uuid is None:
             return f"{self._controller.guid}_{self._lutron_device.legacy_uuid}"
         return f"{self._controller.guid}_{self._lutron_device.uuid}"
@@ -130,15 +129,11 @@ class LutronVariable(LutronBaseEntity):
         lutron_device: Device,
         controller: LutronController,
     ) -> None:
-        """Initialize the device. Assign to the controller device."""
+        """Initialize the entity with the proper name. Assign it to the controller device."""
         super().__init__(lutron_device, controller)
         self._attr_name = lutron_device.name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, controller.guid)},
-            name="Lutron Controller",
-            manufacturer="Lutron",
-            model=controller.lip.controller_type.name.lower(),
-            sw_version="NA",
         )
 
 
@@ -146,7 +141,7 @@ class LutronKeypadComponent(LutronBaseEntity):
     """Representation of a Lutron Keypad Component, such as Leds, Buttons, Events.
 
     The HA device is the keypad with device_name
-    The entity has a name -> full name is device_name + name
+    The entity has a name, so the full name is device_name + name
     """
 
     _lutron_device: KeypadComponent
@@ -156,7 +151,11 @@ class LutronKeypadComponent(LutronBaseEntity):
         lutron_device: KeypadComponent,
         controller: LutronController,
     ) -> None:
-        """Initialize the device."""
+        """Initialize the device.
+
+        RadioRA main repeater is also a keypad.
+        HomeworksQS is not.
+        """
         super().__init__(lutron_device, controller)
         self._component_number = lutron_device.component_number
         self._attr_device_info = DeviceInfo(
@@ -172,12 +171,10 @@ class LutronKeypadComponent(LutronBaseEntity):
 
     @property
     def name(self) -> str:
-        """Return the name of the entity based on the different conditions."""
-
-        if not self._controller.use_radiora_mode:
-            return self._lutron_device.component_name
-
-        return self._lutron_device.name
+        """Return the name of the entity."""
+        if self._controller.use_radiora_mode:
+            return self._lutron_device.name
+        return self._lutron_device.component_name
 
     @property
     def keypad_name(self) -> str:
@@ -192,8 +189,7 @@ class LutronKeypadComponent(LutronBaseEntity):
 
     @property
     def device_name(self) -> str:
-        """Return the device name for the keypad component, which is the keypad including the computed area_name."""
-
+        """Return the device name for the keypad component, which is the keypad_name name including the computed area_name."""
         return (
             f"{self.area_name} {self.keypad_name}"
             if self._controller.use_area_for_device_name and self.area_name is not None
@@ -202,7 +198,6 @@ class LutronKeypadComponent(LutronBaseEntity):
 
     async def async_added_to_hass(self) -> None:  # pylint: disable=hass-missing-super-call
         """Register the keypad component using also the component_number to get the updates for the components."""
-
         self._controller.subscribe(
             self._lutron_device.integration_id,
             self._component_number,
@@ -230,5 +225,4 @@ class LutronControllerBaseEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-
         return self._controller.guid

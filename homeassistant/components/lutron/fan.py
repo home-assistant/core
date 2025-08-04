@@ -29,10 +29,7 @@ async def async_setup_entry(
     """
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
-        [
-            LutronFan(device, entry_data.controller, config_entry)
-            for device in entry_data.fans
-        ],
+        [LutronFan(device, entry_data.controller) for device in entry_data.fans],
         True,
     )
 
@@ -53,11 +50,9 @@ class LutronFan(LutronOutput, FanEntity):
         self,
         lutron_device: Output,
         controller: LutronController,
-        config_entry: ConfigEntry,
     ) -> None:
         """Initialize the device."""
         super().__init__(lutron_device, controller)
-        self._config_entry = config_entry
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""

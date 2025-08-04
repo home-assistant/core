@@ -56,7 +56,7 @@ async def async_setup_entry(
     if not use_radiora_mode:
         async_add_entities(
             (
-                LutronLedLight(device, entry_data.controller, config_entry)
+                LutronLedLight(device, entry_data.controller)
                 for device in entry_data.leds
             ),
             True,
@@ -166,11 +166,9 @@ class LutronLedLight(LutronKeypadComponent, LightEntity):
         self,
         lutron_device: Led,
         controller: LutronController,
-        config_entry: ConfigEntry,
     ) -> None:
         """Initialize the device."""
         super().__init__(lutron_device, controller)
-        self._config_entry = config_entry
         self._attr_name = lutron_device.name
 
     async def async_turn_on(self, **kwargs: Any) -> None:

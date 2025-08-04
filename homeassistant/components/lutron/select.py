@@ -33,8 +33,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Lutron sensor platform.
 
-    Adds variable from the Main Repeater associated with the
-    config_entry as sensor entities.
+    Adds variables to the controller as sensor entities.
     """
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
