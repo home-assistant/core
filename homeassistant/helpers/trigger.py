@@ -38,14 +38,11 @@ from homeassistant.loader import (
     async_get_integrations,
 )
 from homeassistant.util.async_ import create_eager_task
-from homeassistant.util.automation import (
-    get_absolute_description_key,
-    get_relative_description_key,
-)
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
 
 from . import config_validation as cv, selector
+from .automation import get_absolute_description_key, get_relative_description_key
 from .integration_platform import async_process_integration_platforms
 from .selector import TargetSelector
 from .template import Template

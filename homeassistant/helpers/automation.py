@@ -1,4 +1,4 @@
-"""Utilities to help with automations."""
+"""Helpers for automation."""
 
 
 def get_absolute_description_key(domain: str, key: str) -> str:

@@ -1,8 +1,8 @@
-"""Test automation utils."""
+"""Test automation helpers."""
 
 import pytest
 
-from homeassistant.util.automation import (
+from homeassistant.helpers.automation import (
     get_absolute_description_key,
     get_relative_description_key,
 )
