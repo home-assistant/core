@@ -898,7 +898,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.ATMOSPHERIC_PRESSTURE,
-            translation_key="pressure",
+            translation_key="air_pressure",
             device_class=SensorDeviceClass.PRESSURE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
