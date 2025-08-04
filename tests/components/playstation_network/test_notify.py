@@ -55,11 +55,16 @@ async def test_notify_platform(
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    "entity_id",
+    ["notify.testuser_group_publicuniversalfriend", "notify.testuser_direct_message"],
+)
 @freeze_time("2025-07-28T00:00:00+00:00")
 async def test_send_message(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_psnawpapi: MagicMock,
+    entity_id: str,
 ) -> None:
     """Test send message."""
 
@@ -69,7 +74,7 @@ async def test_send_message(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    state = hass.states.get("notify.testuser_group_publicuniversalfriend")
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_UNKNOWN
 
@@ -77,13 +82,13 @@ async def test_send_message(
         NOTIFY_DOMAIN,
         SERVICE_SEND_MESSAGE,
         {
-            ATTR_ENTITY_ID: "notify.testuser_group_publicuniversalfriend",
+            ATTR_ENTITY_ID: entity_id,
             ATTR_MESSAGE: "henlo fren",
         },
         blocking=True,
     )
 
-    state = hass.states.get("notify.testuser_group_publicuniversalfriend")
+    state = hass.states.get(entity_id)
     assert state
     assert state.state == "2025-07-28T00:00:00+00:00"
     mock_psnawpapi.group.return_value.send_message.assert_called_once_with("henlo fren")
