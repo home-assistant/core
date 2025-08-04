@@ -163,12 +163,18 @@ class HabuSensor(SensorEntity, ABC):
         self._serial_number = serial_number
         self._access = access
         self.entity_description = description
+        self._access.register_listener(self._on_state_update)
 
     def _device_name(self) -> str:
         """Return the device name based on its type."""
         if GreencellUtils.device_is_habu_den(self._serial_number):
             return GREENCELL_HABU_DEN
         return GREENCELL_OTHER_DEVICE
+
+    def _on_state_update(self) -> None:
+        """Handle state update logic."""
+        if self.hass:
+            self.async_schedule_update_ha_state()
 
     @property
     def unique_id(self) -> str:
