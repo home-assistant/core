@@ -70,9 +70,31 @@ DEVICE_MOCKS = {
         Platform.SENSOR,
         Platform.SWITCH,
     ],
+    "cz_0g1fmqh6d5io7lcn": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.SWITCH,
+    ],
     "cz_2jxesipczks0kdct": [
         # https://github.com/home-assistant/core/issues/147149
         Platform.SENSOR,
+        Platform.SWITCH,
+    ],
+    "cz_cuhokdii7ojyw8k2": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.SWITCH,
+    ],
+    "cz_dntgh2ngvshfxpsz": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.SWITCH,
+    ],
+    "cz_hj0a5c7ckzzexu8l": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
+    "cz_t0a4hwsf8anfsadp": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.SELECT,
         Platform.SWITCH,
     ],
     "dj_mki13ie507rlry4r": [
