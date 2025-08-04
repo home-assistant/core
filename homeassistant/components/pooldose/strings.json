@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Set up SEKO PoolDose Device",
+        "title": "Set up SEKO PoolDose device",
         "description": "The device password must be set to default (0000).",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -25,173 +25,96 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Configure SEKO PoolDose options",
-        "description": "Adjust settings for your device."
-      }
-    },
-    "error": {
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    }
-  },
   "entity": {
     "sensor": {
-      "name": {
-        "name": "System Name"
-      },
-      "serial_number": {
-        "name": "Serial Number"
-      },
-      "device_id": {
-        "name": "Device ID"
-      },
-      "model": {
-        "name": "Model"
-      },
-      "model_id": {
-        "name": "Model ID"
-      },
-      "ownerid": {
-        "name": "Owner ID"
-      },
-      "groupname": {
-        "name": "Group Name"
-      },
-      "fw_version": {
-        "name": "Firmware Version"
-      },
-      "sw_version": {
-        "name": "Software Version"
-      },
-      "api_version": {
-        "name": "API Version"
-      },
-      "fw_code": {
-        "name": "Firmware Code"
-      },
-      "mac": {
-        "name": "MAC Address"
-      },
-      "ip": {
-        "name": "IP Address"
-      },
-      "wifi_ssid": {
-        "name": "WiFi SSID"
-      },
-      "ap_ssid": {
-        "name": "AP SSID"
-      },
-      "temperature": {
-        "name": "Temperature"
-      },
-      "ph": {
-        "name": "pH"
-      },
       "orp": {
         "name": "ORP"
       },
       "ph_type_dosing": {
-        "name": "pH Type Dosing",
+        "name": "pH dosing type",
         "state": {
           "alcalyne": "pH+",
           "acid": "pH-"
         }
       },
       "peristaltic_ph_dosing": {
-        "name": "Peristaltic pH Dosing",
+        "name": "ph peristaltic dosing",
         "state": {
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "proportional": "Proportional",
           "on_off": "On/Off",
           "timed": "Timed"
         }
       },
       "ofa_ph_value": {
-        "name": "OFA pH Time Value"
+        "name": "pH over feed alert time"
       },
       "orp_type_dosing": {
-        "name": "ORP Type Dosing",
+        "name": "ORP dosing type",
         "state": {
-          "low": "Low",
-          "high": "High"
+          "low": "[%key:common::state::low%]",
+          "high": "[%key:common::state::high%]"
         }
       },
       "peristaltic_orp_dosing": {
-        "name": "Peristaltic ORP Dosing",
+        "name": "ORP peristaltic dosing",
         "state": {
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "proportional": "Proportional",
           "on_off": "On/Off",
           "timed": "Timed"
         }
       },
       "ofa_orp_value": {
-        "name": "OFA ORP Time Value"
+        "name": "ORP over feed alert time"
       },
       "ph_calibration_type": {
-        "name": "pH Calibration Type",
+        "name": "pH calibration type",
         "state": {
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "reference": "Reference",
-          "1_point": "1 Point",
-          "2_points": "2 Points"
+          "1_point": "1 point",
+          "2_points": "2 points"
         }
       },
       "ph_calibration_offset": {
-        "name": "pH Calibration Offset"
+        "name": "pH calibration offset"
       },
       "ph_calibration_slope": {
-        "name": "pH Calibration Slope"
+        "name": "pH calibration slope"
       },
       "orp_calibration_type": {
-        "name": "ORP Calibration Type",
+        "name": "ORP calibration type",
         "state": {
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "reference": "Reference",
-          "1_point": "1 Point"
+          "1_point": "1 point"
         }
       },
       "orp_calibration_offset": {
-        "name": "ORP Calibration Offset"
+        "name": "ORP calibration offset"
       },
       "orp_calibration_slope": {
-        "name": "ORP Calibration Slope"
-      },
-      "peristaltic_ph_dosing_alt": {
-        "name": "Peristaltic pH Dosing",
-        "state": {
-          "proportional": "Proportional"
-        }
-      },
-      "peristaltic_orp_dosing_alt": {
-        "name": "Peristaltic ORP Dosing",
-        "state": {
-          "proportional": "Proportional",
-          "off": "Off",
-          "on_off": "On/Off",
-          "timed": "Timed"
-        }
+        "name": "ORP calibration slope"
       }
     },
     "number": {
       "ph_target": {
-        "name": "Target pH"
+        "name": "pH target"
       },
       "orp_target": {
-        "name": "Target ORP"
+        "name": "ORP target"
       }
     },
     "switch": {
       "stop_pool_dosing": {
-        "name": "Pause Dosing"
+        "name": "Pause dosing"
       },
       "circulation_detection": {
-        "name": "Circulation Monitoring"
+        "name": "Circulation monitoring"
       },
       "frequency_input": {
-        "name": "Frequency Input"
+        "name": "Frequency input"
       }
     },
     "binary_sensor": {
@@ -199,27 +122,27 @@
         "name": "Circulation"
       },
       "ph_level_ok": {
-        "name": "pH Level OK"
+        "name": "pH level OK"
       },
       "orp_level_ok": {
-        "name": "ORP Level OK"
+        "name": "ORP level OK"
       },
       "flow_rate_ok": {
-        "name": "Flow Rate OK"
+        "name": "Flow rate OK"
       },
       "alarm_relay": {
-        "name": "Alarm Relay"
+        "name": "Alarm relay"
       },
       "relay_aux1_ph": {
-        "name": "Relay AUX 1 pH Measure"
+        "name": "pH measure relay"
       },
       "relay_aux2_orpcl": {
-        "name": "Relay AUX 2 ORP/CL"
+        "name": "ORP/CL measure relay"
       }
     },
     "select": {
       "water_meter_unit": {
-        "name": "Water Meter Unit"
+        "name": "Water meter unit"
       }
     }
   }

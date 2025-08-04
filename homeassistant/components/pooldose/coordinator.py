@@ -1,4 +1,4 @@
-"""Data update coordinator for PoolDose."""
+"""Data update coordinator for the PoolDose integration."""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class PooldoseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Coordinator for Pooldose integration."""
+    """Coordinator for PoolDose integration."""
 
     def __init__(
         self,
@@ -71,8 +71,3 @@ class PooldoseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed("No data received from API")
 
         return instant_values
-
-    @property
-    def available(self) -> bool:
-        """Return True if coordinator is available."""
-        return self.last_update_success and self.data is not None

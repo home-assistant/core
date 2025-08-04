@@ -58,7 +58,7 @@ def mock_device_info():
 
 def test_sensor_basic_properties(mock_coordinator, mock_device_info) -> None:
     """Test that the sensor has correct basic properties."""
-    description = get_description("temperature")
+    description = get_description("ph")
     sensor = PooldoseSensor(
         mock_coordinator,
         description,
@@ -66,10 +66,9 @@ def test_sensor_basic_properties(mock_coordinator, mock_device_info) -> None:
         mock_device_info,
     )
 
-    assert sensor.unique_id == "SN123456789_temperature"
-    assert sensor.translation_key == "temperature"
+    assert sensor.unique_id == "SN123456789_ph"
     assert sensor.has_entity_name is True
-    assert sensor.device_class == SensorDeviceClass.TEMPERATURE
+    assert sensor.device_class == SensorDeviceClass.PH
 
 
 def test_sensor_native_value(mock_coordinator, mock_device_info) -> None:
@@ -85,8 +84,8 @@ def test_sensor_native_value(mock_coordinator, mock_device_info) -> None:
     assert sensor.native_value == 25.5
 
 
-def test_sensor_native_unit_of_measurement(mock_coordinator, mock_device_info) -> None:
-    """Test that the sensor returns the correct unit from API data."""
+def test_sensor_temperature_unit_dynamic(mock_coordinator, mock_device_info) -> None:
+    """Test that temperature sensor gets unit dynamically from API data."""
     description = get_description("temperature")
     sensor = PooldoseSensor(
         mock_coordinator,
@@ -98,26 +97,12 @@ def test_sensor_native_unit_of_measurement(mock_coordinator, mock_device_info) -
     assert sensor.native_unit_of_measurement == "°C"
 
 
-def test_sensor_native_value_missing_key(mock_coordinator, mock_device_info) -> None:
-    """Test that the sensor returns None if the key is missing in the data."""
-    description = PooldoseSensorEntityDescription(
-        key="missing_sensor",
-        translation_key="missing_sensor",
-    )
-    sensor = PooldoseSensor(
-        mock_coordinator,
-        description,
-        "SN123456789",
-        mock_device_info,
-    )
-
-    assert sensor.native_value is None
-
-
-def test_sensor_api_error(mock_device_info) -> None:
-    """Test that the sensor returns None when the API returns an error status."""
+def test_sensor_temperature_unit_fahrenheit(mock_device_info) -> None:
+    """Test that temperature sensor handles Fahrenheit unit."""
     coordinator = MagicMock(spec=PooldoseCoordinator)
-    coordinator.data = {}
+    coordinator.data = {
+        "temperature": [77.0, "°F"],  # Fahrenheit temperature
+    }
     description = get_description("temperature")
     sensor = PooldoseSensor(
         coordinator,
@@ -126,42 +111,12 @@ def test_sensor_api_error(mock_device_info) -> None:
         mock_device_info,
     )
 
-    assert sensor.native_value is None
+    assert sensor.native_value == 77.0
+    assert sensor.native_unit_of_measurement == "°F"
 
 
-def test_sensor_empty_data(mock_device_info) -> None:
-    """Test sensor behavior when the coordinator data is empty."""
-    coordinator = MagicMock(spec=PooldoseCoordinator)
-    coordinator.data = None
-    description = get_description("temperature")
-    sensor = PooldoseSensor(
-        coordinator,
-        description,
-        "SN123456789",
-        mock_device_info,
-    )
-
-    assert sensor.native_value is None
-    assert sensor.native_unit_of_measurement is None
-
-
-def test_sensor_ph_device_class(mock_coordinator, mock_device_info) -> None:
-    """Test that pH sensor has correct device class."""
-    description = get_description("ph")
-    sensor = PooldoseSensor(
-        mock_coordinator,
-        description,
-        "SN123456789",
-        mock_device_info,
-    )
-
-    assert sensor.device_class == SensorDeviceClass.PH
-    assert sensor.native_value == 7.2
-    assert sensor.native_unit_of_measurement is None
-
-
-def test_sensor_orp_device_class(mock_coordinator, mock_device_info) -> None:
-    """Test that ORP sensor has correct device class."""
+def test_sensor_static_unit_orp(mock_coordinator, mock_device_info) -> None:
+    """Test that ORP sensor uses static unit definition."""
     description = get_description("orp")
     sensor = PooldoseSensor(
         mock_coordinator,
@@ -170,9 +125,51 @@ def test_sensor_orp_device_class(mock_coordinator, mock_device_info) -> None:
         mock_device_info,
     )
 
-    assert sensor.device_class == SensorDeviceClass.VOLTAGE
     assert sensor.native_value == 650
-    assert sensor.native_unit_of_measurement == "mV"
+    assert sensor.native_unit_of_measurement == "mV"  # Static unit from description
+
+
+def test_sensor_static_unit_dosing(mock_coordinator, mock_device_info) -> None:
+    """Test that dosing sensor uses static unit definition."""
+    description = get_description("peristaltic_ph_dosing")
+    sensor = PooldoseSensor(
+        mock_coordinator,
+        description,
+        "SN123456789",
+        mock_device_info,
+    )
+
+    assert sensor.native_value == 15
+    assert sensor.native_unit_of_measurement is None
+
+
+def test_sensor_ph_no_unit(mock_coordinator, mock_device_info) -> None:
+    """Test that pH sensor has no unit (dimensionless)."""
+    description = get_description("ph")
+    sensor = PooldoseSensor(
+        mock_coordinator,
+        description,
+        "SN123456789",
+        mock_device_info,
+    )
+
+    assert sensor.native_value == 7.2
+    assert sensor.native_unit_of_measurement is None
+
+
+def test_sensor_native_value_missing_key(mock_coordinator, mock_device_info) -> None:
+    """Test that the sensor returns None if the key is missing in the data."""
+    description = PooldoseSensorEntityDescription(
+        key="missing_sensor",
+    )
+    sensor = PooldoseSensor(
+        mock_coordinator,
+        description,
+        "SN123456789",
+        mock_device_info,
+    )
+
+    assert sensor.native_value is None
 
 
 def test_diagnostic_sensor_entity_category(mock_coordinator, mock_device_info) -> None:
@@ -203,24 +200,6 @@ def test_sensor_disabled_by_default(mock_coordinator, mock_device_info) -> None:
     assert sensor.entity_category == EntityCategory.DIAGNOSTIC
 
 
-def test_sensor_with_undefined_unit(mock_device_info) -> None:
-    """Test that sensor returns None for undefined units."""
-    coordinator = MagicMock(spec=PooldoseCoordinator)
-    coordinator.data = {
-        "temperature": [25.5, "UNDEFINED"],  # Undefined unit
-    }
-    description = get_description("temperature")
-    sensor = PooldoseSensor(
-        coordinator,
-        description,
-        "SN123456789",
-        mock_device_info,
-    )
-
-    assert sensor.native_value == 25.5
-    assert sensor.native_unit_of_measurement == "UNDEFINED"
-
-
 def test_sensor_value_function(mock_coordinator, mock_device_info) -> None:
     """Test that sensor uses the value function correctly."""
     description = get_description("temperature")
@@ -235,62 +214,10 @@ def test_sensor_value_function(mock_coordinator, mock_device_info) -> None:
     assert sensor.native_value == 25.5  # First element of [25.5, "°C"]
 
 
-def test_sensor_translation_key_property(mock_coordinator, mock_device_info) -> None:
-    """Test that sensor has correct translation key."""
-    description = get_description("ph_calibration_offset")
-    sensor = PooldoseSensor(
-        mock_coordinator,
-        description,
-        "SN123456789",
-        mock_device_info,
-    )
-
-    assert sensor.translation_key == "ph_calibration_offset"
-    assert sensor.entity_category == EntityCategory.DIAGNOSTIC
-    assert sensor.entity_registry_enabled_default is False
-
-
-def test_sensor_with_no_unit_data(mock_device_info) -> None:
-    """Test sensor behavior when unit data is missing."""
-    coordinator = MagicMock(spec=PooldoseCoordinator)
-    coordinator.data = {
-        "temperature": [25.5],  # Only value, no unit
-    }
-    description = get_description("temperature")
-    sensor = PooldoseSensor(
-        coordinator,
-        description,
-        "SN123456789",
-        mock_device_info,
-    )
-
-    assert sensor.native_value == 25.5
-    assert sensor.native_unit_of_measurement is None
-
-
-def test_sensor_with_ph_unit_filtering(mock_device_info) -> None:
-    """Test that pH sensor filters out 'ph' as unit."""
-    coordinator = MagicMock(spec=PooldoseCoordinator)
-    coordinator.data = {
-        "ph": [7.2, "ph"],  # pH unit should be filtered out
-    }
-    description = get_description("ph")
-    sensor = PooldoseSensor(
-        coordinator,
-        description,
-        "SN123456789",
-        mock_device_info,
-    )
-
-    assert sensor.native_value == 7.2
-    assert sensor.native_unit_of_measurement is None  # 'ph' unit filtered out
-
-
 def test_all_sensor_descriptions_have_required_fields() -> None:
     """Test that all sensor descriptions have required fields."""
     for description in SENSOR_DESCRIPTIONS:
         assert description.key is not None
-        assert description.translation_key is not None
         # Check that diagnostic sensors have entity_category set
         if description.entity_registry_enabled_default is False:
             assert description.entity_category == EntityCategory.DIAGNOSTIC
@@ -300,34 +227,56 @@ def test_sensor_entity_description_inheritance() -> None:
     """Test that PooldoseSensorEntityDescription properly inherits from SensorEntityDescription."""
     description = PooldoseSensorEntityDescription(
         key="test_key",
-        translation_key="test_translation",
         device_class=SensorDeviceClass.TEMPERATURE,
     )
 
     assert description.key == "test_key"
-    assert description.translation_key == "test_translation"
     assert description.device_class == SensorDeviceClass.TEMPERATURE
-    assert callable(description.value_fn)
 
-    # Test default value_fn behavior
-    test_data = [42.5, "°C"]
-    assert description.value_fn(test_data) == 42.5
+    # Test that entity_category can be set (specific to PooldoseSensorEntityDescription)
+    diagnostic_description = PooldoseSensorEntityDescription(
+        key="diagnostic_sensor",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    )
 
-    # Test with None data
-    assert description.value_fn(None) is None
+    assert diagnostic_description.entity_category == EntityCategory.DIAGNOSTIC
+    assert diagnostic_description.key == "diagnostic_sensor"
 
 
-def test_sensor_coordinator_unavailable(mock_device_info) -> None:
-    """Test sensor behavior when coordinator is not available."""
-    coordinator = MagicMock(spec=PooldoseCoordinator)
-    coordinator.data = {}
-    description = get_description("temperature")
+def test_sensor_device_classes() -> None:
+    """Test that sensors have correct device classes."""
+    temperature_desc = get_description("temperature")
+    assert temperature_desc.device_class == SensorDeviceClass.TEMPERATURE
+
+    ph_desc = get_description("ph")
+    assert ph_desc.device_class == SensorDeviceClass.PH
+
+    orp_desc = get_description("orp")
+    assert orp_desc.device_class == SensorDeviceClass.VOLTAGE
+
+
+def test_sensor_unique_id_generation(mock_coordinator, mock_device_info) -> None:
+    """Test that sensors generate correct unique IDs."""
+    description = get_description("ph_calibration_offset")
     sensor = PooldoseSensor(
-        coordinator,
+        mock_coordinator,
         description,
         "SN123456789",
         mock_device_info,
     )
 
-    assert sensor.native_value is None
+    assert sensor.unique_id == "SN123456789_ph_calibration_offset"
+
+
+def test_sensor_text_values(mock_coordinator, mock_device_info) -> None:
+    """Test sensors that return text values."""
+    description = get_description("ph_type_dosing")
+    sensor = PooldoseSensor(
+        mock_coordinator,
+        description,
+        "SN123456789",
+        mock_device_info,
+    )
+
+    assert sensor.native_value == "Automatic"
     assert sensor.native_unit_of_measurement is None

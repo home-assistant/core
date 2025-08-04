@@ -1,12 +1,6 @@
 {
   "entity": {
     "sensor": {
-      "temperature": {
-        "default": "mdi:thermometer"
-      },
-      "ph": {
-        "default": "mdi:ph"
-      },
       "orp": {
         "default": "mdi:water-check"
       },

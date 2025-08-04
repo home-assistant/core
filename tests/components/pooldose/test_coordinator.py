@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components.pooldose.coordinator import PooldoseCoordinator
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
@@ -27,7 +28,13 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 def mock_client() -> AsyncMock:
     """Return a mock client."""
-    return AsyncMock()
+    client = AsyncMock()
+    client.device_info = {
+        "SERIAL_NUMBER": "PDPR1H1HAW100_FW539187",
+        "MODEL": "PoolDose Pro",
+        "SW_VERSION": "1.0",
+    }
+    return client
 
 
 @pytest.fixture
@@ -81,6 +88,71 @@ def mock_instant_values() -> dict:
 
 
 @pytest.mark.asyncio
+async def test_coordinator_setup_success(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_instant_values: dict,
+) -> None:
+    """Test successful coordinator setup and data fetch."""
+    mock_client.connect.return_value = RequestStatus.SUCCESS
+    mock_client.instant_values.return_value = (
+        RequestStatus.SUCCESS,
+        mock_instant_values,
+    )
+
+    coordinator = PooldoseCoordinator(
+        hass,
+        mock_client,
+        datetime.timedelta(seconds=30),
+        mock_config_entry,
+    )
+
+    # Test setup
+    await coordinator._async_setup()
+    assert coordinator.device_info == mock_client.device_info
+    mock_client.connect.assert_called_once()
+
+    # Test data fetch
+    await coordinator.async_refresh()
+    assert coordinator.data is not None
+    assert coordinator.last_update_success is True
+
+    data = coordinator.data
+    assert isinstance(data, dict)
+    assert "deviceInfo" in data
+    assert data["deviceInfo"]["dwi_status"] == "ok"
+    assert "PDPR1H1HAW100_FW539187_w_1ekeigkin" in data
+    assert data["PDPR1H1HAW100_FW539187_w_1ekeigkin"]["current"] == 7.6
+
+    mock_client.instant_values.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_coordinator_setup_connection_failure(
+    hass: HomeAssistant,
+    mock_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test coordinator setup with connection failure."""
+    mock_client.connect.return_value = RequestStatus.HOST_UNREACHABLE
+
+    coordinator = PooldoseCoordinator(
+        hass,
+        mock_client,
+        datetime.timedelta(seconds=30),
+        mock_config_entry,
+    )
+
+    with pytest.raises(
+        ConfigEntryNotReady, match="Failed to connect to PoolDose client"
+    ):
+        await coordinator._async_setup()
+
+    mock_client.connect.assert_called_once()
+
+
+@pytest.mark.asyncio
 async def test_coordinator_successful_data_fetch(
     hass: HomeAssistant,
     mock_client: AsyncMock,
@@ -88,6 +160,7 @@ async def test_coordinator_successful_data_fetch(
     mock_instant_values: dict,
 ) -> None:
     """Test that the coordinator successfully fetches and processes data."""
+    mock_client.connect.return_value = RequestStatus.SUCCESS
     mock_client.instant_values.return_value = (
         RequestStatus.SUCCESS,
         mock_instant_values,
@@ -104,7 +177,6 @@ async def test_coordinator_successful_data_fetch(
 
     assert coordinator.data is not None
     assert coordinator.last_update_success is True
-    assert coordinator.available is True
 
     data = coordinator.data
     assert isinstance(data, dict)
@@ -123,6 +195,7 @@ async def test_coordinator_handles_connection_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that the coordinator handles connection errors gracefully."""
+    mock_client.connect.return_value = RequestStatus.SUCCESS
     mock_client.instant_values.side_effect = ConnectionError("Connection failed")
 
     coordinator = PooldoseCoordinator(
@@ -136,7 +209,6 @@ async def test_coordinator_handles_connection_error(
     await coordinator.async_refresh()
 
     assert coordinator.last_update_success is False
-    assert coordinator.available is False
     assert coordinator.data is None
     mock_client.instant_values.assert_called_once()
 
@@ -148,6 +220,7 @@ async def test_coordinator_handles_timeout_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that the coordinator handles timeout errors gracefully."""
+    mock_client.connect.return_value = RequestStatus.SUCCESS
     mock_client.instant_values.side_effect = TimeoutError("Request timed out")
 
     coordinator = PooldoseCoordinator(
@@ -161,7 +234,6 @@ async def test_coordinator_handles_timeout_error(
     await coordinator.async_refresh()
 
     assert coordinator.last_update_success is False
-    assert coordinator.available is False
     assert coordinator.data is None
     mock_client.instant_values.assert_called_once()
 
@@ -173,6 +245,7 @@ async def test_coordinator_handles_os_error(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that the coordinator handles OS errors gracefully."""
+    mock_client.connect.return_value = RequestStatus.SUCCESS
     mock_client.instant_values.side_effect = OSError("Network unreachable")
 
     coordinator = PooldoseCoordinator(
@@ -186,7 +259,6 @@ async def test_coordinator_handles_os_error(
     await coordinator.async_refresh()
 
     assert coordinator.last_update_success is False
-    assert coordinator.available is False
     assert coordinator.data is None
     mock_client.instant_values.assert_called_once()
 
@@ -198,6 +270,7 @@ async def test_coordinator_handles_api_error_status(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that the coordinator handles API error status."""
+    mock_client.connect.return_value = RequestStatus.SUCCESS
     mock_client.instant_values.return_value = (
         RequestStatus.API_VERSION_UNSUPPORTED,
         None,
@@ -214,7 +287,6 @@ async def test_coordinator_handles_api_error_status(
     await coordinator.async_refresh()
 
     assert coordinator.last_update_success is False
-    assert coordinator.available is False
     assert coordinator.data is None
     mock_client.instant_values.assert_called_once()
 
@@ -226,6 +298,7 @@ async def test_coordinator_handles_none_data(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that the coordinator handles None data response."""
+    mock_client.connect.return_value = RequestStatus.SUCCESS
     mock_client.instant_values.return_value = (RequestStatus.SUCCESS, None)
 
     coordinator = PooldoseCoordinator(
@@ -239,7 +312,6 @@ async def test_coordinator_handles_none_data(
     await coordinator.async_refresh()
 
     assert coordinator.last_update_success is False
-    assert coordinator.available is False
     assert coordinator.data is None
     mock_client.instant_values.assert_called_once()
 
@@ -251,6 +323,7 @@ async def test_coordinator_handles_generic_exception(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that the coordinator handles generic exceptions gracefully."""
+    mock_client.connect.return_value = RequestStatus.SUCCESS
     mock_client.instant_values.side_effect = Exception("Unexpected error")
 
     coordinator = PooldoseCoordinator(
@@ -264,7 +337,6 @@ async def test_coordinator_handles_generic_exception(
     await coordinator.async_refresh()
 
     assert coordinator.last_update_success is False
-    assert coordinator.available is False
     assert coordinator.data is None
     mock_client.instant_values.assert_called_once()
 
@@ -276,7 +348,9 @@ async def test_coordinator_availability_state_changes(
     mock_config_entry: MockConfigEntry,
     mock_instant_values: dict,
 ) -> None:
-    """Test the coordinator's availability property changes correctly."""
+    """Test the coordinator's last_update_success changes correctly."""
+    mock_client.connect.return_value = RequestStatus.SUCCESS
+
     coordinator = PooldoseCoordinator(
         hass,
         mock_client,
@@ -284,30 +358,27 @@ async def test_coordinator_availability_state_changes(
         mock_config_entry,
     )
 
-    # Initially not available (no data fetched yet)
-    assert coordinator.available is False
-
-    # Successful fetch makes it available
+    # Successful fetch
     mock_client.instant_values.return_value = (
         RequestStatus.SUCCESS,
         mock_instant_values,
     )
     await coordinator.async_refresh()
-    assert coordinator.available is True
+    assert coordinator.last_update_success is True
 
-    # API failure makes it unavailable
+    # API failure
     mock_client.instant_values.side_effect = ConnectionError("Connection failed")
     await coordinator.async_refresh()
-    assert coordinator.available is False
+    assert coordinator.last_update_success is False
 
-    # Recovery makes it available again
+    # Recovery
     mock_client.instant_values.side_effect = None
     mock_client.instant_values.return_value = (
         RequestStatus.SUCCESS,
         mock_instant_values,
     )
     await coordinator.async_refresh()
-    assert coordinator.available is True
+    assert coordinator.last_update_success is True
 
 
 @pytest.mark.asyncio
@@ -317,6 +388,7 @@ async def test_coordinator_data_structure_validation(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that the coordinator validates data structure properly."""
+    mock_client.connect.return_value = RequestStatus.SUCCESS
     # Test with empty data
     mock_client.instant_values.return_value = (RequestStatus.SUCCESS, {})
 
@@ -331,7 +403,6 @@ async def test_coordinator_data_structure_validation(
 
     assert coordinator.data is not None
     assert coordinator.last_update_success is True
-    assert coordinator.available is True
 
     data = coordinator.data
     assert data == {}
@@ -346,6 +417,7 @@ async def test_coordinator_multiple_refresh_cycles(
     mock_instant_values: dict,
 ) -> None:
     """Test that the coordinator handles multiple refresh cycles correctly."""
+    mock_client.connect.return_value = RequestStatus.SUCCESS
     mock_client.instant_values.return_value = (
         RequestStatus.SUCCESS,
         mock_instant_values,
@@ -360,7 +432,6 @@ async def test_coordinator_multiple_refresh_cycles(
 
     # First refresh
     await coordinator.async_refresh()
-    assert coordinator.available is True
     assert coordinator.last_update_success is True
 
     # Second refresh with updated data
@@ -369,7 +440,6 @@ async def test_coordinator_multiple_refresh_cycles(
     mock_client.instant_values.return_value = (RequestStatus.SUCCESS, updated_data)
 
     await coordinator.async_refresh()
-    assert coordinator.available is True
     assert coordinator.last_update_success is True
 
     data = coordinator.data

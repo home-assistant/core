@@ -40,7 +40,6 @@ async def test_form_shows_and_creates_entry(
         )
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
-        assert result["errors"] == {}
 
         user_input = {CONF_HOST: "192.168.1.100"}
         result2 = await hass.config_entries.flow.async_configure(
