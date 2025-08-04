@@ -5,9 +5,9 @@ from __future__ import annotations
 import asyncio
 import logging
 
-from hass_nabucasa import Cloud
-from hass_nabucasa.payments_api import (
-    MirgatePaypalAgreementInfo,
+from hass_nabucasa import (
+    Cloud,
+    MigratePaypalAgreementInfo,
     PaymentsApiError,
     SubscriptionInfo,
 )
@@ -31,7 +31,7 @@ async def async_subscription_info(cloud: Cloud[CloudClient]) -> SubscriptionInfo
 
 async def async_migrate_paypal_agreement(
     cloud: Cloud[CloudClient],
-) -> MirgatePaypalAgreementInfo | None:
+) -> MigratePaypalAgreementInfo | None:
     """Migrate a paypal agreement from legacy."""
     try:
         async with asyncio.timeout(REQUEST_TIMEOUT):
