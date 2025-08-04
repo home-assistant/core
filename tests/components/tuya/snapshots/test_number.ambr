@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[co2bj_air_detector][number.aqi_alarm_duration-entry]
+# name: test_platform_setup_and_discovery[co2bj_yrr3eiyiacm31ski][number.aqi_alarm_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -39,7 +39,7 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_platform_setup_and_discovery[co2bj_air_detector][number.aqi_alarm_duration-state]
+# name: test_platform_setup_and_discovery[co2bj_yrr3eiyiacm31ski][number.aqi_alarm_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -58,7 +58,7 @@
     'state': '1.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[cwwsq_cleverio_pf100][number.cleverio_pf100_feed-entry]
+# name: test_platform_setup_and_discovery[cwwsq_wfkzyy0evslzsmoi][number.cleverio_pf100_feed-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -98,7 +98,7 @@
     'unit_of_measurement': '',
   })
 # ---
-# name: test_platform_setup_and_discovery[cwwsq_cleverio_pf100][number.cleverio_pf100_feed-state]
+# name: test_platform_setup_and_discovery[cwwsq_wfkzyy0evslzsmoi][number.cleverio_pf100_feed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Cleverio PF100 Feed',
@@ -116,7 +116,183 @@
     'state': '1.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[mal_alarm_host][number.multifunction_alarm_alarm_delay-entry]
+# name: test_platform_setup_and_discovery[hps_2aaelwxk][number.human_presence_office_far_detection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 1000.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.human_presence_office_far_detection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Far detection',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'far_detection',
+    'unique_id': 'tuya.bf78687ad321a3aeb8a73mfar_detection',
+    'unit_of_measurement': 'cm',
+  })
+# ---
+# name: test_platform_setup_and_discovery[hps_2aaelwxk][number.human_presence_office_far_detection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Human presence Office Far detection',
+      'max': 1000.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': 'cm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.human_presence_office_far_detection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '220.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[hps_2aaelwxk][number.human_presence_office_near_detection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 1000.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.human_presence_office_near_detection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Near detection',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'near_detection',
+    'unique_id': 'tuya.bf78687ad321a3aeb8a73mnear_detection',
+    'unit_of_measurement': 'cm',
+  })
+# ---
+# name: test_platform_setup_and_discovery[hps_2aaelwxk][number.human_presence_office_near_detection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Human presence Office Near detection',
+      'max': 1000.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': 'cm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.human_presence_office_near_detection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[hps_2aaelwxk][number.human_presence_office_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 10.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.human_presence_office_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sensitivity',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sensitivity',
+    'unique_id': 'tuya.bf78687ad321a3aeb8a73msensitivity',
+    'unit_of_measurement': 'x',
+  })
+# ---
+# name: test_platform_setup_and_discovery[hps_2aaelwxk][number.human_presence_office_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Human presence Office Sensitivity',
+      'max': 10.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': 'x',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.human_presence_office_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[mal_gyitctrjj1kefxp2][number.multifunction_alarm_alarm_delay-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -156,7 +332,7 @@
     'unit_of_measurement': 's',
   })
 # ---
-# name: test_platform_setup_and_discovery[mal_alarm_host][number.multifunction_alarm_alarm_delay-state]
+# name: test_platform_setup_and_discovery[mal_gyitctrjj1kefxp2][number.multifunction_alarm_alarm_delay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -175,7 +351,7 @@
     'state': '20.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[mal_alarm_host][number.multifunction_alarm_arm_delay-entry]
+# name: test_platform_setup_and_discovery[mal_gyitctrjj1kefxp2][number.multifunction_alarm_arm_delay-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -215,7 +391,7 @@
     'unit_of_measurement': 's',
   })
 # ---
-# name: test_platform_setup_and_discovery[mal_alarm_host][number.multifunction_alarm_arm_delay-state]
+# name: test_platform_setup_and_discovery[mal_gyitctrjj1kefxp2][number.multifunction_alarm_arm_delay-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -234,7 +410,7 @@
     'state': '15.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[mal_alarm_host][number.multifunction_alarm_siren_duration-entry]
+# name: test_platform_setup_and_discovery[mal_gyitctrjj1kefxp2][number.multifunction_alarm_siren_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -274,7 +450,7 @@
     'unit_of_measurement': 'min',
   })
 # ---
-# name: test_platform_setup_and_discovery[mal_alarm_host][number.multifunction_alarm_siren_duration-state]
+# name: test_platform_setup_and_discovery[mal_gyitctrjj1kefxp2][number.multifunction_alarm_siren_duration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -293,7 +469,65 @@
     'state': '3.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[wk_wifi_smart_gas_boiler_thermostat][number.wifi_smart_gas_boiler_thermostat_temperature_correction-entry]
+# name: test_platform_setup_and_discovery[sgbj_ulv4nnue7gqp0rjk][number.siren_veranda_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 30.0,
+      'min': 1.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.siren_veranda_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Time',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'time',
+    'unique_id': 'tuya.bf0984adfeffe10d5a3ofdalarm_time',
+    'unit_of_measurement': '',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sgbj_ulv4nnue7gqp0rjk][number.siren_veranda_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Siren veranda  Time',
+      'max': 30.0,
+      'min': 1.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.siren_veranda_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[wk_fi6dne5tu4t1nm6j][number.wifi_smart_gas_boiler_thermostat_temperature_correction-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -333,7 +567,7 @@
     'unit_of_measurement': '℃',
   })
 # ---
-# name: test_platform_setup_and_discovery[wk_wifi_smart_gas_boiler_thermostat][number.wifi_smart_gas_boiler_thermostat_temperature_correction-state]
+# name: test_platform_setup_and_discovery[wk_fi6dne5tu4t1nm6j][number.wifi_smart_gas_boiler_thermostat_temperature_correction-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'WiFi Smart Gas Boiler Thermostat  Temperature correction',
