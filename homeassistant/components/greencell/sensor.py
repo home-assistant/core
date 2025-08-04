@@ -398,13 +398,16 @@ async def setup_sensors(
     def status_message_received(msg) -> None:
         """Handle the status message. If the device is unavailable, disable the entity."""
 
-        MqttParser.parse_single_phase_msg(msg.payload, "state", state_data_obj)
-        state = state_data_obj.data
-
+        try:
+            str_payload = msg.payload.decode("utf-8", errors="ignore")
+        except (AttributeError, TypeError):
+            str_payload = str(msg.payload)
         if (
-            "UNAVAILABLE" in state or "OFFLINE" in state
+            "UNAVAILABLE" in str_payload or "OFFLINE" in str_payload
         ):  # Handle OFFLINE value, which could by send by Habu Den with 1.8.3 FW version.
             access.update("UNAVAILABLE")
+        else:
+            MqttParser.parse_single_phase_msg(msg.payload, "state", state_data_obj)
 
         try:
             state_sensor.async_schedule_update_ha_state(True)
