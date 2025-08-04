@@ -44,6 +44,9 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "yarl": "SemVer",
 }
 PACKAGE_CHECK_PREPARE_UPDATE: dict[str, int] = {
+    # In the form dict("dependencyX": n+1)
+    # - dependencyX should be the name of the referenced dependency
+    # - current major version +1
     # Pandas will only fully support Python 3.14 in v3.
     "pandas": 3,
 }
