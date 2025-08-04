@@ -97,7 +97,6 @@ class AutomowerBaseEntity(CoordinatorEntity[AutomowerDataUpdateCoordinator]):
             ).removeprefix("Husqvarna "),
             name=self.mower_attributes.system.name,
             serial_number=self.mower_attributes.system.serial_number,
-            suggested_area="Garden",
         )
 
     @property
