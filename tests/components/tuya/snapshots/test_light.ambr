@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[clkg_curtain_switch][light.tapparelle_studio_backlight-entry]
+# name: test_platform_setup_and_discovery[clkg_nhyj64w2][light.tapparelle_studio_backlight-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -38,7 +38,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[clkg_curtain_switch][light.tapparelle_studio_backlight-state]
+# name: test_platform_setup_and_discovery[clkg_nhyj64w2][light.tapparelle_studio_backlight-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'color_mode': <ColorMode.ONOFF: 'onoff'>,
@@ -56,7 +56,7 @@
     'state': 'on',
   })
 # ---
-# name: test_platform_setup_and_discovery[dj_smart_light_bulb][light.garage_light-entry]
+# name: test_platform_setup_and_discovery[dj_mki13ie507rlry4r][light.garage_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -96,7 +96,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[dj_smart_light_bulb][light.garage_light-state]
+# name: test_platform_setup_and_discovery[dj_mki13ie507rlry4r][light.garage_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': 138,
@@ -119,7 +119,7 @@
     'state': 'on',
   })
 # ---
-# name: test_platform_setup_and_discovery[gyd_night_light][light.colorful_pir_night_light-entry]
+# name: test_platform_setup_and_discovery[gyd_lgekqfxdabipm3tn][light.colorful_pir_night_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -163,7 +163,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[gyd_night_light][light.colorful_pir_night_light-state]
+# name: test_platform_setup_and_discovery[gyd_lgekqfxdabipm3tn][light.colorful_pir_night_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
@@ -192,7 +192,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[ks_tower_fan][light.tower_fan_ca_407g_smart_backlight-entry]
+# name: test_platform_setup_and_discovery[ks_j9fa8ahzac8uvlfl][light.tower_fan_ca_407g_smart_backlight-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -231,7 +231,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[ks_tower_fan][light.tower_fan_ca_407g_smart_backlight-state]
+# name: test_platform_setup_and_discovery[ks_j9fa8ahzac8uvlfl][light.tower_fan_ca_407g_smart_backlight-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'color_mode': <ColorMode.ONOFF: 'onoff'>,

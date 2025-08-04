@@ -15,7 +15,7 @@ from . import initialize_entry
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.parametrize("mock_device_code", ["ydkt_dolceclima_unsupported"])
+@pytest.mark.parametrize("mock_device_code", ["ydkt_jevroj5aguwdbs2e"])
 async def test_unsupported_device(
     hass: HomeAssistant,
     mock_manager: ManagerCompat,

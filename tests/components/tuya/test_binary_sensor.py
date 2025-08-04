@@ -60,7 +60,7 @@ async def test_platform_setup_no_discovery(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cs_arete_two_12l_dehumidifier_air_purifier"],
+    ["cs_zibqa9dutqyaxym2"],
 )
 @pytest.mark.parametrize(
     ("fault_value", "tankfull", "defrost", "wet"),
@@ -84,7 +84,7 @@ async def test_bitmap(
     defrost: str,
     wet: str,
 ) -> None:
-    """Test BITMAP fault sensor on cs_arete_two_12l_dehumidifier_air_purifier."""
+    """Test BITMAP fault sensor on cs_zibqa9dutqyaxym2."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     assert hass.states.get("binary_sensor.dehumidifier_tank_full").state == "off"
