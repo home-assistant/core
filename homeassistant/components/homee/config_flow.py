@@ -11,7 +11,7 @@ from pyHomee import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -67,7 +67,7 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.info("Homee config successfully tested")
 
             await self.async_set_unique_id(
-                self.homee.settings.uid, raise_on_progress=(self.init_step != "user")
+                self.homee.settings.uid, raise_on_progress=self.source != SOURCE_USER
             )
 
             self._abort_if_unique_id_configured()
