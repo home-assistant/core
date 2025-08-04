@@ -560,7 +560,7 @@ aurorapy==0.2.7
 autarco==3.1.0
 
 # homeassistant.components.husqvarna_automower_ble
-automower-ble==0.2.1
+automower-ble==0.2.7
 
 # homeassistant.components.generic
 # homeassistant.components.stream
@@ -1133,7 +1133,7 @@ habiticalib==0.4.1
 habluetooth==4.0.1
 
 # homeassistant.components.cloud
-hass-nabucasa==0.110.0
+hass-nabucasa==0.110.1
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -3185,7 +3185,7 @@ youless-api==2.2.0
 youtubeaio==2.0.0
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2025.06.09
+yt-dlp[default]==2025.07.21
 
 # homeassistant.components.zabbix
 zabbix-utils==2.0.2
@@ -3203,7 +3203,7 @@ zeroconf==0.147.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.64
+zha==0.0.65
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
