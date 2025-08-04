@@ -70,14 +70,140 @@ DEVICE_MOCKS = {
         Platform.SENSOR,
         Platform.SWITCH,
     ],
+    "cz_0g1fmqh6d5io7lcn": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.SWITCH,
+    ],
     "cz_2jxesipczks0kdct": [
         # https://github.com/home-assistant/core/issues/147149
         Platform.SENSOR,
         Platform.SWITCH,
     ],
+    "cz_cuhokdii7ojyw8k2": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.SWITCH,
+    ],
+    "cz_dntgh2ngvshfxpsz": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.SWITCH,
+    ],
+    "cz_hj0a5c7ckzzexu8l": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
+    "cz_t0a4hwsf8anfsadp": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.SELECT,
+        Platform.SWITCH,
+    ],
+    "dc_l3bpgg8ibsagon4x": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_8szt7whdvwpmxglk": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_8y0aquaa8v6tho8w": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_baf9tt9lb8t5uc7z": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_d4g0fbsoaal841o6": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_djnozmdyqyriow8z": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_ekwolitfjhxn55js": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_fuupmcr2mb1odkja": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_hp6orhaqm6as3jnv": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_hpc8ddyfv85haxa7": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_iayz2jmtlipjnxj7": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_idnfq7xbx8qewyoa": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_ilddqqih3tucdk68": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_j1bgp31cffutizub": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_lmnt3uyltk1xffrt": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
     "dj_mki13ie507rlry4r": [
         # https://github.com/home-assistant/core/pull/126242
-        Platform.LIGHT
+        Platform.LIGHT,
+    ],
+    "dj_nbumqpv8vz61enji": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_nlxvjzy1hoeiqsg6": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_oe0cpnjg": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_riwp3k79": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_tmsloaroqavbucgn": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_ufq2xwuzd4nb0qdr": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_vqwcnabamzrc2kab": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_xokdfs6kh5ednakk": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_zakhnlpdiu0ycdxn": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_zav1pa32pyxray78": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_zputiamzanuk6yky": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
     ],
     "dlq_0tnvg2xaisqdadcf": [
         # https://github.com/home-assistant/core/issues/102769
@@ -233,6 +359,10 @@ DEVICE_MOCKS = {
         # https://github.com/home-assistant/core/issues/149704
         Platform.BINARY_SENSOR,
         Platform.SENSOR,
+    ],
+    "ywcgq_wtzwyhkev3b4ubns": [
+        # https://community.home-assistant.io/t/something-is-wrong-with-tuya-tank-level-sensors-with-the-new-official-integration/689321
+        # not (yet) supported
     ],
     "zndb_ze8faryrxr0glqnn": [
         # https://github.com/home-assistant/core/issues/138372
