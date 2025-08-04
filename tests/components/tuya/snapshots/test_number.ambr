@@ -116,6 +116,182 @@
     'state': '1.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[hps_2aaelwxk][number.human_presence_office_far_detection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 1000.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.human_presence_office_far_detection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Far detection',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'far_detection',
+    'unique_id': 'tuya.bf78687ad321a3aeb8a73mfar_detection',
+    'unit_of_measurement': 'cm',
+  })
+# ---
+# name: test_platform_setup_and_discovery[hps_2aaelwxk][number.human_presence_office_far_detection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Human presence Office Far detection',
+      'max': 1000.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': 'cm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.human_presence_office_far_detection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '220.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[hps_2aaelwxk][number.human_presence_office_near_detection-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 1000.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.human_presence_office_near_detection',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Near detection',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'near_detection',
+    'unique_id': 'tuya.bf78687ad321a3aeb8a73mnear_detection',
+    'unit_of_measurement': 'cm',
+  })
+# ---
+# name: test_platform_setup_and_discovery[hps_2aaelwxk][number.human_presence_office_near_detection-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Human presence Office Near detection',
+      'max': 1000.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': 'cm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.human_presence_office_near_detection',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[hps_2aaelwxk][number.human_presence_office_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 10.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.human_presence_office_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sensitivity',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sensitivity',
+    'unique_id': 'tuya.bf78687ad321a3aeb8a73msensitivity',
+    'unit_of_measurement': 'x',
+  })
+# ---
+# name: test_platform_setup_and_discovery[hps_2aaelwxk][number.human_presence_office_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Human presence Office Sensitivity',
+      'max': 10.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': 'x',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.human_presence_office_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[mal_gyitctrjj1kefxp2][number.multifunction_alarm_alarm_delay-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
