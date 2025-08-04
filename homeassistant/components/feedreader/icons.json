@@ -5,5 +5,10 @@
         "default": "mdi:rss"
       }
     }
+  },
+  "services": {
+    "get_posts": {
+      "service": "mdi:note-search"
+    }
   }
 }
