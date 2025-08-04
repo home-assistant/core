@@ -118,37 +118,38 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
                     start=target_date,
                     end=target_date,
                     summary=f"{holiday}",
-                    description=f"Jewish Holiday: {holiday}",
+                    description=(
+                        f"Jewish Holiday: {holiday}\nHoliday Type: {holiday.type}"
+                    ),
                 )
                 for holiday in info.holidays
             ]
 
-        if event_type == "weekly_portion" and info.upcoming_shabbat.parasha:
-            if target_date.weekday() == 5:  # Only show on Shabbat (Saturday)
-                return CalendarEvent(
-                    start=target_date,
-                    end=target_date,
-                    summary=f"{info.upcoming_shabbat.parasha}",
-                    description=f"Weekly Torah portion: {info.upcoming_shabbat.parasha}",
-                )
+        if event_type == "weekly_portion" and info.parasha:
+            return CalendarEvent(
+                start=target_date,
+                end=target_date,
+                summary=f"{info.parasha}",
+                description=f"Parshat Hashavua: {info.parasha}",
+            )
 
-        elif event_type == "omer_count" and info.omer.total_days > 0:
+        if event_type == "omer_count" and info.omer.total_days > 0:
             return CalendarEvent(
                 start=target_date,
                 end=target_date,
                 summary=f"{info.omer}",
-                description=f"{info.omer.count_str()}",
+                description=f"Sefirat HaOmer: {info.omer.count_str()}",
             )
 
-        elif event_type == "daf_yomi" and info.daf_yomi:
+        if event_type == "daf_yomi" and info.daf_yomi:
             return CalendarEvent(
                 start=target_date,
                 end=target_date,
                 summary=f"{info.daf_yomi}",
-                description=f"Daily Talmud study: {info.daf_yomi}",
+                description=f"Daf Yomi: {info.daf_yomi}",
             )
 
-        elif event_type == "candle_lighting" and zmanim.candle_lighting:
+        if event_type == "candle_lighting" and zmanim.candle_lighting:
             return CalendarEvent(
                 start=zmanim.candle_lighting.astimezone(UTC),
                 end=zmanim.candle_lighting.astimezone(UTC),
@@ -156,7 +157,7 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
                 description=f"Candle lighting time: {zmanim.candle_lighting.strftime('%H:%M')}",
             )
 
-        elif event_type == "havdalah" and zmanim.havdalah:
+        if event_type == "havdalah" and zmanim.havdalah:
             return CalendarEvent(
                 start=zmanim.havdalah.astimezone(UTC),
                 end=zmanim.havdalah.astimezone(UTC),
