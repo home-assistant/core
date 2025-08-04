@@ -235,10 +235,9 @@ aiofiles>=24.1.0
 # https://github.com/aio-libs/multidict/issues/1131
 multidict>=6.4.2
 
-# rpds-py > 0.25.0 requires cargo 1.84.0
-# Stable Alpine current only ships cargo 1.83.0
+# rpds-py frequently updates cargo causing build failures
 # No wheels upstream available for armhf & armv7
-rpds-py==0.24.0
+rpds-py==0.26.0
 """
 
 GENERATED_MESSAGE = (
