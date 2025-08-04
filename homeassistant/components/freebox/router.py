@@ -126,7 +126,7 @@ class FreeboxRouter:
         self.raids: dict[int, dict[str, Any]] = {}
         self.sensors_temperature: dict[str, int] = {}
         self.sensors_connection: dict[str, float] = {}
-        self.ftth_info: dict[str, str] = {}
+        self.ftth_info: dict[str, Any] = {}
         self.call_list: list[dict[str, Any]] = []
         self.home_granted = True
         self.home_devices: dict[str, Any] = {}
@@ -177,6 +177,11 @@ class FreeboxRouter:
 
     async def update_sensors(self) -> None:
         """Update Freebox sensors."""
+
+        # Reset FTTH information
+        self.ftth_info = {}
+        self.sensors_connection.pop("sfp_pwr_rx", None)
+        self.sensors_connection.pop("sfp_pwr_tx", None)
 
         # System sensors
         syst_datas: dict[str, Any] = await self._api.system.get_config()
