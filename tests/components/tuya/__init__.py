@@ -14,17 +14,17 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 DEVICE_MOCKS = {
-    "cl_am43_corded_motor_zigbee_cover": [
+    "cl_zah67ekd": [
         # https://github.com/home-assistant/core/issues/71242
         Platform.COVER,
         Platform.SELECT,
     ],
-    "clkg_curtain_switch": [
+    "clkg_nhyj64w2": [
         # https://github.com/home-assistant/core/issues/136055
         Platform.COVER,
         Platform.LIGHT,
     ],
-    "co2bj_air_detector": [
+    "co2bj_yrr3eiyiacm31ski": [
         # https://github.com/home-assistant/core/issues/133173
         Platform.BINARY_SENSOR,
         Platform.NUMBER,
@@ -32,15 +32,7 @@ DEVICE_MOCKS = {
         Platform.SENSOR,
         Platform.SIREN,
     ],
-    "cs_arete_two_12l_dehumidifier_air_purifier": [
-        Platform.BINARY_SENSOR,
-        Platform.FAN,
-        Platform.HUMIDIFIER,
-        Platform.SELECT,
-        Platform.SENSOR,
-        Platform.SWITCH,
-    ],
-    "cs_emma_dehumidifier": [
+    "cs_ka2wfrdoogpvgzfi": [
         # https://github.com/home-assistant/core/issues/119865
         Platform.BINARY_SENSOR,
         Platform.FAN,
@@ -49,102 +41,110 @@ DEVICE_MOCKS = {
         Platform.SENSOR,
         Platform.SWITCH,
     ],
-    "cs_smart_dry_plus": [
+    "cs_vmxuxszzjwp5smli": [
         # https://github.com/home-assistant/core/issues/119865
         Platform.FAN,
         Platform.HUMIDIFIER,
     ],
-    "cwjwq_smart_odor_eliminator": [
+    "cs_zibqa9dutqyaxym2": [
+        Platform.BINARY_SENSOR,
+        Platform.FAN,
+        Platform.HUMIDIFIER,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
+    "cwjwq_agwu93lr": [
         # https://github.com/orgs/home-assistant/discussions/79
         Platform.SELECT,
         Platform.SENSOR,
         Platform.SWITCH,
     ],
-    "cwwsq_cleverio_pf100": [
+    "cwwsq_wfkzyy0evslzsmoi": [
         # https://github.com/home-assistant/core/issues/144745
         Platform.NUMBER,
         Platform.SENSOR,
     ],
-    "cwysj_pixi_smart_drinking_fountain": [
+    "cwysj_z3rpyvznfcch99aa": [
         # https://github.com/home-assistant/core/pull/146599
         Platform.SENSOR,
         Platform.SWITCH,
     ],
-    "cz_dual_channel_metering": [
+    "cz_2jxesipczks0kdct": [
         # https://github.com/home-assistant/core/issues/147149
         Platform.SENSOR,
         Platform.SWITCH,
     ],
-    "dj_smart_light_bulb": [
+    "dj_mki13ie507rlry4r": [
         # https://github.com/home-assistant/core/pull/126242
         Platform.LIGHT
     ],
-    "dlq_earu_electric_eawcpt": [
+    "dlq_0tnvg2xaisqdadcf": [
         # https://github.com/home-assistant/core/issues/102769
         Platform.SENSOR,
         Platform.SWITCH,
     ],
-    "dlq_metering_3pn_wifi": [
+    "dlq_kxdr6su0c55p7bbo": [
         # https://github.com/home-assistant/core/issues/143499
         Platform.SENSOR,
     ],
-    "gyd_night_light": [
+    "gyd_lgekqfxdabipm3tn": [
         # https://github.com/home-assistant/core/issues/133173
         Platform.LIGHT,
     ],
-    "kg_smart_valve": [
+    "kg_gbm9ata1zrzaez4a": [
         # https://github.com/home-assistant/core/issues/148347
         Platform.SWITCH,
     ],
-    "kj_bladeless_tower_fan": [
+    "kj_yrzylxax1qspdgpp": [
         # https://github.com/orgs/home-assistant/discussions/61
         Platform.FAN,
         Platform.SELECT,
         Platform.SWITCH,
     ],
-    "ks_tower_fan": [
+    "ks_j9fa8ahzac8uvlfl": [
         # https://github.com/orgs/home-assistant/discussions/329
         Platform.FAN,
         Platform.LIGHT,
         Platform.SWITCH,
     ],
-    "kt_serenelife_slpac905wuk_air_conditioner": [
+    "kt_5wnlzekkstwcdsvm": [
         # https://github.com/home-assistant/core/pull/148646
         Platform.CLIMATE,
     ],
-    "mal_alarm_host": [
+    "mal_gyitctrjj1kefxp2": [
         # Alarm Host support
         Platform.ALARM_CONTROL_PANEL,
         Platform.NUMBER,
         Platform.SWITCH,
     ],
-    "mcs_door_sensor": [
+    "mcs_7jIGJAymiH8OsFFb": [
         # https://github.com/home-assistant/core/issues/108301
         Platform.BINARY_SENSOR,
         Platform.SENSOR,
     ],
-    "qccdz_ac_charging_control": [
+    "qccdz_7bvgooyjhiua1yyq": [
         # https://github.com/home-assistant/core/issues/136207
         Platform.SWITCH,
     ],
-    "qxj_temp_humidity_external_probe": [
-        # https://github.com/home-assistant/core/issues/136472
-        Platform.SENSOR,
-    ],
-    "qxj_weather_station": [
+    "qxj_fsea1lat3vuktbt6": [
         # https://github.com/orgs/home-assistant/discussions/318
         Platform.SENSOR,
     ],
-    "rqbj_gas_sensor": [
+    "qxj_is2indt9nlth6esa": [
+        # https://github.com/home-assistant/core/issues/136472
+        Platform.SENSOR,
+    ],
+    "rqbj_4iqe2hsfyd86kwwc": [
         # https://github.com/orgs/home-assistant/discussions/100
         Platform.BINARY_SENSOR,
         Platform.SENSOR,
     ],
-    "sfkzq_valve_controller": [
+    "sfkzq_o6dagifntoafakst": [
         # https://github.com/home-assistant/core/issues/148116
         Platform.SWITCH,
     ],
-    "tdq_4_443": [
+    "tdq_cq1p0nt0a4rixnex": [
         # https://github.com/home-assistant/core/issues/146845
         Platform.SELECT,
         Platform.SWITCH,
@@ -155,32 +155,32 @@ DEVICE_MOCKS = {
         Platform.SENSOR,
         Platform.SWITCH,
     ],
-    "wk_air_conditioner": [
+    "wk_aqoouq7x": [
         # https://github.com/home-assistant/core/issues/146263
         Platform.CLIMATE,
         Platform.SWITCH,
     ],
-    "ydkt_dolceclima_unsupported": [
-        # https://github.com/orgs/home-assistant/discussions/288
-        # unsupported device - no platforms
-    ],
-    "wk_wifi_smart_gas_boiler_thermostat": [
+    "wk_fi6dne5tu4t1nm6j": [
         # https://github.com/orgs/home-assistant/discussions/243
         Platform.CLIMATE,
         Platform.NUMBER,
         Platform.SENSOR,
         Platform.SWITCH,
     ],
-    "wsdcg_temperature_humidity": [
+    "wsdcg_g2y6z3p3ja2qhyav": [
         # https://github.com/home-assistant/core/issues/102769
         Platform.SENSOR,
     ],
-    "wxkg_wireless_switch": [
+    "wxkg_l8yaz4um5b3pwyvf": [
         # https://github.com/home-assistant/core/issues/93975
         Platform.EVENT,
         Platform.SENSOR,
     ],
-    "zndb_smart_meter": [
+    "ydkt_jevroj5aguwdbs2e": [
+        # https://github.com/orgs/home-assistant/discussions/288
+        # unsupported device - no platforms
+    ],
+    "zndb_ze8faryrxr0glqnn": [
         # https://github.com/home-assistant/core/issues/138372
         Platform.SENSOR,
     ],
