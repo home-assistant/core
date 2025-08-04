@@ -26,8 +26,10 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
 
@@ -164,14 +166,23 @@ class SwitchBotSensor(SwitchbotEntity, SensorEntity):
         """Initialize the Switchbot sensor."""
         super().__init__(coordinator)
         self._sensor = sensor
-        self._attr_unique_id = f"{coordinator.base_unique_id}-{sensor}"
         self._channel = channel
         self.entity_description = SENSOR_TYPES[sensor]
+
         if self._channel:
             self._attr_unique_id = (
                 f"{coordinator.base_unique_id}-{sensor}-{self._channel}"
             )
-            self._attr_name = f"{self._sensor} {self._channel}"
+            self._attr_device_info = DeviceInfo(
+                identifiers={
+                    (DOMAIN, f"{coordinator.base_unique_id}-channel-{self._channel}")
+                },
+                manufacturer="SwitchBot",
+                model="RelaySwitch2PM",
+                name=f"{coordinator.device_name} Channel {self._channel}",
+            )
+        else:
+            self._attr_unique_id = f"{coordinator.base_unique_id}-{sensor}"
 
     @property
     def native_value(self) -> str | int | None:

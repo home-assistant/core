@@ -588,59 +588,59 @@ async def test_relay_switch_2pm_sensor(hass: HomeAssistant) -> None:
 
     assert len(hass.states.async_all("sensor")) == 9
 
-    power_sensor_1 = hass.states.get("sensor.test_name_power_1")
+    power_sensor_1 = hass.states.get("sensor.test_name_channel_1_power")
     power_sensor_attrs = power_sensor_1.attributes
     assert power_sensor_1.state == "4.9"
-    assert power_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name power 1"
+    assert power_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Channel 1 Power"
     assert power_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "W"
     assert power_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
-    voltage_sensor_1 = hass.states.get("sensor.test_name_voltage_1")
+    voltage_sensor_1 = hass.states.get("sensor.test_name_channel_1_voltage")
     voltage_sensor_1_attrs = voltage_sensor_1.attributes
     assert voltage_sensor_1.state == "25"
-    assert voltage_sensor_1_attrs[ATTR_FRIENDLY_NAME] == "test-name voltage 1"
+    assert voltage_sensor_1_attrs[ATTR_FRIENDLY_NAME] == "test-name Channel 1 Voltage"
     assert voltage_sensor_1_attrs[ATTR_UNIT_OF_MEASUREMENT] == "V"
     assert voltage_sensor_1_attrs[ATTR_STATE_CLASS] == "measurement"
 
-    current_sensor_1 = hass.states.get("sensor.test_name_current_1")
+    current_sensor_1 = hass.states.get("sensor.test_name_channel_1_current")
     current_sensor_1_attrs = current_sensor_1.attributes
     assert current_sensor_1.state == "0.1"
-    assert current_sensor_1_attrs[ATTR_FRIENDLY_NAME] == "test-name current 1"
+    assert current_sensor_1_attrs[ATTR_FRIENDLY_NAME] == "test-name Channel 1 Current"
     assert current_sensor_1_attrs[ATTR_UNIT_OF_MEASUREMENT] == "A"
     assert current_sensor_1_attrs[ATTR_STATE_CLASS] == "measurement"
 
-    energy_sensor_1 = hass.states.get("sensor.test_name_energy_1")
+    energy_sensor_1 = hass.states.get("sensor.test_name_channel_1_energy")
     energy_sensor_1_attrs = energy_sensor_1.attributes
     assert energy_sensor_1.state == "0.2"
-    assert energy_sensor_1_attrs[ATTR_FRIENDLY_NAME] == "test-name energy 1"
+    assert energy_sensor_1_attrs[ATTR_FRIENDLY_NAME] == "test-name Channel 1 Energy"
     assert energy_sensor_1_attrs[ATTR_UNIT_OF_MEASUREMENT] == "kWh"
     assert energy_sensor_1_attrs[ATTR_STATE_CLASS] == "total_increasing"
 
-    power_sensor_2 = hass.states.get("sensor.test_name_power_2")
+    power_sensor_2 = hass.states.get("sensor.test_name_channel_2_power")
     power_sensor_2_attrs = power_sensor_2.attributes
     assert power_sensor_2.state == "7.9"
-    assert power_sensor_2_attrs[ATTR_FRIENDLY_NAME] == "test-name power 2"
+    assert power_sensor_2_attrs[ATTR_FRIENDLY_NAME] == "test-name Channel 2 Power"
     assert power_sensor_2_attrs[ATTR_UNIT_OF_MEASUREMENT] == "W"
     assert power_sensor_2_attrs[ATTR_STATE_CLASS] == "measurement"
 
-    voltage_sensor_2 = hass.states.get("sensor.test_name_voltage_2")
+    voltage_sensor_2 = hass.states.get("sensor.test_name_channel_2_voltage")
     voltage_sensor_2_attrs = voltage_sensor_2.attributes
     assert voltage_sensor_2.state == "25"
-    assert voltage_sensor_2_attrs[ATTR_FRIENDLY_NAME] == "test-name voltage 2"
+    assert voltage_sensor_2_attrs[ATTR_FRIENDLY_NAME] == "test-name Channel 2 Voltage"
     assert voltage_sensor_2_attrs[ATTR_UNIT_OF_MEASUREMENT] == "V"
     assert voltage_sensor_2_attrs[ATTR_STATE_CLASS] == "measurement"
 
-    current_sensor_2 = hass.states.get("sensor.test_name_current_2")
+    current_sensor_2 = hass.states.get("sensor.test_name_channel_2_current")
     current_sensor_2_attrs = current_sensor_2.attributes
     assert current_sensor_2.state == "0.6"
-    assert current_sensor_2_attrs[ATTR_FRIENDLY_NAME] == "test-name current 2"
+    assert current_sensor_2_attrs[ATTR_FRIENDLY_NAME] == "test-name Channel 2 Current"
     assert current_sensor_2_attrs[ATTR_UNIT_OF_MEASUREMENT] == "A"
     assert current_sensor_2_attrs[ATTR_STATE_CLASS] == "measurement"
 
-    energy_sensor_2 = hass.states.get("sensor.test_name_energy_2")
+    energy_sensor_2 = hass.states.get("sensor.test_name_channel_2_energy")
     energy_sensor_2_attrs = energy_sensor_2.attributes
     assert energy_sensor_2.state == "2.5"
-    assert energy_sensor_2_attrs[ATTR_FRIENDLY_NAME] == "test-name energy 2"
+    assert energy_sensor_2_attrs[ATTR_FRIENDLY_NAME] == "test-name Channel 2 Energy"
     assert energy_sensor_2_attrs[ATTR_UNIT_OF_MEASUREMENT] == "kWh"
     assert energy_sensor_2_attrs[ATTR_STATE_CLASS] == "total_increasing"
 
