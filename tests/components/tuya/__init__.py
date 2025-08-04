@@ -97,9 +97,113 @@ DEVICE_MOCKS = {
         Platform.SELECT,
         Platform.SWITCH,
     ],
+    "dc_l3bpgg8ibsagon4x": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_8szt7whdvwpmxglk": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_8y0aquaa8v6tho8w": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_baf9tt9lb8t5uc7z": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_d4g0fbsoaal841o6": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_djnozmdyqyriow8z": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_ekwolitfjhxn55js": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_fuupmcr2mb1odkja": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_hp6orhaqm6as3jnv": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_hpc8ddyfv85haxa7": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_iayz2jmtlipjnxj7": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_idnfq7xbx8qewyoa": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_ilddqqih3tucdk68": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_j1bgp31cffutizub": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_lmnt3uyltk1xffrt": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
     "dj_mki13ie507rlry4r": [
         # https://github.com/home-assistant/core/pull/126242
-        Platform.LIGHT
+        Platform.LIGHT,
+    ],
+    "dj_nbumqpv8vz61enji": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_nlxvjzy1hoeiqsg6": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_oe0cpnjg": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_riwp3k79": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_tmsloaroqavbucgn": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_ufq2xwuzd4nb0qdr": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_vqwcnabamzrc2kab": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_xokdfs6kh5ednakk": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_zakhnlpdiu0ycdxn": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_zav1pa32pyxray78": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
+    ],
+    "dj_zputiamzanuk6yky": [
+        # https://github.com/home-assistant/core/issues/149704
+        Platform.LIGHT,
     ],
     "dlq_0tnvg2xaisqdadcf": [
         # https://github.com/home-assistant/core/issues/102769
