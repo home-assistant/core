@@ -9,6 +9,10 @@ from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice
 
 from homeassistant.components.tuya import ManagerCompat
+from homeassistant.components.vacuum import (
+    DOMAIN as VACUUM_DOMAIN,
+    SERVICE_RETURN_TO_BASE,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -54,4 +58,33 @@ async def test_platform_setup_no_discovery(
 
     assert not er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
+    )
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["sd_lr33znaodtyarrrz"],
+)
+async def test_return_home(
+    hass: HomeAssistant,
+    mock_manager: ManagerCompat,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Test return home service (#141278)."""
+    entity_id = "vacuum.v20"
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    await hass.services.async_call(
+        VACUUM_DOMAIN,
+        SERVICE_RETURN_TO_BASE,
+        {
+            "entity_id": entity_id,
+        },
+        blocking=True,
+    )
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id, [{"code": "switch_charge", "value": True}]
     )
