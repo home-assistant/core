@@ -153,6 +153,70 @@
     'state': 'on',
   })
 # ---
+# name: test_platform_setup_and_discovery[fs_g0ewlb1vmwqljzji][fan.ceiling_fan_with_light-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'preset_modes': list([
+        'normal',
+        'sleep',
+        'nature',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.ceiling_fan_with_light',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 61>,
+    'translation_key': None,
+    'unique_id': 'tuya.XXX',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[fs_g0ewlb1vmwqljzji][fan.ceiling_fan_with_light-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'direction': 'reverse',
+      'friendly_name': 'Ceiling Fan With Light',
+      'percentage': 16,
+      'percentage_step': 16.666666666666668,
+      'preset_mode': 'normal',
+      'preset_modes': list([
+        'normal',
+        'sleep',
+        'nature',
+      ]),
+      'supported_features': <FanEntityFeature: 61>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.ceiling_fan_with_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_platform_setup_and_discovery[kj_yrzylxax1qspdgpp][fan.bree-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
