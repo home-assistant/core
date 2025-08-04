@@ -230,7 +230,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         all_lights = self.controller.get_lights(self.resource.id)
         lights_in_colortemp_mode = 0
         lights_in_dynamic_mode = 0
-        # accumulate colour values
+        # accumulate color values
         xy_total_x = 0.0
         xy_total_y = 0.0
         xy_count = 0
@@ -258,7 +258,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
                 )
                 if color_temp.mirek is not None and color_temp.mirek_valid:
                     lights_in_colortemp_mode += 1
-                # accumulate temp colour values
+                # accumulate temp color values
                 if light.on.on and self._attr_color_temp_kelvin is not None:
                     temp_total += self._attr_color_temp_kelvin
                     temp_count += 1
@@ -266,7 +266,7 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
                 lights_with_color_support += 1
                 # default to xy values from the first capable light
                 self._attr_xy_color = (color.xy.x, color.xy.y)
-                # accumulate xy colour values
+                # accumulate xy color values
                 if light.on.on:
                     xy_total_x += color.xy.x
                     xy_total_y += color.xy.y
