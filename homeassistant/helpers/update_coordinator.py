@@ -61,6 +61,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
     implements ``__eq__`` or uses a python object that already does.
     """
 
+    config_entry: config_entries.ConfigEntry | None
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -84,21 +86,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self.update_interval = update_interval
         self._shutdown_requested = False
         if config_entry is UNDEFINED:
-            # late import to avoid circular imports
-            from . import frame  # noqa: PLC0415
-
-            # It is not planned to enforce this for custom integrations.
-            # see https://github.com/home-assistant/core/pull/138161#discussion_r1958184241
-            frame.report_usage(
-                "relies on ContextVar, but should pass the config entry explicitly.",
-                core_behavior=frame.ReportBehavior.ERROR,
-                custom_integration_behavior=frame.ReportBehavior.LOG,
-                breaks_in_ha_version="2026.8",
-            )
-
-            self.config_entry = config_entries.current_entry.get()
-        else:
-            self.config_entry = config_entry
+            raise ValueError
+        self.config_entry = config_entry
         self.always_update = always_update
 
         # It's None before the first successful update.
