@@ -21,6 +21,20 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 
+async def async_reset_cutting_blade_usage_time(
+    session: AutomowerSession,
+    mower_id: str,
+) -> None:
+    """Reset cutting blade usage time."""
+    await session.commands.reset_cutting_blade_usage_time(mower_id)
+
+
+def reset_cutting_blade_usage_time_availability(data: MowerAttributes) -> bool:
+    """Return True if blade usage time is greater than 0."""
+    value = data.statistics.cutting_blade_usage_time
+    return value is not None and value > 0
+
+
 @dataclass(frozen=True, kw_only=True)
 class AutomowerButtonEntityDescription(ButtonEntityDescription):
     """Describes Automower button entities."""
@@ -28,6 +42,7 @@ class AutomowerButtonEntityDescription(ButtonEntityDescription):
     available_fn: Callable[[MowerAttributes], bool] = lambda _: True
     exists_fn: Callable[[MowerAttributes], bool] = lambda _: True
     press_fn: Callable[[AutomowerSession, str], Awaitable[Any]]
+    poll_after_sending: bool = False
 
 
 MOWER_BUTTON_TYPES: tuple[AutomowerButtonEntityDescription, ...] = (
@@ -42,6 +57,14 @@ MOWER_BUTTON_TYPES: tuple[AutomowerButtonEntityDescription, ...] = (
         key="sync_clock",
         translation_key="sync_clock",
         press_fn=lambda session, mower_id: session.commands.set_datetime(mower_id),
+    ),
+    AutomowerButtonEntityDescription(
+        key="reset_cutting_blade_usage_time",
+        translation_key="reset_cutting_blade_usage_time",
+        available_fn=reset_cutting_blade_usage_time_availability,
+        exists_fn=lambda data: data.statistics.cutting_blade_usage_time is not None,
+        press_fn=async_reset_cutting_blade_usage_time,
+        poll_after_sending=True,
     ),
 )
 
@@ -93,3 +116,5 @@ class AutomowerButtonEntity(AutomowerControlEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Send a command to the mower."""
         await self.entity_description.press_fn(self.coordinator.api, self.mower_id)
+        if self.entity_description.poll_after_sending:
+            await self.coordinator.async_request_refresh()

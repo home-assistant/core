@@ -66,7 +66,7 @@ async def test_platform_setup_no_discovery(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["kt_serenelife_slpac905wuk_air_conditioner"],
+    ["kt_5wnlzekkstwcdsvm"],
 )
 async def test_set_temperature(
     hass: HomeAssistant,
@@ -96,7 +96,7 @@ async def test_set_temperature(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["kt_serenelife_slpac905wuk_air_conditioner"],
+    ["kt_5wnlzekkstwcdsvm"],
 )
 async def test_fan_mode_windspeed(
     hass: HomeAssistant,
@@ -127,7 +127,7 @@ async def test_fan_mode_windspeed(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["kt_serenelife_slpac905wuk_air_conditioner"],
+    ["kt_5wnlzekkstwcdsvm"],
 )
 async def test_fan_mode_no_valid_code(
     hass: HomeAssistant,
@@ -161,7 +161,7 @@ async def test_fan_mode_no_valid_code(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["kt_serenelife_slpac905wuk_air_conditioner"],
+    ["kt_5wnlzekkstwcdsvm"],
 )
 async def test_set_humidity_not_supported(
     hass: HomeAssistant,

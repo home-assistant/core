@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_device_diagnostics[rqbj_gas_sensor]
+# name: test_device_diagnostics[rqbj_4iqe2hsfyd86kwwc]
   dict({
     'active_time': '2025-06-24T20:33:10+00:00',
     'category': 'rqbj',
@@ -88,7 +88,7 @@
     'update_time': '2025-06-24T20:33:10+00:00',
   })
 # ---
-# name: test_entry_diagnostics[rqbj_gas_sensor]
+# name: test_entry_diagnostics[rqbj_4iqe2hsfyd86kwwc]
   dict({
     'devices': list([
       dict({
