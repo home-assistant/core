@@ -9,6 +9,7 @@ from typing import Any
 import voluptuous as vol
 from volvocarsapi.api import VolvoCarsApi
 from volvocarsapi.models import VolvoApiException, VolvoCarsVehicle
+from volvocarsapi.scopes import DEFAULT_SCOPES
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
@@ -53,6 +54,13 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         self._vehicles: list[VolvoCarsVehicle] = []
         self._config_data: dict = {}
+
+    @property
+    def extra_authorize_data(self) -> dict:
+        """Extra data that needs to be appended to the authorize url."""
+        return super().extra_authorize_data | {
+            "scope": " ".join(DEFAULT_SCOPES),
+        }
 
     @property
     def logger(self) -> logging.Logger:
