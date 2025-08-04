@@ -97,7 +97,6 @@ def _backward_compat_schema(value: Any | None) -> Any:
 
 
 CONFIG_SECTION_SCHEMA = vol.All(
-    _backward_compat_schema,
     vol.Schema(
         {
             vol.Optional(CONF_ACTIONS): cv.SCRIPT_SCHEMA,
