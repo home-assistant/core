@@ -29,7 +29,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import init_integration, mock_nextdns
 
-from tests.common import async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -37,17 +37,20 @@ async def test_switch(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test states of the switches."""
     with patch("homeassistant.components.nextdns.PLATFORMS", [Platform.SWITCH]):
-        entry = await init_integration(hass)
+        await init_integration(hass, mock_config_entry)
 
-    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_switch_on(hass: HomeAssistant) -> None:
+async def test_switch_on(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test the switch can be turned on."""
-    await init_integration(hass)
+    await init_integration(hass, mock_config_entry)
 
     state = hass.states.get("switch.fake_profile_block_page")
     assert state
@@ -71,9 +74,11 @@ async def test_switch_on(hass: HomeAssistant) -> None:
         mock_switch_on.assert_called_once()
 
 
-async def test_switch_off(hass: HomeAssistant) -> None:
+async def test_switch_off(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test the switch can be turned on."""
-    await init_integration(hass)
+    await init_integration(hass, mock_config_entry)
 
     state = hass.states.get("switch.fake_profile_web3")
     assert state
@@ -106,10 +111,13 @@ async def test_switch_off(hass: HomeAssistant) -> None:
     ],
 )
 async def test_availability(
-    hass: HomeAssistant, exc: Exception, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    exc: Exception,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
-    await init_integration(hass)
+    await init_integration(hass, mock_config_entry)
 
     state = hass.states.get("switch.fake_profile_web3")
     assert state
@@ -148,9 +156,11 @@ async def test_availability(
         ClientError,
     ],
 )
-async def test_switch_failure(hass: HomeAssistant, exc: Exception) -> None:
+async def test_switch_failure(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, exc: Exception
+) -> None:
     """Tests that the turn on/off service throws HomeAssistantError."""
-    await init_integration(hass)
+    await init_integration(hass, mock_config_entry)
 
     with (
         patch("homeassistant.components.nextdns.NextDns.set_setting", side_effect=exc),
@@ -164,9 +174,11 @@ async def test_switch_failure(hass: HomeAssistant, exc: Exception) -> None:
         )
 
 
-async def test_switch_auth_error(hass: HomeAssistant) -> None:
+async def test_switch_auth_error(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Tests that the turn on/off action starts re-auth flow."""
-    entry = await init_integration(hass)
+    await init_integration(hass, mock_config_entry)
 
     with patch(
         "homeassistant.components.nextdns.NextDns.set_setting",
@@ -179,7 +191,7 @@ async def test_switch_auth_error(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    assert entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -190,4 +202,4 @@ async def test_switch_auth_error(hass: HomeAssistant) -> None:
 
     assert "context" in flow
     assert flow["context"].get("source") == SOURCE_REAUTH
-    assert flow["context"].get("entry_id") == entry.entry_id
+    assert flow["context"].get("entry_id") == mock_config_entry.entry_id

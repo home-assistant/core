@@ -13,24 +13,29 @@ from homeassistant.helpers import entity_registry as er
 
 from . import init_integration, mock_nextdns
 
-from tests.common import async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_binary_sensor(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test states of the binary sensors."""
     with patch("homeassistant.components.nextdns.PLATFORMS", [Platform.BINARY_SENSOR]):
-        entry = await init_integration(hass)
+        await init_integration(hass, mock_config_entry)
 
-    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_availability(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
-    await init_integration(hass)
+    await init_integration(hass, mock_config_entry)
 
     state = hass.states.get("binary_sensor.fake_profile_device_connection_status")
     assert state

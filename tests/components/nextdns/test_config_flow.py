@@ -14,6 +14,8 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import PROFILES, init_integration, mock_nextdns
 
+from tests.common import MockConfigEntry
+
 
 async def test_form_create_entry(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
@@ -76,9 +78,11 @@ async def test_form_errors(
     assert result["errors"] == {"base": base_error}
 
 
-async def test_form_already_configured(hass: HomeAssistant) -> None:
+async def test_form_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test that errors are shown when duplicates are added."""
-    await init_integration(hass)
+    await init_integration(hass, mock_config_entry)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -100,11 +104,13 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_reauth_successful(hass: HomeAssistant) -> None:
+async def test_reauth_successful(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test starting a reauthentication flow."""
-    entry = await init_integration(hass)
+    await init_integration(hass, mock_config_entry)
 
-    result = await entry.start_reauth_flow(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -135,12 +141,15 @@ async def test_reauth_successful(hass: HomeAssistant) -> None:
     ],
 )
 async def test_reauth_errors(
-    hass: HomeAssistant, exc: Exception, base_error: str
+    hass: HomeAssistant,
+    exc: Exception,
+    base_error: str,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reauthentication flow with errors."""
-    entry = await init_integration(hass)
+    await init_integration(hass, mock_config_entry)
 
-    result = await entry.start_reauth_flow(hass)
+    result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
