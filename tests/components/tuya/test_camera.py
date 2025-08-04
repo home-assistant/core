@@ -6,7 +6,6 @@ from unittest.mock import patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from syrupy.filters import paths
 from tuya_sharing import CustomerDevice
 
 from homeassistant.components.tuya import ManagerCompat
@@ -17,6 +16,16 @@ from homeassistant.helpers import entity_registry as er
 from . import DEVICE_MOCKS, initialize_entry
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+def mock_getrandbits():
+    """Mock camera access token which normally is randomized."""
+    with patch(
+        "homeassistant.components.camera.SystemRandom.getrandbits",
+        return_value=1,
+    ):
+        yield
 
 
 @pytest.mark.parametrize(
@@ -33,6 +42,7 @@ async def test_platform_setup_and_discovery(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test platform setup and discovery."""
+
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     await snapshot_platform(
@@ -40,7 +50,6 @@ async def test_platform_setup_and_discovery(
         entity_registry,
         snapshot,
         mock_config_entry.entry_id,
-        snapshot_exclude=paths("attributes.access_token", "attributes.entity_picture"),
     )
 
 
