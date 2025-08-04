@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[co2bj_yrr3eiyiacm31ski][siren.aqi-entry]
+# name: test_platform_setup_and_discovery[sp_drezasavompxpcgm][camera.cam_garage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -10,9 +10,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'siren',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'siren.aqi',
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.cam_garage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -28,27 +28,32 @@
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <SirenEntityFeature: 3>,
+    'supported_features': <CameraEntityFeature: 2>,
     'translation_key': None,
-    'unique_id': 'tuya.eb14fd1dd93ca2ea34vpinalarm_switch',
+    'unique_id': 'tuya.bf7b8e59f8cd49f425mmfm',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[co2bj_yrr3eiyiacm31ski][siren.aqi-state]
+# name: test_platform_setup_and_discovery[sp_drezasavompxpcgm][camera.cam_garage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AQI',
-      'supported_features': <SirenEntityFeature: 3>,
+      'access_token': '1',
+      'brand': 'Tuya',
+      'entity_picture': '/api/camera_proxy/camera.cam_garage?token=1',
+      'friendly_name': 'CAM GARAGE',
+      'model_name': 'Indoor camera ',
+      'motion_detection': True,
+      'supported_features': <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
-    'entity_id': 'siren.aqi',
+    'entity_id': 'camera.cam_garage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'idle',
   })
 # ---
-# name: test_platform_setup_and_discovery[sgbj_ulv4nnue7gqp0rjk][siren.siren_veranda-entry]
+# name: test_platform_setup_and_discovery[sp_rjKXWRohlvOTyLBu][camera.cam_porch-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -59,9 +64,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'siren',
+    'domain': 'camera',
     'entity_category': None,
-    'entity_id': 'siren.siren_veranda',
+    'entity_id': 'camera.cam_porch',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -77,27 +82,31 @@
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <SirenEntityFeature: 3>,
+    'supported_features': <CameraEntityFeature: 2>,
     'translation_key': None,
-    'unique_id': 'tuya.bf0984adfeffe10d5a3ofdalarm_switch',
+    'unique_id': 'tuya.bf9d5b7ea61ea4c9a6rom9',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sgbj_ulv4nnue7gqp0rjk][siren.siren_veranda-state]
+# name: test_platform_setup_and_discovery[sp_rjKXWRohlvOTyLBu][camera.cam_porch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Siren veranda ',
-      'supported_features': <SirenEntityFeature: 3>,
+      'access_token': '1',
+      'brand': 'Tuya',
+      'entity_picture': '/api/camera_proxy/camera.cam_porch?token=1',
+      'friendly_name': 'CAM PORCH',
+      'model_name': 'Indoor cam Pan/Tilt ',
+      'supported_features': <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
-    'entity_id': 'siren.siren_veranda',
+    'entity_id': 'camera.cam_porch',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'idle',
   })
 # ---
-# name: test_platform_setup_and_discovery[sp_sdd5f5f2dl5wydjf][siren.c9-entry]
+# name: test_platform_setup_and_discovery[sp_sdd5f5f2dl5wydjf][camera.c9-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -108,9 +117,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'siren',
+    'domain': 'camera',
     'entity_category': None,
-    'entity_id': 'siren.c9',
+    'entity_id': 'camera.c9',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -126,23 +135,28 @@
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <SirenEntityFeature: 3>,
+    'supported_features': <CameraEntityFeature: 2>,
     'translation_key': None,
-    'unique_id': 'tuya.bf3f8b448bbc123e29oghfsiren_switch',
+    'unique_id': 'tuya.bf3f8b448bbc123e29oghf',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sp_sdd5f5f2dl5wydjf][siren.c9-state]
+# name: test_platform_setup_and_discovery[sp_sdd5f5f2dl5wydjf][camera.c9-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'access_token': '1',
+      'brand': 'Tuya',
+      'entity_picture': '/api/camera_proxy/camera.c9?token=1',
       'friendly_name': 'C9',
-      'supported_features': <SirenEntityFeature: 3>,
+      'model_name': 'Security Camera',
+      'motion_detection': True,
+      'supported_features': <CameraEntityFeature: 2>,
     }),
     'context': <ANY>,
-    'entity_id': 'siren.c9',
+    'entity_id': 'camera.c9',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'recording',
   })
 # ---
