@@ -117,7 +117,7 @@ class FreeboxRouter:
         self.name: str = freebox_config["model_info"]["pretty_name"]
         self.mac: str = freebox_config["mac"]
         self._sw_v: str = freebox_config["firmware_version"]
-        self._hw_v: str = str(freebox_config.get("board_name") or "")
+        self._hw_v: str | None = freebox_config.get("board_name")
         self._attrs: dict[str, Any] = {}
 
         self.supports_hosts = True
