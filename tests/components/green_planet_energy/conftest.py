@@ -28,41 +28,27 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_api() -> Generator[MagicMock]:
-    """Create a mocked aiohttp session."""
-    mock_session = MagicMock()
+    """Create a mocked Green Planet Energy API."""
+    mock_api_instance = AsyncMock()
 
-    # Mock response data in the correct format expected by the coordinator
-    # Format: {"result": {"datum": [...], "wert": [...]}}
-
-    # Create datum array with proper timestamp format
-    # Today's data: "04.08.25, HH:00 Uhr"
-    datum_array = [f"04.08.25, {hour:02d}:00 Uhr" for hour in range(24)]
-    # Tomorrow's data: "05.08.25, HH:00 Uhr"
-    datum_array.extend([f"05.08.25, {hour:02d}:00 Uhr" for hour in range(24)])
-
-    # Create wert array (prices as strings with German decimal comma format)
+    # Mock the API response data
     # Today's prices: 0.20 + (hour * 0.01)
-    wert_array = [f"{0.20 + (hour * 0.01):.2f}".replace(".", ",") for hour in range(24)]
+    today_prices = {f"gpe_price_{hour:02d}": 0.20 + (hour * 0.01) for hour in range(24)}
     # Tomorrow's prices: 0.25 + (hour * 0.01) (slightly different for testing)
-    wert_array.extend(
-        [f"{0.25 + (hour * 0.01):.2f}".replace(".", ",") for hour in range(24)]
-    )
+    tomorrow_prices = {
+        f"gpe_price_{hour:02d}_tomorrow": 0.25 + (hour * 0.01) for hour in range(24)
+    }
 
-    mock_response = MagicMock()
-    mock_response.status = 200
-    mock_response.json = AsyncMock(
-        return_value={
-            "result": {"errorCode": 0, "datum": datum_array, "wert": wert_array}
-        }
-    )
+    # Combine all prices
+    all_prices = {**today_prices, **tomorrow_prices}
 
-    mock_session.post.return_value.__aenter__.return_value = mock_response
+    mock_api_instance.get_electricity_prices.return_value = all_prices
 
     with patch(
-        "homeassistant.components.green_planet_energy.coordinator.async_get_clientsession",
-        return_value=mock_session,
+        "homeassistant.components.green_planet_energy.coordinator.GreenPlanetEnergyAPI",
+        return_value=mock_api_instance,
     ):
-        yield mock_session
+        yield mock_api_instance
 
 
 @pytest.fixture

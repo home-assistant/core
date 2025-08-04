@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/green_planet_energy",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "quality_scale": "bronze"
+  "quality_scale": "bronze",
+  "requirements": ["greenplanet-energy-api==0.1.2"]
 }

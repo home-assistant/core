@@ -57,7 +57,7 @@ async def test_coordinator_tomorrow_data(
     tomorrow_keys = [key for key in coordinator.data if key.endswith("_tomorrow")]
     assert len(tomorrow_keys) == 24  # Should have 24 hours for tomorrow
 
-    # Verify some specific values
+    # Verify some specific values (using the mock data values)
     assert coordinator.data.get("gpe_price_00") == 0.20  # Today's midnight price
     assert (
         coordinator.data.get("gpe_price_00_tomorrow") == 0.25
