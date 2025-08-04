@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Sequence
+import dataclasses
 from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
@@ -19,6 +20,7 @@ from uiprotect.data import (
     Sensor,
     SmartDetectObjectType,
 )
+from uiprotect.data.nvr import UOSDisk
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -82,6 +84,17 @@ class ProtectSensorEntityDescription(
 
 
 @dataclass(frozen=True, kw_only=True)
+class ProtectDiskSensorEntityDescription(
+    ProtectSensorEntityDescription[T], SensorEntityDescription
+):
+    """Describes UniFi Protect Disk Sensor entity."""
+
+    disk_value: Callable[[UOSDisk], int | float | None]
+    translation_key: str
+    supported_by_disk_types: frozenset[str]
+
+
+@dataclass(frozen=True, kw_only=True)
 class ProtectSensorEventEntityDescription(
     ProtectEventMixin[T], SensorEntityDescription
 ):
@@ -120,6 +133,22 @@ def _get_alarm_sound(obj: Sensor) -> str:
     ):
         alarm_type = obj.last_alarm_event.metadata.alarm_type or OBJECT_TYPE_NONE
     return alarm_type.lower()
+
+
+def _get_disk_life_span(disk: UOSDisk) -> float | None:
+    return disk.life_span
+
+
+def _get_disk_temperature(disk: UOSDisk) -> float | None:
+    return disk.temperature
+
+
+def _get_disk_bad_sector(disk: UOSDisk) -> int | None:
+    return disk.bad_sector
+
+
+def _get_disk_power_on_hours(disk: UOSDisk) -> int | None:
+    return disk.power_on_hours
 
 
 ALL_DEVICES_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
@@ -533,6 +562,54 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ),
 )
 
+DISK_SENSORS: tuple[ProtectDiskSensorEntityDescription, ...] = (
+    ProtectDiskSensorEntityDescription(
+        key="disk_life_span",
+        translation_key="disk_life_span",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:harddisk",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        disk_value=_get_disk_life_span,
+        supported_by_disk_types=frozenset(["SSD"]),
+    ),
+    ProtectDiskSensorEntityDescription(
+        key="disk_temperature",
+        translation_key="disk_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        precision=1,
+        disk_value=_get_disk_temperature,
+        supported_by_disk_types=frozenset(["SSD", "HDD"]),
+    ),
+    ProtectDiskSensorEntityDescription(
+        key="disk_bad_sector",
+        translation_key="disk_bad_sector",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:harddisk",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        disk_value=_get_disk_bad_sector,
+        supported_by_disk_types=frozenset(["SSD", "HDD"]),
+    ),
+    ProtectDiskSensorEntityDescription(
+        key="disk_power_on_hours",
+        translation_key="disk_power_on_hours",
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        icon="mdi:harddisk",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        disk_value=_get_disk_power_on_hours,
+        supported_by_disk_types=frozenset(["SSD", "HDD"]),
+    ),
+)
+
 LICENSE_PLATE_EVENT_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
     ProtectSensorEventEntityDescription(
         key="smart_obj_licenseplate",
@@ -707,6 +784,16 @@ def _async_nvr_entities(
         entities.append(ProtectNVRSensor(data, device, description))
         _LOGGER.debug("Adding NVR sensor entity %s", description.name)
 
+    if (ustorage := device.system_info.ustorage) is None:
+        return entities
+
+    entities.extend(
+        ProtectDiskSensor(data, device, description, disk)
+        for disk in ustorage.disks
+        for description in DISK_SENSORS
+        if disk.has_disk and disk.type in description.supported_by_disk_types
+    )
+
     return entities
 
 
@@ -727,6 +814,53 @@ class ProtectDeviceSensor(BaseProtectSensor, ProtectDeviceEntity):
 
 class ProtectNVRSensor(BaseProtectSensor, ProtectNVREntity):
     """A Ubiquiti UniFi Protect Sensor."""
+
+
+class ProtectDiskSensor(SensorEntity, ProtectNVREntity):
+    """A UniFi Protect NVR Disk Sensor."""
+
+    _disk: UOSDisk
+    entity_description: ProtectDiskSensorEntityDescription
+    _state_attrs = ("_attr_available", "_attr_native_value")
+
+    def __init__(
+        self,
+        data: ProtectData,
+        device: NVR,
+        description: ProtectDiskSensorEntityDescription,
+        disk: UOSDisk,
+    ) -> None:
+        """Initialize the disk sensor."""
+        self._disk = disk
+
+        description = dataclasses.replace(
+            description,
+            key=f"{str(disk.type).lower()}_{disk.slot}_{description.key}",
+            name=f"{disk.type} {disk.slot} {description.translation_key.replace('_', ' ').title()}",
+            translation_placeholders={
+                "disk_slot": str(disk.slot),
+                "disk_type": str(disk.type),
+            },
+        )
+        super().__init__(data, device, description)
+
+    @callback
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
+        super()._async_update_device_from_protect(device)
+        slot = self._disk.slot
+        self._attr_available = False
+        available = self.data.last_update_success
+
+        # should not be possible since it would require user to
+        # _downgrade_ to make ustorage disappear
+        assert self.device.system_info.ustorage is not None
+        for disk in self.device.system_info.ustorage.disks:
+            if disk.slot == slot:
+                self._disk = disk
+                self._attr_available = available
+                break
+
+        self._attr_native_value = self.entity_description.disk_value(self._disk)
 
 
 class ProtectEventSensor(EventEntityMixin, SensorEntity):

@@ -25,11 +25,13 @@ from homeassistant.components.unifiprotect.sensor import (
     ALL_DEVICES_SENSORS,
     CAMERA_DISABLED_SENSORS,
     CAMERA_SENSORS,
+    DISK_SENSORS,
     LICENSE_PLATE_EVENT_SENSORS,
     MOTION_TRIP_SENSORS,
     NVR_DISABLED_SENSORS,
     NVR_SENSORS,
     SENSE_SENSORS,
+    ProtectDiskSensorEntityDescription,
     ProtectSensorEntityDescription,
 )
 from homeassistant.const import (
@@ -49,6 +51,7 @@ from .utils import (
     enable_entity,
     ids_from_device_description,
     init_entry,
+    normalize_name,
     remove_entities,
     reset_objects,
     time_changed,
@@ -107,7 +110,7 @@ async def test_sensor_setup_sensor(
     """Test sensor entity setup for sensor devices."""
 
     await init_entry(hass, ufp, [sensor_all])
-    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
+    assert_entity_counts(hass, Platform.SENSOR, 44, 14)
 
     expected_values = (
         "10",
@@ -162,7 +165,7 @@ async def test_sensor_setup_sensor_none(
     """Test sensor entity setup for sensor devices with no sensors enabled."""
 
     await init_entry(hass, ufp, [sensor])
-    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
+    assert_entity_counts(hass, Platform.SENSOR, 44, 14)
 
     expected_values = (
         "10",
@@ -215,7 +218,7 @@ async def test_sensor_setup_nvr(
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.SENSOR, 12, 9)
+    assert_entity_counts(hass, Platform.SENSOR, 34, 9)
 
     expected_values = (
         fixed_now.replace(second=0, microsecond=0).isoformat(),
@@ -280,7 +283,7 @@ async def test_sensor_nvr_missing_values(
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.SENSOR, 12, 9)
+    assert_entity_counts(hass, Platform.SENSOR, 34, 9)
 
     # Uptime
     description = get_sensor_by_key(NVR_SENSORS, "uptime")
@@ -343,7 +346,7 @@ async def test_sensor_setup_camera(
     """Test sensor entity setup for camera devices."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SENSOR, 24, 12)
+    assert_entity_counts(hass, Platform.SENSOR, 46, 12)
 
     expected_values = (
         fixed_now.replace(microsecond=0).isoformat(),
@@ -438,7 +441,7 @@ async def test_sensor_setup_camera_with_last_trip_time(
     """Test sensor entity setup for camera devices with last trip time."""
 
     await init_entry(hass, ufp, [doorbell])
-    assert_entity_counts(hass, Platform.SENSOR, 24, 24)
+    assert_entity_counts(hass, Platform.SENSOR, 46, 46)
 
     # Last Trip Time
     unique_id, entity_id = await ids_from_device_description(
@@ -467,7 +470,7 @@ async def test_sensor_update_alarm(
     """Test sensor motion entity."""
 
     await init_entry(hass, ufp, [sensor_all])
-    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
+    assert_entity_counts(hass, Platform.SENSOR, 44, 14)
 
     _, entity_id = await ids_from_device_description(
         hass,
@@ -520,7 +523,7 @@ async def test_sensor_update_alarm_with_last_trip_time(
     """Test sensor motion entity with last trip time."""
 
     await init_entry(hass, ufp, [sensor_all])
-    assert_entity_counts(hass, Platform.SENSOR, 22, 22)
+    assert_entity_counts(hass, Platform.SENSOR, 44, 44)
 
     # Last Trip Time
     unique_id, entity_id = await ids_from_device_description(
@@ -555,7 +558,7 @@ async def test_camera_update_license_plate(
     )
 
     await init_entry(hass, ufp, [camera])
-    assert_entity_counts(hass, Platform.SENSOR, 23, 13)
+    assert_entity_counts(hass, Platform.SENSOR, 45, 13)
 
     _, entity_id = await ids_from_device_description(
         hass,
@@ -673,7 +676,7 @@ async def test_camera_update_license_plate_changes_number_during_detect(
     )
 
     await init_entry(hass, ufp, [camera])
-    assert_entity_counts(hass, Platform.SENSOR, 23, 13)
+    assert_entity_counts(hass, Platform.SENSOR, 45, 13)
 
     _, entity_id = await ids_from_device_description(
         hass,
@@ -763,7 +766,7 @@ async def test_camera_update_license_plate_multiple_updates(
     )
 
     await init_entry(hass, ufp, [camera])
-    assert_entity_counts(hass, Platform.SENSOR, 23, 13)
+    assert_entity_counts(hass, Platform.SENSOR, 45, 13)
 
     _, entity_id = await ids_from_device_description(
         hass,
@@ -889,7 +892,7 @@ async def test_camera_update_license_no_dupes(
     )
 
     await init_entry(hass, ufp, [camera])
-    assert_entity_counts(hass, Platform.SENSOR, 23, 13)
+    assert_entity_counts(hass, Platform.SENSOR, 45, 13)
 
     _, entity_id = await ids_from_device_description(
         hass,
@@ -984,7 +987,7 @@ async def test_sensor_precision(
     """Test sensor precision value is respected."""
 
     await init_entry(hass, ufp, [sensor_all])
-    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
+    assert_entity_counts(hass, Platform.SENSOR, 44, 14)
     nvr: NVR = ufp.api.bootstrap.nvr
 
     _, entity_id = await ids_from_device_description(
@@ -992,3 +995,61 @@ async def test_sensor_precision(
     )
 
     assert hass.states.get(entity_id).state == "17.49"
+
+
+def get_disk_ids(
+    device: NVR,
+    description: ProtectDiskSensorEntityDescription,
+    disk_type: str,
+    disk_slot: int,
+) -> tuple[str, str]:
+    """Get unique ID and entity ID for disk sensors."""
+    entity_name = normalize_name(device.display_name)
+    sensor_name = normalize_name(description.key)
+
+    unique_id = f"{device.mac}_{disk_type.lower()}_{disk_slot}_{description.key}"
+    entity_id = f"{Platform.SENSOR.value}.{entity_name}_{disk_type.lower()}_{disk_slot}_{sensor_name}"
+
+    return unique_id, entity_id
+
+
+async def test_sensor_setup_disks(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+) -> None:
+    """Test disk sensor setup."""
+
+    nvr: NVR = ufp.api.bootstrap.nvr
+
+    await init_entry(hass, ufp, [])
+
+    assert_entity_counts(hass, Platform.SENSOR, 34, 9)
+
+    expected_hdd_values = [None, "52", "0", "4242"]
+    expected_ssd_values = ["94", "58", "0", "16047"]
+
+    for index, sensor in enumerate(DISK_SENSORS):
+        if "HDD" in sensor.supported_by_disk_types:
+            hdd_unique_id, hdd_entity_id = get_disk_ids(nvr, sensor, "HDD", 1)
+            hdd_entity = entity_registry.async_get(hdd_entity_id)
+
+            assert hdd_entity
+            assert hdd_entity.disabled is True
+            assert hdd_entity.unique_id == hdd_unique_id
+
+            await enable_entity(hass, ufp.entry.entry_id, hdd_entity_id)
+
+            assert hass.states.get(hdd_entity_id).state == expected_hdd_values[index]
+
+        if "SSD" in sensor.supported_by_disk_types:
+            ssd_unique_id, ssd_entity_id = get_disk_ids(nvr, sensor, "SSD", 8)
+            ssd_entity = entity_registry.async_get(ssd_entity_id)
+
+            assert ssd_entity
+            assert ssd_entity.disabled is True
+            assert ssd_entity.unique_id == ssd_unique_id
+
+            await enable_entity(hass, ufp.entry.entry_id, ssd_entity_id)
+
+            assert hass.states.get(ssd_entity_id).state == expected_ssd_values[index]

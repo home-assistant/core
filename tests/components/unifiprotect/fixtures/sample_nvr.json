@@ -249,6 +249,28 @@
           "threshold": 10,
           "progress": 21.390607518939174,
           "estimate": 234395.73300748435
+        },
+        {
+          "slot": 8,
+          "state": "normal",
+          "type": "SSD",
+          "model": "CT4000P3PSSD8",
+          "serial": "ABCD1234",
+          "firmware": "FW1",
+          "rpm": 0,
+          "ata": "-",
+          "sata": "-",
+          "action": "none",
+          "healthy": "good",
+          "reason": [],
+          "temperature": 58,
+          "life_span": 94,
+          "bad_sector": 0,
+          "threshold": null,
+          "progress": null,
+          "estimate": null,
+          "size": 4000787030016,
+          "poweronhrs": 16047
         }
       ],
       "space": [

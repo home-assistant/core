@@ -108,7 +108,7 @@ async def test_binary_sensor_setup_light(
     """Test binary_sensor entity setup for light devices."""
 
     await init_entry(hass, ufp, [light])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 8, 8)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 9, 9)
 
     for description in LIGHT_SENSOR_WRITE:
         unique_id, entity_id = await ids_from_device_description(
@@ -220,7 +220,7 @@ async def test_binary_sensor_setup_sensor(
     """Test binary_sensor entity setup for sensor devices."""
 
     await init_entry(hass, ufp, [sensor_all])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 12, 12)
 
     expected = [
         STATE_UNAVAILABLE,
@@ -253,7 +253,7 @@ async def test_binary_sensor_setup_sensor_leak(
 
     sensor.mount_type = MountType.LEAK
     await init_entry(hass, ufp, [sensor])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 12, 12)
 
     expected = [
         STATE_OFF,
@@ -286,7 +286,7 @@ async def test_binary_sensor_update_motion(
     """Test binary_sensor motion entity."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 15, 12)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 16, 13)
 
     _, entity_id = await ids_from_device_description(
         hass, Platform.BINARY_SENSOR, doorbell, EVENT_SENSORS[1]
@@ -332,7 +332,7 @@ async def test_binary_sensor_update_light_motion(
     """Test binary_sensor motion entity."""
 
     await init_entry(hass, ufp, [light])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 8, 8)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 9, 9)
 
     _, entity_id = await ids_from_device_description(
         hass, Platform.BINARY_SENSOR, light, LIGHT_SENSOR_WRITE[1]
@@ -376,7 +376,7 @@ async def test_binary_sensor_update_mount_type_window(
     """Test binary_sensor motion entity."""
 
     await init_entry(hass, ufp, [sensor_all])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 12, 12)
 
     _, entity_id = await ids_from_device_description(
         hass, Platform.BINARY_SENSOR, sensor_all, MOUNTABLE_SENSE_SENSORS[0]
@@ -408,7 +408,7 @@ async def test_binary_sensor_update_mount_type_garage(
     """Test binary_sensor motion entity."""
 
     await init_entry(hass, ufp, [sensor_all])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 12, 12)
 
     _, entity_id = await ids_from_device_description(
         hass, Platform.BINARY_SENSOR, sensor_all, MOUNTABLE_SENSE_SENSORS[0]
@@ -447,7 +447,7 @@ async def test_binary_sensor_package_detected(
     """Test binary_sensor package detection entity."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 15, 15)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 16, 16)
 
     doorbell.smart_detect_settings.object_types.append(SmartDetectObjectType.PACKAGE)
 
@@ -588,7 +588,7 @@ async def test_binary_sensor_person_detected(
     """Test binary_sensor person detected detection entity."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 15, 15)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 16, 16)
 
     doorbell.smart_detect_settings.object_types.append(SmartDetectObjectType.PERSON)
 
