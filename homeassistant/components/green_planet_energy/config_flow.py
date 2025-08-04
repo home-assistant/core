@@ -17,8 +17,10 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SCHEMA = vol.Schema({})
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
+async def prepare_config_entry(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> dict[str, Any]:
+    """Prepare the config entry for Green Planet Energy.
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
@@ -46,7 +48,7 @@ class GreenPlanetEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
+                info = await prepare_config_entry(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except Exception:

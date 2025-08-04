@@ -32,7 +32,7 @@ class GreenPlanetEnergySensorEntityDescription(SensorEntityDescription):
     hour: int
 
 
-SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
+SENSOR_HOURLY_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
     GreenPlanetEnergySensorEntityDescription(
         key=f"gpe_price_{hour:02d}",
         translation_key=f"price_{hour:02d}",
@@ -42,7 +42,9 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         hour=hour,
     )
     for hour in SENSOR_HOURS
-] + [
+]
+
+SENSOR_STAT_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
     # Additional sensors for statistics
     GreenPlanetEnergySensorEntityDescription(
         key="gpe_highest_price_today",
@@ -85,6 +87,10 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         hour=-4,  # Special value for 24h chart data
     ),
 ]
+
+SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = (
+    SENSOR_HOURLY_DESCRIPTIONS + SENSOR_STAT_DESCRIPTIONS
+)
 
 
 async def async_setup_entry(

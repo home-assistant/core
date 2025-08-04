@@ -18,7 +18,7 @@ async def test_form(hass: HomeAssistant, mock_api) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.green_planet_energy.config_flow.validate_input",
+        "homeassistant.components.green_planet_energy.config_flow.prepare_config_entry",
         return_value={"title": "Green Planet Energy"},
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -35,7 +35,7 @@ async def test_form(hass: HomeAssistant, mock_api) -> None:
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     with patch(
-        "homeassistant.components.green_planet_energy.config_flow.validate_input",
+        "homeassistant.components.green_planet_energy.config_flow.prepare_config_entry",
         side_effect=CannotConnect,
     ):
         result = await hass.config_entries.flow.async_init(
@@ -54,7 +54,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
     """Test we handle unexpected exception."""
     with patch(
-        "homeassistant.components.green_planet_energy.config_flow.validate_input",
+        "homeassistant.components.green_planet_energy.config_flow.prepare_config_entry",
         side_effect=Exception,
     ):
         result = await hass.config_entries.flow.async_init(

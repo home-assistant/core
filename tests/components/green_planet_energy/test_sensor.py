@@ -32,7 +32,8 @@ async def test_sensor_values(
     # Mock data generates price = 0.20 + (hour * 0.01)
 
     state_00 = hass.states.get("sensor.gpe_price_00")
-    assert state_00.state == "0.2"  # Changed from "0.20" to "0.2"
+    # The sensor returns "0.2" instead of "0.20" due to float formatting in the integration
+    assert state_00.state == "0.2"
 
     state_09 = hass.states.get("sensor.gpe_price_09")
     assert state_09.state == "0.29"

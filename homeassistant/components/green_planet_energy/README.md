@@ -1,7 +1,7 @@
 # Green Planet Energy Integration
 
 This integration provides real-time electricity pricing data from Green Planet Energy, a German renewable energy provider. It fetches hourly electricity prices and provides various sensors for energy optimization and monitoring.
-It was written for the purpose to visualize the prices so that you can adpot your power consumption and shift it to cheaper hours.
+It was written for the purpose to visualize the prices so that you can adopt your power consumption and shift it to cheaper hours.
 
 ## Features
 
