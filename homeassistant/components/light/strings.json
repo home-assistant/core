@@ -132,6 +132,13 @@
     }
   },
   "selector": {
+    "behavior": {
+      "options": {
+        "all": "All",
+        "any": "Any",
+        "one": "One"
+      }
+    },
     "color_name": {
       "options": {
         "homeassistant": "Home Assistant",
@@ -288,6 +295,12 @@
       "options": {
         "short": "Short",
         "long": "Long"
+      }
+    },
+    "state": {
+      "options": {
+        "off": "[%key:common::state::off%]",
+        "on": "[%key:common::state::on%]"
       }
     }
   },
