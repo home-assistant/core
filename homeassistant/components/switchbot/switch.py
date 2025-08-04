@@ -10,9 +10,11 @@ import switchbot
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
+from .const import DOMAIN
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotSwitchedEntity, exception_handler
 
@@ -93,7 +95,14 @@ class SwitchbotMultiChannelSwitch(SwitchbotSwitchedEntity, SwitchEntity):
         super().__init__(coordinator)
         self._channel = channel
         self._attr_unique_id = f"{coordinator.base_unique_id}-{channel}"
-        self._attr_name = f"{coordinator.device_name} {channel}"
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{coordinator.base_unique_id}-channel-{channel}")},
+            manufacturer="SwitchBot",
+            model="RelaySwitch2PM",
+            name=f"{coordinator.device_name} Channel {channel}",
+        )
+        self._attr_name = None
 
     async def async_added_to_hass(self) -> None:
         """Active acquisition of current and voltage."""

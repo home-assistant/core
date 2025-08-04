@@ -130,7 +130,7 @@ async def test_relay_switch_2pm_control(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        entity_id_1 = "switch.test_name_test_name_1"
+        entity_id_1 = "switch.test_name_channel_1"
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -141,7 +141,7 @@ async def test_relay_switch_2pm_control(
 
         mocked_instance.assert_called_with(1)
 
-        entity_id_2 = "switch.test_name_test_name_2"
+        entity_id_2 = "switch.test_name_channel_2"
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
