@@ -53,6 +53,15 @@ class ToloConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            # For reconfigure flow, check if the host actually changed
+            if self.source == SOURCE_RECONFIGURE:
+                current_host = self._get_reconfigure_entry().data[CONF_HOST]
+                if user_input[CONF_HOST] == current_host:
+                    # Host didn't change, just reload with same data
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(), data_updates=user_input
+                    )
+
             device_available = await self.hass.async_add_executor_job(
                 self._check_device_availability, user_input[CONF_HOST]
             )
@@ -93,9 +102,11 @@ class ToloConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
+        # Check for existing entries with the same host first
+        self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
+
         await self.async_set_unique_id(format_mac(discovery_info.macaddress))
         self._abort_if_unique_id_configured({CONF_HOST: discovery_info.ip})
-        self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
 
         device_available = await self.hass.async_add_executor_job(
             self._check_device_availability, discovery_info.ip
