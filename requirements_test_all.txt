@@ -2586,7 +2586,7 @@ wolf-comm==0.0.23
 wsdot==0.0.1
 
 # homeassistant.components.wyoming
-wyoming==1.7.1
+wyoming==1.7.2
 
 # homeassistant.components.xbox
 xbox-webapi==2.1.0
