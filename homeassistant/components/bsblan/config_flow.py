@@ -267,9 +267,9 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors={"base": "cannot_connect"},
             )
 
-        # Update the config entry with the new merged data
+        # Update only the fields that were provided by the user
         return self.async_update_reload_and_abort(
-            existing_entry, data=config_data, reason="reauth_successful"
+            existing_entry, data_updates=user_input, reason="reauth_successful"
         )
 
     @callback
