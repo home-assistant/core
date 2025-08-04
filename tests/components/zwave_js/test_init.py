@@ -497,17 +497,17 @@ async def test_on_node_added_ready(
     )
 
 
-async def test_on_node_added_preprovisioned(
+async def test_on_node_added_pre_provisioned(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     multisensor_6_state,
     client,
     integration,
 ) -> None:
-    """Test node added event with a preprovisioned device."""
+    """Test node added event with a pre-provisioned device."""
     dsk = "test"
     node = Node(client, deepcopy(multisensor_6_state))
-    device = device_registry.async_get_or_create(
+    pre_provisioned_device = device_registry.async_get_or_create(
         config_entry_id=integration.entry_id,
         identifiers={(DOMAIN, f"provision_{dsk}")},
     )
@@ -515,7 +515,7 @@ async def test_on_node_added_preprovisioned(
         {
             "dsk": dsk,
             "securityClasses": [SecurityClass.S2_UNAUTHENTICATED],
-            "device_id": device.id,
+            "device_id": pre_provisioned_device.id,
         }
     )
     with patch(
@@ -526,14 +526,14 @@ async def test_on_node_added_preprovisioned(
         client.driver.controller.emit("node added", event)
         await hass.async_block_till_done()
 
-        device = device_registry.async_get(device.id)
+        device = device_registry.async_get(pre_provisioned_device.id)
         assert device
         assert device.identifiers == {
             get_device_id(client.driver, node),
             get_device_id_ext(client.driver, node),
         }
         assert device.sw_version == node.firmware_version
-        # There should only be the controller and the preprovisioned device
+        # There should only be the controller and the pre-provisioned device
         assert len(device_registry.devices) == 2
 
 
