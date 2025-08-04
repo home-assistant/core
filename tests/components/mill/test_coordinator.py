@@ -175,7 +175,7 @@ async def test_mill_historic_data_no_data(
     mill_data_connection.fetch_historic_energy_usage = AsyncMock(return_value=None)
 
     coordinator = MillHistoricDataUpdateCoordinator(
-        hass, mill_data_connection=mill_data_connection
+        hass, entry, mill_data_connection=mill_data_connection
     )
     await coordinator._async_update_data()
     await async_wait_recording_done(hass)
