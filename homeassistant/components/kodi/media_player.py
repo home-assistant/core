@@ -24,7 +24,7 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
@@ -55,6 +55,7 @@ from homeassistant.helpers.network import is_internal_request
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictType
 from homeassistant.util import dt as dt_util
 
+from . import KodiConfigEntry
 from .browse_media import (
     build_item_response,
     get_media_info,
@@ -63,8 +64,6 @@ from .browse_media import (
 )
 from .const import (
     CONF_WS_PORT,
-    DATA_CONNECTION,
-    DATA_KODI,
     DEFAULT_PORT,
     DEFAULT_SSL,
     DEFAULT_TIMEOUT,
@@ -208,7 +207,7 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: KodiConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Kodi media player platform."""
@@ -220,14 +219,12 @@ async def async_setup_entry(
         SERVICE_CALL_METHOD, KODI_CALL_METHOD_SCHEMA, "async_call_method"
     )
 
-    data = hass.data[DOMAIN][config_entry.entry_id]
-    connection = data[DATA_CONNECTION]
-    kodi = data[DATA_KODI]
+    data = config_entry.runtime_data
     name = config_entry.data[CONF_NAME]
     if (uid := config_entry.unique_id) is None:
         uid = config_entry.entry_id
 
-    entity = KodiEntity(connection, kodi, name, uid)
+    entity = KodiEntity(data.connection, data.kodi, name, uid)
     async_add_entities([entity])
 
 

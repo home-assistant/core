@@ -1,6 +1,5 @@
 """The tests for the emulated Hue component."""
 
-from asyncio import AbstractEventLoop
 from collections.abc import Generator
 from http import HTTPStatus
 import json
@@ -38,7 +37,6 @@ class MockTransport:
 
 @pytest.fixture
 def aiohttp_client(
-    event_loop: AbstractEventLoop,
     aiohttp_client: ClientSessionGenerator,
     socket_enabled: None,
 ) -> ClientSessionGenerator:

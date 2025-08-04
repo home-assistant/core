@@ -11,7 +11,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from ..const import ATTR_MANUFACTURER, DOMAIN as AXIS_DOMAIN
+from ..const import ATTR_MANUFACTURER, DOMAIN
 from .config import AxisConfig
 from .entity_loader import AxisEntityLoader
 from .event_source import AxisEventSource
@@ -79,7 +79,7 @@ class AxisHub:
             config_entry_id=self.config.entry.entry_id,
             configuration_url=self.api.config.url,
             connections={(CONNECTION_NETWORK_MAC, self.unique_id)},
-            identifiers={(AXIS_DOMAIN, self.unique_id)},
+            identifiers={(DOMAIN, self.unique_id)},
             manufacturer=ATTR_MANUFACTURER,
             model=f"{self.config.model} {self.product_type}",
             name=self.config.name,
