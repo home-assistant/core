@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import functools
+from typing import Any
 
 from pydantic import ValidationError
 import voluptuous as vol
@@ -272,6 +273,12 @@ class EventTrigger(Trigger):
     ) -> ConfigType:
         """Validate config."""
         return await async_validate_trigger_config(hass, config)
+
+    @classmethod
+    async def async_validate_data(cls, hass: HomeAssistant, data: Any) -> Any:
+        """Validate data."""
+        # Needs to be migrated from old format first
+        raise NotImplementedError
 
     async def async_attach(
         self,

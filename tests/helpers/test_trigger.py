@@ -1,6 +1,7 @@
 """The tests for the trigger helper."""
 
 import io
+from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 
 import pytest
@@ -457,15 +458,15 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
     class MockTrigger(Trigger):
         """Mock trigger."""
 
-        def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
-            """Initialize trigger."""
+        has_target = False
 
         @classmethod
-        async def async_validate_config(
-            cls, hass: HomeAssistant, config: ConfigType
-        ) -> ConfigType:
-            """Validate config."""
-            return config
+        async def async_validate_data(cls, hass: HomeAssistant, data: Any) -> Any:
+            """Validate data."""
+            return data
+
+        def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+            """Initialize trigger."""
 
     class MockTrigger1(MockTrigger):
         """Mock trigger 1."""
@@ -489,9 +490,7 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
             """Attach a trigger."""
             action({"trigger": "test_trigger_2"})
 
-    async def async_get_triggers(
-        hass: HomeAssistant,
-    ) -> dict[str, type[Trigger]]:
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "_": MockTrigger1,
             "trig_2": MockTrigger2,
@@ -500,9 +499,9 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
     mock_integration(hass, MockModule("test"))
     mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
 
-    config_1 = [{"platform": "test"}]
-    config_2 = [{"platform": "test.trig_2"}]
-    config_3 = [{"platform": "test.unknown_trig"}]
+    config_1 = [{"platform": "test", "data": {"x": 1}}]
+    config_2 = [{"platform": "test.trig_2", "data": {"x": 1}}]
+    config_3 = [{"platform": "test.unknown_trig", "data": {"x": 1}}]
     assert await async_validate_trigger_config(hass, config_1) == config_1
     assert await async_validate_trigger_config(hass, config_2) == config_2
     with pytest.raises(

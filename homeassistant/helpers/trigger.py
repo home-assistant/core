@@ -10,16 +10,18 @@ from dataclasses import dataclass, field
 import functools
 import inspect
 import logging
-from typing import TYPE_CHECKING, Any, Protocol, TypedDict, cast
+from typing import TYPE_CHECKING, Any, ClassVar, Protocol, TypedDict, cast
 
 import voluptuous as vol
 
 from homeassistant.const import (
     CONF_ALIAS,
+    CONF_DATA,
     CONF_ENABLED,
     CONF_ID,
     CONF_PLATFORM,
     CONF_SELECTOR,
+    CONF_TARGET,
     CONF_VARIABLES,
 )
 from homeassistant.core import (
@@ -74,17 +76,17 @@ TRIGGERS: HassKey[dict[str, str]] = HassKey("triggers")
 
 # Basic schemas to sanity check the trigger descriptions,
 # full validation is done by hassfest.triggers
-_FIELD_SCHEMA = vol.Schema(
+_FIELD_DESCRIPTION_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_SELECTOR): selector.validate_selector,
     },
     extra=vol.ALLOW_EXTRA,
 )
 
-_TRIGGER_SCHEMA = vol.Schema(
+_TRIGGER_DESCRIPTION_SCHEMA = vol.Schema(
     {
         vol.Optional("target"): TargetSelector.CONFIG_SCHEMA,
-        vol.Optional("fields"): vol.Schema({str: _FIELD_SCHEMA}),
+        vol.Optional("fields"): vol.Schema({str: _FIELD_DESCRIPTION_SCHEMA}),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -97,10 +99,10 @@ def starts_with_dot(key: str) -> str:
     return key
 
 
-_TRIGGERS_SCHEMA = vol.Schema(
+_TRIGGERS_DESCRIPTION_SCHEMA = vol.Schema(
     {
         vol.Remove(vol.All(str, starts_with_dot)): object,
-        cv.underscore_slug: vol.Any(None, _TRIGGER_SCHEMA),
+        cv.underscore_slug: vol.Any(None, _TRIGGER_DESCRIPTION_SCHEMA),
     }
 )
 
@@ -165,18 +167,39 @@ async def _register_trigger_platform(
             _LOGGER.exception("Error while notifying trigger platform listener")
 
 
+_TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
+    {
+        vol.Optional(CONF_DATA): object,
+        vol.Optional(CONF_TARGET): cv.TARGET_FIELDS,
+    }
+)
+
+
 class Trigger(abc.ABC):
     """Trigger class."""
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
-        """Initialize trigger."""
+    has_target: ClassVar[bool]
 
     @classmethod
-    @abc.abstractmethod
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
+        config = _TRIGGER_SCHEMA(config)
+        config[CONF_DATA] = await cls.async_validate_data(hass, config.get(CONF_DATA))
+        if (CONF_TARGET in config) != cls.has_target:
+            if cls.has_target:
+                raise ValueError(f"Missing '{CONF_TARGET}' in trigger configuration")
+            raise ValueError(f"Unexpected '{CONF_TARGET}' in trigger configuration")
+        return config
+
+    @classmethod
+    @abc.abstractmethod
+    async def async_validate_data(cls, hass: HomeAssistant, data: Any) -> Any:
+        """Validate data."""
+
+    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+        """Initialize trigger."""
 
     @abc.abstractmethod
     async def async_attach(
@@ -537,7 +560,7 @@ def _load_triggers_file(integration: Integration) -> dict[str, Any]:
     try:
         return cast(
             dict[str, Any],
-            _TRIGGERS_SCHEMA(
+            _TRIGGERS_DESCRIPTION_SCHEMA(
                 load_yaml_dict(str(integration.file_path / "triggers.yaml"))
             ),
         )
