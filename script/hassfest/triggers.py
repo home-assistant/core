@@ -50,7 +50,7 @@ TRIGGER_SCHEMA = vol.Any(
 TRIGGERS_SCHEMA = vol.Schema(
     {
         vol.Remove(vol.All(str, trigger.starts_with_dot)): object,
-        cv.slug: TRIGGER_SCHEMA,
+        cv.underscore_slug: TRIGGER_SCHEMA,
     }
 )
 
