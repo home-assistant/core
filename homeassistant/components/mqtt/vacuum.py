@@ -84,7 +84,7 @@ SERVICE_TO_STRING: dict[VacuumEntityFeature, str] = {
     VacuumEntityFeature.STOP: "stop",
     VacuumEntityFeature.RETURN_HOME: "return_home",
     VacuumEntityFeature.FAN_SPEED: "fan_speed",
-    # Use of the battery feature was deprecated in HA Core 2025.9
+    # Use of the battery feature was deprecated in HA Core 2025.8
     # and will removed with HA Core 2026.3
     VacuumEntityFeature.BATTERY: "battery",
     VacuumEntityFeature.STATUS: "status",
