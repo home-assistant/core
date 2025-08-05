@@ -11,7 +11,13 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    HassJob,
+    HomeAssistant,
+    callback,
+    split_entity_id,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import process_state_match
 from homeassistant.helpers.target import (
@@ -28,7 +34,7 @@ BEHAVIOR_FIRST = "first"
 BEHAVIOR_LAST = "last"
 BEHAVIOR_ANY = "any"
 
-STATE_PLATFORM_TYPE = f"state"
+STATE_PLATFORM_TYPE = "state"
 STATE_TRIGGER_SCHEMA = vol.All(
     cv.TRIGGER_BASE_SCHEMA.extend(
         {
@@ -132,8 +138,16 @@ class StateTrigger(Trigger):
                 event.context,
             )
 
+        def entity_filter(entities: set[str]) -> set[str]:
+            """Filter entities of this domain."""
+            return {
+                entity_id
+                for entity_id in entities
+                if split_entity_id(entity_id)[0] == DOMAIN
+            }
+
         return async_track_target_selector_state_change_event(
-            self.hass, self.config, state_change_listener
+            self.hass, self.config, state_change_listener, entity_filter
         )
 
 
