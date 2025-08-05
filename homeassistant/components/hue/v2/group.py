@@ -306,16 +306,14 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         if temp_count > xy_count and temp_count > 0:
             self._attr_color_mode = ColorMode.COLOR_TEMP
             # set the group temp color as an average of the lights that are on
-            if temp_count > 0:
-                avg_temp = temp_total / temp_count
-                self._attr_color_temp_kelvin = round(avg_temp)
+            avg_temp = temp_total / temp_count
+            self._attr_color_temp_kelvin = round(avg_temp)
         elif xy_count > 0:
             self._attr_color_mode = ColorMode.XY
             # set the group xy color as an average of the lights that are on
-            if xy_count > 0:
-                avg_x = round(xy_total_x / xy_count, 3)
-                avg_y = round(xy_total_y / xy_count, 3)
-                self._attr_xy_color = (avg_x, avg_y)
+            avg_x = round(xy_total_x / xy_count, 3)
+            avg_y = round(xy_total_y / xy_count, 3)
+            self._attr_xy_color = (avg_x, avg_y)
         elif lights_with_color_temp_support > 0 and lights_in_colortemp_mode > 0:
             self._attr_color_mode = ColorMode.COLOR_TEMP
         elif lights_with_color_support > 0:
