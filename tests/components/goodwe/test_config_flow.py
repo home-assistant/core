@@ -8,15 +8,17 @@ from homeassistant.components.goodwe.const import (
     CONF_MODEL_FAMILY,
     DEFAULT_NAME,
     DOMAIN,
+    PROTOCOL_UDP,
 )
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PROTOCOL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 TEST_HOST = "1.2.3.4"
+TEST_PROTOCOL = PROTOCOL_UDP
 TEST_SERIAL = "123456789"
 
 
@@ -54,6 +56,7 @@ async def test_manual_setup(hass: HomeAssistant) -> None:
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
+        CONF_PROTOCOL: TEST_PROTOCOL,
         CONF_MODEL_FAMILY: "AsyncMock",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -62,7 +65,9 @@ async def test_manual_setup(hass: HomeAssistant) -> None:
 async def test_manual_setup_already_exists(hass: HomeAssistant) -> None:
     """Test manually setting up and the device already exists."""
     entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: TEST_HOST}, unique_id=TEST_SERIAL
+        domain=DOMAIN,
+        data={CONF_HOST: TEST_HOST},
+        unique_id=TEST_SERIAL,
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
