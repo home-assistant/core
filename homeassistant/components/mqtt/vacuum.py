@@ -271,7 +271,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             _LOGGER.warning(
                 "MQTT vacuum entity %s implements the battery feature "
                 "which is deprecated. This will stop working "
-                "in Home Assistant 2026.3. Implement a separate entity "
+                "in Home Assistant 2026.2. Implement a separate entity "
                 "for the battery status instead",
                 self.entity_id,
             )
