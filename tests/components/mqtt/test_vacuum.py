@@ -64,7 +64,7 @@ from .common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import async_capture_events, async_fire_mqtt_message
+from tests.common import async_fire_mqtt_message
 from tests.components.vacuum import common
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
@@ -352,7 +352,6 @@ async def test_status_with_deprecated_battery_feature(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test status updates from the vacuum with deprecated battery feature."""
-    events = async_capture_events(hass, ir.EVENT_REPAIRS_ISSUE_REGISTRY_UPDATED)
     await mqtt_mock_entry()
     state = hass.states.get("vacuum.mqtttest")
     assert state.state == STATE_UNKNOWN
@@ -388,19 +387,14 @@ async def test_status_with_deprecated_battery_feature(
     )
 
     # assert a repair issue was created for the entity
-    assert len(events) == 1
-    assert events[0].event_type == "repairs_issue_registry_updated"
-    assert events[0].data["action"] == "create"
-    assert events[0].data["domain"] == mqtt.DOMAIN
-    assert (
-        events[0].data["issue_id"]
-        == "deprecated_vacuum_battery_feature_vacuum.mqtttest"
-    )
     issue_registry = ir.async_get(hass)
     issue = issue_registry.async_get_issue(
         mqtt.DOMAIN, "deprecated_vacuum_battery_feature_vacuum.mqtttest"
     )
     assert issue is not None
+    assert issue.issue_domain == "vacuum"
+    assert issue.translation_key == "deprecated_vacuum_battery_feature"
+    assert issue.translation_placeholders == {"entity_id": "vacuum.mqtttest"}
 
 
 @pytest.mark.parametrize(
