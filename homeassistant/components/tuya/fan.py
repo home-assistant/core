@@ -267,11 +267,11 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
             return int(self._speed.remap_value_to(value, 1, 100))
 
         if self._speeds is not None:
-            if (value := self.device.status.get(self._speeds.dpcode)) is None:
+            if (
+                value := self.device.status.get(self._speeds.dpcode)
+            ) is None or value not in self._speeds.range:
                 return None
-            # range is always a list of strings, but value can be an integer
-            # so we need to convert it to a string - see #141231
-            return ordered_list_item_to_percentage(self._speeds.range, str(value))
+            return ordered_list_item_to_percentage(self._speeds.range, value)
 
         return None
 

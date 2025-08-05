@@ -199,7 +199,7 @@
     'attributes': ReadOnlyDict({
       'direction': 'reverse',
       'friendly_name': 'Ceiling Fan With Light',
-      'percentage': 16,
+      'percentage': None,
       'percentage_step': 16.666666666666668,
       'preset_mode': 'normal',
       'preset_modes': list([
@@ -211,6 +211,63 @@
     }),
     'context': <ANY>,
     'entity_id': 'fan.ceiling_fan_with_light',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_platform_setup_and_discovery[kj_CAjWAxBUZt7QZHfz][fan.hl400-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'preset_modes': list([
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.hl400',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 49>,
+    'translation_key': None,
+    'unique_id': 'tuya.152027113c6105cce49c',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[kj_CAjWAxBUZt7QZHfz][fan.hl400-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'HL400',
+      'percentage': None,
+      'percentage_step': 33.333333333333336,
+      'preset_mode': None,
+      'preset_modes': list([
+      ]),
+      'supported_features': <FanEntityFeature: 49>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.hl400',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

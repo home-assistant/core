@@ -233,6 +233,11 @@ DEVICE_MOCKS = {
         # https://github.com/home-assistant/core/issues/148347
         Platform.SWITCH,
     ],
+    "kj_CAjWAxBUZt7QZHfz": [
+        # https://github.com/home-assistant/core/issues/146023
+        Platform.FAN,
+        Platform.SWITCH,
+    ],
     "kj_yrzylxax1qspdgpp": [
         # https://github.com/orgs/home-assistant/discussions/61
         Platform.FAN,
