@@ -261,7 +261,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
                 DOMAIN,
                 f"deprecated_vacuum_battery_feature_{self.entity_id}",
                 issue_domain=vacuum.DOMAIN,
-                breaks_in_ha_version="2026.3",
+                breaks_in_ha_version="2026.2",
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
                 learn_more_url=learn_more_url(vacuum.DOMAIN),
