@@ -29,7 +29,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_PASSKEY
+from .const import CONF_PASSKEY, DOMAIN
 from .coordinator import BSBLanUpdateCoordinator
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.WATER_HEATER]
@@ -75,15 +75,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
         static = await bsblan.static_values()
     except BSBLANConnectionError as err:
         raise ConfigEntryNotReady(
-            f"Failed to retrieve static device data from BSB-Lan device at {entry.data[CONF_HOST]}"
+            translation_domain=DOMAIN,
+            translation_key="setup_connection_error",
+            translation_placeholders={"host": entry.data[CONF_HOST]},
         ) from err
     except BSBLANAuthError as err:
         raise ConfigEntryAuthFailed(
-            "Authentication failed while retrieving static device data"
+            translation_domain=DOMAIN,
+            translation_key="setup_auth_error",
         ) from err
     except BSBLANError as err:
         raise ConfigEntryError(
-            "An unknown error occurred while retrieving static device data"
+            translation_domain=DOMAIN,
+            translation_key="setup_general_error",
         ) from err
 
     entry.runtime_data = BSBLanData(
