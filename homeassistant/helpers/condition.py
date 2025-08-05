@@ -199,14 +199,14 @@ class Condition(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    async def async_validate_condition_config(
+    async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
 
     @abc.abstractmethod
-    async def async_condition_from_config(self) -> ConditionCheckerType:
-        """Evaluate state based on configuration."""
+    async def async_get_checker(self) -> ConditionCheckerType:
+        """Get the condition checker."""
 
 
 class ConditionProtocol(Protocol):
@@ -346,7 +346,7 @@ async def async_from_config(
     if platform is not None:
         condition_descriptors = await platform.async_get_conditions(hass)
         condition_instance = condition_descriptors[condition](hass, config)
-        return await condition_instance.async_condition_from_config()
+        return await condition_instance.async_get_checker()
 
     for fmt in (ASYNC_FROM_CONFIG_FORMAT, FROM_CONFIG_FORMAT):
         factory = getattr(sys.modules[__name__], fmt.format(condition), None)
@@ -974,7 +974,7 @@ async def async_validate_condition_config(
         condition_descriptors = await platform.async_get_conditions(hass)
         if not (condition_class := condition_descriptors.get(condition)):
             raise vol.Invalid(f"Invalid condition '{condition}' specified")
-        return await condition_class.async_validate_condition_config(hass, config)
+        return await condition_class.async_validate_config(hass, config)
     if platform is None and condition in ("numeric_state", "state"):
         validator = cast(
             Callable[[HomeAssistant, ConfigType], ConfigType],

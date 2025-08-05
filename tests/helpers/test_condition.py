@@ -2089,7 +2089,7 @@ async def test_platform_multiple_conditions(hass: HomeAssistant) -> None:
             """Initialize condition."""
 
         @classmethod
-        async def async_validate_condition_config(
+        async def async_validate_config(
             cls, hass: HomeAssistant, config: ConfigType
         ) -> ConfigType:
             """Validate config."""
@@ -2098,14 +2098,14 @@ async def test_platform_multiple_conditions(hass: HomeAssistant) -> None:
     class MockCondition1(MockCondition):
         """Mock condition 1."""
 
-        async def async_condition_from_config(self) -> condition.ConditionCheckerType:
+        async def async_get_checker(self) -> condition.ConditionCheckerType:
             """Evaluate state based on configuration."""
             return lambda hass, vars: True
 
     class MockCondition2(MockCondition):
         """Mock condition 2."""
 
-        async def async_condition_from_config(self) -> condition.ConditionCheckerType:
+        async def async_get_checker(self) -> condition.ConditionCheckerType:
             """Evaluate state based on configuration."""
             return lambda hass, vars: False
 
