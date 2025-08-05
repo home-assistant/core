@@ -43,13 +43,6 @@
       "wireless_essid": {
         "name": "Wireless SSID"
       },
-      "wireless_mode": {
-        "name": "Wireless mode",
-        "state": {
-          "ap_ptp": "Access point",
-          "sta_ptp": "Station"
-        }
-      },
       "wireless_antenna_gain": {
         "name": "Antenna gain"
       },

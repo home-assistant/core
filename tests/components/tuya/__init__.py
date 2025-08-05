@@ -41,6 +41,11 @@ DEVICE_MOCKS = {
         Platform.SENSOR,
         Platform.SWITCH,
     ],
+    "cs_qhxmvae667uap4zh": [
+        # https://github.com/home-assistant/core/issues/141278
+        Platform.FAN,
+        Platform.HUMIDIFIER,
+    ],
     "cs_vmxuxszzjwp5smli": [
         # https://github.com/home-assistant/core/issues/119865
         Platform.FAN,
@@ -214,6 +219,16 @@ DEVICE_MOCKS = {
         # https://github.com/home-assistant/core/issues/143499
         Platform.SENSOR,
     ],
+    "fs_g0ewlb1vmwqljzji": [
+        # https://github.com/home-assistant/core/issues/141231
+        Platform.FAN,
+        Platform.LIGHT,
+        Platform.SELECT,
+    ],
+    "fs_ibytpo6fpnugft1c": [
+        # https://github.com/home-assistant/core/issues/135541
+        Platform.FAN,
+    ],
     "gyd_lgekqfxdabipm3tn": [
         # https://github.com/home-assistant/core/issues/133173
         Platform.LIGHT,
@@ -225,6 +240,11 @@ DEVICE_MOCKS = {
     ],
     "kg_gbm9ata1zrzaez4a": [
         # https://github.com/home-assistant/core/issues/148347
+        Platform.SWITCH,
+    ],
+    "kj_CAjWAxBUZt7QZHfz": [
+        # https://github.com/home-assistant/core/issues/146023
+        Platform.FAN,
         Platform.SWITCH,
     ],
     "kj_yrzylxax1qspdgpp": [
@@ -294,6 +314,15 @@ DEVICE_MOCKS = {
         Platform.BINARY_SENSOR,
         Platform.SENSOR,
     ],
+    "sd_lr33znaodtyarrrz": [
+        # https://github.com/home-assistant/core/issues/141278
+        Platform.BUTTON,
+        Platform.NUMBER,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+        Platform.VACUUM,
+    ],
     "sfkzq_o6dagifntoafakst": [
         # https://github.com/home-assistant/core/issues/148116
         Platform.SWITCH,
@@ -306,14 +335,25 @@ DEVICE_MOCKS = {
     ],
     "sp_drezasavompxpcgm": [
         # https://github.com/home-assistant/core/issues/149704
+        Platform.CAMERA,
         Platform.LIGHT,
         Platform.SELECT,
         Platform.SWITCH,
     ],
     "sp_rjKXWRohlvOTyLBu": [
         # https://github.com/home-assistant/core/issues/149704
+        Platform.CAMERA,
         Platform.LIGHT,
         Platform.SELECT,
+        Platform.SWITCH,
+    ],
+    "sp_sdd5f5f2dl5wydjf": [
+        # https://github.com/home-assistant/core/issues/144087
+        Platform.CAMERA,
+        Platform.NUMBER,
+        Platform.SENSOR,
+        Platform.SELECT,
+        Platform.SIREN,
         Platform.SWITCH,
     ],
     "tdq_cq1p0nt0a4rixnex": [
@@ -334,6 +374,10 @@ DEVICE_MOCKS = {
         # https://github.com/home-assistant/core/issues/146263
         Platform.CLIMATE,
         Platform.SWITCH,
+    ],
+    "wg2_nwxr8qcu4seltoro": [
+        # https://github.com/orgs/home-assistant/discussions/430
+        Platform.BINARY_SENSOR,
     ],
     "wk_fi6dne5tu4t1nm6j": [
         # https://github.com/orgs/home-assistant/discussions/243
