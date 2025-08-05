@@ -603,7 +603,9 @@ async def test_battery_level_template(
 )
 @pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
 async def test_battery_level_template_repair(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test battery_level template raises issue."""
     # Ensure trigger entity templates are rendered
@@ -618,6 +620,7 @@ async def test_battery_level_template_repair(
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_placeholders["entity_name"] == TEST_OBJECT_ID
     assert issue.translation_placeholders["entity_id"] == TEST_ENTITY_ID
+    assert "Detected that integration 'template' is setting the" not in caplog.text
 
 
 @pytest.mark.parametrize(
