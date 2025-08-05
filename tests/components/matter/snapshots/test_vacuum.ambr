@@ -37,7 +37,7 @@
 # name: test_vacuum[vacuum_cleaner][vacuum.mock_vacuum-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_area': 7,
+      'current_area': None,
       'friendly_name': 'Mock Vacuum',
       'supported_features': <VacuumEntityFeature: 12316>,
     }),

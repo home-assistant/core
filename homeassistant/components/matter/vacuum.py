@@ -32,6 +32,7 @@ from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
+ATTR_AREAS = "areas"
 ATTR_CURRENT_AREA = "current_area"
 
 
@@ -102,6 +103,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     _supported_run_modes: (
         dict[int, clusters.RvcRunMode.Structs.ModeOptionStruct] | None
     ) = None
+    _attr_areas: dict[str, Any] | None = None
     _attr_current_area: int | None = None
     entity_description: StateVacuumEntityDescription
     _platform_translation_key = "vacuum"
@@ -111,6 +113,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         """Return the state attributes of the entity."""
         return {
             ATTR_CURRENT_AREA: self._attr_current_area,
+            # ATTR_AREAS: self._attr_areas,
         }
 
     def _get_run_mode_by_tag(
@@ -180,6 +183,53 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     async def async_pause(self) -> None:
         """Pause the cleaning task."""
         await self.send_device_command(clusters.RvcOperationalState.Commands.Pause())
+
+    def async_get_areas(self, **kwargs: Any) -> dict[str, Any]:
+        """Get available area and map IDs from vacuum appliance."""
+
+        supported_areas = self.get_matter_attribute_value(
+            clusters.ServiceArea.Attributes.SupportedAreas
+        )
+        if not supported_areas:
+            raise HomeAssistantError("Can't get areas from the device.")
+
+        # Extract areaID, mapID, and locationName from each area
+        areas = []
+        for area in supported_areas:
+            area_id = getattr(area, "areaID", None)
+            map_id = getattr(area, "mapID", None)
+            location_name = None
+            area_info = getattr(area, "areaInfo", None)
+            if area_info is not None:
+                location_info = getattr(area_info, "locationInfo", None)
+                if location_info is not None:
+                    location_name = getattr(location_info, "locationName", None)
+            areas.append(
+                {
+                    "area_id": area_id,
+                    "map_id": map_id,
+                    "name": location_name,
+                }
+            )
+
+        # Optionally, also extract supported maps if available
+        supported_maps = self.get_matter_attribute_value(
+            clusters.ServiceArea.Attributes.SupportedMaps
+        )
+        maps = []
+        if supported_maps:
+            maps = [
+                {
+                    "map_id": getattr(m, "mapID", None),
+                    "name": getattr(m, "name", None),
+                }
+                for m in supported_maps
+            ]
+
+        return {
+            "areas": areas,
+            "maps": maps,
+        }
 
     async def async_handle_get_areas(self, **kwargs: Any) -> ServiceResponse:
         """Get available area and map IDs from vacuum appliance."""
@@ -264,11 +314,19 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     def _update_from_device(self) -> None:
         """Update from device."""
         self._calculate_features()
+        # ServiceArea: get areas from the device
+        self._attr_areas = self.async_get_areas()
         # optional CurrentArea attribute
         if self.get_matter_attribute_value(clusters.ServiceArea.Attributes.CurrentArea):
-            self._attr_current_area = self.get_matter_attribute_value(
+            current_area = self.get_matter_attribute_value(
                 clusters.ServiceArea.Attributes.CurrentArea
             )
+        # get CurrentArea name from the areas
+        if current_area is not None and self._attr_areas is not None:
+            for area in self._attr_areas.get("areas", []):
+                if area.get("area_id") == self._attr_current_area:
+                    self._attr_current_area = area.get("name")
+                    break
 
         # optional battery level
         if VacuumEntityFeature.BATTERY & self._attr_supported_features:
