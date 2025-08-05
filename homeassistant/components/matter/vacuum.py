@@ -75,7 +75,6 @@ async def async_setup_entry(
         func="async_handle_get_areas",
         supports_response=SupportsResponse.ONLY,
     )
-
     # This will call Entity.async_handle_clean_area
     platform.async_register_entity_service(
         SERVICE_CLEAN_AREA,
@@ -107,14 +106,12 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     entity_description: StateVacuumEntityDescription
     _platform_translation_key = "vacuum"
 
-    _extra_attrs = {
-        ATTR_CURRENT_AREA: _attr_current_area,
-    }
-
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
-        return self._extra_attrs
+        return {
+            ATTR_CURRENT_AREA: self._attr_current_area,
+        }
 
     def _get_run_mode_by_tag(
         self, tag: ModeTag
@@ -267,15 +264,17 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     def _update_from_device(self) -> None:
         """Update from device."""
         self._calculate_features()
+        # optional CurrentArea attribute
+        if self.get_matter_attribute_value(clusters.ServiceArea.Attributes.CurrentArea):
+            self._attr_current_area = self.get_matter_attribute_value(
+                clusters.ServiceArea.Attributes.CurrentArea
+            )
+
         # optional battery level
         if VacuumEntityFeature.BATTERY & self._attr_supported_features:
             self._attr_battery_level = self.get_matter_attribute_value(
                 clusters.PowerSource.Attributes.BatPercentRemaining
             )
-        # optional current area
-        self._attr_current_area = self.get_matter_attribute_value(
-            clusters.ServiceArea.Attributes.CurrentArea
-        )
         # derive state from the run mode + operational state
         run_mode_raw: int = self.get_matter_attribute_value(
             clusters.RvcRunMode.Attributes.CurrentMode
@@ -302,7 +301,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
                 state = VacuumActivity.IDLE
             elif ModeTag.MAPPING in tags:
                 state = VacuumActivity.CLEANING
-            self._attr_activity = state
+        self._attr_activity = state
 
     @callback
     def _calculate_features(self) -> None:
