@@ -334,8 +334,8 @@ async def test_status(
     assert state.state == STATE_UNKNOWN
 
 
-# Use of the battery feature was deprecated in HA Core 2025.9
-# and will removed with HA Core 2026.3
+# Use of the battery feature was deprecated in HA Core 2025.8
+# and will be removed with HA Core 2026.2
 @pytest.mark.parametrize(
     "hass_config",
     [
