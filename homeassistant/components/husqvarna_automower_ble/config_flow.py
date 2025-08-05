@@ -49,8 +49,8 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self.address: str
-        self.pin: int | None
+        self.address: str | None = None
+        self.pin: int | None = None
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
@@ -142,6 +142,8 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Check that the mower exists and is setup."""
+        assert self.address
+
         device = bluetooth.async_ble_device_from_address(
             self.hass, self.address, connectable=True
         )
@@ -176,13 +178,24 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                         ),
                         errors=errors,
                     )
+
+                user_input = {}
+
+                if self.address:
+                    user_input[CONF_ADDRESS] = self.address
+                if self.pin:
+                    user_input[CONF_PIN] = self.pin
+
                 return self.async_show_form(
                     step_id="user",
-                    data_schema=vol.Schema(
-                        {
-                            vol.Required(CONF_ADDRESS): str,
-                            vol.Required(CONF_PIN): int,
-                        },
+                    data_schema=self.add_suggested_values_to_schema(
+                        vol.Schema(
+                            {
+                                vol.Required(CONF_ADDRESS): str,
+                                vol.Required(CONF_PIN): int,
+                            },
+                        ),
+                        user_input,
                     ),
                     errors=errors,
                 )
@@ -256,13 +269,23 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             except (TimeoutError, BleakError):
                 return self.async_abort(reason="cannot_connect")
 
+        user_input = {}
+
+        if self.address:
+            user_input[CONF_ADDRESS] = self.address
+        if self.pin:
+            user_input[CONF_PIN] = self.pin
+
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_ADDRESS): str,
-                    vol.Required(CONF_PIN): int,
-                },
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_ADDRESS): str,
+                        vol.Required(CONF_PIN): int,
+                    },
+                ),
+                user_input,
             ),
             errors=errors,
         )
