@@ -148,7 +148,7 @@ HOST_SENSORS = (
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         entity_registry_enabled_default=False,
         value=lambda api: api.wifi_signal(),
-        supported=lambda api: api.supported(None, "wifi") and api.wifi_connection,
+        supported=lambda api: api.supported(None, "wifi") and api.wifi_connection(),
     ),
     ReolinkHostSensorEntityDescription(
         key="cpu_usage",
