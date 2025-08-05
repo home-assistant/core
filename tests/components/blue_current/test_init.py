@@ -10,10 +10,16 @@ from bluecurrent_api.exceptions import (
     WebsocketError,
 )
 import pytest
+from voluptuous import MultipleInvalid
 
-from homeassistant.components.blue_current import DOMAIN, async_setup_entry
+from homeassistant.components.blue_current import (
+    CHARGING_CARD_ID,
+    DOMAIN,
+    SERVICE_START_CHARGE_SESSION,
+    async_setup_entry,
+)
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import CONF_DEVICE_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -21,7 +27,7 @@ from homeassistant.exceptions import (
     IntegrationError,
     ServiceValidationError,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceRegistry
 
 from . import init_integration
 
@@ -110,7 +116,7 @@ async def test_connect_request_limit_reached_error(
 
 
 async def test_start_charging_action(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry, device_registry: DeviceRegistry
 ) -> None:
     """Test the start charing action when a charging card is provided."""
     integration = await init_integration(hass, config_entry, Platform.BUTTON)
@@ -118,10 +124,10 @@ async def test_start_charging_action(
 
     await hass.services.async_call(
         DOMAIN,
-        "start_charge_session",
+        SERVICE_START_CHARGE_SESSION,
         {
-            "device_id": list(dr.async_get(hass).devices)[0],
-            "charging_card_id": "TEST_CARD",
+            CONF_DEVICE_ID: list(device_registry.devices)[0],
+            CHARGING_CARD_ID: "TEST_CARD",
         },
         blocking=True,
     )
@@ -130,7 +136,7 @@ async def test_start_charging_action(
 
 
 async def test_start_charging_action_without_card(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry, device_registry: DeviceRegistry
 ) -> None:
     """Test the start charing action when no charging card is provided."""
     integration = await init_integration(hass, config_entry, Platform.BUTTON)
@@ -138,9 +144,9 @@ async def test_start_charging_action_without_card(
 
     await hass.services.async_call(
         DOMAIN,
-        "start_charge_session",
+        SERVICE_START_CHARGE_SESSION,
         {
-            "device_id": list(dr.async_get(hass).devices)[0],
+            CONF_DEVICE_ID: list(device_registry.devices)[0],
         },
         blocking=True,
     )
@@ -149,16 +155,18 @@ async def test_start_charging_action_without_card(
 
 
 async def test_start_charging_action_errors(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: DeviceRegistry,
 ) -> None:
     """Test the start charing action errors."""
     await init_integration(hass, config_entry, Platform.BUTTON)
 
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(MultipleInvalid):
         # No device id
         await hass.services.async_call(
             DOMAIN,
-            "start_charge_session",
+            SERVICE_START_CHARGE_SESSION,
             {},
             blocking=True,
         )
@@ -167,13 +175,13 @@ async def test_start_charging_action_errors(
         # Invalid device id
         await hass.services.async_call(
             DOMAIN,
-            "start_charge_session",
-            {"device_id": "INVALID"},
+            SERVICE_START_CHARGE_SESSION,
+            {CONF_DEVICE_ID: "INVALID"},
             blocking=True,
         )
 
     get_entry_mock = MagicMock()
-    get_entry_mock.state = ConfigEntryState.SETUP_IN_PROGRESS
+    get_entry_mock.state = ConfigEntryState.NOT_LOADED
 
     with (
         patch.object(
@@ -183,9 +191,9 @@ async def test_start_charging_action_errors(
     ):
         await hass.services.async_call(
             DOMAIN,
-            "start_charge_session",
+            SERVICE_START_CHARGE_SESSION,
             {
-                "device_id": list(dr.async_get(hass).devices)[0],
+                CONF_DEVICE_ID: list(device_registry.devices)[0],
             },
             blocking=True,
         )

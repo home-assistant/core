@@ -13,6 +13,7 @@ from bluecurrent_api.exceptions import (
     RequestLimitReached,
     WebsocketError,
 )
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_API_TOKEN, CONF_DEVICE_ID, Platform
@@ -35,7 +36,7 @@ from .const import (
     EVSE_ID,
     LOGGER,
     PLUG_AND_CHARGE,
-    START_CHARGE_SESSION,
+    SERVICE_START_CHARGE_SESSION,
     VALUE,
 )
 
@@ -51,7 +52,15 @@ GRID = "GRID"
 OBJECT = "object"
 VALUE_TYPES = [CHARGEPOINT_STATUS, CHARGEPOINT_SETTINGS]
 
-CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+SERVICE_START_CHARGE_SESSION_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DEVICE_ID): cv.string,
+        # When no charging card is provided, use no charging card (BCU_APP = no charging card).
+        vol.Optional(CHARGING_CARD_ID, default=BCU_APP): cv.string,
+    }
+)
 
 
 async def async_setup_entry(
@@ -85,37 +94,43 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def start_charge_session(service_call: ServiceCall) -> None:
         """Start a charge session with the provided device and charge card ID."""
         # When no charge card is provided, use the default charge card set in the config flow.
-        charging_card_id = service_call.data.get(CHARGING_CARD_ID)
-        device_id = service_call.data.get(CONF_DEVICE_ID)
-
-        if device_id is None:
-            raise ServiceValidationError
+        charging_card_id = service_call.data[CHARGING_CARD_ID]
+        device_id = service_call.data[CONF_DEVICE_ID]
 
         # Get the device based on the given device ID.
         device = dr.async_get(hass).devices.get(device_id)
 
         if device is None:
-            raise ServiceValidationError
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="invalid_device_id"
+            )
 
         config_entry = hass.config_entries.async_get_entry(
             list(device.config_entries)[0]
         )
 
         if config_entry is None or config_entry.state is not ConfigEntryState.LOADED:
-            raise ServiceValidationError
+            raise ServiceValidationError(
+                translation_domain=DOMAIN, translation_key="config_entry_not_loaded"
+            )
 
         connector = config_entry.runtime_data
 
         # Get the evse_id from the identifier of the device.
-        evse_id = list(device.identifiers)[0][1]
-
-        # When no charging card is provided, use no charging card (BCU_APP = no charging card).
-        if charging_card_id is None:
-            charging_card_id = BCU_APP
+        evse_id = next(
+            identifier[1]
+            for identifier in device.identifiers
+            if identifier[0] == DOMAIN
+        )
 
         await connector.client.start_session(evse_id, charging_card_id)
 
-    hass.services.async_register(DOMAIN, START_CHARGE_SESSION, start_charge_session)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_START_CHARGE_SESSION,
+        start_charge_session,
+        SERVICE_START_CHARGE_SESSION_SCHEMA,
+    )
 
     return True
 

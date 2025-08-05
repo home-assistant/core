@@ -169,5 +169,13 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "invalid_device_id": {
+      "message": "Invalid device ID given."
+    },
+    "config_entry_not_loaded": {
+      "message": "Config entry not loaded."
+    }
   }
 }
