@@ -520,7 +520,7 @@ async def test_async_track_target_selector_state_change_event(
         """Toggle the state entities and check for events."""
         nonlocal last_state
         last_state = STATE_ON if last_state == STATE_OFF else STATE_OFF
-        set_states_and_check_target_events(
+        await set_states_and_check_target_events(
             hass, events, last_state, entities_to_set_state, entities_to_assert_change
         )
 
@@ -685,7 +685,7 @@ async def test_async_track_target_selector_state_change_event_filter(
         """Toggle the state entities and check for events."""
         nonlocal last_state
         last_state = STATE_ON if last_state == STATE_OFF else STATE_OFF
-        set_states_and_check_target_events(
+        await set_states_and_check_target_events(
             hass, events, last_state, entities_to_set_state, entities_to_assert_change
         )
 
@@ -720,9 +720,27 @@ async def test_async_track_target_selector_state_change_event_filter(
     )
 
     filtered_entity = targeted_entity
+    # Fire an event so that the targeted entities are re-evaluated
+    hass.bus.async_fire(
+        er.EVENT_ENTITY_REGISTRY_UPDATED,
+        {
+            "action": "update",
+            "entity_id": "light.other",
+            "changes": {},
+        },
+    )
     await set_states_and_check_events([targeted_entity, label_entity], [label_entity])
 
     filtered_entity = label_entity
+    # Fire an event so that the targeted entities are re-evaluated
+    hass.bus.async_fire(
+        er.EVENT_ENTITY_REGISTRY_UPDATED,
+        {
+            "action": "update",
+            "entity_id": "light.other",
+            "changes": {},
+        },
+    )
     await set_states_and_check_events(
         [targeted_entity, label_entity], [targeted_entity]
     )
