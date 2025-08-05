@@ -41,6 +41,11 @@ DEVICE_MOCKS = {
         Platform.SENSOR,
         Platform.SWITCH,
     ],
+    "cs_qhxmvae667uap4zh": [
+        # https://github.com/home-assistant/core/issues/141278
+        Platform.FAN,
+        Platform.HUMIDIFIER,
+    ],
     "cs_vmxuxszzjwp5smli": [
         # https://github.com/home-assistant/core/issues/119865
         Platform.FAN,
@@ -219,6 +224,10 @@ DEVICE_MOCKS = {
         Platform.FAN,
         Platform.LIGHT,
         Platform.SELECT,
+    ],
+    "fs_ibytpo6fpnugft1c": [
+        # https://github.com/home-assistant/core/issues/135541
+        Platform.FAN,
     ],
     "gyd_lgekqfxdabipm3tn": [
         # https://github.com/home-assistant/core/issues/133173
