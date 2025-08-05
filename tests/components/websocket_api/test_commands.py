@@ -806,10 +806,10 @@ async def test_subscribe_triggers(
 ) -> None:
     """Test trigger_platforms/subscribe command."""
     sun_trigger_descriptions = """
-        sun: {}
+        _: {}
         """
     tag_trigger_descriptions = """
-        tag: {}
+        _: {}
         """
 
     def _load_yaml(fname, secrets=None):

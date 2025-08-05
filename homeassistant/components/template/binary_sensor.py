@@ -370,7 +370,6 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
     def _set_state(self, state, _=None):
         """Set up auto off."""
         self._attr_is_on = state
-        self.async_set_context(self.coordinator.data["context"])
         self.async_write_ha_state()
 
         if not state:
