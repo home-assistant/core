@@ -21,13 +21,13 @@
   },
   "entity": {
     "sensor": {
-      "current_flow_rate": { "name": "Flow Rate" },
-      "server_connectivity": { "name": "Server Status" },
-      "signal_quality": { "name": "Signal Quality" },
-      "volume": { "name": "Live Volume" },
-      "daily_volume": { "name": "Daily Volume" },
-      "weekly_volume": { "name": "Weekly Volume" },
-      "monthly_volume": { "name": "Monthly Volume" }
+      "current_flow_rate": { "name": "Flow rate" },
+      "server_connectivity": { "name": "Server status" },
+      "signal_quality": { "name": "Signal quality" },
+      "volume": { "name": "Live volume" },
+      "daily_volume": { "name": "Daily volume" },
+      "weekly_volume": { "name": "Weekly volume" },
+      "monthly_volume": { "name": "Monthly volume" }
     }
   }
 }
