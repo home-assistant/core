@@ -111,6 +111,14 @@ async def test_user_selection_incorrect_pin(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
+    assert len(hass.config_entries.async_entries()) == 2
+
+    assert (
+        mock_config_entry.data[CONF_ADDRESS] == "00000000-0000-0000-0000-000000000001"
+    )
+    assert mock_config_entry.data[CONF_CLIENT_ID] == 1197489078
+    assert mock_config_entry.data[CONF_PIN] == 1234
+
 
 async def test_bluetooth(hass: HomeAssistant) -> None:
     """Test bluetooth device discovery."""
@@ -315,6 +323,14 @@ async def test_successful_reauth(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+
+    assert len(hass.config_entries.async_entries()) == 2
+
+    assert (
+        mock_config_entry.data[CONF_ADDRESS] == "00000000-0000-0000-0000-000000000001"
+    )
+    assert mock_config_entry.data[CONF_CLIENT_ID] == 1197489078
+    assert mock_config_entry.data[CONF_PIN] == 1234
 
 
 async def test_unable_to_connect(
