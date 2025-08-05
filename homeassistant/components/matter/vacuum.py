@@ -34,6 +34,7 @@ from .models import MatterDiscoverySchema
 
 # ATTR_AREAS = "areas"
 ATTR_CURRENT_AREA = "current_area"
+ATTR_SELECTED_AREAS = "selected_areas"
 
 
 class OperationalState(IntEnum):
@@ -105,6 +106,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
     ) = None
     _attr_areas: dict[str, Any] | None = None
     _attr_current_area: int | None = None
+    _attr_selected_areas: list[int] | None = None
     entity_description: StateVacuumEntityDescription
     _platform_translation_key = "vacuum"
 
@@ -113,6 +115,7 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         """Return the state attributes of the entity."""
         return {
             ATTR_CURRENT_AREA: self._attr_current_area,
+            ATTR_SELECTED_AREAS: self._attr_selected_areas,
             # ATTR_AREAS: self._attr_areas,
         }
 
@@ -317,6 +320,11 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
                 or current_area
             )
 
+        # optional SelectedAreas attribute
+        if self.get_matter_attribute_value(clusters.ServiceArea.Attributes.CurrentArea):
+            self._attr_selected_areas = self.get_matter_attribute_value(
+                clusters.ServiceArea.Attributes.SelectedAreas
+            )
         # optional battery level
         if VacuumEntityFeature.BATTERY & self._attr_supported_features:
             self._attr_battery_level = self.get_matter_attribute_value(

@@ -39,6 +39,8 @@
     'attributes': ReadOnlyDict({
       'current_area': 'My Location A',
       'friendly_name': 'Mock Vacuum',
+      'selected_areas': list([
+      ]),
       'supported_features': <VacuumEntityFeature: 12316>,
     }),
     'context': <ANY>,
