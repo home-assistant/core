@@ -1,6 +1,12 @@
 """Tests for the OpenAI Conversation integration."""
 
 from openai.types.responses import (
+    ResponseCodeInterpreterCallCodeDeltaEvent,
+    ResponseCodeInterpreterCallCodeDoneEvent,
+    ResponseCodeInterpreterCallCompletedEvent,
+    ResponseCodeInterpreterCallInProgressEvent,
+    ResponseCodeInterpreterCallInterpretingEvent,
+    ResponseCodeInterpreterToolCall,
     ResponseContentPartAddedEvent,
     ResponseContentPartDoneEvent,
     ResponseFunctionCallArgumentsDeltaEvent,
@@ -239,3 +245,86 @@ def create_web_search_item(id: str, output_index: int) -> list[ResponseStreamEve
             type="response.output_item.done",
         ),
     ]
+
+
+def create_code_interpreter_item(
+    id: str, code: str | list[str], output_index: int
+) -> list[ResponseStreamEvent]:
+    """Create a message item."""
+    if isinstance(code, str):
+        code = [code]
+
+    container_id = "cntr_A"
+    events = [
+        ResponseOutputItemAddedEvent(
+            item=ResponseCodeInterpreterToolCall(
+                id=id,
+                code="",
+                container_id=container_id,
+                outputs=None,
+                type="code_interpreter_call",
+                status="in_progress",
+            ),
+            output_index=output_index,
+            sequence_number=0,
+            type="response.output_item.added",
+        ),
+        ResponseCodeInterpreterCallInProgressEvent(
+            item_id=id,
+            output_index=output_index,
+            sequence_number=0,
+            type="response.code_interpreter_call.in_progress",
+        ),
+    ]
+
+    events.extend(
+        ResponseCodeInterpreterCallCodeDeltaEvent(
+            delta=delta,
+            item_id=id,
+            output_index=output_index,
+            sequence_number=0,
+            type="response.code_interpreter_call_code.delta",
+        )
+        for delta in code
+    )
+
+    code = "".join(code)
+
+    events.extend(
+        [
+            ResponseCodeInterpreterCallCodeDoneEvent(
+                item_id=id,
+                output_index=output_index,
+                code=code,
+                sequence_number=0,
+                type="response.code_interpreter_call_code.done",
+            ),
+            ResponseCodeInterpreterCallInterpretingEvent(
+                item_id=id,
+                output_index=output_index,
+                sequence_number=0,
+                type="response.code_interpreter_call.interpreting",
+            ),
+            ResponseCodeInterpreterCallCompletedEvent(
+                item_id=id,
+                output_index=output_index,
+                sequence_number=0,
+                type="response.code_interpreter_call.completed",
+            ),
+            ResponseOutputItemDoneEvent(
+                item=ResponseCodeInterpreterToolCall(
+                    id=id,
+                    code=code,
+                    container_id=container_id,
+                    outputs=None,
+                    status="completed",
+                    type="code_interpreter_call",
+                ),
+                output_index=output_index,
+                sequence_number=0,
+                type="response.output_item.done",
+            ),
+        ]
+    )
+
+    return events

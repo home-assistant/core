@@ -5,6 +5,7 @@ from __future__ import annotations
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.number import (
+    DEVICE_CLASS_UNITS as NUMBER_DEVICE_CLASS_UNITS,
     NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
@@ -15,9 +16,17 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import DEVICE_CLASS_UNITS, DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import (
+    DEVICE_CLASS_UNITS,
+    DOMAIN,
+    LOGGER,
+    TUYA_DISCOVERY_NEW,
+    DPCode,
+    DPType,
+)
 from .entity import TuyaEntity
 from .models import IntegerTypeData
+from .util import ActionDPCodeNotFoundError
 
 # All descriptions can be found here. Mostly the Integer data types in the
 # default instructions set of each category end up being a number.
@@ -162,6 +171,30 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Alarm Host
+    # https://developer.tuya.com/en/docs/iot/alarm-hosts?id=K9gf48r87hyjk
+    "mal": (
+        NumberEntityDescription(
+            key=DPCode.DELAY_SET,
+            # This setting is called "Arm Delay" in the official Tuya app
+            translation_key="arm_delay",
+            device_class=NumberDeviceClass.DURATION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.ALARM_DELAY_TIME,
+            translation_key="alarm_delay",
+            device_class=NumberDeviceClass.DURATION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.ALARM_TIME,
+            # This setting is called "Siren Duration" in the official Tuya app
+            translation_key="siren_duration",
+            device_class=NumberDeviceClass.DURATION,
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Sous Vide Cooker
     # https://developer.tuya.com/en/docs/iot/categorymzj?id=Kaiuz2vy130ux
     "mzj": (
@@ -234,32 +267,38 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "tgkg": (
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_1,
-            translation_key="minimum_brightness",
+            translation_key="indexed_minimum_brightness",
+            translation_placeholders={"index": "1"},
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_1,
-            translation_key="maximum_brightness",
+            translation_key="indexed_maximum_brightness",
+            translation_placeholders={"index": "1"},
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_2,
-            translation_key="minimum_brightness_2",
+            translation_key="indexed_minimum_brightness",
+            translation_placeholders={"index": "2"},
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_2,
-            translation_key="maximum_brightness_2",
+            translation_key="indexed_maximum_brightness",
+            translation_placeholders={"index": "2"},
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_3,
-            translation_key="minimum_brightness_3",
+            translation_key="indexed_minimum_brightness",
+            translation_placeholders={"index": "3"},
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_3,
-            translation_key="maximum_brightness_3",
+            translation_key="indexed_maximum_brightness",
+            translation_placeholders={"index": "3"},
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -268,22 +307,35 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "tgq": (
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_1,
-            translation_key="minimum_brightness",
+            translation_key="indexed_minimum_brightness",
+            translation_placeholders={"index": "1"},
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_1,
-            translation_key="maximum_brightness",
+            translation_key="indexed_maximum_brightness",
+            translation_placeholders={"index": "1"},
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_2,
-            translation_key="minimum_brightness_2",
+            translation_key="indexed_minimum_brightness",
+            translation_placeholders={"index": "2"},
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_2,
-            translation_key="maximum_brightness_2",
+            translation_key="indexed_maximum_brightness",
+            translation_placeholders={"index": "2"},
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Thermostat
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
+    "wk": (
+        NumberEntityDescription(
+            key=DPCode.TEMP_CORRECTION,
+            translation_key="temp_correction",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -364,6 +416,8 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             self._attr_native_max_value = self._number.max_scaled
             self._attr_native_min_value = self._number.min_scaled
             self._attr_native_step = self._number.step_scaled
+            if description.native_unit_of_measurement is None:
+                self._attr_native_unit_of_measurement = int_type.unit
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
@@ -371,6 +425,9 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             self.device_class is not None
             and not self.device_class.startswith(DOMAIN)
             and description.native_unit_of_measurement is None
+            # we do not need to check mappings if the API UOM is allowed
+            and self.native_unit_of_measurement
+            not in NUMBER_DEVICE_CLASS_UNITS[self.device_class]
         ):
             # We cannot have a device class, if the UOM isn't set or the
             # device class cannot be found in the validation mapping.
@@ -378,24 +435,28 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
                 self.native_unit_of_measurement is None
                 or self.device_class not in DEVICE_CLASS_UNITS
             ):
+                LOGGER.debug(
+                    "Device class %s ignored for incompatible unit %s in number entity %s",
+                    self.device_class,
+                    self.native_unit_of_measurement,
+                    self.unique_id,
+                )
                 self._attr_device_class = None
                 return
 
             uoms = DEVICE_CLASS_UNITS[self.device_class]
-            self._uom = uoms.get(self.native_unit_of_measurement) or uoms.get(
+            uom = uoms.get(self.native_unit_of_measurement) or uoms.get(
                 self.native_unit_of_measurement.lower()
             )
 
             # Unknown unit of measurement, device class should not be used.
-            if self._uom is None:
+            if uom is None:
                 self._attr_device_class = None
                 return
 
             # Found unit of measurement, use the standardized Unit
             # Use the target conversion unit (if set)
-            self._attr_native_unit_of_measurement = (
-                self._uom.conversion_unit or self._uom.unit
-            )
+            self._attr_native_unit_of_measurement = uom.unit
 
     @property
     def native_value(self) -> float | None:
@@ -413,7 +474,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
     def set_native_value(self, value: float) -> None:
         """Set new value."""
         if self._number is None:
-            raise RuntimeError("Cannot set value, device doesn't provide type data")
+            raise ActionDPCodeNotFoundError(self.device, self.entity_description.key)
 
         self._send_command(
             [

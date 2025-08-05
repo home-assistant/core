@@ -55,7 +55,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_all_entities[da_ks_oven_01061][select.oven_lamp-entry]
@@ -112,7 +112,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'high',
   })
 # ---
 # name: test_all_entities[da_ks_range_0101x][select.vulcan_lamp-entry]
@@ -226,7 +226,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_all_entities[da_wm_dw_000001][select.dishwasher-entry]
