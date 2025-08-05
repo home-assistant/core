@@ -414,6 +414,69 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_platform_setup_and_discovery[fs_g0ewlb1vmwqljzji][select.ceiling_fan_with_light_countdown-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'cancel',
+        '1h',
+        '2h',
+        '4h',
+        '8h',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.ceiling_fan_with_light_countdown',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Countdown',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'countdown',
+    'unique_id': 'tuya.XXXcountdown_set',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[fs_g0ewlb1vmwqljzji][select.ceiling_fan_with_light_countdown-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ceiling Fan With Light Countdown',
+      'options': list([
+        'cancel',
+        '1h',
+        '2h',
+        '4h',
+        '8h',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ceiling_fan_with_light_countdown',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_platform_setup_and_discovery[kj_yrzylxax1qspdgpp][select.bree_countdown-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
