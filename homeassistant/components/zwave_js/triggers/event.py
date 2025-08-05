@@ -263,13 +263,13 @@ class EventTrigger(Trigger):
         self._hass = hass
 
     @classmethod
-    async def async_validate_trigger_config(
+    async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
         return await async_validate_trigger_config(hass, config)
 
-    async def async_attach_trigger(
+    async def async_attach(
         self,
         action: TriggerActionType,
         trigger_info: TriggerInfo,
