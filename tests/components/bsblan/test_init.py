@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from bsblan import BSBLANAuthError, BSBLANConnectionError, BSBLANError
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.components.bsblan.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -77,49 +78,36 @@ async def test_config_entry_auth_failed_triggers_reauth(
     assert flows[0]["context"]["entry_id"] == mock_config_entry.entry_id
 
 
-async def test_config_entry_static_data_connection_error(
+@pytest.mark.parametrize(
+    ("method", "exception", "expected_state"),
+    [
+        (
+            "device",
+            BSBLANConnectionError("Connection failed"),
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        (
+            "info",
+            BSBLANAuthError("Authentication failed"),
+            ConfigEntryState.SETUP_ERROR,
+        ),
+        ("static_values", BSBLANError("General error"), ConfigEntryState.SETUP_ERROR),
+    ],
+)
+async def test_config_entry_static_data_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_bsblan: MagicMock,
+    method: str,
+    exception: Exception,
+    expected_state: ConfigEntryState,
 ) -> None:
-    """Test BSBLANConnectionError during static data fetching triggers ConfigEntryNotReady."""
-    # Mock connection error during device() call
-    mock_bsblan.device.side_effect = BSBLANConnectionError("Connection failed")
+    """Test various errors during static data fetching trigger appropriate config entry states."""
+    # Mock the specified method to raise the exception
+    getattr(mock_bsblan, method).side_effect = exception
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_config_entry_static_data_auth_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_bsblan: MagicMock,
-) -> None:
-    """Test BSBLANAuthError during static data fetching triggers ConfigEntryAuthFailed."""
-    # Mock auth error during info() call
-    mock_bsblan.info.side_effect = BSBLANAuthError("Authentication failed")
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_config_entry_static_data_general_error(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_bsblan: MagicMock,
-) -> None:
-    """Test BSBLANError during static data fetching triggers ConfigEntryError."""
-    # Mock general error during static_values() call
-    mock_bsblan.static_values.side_effect = BSBLANError("General error")
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is expected_state
