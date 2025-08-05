@@ -102,7 +102,14 @@ async def async_setup_entry(
 
     def available_soco_attributes(speaker: SonosSpeaker) -> list[str]:
         features = []
-        for feature_type in (*ALL_FEATURES, *ALL_SUBST_FEATURES):
+        for feature_type in ALL_SUBST_FEATURES:
+            try:
+                if (state := getattr(speaker.soco, feature_type, None)) is not None:
+                    setattr(speaker, feature_type, state)
+            except SoCoSlaveException:
+                pass
+
+        for feature_type in ALL_FEATURES:
             try:
                 if (state := getattr(speaker.soco, feature_type, None)) is not None:
                     setattr(speaker, feature_type, state)
