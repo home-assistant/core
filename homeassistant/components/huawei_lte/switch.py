@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -55,24 +55,29 @@ class HuaweiLteBaseSwitch(HuaweiLteBaseEntityWithDevice, SwitchEntity):
     def _turn(self, state: bool) -> None:
         raise NotImplementedError
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         self._turn(state=True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         self._turn(state=False)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to needed data on add."""
         await super().async_added_to_hass()
         self.router.subscriptions[self.key].append(f"{SWITCH_DOMAIN}/{self.item}")
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from needed data on remove."""
         await super().async_will_remove_from_hass()
         self.router.subscriptions[self.key].remove(f"{SWITCH_DOMAIN}/{self.item}")
 
+    @override
     async def async_update(self) -> None:
         """Update state."""
         try:
@@ -94,14 +99,17 @@ class HuaweiLteMobileDataSwitch(HuaweiLteBaseSwitch):
     item = "dataswitch"
 
     @property
+    @override
     def _device_unique_id(self) -> str:
         return f"{self.key}.{self.item}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return whether the switch is on."""
         return self._raw_state == "1"
 
+    @override
     def _turn(self, state: bool) -> None:
         value = 1 if state else 0
         self.router.client.dial_up.set_mobile_dataswitch(dataswitch=value)
@@ -118,20 +126,24 @@ class HuaweiLteWifiGuestNetworkSwitch(HuaweiLteBaseSwitch):
     item = "WifiEnable"
 
     @property
+    @override
     def _device_unique_id(self) -> str:
         return f"{self.key}.{self.item}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return whether the switch is on."""
         return self._raw_state == "1"
 
+    @override
     def _turn(self, state: bool) -> None:
         self.router.client.wlan.wifi_guest_network_switch(state)
         self._raw_state = "1" if state else "0"
         self.schedule_update_ha_state()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
         return {"ssid": self.router.data[self.key].get("WifiSsid")}

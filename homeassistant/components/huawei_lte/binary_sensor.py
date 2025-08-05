@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from huawei_lte_api.enums.cradle import ConnectionStatusEnum
 
@@ -59,9 +59,11 @@ class HuaweiLteBaseBinarySensor(HuaweiLteBaseEntityWithDevice, BinarySensorEntit
     _raw_state: str | None = None
 
     @property
+    @override
     def _device_unique_id(self) -> str:
         return f"{self.key}.{self.item}"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to needed data on add."""
         await super().async_added_to_hass()
@@ -69,6 +71,7 @@ class HuaweiLteBaseBinarySensor(HuaweiLteBaseEntityWithDevice, BinarySensorEntit
             f"{BINARY_SENSOR_DOMAIN}/{self.item}"
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from needed data on remove."""
         await super().async_will_remove_from_hass()
@@ -76,6 +79,7 @@ class HuaweiLteBaseBinarySensor(HuaweiLteBaseEntityWithDevice, BinarySensorEntit
             f"{BINARY_SENSOR_DOMAIN}/{self.item}"
         )
 
+    @override
     async def async_update(self) -> None:
         """Update state."""
         try:
@@ -111,6 +115,7 @@ class HuaweiLteMobileConnectionBinarySensor(HuaweiLteBaseBinarySensor):
     item = "ConnectionStatus"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return whether the binary sensor is on."""
         return bool(
@@ -120,6 +125,7 @@ class HuaweiLteMobileConnectionBinarySensor(HuaweiLteBaseBinarySensor):
         )
 
     @property
+    @override
     def assumed_state(self) -> bool:
         """Return True if real state is assumed, not known."""
         return not self._raw_state or int(self._raw_state) not in (
@@ -129,6 +135,7 @@ class HuaweiLteMobileConnectionBinarySensor(HuaweiLteBaseBinarySensor):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Get additional attributes related to connection status."""
         attributes = {}
@@ -145,11 +152,13 @@ class HuaweiLteBaseWifiStatusBinarySensor(HuaweiLteBaseBinarySensor):
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return whether the binary sensor is on."""
         return self._raw_state is not None and int(self._raw_state) == 1
 
     @property
+    @override
     def assumed_state(self) -> bool:
         """Return True if real state is assumed, not known."""
         return self._raw_state is None
@@ -191,11 +200,13 @@ class HuaweiLteSmsStorageFullBinarySensor(HuaweiLteBaseBinarySensor):
     item = "SmsStorageFull"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return whether the binary sensor is on."""
         return self._raw_state is not None and int(self._raw_state) != 0
 
     @property
+    @override
     def assumed_state(self) -> bool:
         """Return True if real state is assumed, not known."""
         return self._raw_state is None
