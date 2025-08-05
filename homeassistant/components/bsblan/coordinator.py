@@ -57,9 +57,10 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[BSBLanCoordinatorData]):
 
         Use the default scan interval and add a random number of seconds to avoid timeouts when
         the BSB-Lan device is already/still busy retrieving data,
-        e.g. for MQTT or internal logging.
+        e.g. for MQTT or internal logging. This helps to make it less likely that multiple
+        requests hit the device at the same time.
         """
-        return SCAN_INTERVAL + timedelta(seconds=randint(1, 8))
+        return SCAN_INTERVAL + timedelta(seconds=randint(1, 10))
 
     async def _async_update_data(self) -> BSBLanCoordinatorData:
         """Get state and sensor data from BSB-Lan device."""

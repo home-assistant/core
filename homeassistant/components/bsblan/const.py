@@ -10,7 +10,7 @@ from typing import Final
 DOMAIN: Final = "bsblan"
 
 LOGGER = logging.getLogger(__package__)
-SCAN_INTERVAL = timedelta(seconds=12)
+SCAN_INTERVAL = timedelta(seconds=50)
 
 # Services
 DATA_BSBLAN_CLIENT: Final = "bsblan_client"
