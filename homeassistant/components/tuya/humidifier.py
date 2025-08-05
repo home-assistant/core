@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -24,12 +24,12 @@ from .models import IntegerTypeData
 from .util import ActionDPCodeNotFoundError
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class TuyaHumidifierEntityDescription(HumidifierEntityDescription):
     """Describe an Tuya (de)humidifier entity."""
 
     # DPCode, to use. If None, the key will be used as DPCode
-    dpcode: DPCode | tuple[DPCode, ...] | None = None
+    dpcode: tuple[DPCode, ...]
 
     current_humidity: DPCode | None = None
     humidity: DPCode | None = None
@@ -71,7 +71,9 @@ async def async_setup_entry(
         entities: list[TuyaHumidifierEntity] = []
         for device_id in device_ids:
             device = hass_data.manager.device_map[device_id]
-            if description := HUMIDIFIERS.get(device.category):
+            if (description := HUMIDIFIERS.get(device.category)) and any(
+                code in device.status for code in description.dpcode
+            ):
                 entities.append(
                     TuyaHumidifierEntity(device, hass_data.manager, description)
                 )
@@ -170,20 +172,16 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        if self._switch_dpcode is None:
-            raise ActionDPCodeNotFoundError(
-                self.device,
-                self.entity_description.dpcode or self.entity_description.key,
-            )
+        if TYPE_CHECKING:
+            # Guarded by device.status for code in description.dpcode
+            assert self._switch_dpcode
         self._send_command([{"code": self._switch_dpcode, "value": True}])
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        if self._switch_dpcode is None:
-            raise ActionDPCodeNotFoundError(
-                self.device,
-                self.entity_description.dpcode or self.entity_description.key,
-            )
+        if TYPE_CHECKING:
+            # Guarded by device.status for code in description.dpcode
+            assert self._switch_dpcode
         self._send_command([{"code": self._switch_dpcode, "value": False}])
 
     def set_humidity(self, humidity: int) -> None:
