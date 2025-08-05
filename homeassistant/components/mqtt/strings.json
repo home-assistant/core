@@ -1104,6 +1104,7 @@
     },
     "device_class_sensor": {
       "options": {
+        "absolute_humidity": "[%key:component::sensor::entity_component::absolute_humidity::name%]",
         "apparent_power": "[%key:component::sensor::entity_component::apparent_power::name%]",
         "area": "[%key:component::sensor::entity_component::area::name%]",
         "aqi": "[%key:component::sensor::entity_component::aqi::name%]",
@@ -1284,7 +1285,7 @@
     }
   },
   "triggers": {
-    "mqtt": {
+    "_": {
       "name": "MQTT",
       "description": "When a specific message is received on a given MQTT topic.",
       "description_configured": "When an MQTT message has been received",
