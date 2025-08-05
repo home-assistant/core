@@ -73,7 +73,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self.pin = user_input[CONF_PIN]
-            return await self.async_step_bluetooth_finalise()
+            return await self.check_mower(True, user_input)
 
         return self.async_show_form(
             step_id="bluetooth_confirm",
@@ -94,7 +94,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             self.pin = user_input[CONF_PIN]
             await self.async_set_unique_id(self.address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
-            return await self.async_step_finalise()
+            return await self.check_mower(False, user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -210,20 +210,6 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PIN: self.pin,
             },
         )
-
-    async def async_step_bluetooth_finalise(
-        self,
-        user_input: dict[str, Any] | None = None,
-    ) -> ConfigFlowResult:
-        """Finalise the Bluetooth setup."""
-        return await self.check_mower(True, user_input)
-
-    async def async_step_finalise(
-        self,
-        user_input: dict[str, Any] | None = None,
-    ) -> ConfigFlowResult:
-        """Finalise the Manual setup."""
-        return await self.check_mower(False, user_input)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
