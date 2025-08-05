@@ -72,21 +72,13 @@ class TuyaEntity(Entity):
         dptype: Literal[DPType.INTEGER],
     ) -> IntegerTypeData | None: ...
 
-    @overload
     def find_dpcode(
         self,
         dpcodes: str | DPCode | tuple[DPCode, ...] | None,
         *,
         prefer_function: bool = False,
-    ) -> DPCode | None: ...
-
-    def find_dpcode(
-        self,
-        dpcodes: str | DPCode | tuple[DPCode, ...] | None,
-        *,
-        prefer_function: bool = False,
-        dptype: DPType | None = None,
-    ) -> DPCode | EnumTypeData | IntegerTypeData | None:
+        dptype: DPType,
+    ) -> EnumTypeData | IntegerTypeData | None:
         """Find a matching DP code available on for this device."""
         if dpcodes is None:
             return None
@@ -99,11 +91,6 @@ class TuyaEntity(Entity):
         order = ["status_range", "function"]
         if prefer_function:
             order = ["function", "status_range"]
-
-        # When we are not looking for a specific datatype, we can append status for
-        # searching
-        if not dptype:
-            order.append("status")
 
         for dpcode in dpcodes:
             for key in order:
@@ -132,9 +119,6 @@ class TuyaEntity(Entity):
                     ):
                         continue
                     return integer_type
-
-                if dptype not in (DPType.ENUM, DPType.INTEGER):
-                    return dpcode
 
         return None
 
