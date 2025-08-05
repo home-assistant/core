@@ -18,7 +18,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, MANURFACER_NAME
+from .const import DOMAIN, MANUFACTURER_NAME
 from .coordinator import CompitConfigEntry, CompitDataUpdateCoordinator
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -109,7 +109,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(device.id))},
             name=device.label,
-            manufacturer=MANURFACER_NAME,
+            manufacturer=MANUFACTURER_NAME,
             model=device_name,
         )
 

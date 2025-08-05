@@ -1,7 +1,5 @@
 """The Compit integration."""
 
-import logging
-
 from compit_inext_api import (
     CannotConnect,
     CompitAPI,
@@ -24,8 +22,6 @@ from .coordinator import CompitConfigEntry, CompitDataUpdateCoordinator
 PLATFORMS = [
     Platform.CLIMATE,
 ]
-
-_LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: CompitConfigEntry) -> bool:

@@ -52,7 +52,7 @@ rules:
   discovery-update-info:
     status: exempt
     comment: |
-      This integration is connecting to a cloud service.
+      This integration is a cloud service and does not support discovery.
   discovery: todo
   docs-data-update: todo
   docs-examples: todo
