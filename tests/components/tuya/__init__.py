@@ -43,7 +43,7 @@ DEVICE_MOCKS = {
     ],
     "cs_vmxuxszzjwp5smli": [
         # https://github.com/home-assistant/core/issues/119865
-        # Platform.FAN, missing DPCodes in device status
+        Platform.FAN,
         Platform.HUMIDIFIER,
     ],
     "cs_zibqa9dutqyaxym2": [
@@ -213,10 +213,6 @@ DEVICE_MOCKS = {
     "dlq_kxdr6su0c55p7bbo": [
         # https://github.com/home-assistant/core/issues/143499
         Platform.SENSOR,
-    ],
-    "fs_ibytpo6fpnugft1c": [
-        # https://github.com/home-assistant/core/issues/135541
-        # Platform.FAN, missing DPCodes in device status
     ],
     "gyd_lgekqfxdabipm3tn": [
         # https://github.com/home-assistant/core/issues/133173
