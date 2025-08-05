@@ -396,6 +396,11 @@ async def test_status_with_deprecated_battery_feature(
         events[0].data["issue_id"]
         == "deprecated_vacuum_battery_feature_vacuum.mqtttest"
     )
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(
+        mqtt.DOMAIN, "deprecated_vacuum_battery_feature_vacuum.mqtttest"
+    )
+    assert issue is not None
 
 
 @pytest.mark.parametrize(
