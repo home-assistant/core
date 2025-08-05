@@ -21,7 +21,7 @@ async def test_sensors(
 ) -> None:
     """Test sensor entities."""
     reolink_host.ptz_pan_position.return_value = 1200
-    reolink_host.wifi_connection = True
+    reolink_host.wifi_connection.return_value = True
     reolink_host.wifi_signal.return_value = -55
     reolink_host.hdd_list = [0]
     reolink_host.hdd_storage.return_value = 95
