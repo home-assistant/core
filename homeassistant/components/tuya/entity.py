@@ -80,6 +80,9 @@ class TuyaEntity(Entity):
         dptype: DPType,
     ) -> EnumTypeData | IntegerTypeData | None:
         """Find a matching DP code available on for this device."""
+        if dptype not in (DPType.ENUM, DPType.INTEGER):
+            raise NotImplementedError("Only ENUM and INTEGER types are supported")
+
         if dpcodes is None:
             return None
 
