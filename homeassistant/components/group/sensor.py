@@ -44,7 +44,10 @@ from homeassistant.helpers.entity import (
     get_device_class,
     get_unit_of_measurement,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -52,7 +55,7 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
-from .const import CONF_IGNORE_NON_NUMERIC, DOMAIN as GROUP_DOMAIN
+from .const import CONF_IGNORE_NON_NUMERIC, DOMAIN
 from .entity import GroupEntity
 
 DEFAULT_NAME = "Sensor Group"
@@ -130,7 +133,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Switch Group config entry."""
     registry = er.async_get(hass)
@@ -506,7 +509,7 @@ class SensorGroup(GroupEntity, SensorEntity):
             return state_classes[0]
         async_create_issue(
             self.hass,
-            GROUP_DOMAIN,
+            DOMAIN,
             f"{self.entity_id}_state_classes_not_matching",
             is_fixable=False,
             is_persistent=False,
@@ -563,7 +566,7 @@ class SensorGroup(GroupEntity, SensorEntity):
             return device_classes[0]
         async_create_issue(
             self.hass,
-            GROUP_DOMAIN,
+            DOMAIN,
             f"{self.entity_id}_device_classes_not_matching",
             is_fixable=False,
             is_persistent=False,
@@ -651,7 +654,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         if device_class:
             async_create_issue(
                 self.hass,
-                GROUP_DOMAIN,
+                DOMAIN,
                 f"{self.entity_id}_uoms_not_matching_device_class",
                 is_fixable=False,
                 is_persistent=False,
@@ -667,7 +670,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         else:
             async_create_issue(
                 self.hass,
-                GROUP_DOMAIN,
+                DOMAIN,
                 f"{self.entity_id}_uoms_not_matching_no_device_class",
                 is_fixable=False,
                 is_persistent=False,

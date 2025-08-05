@@ -7,14 +7,11 @@ from typing import Final
 from aiohttp import CookieJar
 from pybravia import BraviaClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .coordinator import BraviaTVCoordinator
-
-BraviaTVConfigEntry = ConfigEntry[BraviaTVCoordinator]
+from .coordinator import BraviaTVConfigEntry, BraviaTVCoordinator
 
 PLATFORMS: Final[list[Platform]] = [
     Platform.BUTTON,
@@ -36,8 +33,8 @@ async def async_setup_entry(
     client = BraviaClient(host, mac, session=session)
     coordinator = BraviaTVCoordinator(
         hass=hass,
+        config_entry=config_entry,
         client=client,
-        config=config_entry.data,
     )
     config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
 

@@ -16,7 +16,7 @@ class EnOceanEntity(Entity):
         """Initialize the device."""
         self.dev_id = dev_id
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(

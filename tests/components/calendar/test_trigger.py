@@ -25,7 +25,7 @@ from homeassistant.components.calendar.trigger import EVENT_END, EVENT_START
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .conftest import MockCalendarEntity
 

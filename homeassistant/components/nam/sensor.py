@@ -19,6 +19,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
+    LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
@@ -27,13 +28,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
-from . import NAMConfigEntry, NAMDataUpdateCoordinator
 from .const import (
+    ATTR_BH1750_ILLUMINANCE,
     ATTR_BME280_HUMIDITY,
     ATTR_BME280_PRESSURE,
     ATTR_BME280_TEMPERATURE,
@@ -69,6 +70,7 @@ from .const import (
     DOMAIN,
     MIGRATION_SENSORS,
 )
+from .coordinator import NAMConfigEntry, NAMDataUpdateCoordinator
 
 PARALLEL_UPDATES = 1
 
@@ -83,6 +85,15 @@ class NAMSensorEntityDescription(SensorEntityDescription):
 
 
 SENSORS: tuple[NAMSensorEntityDescription, ...] = (
+    NAMSensorEntityDescription(
+        key=ATTR_BH1750_ILLUMINANCE,
+        translation_key="bh1750_illuminance",
+        suggested_display_precision=0,
+        native_unit_of_measurement=LIGHT_LUX,
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value=lambda sensors: sensors.bh1750_illuminance,
+    ),
     NAMSensorEntityDescription(
         key=ATTR_BME280_HUMIDITY,
         translation_key="bme280_humidity",
@@ -356,7 +367,9 @@ SENSORS: tuple[NAMSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: NAMConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: NAMConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a Nettigo Air Monitor entities from a config_entry."""
     coordinator = entry.runtime_data

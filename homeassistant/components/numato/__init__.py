@@ -18,7 +18,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.typing import ConfigType
 

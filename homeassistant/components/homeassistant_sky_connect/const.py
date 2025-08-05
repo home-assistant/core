@@ -7,6 +7,20 @@ from typing import Self
 DOMAIN = "homeassistant_sky_connect"
 DOCS_WEB_FLASHER_URL = "https://skyconnect.home-assistant.io/firmware-update/"
 
+NABU_CASA_FIRMWARE_RELEASES_URL = (
+    "https://api.github.com/repos/NabuCasa/silabs-firmware-builder/releases/latest"
+)
+
+FIRMWARE = "firmware"
+FIRMWARE_VERSION = "firmware_version"
+SERIAL_NUMBER = "serial_number"
+MANUFACTURER = "manufacturer"
+PRODUCT = "product"
+DESCRIPTION = "description"
+PID = "pid"
+VID = "vid"
+DEVICE = "device"
+
 
 @dataclasses.dataclass(frozen=True)
 class VariantInfo:

@@ -17,9 +17,8 @@ import voluptuous as vol
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CODE, CONF_EMAIL, CONF_REGION, CONF_TOKEN, CONF_TTL
 from homeassistant.core import HomeAssistant, async_get_hass
-from homeassistant.helpers import selector
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,

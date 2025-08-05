@@ -17,7 +17,7 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FritzBoxCallMonitorConfigEntry
 from .base import Contact, FritzBoxPhonebook
@@ -48,7 +48,7 @@ class CallState(StrEnum):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: FritzBoxCallMonitorConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the fritzbox_callmonitor sensor from config_entry."""
     fritzbox_phonebook = config_entry.runtime_data

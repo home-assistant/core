@@ -18,7 +18,7 @@ from homeassistant.components.todo import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import CookidooConfigEntry, CookidooDataUpdateCoordinator
@@ -30,7 +30,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: CookidooConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the todo list from a config entry created in the integrations UI."""
     coordinator = config_entry.runtime_data
@@ -52,7 +52,8 @@ class CookidooIngredientsTodoListEntity(CookidooBaseEntity, TodoListEntity):
     def __init__(self, coordinator: CookidooDataUpdateCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_ingredients"
+        assert coordinator.config_entry.unique_id
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_ingredients"
 
     @property
     def todo_items(self) -> list[TodoItem]:
@@ -112,7 +113,8 @@ class CookidooAdditionalItemTodoListEntity(CookidooBaseEntity, TodoListEntity):
     def __init__(self, coordinator: CookidooDataUpdateCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_additional_items"
+        assert coordinator.config_entry.unique_id
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_additional_items"
 
     @property
     def todo_items(self) -> list[TodoItem]:

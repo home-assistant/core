@@ -7,13 +7,14 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Event, HassJob, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
 from .analytics import Analytics
 from .const import ATTR_ONBOARDED, ATTR_PREFERENCES, DOMAIN, INTERVAL, PREFERENCE_SCHEMA
+from .http import AnalyticsDevicesView
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -54,6 +55,8 @@ async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
 
     websocket_api.async_register_command(hass, websocket_analytics)
     websocket_api.async_register_command(hass, websocket_analytics_preferences)
+
+    hass.http.register_view(AnalyticsDevicesView)
 
     hass.data[DATA_COMPONENT] = analytics
     return True

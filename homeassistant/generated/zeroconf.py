@@ -128,6 +128,10 @@ HOMEKIT = {
         "always_discover": True,
         "domain": "lifx",
     },
+    "LIFX Luna": {
+        "always_discover": True,
+        "domain": "lifx",
+    },
     "LIFX Mini": {
         "always_discover": True,
         "domain": "lifx",
@@ -205,6 +209,14 @@ HOMEKIT = {
         "domain": "nanoleaf",
     },
     "NL59": {
+        "always_discover": False,
+        "domain": "nanoleaf",
+    },
+    "NL69": {
+        "always_discover": False,
+        "domain": "nanoleaf",
+    },
+    "NL81": {
         "always_discover": False,
         "domain": "nanoleaf",
     },
@@ -328,6 +340,11 @@ ZEROCONF = {
     "_airport._tcp.local.": [
         {
             "domain": "apple_tv",
+        },
+    ],
+    "_altruist._tcp.local.": [
+        {
+            "domain": "altruist",
         },
     ],
     "_amzn-alexa._tcp.local.": [
@@ -517,9 +534,24 @@ ZEROCONF = {
             "domain": "homekit_controller",
         },
     ],
+    "_heos-audio._tcp.local.": [
+        {
+            "domain": "heos",
+        },
+    ],
+    "_homeconnect._tcp.local.": [
+        {
+            "domain": "home_connect",
+        },
+    ],
     "_homekit._tcp.local.": [
         {
             "domain": "homekit",
+        },
+    ],
+    "_homewizard._tcp.local.": [
+        {
+            "domain": "homewizard",
         },
     ],
     "_hscp._tcp.local.": [
@@ -535,6 +567,10 @@ ZEROCONF = {
         {
             "domain": "bosch_shc",
             "name": "bosch shc*",
+        },
+        {
+            "domain": "bsblan",
+            "name": "bsb-lan*",
         },
         {
             "domain": "eheimdigital",
@@ -607,6 +643,11 @@ ZEROCONF = {
     "_hwenergy._tcp.local.": [
         {
             "domain": "homewizard",
+        },
+    ],
+    "_iometer._tcp.local.": [
+        {
+            "domain": "iometer",
         },
     ],
     "_ipp._tcp.local.": [
@@ -692,6 +733,11 @@ ZEROCONF = {
             "domain": "thread",
         },
     ],
+    "_mieleathome._tcp.local.": [
+        {
+            "domain": "miele",
+        },
+    ],
     "_miio._udp.local.": [
         {
             "domain": "xiaomi_aqara",
@@ -727,6 +773,21 @@ ZEROCONF = {
     "_octoprint._tcp.local.": [
         {
             "domain": "octoprint",
+        },
+    ],
+    "_owserver._tcp.local.": [
+        {
+            "domain": "onewire",
+        },
+    ],
+    "_philipstv_rpc._tcp.local.": [
+        {
+            "domain": "philips_js",
+        },
+    ],
+    "_philipstv_s_rpc._tcp.local.": [
+        {
+            "domain": "philips_js",
         },
     ],
     "_plexmediasvr._tcp.local.": [
@@ -775,6 +836,16 @@ ZEROCONF = {
             },
         },
     ],
+    "_rio._tcp.local.": [
+        {
+            "domain": "russound_rio",
+        },
+    ],
+    "_shelly._tcp.local.": [
+        {
+            "domain": "shelly",
+        },
+    ],
     "_sideplay._tcp.local.": [
         {
             "domain": "ecobee",
@@ -818,12 +889,11 @@ ZEROCONF = {
             "domain": "soundtouch",
         },
     ],
-    "_spotify-connect._tcp.local.": [
-        {
-            "domain": "spotify",
-        },
-    ],
     "_ssh._tcp.local.": [
+        {
+            "domain": "homee",
+            "name": "homee-*",
+        },
         {
             "domain": "smappee",
             "name": "smappee1*",
@@ -866,6 +936,11 @@ ZEROCONF = {
         {
             "domain": "zha",
             "name": "uzg-01*",
+        },
+    ],
+    "_vege._tcp.local.": [
+        {
+            "domain": "vegehub",
         },
     ],
     "_viziocast._tcp.local.": [

@@ -28,8 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
-import homeassistant.helpers.config_validation as cv
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify as util_slugify
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
@@ -182,11 +181,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     session = aiohttp.ClientSession(connector=connector)
 
     @callback
-    def _async_close_websession(event: Event) -> None:
+    def _async_close_websession(event: Event | None = None) -> None:
         """Close websession."""
         session.detach()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close_websession)
+    entry.async_on_unload(_async_close_websession)
+    entry.async_on_unload(
+        hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, _async_close_websession)
+    )
 
     client = OctoprintClient(
         host=entry.data[CONF_HOST],

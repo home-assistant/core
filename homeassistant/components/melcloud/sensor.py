@@ -15,13 +15,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MelCloudDevice
-from .const import DOMAIN
+from . import MelCloudConfigEntry, MelCloudDevice
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -104,10 +102,12 @@ ATW_ZONE_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: MelCloudConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MELCloud device sensors based on config_entry."""
-    mel_devices = hass.data[DOMAIN].get(entry.entry_id)
+    mel_devices = entry.runtime_data
 
     entities: list[MelDeviceSensor] = [
         MelDeviceSensor(mel_device, description)

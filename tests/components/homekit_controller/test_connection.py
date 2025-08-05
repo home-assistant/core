@@ -375,9 +375,9 @@ async def test_poll_firmware_version_only_all_watchable_accessory_mode(
         state = await helper.poll_and_get_state()
         assert state.state == STATE_OFF
         assert mock_get_characteristics.call_count == 2
-        # Verify only firmware version is polled
-        assert mock_get_characteristics.call_args_list[0][0][0] == {(1, 7)}
-        assert mock_get_characteristics.call_args_list[1][0][0] == {(1, 7)}
+        # Verify everything is polled
+        assert mock_get_characteristics.call_args_list[0][0][0] == {(1, 10), (1, 11)}
+        assert mock_get_characteristics.call_args_list[1][0][0] == {(1, 10), (1, 11)}
 
         # Test device goes offline
         helper.pairing.available = False
@@ -429,8 +429,8 @@ async def test_manual_poll_all_chars(
     ) as mock_get_characteristics:
         # Initial state is that the light is off
         await helper.poll_and_get_state()
-        # Verify only firmware version is polled
-        assert mock_get_characteristics.call_args_list[0][0][0] == {(1, 7)}
+        # Verify poll polls all chars
+        assert len(mock_get_characteristics.call_args_list[0][0][0]) > 1
 
         # Now do a manual poll to ensure all chars are polled
         mock_get_characteristics.reset_mock()

@@ -4,11 +4,19 @@ from dataclasses import dataclass
 from datetime import timedelta
 from random import randint
 
-from bsblan import BSBLAN, BSBLANConnectionError, HotWaterState, Sensor, State
+from bsblan import (
+    BSBLAN,
+    BSBLANAuthError,
+    BSBLANConnectionError,
+    HotWaterState,
+    Sensor,
+    State,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
@@ -38,6 +46,7 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[BSBLanCoordinatorData]):
         super().__init__(
             hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=f"{DOMAIN}_{config_entry.data[CONF_HOST]}",
             update_interval=self._get_update_interval(),
         )
@@ -61,6 +70,10 @@ class BSBLanUpdateCoordinator(DataUpdateCoordinator[BSBLanCoordinatorData]):
             state = await self.client.state()
             sensor = await self.client.sensor()
             dhw = await self.client.hot_water_state()
+        except BSBLANAuthError as err:
+            raise ConfigEntryAuthFailed(
+                "Authentication failed for BSB-Lan device"
+            ) from err
         except BSBLANConnectionError as err:
             host = self.config_entry.data[CONF_HOST] if self.config_entry else "unknown"
             raise UpdateFailed(

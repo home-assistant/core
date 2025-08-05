@@ -12,7 +12,7 @@
         }
       },
       "discovery_confirm": {
-        "description": "Do you want to setup {name}?"
+        "description": "Do you want to set up {name}?"
       },
       "reconfigure": {
         "description": "Reconfigure your Cambridge Audio Streamer.",
@@ -28,7 +28,7 @@
       "cannot_connect": "Failed to connect to Cambridge Audio device. Please make sure the device is powered up and connected to the network. Try power-cycling the device if it does not connect."
     },
     "abort": {
-      "wrong_device": "This Cambridge Audio device does not match the existing device id. Please make sure you entered the correct IP address.",
+      "wrong_device": "This Cambridge Audio device does not match the existing device ID. Please make sure you entered the correct IP address.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
@@ -46,6 +46,14 @@
       },
       "audio_output": {
         "name": "Audio output"
+      },
+      "control_bus_mode": {
+        "name": "Control Bus mode",
+        "state": {
+          "amplifier": "Amplifier",
+          "receiver": "Receiver",
+          "off": "[%key:common::state::off%]"
+        }
       }
     },
     "switch": {

@@ -40,9 +40,11 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.device import async_device_info_to_link_from_entity
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.event import (
     async_call_later,
     async_track_state_change_event,
@@ -234,18 +236,13 @@ class IntegrationSensorExtraStoredData(SensorExtraStoredData):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Integration - Riemann sum integral config entry."""
     registry = er.async_get(hass)
     # Validate + resolve entity registry id to entity_id
     source_entity_id = er.async_validate_entity_id(
         registry, config_entry.options[CONF_SOURCE_SENSOR]
-    )
-
-    device_info = async_device_info_to_link_from_entity(
-        hass,
-        source_entity_id,
     )
 
     if (unit_prefix := config_entry.options.get(CONF_UNIT_PREFIX)) == "none":
@@ -262,6 +259,7 @@ async def async_setup_entry(
         round_digits = int(round_digits)
 
     integral = IntegrationSensor(
+        hass,
         integration_method=config_entry.options[CONF_METHOD],
         name=config_entry.title,
         round_digits=round_digits,
@@ -269,7 +267,6 @@ async def async_setup_entry(
         unique_id=config_entry.entry_id,
         unit_prefix=unit_prefix,
         unit_time=config_entry.options[CONF_UNIT_TIME],
-        device_info=device_info,
         max_sub_interval=max_sub_interval,
     )
 
@@ -284,6 +281,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up the integration sensor."""
     integral = IntegrationSensor(
+        hass,
         integration_method=config[CONF_METHOD],
         name=config.get(CONF_NAME),
         round_digits=config.get(CONF_ROUND_DIGITS),
@@ -305,6 +303,7 @@ class IntegrationSensor(RestoreSensor):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         *,
         integration_method: str,
         name: str | None,
@@ -314,7 +313,6 @@ class IntegrationSensor(RestoreSensor):
         unit_prefix: str | None,
         unit_time: UnitOfTime,
         max_sub_interval: timedelta | None,
-        device_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the integration sensor."""
         self._attr_unique_id = unique_id
@@ -332,7 +330,10 @@ class IntegrationSensor(RestoreSensor):
         self._attr_icon = "mdi:chart-histogram"
         self._source_entity: str = source_entity
         self._last_valid_state: Decimal | None = None
-        self._attr_device_info = device_info
+        self.device_entry = async_entity_id_to_device(
+            hass,
+            source_entity,
+        )
         self._max_sub_interval: timedelta | None = (
             None  # disable time based integration
             if max_sub_interval is None or max_sub_interval.total_seconds() == 0
@@ -462,7 +463,7 @@ class IntegrationSensor(RestoreSensor):
     ) -> None:
         """Handle sensor state update when sub interval is configured."""
         self._integrate_on_state_update_with_max_sub_interval(
-            None, event.data["old_state"], event.data["new_state"]
+            None, None, event.data["old_state"], event.data["new_state"]
         )
 
     @callback
@@ -471,13 +472,17 @@ class IntegrationSensor(RestoreSensor):
     ) -> None:
         """Handle sensor state report when sub interval is configured."""
         self._integrate_on_state_update_with_max_sub_interval(
-            event.data["old_last_reported"], None, event.data["new_state"]
+            event.data["old_last_reported"],
+            event.data["last_reported"],
+            None,
+            event.data["new_state"],
         )
 
     @callback
     def _integrate_on_state_update_with_max_sub_interval(
         self,
-        old_last_reported: datetime | None,
+        old_timestamp: datetime | None,
+        new_timestamp: datetime | None,
         old_state: State | None,
         new_state: State | None,
     ) -> None:
@@ -488,7 +493,9 @@ class IntegrationSensor(RestoreSensor):
         """
         self._cancel_max_sub_interval_exceeded_callback()
         try:
-            self._integrate_on_state_change(old_last_reported, old_state, new_state)
+            self._integrate_on_state_change(
+                old_timestamp, new_timestamp, old_state, new_state
+            )
             self._last_integration_trigger = _IntegrationTrigger.StateEvent
             self._last_integration_time = datetime.now(tz=UTC)
         finally:
@@ -502,7 +509,7 @@ class IntegrationSensor(RestoreSensor):
     ) -> None:
         """Handle sensor state change."""
         return self._integrate_on_state_change(
-            None, event.data["old_state"], event.data["new_state"]
+            None, None, event.data["old_state"], event.data["new_state"]
         )
 
     @callback
@@ -511,12 +518,16 @@ class IntegrationSensor(RestoreSensor):
     ) -> None:
         """Handle sensor state report."""
         return self._integrate_on_state_change(
-            event.data["old_last_reported"], None, event.data["new_state"]
+            event.data["old_last_reported"],
+            event.data["last_reported"],
+            None,
+            event.data["new_state"],
         )
 
     def _integrate_on_state_change(
         self,
-        old_last_reported: datetime | None,
+        old_timestamp: datetime | None,
+        new_timestamp: datetime | None,
         old_state: State | None,
         new_state: State | None,
     ) -> None:
@@ -530,16 +541,17 @@ class IntegrationSensor(RestoreSensor):
 
         if old_state:
             # state has changed, we recover old_state from the event
+            new_timestamp = new_state.last_updated
             old_state_state = old_state.state
-            old_last_reported = old_state.last_reported
+            old_timestamp = old_state.last_reported
         else:
-            # event state reported without any state change
+            # first state or event state reported without any state change
             old_state_state = new_state.state
 
         self._attr_available = True
         self._derive_and_set_attributes_from_state(new_state)
 
-        if old_last_reported is None and old_state is None:
+        if old_timestamp is None and old_state is None:
             self.async_write_ha_state()
             return
 
@@ -550,11 +562,12 @@ class IntegrationSensor(RestoreSensor):
             return
 
         if TYPE_CHECKING:
-            assert old_last_reported is not None
+            assert new_timestamp is not None
+            assert old_timestamp is not None
         elapsed_seconds = Decimal(
-            (new_state.last_reported - old_last_reported).total_seconds()
+            (new_timestamp - old_timestamp).total_seconds()
             if self._last_integration_trigger == _IntegrationTrigger.StateEvent
-            else (new_state.last_reported - self._last_integration_time).total_seconds()
+            else (new_timestamp - self._last_integration_time).total_seconds()
         )
 
         area = self._method.calculate_area_with_two_states(elapsed_seconds, *states)

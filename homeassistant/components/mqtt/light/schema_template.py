@@ -31,19 +31,38 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType, VolSchemaType
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util
 
 from .. import subscription
 from ..config import MQTT_RW_SCHEMA
-from ..const import CONF_COMMAND_TOPIC, CONF_STATE_TOPIC, PAYLOAD_NONE
+from ..const import (
+    CONF_BLUE_TEMPLATE,
+    CONF_BRIGHTNESS_TEMPLATE,
+    CONF_COLOR_TEMP_KELVIN,
+    CONF_COLOR_TEMP_TEMPLATE,
+    CONF_COMMAND_OFF_TEMPLATE,
+    CONF_COMMAND_ON_TEMPLATE,
+    CONF_COMMAND_TOPIC,
+    CONF_EFFECT_LIST,
+    CONF_EFFECT_TEMPLATE,
+    CONF_GREEN_TEMPLATE,
+    CONF_MAX_KELVIN,
+    CONF_MAX_MIREDS,
+    CONF_MIN_KELVIN,
+    CONF_MIN_MIREDS,
+    CONF_RED_TEMPLATE,
+    CONF_STATE_TOPIC,
+    PAYLOAD_NONE,
+)
 from ..entity import MqttEntity
 from ..models import (
     MqttCommandTemplate,
     MqttValueTemplate,
+    PayloadSentinel,
     PublishPayloadType,
     ReceiveMessage,
 )
@@ -56,18 +75,6 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "mqtt_template"
 
 DEFAULT_NAME = "MQTT Template Light"
-
-CONF_BLUE_TEMPLATE = "blue_template"
-CONF_BRIGHTNESS_TEMPLATE = "brightness_template"
-CONF_COLOR_TEMP_TEMPLATE = "color_temp_template"
-CONF_COMMAND_OFF_TEMPLATE = "command_off_template"
-CONF_COMMAND_ON_TEMPLATE = "command_on_template"
-CONF_EFFECT_LIST = "effect_list"
-CONF_EFFECT_TEMPLATE = "effect_template"
-CONF_GREEN_TEMPLATE = "green_template"
-CONF_MAX_MIREDS = "max_mireds"
-CONF_MIN_MIREDS = "min_mireds"
-CONF_RED_TEMPLATE = "red_template"
 
 COMMAND_TEMPLATES = (CONF_COMMAND_ON_TEMPLATE, CONF_COMMAND_OFF_TEMPLATE)
 VALUE_TEMPLATES = (
@@ -85,12 +92,15 @@ PLATFORM_SCHEMA_MODERN_TEMPLATE = (
         {
             vol.Optional(CONF_BLUE_TEMPLATE): cv.template,
             vol.Optional(CONF_BRIGHTNESS_TEMPLATE): cv.template,
+            vol.Optional(CONF_COLOR_TEMP_KELVIN, default=False): cv.boolean,
             vol.Optional(CONF_COLOR_TEMP_TEMPLATE): cv.template,
             vol.Required(CONF_COMMAND_OFF_TEMPLATE): cv.template,
             vol.Required(CONF_COMMAND_ON_TEMPLATE): cv.template,
             vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_EFFECT_TEMPLATE): cv.template,
             vol.Optional(CONF_GREEN_TEMPLATE): cv.template,
+            vol.Optional(CONF_MAX_KELVIN): cv.positive_int,
+            vol.Optional(CONF_MIN_KELVIN): cv.positive_int,
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
             vol.Optional(CONF_NAME): vol.Any(cv.string, None),
@@ -117,7 +127,9 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     _command_templates: dict[
         str, Callable[[PublishPayloadType, TemplateVarsType], PublishPayloadType]
     ]
-    _value_templates: dict[str, Callable[[ReceivePayloadType], ReceivePayloadType]]
+    _value_templates: dict[
+        str, Callable[[ReceivePayloadType, ReceivePayloadType], ReceivePayloadType]
+    ]
     _fixed_color_mode: ColorMode | str | None
     _topics: dict[str, str | None]
 
@@ -128,15 +140,16 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
+        self._color_temp_kelvin = config[CONF_COLOR_TEMP_KELVIN]
         self._attr_min_color_temp_kelvin = (
             color_util.color_temperature_mired_to_kelvin(max_mireds)
             if (max_mireds := config.get(CONF_MAX_MIREDS))
-            else DEFAULT_MIN_KELVIN
+            else config.get(CONF_MIN_KELVIN, DEFAULT_MIN_KELVIN)
         )
         self._attr_max_color_temp_kelvin = (
             color_util.color_temperature_mired_to_kelvin(min_mireds)
             if (min_mireds := config.get(CONF_MIN_MIREDS))
-            else DEFAULT_MAX_KELVIN
+            else config.get(CONF_MAX_KELVIN, DEFAULT_MAX_KELVIN)
         )
         self._attr_effect_list = config.get(CONF_EFFECT_LIST)
 
@@ -193,71 +206,133 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     @callback
     def _state_received(self, msg: ReceiveMessage) -> None:
         """Handle new MQTT messages."""
-        state = self._value_templates[CONF_STATE_TEMPLATE](msg.payload)
-        if state == STATE_ON:
+        state_value = self._value_templates[CONF_STATE_TEMPLATE](
+            msg.payload,
+            PayloadSentinel.NONE,
+        )
+        if not state_value:
+            _LOGGER.debug(
+                "Ignoring message from '%s' with empty state value", msg.topic
+            )
+        elif state_value == STATE_ON:
             self._attr_is_on = True
-        elif state == STATE_OFF:
+        elif state_value == STATE_OFF:
             self._attr_is_on = False
-        elif state == PAYLOAD_NONE:
+        elif state_value == PAYLOAD_NONE:
             self._attr_is_on = None
         else:
-            _LOGGER.warning("Invalid state value received")
+            _LOGGER.warning(
+                "Invalid state value '%s' received from %s",
+                state_value,
+                msg.topic,
+            )
 
         if CONF_BRIGHTNESS_TEMPLATE in self._config:
-            try:
-                if brightness := int(
-                    self._value_templates[CONF_BRIGHTNESS_TEMPLATE](msg.payload)
-                ):
-                    self._attr_brightness = brightness
-                else:
-                    _LOGGER.debug(
-                        "Ignoring zero brightness value for entity %s",
-                        self.entity_id,
+            brightness_value = self._value_templates[CONF_BRIGHTNESS_TEMPLATE](
+                msg.payload,
+                PayloadSentinel.NONE,
+            )
+            if not brightness_value:
+                _LOGGER.debug(
+                    "Ignoring message from '%s' with empty brightness value",
+                    msg.topic,
+                )
+            else:
+                try:
+                    if brightness := int(brightness_value):
+                        self._attr_brightness = brightness
+                    else:
+                        _LOGGER.debug(
+                            "Ignoring zero brightness value for entity %s",
+                            self.entity_id,
+                        )
+                except ValueError:
+                    _LOGGER.warning(
+                        "Invalid brightness value '%s' received from %s",
+                        brightness_value,
+                        msg.topic,
                     )
 
-            except ValueError:
-                _LOGGER.warning("Invalid brightness value received from %s", msg.topic)
-
         if CONF_COLOR_TEMP_TEMPLATE in self._config:
-            try:
-                color_temp = self._value_templates[CONF_COLOR_TEMP_TEMPLATE](
-                    msg.payload
+            color_temp_value = self._value_templates[CONF_COLOR_TEMP_TEMPLATE](
+                msg.payload,
+                PayloadSentinel.NONE,
+            )
+            if not color_temp_value:
+                _LOGGER.debug(
+                    "Ignoring message from '%s' with empty color temperature value",
+                    msg.topic,
                 )
-                self._attr_color_temp_kelvin = (
-                    color_util.color_temperature_mired_to_kelvin(int(color_temp))
-                    if color_temp != "None"
-                    else None
-                )
-            except ValueError:
-                _LOGGER.warning("Invalid color temperature value received")
+            else:
+                try:
+                    self._attr_color_temp_kelvin = (
+                        int(color_temp_value)
+                        if self._color_temp_kelvin
+                        else color_util.color_temperature_mired_to_kelvin(
+                            int(color_temp_value)
+                        )
+                        if color_temp_value != "None"
+                        else None
+                    )
+                except ValueError:
+                    _LOGGER.warning(
+                        "Invalid color temperature value '%s' received from %s",
+                        color_temp_value,
+                        msg.topic,
+                    )
 
         if (
             CONF_RED_TEMPLATE in self._config
             and CONF_GREEN_TEMPLATE in self._config
             and CONF_BLUE_TEMPLATE in self._config
         ):
-            try:
-                red = self._value_templates[CONF_RED_TEMPLATE](msg.payload)
-                green = self._value_templates[CONF_GREEN_TEMPLATE](msg.payload)
-                blue = self._value_templates[CONF_BLUE_TEMPLATE](msg.payload)
-                if red == "None" and green == "None" and blue == "None":
-                    self._attr_hs_color = None
-                else:
-                    self._attr_hs_color = color_util.color_RGB_to_hs(
-                        int(red), int(green), int(blue)
-                    )
+            red_value = self._value_templates[CONF_RED_TEMPLATE](
+                msg.payload,
+                PayloadSentinel.NONE,
+            )
+            green_value = self._value_templates[CONF_GREEN_TEMPLATE](
+                msg.payload,
+                PayloadSentinel.NONE,
+            )
+            blue_value = self._value_templates[CONF_BLUE_TEMPLATE](
+                msg.payload,
+                PayloadSentinel.NONE,
+            )
+            if not red_value or not green_value or not blue_value:
+                _LOGGER.debug(
+                    "Ignoring message from '%s' with empty color value", msg.topic
+                )
+            elif red_value == "None" and green_value == "None" and blue_value == "None":
+                self._attr_hs_color = None
                 self._update_color_mode()
-            except ValueError:
-                _LOGGER.warning("Invalid color value received")
+            else:
+                try:
+                    self._attr_hs_color = color_util.color_RGB_to_hs(
+                        int(red_value), int(green_value), int(blue_value)
+                    )
+                    self._update_color_mode()
+                except ValueError:
+                    _LOGGER.warning("Invalid color value received from %s", msg.topic)
 
         if CONF_EFFECT_TEMPLATE in self._config:
-            effect = str(self._value_templates[CONF_EFFECT_TEMPLATE](msg.payload))
-            if (
-                effect_list := self._config[CONF_EFFECT_LIST]
-            ) and effect in effect_list:
-                self._attr_effect = effect
+            effect_value = self._value_templates[CONF_EFFECT_TEMPLATE](
+                msg.payload,
+                PayloadSentinel.NONE,
+            )
+            if not effect_value:
+                _LOGGER.debug(
+                    "Ignoring message from '%s' with empty effect value", msg.topic
+                )
+            elif (effect_list := self._config[CONF_EFFECT_LIST]) and str(
+                effect_value
+            ) in effect_list:
+                self._attr_effect = str(effect_value)
             else:
-                _LOGGER.warning("Unsupported effect value received")
+                _LOGGER.warning(
+                    "Unsupported effect value '%s' received from %s",
+                    effect_value,
+                    msg.topic,
+                )
 
     @callback
     def _prepare_subscribe_topics(self) -> None:
@@ -310,8 +385,12 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                 self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
 
         if ATTR_COLOR_TEMP_KELVIN in kwargs:
-            values["color_temp"] = color_util.color_temperature_kelvin_to_mired(
+            values["color_temp"] = (
                 kwargs[ATTR_COLOR_TEMP_KELVIN]
+                if self._color_temp_kelvin
+                else color_util.color_temperature_kelvin_to_mired(
+                    kwargs[ATTR_COLOR_TEMP_KELVIN]
+                )
             )
 
             if self._optimistic:

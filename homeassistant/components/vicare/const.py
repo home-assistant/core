@@ -25,8 +25,8 @@ UNSUPPORTED_DEVICES = [
     "E3_RoomControl_One_522",
 ]
 
-DEVICE_LIST = "device_list"
 VICARE_NAME = "ViCare"
+VICARE_TOKEN_FILENAME = "vicare_token.save"
 
 CONF_CIRCUIT = "circuit"
 CONF_HEATING_TYPE = "heating_type"

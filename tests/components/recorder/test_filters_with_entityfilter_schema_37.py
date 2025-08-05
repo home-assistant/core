@@ -1,6 +1,6 @@
 """The tests for the recorder filter matching the EntityFilter component."""
 
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Generator
 import json
 from unittest.mock import patch
 
@@ -32,12 +32,21 @@ from homeassistant.helpers.entityfilter import (
 
 from .common import async_wait_recording_done, old_db_schema
 
+from tests.typing import RecorderInstanceContextManager
+
+
+@pytest.fixture
+async def mock_recorder_before_hass(
+    async_test_recorder: RecorderInstanceContextManager,
+) -> None:
+    """Set up recorder."""
+
 
 # This test is for schema 37 and below (32 is new enough to test)
 @pytest.fixture(autouse=True)
-def db_schema_32():
+def db_schema_32(hass: HomeAssistant) -> Generator[None]:
     """Fixture to initialize the db with the old schema 32."""
-    with old_db_schema("32"):
+    with old_db_schema(hass, "32"):
         yield
 
 

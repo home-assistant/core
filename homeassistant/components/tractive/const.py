@@ -16,6 +16,7 @@ ATTR_MINUTES_ACTIVE = "minutes_active"
 ATTR_MINUTES_DAY_SLEEP = "minutes_day_sleep"
 ATTR_MINUTES_NIGHT_SLEEP = "minutes_night_sleep"
 ATTR_MINUTES_REST = "minutes_rest"
+ATTR_POWER_SAVING = "power_saving"
 ATTR_SLEEP_LABEL = "sleep_label"
 ATTR_TRACKER_STATE = "tracker_state"
 

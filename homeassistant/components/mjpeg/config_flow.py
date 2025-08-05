@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from http import HTTPStatus
-from types import MappingProxyType
 from typing import Any
 
 import requests
@@ -34,7 +34,7 @@ from .const import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, DOMAIN, LOGGER
 
 @callback
 def async_get_schema(
-    defaults: dict[str, Any] | MappingProxyType[str, Any], show_name: bool = False
+    defaults: Mapping[str, Any], show_name: bool = False
 ) -> vol.Schema:
     """Return MJPEG IP Camera schema."""
     schema = {

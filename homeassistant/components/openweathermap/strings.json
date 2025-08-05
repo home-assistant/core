@@ -17,7 +17,7 @@
           "mode": "[%key:common::config_flow::data::mode%]",
           "name": "[%key:common::config_flow::data::name%]"
         },
-        "description": "To generate API key go to https://openweathermap.org/appid"
+        "description": "To generate an API key, please refer to the [integration documentation]({doc_url})"
       }
     }
   },
@@ -46,6 +46,17 @@
           "cannot_connect": "Failed to connect: {error}"
         }
       }
+    }
+  },
+  "services": {
+    "get_minute_forecast": {
+      "name": "Get minute forecast",
+      "description": "Retrieves a minute-by-minute weather forecast for one hour."
+    }
+  },
+  "exceptions": {
+    "service_minute_forecast_mode": {
+      "message": "Minute forecast is available only when {name} mode is set to v3.0"
     }
   }
 }

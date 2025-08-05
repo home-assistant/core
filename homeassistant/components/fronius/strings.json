@@ -52,8 +52,8 @@
       "current_dc": {
         "name": "DC current"
       },
-      "current_dc_2": {
-        "name": "DC current 2"
+      "current_dc_mppt_no": {
+        "name": "DC current {mppt_no}"
       },
       "power_ac": {
         "name": "AC power"
@@ -64,14 +64,115 @@
       "voltage_dc": {
         "name": "DC voltage"
       },
-      "voltage_dc_2": {
-        "name": "DC voltage 2"
+      "voltage_dc_mppt_no": {
+        "name": "DC voltage {mppt_no}"
       },
       "inverter_state": {
         "name": "Inverter state"
       },
       "error_code": {
         "name": "Error code"
+      },
+      "error_message": {
+        "name": "Error message",
+        "state": {
+          "no_error": "No error",
+          "ac_voltage_too_high": "AC voltage too high",
+          "ac_voltage_too_low": "AC voltage too low",
+          "ac_frequency_too_high": "AC frequency too high",
+          "ac_frequency_too_low": "AC frequency too low",
+          "ac_grid_outside_permissible_limits": "AC grid outside the permissible limits",
+          "stand_alone_operation_detected": "Stand-alone operation detected",
+          "rcmu_error": "RCMU error",
+          "arc_detection_triggered": "Arc detection triggered",
+          "overcurrent_ac": "Overcurrent (AC)",
+          "overcurrent_dc": "Overcurrent (DC)",
+          "dc_module_over_temperature": "DC module overtemperature",
+          "ac_module_over_temperature": "AC module overtemperature",
+          "no_power_fed_in_despite_closed_relay": "No power being fed in, despite closed relay",
+          "pv_output_too_low_for_feeding_energy_into_the_grid": "PV output too low for feeding energy into the grid",
+          "low_pv_voltage_dc_input_voltage_too_low": "Low PV voltage - DC input voltage too low for feeding energy into the grid",
+          "intermediate_circuit_voltage_too_high": "Intermediate circuit voltage too high",
+          "dc_input_voltage_mppt_1_too_high": "DC input voltage MPPT 1 too high",
+          "polarity_of_dc_strings_reversed": "Polarity of DC strings reversed",
+          "dc_input_voltage_mppt_2_too_high": "DC input voltage MPPT 2 too high",
+          "current_sensor_calibration_timeout": "Current sensor calibration timeout",
+          "ac_current_sensor_error": "AC current sensor error",
+          "interrupt_check_fail": "Interrupt Check fail",
+          "overtemperature_in_connection_area": "Overtemperature in the connection area",
+          "fan_1_error": "Fan 1 error",
+          "fan_2_error": "Fan 2 error",
+          "no_communication_with_power_stage_set": "No communication with the power stage set possible",
+          "ac_module_temperature_sensor_faulty_l1": "AC module temperature sensor faulty (L1)",
+          "ac_module_temperature_sensor_faulty_l2": "AC module temperature sensor faulty (L2)",
+          "dc_component_measured_in_grid_too_high": "DC component measured in the grid too high",
+          "fixed_voltage_mode_out_of_range": "Fixed voltage mode has been selected instead of MPP voltage mode and the fixed voltage has been set to too low or too high a value",
+          "safety_cut_out_triggered": "Safety cut-out via option card or RECERBO has triggered",
+          "no_communication_between_power_stage_and_control_system": "No communication possible between power stage set and control system",
+          "hardware_id_problem": "Hardware ID problem",
+          "unique_id_conflict": "Unique ID conflict",
+          "no_communication_with_hybrid_manager": "No communication possible with the Hybrid manager",
+          "hid_range_error": "HID range error",
+          "possible_hardware_fault": "Possible hardware fault",
+          "software_problem": "Software problem",
+          "functional_incompatibility_between_pc_boards": "Functional incompatibility (one or more PC boards in the inverter are not compatible with each other, e.g. after a PC board has been replaced)",
+          "power_stage_set_problem": "Power stage set problem",
+          "intermediate_circuit_voltage_too_low_or_asymmetric": "Intermediate circuit voltage too low or asymmetric",
+          "compatibility_error_invalid_power_stage_configuration": "Compatibility error (e.g. due to replacement of a PC board) - invalid power stage set configuration",
+          "insulation_fault": "Insulation fault",
+          "neutral_conductor_not_connected": "Neutral conductor not connected",
+          "guard_cannot_be_found": "Guard cannot be found",
+          "memory_error_detected": "Memory error detected",
+          "communication": "Communication error",
+          "insulation_error_on_solar_panels": "Insulation error on the solar panels",
+          "no_energy_fed_into_grid_past_24_hours": "No energy fed into the grid in the past 24 hours",
+          "no_communication_with_filter": "No communication with filter possible",
+          "no_communication_with_storage_unit": "No communication possible with the storage unit",
+          "power_derating_due_to_high_temperature": "Power derating caused by too high a temperature",
+          "internal_dsp_malfunction": "Internal DSP malfunction",
+          "no_energy_fed_by_mppt1_past_24_hours": "No energy fed into the grid by MPPT1 in the past 24 hours",
+          "dc_low_string_1": "DC low string 1",
+          "dc_low_string_2": "DC low string 2",
+          "derating_caused_by_over_frequency": "Derating caused by overfrequency",
+          "arc_detector_switched_off": "Arc detector switched off (e.g. during external arc monitoring)",
+          "grid_voltage_dependent_power_reduction_active": "Grid voltage-dependent power reduction (GVDPR) is active",
+          "can_bus_full": "CAN bus is full",
+          "ac_module_temperature_sensor_faulty_l3": "AC module temperature sensor faulty (L3)",
+          "dc_module_temperature_sensor_faulty": "DC module temperature sensor faulty",
+          "internal_processor_status": "Warning about the internal processor status. See status code for more information",
+          "eeprom_reinitialised": "EEPROM has been re-initialized",
+          "initialisation_error_usb_flash_drive_not_supported": "Initialization error – USB flash drive is not supported",
+          "initialisation_error_usb_stick_over_current": "Initialization error – Overcurrent on USB stick",
+          "no_usb_flash_drive_connected": "No USB flash drive connected",
+          "update_file_not_recognised_or_missing": "Update file not recognized or not present",
+          "update_file_does_not_match_device": "Update file does not match the device, update file too old",
+          "write_or_read_error_occurred": "Write or read error occurred",
+          "file_could_not_be_opened": "File could not be opened",
+          "log_file_cannot_be_saved": "Log file cannot be saved (e.g. USB flash drive is write-protected or full)",
+          "initialisation_error_file_system_error_on_usb": "Initialization error in file system on USB flash drive",
+          "error_during_logging_data_recording": "Error during recording of logging data",
+          "error_during_update_process": "Error occurred during update process",
+          "update_file_corrupt": "Update file corrupt",
+          "time_lost": "Time lost",
+          "real_time_clock_communication_error": "Real Time Clock module communication error",
+          "real_time_clock_in_emergency_mode": "Internal error: Real Time Clock module is in emergency mode",
+          "real_time_clock_hardware_error": "Hardware error in the Real Time Clock module",
+          "internal_hardware_error": "Internal hardware error",
+          "emergency_power_derating_activated": "Emergency power derating activated",
+          "different_power_limitation_in_hardware_modules": "Different power limitation in the hardware modules",
+          "storage_unit_not_available": "Storage unit not available",
+          "software_update_invalid_country_setup": "Software update group 0 (invalid country setup)",
+          "pmc_power_stage_set_not_available": "PMC power stage set not available",
+          "invalid_device_type": "Invalid device type",
+          "insulation_measurement_triggered": "Insulation measurement triggered",
+          "inverter_settings_changed_restart_required": "Inverter settings have been changed, inverter restart required",
+          "wired_shut_down_triggered": "Wired shutdown triggered",
+          "grid_frequency_exceeded_limit_reconnecting": "The grid frequency has exceeded a limit value when reconnecting",
+          "mains_voltage_dependent_power_reduction": "Mains voltage-dependent power reduction",
+          "too_little_dc_power_for_feed_in_operation": "Too little DC power for feed-in operation",
+          "inverter_required_setup_values_not_received": "Inverter required setup values could not be received",
+          "dc_connection_inverter_battery_interrupted": "DC connection between inverter and battery interrupted"
+        }
       },
       "status_code": {
         "name": "Status code"
@@ -81,10 +182,10 @@
         "state": {
           "startup": "Startup",
           "running": "Running",
-          "standby": "Standby",
+          "standby": "[%key:common::state::standby%]",
           "bootloading": "Bootloading",
-          "error": "Error",
-          "idle": "Idle",
+          "error": "[%key:common::state::error%]",
+          "idle": "[%key:common::state::idle%]",
           "ready": "Ready",
           "sleeping": "Sleeping"
         }
@@ -216,11 +317,11 @@
       "state_message": {
         "name": "State message",
         "state": {
+          "fault": "[%key:common::state::fault%]",
+          "critical_fault": "Critical fault",
           "up_and_running": "Up and running",
           "keep_minimum_temperature": "Keep minimum temperature",
           "legionella_protection": "Legionella protection",
-          "critical_fault": "Critical fault",
-          "fault": "Fault",
           "boost_mode": "Boost mode"
         }
       },
@@ -261,7 +362,7 @@
         "name": "Relative autonomy"
       },
       "relative_self_consumption": {
-        "name": "Relative self consumption"
+        "name": "Relative self-consumption"
       },
       "capacity_maximum": {
         "name": "Maximum capacity"

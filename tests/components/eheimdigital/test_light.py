@@ -1,10 +1,11 @@
 """Tests for the light module."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError
-from eheimdigital.types import EheimDeviceType, LightMode
+from eheimdigital.classic_led_ctrl import EheimDigitalClassicLEDControl
+from eheimdigital.types import EheimDeviceType, EheimDigitalClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -23,8 +24,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.color import value_to_brightness
+
+from .conftest import init_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -51,7 +55,13 @@ async def test_setup_classic_led_ctrl(
 
     classic_led_ctrl_mock.tankconfig = tankconfig
 
-    with patch("homeassistant.components.eheimdigital.PLATFORMS", [Platform.LIGHT]):
+    with (
+        patch("homeassistant.components.eheimdigital.PLATFORMS", [Platform.LIGHT]),
+        patch(
+            "homeassistant.components.eheimdigital.coordinator.asyncio.Event",
+            new=AsyncMock,
+        ),
+    ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
@@ -75,7 +85,13 @@ async def test_dynamic_new_devices(
 
     eheimdigital_hub_mock.return_value.devices = {}
 
-    with patch("homeassistant.components.eheimdigital.PLATFORMS", [Platform.LIGHT]):
+    with (
+        patch("homeassistant.components.eheimdigital.PLATFORMS", [Platform.LIGHT]),
+        patch(
+            "homeassistant.components.eheimdigital.coordinator.asyncio.Event",
+            new=AsyncMock,
+        ),
+    ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert (
@@ -99,31 +115,49 @@ async def test_dynamic_new_devices(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("eheimdigital_hub_mock")
 async def test_turn_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    classic_led_ctrl_mock: MagicMock,
+    eheimdigital_hub_mock: MagicMock,
+    classic_led_ctrl_mock: EheimDigitalClassicLEDControl,
 ) -> None:
     """Test turning off the light."""
-    mock_config_entry.add_to_hass(hass)
+    await init_integration(hass, mock_config_entry)
 
-    with patch("homeassistant.components.eheimdigital.PLATFORMS", [Platform.LIGHT]):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await mock_config_entry.runtime_data._async_device_found(
+    await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
         "00:00:00:00:00:01", EheimDeviceType.VERSION_EHEIM_CLASSIC_LED_CTRL_PLUS_E
     )
     await hass.async_block_till_done()
 
+    classic_led_ctrl_mock.hub.send_packet.side_effect = EheimDigitalClientError
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "light.mock_classicledcontrol_e_channel_1"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "communication_error"
+
+    classic_led_ctrl_mock.hub.send_packet.side_effect = None
+
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.mock_classicledcontrol_e_channel_0"},
+        {ATTR_ENTITY_ID: "light.mock_classicledcontrol_e_channel_1"},
         blocking=True,
     )
 
-    classic_led_ctrl_mock.set_light_mode.assert_awaited_once_with(LightMode.MAN_MODE)
-    classic_led_ctrl_mock.turn_off.assert_awaited_once_with(0)
+    calls = [
+        call
+        for call in classic_led_ctrl_mock.hub.mock_calls
+        if call[0] == "send_packet"
+    ]
+    assert len(calls) == 3
+    assert calls[1][1][0].get("title") == "MAN_MODE"
+    assert calls[2][1][0]["currentValues"][1] == 0
 
 
 @pytest.mark.parametrize(
@@ -138,47 +172,66 @@ async def test_turn_on_brightness(
     hass: HomeAssistant,
     eheimdigital_hub_mock: MagicMock,
     mock_config_entry: MockConfigEntry,
-    classic_led_ctrl_mock: MagicMock,
+    classic_led_ctrl_mock: EheimDigitalClassicLEDControl,
     dim_input: int,
     expected_dim_value: int,
 ) -> None:
     """Test turning on the light with different brightness values."""
-    mock_config_entry.add_to_hass(hass)
+    await init_integration(hass, mock_config_entry)
 
-    with patch("homeassistant.components.eheimdigital.PLATFORMS", [Platform.LIGHT]):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
         "00:00:00:00:00:01", EheimDeviceType.VERSION_EHEIM_CLASSIC_LED_CTRL_PLUS_E
     )
     await hass.async_block_till_done()
 
+    classic_led_ctrl_mock.hub.send_packet.side_effect = EheimDigitalClientError
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {
+                ATTR_ENTITY_ID: "light.mock_classicledcontrol_e_channel_1",
+                ATTR_BRIGHTNESS: dim_input,
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "communication_error"
+
+    classic_led_ctrl_mock.hub.send_packet.side_effect = None
+
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.mock_classicledcontrol_e_channel_0",
+            ATTR_ENTITY_ID: "light.mock_classicledcontrol_e_channel_1",
             ATTR_BRIGHTNESS: dim_input,
         },
         blocking=True,
     )
 
-    classic_led_ctrl_mock.set_light_mode.assert_awaited_once_with(LightMode.MAN_MODE)
-    classic_led_ctrl_mock.turn_on.assert_awaited_once_with(expected_dim_value, 0)
+    calls = [
+        call
+        for call in classic_led_ctrl_mock.hub.mock_calls
+        if call[0] == "send_packet"
+    ]
+    assert len(calls) == 3
+    assert calls[1][1][0].get("title") == "MAN_MODE"
+    assert calls[2][1][0]["currentValues"][1] == expected_dim_value
 
 
 async def test_turn_on_effect(
     hass: HomeAssistant,
     eheimdigital_hub_mock: MagicMock,
     mock_config_entry: MockConfigEntry,
-    classic_led_ctrl_mock: MagicMock,
+    classic_led_ctrl_mock: EheimDigitalClassicLEDControl,
 ) -> None:
     """Test turning on the light with an effect value."""
-    mock_config_entry.add_to_hass(hass)
+    classic_led_ctrl_mock.clock["mode"] = "MAN_MODE"
 
-    classic_led_ctrl_mock.light_mode = LightMode.MAN_MODE
+    await init_integration(hass, mock_config_entry)
 
-    with patch("homeassistant.components.eheimdigital.PLATFORMS", [Platform.LIGHT]):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
         "00:00:00:00:00:01", EheimDeviceType.VERSION_EHEIM_CLASSIC_LED_CTRL_PLUS_E
     )
@@ -188,36 +241,40 @@ async def test_turn_on_effect(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.mock_classicledcontrol_e_channel_0",
+            ATTR_ENTITY_ID: "light.mock_classicledcontrol_e_channel_1",
             ATTR_EFFECT: EFFECT_DAYCL_MODE,
         },
         blocking=True,
     )
 
-    classic_led_ctrl_mock.set_light_mode.assert_awaited_once_with(LightMode.DAYCL_MODE)
+    calls = [
+        call
+        for call in classic_led_ctrl_mock.hub.mock_calls
+        if call[0] == "send_packet"
+    ]
+    assert len(calls) == 1
+    assert calls[0][1][0].get("title") == "DAYCL_MODE"
 
 
 async def test_state_update(
     hass: HomeAssistant,
     eheimdigital_hub_mock: MagicMock,
     mock_config_entry: MockConfigEntry,
-    classic_led_ctrl_mock: MagicMock,
+    classic_led_ctrl_mock: EheimDigitalClassicLEDControl,
 ) -> None:
     """Test the light state update."""
-    mock_config_entry.add_to_hass(hass)
+    await init_integration(hass, mock_config_entry)
 
-    with patch("homeassistant.components.eheimdigital.PLATFORMS", [Platform.LIGHT]):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
         "00:00:00:00:00:01", EheimDeviceType.VERSION_EHEIM_CLASSIC_LED_CTRL_PLUS_E
     )
     await hass.async_block_till_done()
 
-    classic_led_ctrl_mock.light_level = (20, 30)
+    classic_led_ctrl_mock.ccv["currentValues"] = [30, 20]
 
     await eheimdigital_hub_mock.call_args.kwargs["receive_callback"]()
 
-    assert (state := hass.states.get("light.mock_classicledcontrol_e_channel_0"))
+    assert (state := hass.states.get("light.mock_classicledcontrol_e_channel_1"))
     assert state.attributes["brightness"] == value_to_brightness((1, 100), 20)
 
 
@@ -228,10 +285,8 @@ async def test_update_failed(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test an failed update."""
-    mock_config_entry.add_to_hass(hass)
+    await init_integration(hass, mock_config_entry)
 
-    with patch("homeassistant.components.eheimdigital.PLATFORMS", [Platform.LIGHT]):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await eheimdigital_hub_mock.call_args.kwargs["device_found_callback"](
         "00:00:00:00:00:01", EheimDeviceType.VERSION_EHEIM_CLASSIC_LED_CTRL_PLUS_E
     )
@@ -244,6 +299,6 @@ async def test_update_failed(
     await hass.async_block_till_done()
 
     assert (
-        hass.states.get("light.mock_classicledcontrol_e_channel_0").state
+        hass.states.get("light.mock_classicledcontrol_e_channel_1").state
         == STATE_UNAVAILABLE
     )

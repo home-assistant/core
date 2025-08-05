@@ -11,12 +11,11 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
@@ -166,8 +165,8 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
         return OptionsFlowHandler(config_entry)
 
 
-class OptionsFlowHandler(OptionsFlow):
-    """Handle a option flow for nut."""
+class OptionsFlowHandler(OptionsFlowWithReload):
+    """Handle an option flow for NINA."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""

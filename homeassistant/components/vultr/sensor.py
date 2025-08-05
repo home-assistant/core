@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_NAME, UnitOfInformation
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 

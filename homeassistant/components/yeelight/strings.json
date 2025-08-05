@@ -59,7 +59,7 @@
   "services": {
     "set_mode": {
       "name": "Set mode",
-      "description": "Sets a operation mode.",
+      "description": "Sets an operation mode.",
       "fields": {
         "mode": {
           "name": "[%key:common::config_flow::data::mode%]",
@@ -73,7 +73,7 @@
       "fields": {
         "rgb_color": {
           "name": "RGB color",
-          "description": "Color for the light in RGB-format."
+          "description": "Color for the light in RGB format."
         },
         "brightness": {
           "name": "Brightness",
@@ -129,7 +129,7 @@
     },
     "set_auto_delay_off_scene": {
       "name": "Set auto delay off scene",
-      "description": "Turns the light on to the specified brightness and sets a timer to turn it back off after the given number of minutes. If the light is off, Set a color scene, if light is off, it will be turned on.",
+      "description": "Turns the light on to the specified brightness and sets a timer to turn it back off after the given number of minutes. If the light is off, it will be turned on.",
       "fields": {
         "minutes": {
           "name": "Minutes",
@@ -143,7 +143,7 @@
     },
     "start_flow": {
       "name": "Start flow",
-      "description": "Start a custom flow, using transitions from https://yeelight.readthedocs.io/en/stable/yeelight.html#flow-objects.",
+      "description": "Starts a custom flow, using transitions from https://yeelight.readthedocs.io/en/stable/yeelight.html#flow-objects.",
       "fields": {
         "count": {
           "name": "Count",
@@ -161,11 +161,11 @@
     },
     "set_music_mode": {
       "name": "Set music mode",
-      "description": "Enables or disables music_mode.",
+      "description": "Enables or disables music mode.",
       "fields": {
         "music_mode": {
           "name": "Music mode",
-          "description": "Use true or false to enable / disable music_mode."
+          "description": "Whether to enable or disable music mode."
         }
       }
     }
@@ -173,11 +173,11 @@
   "selector": {
     "mode": {
       "options": {
-        "color_flow": "Color Flow",
+        "normal": "[%key:common::state::normal%]",
+        "color_flow": "Color flow",
         "hsv": "HSV",
         "last": "Last",
         "moonlight": "Moonlight",
-        "normal": "Normal",
         "rgb": "RGB"
       }
     },

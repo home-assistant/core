@@ -21,7 +21,7 @@ class HiveEntity(Entity):
         self.hive = hive
         self.device = hive_device
         self._attr_name = self.device["haName"]
-        self._attr_unique_id = f'{self.device["hiveID"]}-{self.device["hiveType"]}'
+        self._attr_unique_id = f"{self.device['hiveID']}-{self.device['hiveType']}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.device["device_id"])},
             model=self.device["deviceData"]["model"],

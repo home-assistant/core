@@ -430,7 +430,7 @@ async def test_bad_date_holiday(
 
 
 @pytest.mark.parametrize(
-    "ignore_translations",
+    "ignore_missing_translations",
     ["component.workday.issues.issue_1.title"],
 )
 async def test_other_fixable_issues(

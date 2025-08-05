@@ -8,10 +8,14 @@ from python_homeassistant_analytics import (
     HomeassistantAnalyticsClient,
     HomeassistantAnalyticsConnectionError,
 )
-from python_homeassistant_analytics.models import IntegrationType
+from python_homeassistant_analytics.models import Environment, IntegrationType
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -81,7 +85,7 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         try:
             addons = await client.get_addons()
-            integrations = await client.get_integrations()
+            integrations = await client.get_integrations(Environment.NEXT)
             custom_integrations = await client.get_custom_integrations()
         except HomeassistantAnalyticsConnectionError:
             LOGGER.exception("Error connecting to Home Assistant analytics")
@@ -129,7 +133,7 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlow):
+class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlowWithReload):
     """Handle Homeassistant Analytics options."""
 
     async def async_step_init(
@@ -165,7 +169,7 @@ class HomeassistantAnalyticsOptionsFlowHandler(OptionsFlow):
         )
         try:
             addons = await client.get_addons()
-            integrations = await client.get_integrations()
+            integrations = await client.get_integrations(Environment.NEXT)
             custom_integrations = await client.get_custom_integrations()
         except HomeassistantAnalyticsConnectionError:
             LOGGER.exception("Error connecting to Home Assistant analytics")

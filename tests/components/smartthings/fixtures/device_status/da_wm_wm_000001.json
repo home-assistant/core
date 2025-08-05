@@ -1,0 +1,1243 @@
+{
+  "components": {
+    "hca.main": {
+      "hca.washerMode": {
+        "mode": {
+          "value": "normal",
+          "timestamp": "2025-02-07T02:29:55.623Z"
+        },
+        "supportedModes": {
+          "value": ["normal", "quickWash"],
+          "timestamp": "2025-02-07T02:29:55.152Z"
+        }
+      }
+    },
+    "main": {
+      "samsungce.washerDelayEnd": {
+        "remainingTime": {
+          "value": 0,
+          "unit": "min",
+          "timestamp": "2025-02-07T02:29:55.546Z"
+        },
+        "minimumReservableTime": {
+          "value": 45,
+          "unit": "min",
+          "timestamp": "2025-02-07T03:09:45.594Z"
+        }
+      },
+      "samsungce.washerWaterLevel": {
+        "supportedWaterLevel": {
+          "value": null
+        },
+        "waterLevel": {
+          "value": null
+        }
+      },
+      "samsungce.welcomeMessage": {
+        "welcomeMessage": {
+          "value": null
+        }
+      },
+      "custom.washerWaterTemperature": {
+        "supportedWasherWaterTemperature": {
+          "value": ["none", "tapCold", "cold", "warm", "hot", "extraHot"],
+          "timestamp": "2024-12-25T22:13:27.760Z"
+        },
+        "washerWaterTemperature": {
+          "value": "warm",
+          "timestamp": "2025-02-07T02:29:55.691Z"
+        }
+      },
+      "samsungce.softenerAutoReplenishment": {
+        "regularSoftenerType": {
+          "value": null
+        },
+        "regularSoftenerAlarmEnabled": {
+          "value": null
+        },
+        "regularSoftenerInitialAmount": {
+          "value": null
+        },
+        "regularSoftenerRemainingAmount": {
+          "value": null
+        },
+        "regularSoftenerDosage": {
+          "value": null
+        },
+        "regularSoftenerOrderThreshold": {
+          "value": null
+        }
+      },
+      "samsungce.autoDispenseSoftener": {
+        "remainingAmount": {
+          "value": null
+        },
+        "amount": {
+          "value": null
+        },
+        "supportedDensity": {
+          "value": null
+        },
+        "density": {
+          "value": null
+        },
+        "supportedAmount": {
+          "value": null
+        }
+      },
+      "samsungce.dongleSoftwareInstallation": {
+        "status": {
+          "value": "completed",
+          "timestamp": "2022-06-15T14:11:34.909Z"
+        }
+      },
+      "samsungce.autoDispenseDetergent": {
+        "remainingAmount": {
+          "value": null
+        },
+        "amount": {
+          "value": null
+        },
+        "supportedDensity": {
+          "value": null
+        },
+        "density": {
+          "value": null
+        },
+        "supportedAmount": {
+          "value": null
+        },
+        "availableTypes": {
+          "value": null
+        },
+        "type": {
+          "value": null
+        },
+        "recommendedAmount": {
+          "value": null
+        }
+      },
+      "samsungce.deviceIdentification": {
+        "micomAssayCode": {
+          "value": "20233741",
+          "timestamp": "2025-02-07T02:29:55.453Z"
+        },
+        "modelName": {
+          "value": null
+        },
+        "serialNumber": {
+          "value": null
+        },
+        "serialNumberExtra": {
+          "value": null
+        },
+        "modelClassificationCode": {
+          "value": "2001000100131100022B010000000000",
+          "timestamp": "2025-02-07T02:29:55.453Z"
+        },
+        "description": {
+          "value": "DA_WM_TP2_20_COMMON_WF6300R/DC92-02338B_0080",
+          "timestamp": "2025-02-07T02:29:55.453Z"
+        },
+        "releaseYear": {
+          "value": null
+        },
+        "binaryId": {
+          "value": "DA_WM_TP2_20_COMMON",
+          "timestamp": "2025-02-07T02:29:55.453Z"
+        }
+      },
+      "samsungce.washerWaterValve": {
+        "waterValve": {
+          "value": null
+        },
+        "supportedWaterValve": {
+          "value": null
+        }
+      },
+      "washerOperatingState": {
+        "completionTime": {
+          "value": "2025-02-07T03:54:45Z",
+          "timestamp": "2025-02-07T03:09:45.534Z"
+        },
+        "machineState": {
+          "value": "stop",
+          "timestamp": "2025-02-07T03:09:45.534Z"
+        },
+        "washerJobState": {
+          "value": "none",
+          "timestamp": "2025-02-07T03:09:45.534Z"
+        },
+        "supportedMachineStates": {
+          "value": ["stop", "run", "pause"],
+          "timestamp": "2025-02-07T02:29:55.546Z"
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "off",
+          "timestamp": "2025-02-07T03:09:45.456Z"
+        }
+      },
+      "custom.washerAutoSoftener": {
+        "washerAutoSoftener": {
+          "value": null
+        }
+      },
+      "samsungce.washerFreezePrevent": {
+        "operatingState": {
+          "value": null
+        }
+      },
+      "samsungce.quickControl": {
+        "version": {
+          "value": null
+        }
+      },
+      "samsungce.washerCycle": {
+        "supportedCycles": {
+          "value": [
+            {
+              "cycle": "01",
+              "cycleType": "washingOnly",
+              "supportedOptions": {
+                "soilLevel": {
+                  "raw": "C33E",
+                  "default": "normal",
+                  "options": [
+                    "extraLight",
+                    "light",
+                    "normal",
+                    "heavy",
+                    "extraHeavy"
+                  ]
+                },
+                "spinLevel": {
+                  "raw": "A43B",
+                  "default": "high",
+                  "options": [
+                    "rinseHold",
+                    "noSpin",
+                    "medium",
+                    "high",
+                    "extraHigh"
+                  ]
+                },
+                "rinseCycle": {
+                  "raw": "923F",
+                  "default": "2",
+                  "options": ["0", "1", "2", "3", "4", "5"]
+                },
+                "waterTemperature": {
+                  "raw": "833E",
+                  "default": "warm",
+                  "options": ["tapCold", "cold", "warm", "hot", "extraHot"]
+                }
+              }
+            },
+            {
+              "cycle": "70",
+              "cycleType": "washingOnly",
+              "supportedOptions": {
+                "soilLevel": {
+                  "raw": "C53E",
+                  "default": "extraHeavy",
+                  "options": [
+                    "extraLight",
+                    "light",
+                    "normal",
+                    "heavy",
+                    "extraHeavy"
+                  ]
+                },
+                "spinLevel": {
+                  "raw": "A53F",
+                  "default": "extraHigh",
+                  "options": [
+                    "rinseHold",
+                    "noSpin",
+                    "low",
+                    "medium",
+                    "high",
+                    "extraHigh"
+                  ]
+                },
+                "rinseCycle": {
+                  "raw": "923F",
+                  "default": "2",
+                  "options": ["0", "1", "2", "3", "4", "5"]
+                },
+                "waterTemperature": {
+                  "raw": "843E",
+                  "default": "hot",
+                  "options": ["tapCold", "cold", "warm", "hot", "extraHot"]
+                }
+              }
+            },
+            {
+              "cycle": "55",
+              "cycleType": "washingOnly",
+              "supportedOptions": {
+                "soilLevel": {
+                  "raw": "C33E",
+                  "default": "normal",
+                  "options": [
+                    "extraLight",
+                    "light",
+                    "normal",
+                    "heavy",
+                    "extraHeavy"
+                  ]
+                },
+                "spinLevel": {
+                  "raw": "A43F",
+                  "default": "high",
+                  "options": [
+                    "rinseHold",
+                    "noSpin",
+                    "low",
+                    "medium",
+                    "high",
+                    "extraHigh"
+                  ]
+                },
+                "rinseCycle": {
+                  "raw": "923F",
+                  "default": "2",
+                  "options": ["0", "1", "2", "3", "4", "5"]
+                },
+                "waterTemperature": {
+                  "raw": "831E",
+                  "default": "warm",
+                  "options": ["tapCold", "cold", "warm", "hot"]
+                }
+              }
+            },
+            {
+              "cycle": "71",
+              "cycleType": "washingOnly",
+              "supportedOptions": {
+                "soilLevel": {
+                  "raw": "C33E",
+                  "default": "normal",
+                  "options": [
+                    "extraLight",
+                    "light",
+                    "normal",
+                    "heavy",
+                    "extraHeavy"
+                  ]
+                },
+                "spinLevel": {
+                  "raw": "A20F",
+                  "default": "low",
+                  "options": ["rinseHold", "noSpin", "low", "medium"]
+                },
+                "rinseCycle": {
+                  "raw": "923F",
+                  "default": "2",
+                  "options": ["0", "1", "2", "3", "4", "5"]
+                },
+                "waterTemperature": {
+                  "raw": "830E",
+                  "default": "warm",
+                  "options": ["tapCold", "cold", "warm"]
+                }
+              }
+            },
+            {
+              "cycle": "72",
+              "cycleType": "washingOnly",
+              "supportedOptions": {
+                "soilLevel": {
+                  "raw": "C33E",
+                  "default": "normal",
+                  "options": [
+                    "extraLight",
+                    "light",
+                    "normal",
+                    "heavy",
+                    "extraHeavy"
+                  ]
+                },
+                "spinLevel": {
+                  "raw": "A43F",
+                  "default": "high",
+                  "options": [
+                    "rinseHold",
+                    "noSpin",
+                    "low",
+                    "medium",
+                    "high",
+                    "extraHigh"
+                  ]
+                },
+                "rinseCycle": {
+                  "raw": "923F",
+                  "default": "2",
+                  "options": ["0", "1", "2", "3", "4", "5"]
+                },
+                "waterTemperature": {
+                  "raw": "8520",
+                  "default": "extraHot",
+                  "options": ["extraHot"]
+                }
+              }
+            },
+            {
+              "cycle": "77",
+              "cycleType": "washingOnly",
+              "supportedOptions": {
+                "soilLevel": {
+                  "raw": "C33E",
+                  "default": "normal",
+                  "options": [
+                    "extraLight",
+                    "light",
+                    "normal",
+                    "heavy",
+                    "extraHeavy"
+                  ]
+                },
+                "spinLevel": {
+                  "raw": "A21F",
+                  "default": "low",
+                  "options": ["rinseHold", "noSpin", "low", "medium", "high"]
+                },
+                "rinseCycle": {
+                  "raw": "923F",
+                  "default": "2",
+                  "options": ["0", "1", "2", "3", "4", "5"]
+                },
+                "waterTemperature": {
+                  "raw": "830E",
+                  "default": "warm",
+                  "options": ["tapCold", "cold", "warm"]
+                }
+              }
+            },
+            {
+              "cycle": "E5",
+              "cycleType": "washingOnly",
+              "supportedOptions": {
+                "soilLevel": {
+                  "raw": "C53E",
+                  "default": "extraHeavy",
+                  "options": [
+                    "extraLight",
+                    "light",
+                    "normal",
+                    "heavy",
+                    "extraHeavy"
+                  ]
+                },
+                "spinLevel": {
+                  "raw": "A43F",
+                  "default": "high",
+                  "options": [
+                    "rinseHold",
+                    "noSpin",
+                    "low",
+                    "medium",
+                    "high",
+                    "extraHigh"
+                  ]
+                },
+                "rinseCycle": {
+                  "raw": "923F",
+                  "default": "2",
+                  "options": ["0", "1", "2", "3", "4", "5"]
+                },
+                "waterTemperature": {
+                  "raw": "831E",
+                  "default": "warm",
+                  "options": ["tapCold", "cold", "warm", "hot"]
+                }
+              }
+            },
+            {
+              "cycle": "57",
+              "cycleType": "washingOnly",
+              "supportedOptions": {
+                "soilLevel": {
+                  "raw": "C000",
+                  "default": "none",
+                  "options": []
+                },
+                "spinLevel": {
+                  "raw": "A520",
+                  "default": "extraHigh",
+                  "options": ["extraHigh"]
+                },
+                "rinseCycle": {
+                  "raw": "9204",
+                  "default": "2",
+                  "options": ["2"]
+                },
+                "waterTemperature": {
+                  "raw": "8520",
+                  "default": "extraHot",
+                  "options": ["extraHot"]
+                }
+              }
+            },
+            {
+              "cycle": "73",
+              "cycleType": "washingOnly",
+              "supportedOptions": {
+                "soilLevel": {
+                  "raw": "C000",
+                  "default": "none",
+                  "options": []
+                },
+                "spinLevel": {
+                  "raw": "A43F",
+                  "default": "high",
+                  "options": [
+                    "rinseHold",
+                    "noSpin",
+                    "low",
+                    "medium",
+                    "high",
+                    "extraHigh"
+                  ]
+                },
+                "rinseCycle": {
+                  "raw": "913F",
+                  "default": "1",
+                  "options": ["0", "1", "2", "3", "4", "5"]
+                },
+                "waterTemperature": {
+                  "raw": "8000",
+                  "default": "none",
+                  "options": []
+                }
+              }
+            },
+            {
+              "cycle": "74",
+              "cycleType": "washingOnly",
+              "supportedOptions": {
+                "soilLevel": {
+                  "raw": "C33E",
+                  "default": "normal",
+                  "options": [
+                    "extraLight",
+                    "light",
+                    "normal",
+                    "heavy",
+                    "extraHeavy"
+                  ]
+                },
+                "spinLevel": {
+                  "raw": "A207",
+                  "default": "low",
+                  "options": ["rinseHold", "noSpin", "low"]
+                },
+                "rinseCycle": {
+                  "raw": "923F",
+                  "default": "2",
+                  "options": ["0", "1", "2", "3", "4", "5"]
+                },
+                "waterTemperature": {
+                  "raw": "830E",
+                  "default": "warm",
+                  "options": ["tapCold", "cold", "warm"]
+                }
+              }
+            },
+            {
+              "cycle": "75",
+              "cycleType": "washingOnly",
+              "supportedOptions": {
+                "soilLevel": {
+                  "raw": "C33E",
+                  "default": "normal",
+                  "options": [
+                    "extraLight",
+                    "light",
+                    "normal",
+                    "heavy",
+                    "extraHeavy"
+                  ]
+                },
+                "spinLevel": {
+                  "raw": "A30F",
+                  "default": "medium",
+                  "options": ["rinseHold", "noSpin", "low", "medium"]
+                },
+                "rinseCycle": {
+                  "raw": "920F",
+                  "default": "2",
+                  "options": ["0", "1", "2", "3"]
+                },
+                "waterTemperature": {
+                  "raw": "810E",
+                  "default": "tapCold",
+                  "options": ["tapCold", "cold", "warm"]
+                }
+              }
+            },
+            {
+              "cycle": "78",
+              "cycleType": "washingOnly",
+              "supportedOptions": {
+                "soilLevel": {
+                  "raw": "C13E",
+                  "default": "extraLight",
+                  "options": [
+                    "extraLight",
+                    "light",
+                    "normal",
+                    "heavy",
+                    "extraHeavy"
+                  ]
+                },
+                "spinLevel": {
+                  "raw": "A53F",
+                  "default": "extraHigh",
+                  "options": [
+                    "rinseHold",
+                    "noSpin",
+                    "low",
+                    "medium",
+                    "high",
+                    "extraHigh"
+                  ]
+                },
+                "rinseCycle": {
+                  "raw": "913F",
+                  "default": "1",
+                  "options": ["0", "1", "2", "3", "4", "5"]
+                },
+                "waterTemperature": {
+                  "raw": "831E",
+                  "default": "warm",
+                  "options": ["tapCold", "cold", "warm", "hot"]
+                }
+              }
+            }
+          ],
+          "timestamp": "2024-12-25T22:13:27.760Z"
+        },
+        "washerCycle": {
+          "value": "Table_00_Course_01",
+          "timestamp": "2025-02-07T02:29:55.623Z"
+        },
+        "referenceTable": {
+          "value": {
+            "id": "Table_00"
+          },
+          "timestamp": "2021-06-01T22:52:20.068Z"
+        },
+        "specializedFunctionClassification": {
+          "value": 4,
+          "timestamp": "2025-02-07T02:29:55.152Z"
+        }
+      },
+      "samsungce.waterConsumptionReport": {
+        "waterConsumption": {
+          "value": null
+        }
+      },
+      "ocf": {
+        "st": {
+          "value": null
+        },
+        "mndt": {
+          "value": null
+        },
+        "mnfv": {
+          "value": "DA_WM_TP2_20_COMMON_30230804",
+          "timestamp": "2024-12-25T22:13:27.131Z"
+        },
+        "mnhw": {
+          "value": "MediaTek",
+          "timestamp": "2024-12-25T22:13:27.131Z"
+        },
+        "di": {
+          "value": "f984b91d-f250-9d42-3436-33f09a422a47",
+          "timestamp": "2024-12-25T22:13:27.131Z"
+        },
+        "mnsl": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2024-12-25T22:13:27.131Z"
+        },
+        "dmv": {
+          "value": "res.1.1.0,sh.1.1.0",
+          "timestamp": "2024-12-25T22:13:27.131Z"
+        },
+        "n": {
+          "value": "[washer] Samsung",
+          "timestamp": "2024-12-25T22:13:27.131Z"
+        },
+        "mnmo": {
+          "value": "DA_WM_TP2_20_COMMON|20233741|2001000100131100022B010000000000",
+          "timestamp": "2024-12-25T22:13:27.131Z"
+        },
+        "vid": {
+          "value": "DA-WM-WM-000001",
+          "timestamp": "2024-12-25T22:13:27.131Z"
+        },
+        "mnmn": {
+          "value": "Samsung Electronics",
+          "timestamp": "2024-12-25T22:13:27.131Z"
+        },
+        "mnml": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2024-12-25T22:13:27.131Z"
+        },
+        "mnpv": {
+          "value": "DAWIT 2.0",
+          "timestamp": "2024-12-25T22:13:27.131Z"
+        },
+        "mnos": {
+          "value": "TizenRT 2.0 + IPv6",
+          "timestamp": "2024-12-25T22:13:27.131Z"
+        },
+        "pi": {
+          "value": "f984b91d-f250-9d42-3436-33f09a422a47",
+          "timestamp": "2024-12-25T22:13:27.131Z"
+        },
+        "icv": {
+          "value": "core.1.1.0",
+          "timestamp": "2024-12-25T22:13:27.131Z"
+        }
+      },
+      "custom.dryerDryLevel": {
+        "dryerDryLevel": {
+          "value": null
+        },
+        "supportedDryerDryLevel": {
+          "value": null
+        }
+      },
+      "custom.disabledCapabilities": {
+        "disabledCapabilities": {
+          "value": [
+            "samsungce.autoDispenseDetergent",
+            "samsungce.autoDispenseSoftener",
+            "samsungce.waterConsumptionReport",
+            "samsungce.washerCyclePreset",
+            "samsungce.welcomeMessage",
+            "samsungce.dongleSoftwareInstallation",
+            "sec.wifiConfiguration",
+            "samsungce.quickControl",
+            "samsungce.deviceInfoPrivate",
+            "samsungce.energyPlanner",
+            "demandResponseLoadControl",
+            "samsungce.softenerAutoReplenishment",
+            "samsungce.softenerOrder",
+            "samsungce.softenerState",
+            "samsungce.washerBubbleSoak",
+            "samsungce.washerFreezePrevent",
+            "custom.dryerDryLevel",
+            "samsungce.washerWaterLevel",
+            "samsungce.washerWaterValve",
+            "samsungce.washerWashingTime",
+            "custom.washerAutoDetergent",
+            "custom.washerAutoSoftener"
+          ],
+          "timestamp": "2024-07-01T16:13:35.173Z"
+        }
+      },
+      "custom.washerRinseCycles": {
+        "supportedWasherRinseCycles": {
+          "value": ["0", "1", "2", "3", "4", "5"],
+          "timestamp": "2024-12-25T22:13:27.760Z"
+        },
+        "washerRinseCycles": {
+          "value": "2",
+          "timestamp": "2025-02-07T02:29:55.691Z"
+        }
+      },
+      "samsungce.driverVersion": {
+        "versionNumber": {
+          "value": 24110101,
+          "timestamp": "2024-12-03T02:14:52.963Z"
+        }
+      },
+      "sec.diagnosticsInformation": {
+        "logType": {
+          "value": ["errCode", "dump"],
+          "timestamp": "2025-02-07T02:29:55.453Z"
+        },
+        "endpoint": {
+          "value": "SSM",
+          "timestamp": "2025-02-07T02:29:55.453Z"
+        },
+        "minVersion": {
+          "value": "1.0",
+          "timestamp": "2025-02-07T02:29:55.453Z"
+        },
+        "signinPermission": {
+          "value": null
+        },
+        "setupId": {
+          "value": "210",
+          "timestamp": "2025-02-07T02:29:55.453Z"
+        },
+        "protocolType": {
+          "value": "wifi_https",
+          "timestamp": "2025-02-07T02:29:55.453Z"
+        },
+        "tsId": {
+          "value": null
+        },
+        "mnId": {
+          "value": "0AJT",
+          "timestamp": "2025-02-07T02:29:55.453Z"
+        },
+        "dumpType": {
+          "value": "file",
+          "timestamp": "2025-02-07T02:29:55.453Z"
+        }
+      },
+      "samsungce.washerOperatingState": {
+        "washerJobState": {
+          "value": "none",
+          "timestamp": "2025-02-07T03:09:45.534Z"
+        },
+        "operatingState": {
+          "value": "ready",
+          "timestamp": "2025-02-07T03:09:45.534Z"
+        },
+        "supportedOperatingStates": {
+          "value": ["ready", "running", "paused"],
+          "timestamp": "2022-11-04T14:21:57.546Z"
+        },
+        "scheduledJobs": {
+          "value": [
+            {
+              "jobName": "wash",
+              "timeInMin": 23
+            },
+            {
+              "jobName": "rinse",
+              "timeInMin": 10
+            },
+            {
+              "jobName": "spin",
+              "timeInMin": 9
+            }
+          ],
+          "timestamp": "2025-02-07T02:30:43.851Z"
+        },
+        "scheduledPhases": {
+          "value": [
+            {
+              "phaseName": "wash",
+              "timeInMin": 23
+            },
+            {
+              "phaseName": "rinse",
+              "timeInMin": 10
+            },
+            {
+              "phaseName": "spin",
+              "timeInMin": 9
+            }
+          ],
+          "timestamp": "2025-02-07T02:30:43.851Z"
+        },
+        "progress": {
+          "value": 1,
+          "unit": "%",
+          "timestamp": "2025-02-07T03:09:45.534Z"
+        },
+        "remainingTimeStr": {
+          "value": "00:45",
+          "timestamp": "2025-02-07T03:09:45.534Z"
+        },
+        "washerJobPhase": {
+          "value": "none",
+          "timestamp": "2025-02-07T03:09:45.534Z"
+        },
+        "operationTime": {
+          "value": 45,
+          "unit": "min",
+          "timestamp": "2025-02-07T03:09:45.594Z"
+        },
+        "remainingTime": {
+          "value": 45,
+          "unit": "min",
+          "timestamp": "2025-02-07T03:09:45.534Z"
+        }
+      },
+      "samsungce.kidsLock": {
+        "lockState": {
+          "value": "unlocked",
+          "timestamp": "2025-02-07T02:29:55.407Z"
+        }
+      },
+      "demandResponseLoadControl": {
+        "drlcStatus": {
+          "value": null
+        }
+      },
+      "samsungce.detergentOrder": {
+        "alarmEnabled": {
+          "value": false,
+          "timestamp": "2025-02-07T02:29:55.152Z"
+        },
+        "orderThreshold": {
+          "value": 0,
+          "unit": "cc",
+          "timestamp": "2025-02-07T02:29:55.152Z"
+        }
+      },
+      "powerConsumptionReport": {
+        "powerConsumption": {
+          "value": {
+            "energy": 352800,
+            "deltaEnergy": 0,
+            "power": 0,
+            "powerEnergy": 0.0,
+            "persistedEnergy": 0,
+            "energySaved": 0,
+            "start": "2025-02-07T03:09:24Z",
+            "end": "2025-02-07T03:09:45Z"
+          },
+          "timestamp": "2025-02-07T03:09:45.703Z"
+        }
+      },
+      "samsungce.detergentAutoReplenishment": {
+        "neutralDetergentType": {
+          "value": null
+        },
+        "regularDetergentRemainingAmount": {
+          "value": 0,
+          "unit": "cc",
+          "timestamp": "2025-02-07T02:29:55.152Z"
+        },
+        "babyDetergentRemainingAmount": {
+          "value": null
+        },
+        "neutralDetergentRemainingAmount": {
+          "value": null
+        },
+        "neutralDetergentAlarmEnabled": {
+          "value": null
+        },
+        "neutralDetergentOrderThreshold": {
+          "value": null
+        },
+        "babyDetergentInitialAmount": {
+          "value": null
+        },
+        "babyDetergentType": {
+          "value": null
+        },
+        "neutralDetergentInitialAmount": {
+          "value": null
+        },
+        "regularDetergentDosage": {
+          "value": 0,
+          "unit": "cc",
+          "timestamp": "2025-02-07T02:29:55.152Z"
+        },
+        "babyDetergentDosage": {
+          "value": null
+        },
+        "regularDetergentOrderThreshold": {
+          "value": 0,
+          "unit": "cc",
+          "timestamp": "2025-02-07T02:29:55.152Z"
+        },
+        "regularDetergentType": {
+          "value": "none",
+          "timestamp": "2025-02-07T02:29:55.152Z"
+        },
+        "regularDetergentInitialAmount": {
+          "value": 0,
+          "unit": "cc",
+          "timestamp": "2025-02-07T02:29:55.152Z"
+        },
+        "regularDetergentAlarmEnabled": {
+          "value": false,
+          "timestamp": "2025-02-07T02:29:55.152Z"
+        },
+        "neutralDetergentDosage": {
+          "value": null
+        },
+        "babyDetergentOrderThreshold": {
+          "value": null
+        },
+        "babyDetergentAlarmEnabled": {
+          "value": null
+        }
+      },
+      "samsungce.softenerOrder": {
+        "alarmEnabled": {
+          "value": null
+        },
+        "orderThreshold": {
+          "value": null
+        }
+      },
+      "custom.washerSoilLevel": {
+        "supportedWasherSoilLevel": {
+          "value": [
+            "none",
+            "extraLight",
+            "light",
+            "normal",
+            "heavy",
+            "extraHeavy"
+          ],
+          "timestamp": "2024-12-25T22:13:27.760Z"
+        },
+        "washerSoilLevel": {
+          "value": "normal",
+          "timestamp": "2025-02-07T02:29:55.691Z"
+        }
+      },
+      "samsungce.washerBubbleSoak": {
+        "status": {
+          "value": null
+        }
+      },
+      "samsungce.washerCyclePreset": {
+        "maxNumberOfPresets": {
+          "value": 10,
+          "timestamp": "2025-02-07T02:29:55.805Z"
+        },
+        "presets": {
+          "value": null
+        }
+      },
+      "samsungce.detergentState": {
+        "remainingAmount": {
+          "value": 0,
+          "unit": "cc",
+          "timestamp": "2025-02-07T02:29:55.152Z"
+        },
+        "dosage": {
+          "value": 0,
+          "unit": "cc",
+          "timestamp": "2025-02-07T02:29:55.152Z"
+        },
+        "initialAmount": {
+          "value": 0,
+          "unit": "cc",
+          "timestamp": "2025-02-07T02:29:55.152Z"
+        },
+        "detergentType": {
+          "value": "none",
+          "timestamp": "2021-06-01T22:52:19.999Z"
+        }
+      },
+      "refresh": {},
+      "custom.jobBeginningStatus": {
+        "jobBeginningStatus": {
+          "value": null
+        }
+      },
+      "execute": {
+        "data": {
+          "value": {
+            "payload": {
+              "rt": ["x.com.samsung.da.information"],
+              "if": ["oic.if.baseline", "oic.if.a"],
+              "x.com.samsung.da.modelNum": "DA_WM_TP2_20_COMMON|20233741|2001000100131100022B010000000000",
+              "x.com.samsung.da.description": "DA_WM_TP2_20_COMMON_WF6300R/DC92-02338B_0080",
+              "x.com.samsung.da.serialNum": "01FW57AR401623N",
+              "x.com.samsung.da.otnDUID": "U7CNQWBWJM5U4",
+              "x.com.samsung.da.diagProtocolType": "WIFI_HTTPS",
+              "x.com.samsung.da.diagLogType": ["errCode", "dump"],
+              "x.com.samsung.da.diagDumpType": "file",
+              "x.com.samsung.da.diagEndPoint": "SSM",
+              "x.com.samsung.da.diagMnid": "0AJT",
+              "x.com.samsung.da.diagSetupid": "210",
+              "x.com.samsung.da.diagMinVersion": "1.0",
+              "x.com.samsung.da.items": [
+                {
+                  "x.com.samsung.da.id": "0",
+                  "x.com.samsung.da.description": "DA_WM_TP2_20_COMMON|20233741|2001000100131100022B010000000000",
+                  "x.com.samsung.da.type": "Software",
+                  "x.com.samsung.da.number": "02674A220725(F541)",
+                  "x.com.samsung.da.newVersionAvailable": "0"
+                },
+                {
+                  "x.com.samsung.da.id": "1",
+                  "x.com.samsung.da.description": "DA_WM_TP2_20_COMMON",
+                  "x.com.samsung.da.type": "Firmware",
+                  "x.com.samsung.da.number": "18112816,20050607",
+                  "x.com.samsung.da.newVersionAvailable": "0"
+                }
+              ]
+            }
+          },
+          "data": {
+            "href": "/information/vs/0"
+          },
+          "timestamp": "2023-08-06T16:52:15.994Z"
+        }
+      },
+      "samsungce.softenerState": {
+        "remainingAmount": {
+          "value": null
+        },
+        "dosage": {
+          "value": null
+        },
+        "softenerType": {
+          "value": null
+        },
+        "initialAmount": {
+          "value": null
+        }
+      },
+      "samsungce.energyPlanner": {
+        "data": {
+          "value": null
+        },
+        "plan": {
+          "value": null
+        }
+      },
+      "sec.wifiConfiguration": {
+        "autoReconnection": {
+          "value": null
+        },
+        "minVersion": {
+          "value": null
+        },
+        "supportedWiFiFreq": {
+          "value": null
+        },
+        "supportedAuthType": {
+          "value": null
+        },
+        "protocolType": {
+          "value": null
+        }
+      },
+      "remoteControlStatus": {
+        "remoteControlEnabled": {
+          "value": "false",
+          "timestamp": "2025-02-07T02:29:55.634Z"
+        }
+      },
+      "custom.supportedOptions": {
+        "course": {
+          "value": null
+        },
+        "referenceTable": {
+          "value": {
+            "id": "Table_00"
+          },
+          "timestamp": "2025-02-07T02:29:55.623Z"
+        },
+        "supportedCourses": {
+          "value": [
+            "01",
+            "70",
+            "55",
+            "71",
+            "72",
+            "77",
+            "E5",
+            "57",
+            "73",
+            "74",
+            "75",
+            "78"
+          ],
+          "timestamp": "2025-02-07T02:29:55.152Z"
+        }
+      },
+      "samsungce.washerWashingTime": {
+        "supportedWashingTimes": {
+          "value": null
+        },
+        "washingTime": {
+          "value": null
+        }
+      },
+      "custom.energyType": {
+        "energyType": {
+          "value": "2.0",
+          "timestamp": "2022-06-15T14:11:34.909Z"
+        },
+        "energySavingSupport": {
+          "value": false,
+          "timestamp": "2022-06-15T14:26:38.584Z"
+        },
+        "drMaxDuration": {
+          "value": 99999999,
+          "unit": "min",
+          "timestamp": "2022-06-15T14:11:37.255Z"
+        },
+        "energySavingLevel": {
+          "value": null
+        },
+        "energySavingInfo": {
+          "value": null
+        },
+        "supportedEnergySavingLevels": {
+          "value": null
+        },
+        "energySavingOperation": {
+          "value": null
+        },
+        "notificationTemplateID": {
+          "value": null
+        },
+        "energySavingOperationSupport": {
+          "value": false,
+          "timestamp": "2022-06-15T14:11:37.255Z"
+        }
+      },
+      "samsungce.softwareUpdate": {
+        "targetModule": {
+          "value": {},
+          "timestamp": "2025-02-07T02:29:55.548Z"
+        },
+        "otnDUID": {
+          "value": "U7CNQWBWJM5U4",
+          "timestamp": "2025-02-07T02:29:55.453Z"
+        },
+        "lastUpdatedDate": {
+          "value": null
+        },
+        "availableModules": {
+          "value": [],
+          "timestamp": "2024-12-01T23:36:22.798Z"
+        },
+        "newVersionAvailable": {
+          "value": false,
+          "timestamp": "2025-02-07T02:29:55.548Z"
+        },
+        "operatingState": {
+          "value": null
+        },
+        "progress": {
+          "value": null
+        }
+      },
+      "custom.washerAutoDetergent": {
+        "washerAutoDetergent": {
+          "value": null
+        }
+      },
+      "custom.washerSpinLevel": {
+        "washerSpinLevel": {
+          "value": "high",
+          "timestamp": "2025-02-07T02:29:55.691Z"
+        },
+        "supportedWasherSpinLevel": {
+          "value": [
+            "rinseHold",
+            "noSpin",
+            "low",
+            "medium",
+            "high",
+            "extraHigh"
+          ],
+          "timestamp": "2024-12-25T22:13:27.760Z"
+        }
+      }
+    }
+  }
+}

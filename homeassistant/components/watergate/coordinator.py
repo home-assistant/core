@@ -7,6 +7,7 @@ import logging
 from watergate_local_api import WatergateApiException, WatergateLocalApiClient
 from watergate_local_api.models import DeviceState, NetworkingData, TelemetryData
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -24,14 +25,25 @@ class WatergateAgregatedRequests:
     networking: NetworkingData
 
 
+type WatergateConfigEntry = ConfigEntry[WatergateDataCoordinator]
+
+
 class WatergateDataCoordinator(DataUpdateCoordinator[WatergateAgregatedRequests]):
     """Class to manage fetching watergate data."""
 
-    def __init__(self, hass: HomeAssistant, api: WatergateLocalApiClient) -> None:
+    config_entry: WatergateConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: WatergateConfigEntry,
+        api: WatergateLocalApiClient,
+    ) -> None:
         """Initialize."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(minutes=2),
         )

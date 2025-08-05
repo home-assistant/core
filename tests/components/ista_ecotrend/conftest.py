@@ -80,7 +80,7 @@ def mock_ista() -> Generator[MagicMock]:
             "26e93f1a-c828-11ea-87d0-0242ac130003",
             "eaf5c5c8-889f-4a3c-b68c-e9a676505762",
         ]
-        client.get_consumption_data = get_consumption_data
+        client.get_consumption_data.side_effect = get_consumption_data
 
         yield client
 
@@ -96,12 +96,16 @@ def get_consumption_data(obj_uuid: str | None = None) -> dict[str, Any]:
                     {
                         "type": "heating",
                         "value": "35",
+                        "unit": "Einheiten",
                         "additionalValue": "38,0",
+                        "additionalUnit": "kWh",
                     },
                     {
                         "type": "warmwater",
                         "value": "1,0",
+                        "unit": "m³",
                         "additionalValue": "57,0",
+                        "additionalUnit": "kWh",
                     },
                     {
                         "type": "water",
@@ -115,16 +119,21 @@ def get_consumption_data(obj_uuid: str | None = None) -> dict[str, Any]:
                     {
                         "type": "heating",
                         "value": "104",
+                        "unit": "Einheiten",
                         "additionalValue": "113,0",
+                        "additionalUnit": "kWh",
                     },
                     {
                         "type": "warmwater",
                         "value": "1,1",
+                        "unit": "m³",
                         "additionalValue": "61,1",
+                        "additionalUnit": "kWh",
                     },
                     {
                         "type": "water",
                         "value": "6,8",
+                        "unit": "m³",
                     },
                 ],
             },
@@ -200,16 +209,21 @@ def extend_statistics(obj_uuid: str | None = None) -> dict[str, Any]:
                 {
                     "type": "heating",
                     "value": "9000",
+                    "unit": "Einheiten",
                     "additionalValue": "9000,0",
+                    "additionalUnit": "kWh",
                 },
                 {
                     "type": "warmwater",
                     "value": "9999,0",
+                    "unit": "m³",
                     "additionalValue": "90000,0",
+                    "additionalUnit": "kWh",
                 },
                 {
                     "type": "water",
                     "value": "9000,0",
+                    "unit": "m³",
                 },
             ],
         },

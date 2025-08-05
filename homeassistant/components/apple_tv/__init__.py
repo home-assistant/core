@@ -233,7 +233,6 @@ class AppleTVManager(DeviceListener):
             pass
         except Exception:
             _LOGGER.exception("Failed to connect")
-            await self.disconnect()
 
     async def _connect_loop(self) -> None:
         """Connect loop background task function."""

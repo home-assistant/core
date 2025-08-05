@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from nibe.coil import Coil, CoilData
 
-from homeassistant.components.number import ENTITY_ID_FORMAT, NumberEntity
+from homeassistant.components.number import ENTITY_ID_FORMAT, NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import CoilCoordinator
@@ -18,7 +18,7 @@ from .entity import CoilEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up platform."""
 
@@ -61,6 +61,7 @@ class Number(CoilEntity, NumberEntity):
 
         self._attr_native_step = 1 / coil.factor
         self._attr_native_unit_of_measurement = coil.unit
+        self._attr_mode = NumberMode.BOX
 
     def _async_read_coil(self, data: CoilData) -> None:
         if data.value is None:

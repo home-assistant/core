@@ -20,7 +20,7 @@ from homeassistant.components.camera import (
 from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utc_from_timestamp

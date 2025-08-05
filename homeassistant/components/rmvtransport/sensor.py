@@ -20,7 +20,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import CONF_NAME, CONF_TIMEOUT, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -156,7 +156,7 @@ class RMVDepartureSensor(SensorEntity):
         return self._name
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return self._state is not None
 
@@ -264,18 +264,15 @@ class RMVDepartureData:
                 for dest in self._destinations:
                     if dest in journey["stops"]:
                         dest_found = True
-                        if dest in _deps_not_found:
-                            _deps_not_found.remove(dest)
+                        _deps_not_found.discard(dest)
                         _nextdep["destination"] = dest
 
                 if not dest_found:
                     continue
 
-            if (
-                self._lines
-                and journey["number"] not in self._lines
-                or journey["minutes"] < self._time_offset
-            ):
+            if (self._lines and journey["number"] not in self._lines) or journey[
+                "minutes"
+            ] < self._time_offset:
                 continue
 
             for attr in ("direction", "departure_time", "product", "minutes"):

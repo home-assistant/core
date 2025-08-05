@@ -1,5 +1,10 @@
 {
   "entity": {
+    "event": {
+      "activity": {
+        "default": "mdi:bell"
+      }
+    },
     "sensor": {
       "urgent": {
         "default": "mdi:run-fast"
@@ -30,6 +35,9 @@
   "services": {
     "send_message": {
       "service": "mdi:cellphone-message"
+    },
+    "send_reaction": {
+      "service": "mdi:thumb-up"
     }
   }
 }

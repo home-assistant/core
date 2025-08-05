@@ -111,13 +111,13 @@
       "fields": {
         "device_id": {
           "name": "[%key:common::config_flow::data::device%]",
-          "description": "Try reconnect client to wireless network."
+          "description": "The device that should be forced to reconnect to the wireless network."
         }
       }
     },
     "remove_clients": {
       "name": "Remove clients from the UniFi Network",
-      "description": "Cleans up clients that has only been associated with the controller for a short period of time."
+      "description": "Cleans up clients that have only been associated with the controller for a short period of time."
     }
   }
 }

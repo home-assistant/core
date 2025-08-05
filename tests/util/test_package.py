@@ -410,3 +410,47 @@ def test_check_package_previous_failed_install() -> None:
     with patch("homeassistant.util.package.version", return_value=None):
         assert not package.is_installed(installed_package)
         assert not package.is_installed(f"{installed_package}=={installed_version}")
+
+
+@pytest.mark.parametrize("dockerenv", [True, False], ids=["dockerenv", "not_dockerenv"])
+@pytest.mark.parametrize(
+    "containerenv", [True, False], ids=["containerenv", "not_containerenv"]
+)
+@pytest.mark.parametrize(
+    "kubernetes_service_host", [True, False], ids=["kubernetes", "not_kubernetes"]
+)
+@pytest.mark.parametrize(
+    "is_official_image", [True, False], ids=["official_image", "not_official_image"]
+)
+async def test_is_docker_env(
+    dockerenv: bool,
+    containerenv: bool,
+    kubernetes_service_host: bool,
+    is_official_image: bool,
+) -> None:
+    """Test is_docker_env."""
+
+    def new_path_mock(path: str):
+        mock = Mock()
+        if path == "/.dockerenv":
+            mock.exists.return_value = dockerenv
+        elif path == "/run/.containerenv":
+            mock.exists.return_value = containerenv
+        return mock
+
+    env = {}
+    if kubernetes_service_host:
+        env["KUBERNETES_SERVICE_HOST"] = "True"
+
+    package.is_docker_env.cache_clear()
+    with (
+        patch("homeassistant.util.package.Path", side_effect=new_path_mock),
+        patch(
+            "homeassistant.util.package.is_official_image",
+            return_value=is_official_image,
+        ),
+        patch.dict(os.environ, env),
+    ):
+        assert package.is_docker_env() is any(
+            [dockerenv, containerenv, kubernetes_service_host, is_official_image]
+        )

@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic
 
 from deebot_client.capabilities import CapabilitySet
 from deebot_client.events import CleanCountEvent, CutDirectionEvent, VolumeEvent
+from deebot_client.events.base import Event
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -16,23 +16,21 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import DEGREE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EcovacsConfigEntry
 from .entity import (
     EcovacsCapabilityEntityDescription,
     EcovacsDescriptionEntity,
     EcovacsEntity,
-    EventT,
 )
-from .util import get_supported_entitites
+from .util import get_supported_entities
 
 
 @dataclass(kw_only=True, frozen=True)
-class EcovacsNumberEntityDescription(
+class EcovacsNumberEntityDescription[EventT: Event](
     NumberEntityDescription,
     EcovacsCapabilityEntityDescription,
-    Generic[EventT],
 ):
     """Ecovacs number entity description."""
 
@@ -83,19 +81,19 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsNumberEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EcovacsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add entities for passed config_entry in HA."""
     controller = config_entry.runtime_data
-    entities: list[EcovacsEntity] = get_supported_entitites(
+    entities: list[EcovacsEntity] = get_supported_entities(
         controller, EcovacsNumberEntity, ENTITY_DESCRIPTIONS
     )
     if entities:
         async_add_entities(entities)
 
 
-class EcovacsNumberEntity(
-    EcovacsDescriptionEntity[CapabilitySet[EventT, int]],
+class EcovacsNumberEntity[EventT: Event](
+    EcovacsDescriptionEntity[CapabilitySet[EventT, [int]]],
     NumberEntity,
 ):
     """Ecovacs number entity."""

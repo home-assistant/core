@@ -1,0 +1,10 @@
+{
+  "domain": "pterodactyl",
+  "name": "Pterodactyl",
+  "codeowners": ["@elmurato"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/pterodactyl",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["py-dactyl==2.0.4"]
+}

@@ -10,6 +10,11 @@ from aiohomekit.model.characteristics import (
 from aiohomekit.model.services import Service, ServicesTypes
 import pytest
 
+from homeassistant.components.media_player import (
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -407,4 +412,58 @@ async def test_migrate_unique_id(
     assert (
         entity_registry.async_get(media_player_entry.entity_id).unique_id
         == f"00:00:00:00:00:00_{aid}_8"
+    )
+
+
+async def test_turn_on(hass: HomeAssistant, get_next_aid: Callable[[], int]) -> None:
+    """Test that we can turn on a media player."""
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_tv_service_with_target_media_state
+    )
+
+    await helper.async_update(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.CURRENT_MEDIA_STATE: 0,
+        },
+    )
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_TURN_ON,
+        {"entity_id": "media_player.testdevice"},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.ACTIVE: 1,
+        },
+    )
+
+
+async def test_turn_off(hass: HomeAssistant, get_next_aid: Callable[[], int]) -> None:
+    """Test that we can turn off a media player."""
+    helper = await setup_test_component(
+        hass, get_next_aid(), create_tv_service_with_target_media_state
+    )
+
+    await helper.async_update(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.CURRENT_MEDIA_STATE: 0,
+        },
+    )
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_TURN_OFF,
+        {"entity_id": "media_player.testdevice"},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.TELEVISION,
+        {
+            CharacteristicsTypes.ACTIVE: 0,
+        },
     )

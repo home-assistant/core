@@ -31,7 +31,7 @@ from homeassistant.components.media_player import (
     RepeatMode,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .browse_media import async_browse_media_internal
@@ -70,7 +70,7 @@ AFTER_REQUEST_SLEEP = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SpotifyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Spotify based on a config entry."""
     data = entry.runtime_data

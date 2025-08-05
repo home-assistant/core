@@ -11,7 +11,7 @@ import pytest
 import simplehound.core as hound
 
 from homeassistant.components.image_processing import DOMAIN as IP_DOMAIN, SERVICE_SCAN
-import homeassistant.components.sighthound.image_processing as sh
+from homeassistant.components.sighthound import image_processing as sh
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_API_KEY,

@@ -6,17 +6,15 @@ from pydiscovergy import Discovergy
 from pydiscovergy.authentication import BasicAuth
 import pydiscovergy.error as discovergyError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.httpx_client import create_async_httpx_client
 
-from .coordinator import DiscovergyUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import DiscovergyConfigEntry, DiscovergyUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
-
-type DiscovergyConfigEntry = ConfigEntry[list[DiscovergyUpdateCoordinator]]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: DiscovergyConfigEntry) -> bool:
@@ -24,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DiscovergyConfigEntry) -
     client = Discovergy(
         email=entry.data[CONF_EMAIL],
         password=entry.data[CONF_PASSWORD],
-        httpx_client=get_async_client(hass),
+        httpx_client=create_async_httpx_client(hass),
         authentication=BasicAuth(),
     )
 
@@ -33,10 +31,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: DiscovergyConfigEntry) -
         # if no exception is raised everything is fine to go
         meters = await client.meters()
     except discovergyError.InvalidLogin as err:
-        raise ConfigEntryAuthFailed("Invalid email or password") from err
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+        ) from err
     except Exception as err:
         raise ConfigEntryNotReady(
-            "Unexpected error while while getting meters"
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect_meters_setup",
         ) from err
 
     # Init coordinators for meters
@@ -46,6 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DiscovergyConfigEntry) -
         # so we have data when entities are added
         coordinator = DiscovergyUpdateCoordinator(
             hass=hass,
+            config_entry=entry,
             meter=meter,
             discovergy_client=client,
         )

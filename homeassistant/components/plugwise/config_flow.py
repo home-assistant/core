@@ -16,7 +16,6 @@ from plugwise.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     ATTR_CONFIGURATION_URL,
@@ -29,6 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
     DEFAULT_PORT,
@@ -59,8 +59,6 @@ def smile_user_schema(discovery_info: ZeroconfServiceInfo | None) -> vol.Schema:
         schema = schema.extend(
             {
                 vol.Required(CONF_HOST): str,
-                # Port under investigation for removal (hence not added in #132878)
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
                 vol.Required(CONF_USERNAME, default=SMILE): vol.In(
                     {SMILE: FLOW_SMILE, STRETCH: FLOW_STRETCH}
                 ),
@@ -105,7 +103,7 @@ async def verify_connection(
         errors[CONF_BASE] = "response_error"
     except UnsupportedDeviceError:
         errors[CONF_BASE] = "unsupported"
-    except Exception:  # noqa: BLE001
+    except Exception:
         _LOGGER.exception(
             "Unknown exception while verifying connection with your Plugwise Smile"
         )
@@ -197,6 +195,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            user_input[CONF_PORT] = DEFAULT_PORT
             if self.discovery_info:
                 user_input[CONF_HOST] = self.discovery_info.host
                 user_input[CONF_PORT] = self.discovery_info.port
@@ -205,11 +204,11 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
             api, errors = await verify_connection(self.hass, user_input)
             if api:
                 await self.async_set_unique_id(
-                    api.smile_hostname or api.gateway_id,
+                    api.smile.hostname or api.gateway_id,
                     raise_on_progress=False,
                 )
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=api.smile_name, data=user_input)
+                return self.async_create_entry(title=api.smile.name, data=user_input)
 
         return self.async_show_form(
             step_id=SOURCE_USER,
@@ -237,7 +236,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
             api, errors = await verify_connection(self.hass, full_input)
             if api:
                 await self.async_set_unique_id(
-                    api.smile_hostname or api.gateway_id,
+                    api.smile.hostname or api.gateway_id,
                     raise_on_progress=False,
                 )
                 self._abort_if_unique_id_mismatch(reason="not_the_same_smile")

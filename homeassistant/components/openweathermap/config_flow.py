@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
     CONFIG_FLOW_VERSION,
@@ -68,6 +68,10 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input[CONF_NAME], data=data, options=options
                 )
+
+        description_placeholders["doc_url"] = (
+            "https://www.home-assistant.io/integrations/openweathermap/"
+        )
 
         schema = vol.Schema(
             {

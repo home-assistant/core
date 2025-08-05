@@ -23,7 +23,7 @@
   "entity": {
     "climate": {
       "auto_comfort": {
-        "name": "Auto comfort"
+        "name": "Auto Comfort"
       }
     },
     "fan": {
@@ -31,7 +31,7 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "auto": "[%key:component::climate::entity_component::_::state_attributes::fan_mode::state::auto%]"
+              "auto": "[%key:common::state::auto%]"
             }
           }
         }
@@ -39,25 +39,25 @@
     },
     "number": {
       "comfort_min_speed": {
-        "name": "Auto Comfort Minimum Speed"
+        "name": "Auto Comfort minimum speed"
       },
       "comfort_max_speed": {
-        "name": "Auto Comfort Maximum Speed"
+        "name": "Auto Comfort maximum speed"
       },
       "comfort_heat_assist_speed": {
-        "name": "Auto Comfort Heat Assist Speed"
+        "name": "Auto Comfort Heat Assist speed"
       },
       "return_to_auto_timeout": {
-        "name": "Return to Auto Timeout"
+        "name": "Return to Auto timeout"
       },
       "motion_sense_timeout": {
-        "name": "Motion Sense Timeout"
+        "name": "Motion sense timeout"
       },
       "light_return_to_auto_timeout": {
-        "name": "Light Return to Auto Timeout"
+        "name": "Light return to Auto timeout"
       },
       "light_auto_motion_timeout": {
-        "name": "Light Motion Sense Timeout"
+        "name": "Light motion sense timeout"
       }
     },
     "sensor": {
@@ -76,10 +76,10 @@
     },
     "switch": {
       "legacy_ir_remote_enable": {
-        "name": "Legacy IR Remote"
+        "name": "Legacy IR remote"
       },
       "led_indicators_enable": {
-        "name": "Led Indicators"
+        "name": "LED indicators"
       },
       "comfort_heat_assist_enable": {
         "name": "Auto Comfort Heat Assist"
@@ -88,10 +88,10 @@
         "name": "Beep"
       },
       "eco_enable": {
-        "name": "Eco Mode"
+        "name": "Eco mode"
       },
       "motion_sense_enable": {
-        "name": "Motion Sense"
+        "name": "Motion sense"
       },
       "return_to_auto_enable": {
         "name": "Return to Auto"
@@ -103,7 +103,7 @@
         "name": "Dim to Warm"
       },
       "light_return_to_auto_enable": {
-        "name": "Light Return to Auto"
+        "name": "Light return to Auto"
       }
     }
   }

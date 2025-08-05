@@ -1,9 +1,6 @@
 """Assist pipeline Websocket API."""
 
 import asyncio
-
-# Suppressing disable=deprecated-module is needed for Python 3.11
-import audioop  # pylint: disable=deprecated-module
 import base64
 from collections.abc import AsyncGenerator, Callable
 import contextlib
@@ -11,18 +8,22 @@ import logging
 import math
 from typing import Any, Final
 
+import audioop  # pylint: disable=deprecated-module
 import voluptuous as vol
 
 from homeassistant.components import conversation, stt, tts, websocket_api
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_SECONDS, MATCH_ALL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    chat_session,
+    config_validation as cv,
+    entity_registry as er,
+)
 from homeassistant.util import language as language_util
 
 from .const import (
     DEFAULT_PIPELINE_TIMEOUT,
     DEFAULT_WAKE_WORD_TIMEOUT,
-    DOMAIN,
     EVENT_RECORDING,
     SAMPLE_CHANNELS,
     SAMPLE_RATE,
@@ -30,9 +31,9 @@ from .const import (
 )
 from .error import PipelineNotFound
 from .pipeline import (
+    KEY_ASSIST_PIPELINE,
     AudioSettings,
     DeviceAudioQueue,
-    PipelineData,
     PipelineError,
     PipelineEvent,
     PipelineEventType,
@@ -148,7 +149,6 @@ async def websocket_run(
 
     # Arguments to PipelineInput
     input_args: dict[str, Any] = {
-        "conversation_id": msg.get("conversation_id"),
         "device_id": msg.get("device_id"),
     }
 
@@ -236,38 +236,42 @@ async def websocket_run(
         audio_settings=audio_settings or AudioSettings(),
     )
 
-    pipeline_input = PipelineInput(**input_args)
+    with chat_session.async_get_chat_session(
+        hass, msg.get("conversation_id")
+    ) as session:
+        input_args["session"] = session
+        pipeline_input = PipelineInput(**input_args)
 
-    try:
-        await pipeline_input.validate()
-    except PipelineError as error:
-        # Report more specific error when possible
-        connection.send_error(msg["id"], error.code, error.message)
-        return
+        try:
+            await pipeline_input.validate()
+        except PipelineError as error:
+            # Report more specific error when possible
+            connection.send_error(msg["id"], error.code, error.message)
+            return
 
-    # Confirm subscription
-    connection.send_result(msg["id"])
+        # Confirm subscription
+        connection.send_result(msg["id"])
 
-    run_task = hass.async_create_task(pipeline_input.execute())
+        run_task = hass.async_create_task(pipeline_input.execute())
 
-    # Cancel pipeline if user unsubscribes
-    connection.subscriptions[msg["id"]] = run_task.cancel
+        # Cancel pipeline if user unsubscribes
+        connection.subscriptions[msg["id"]] = run_task.cancel
 
-    try:
-        # Task contains a timeout
-        async with asyncio.timeout(timeout):
-            await run_task
-    except TimeoutError:
-        pipeline_input.run.process_event(
-            PipelineEvent(
-                PipelineEventType.ERROR,
-                {"code": "timeout", "message": "Timeout running pipeline"},
+        try:
+            # Task contains a timeout
+            async with asyncio.timeout(timeout):
+                await run_task
+        except TimeoutError:
+            pipeline_input.run.process_event(
+                PipelineEvent(
+                    PipelineEventType.ERROR,
+                    {"code": "timeout", "message": "Timeout running pipeline"},
+                )
             )
-        )
-    finally:
-        if unregister_handler is not None:
-            # Unregister binary handler
-            unregister_handler()
+        finally:
+            if unregister_handler is not None:
+                # Unregister binary handler
+                unregister_handler()
 
 
 @callback
@@ -284,7 +288,7 @@ def websocket_list_runs(
     msg: dict[str, Any],
 ) -> None:
     """List pipeline runs for which debug data is available."""
-    pipeline_data: PipelineData = hass.data[DOMAIN]
+    pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
     pipeline_id = msg["pipeline_id"]
 
     if pipeline_id not in pipeline_data.pipeline_debug:
@@ -320,7 +324,7 @@ def websocket_list_devices(
     msg: dict[str, Any],
 ) -> None:
     """List assist devices."""
-    pipeline_data: PipelineData = hass.data[DOMAIN]
+    pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
     ent_reg = er.async_get(hass)
     connection.send_result(
         msg["id"],
@@ -351,7 +355,7 @@ def websocket_get_run(
     msg: dict[str, Any],
 ) -> None:
     """Get debug data for a pipeline run."""
-    pipeline_data: PipelineData = hass.data[DOMAIN]
+    pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
     pipeline_id = msg["pipeline_id"]
     pipeline_run_id = msg["pipeline_run_id"]
 
@@ -456,7 +460,7 @@ async def websocket_device_capture(
     msg: dict[str, Any],
 ) -> None:
     """Capture raw audio from a satellite device and forward to client."""
-    pipeline_data: PipelineData = hass.data[DOMAIN]
+    pipeline_data = hass.data[KEY_ASSIST_PIPELINE]
     device_id = msg["device_id"]
 
     # Number of seconds to record audio in wall clock time

@@ -1,6 +1,8 @@
 """Test Enphase Envoy runtime."""
 
-from unittest.mock import AsyncMock, patch
+from datetime import timedelta
+import logging
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from jwt import encode
@@ -15,7 +17,11 @@ from homeassistant.components.enphase_envoy.const import (
     OPTION_DISABLE_KEEP_ALIVE,
     Platform,
 )
-from homeassistant.components.enphase_envoy.coordinator import SCAN_INTERVAL
+from homeassistant.components.enphase_envoy.coordinator import (
+    FIRMWARE_REFRESH_INTERVAL,
+    MAC_VERIFICATION_DELAY,
+    SCAN_INTERVAL,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
@@ -47,10 +53,8 @@ async def test_with_pre_v7_firmware(
     )
     await setup_integration(hass, config_entry)
 
-    assert config_entry.state is ConfigEntryState.LOADED
-
     assert (entity_state := hass.states.get("sensor.inverter_1"))
-    assert entity_state.state == "1"
+    assert entity_state.state == "116"
 
 
 @pytest.mark.freeze_time("2024-07-23 00:00:00+00:00")
@@ -79,11 +83,9 @@ async def test_token_in_config_file(
     )
     mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial="1234")
     await setup_integration(hass, entry)
-    await hass.async_block_till_done(wait_background_tasks=True)
-    assert entry.state is ConfigEntryState.LOADED
 
     assert (entity_state := hass.states.get("sensor.inverter_1"))
-    assert entity_state.state == "1"
+    assert entity_state.state == "116"
 
 
 @respx.mock
@@ -124,11 +126,9 @@ async def test_expired_token_in_config(
         cloud_password="test_password",
     )
     await setup_integration(hass, entry)
-    await hass.async_block_till_done(wait_background_tasks=True)
-    assert entry.state is ConfigEntryState.LOADED
 
     assert (entity_state := hass.states.get("sensor.inverter_1"))
-    assert entity_state.state == "1"
+    assert entity_state.state == "116"
 
 
 async def test_coordinator_update_error(
@@ -225,11 +225,47 @@ async def test_coordinator_token_refresh_error(
     ):
         await setup_integration(hass, entry)
 
-    await hass.async_block_till_done(wait_background_tasks=True)
-    assert entry.state is ConfigEntryState.LOADED
-
     assert (entity_state := hass.states.get("sensor.inverter_1"))
-    assert entity_state.state == "1"
+    assert entity_state.state == "116"
+
+
+@respx.mock
+@pytest.mark.freeze_time("2024-07-23 00:00:00+00:00")
+async def test_coordinator_first_update_auth_error(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+) -> None:
+    """Test coordinator update error handling."""
+    current_token = encode(
+        # some time in future
+        payload={"name": "envoy", "exp": 1927314600},
+        key="secret",
+        algorithm="HS256",
+    )
+
+    # mock envoy with expired token in config
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="45a36e55aaddb2007c5f6602e0c38e72",
+        title="Envoy 1234",
+        unique_id="1234",
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_NAME: "Envoy 1234",
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+            CONF_TOKEN: current_token,
+        },
+    )
+    mock_envoy.auth = EnvoyTokenAuth(
+        "127.0.0.1",
+        token=current_token,
+        envoy_serial="1234",
+        cloud_username="test_username",
+        cloud_password="test_password",
+    )
+    mock_envoy.authenticate.side_effect = EnvoyAuthenticationError("Failing test")
+    await setup_integration(hass, entry, ConfigEntryState.SETUP_ERROR)
 
 
 async def test_config_no_unique_id(
@@ -250,7 +286,6 @@ async def test_config_no_unique_id(
         },
     )
     await setup_integration(hass, entry)
-    assert entry.state is ConfigEntryState.LOADED
     assert entry.unique_id == mock_envoy.serial_number
 
 
@@ -263,7 +298,7 @@ async def test_config_different_unique_id(
         domain=DOMAIN,
         entry_id="45a36e55aaddb2007c5f6602e0c38e72",
         title="Envoy 1234",
-        unique_id=4321,
+        unique_id="4321",
         data={
             CONF_HOST: "1.1.1.1",
             CONF_NAME: "Envoy 1234",
@@ -271,8 +306,7 @@ async def test_config_different_unique_id(
             CONF_PASSWORD: "test-password",
         },
     )
-    await setup_integration(hass, entry)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+    await setup_integration(hass, entry, expected_state=ConfigEntryState.SETUP_RETRY)
 
 
 @pytest.mark.parametrize(
@@ -293,7 +327,6 @@ async def test_remove_config_entry_device(
     """Test removing enphase_envoy config entry device."""
     assert await async_setup_component(hass, "config", {})
     await setup_integration(hass, config_entry)
-    assert config_entry.state is ConfigEntryState.LOADED
 
     # use client to send remove_device command
     hass_client = await hass_ws_client(hass)
@@ -344,10 +377,10 @@ async def test_option_change_reload(
 ) -> None:
     """Test options change will reload entity."""
     await setup_integration(hass, config_entry)
-    await hass.async_block_till_done(wait_background_tasks=True)
-    assert config_entry.state is ConfigEntryState.LOADED
+    # By default neither option is available
+    assert config_entry.options == {}
 
-    # option change will take care of COV of init::async_reload_entry
+    # option change will also take care of COV of init::async_reload_entry
     hass.config_entries.async_update_entry(
         config_entry,
         options={
@@ -355,8 +388,242 @@ async def test_option_change_reload(
             OPTION_DISABLE_KEEP_ALIVE: True,
         },
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.options == {
         OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: False,
         OPTION_DISABLE_KEEP_ALIVE: True,
+    }
+    # flip em
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={
+            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: True,
+            OPTION_DISABLE_KEEP_ALIVE: False,
+        },
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.options == {
+        OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: True,
+        OPTION_DISABLE_KEEP_ALIVE: False,
+    }
+
+
+def mock_envoy_setup(mock_envoy: AsyncMock):
+    """Mock envoy.setup."""
+    mock_envoy.firmware = "9.9.9999"
+
+
+@patch(
+    "homeassistant.components.enphase_envoy.coordinator.SCAN_INTERVAL",
+    timedelta(days=1),
+)
+@respx.mock
+async def test_coordinator_firmware_refresh(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test coordinator scheduled firmware check."""
+    await setup_integration(hass, config_entry)
+
+    # Move time to next firmware check moment
+    # SCAN_INTERVAL is patched to 1 day to disable it's firmware detection
+    mock_envoy.setup.reset_mock()
+    freezer.tick(FIRMWARE_REFRESH_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_envoy.setup.assert_called_once_with()
+    mock_envoy.setup.reset_mock()
+
+    envoy = config_entry.runtime_data.envoy
+    assert envoy.firmware == "7.6.175"
+
+    caplog.set_level(logging.WARNING)
+
+    with patch(
+        "homeassistant.components.enphase_envoy.Envoy.setup",
+        MagicMock(return_value=mock_envoy_setup(mock_envoy)),
+    ):
+        freezer.tick(FIRMWARE_REFRESH_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        assert (
+            "Envoy firmware changed from: 7.6.175 to: 9.9.9999, reloading config entry Envoy 1234"
+            in caplog.text
+        )
+        envoy = config_entry.runtime_data.envoy
+        assert envoy.firmware == "9.9.9999"
+
+
+@respx.mock
+async def test_coordinator_firmware_refresh_with_envoy_error(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test coordinator scheduled firmware check."""
+    await setup_integration(hass, config_entry)
+
+    caplog.set_level(logging.DEBUG)
+    logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
+        logging.DEBUG
+    )
+
+    mock_envoy.setup.side_effect = EnvoyError
+    freezer.tick(FIRMWARE_REFRESH_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "Error reading firmware:" in caplog.text
+
+
+@respx.mock
+async def test_coordinator_interface_information(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test coordinator interface mac verification."""
+    await setup_integration(hass, config_entry)
+
+    caplog.set_level(logging.DEBUG)
+    logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
+        logging.DEBUG
+    )
+
+    # move time forward so interface information is fetched
+    freezer.tick(MAC_VERIFICATION_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # verify first time add of mac to connections is in log
+    assert "added connection" in caplog.text
+
+    # update options and reload
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={
+            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: False,
+            OPTION_DISABLE_KEEP_ALIVE: True,
+        },
+    )
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    caplog.clear()
+    # envoy reloaded and device registry still has connection info
+    # force mac verification again to test existing connection is verified
+    freezer.tick(MAC_VERIFICATION_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # verify existing connection is verified in log
+    assert "connection verified as existing" in caplog.text
+
+
+@respx.mock
+async def test_coordinator_interface_information_no_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test coordinator interface mac verification full code cov."""
+    await setup_integration(hass, config_entry)
+
+    caplog.set_level(logging.DEBUG)
+    logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
+        logging.DEBUG
+    )
+
+    # update device to force no device found in mac verification
+    envoy_device = device_registry.async_get_device(
+        identifiers={
+            (
+                DOMAIN,
+                mock_envoy.serial_number,
+            )
+        }
+    )
+    device_registry.async_update_device(
+        device_id=envoy_device.id,
+        new_identifiers={(DOMAIN, "9999")},
+    )
+
+    # move time forward so interface information is fetched
+    freezer.tick(MAC_VERIFICATION_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # verify no device found message in log
+    assert "No envoy device found in device registry" in caplog.text
+
+
+@respx.mock
+async def test_coordinator_interface_information_mac_also_in_other_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test coordinator interface mac verification with MAC also in other existing device."""
+    await setup_integration(hass, config_entry)
+
+    caplog.set_level(logging.DEBUG)
+    logging.getLogger("homeassistant.components.enphase_envoy.coordinator").setLevel(
+        logging.DEBUG
+    )
+
+    # add existing device with MAC and sparsely populated i.e. unifi that found envoy
+    other_config_entry = MockConfigEntry(domain="test", data={})
+    other_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=other_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:11:22:33:44:55")},
+        manufacturer="Enphase Energy",
+    )
+
+    envoy_device = device_registry.async_get_device(
+        identifiers={
+            (
+                DOMAIN,
+                mock_envoy.serial_number,
+            )
+        }
+    )
+    assert envoy_device
+
+    # move time forward so interface information is fetched
+    freezer.tick(MAC_VERIFICATION_DELAY)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # verify mac was added
+    assert "added connection: ('mac', '00:11:22:33:44:55') to Envoy 1234" in caplog.text
+
+    # verify connection is now in envoy device
+    envoy_device_refetched = device_registry.async_get(envoy_device.id)
+    assert envoy_device_refetched
+    assert envoy_device_refetched.name == "Envoy 1234"
+    assert envoy_device_refetched.serial_number == "1234"
+    assert envoy_device_refetched.connections == {
+        (
+            dr.CONNECTION_NETWORK_MAC,
+            "00:11:22:33:44:55",
+        )
     }

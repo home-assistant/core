@@ -8,13 +8,11 @@ from typing import Any
 from freebox_api.exceptions import InsufficientPermissionsError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .router import FreeboxRouter
+from .router import FreeboxConfigEntry, FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,10 +27,12 @@ SWITCH_DESCRIPTIONS = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FreeboxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the switch."""
-    router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
+    router = entry.runtime_data
     entities = [
         FreeboxSwitch(router, entity_description)
         for entity_description in SWITCH_DESCRIPTIONS

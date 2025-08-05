@@ -6,7 +6,7 @@ from unittest.mock import patch
 from homeassistant.components.nuheat.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .mocks import (
     MOCK_CONFIG_ENTRY,

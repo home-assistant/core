@@ -5,6 +5,29 @@
         "default": "mdi:hand-wave"
       }
     },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "mdi:fan-auto",
+              "smart": "mdi:fan-auto"
+            }
+          }
+        }
+      }
+    },
+    "light": {
+      "light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "colorloop": "mdi:looks"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "timer_duration": {
         "default": "mdi:timer"
@@ -124,6 +147,12 @@
       },
       "on_led_color": {
         "default": "mdi:palette"
+      },
+      "device_mode": {
+        "default": "mdi:cogs"
+      },
+      "pilot_wire_mode": {
+        "default": "mdi:radiator"
       }
     },
     "sensor": {

@@ -7,8 +7,8 @@ from datetime import datetime, timedelta
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import WASTE_TYPE_TO_DESCRIPTION
 from .coordinator import TwenteMilieuConfigEntry
@@ -18,7 +18,7 @@ from .entity import TwenteMilieuEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TwenteMilieuConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Twente Milieu calendar based on a config entry."""
     async_add_entities([TwenteMilieuCalendar(entry)])
@@ -70,8 +70,7 @@ class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEntity):
                 waste_dates
                 and (
                     next_waste_pickup_date is None
-                    or waste_dates[0]  # type: ignore[unreachable]
-                    < next_waste_pickup_date
+                    or waste_dates[0] < next_waste_pickup_date
                 )
                 and waste_dates[0] >= dt_util.now().date()
             ):

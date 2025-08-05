@@ -42,5 +42,10 @@
         "name": "Wind chill"
       }
     }
+  },
+  "exceptions": {
+    "update_error": {
+      "message": "Error updating data"
+    }
   }
 }

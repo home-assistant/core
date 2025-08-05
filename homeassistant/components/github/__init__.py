@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from aiogithubapi import GitHubAPI
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -14,12 +13,9 @@ from homeassistant.helpers.aiohttp_client import (
 )
 
 from .const import CONF_REPOSITORIES, DOMAIN, LOGGER
-from .coordinator import GitHubDataUpdateCoordinator
+from .coordinator import GithubConfigEntry, GitHubDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-
-type GithubConfigEntry = ConfigEntry[dict[str, GitHubDataUpdateCoordinator]]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bool:
@@ -36,6 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bo
     for repository in repositories:
         coordinator = GitHubDataUpdateCoordinator(
             hass=hass,
+            config_entry=entry,
             client=client,
             repository=repository,
         )
@@ -50,14 +47,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bo
     async_cleanup_device_registry(hass=hass, entry=entry)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True
 
 
 @callback
 def async_cleanup_device_registry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: GithubConfigEntry,
 ) -> None:
     """Remove entries form device registry if we no longer track the repository."""
     device_registry = dr.async_get(hass)
@@ -90,8 +86,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> b
         coordinator.unsubscribe()
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle an options update."""
-    await hass.config_entries.async_reload(entry.entry_id)

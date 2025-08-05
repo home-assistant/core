@@ -1,13 +1,23 @@
 {
   "config": {
     "step": {
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      "user": {
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        }
       }
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "[%key:common::config_flow::error::cannot_connect%]"
     }
   }
 }

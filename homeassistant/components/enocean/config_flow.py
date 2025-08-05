@@ -1,4 +1,4 @@
-"""Config flows for the ENOcean integration."""
+"""Config flows for the EnOcean integration."""
 
 from typing import Any
 
@@ -6,6 +6,11 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from . import dongle
 from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER
@@ -15,7 +20,7 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle the enOcean config flows."""
 
     VERSION = 1
-    MANUAL_PATH_VALUE = "Custom path"
+    MANUAL_PATH_VALUE = "manual"
 
     def __init__(self) -> None:
         """Initialize the EnOcean config flow."""
@@ -52,14 +57,24 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.create_enocean_entry(user_input)
             errors = {CONF_DEVICE: ERROR_INVALID_DONGLE_PATH}
 
-        bridges = await self.hass.async_add_executor_job(dongle.detect)
-        if len(bridges) == 0:
+        devices = await self.hass.async_add_executor_job(dongle.detect)
+        if len(devices) == 0:
             return await self.async_step_manual(user_input)
+        devices.append(self.MANUAL_PATH_VALUE)
 
-        bridges.append(self.MANUAL_PATH_VALUE)
         return self.async_show_form(
             step_id="detect",
-            data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(bridges)}),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_DEVICE): SelectSelector(
+                        SelectSelectorConfig(
+                            options=devices,
+                            translation_key="devices",
+                            mode=SelectSelectorMode.LIST,
+                        )
+                    )
+                }
+            ),
             errors=errors,
         )
 

@@ -5,9 +5,9 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 from mcstatus import BedrockServer, JavaServer
-from mcstatus.status_response import BedrockStatusResponse, JavaStatusResponse
+from mcstatus.responses import BedrockStatusResponse, JavaStatusResponse
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant
@@ -64,7 +64,9 @@ async def test_binary_sensor(
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        assert hass.states.get("binary_sensor.minecraft_server_status") == snapshot
+        assert (
+            hass.states.get("binary_sensor.mc_dummyserver_com_25566_status") == snapshot
+        )
 
 
 @pytest.mark.parametrize(
@@ -113,7 +115,9 @@ async def test_binary_sensor_update(
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
-        assert hass.states.get("binary_sensor.minecraft_server_status") == snapshot
+        assert (
+            hass.states.get("binary_sensor.mc_dummyserver_com_25566_status") == snapshot
+        )
 
 
 @pytest.mark.parametrize(
@@ -167,5 +171,6 @@ async def test_binary_sensor_update_failure(
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert (
-            hass.states.get("binary_sensor.minecraft_server_status").state == STATE_OFF
+            hass.states.get("binary_sensor.mc_dummyserver_com_25566_status").state
+            == STATE_OFF
         )

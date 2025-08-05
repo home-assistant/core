@@ -1,5 +1,6 @@
 """Tests for Fritz!Tools config flow."""
 
+from copy import deepcopy
 import dataclasses
 from unittest.mock import patch
 
@@ -10,17 +11,18 @@ from fritzconnection.core.exceptions import (
 )
 import pytest
 
-from homeassistant.components import ssdp
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )
 from homeassistant.components.fritz.const import (
+    CONF_FEATURE_DEVICE_TRACKING,
     CONF_OLD_DISCOVERY,
     DOMAIN,
     ERROR_AUTH_INVALID,
     ERROR_CANNOT_CONNECT,
     ERROR_UNKNOWN,
+    ERROR_UPNP_NOT_CONFIGURED,
     FRITZ_AUTH_EXCEPTIONS,
 )
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
@@ -33,8 +35,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
+from .conftest import FritzConnectionMock
 from .const import (
+    MOCK_FB_SERVICES,
     MOCK_FIRMWARE_INFO,
     MOCK_IPS,
     MOCK_REQUEST,
@@ -644,7 +653,7 @@ async def test_ssdp_already_in_progress_host(
 
         MOCK_NO_UNIQUE_ID = dataclasses.replace(MOCK_SSDP_DATA)
         MOCK_NO_UNIQUE_ID.upnp = MOCK_NO_UNIQUE_ID.upnp.copy()
-        del MOCK_NO_UNIQUE_ID.upnp[ssdp.ATTR_UPNP_UDN]
+        del MOCK_NO_UNIQUE_ID.upnp[ATTR_UPNP_UDN]
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_SSDP}, data=MOCK_NO_UNIQUE_ID
         )
@@ -736,6 +745,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_OLD_DISCOVERY: False,
         CONF_CONSIDER_HOME: 37,
+        CONF_FEATURE_DEVICE_TRACKING: True,
     }
 
 
@@ -745,15 +755,66 @@ async def test_ssdp_ipv6_link_local(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location="https://[fe80::1ff:fe23:4567:890a]:12345/test",
             upnp={
-                ssdp.ATTR_UPNP_FRIENDLY_NAME: "fake_name",
-                ssdp.ATTR_UPNP_UDN: "uuid:only-a-test",
+                ATTR_UPNP_FRIENDLY_NAME: "fake_name",
+                ATTR_UPNP_UDN: "uuid:only-a-test",
             },
         ),
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "ignore_ip6_link_local"
+
+
+async def test_upnp_not_enabled(hass: HomeAssistant) -> None:
+    """Test if UPNP service is enabled on the router."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # Disable UPnP
+    services = deepcopy(MOCK_FB_SERVICES)
+    services["X_AVM-DE_UPnP1"]["GetInfo"]["NewEnable"] = False
+
+    with patch(
+        "homeassistant.components.fritz.config_flow.FritzConnection",
+        return_value=FritzConnectionMock(services),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_INPUT_SIMPLE
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"]["base"] == ERROR_UPNP_NOT_CONFIGURED
+
+    # Enable UPnP
+    services["X_AVM-DE_UPnP1"]["GetInfo"]["NewEnable"] = True
+
+    with (
+        patch(
+            "homeassistant.components.fritz.config_flow.FritzConnection",
+            return_value=FritzConnectionMock(services),
+        ),
+        patch(
+            "homeassistant.components.fritz.config_flow.socket.gethostbyname",
+            return_value=MOCK_IPS["fritz.box"],
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_USER_INPUT_SIMPLE
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["data"][CONF_HOST] == "fake_host"
+        assert result["data"][CONF_PASSWORD] == "fake_pass"
+        assert result["data"][CONF_USERNAME] == "fake_user"
+        assert result["data"][CONF_PORT] == 49000
+        assert result["data"][CONF_SSL] is False

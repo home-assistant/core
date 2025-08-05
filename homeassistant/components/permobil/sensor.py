@@ -32,7 +32,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfLength, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import BATTERY_ASSUMED_VOLTAGE, DOMAIN, KM, MILES
 from .coordinator import MyPermobilCoordinator
@@ -175,7 +175,7 @@ DISTANCE_UNITS: dict[Any, UnitOfLength] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create sensors from a config entry created in the integrations UI."""
 

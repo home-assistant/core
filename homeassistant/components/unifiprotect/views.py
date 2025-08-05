@@ -45,6 +45,34 @@ def async_generate_thumbnail_url(
 
 
 @callback
+def async_generate_snapshot_url(
+    nvr_id: str,
+    camera_id: str,
+    timestamp: datetime,
+    width: int | None = None,
+    height: int | None = None,
+) -> str:
+    """Generate URL for event thumbnail."""
+
+    url_format = SnapshotProxyView.url
+    if TYPE_CHECKING:
+        assert url_format is not None
+    url = url_format.format(
+        nvr_id=nvr_id,
+        camera_id=camera_id,
+        timestamp=timestamp.replace(microsecond=0).isoformat(),
+    )
+
+    params = {}
+    if width is not None:
+        params["width"] = str(width)
+    if height is not None:
+        params["height"] = str(height)
+
+    return f"{url}?{urlencode(params)}"
+
+
+@callback
 def async_generate_event_video_url(event: Event) -> str:
     """Generate URL for event video."""
 
@@ -186,6 +214,59 @@ class ThumbnailProxyView(ProtectProxyView):
             return _404("Event thumbnail not found")
 
         return web.Response(body=thumbnail, content_type="image/jpeg")
+
+
+class SnapshotProxyView(ProtectProxyView):
+    """View to proxy snapshots at specified time from UniFi Protect."""
+
+    url = "/api/unifiprotect/snapshot/{nvr_id}/{camera_id}/{timestamp}"
+    name = "api:unifiprotect_snapshot"
+
+    async def get(
+        self, request: web.Request, nvr_id: str, camera_id: str, timestamp: str
+    ) -> web.Response:
+        """Get snapshot."""
+
+        data = self._get_data_or_404(nvr_id)
+        if isinstance(data, web.Response):
+            return data
+
+        camera = self._async_get_camera(data, camera_id)
+        if camera is None:
+            return _404(f"Invalid camera ID: {camera_id}")
+        if not camera.can_read_media(data.api.bootstrap.auth_user):
+            return _403(f"User cannot read media from camera: {camera.id}")
+
+        width: int | str | None = request.query.get("width")
+        height: int | str | None = request.query.get("height")
+
+        if width is not None:
+            try:
+                width = int(width)
+            except ValueError:
+                return _400("Invalid width param")
+        if height is not None:
+            try:
+                height = int(height)
+            except ValueError:
+                return _400("Invalid height param")
+
+        try:
+            timestamp_dt = datetime.fromisoformat(timestamp)
+        except ValueError:
+            return _400("Invalid timestamp")
+
+        try:
+            snapshot = await camera.get_snapshot(
+                width=width, height=height, dt=timestamp_dt
+            )
+        except ClientError as err:
+            return _404(err)
+
+        if snapshot is None:
+            return _404("snapshot not found")
+
+        return web.Response(body=snapshot, content_type="image/jpeg")
 
 
 class VideoProxyView(ProtectProxyView):

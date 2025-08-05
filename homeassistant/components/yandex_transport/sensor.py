@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from aioymaps import CaptchaError, NoSessionError, YandexMapsRequester
 import voluptuous as vol
@@ -15,11 +16,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,6 +72,7 @@ class DiscoverYandexTransport(SensorEntity):
     """Implementation of yandex_transport sensor."""
 
     _attr_attribution = "Data provided by maps.yandex.ru"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_icon = "mdi:bus"
 
     def __init__(self, requester: YandexMapsRequester, stop_id, routes, name) -> None:
@@ -78,13 +80,15 @@ class DiscoverYandexTransport(SensorEntity):
         self.requester = requester
         self._stop_id = stop_id
         self._routes = routes
-        self._state = None
-        self._name = name
-        self._attrs = None
+        self._attr_name = name
 
-    async def async_update(self, *, tries=0):
+    async def async_update(self) -> None:
         """Get the latest data from maps.yandex.ru and update the states."""
-        attrs = {}
+        await self._try_update(tries=0)
+
+    async def _try_update(self, *, tries: int) -> None:
+        """Get the latest data from maps.yandex.ru and update the states."""
+        attrs: dict[str, Any] = {}
         closer_time = None
         try:
             yandex_reply = await self.requester.get_stop_info(self._stop_id)
@@ -108,7 +112,7 @@ class DiscoverYandexTransport(SensorEntity):
             if tries > 0:
                 return
             await self.requester.set_new_session()
-            await self.async_update(tries=tries + 1)
+            await self._try_update(tries=tries + 1)
             return
 
         stop_name = data["name"]
@@ -146,27 +150,9 @@ class DiscoverYandexTransport(SensorEntity):
         attrs[STOP_NAME] = stop_name
 
         if closer_time is None:
-            self._state = None
+            self._attr_native_value = None
         else:
-            self._state = dt_util.utc_from_timestamp(closer_time).replace(microsecond=0)
-        self._attrs = attrs
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return SensorDeviceClass.TIMESTAMP
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return self._attrs
+            self._attr_native_value = dt_util.utc_from_timestamp(closer_time).replace(
+                microsecond=0
+            )
+        self._attr_extra_state_attributes = attrs

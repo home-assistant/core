@@ -2,30 +2,21 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from py_aosmith import AOSmithAPIClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, device_registry as dr
 
 from .const import DOMAIN
-from .coordinator import AOSmithEnergyCoordinator, AOSmithStatusCoordinator
+from .coordinator import (
+    AOSmithConfigEntry,
+    AOSmithData,
+    AOSmithEnergyCoordinator,
+    AOSmithStatusCoordinator,
+)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.WATER_HEATER]
-
-type AOSmithConfigEntry = ConfigEntry[AOSmithData]
-
-
-@dataclass
-class AOSmithData:
-    """Data for the A. O. Smith integration."""
-
-    client: AOSmithAPIClient
-    status_coordinator: AOSmithStatusCoordinator
-    energy_coordinator: AOSmithEnergyCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AOSmithConfigEntry) -> bool:
@@ -36,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AOSmithConfigEntry) -> b
     session = aiohttp_client.async_get_clientsession(hass)
     client = AOSmithAPIClient(email, password, session)
 
-    status_coordinator = AOSmithStatusCoordinator(hass, client)
+    status_coordinator = AOSmithStatusCoordinator(hass, entry, client)
     await status_coordinator.async_config_entry_first_refresh()
 
     device_registry = dr.async_get(hass)
@@ -53,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AOSmithConfigEntry) -> b
         )
 
     energy_coordinator = AOSmithEnergyCoordinator(
-        hass, client, list(status_coordinator.data)
+        hass, entry, client, list(status_coordinator.data)
     )
     await energy_coordinator.async_config_entry_first_refresh()
 

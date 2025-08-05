@@ -642,7 +642,7 @@
       'entity_picture_local': None,
       'friendly_name': 'Living room Balance',
       'group_members': list([
-        'media_player.beosound_balance_22222222',
+        'media_player.beoconnect_core_22222222',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
@@ -661,7 +661,7 @@
       'supported_features': <MediaPlayerEntityFeature: 2095933>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beosound_balance_22222222',
+    'entity_id': 'media_player.beoconnect_core_22222222',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -737,7 +737,7 @@
       'entity_picture_local': None,
       'friendly_name': 'Living room Balance',
       'group_members': list([
-        'media_player.beosound_balance_22222222',
+        'media_player.beoconnect_core_22222222',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
@@ -756,7 +756,7 @@
       'supported_features': <MediaPlayerEntityFeature: 2095933>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beosound_balance_22222222',
+    'entity_id': 'media_player.beoconnect_core_22222222',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -831,7 +831,7 @@
       'entity_picture_local': None,
       'friendly_name': 'Living room Balance',
       'group_members': list([
-        'media_player.beosound_balance_22222222',
+        'media_player.beoconnect_core_22222222',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
@@ -850,7 +850,7 @@
       'supported_features': <MediaPlayerEntityFeature: 2095933>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beosound_balance_22222222',
+    'entity_id': 'media_player.beoconnect_core_22222222',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -924,7 +924,7 @@
       'entity_picture_local': None,
       'friendly_name': 'Living room Balance',
       'group_members': list([
-        'media_player.beosound_balance_22222222',
+        'media_player.beoconnect_core_22222222',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
@@ -943,7 +943,7 @@
       'supported_features': <MediaPlayerEntityFeature: 2095933>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beosound_balance_22222222',
+    'entity_id': 'media_player.beoconnect_core_22222222',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1003,7 +1003,7 @@
     'attributes': ReadOnlyDict({
       'beolink': dict({
         'leader': dict({
-          'Laundry room Balance': '1111.1111111.22222222@products.bang-olufsen.com',
+          'Laundry room Core': '1111.1111111.22222222@products.bang-olufsen.com',
         }),
         'peers': dict({
           'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
@@ -1017,7 +1017,7 @@
       'entity_picture_local': None,
       'friendly_name': 'Living room Balance',
       'group_members': list([
-        'media_player.beosound_balance_22222222',
+        'media_player.beoconnect_core_22222222',
         'media_player.beosound_balance_11111111',
       ]),
       'media_content_type': <MediaType.MUSIC: 'music'>,
@@ -1062,7 +1062,7 @@
       'entity_picture_local': None,
       'friendly_name': 'Living room Balance',
       'group_members': list([
-        'media_player.beosound_balance_22222222',
+        'media_player.beoconnect_core_22222222',
         'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
         'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
       ]),
@@ -1081,7 +1081,7 @@
       'supported_features': <MediaPlayerEntityFeature: 2095933>,
     }),
     'context': <ANY>,
-    'entity_id': 'media_player.beosound_balance_22222222',
+    'entity_id': 'media_player.beoconnect_core_22222222',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

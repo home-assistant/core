@@ -5,7 +5,7 @@ import socket
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from psutil._common import sdiskusage, shwtemp, snetio, snicaddr
+from psutil._common import sdiskpart, sdiskusage, shwtemp, snetio, snicaddr
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -504,3 +504,43 @@ async def test_remove_obsolete_entities(
         entity_registry.async_get("sensor.systemmonitor_network_out_veth54321")
         is not None
     )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_no_duplicate_disk_entities(
+    hass: HomeAssistant,
+    mock_psutil: Mock,
+    mock_os: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the sensor."""
+    mock_psutil.disk_usage.return_value = sdiskusage(
+        500 * 1024**3, 300 * 1024**3, 200 * 1024**3, 60.0
+    )
+    mock_psutil.disk_partitions.return_value = [
+        sdiskpart("test", "/", "ext4", ""),
+        sdiskpart("test2", "/media/share", "ext4", ""),
+        sdiskpart("test3", "/incorrect", "", ""),
+        sdiskpart("test4", "/media/frigate", "ext4", ""),
+        sdiskpart("test4", "/media/FRIGATE", "ext4", ""),
+        sdiskpart("hosts", "/etc/hosts", "bind", ""),
+        sdiskpart("proc", "/proc/run", "proc", ""),
+    ]
+
+    mock_config_entry = MockConfigEntry(
+        title="System Monitor",
+        domain=DOMAIN,
+        data={},
+        options={
+            "binary_sensor": {"process": ["python3", "pip"]},
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    disk_sensor = hass.states.get("sensor.system_monitor_disk_usage_media_frigate")
+    assert disk_sensor is not None
+    assert disk_sensor.state == "60.0"
+
+    assert "Platform systemmonitor does not generate unique IDs." not in caplog.text

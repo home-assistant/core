@@ -5,30 +5,28 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum, StrEnum
-from typing import Any
 
 from pynecil import (
     AnimationSpeed,
     AutostartMode,
     BatteryType,
     CharSetting,
-    CommunicationError,
     LockingMode,
     LogoDuration,
     ScreenOrientationMode,
     ScrollSpeed,
     SettingsDataResponse,
     TempUnit,
+    TipType,
+    USBPDMode,
 )
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import IronOSConfigEntry
-from .const import DOMAIN
 from .coordinator import IronOSCoordinators
 from .entity import IronOSBaseEntity
 
@@ -41,7 +39,7 @@ class IronOSSelectEntityDescription(SelectEntityDescription):
 
     value_fn: Callable[[SettingsDataResponse], str | None]
     characteristic: CharSetting
-    raw_value_fn: Callable[[str], Any] | None = None
+    raw_value_fn: Callable[[str], Enum]
 
 
 class PinecilSelect(StrEnum):
@@ -55,6 +53,8 @@ class PinecilSelect(StrEnum):
     DESC_SCROLL_SPEED = "desc_scroll_speed"
     LOCKING_MODE = "locking_mode"
     LOGO_DURATION = "logo_duration"
+    USB_PD_MODE = "usb_pd_mode"
+    TIP_TYPE = "tip_type"
 
 
 def enum_to_str(enum: Enum | None) -> str | None:
@@ -141,19 +141,58 @@ PINECIL_SELECT_DESCRIPTIONS: tuple[IronOSSelectEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
 )
+PINECIL_SELECT_DESCRIPTIONS_V222: tuple[IronOSSelectEntityDescription, ...] = (
+    IronOSSelectEntityDescription(
+        key=PinecilSelect.USB_PD_MODE,
+        translation_key=PinecilSelect.USB_PD_MODE,
+        characteristic=CharSetting.USB_PD_MODE,
+        value_fn=lambda x: enum_to_str(x.get("usb_pd_mode")),
+        raw_value_fn=lambda value: USBPDMode[value.upper()],
+        options=["off", "on"],
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+    ),
+)
+PINECIL_SELECT_DESCRIPTIONS_V223: tuple[IronOSSelectEntityDescription, ...] = (
+    IronOSSelectEntityDescription(
+        key=PinecilSelect.USB_PD_MODE,
+        translation_key=PinecilSelect.USB_PD_MODE,
+        characteristic=CharSetting.USB_PD_MODE,
+        value_fn=lambda x: enum_to_str(x.get("usb_pd_mode")),
+        raw_value_fn=lambda value: USBPDMode[value.upper()],
+        options=[x.name.lower() for x in USBPDMode],
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+    ),
+    IronOSSelectEntityDescription(
+        key=PinecilSelect.TIP_TYPE,
+        translation_key=PinecilSelect.TIP_TYPE,
+        characteristic=CharSetting.TIP_TYPE,
+        value_fn=lambda x: enum_to_str(x.get("tip_type")),
+        raw_value_fn=lambda value: TipType[value.upper()],
+        options=[x.name.lower() for x in TipType],
+        entity_category=EntityCategory.CONFIG,
+    ),
+)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: IronOSConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up select entities from a config entry."""
-    coordinator = entry.runtime_data
+    coordinators = entry.runtime_data
+    descriptions = PINECIL_SELECT_DESCRIPTIONS
+
+    descriptions += (
+        PINECIL_SELECT_DESCRIPTIONS_V223
+        if coordinators.live_data.v223_features
+        else PINECIL_SELECT_DESCRIPTIONS_V222
+    )
 
     async_add_entities(
-        IronOSSelectEntity(coordinator, description)
-        for description in PINECIL_SELECT_DESCRIPTIONS
+        IronOSSelectEntity(coordinators, description) for description in descriptions
     )
 
 
@@ -181,18 +220,10 @@ class IronOSSelectEntity(IronOSBaseEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
 
-        if raw_value_fn := self.entity_description.raw_value_fn:
-            value = raw_value_fn(option)
-        try:
-            await self.coordinator.device.write(
-                self.entity_description.characteristic, value
-            )
-        except CommunicationError as e:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="submit_setting_failed",
-            ) from e
-        await self.settings.async_request_refresh()
+        await self.settings.write(
+            self.entity_description.characteristic,
+            self.entity_description.raw_value_fn(option),
+        )
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""

@@ -1,13 +1,17 @@
 """Issues for OpenWeatherMap."""
 
-from typing import cast
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, cast
 
 from homeassistant import data_entry_flow
 from homeassistant.components.repairs import RepairsFlow
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_MODE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
+
+if TYPE_CHECKING:
+    from . import OpenweathermapConfigEntry
 
 from .const import DOMAIN, OWM_MODE_V30
 from .utils import validate_api_key
@@ -16,7 +20,7 @@ from .utils import validate_api_key
 class DeprecatedV25RepairFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
-    def __init__(self, entry: ConfigEntry) -> None:
+    def __init__(self, entry: OpenweathermapConfigEntry) -> None:
         """Create flow."""
         super().__init__()
         self.entry = entry

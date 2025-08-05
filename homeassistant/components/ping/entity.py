@@ -1,11 +1,10 @@
 """Base entity for the Ping component."""
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import PingUpdateCoordinator
+from .coordinator import PingConfigEntry, PingUpdateCoordinator
 
 
 class PingEntity(CoordinatorEntity[PingUpdateCoordinator]):
@@ -15,7 +14,7 @@ class PingEntity(CoordinatorEntity[PingUpdateCoordinator]):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: PingConfigEntry,
         coordinator: PingUpdateCoordinator,
         unique_id: str,
     ) -> None:

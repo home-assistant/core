@@ -33,7 +33,7 @@ from homeassistant.const import CONF_NAME, ENTITY_MATCH_ALL, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .test_common import (
+from .common import (
     help_custom_config,
     help_test_availability_when_connection_lost,
     help_test_availability_without_topic,

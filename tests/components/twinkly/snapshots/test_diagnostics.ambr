@@ -4,8 +4,10 @@
     'attributes': dict({
       'brightness': 26,
       'color_mode': 'rgb',
-      'effect': None,
+      'effect': '1 Rainbow',
       'effect_list': list([
+        '1 Rainbow',
+        '2 Flare',
       ]),
       'friendly_name': 'Tree 1',
       'hs_color': list([
@@ -67,6 +69,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Twinkly',
       'unique_id': '00:2d:13:3b:aa:bb',
       'version': 1,

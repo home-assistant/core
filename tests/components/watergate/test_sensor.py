@@ -1,4 +1,4 @@
-"""Tests for the Watergate valve platform."""
+"""Tests for the Watergate sensor platform."""
 
 from collections.abc import Generator
 
@@ -140,11 +140,11 @@ async def test_power_supply_webhook(
 
     power_supply_change_data = {
         "type": "power-supply-changed",
-        "data": {"supply": "external"},
+        "data": {"supply": "external_battery"},
     }
     client = await hass_client_no_auth()
     await client.post(f"/api/webhook/{MOCK_WEBHOOK_ID}", json=power_supply_change_data)
 
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == "external"
+    assert hass.states.get(entity_id).state == "battery_external"

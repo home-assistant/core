@@ -25,7 +25,7 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "away_indefinitely": "Away Indefinitely"
+              "away_indefinitely": "Away indefinitely"
             }
           }
         }
@@ -55,7 +55,7 @@
       "fields": {
         "entity_id": {
           "name": "Entity",
-          "description": "Ecobee thermostat on which to create the vacation."
+          "description": "ecobee thermostat on which to create the vacation."
         },
         "vacation_name": {
           "name": "Vacation name",
@@ -71,7 +71,7 @@
         },
         "start_date": {
           "name": "Start date",
-          "description": "Date the vacation starts in the YYYY-MM-DD format (optional, immediately if not provided along with start_time)."
+          "description": "Date the vacation starts in the YYYY-MM-DD format (optional, immediately if not provided along with 'Start time')."
         },
         "start_time": {
           "name": "Start time",
@@ -79,7 +79,7 @@
         },
         "end_date": {
           "name": "End date",
-          "description": "Date the vacation ends in the YYYY-MM-DD format (optional, 14 days from now if not provided along with end_time)."
+          "description": "Date the vacation ends in the YYYY-MM-DD format (optional, 14 days from now if not provided along with 'End time')."
         },
         "end_time": {
           "name": "End time",
@@ -91,7 +91,7 @@
         },
         "fan_min_on_time": {
           "name": "Fan minimum on time",
-          "description": "Minimum number of minutes to run the fan each hour (0 to 60) during the vacation."
+          "description": "Minimum number of minutes to run the fan each hour during the vacation."
         }
       }
     },
@@ -101,7 +101,7 @@
       "fields": {
         "entity_id": {
           "name": "Entity",
-          "description": "Ecobee thermostat on which to delete the vacation."
+          "description": "ecobee thermostat on which to delete the vacation."
         },
         "vacation_name": {
           "name": "[%key:component::ecobee::services::create_vacation::fields::vacation_name::name%]",
@@ -125,7 +125,7 @@
     },
     "set_fan_min_on_time": {
       "name": "Set fan minimum on time",
-      "description": "Sets the minimum fan on time.",
+      "description": "Sets the minimum amount of time that the fan will run per hour.",
       "fields": {
         "entity_id": {
           "name": "Entity",
@@ -133,12 +133,12 @@
         },
         "fan_min_on_time": {
           "name": "[%key:component::ecobee::services::create_vacation::fields::fan_min_on_time::name%]",
-          "description": "New value of fan min on time."
+          "description": "Minimum number of minutes to run the fan each hour."
         }
       }
     },
     "set_dst_mode": {
-      "name": "Set Daylight savings time mode",
+      "name": "Set daylight savings time mode",
       "description": "Enables/disables automatic daylight savings time.",
       "fields": {
         "dst_enabled": {
@@ -149,11 +149,11 @@
     },
     "set_mic_mode": {
       "name": "Set mic mode",
-      "description": "Enables/disables Alexa mic (only for Ecobee 4).",
+      "description": "Enables/disables Alexa microphone (only for ecobee 4).",
       "fields": {
         "mic_enabled": {
           "name": "Mic enabled",
-          "description": "Enable Alexa mic."
+          "description": "Enable Alexa microphone."
         }
       }
     },
@@ -172,12 +172,12 @@
       }
     },
     "set_sensors_used_in_climate": {
-      "name": "Set Sensors Used in Climate",
-      "description": "Sets the participating sensors for a climate.",
+      "name": "Set sensors used in climate",
+      "description": "Sets the participating sensors for a climate program.",
       "fields": {
         "entity_id": {
           "name": "Entity",
-          "description": "Ecobee thermostat on which to set active sensors."
+          "description": "ecobee thermostat on which to set active sensors."
         },
         "preset_mode": {
           "name": "Climate Name",
@@ -198,17 +198,17 @@
       "message": "Invalid sensor for thermostat, available options are: {options}"
     },
     "sensor_lookup_failed": {
-      "message": "There was an error getting the sensor ids from sensor names. Try reloading the ecobee integration."
+      "message": "There was an error getting the sensor IDs from sensor names. Try reloading the ecobee integration."
     }
   },
   "issues": {
     "migrate_aux_heat": {
-      "title": "Migration of Ecobee set_aux_heat action",
+      "title": "Migration of ecobee set_aux_heat action",
       "fix_flow": {
         "step": {
           "confirm": {
-            "description": "The Ecobee `set_aux_heat` action has been migrated. A new `aux_heat_only` switch entity is available for each thermostat that supports a Heat Pump.\n\nUpdate any automations to use the new `aux_heat_only` switch entity. When this is done, fix this issue and restart Home Assistant.",
-            "title": "Disable legacy Ecobee set_aux_heat action"
+            "description": "The ecobee `set_aux_heat` action has been migrated. A new `aux_heat_only` switch entity is available for each thermostat that supports a Heat Pump.\n\nUpdate any automations to use the new `aux_heat_only` switch entity. When this is done, fix this issue and restart Home Assistant.",
+            "title": "Disable legacy ecobee set_aux_heat action"
           }
         }
       }

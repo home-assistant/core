@@ -14,7 +14,7 @@ from homeassistant.components.todo import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import MealieConfigEntry, MealieShoppingListCoordinator
@@ -46,7 +46,7 @@ def _convert_api_item(item: ShoppingItem) -> TodoItem:
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: MealieConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the todo platform for entity."""
     coordinator = entry.runtime_data.shoppinglist_coordinator
@@ -174,7 +174,8 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
         if list_item.display.strip() != stripped_item_summary:
             update_shopping_item.note = stripped_item_summary
             update_shopping_item.position = position
-            update_shopping_item.is_food = False
+            if update_shopping_item.is_food is not None:
+                update_shopping_item.is_food = False
             update_shopping_item.food_id = None
             update_shopping_item.quantity = 0.0
             update_shopping_item.checked = item.status == TodoItemStatus.COMPLETED
@@ -249,7 +250,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
             mutate_shopping_item.note = item.note
             mutate_shopping_item.checked = item.checked
 
-            if item.is_food:
+            if item.is_food or item.food_id:
                 mutate_shopping_item.food_id = item.food_id
                 mutate_shopping_item.unit_id = item.unit_id
 

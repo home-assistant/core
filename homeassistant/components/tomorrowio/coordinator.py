@@ -116,14 +116,23 @@ def async_set_update_interval(
 class TomorrowioDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Define an object to hold Tomorrow.io data."""
 
-    def __init__(self, hass: HomeAssistant, api: TomorrowioV4) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, api: TomorrowioV4
+    ) -> None:
         """Initialize."""
         self._api = api
         self.data = {CURRENT: {}, FORECASTS: {}}
         self.entry_id_to_location_dict: dict[str, str] = {}
         self._coordinator_ready: asyncio.Event | None = None
 
-        super().__init__(hass, LOGGER, name=f"{DOMAIN}_{self._api.api_key_masked}")
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=f"{DOMAIN}_{self._api.api_key_masked}",
+        )
 
     def add_entry_to_location_dict(self, entry: ConfigEntry) -> None:
         """Add an entry to the location dict."""

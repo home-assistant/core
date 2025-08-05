@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
-import re
 from typing import Literal
 
+from hassil.recognize import RecognizeResult
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -30,6 +31,18 @@ from .agent_manager import (
     async_get_agent,
     get_agent_manager,
 )
+from .chat_log import (
+    AssistantContent,
+    AssistantContentDeltaDict,
+    Attachment,
+    ChatLog,
+    Content,
+    ConverseError,
+    SystemContent,
+    ToolResultContent,
+    UserContent,
+    async_get_chat_log,
+)
 from .const import (
     ATTR_AGENT_ID,
     ATTR_CONVERSATION_ID,
@@ -39,7 +52,6 @@ from .const import (
     DATA_DEFAULT_ENTITY,
     DOMAIN,
     HOME_ASSISTANT_AGENT,
-    OLD_HOME_ASSISTANT_AGENT,
     SERVICE_PROCESS,
     SERVICE_RELOAD,
     ConversationEntityFeature,
@@ -49,27 +61,36 @@ from .entity import ConversationEntity
 from .http import async_setup as async_setup_conversation_http
 from .models import AbstractConversationAgent, ConversationInput, ConversationResult
 from .trace import ConversationTraceEventType, async_conversation_trace_append
+from .util import async_get_result_from_chat_log
 
 __all__ = [
     "DOMAIN",
     "HOME_ASSISTANT_AGENT",
-    "OLD_HOME_ASSISTANT_AGENT",
+    "AssistantContent",
+    "AssistantContentDeltaDict",
+    "Attachment",
+    "ChatLog",
+    "Content",
     "ConversationEntity",
     "ConversationEntityFeature",
     "ConversationInput",
     "ConversationResult",
     "ConversationTraceEventType",
+    "ConverseError",
+    "SystemContent",
+    "ToolResultContent",
+    "UserContent",
     "async_conversation_trace_append",
     "async_converse",
     "async_get_agent_info",
+    "async_get_chat_log",
+    "async_get_result_from_chat_log",
     "async_set_agent",
     "async_setup",
     "async_unset_agent",
 ]
 
 _LOGGER = logging.getLogger(__name__)
-
-REGEX_TYPE = type(re.compile(""))
 
 SERVICE_PROCESS_SCHEMA = vol.Schema(
     {
@@ -184,7 +205,11 @@ def async_get_agent_info(
         name = agent.name
         if not isinstance(name, str):
             name = agent.entity_id
-        return AgentInfo(id=agent.entity_id, name=name)
+        return AgentInfo(
+            id=agent.entity_id,
+            name=name,
+            supports_streaming=agent.supports_streaming,
+        )
 
     manager = get_agent_manager(hass)
 
@@ -221,7 +246,10 @@ async def async_handle_sentence_triggers(
 
 
 async def async_handle_intents(
-    hass: HomeAssistant, user_input: ConversationInput
+    hass: HomeAssistant,
+    user_input: ConversationInput,
+    *,
+    intent_filter: Callable[[RecognizeResult], bool] | None = None,
 ) -> intent.IntentResponse | None:
     """Try to match input against registered intents and return response.
 
@@ -230,7 +258,9 @@ async def async_handle_intents(
     default_agent = async_get_agent(hass)
     assert isinstance(default_agent, DefaultAgent)
 
-    return await default_agent.async_handle_intents(user_input)
+    return await default_agent.async_handle_intents(
+        user_input, intent_filter=intent_filter
+    )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -240,15 +270,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await async_setup_default_agent(
         hass, entity_component, config.get(DOMAIN, {}).get("intents", {})
-    )
-
-    # Temporary migration. We can remove this in 2024.10
-    from homeassistant.components.assist_pipeline import (  # pylint: disable=import-outside-toplevel
-        async_migrate_engine,
-    )
-
-    async_migrate_engine(
-        hass, "conversation", OLD_HOME_ASSISTANT_AGENT, HOME_ASSISTANT_AGENT
     )
 
     async def handle_process(service: ServiceCall) -> ServiceResponse:

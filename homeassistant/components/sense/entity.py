@@ -12,7 +12,7 @@ from .coordinator import SenseCoordinator
 
 def sense_to_mdi(sense_icon: str) -> str:
     """Convert sense icon to mdi icon."""
-    return f"mdi:{MDI_ICONS.get(sense_icon, "power-plug")}"
+    return f"mdi:{MDI_ICONS.get(sense_icon, 'power-plug')}"
 
 
 class SenseEntity(CoordinatorEntity[SenseCoordinator]):

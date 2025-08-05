@@ -79,6 +79,7 @@ class PingDataICMPLib(PingData):
             "min": data.min_rtt,
             "max": data.max_rtt,
             "avg": data.avg_rtt,
+            "jitter": data.jitter,
         }
 
 
@@ -160,7 +161,7 @@ class PingDataSubProcess(PingData):
             )
 
             if pinger:
-                with suppress(TypeError):
+                with suppress(TypeError, ProcessLookupError):
                     await pinger.kill()  # type: ignore[func-returns-value]
                 del pinger
 

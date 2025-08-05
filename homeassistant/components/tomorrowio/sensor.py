@@ -34,7 +34,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_conversion import DistanceConverter, SpeedConverter
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
@@ -328,7 +328,7 @@ SENSOR_TYPES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.data[CONF_API_KEY]]

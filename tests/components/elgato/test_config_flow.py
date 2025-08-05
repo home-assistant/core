@@ -6,12 +6,12 @@ from unittest.mock import AsyncMock, MagicMock
 from elgato import ElgatoConnectionError
 import pytest
 
-from homeassistant.components import zeroconf
 from homeassistant.components.elgato.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -57,7 +57,7 @@ async def test_full_zeroconf_flow_implementation(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("127.0.0.1"),
             ip_addresses=[ip_address("127.0.0.1")],
             hostname="example.local.",
@@ -141,7 +141,7 @@ async def test_zeroconf_connection_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("127.0.0.1"),
             ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
@@ -181,7 +181,7 @@ async def test_zeroconf_device_exists_abort(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("127.0.0.1"),
             ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",
@@ -202,7 +202,7 @@ async def test_zeroconf_device_exists_abort(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={CONF_SOURCE: SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("127.0.0.2"),
             ip_addresses=[ip_address("127.0.0.2")],
             hostname="mock_hostname",
@@ -230,7 +230,7 @@ async def test_zeroconf_during_onboarding(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("127.0.0.1"),
             ip_addresses=[ip_address("127.0.0.1")],
             hostname="example.local.",

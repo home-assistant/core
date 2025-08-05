@@ -9,11 +9,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import APCUPSdConfigEntry
-from .coordinator import APCUPSdCoordinator
+from .coordinator import APCUPSdConfigEntry, APCUPSdCoordinator
 
 PARALLEL_UPDATES = 0
 
@@ -28,7 +27,7 @@ _VALUE_ONLINE_MASK: Final = 0b1000
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: APCUPSdConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up an APCUPSd Online Status binary sensor."""
     coordinator = config_entry.runtime_data
@@ -54,10 +53,8 @@ class OnlineStatus(CoordinatorEntity[APCUPSdCoordinator], BinarySensorEntity):
         """Initialize the APCUPSd binary device."""
         super().__init__(coordinator, context=description.key.upper())
 
-        # Set up unique id and device info if serial number is available.
-        if (serial_no := coordinator.data.serial_no) is not None:
-            self._attr_unique_id = f"{serial_no}_{description.key}"
         self.entity_description = description
+        self._attr_unique_id = f"{coordinator.unique_device_id}_{description.key}"
         self._attr_device_info = coordinator.device_info
 
     @property

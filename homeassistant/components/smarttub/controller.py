@@ -3,13 +3,15 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import Any
 
 from aiohttp import client_exceptions
-from smarttub import APIError, LoginFailed, SmartTub
+from smarttub import APIError, LoginFailed, SmartTub, Spa
 from smarttub.api import Account
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -20,6 +22,7 @@ from .const import (
     ATTR_LIGHTS,
     ATTR_PUMPS,
     ATTR_REMINDERS,
+    ATTR_SENSORS,
     ATTR_STATUS,
     DOMAIN,
     POLLING_TIMEOUT,
@@ -29,19 +32,21 @@ from .helpers import get_spa_name
 
 _LOGGER = logging.getLogger(__name__)
 
+type SmartTubConfigEntry = ConfigEntry[SmartTubController]
+
 
 class SmartTubController:
     """Interface between Home Assistant and the SmartTub API."""
 
-    def __init__(self, hass):
+    coordinator: DataUpdateCoordinator[dict[str, Any]]
+    spas: list[Spa]
+    _account: Account
+
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize an interface to SmartTub."""
         self._hass = hass
-        self._account = None
-        self.spas = set()
 
-        self.coordinator = None
-
-    async def async_setup_entry(self, entry):
+    async def async_setup_entry(self, entry: SmartTubConfigEntry) -> bool:
         """Perform initial setup.
 
         Authenticate, query static state, set up polling, and otherwise make
@@ -69,6 +74,7 @@ class SmartTubController:
             self._hass,
             _LOGGER,
             name=DOMAIN,
+            config_entry=entry,
             update_method=self.async_update_data,
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
@@ -79,7 +85,7 @@ class SmartTubController:
 
         return True
 
-    async def async_update_data(self):
+    async def async_update_data(self) -> dict[str, Any]:
         """Query the API and return the new state."""
 
         data = {}
@@ -92,7 +98,7 @@ class SmartTubController:
 
         return data
 
-    async def _get_spa_data(self, spa):
+    async def _get_spa_data(self, spa: Spa) -> dict[str, Any]:
         full_status, reminders, errors = await asyncio.gather(
             spa.get_status_full(),
             spa.get_reminders(),
@@ -104,10 +110,11 @@ class SmartTubController:
             ATTR_LIGHTS: {light.zone: light for light in full_status.lights},
             ATTR_REMINDERS: {reminder.id: reminder for reminder in reminders},
             ATTR_ERRORS: errors,
+            ATTR_SENSORS: {sensor.address: sensor for sensor in full_status.sensors},
         }
 
     @callback
-    def async_register_devices(self, entry):
+    def async_register_devices(self, entry: SmartTubConfigEntry) -> None:
         """Register devices with the device registry for all spas."""
         device_registry = dr.async_get(self._hass)
         for spa in self.spas:
@@ -119,11 +126,8 @@ class SmartTubController:
                 model=spa.model,
             )
 
-    async def login(self, email, password) -> Account:
-        """Retrieve the account corresponding to the specified email and password.
-
-        Returns None if the credentials are invalid.
-        """
+    async def login(self, email: str, password: str) -> Account:
+        """Retrieve the account corresponding to the specified email and password."""
 
         api = SmartTub(async_get_clientsession(self._hass))
 

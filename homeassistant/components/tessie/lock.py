@@ -9,7 +9,7 @@ from tessie_api import lock, open_unlock_charge_port, unlock
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TessieConfigEntry
 from .const import DOMAIN, TessieChargeCableLockStates
@@ -22,7 +22,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TessieConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tessie sensor platform from a config entry."""
     data = entry.runtime_data

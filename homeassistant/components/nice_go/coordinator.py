@@ -54,19 +54,18 @@ class NiceGODevice:
     vacation_mode: bool | None
 
 
+type NiceGOConfigEntry = ConfigEntry[NiceGOUpdateCoordinator]
+
+
 class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
     """DataUpdateCoordinator for Nice G.O."""
 
-    config_entry: ConfigEntry
+    config_entry: NiceGOConfigEntry
     organization_id: str
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: NiceGOConfigEntry) -> None:
         """Initialize DataUpdateCoordinator for Nice G.O."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name="Nice G.O.",
-        )
+        super().__init__(hass, _LOGGER, config_entry=config_entry, name="Nice G.O.")
 
         self.refresh_token = self.config_entry.data[CONF_REFRESH_TOKEN]
         self.refresh_token_creation_time = self.config_entry.data[
@@ -154,7 +153,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
             )
             try:
                 if datetime.now().timestamp() >= expiry_time:
-                    await self._update_refresh_token()
+                    await self.update_refresh_token()
                 else:
                     await self.api.authenticate_refresh(
                         self.refresh_token, async_get_clientsession(self.hass)
@@ -179,7 +178,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
             else:
                 self.async_set_updated_data(devices)
 
-    async def _update_refresh_token(self) -> None:
+    async def update_refresh_token(self) -> None:
         """Update the refresh token with Nice G.O. API."""
         _LOGGER.debug("Updating the refresh token with Nice G.O. API")
         try:

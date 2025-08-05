@@ -502,7 +502,7 @@ async def test_issue_registry_invalid_version(
     ("stop_addon_side_effect", "entry_state"),
     [
         (None, ConfigEntryState.NOT_LOADED),
-        (SupervisorError("Boom"), ConfigEntryState.LOADED),
+        (SupervisorError("Boom"), ConfigEntryState.FAILED_UNLOAD),
     ],
 )
 async def test_stop_addon(

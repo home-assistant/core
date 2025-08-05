@@ -18,14 +18,17 @@ from homeassistant.data_entry_flow import FlowResultType
 from .common import (
     CONFIG_DATA,
     CONFIG_DATA_NO_USERCODES,
-    RESPONSE_AUTHENTICATE,
     RESPONSE_DISARMED,
     RESPONSE_GET_ZONE_DETAILS_SUCCESS,
     RESPONSE_PARTITION_DETAILS,
+    RESPONSE_SESSION_DETAILS,
     RESPONSE_SUCCESS,
     RESPONSE_USER_CODE_INVALID,
+    TOTALCONNECT_GET_CONFIG,
     TOTALCONNECT_REQUEST,
+    TOTALCONNECT_REQUEST_TOKEN,
     USERNAME,
+    init_integration,
 )
 
 from tests.common import MockConfigEntry
@@ -48,7 +51,7 @@ async def test_user_show_locations(hass: HomeAssistant) -> None:
     """Test user locations form."""
     # user/pass provided, so check if valid then ask for usercodes on locations form
     responses = [
-        RESPONSE_AUTHENTICATE,
+        RESPONSE_SESSION_DETAILS,
         RESPONSE_PARTITION_DETAILS,
         RESPONSE_GET_ZONE_DETAILS_SUCCESS,
         RESPONSE_DISARMED,
@@ -61,6 +64,8 @@ async def test_user_show_locations(hass: HomeAssistant) -> None:
             TOTALCONNECT_REQUEST,
             side_effect=responses,
         ) as mock_request,
+        patch(TOTALCONNECT_GET_CONFIG, side_effect=None),
+        patch(TOTALCONNECT_REQUEST_TOKEN, side_effect=None),
         patch(
             "homeassistant.components.totalconnect.async_setup_entry", return_value=True
         ),
@@ -180,7 +185,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
 async def test_no_locations(hass: HomeAssistant) -> None:
     """Test with no user locations."""
     responses = [
-        RESPONSE_AUTHENTICATE,
+        RESPONSE_SESSION_DETAILS,
         RESPONSE_PARTITION_DETAILS,
         RESPONSE_GET_ZONE_DETAILS_SUCCESS,
         RESPONSE_DISARMED,
@@ -191,6 +196,8 @@ async def test_no_locations(hass: HomeAssistant) -> None:
             TOTALCONNECT_REQUEST,
             side_effect=responses,
         ) as mock_request,
+        patch(TOTALCONNECT_GET_CONFIG, side_effect=None),
+        patch(TOTALCONNECT_REQUEST_TOKEN, side_effect=None),
         patch(
             "homeassistant.components.totalconnect.async_setup_entry", return_value=True
         ),
@@ -213,38 +220,19 @@ async def test_no_locations(hass: HomeAssistant) -> None:
 
 async def test_options_flow(hass: HomeAssistant) -> None:
     """Test config flow options."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=CONFIG_DATA,
-        unique_id=USERNAME,
+    config_entry = await init_integration(hass)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={AUTO_BYPASS: True, CODE_REQUIRED: False}
     )
-    config_entry.add_to_hass(hass)
 
-    responses = [
-        RESPONSE_AUTHENTICATE,
-        RESPONSE_PARTITION_DETAILS,
-        RESPONSE_GET_ZONE_DETAILS_SUCCESS,
-        RESPONSE_DISARMED,
-        RESPONSE_DISARMED,
-        RESPONSE_DISARMED,
-    ]
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {AUTO_BYPASS: True, CODE_REQUIRED: False}
+    await hass.async_block_till_done()
 
-    with patch(TOTALCONNECT_REQUEST, side_effect=responses):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "init"
-
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"], user_input={AUTO_BYPASS: True, CODE_REQUIRED: False}
-        )
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert config_entry.options == {AUTO_BYPASS: True, CODE_REQUIRED: False}
-        await hass.async_block_till_done()
-
-        assert await hass.config_entries.async_unload(config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()

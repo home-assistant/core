@@ -30,18 +30,25 @@ from .const import CONF_SOURCE_BOUQUET, DOMAIN
 
 LOGGER = logging.getLogger(__package__)
 
+type Enigma2ConfigEntry = ConfigEntry[Enigma2UpdateCoordinator]
+
 
 class Enigma2UpdateCoordinator(DataUpdateCoordinator[OpenWebIfStatus]):
     """The Enigma2 data update coordinator."""
 
+    config_entry: Enigma2ConfigEntry
     device: OpenWebIfDevice
     unique_id: str | None
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: Enigma2ConfigEntry) -> None:
         """Initialize the Enigma2 data update coordinator."""
 
         super().__init__(
-            hass, logger=LOGGER, name=DOMAIN, update_interval=DEFAULT_SCAN_INTERVAL
+            hass,
+            logger=LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=DEFAULT_SCAN_INTERVAL,
         )
 
         base_url = URL.build(

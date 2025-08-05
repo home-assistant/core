@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    CONCENTRATION_GRAMS_PER_CUBIC_METER,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
@@ -24,14 +25,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AirQConfigEntry, AirQCoordinator
-from .const import (
-    ACTIVITY_BECQUEREL_PER_CUBIC_METER,
-    CONCENTRATION_GRAMS_PER_CUBIC_METER,
-)
+from .const import ACTIVITY_BECQUEREL_PER_CUBIC_METER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -195,7 +193,7 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
     ),
     AirQEntityDescription(
         key="humidity_abs",
-        translation_key="absolute_humidity",
+        device_class=SensorDeviceClass.ABSOLUTE_HUMIDITY,
         native_unit_of_measurement=CONCENTRATION_GRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.get("humidity_abs"),
@@ -399,7 +397,7 @@ SENSOR_TYPES: list[AirQEntityDescription] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AirQConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensor entities based on a config entry."""
 

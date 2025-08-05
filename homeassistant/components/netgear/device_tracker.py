@@ -7,7 +7,7 @@ import logging
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DEVICE_ICONS, DOMAIN, KEY_COORDINATOR, KEY_ROUTER
@@ -18,7 +18,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for Netgear component."""
     router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]

@@ -1,0 +1,37 @@
+{
+  "traceId": "0000000000",
+  "code": 0,
+  "msg": "request success",
+  "module": null,
+  "stacktrace": null,
+  "result": {
+    "traceId": "0000000000",
+    "code": 0,
+    "result": {
+      "powerSwitch": 0,
+      "workMode": "normal",
+      "manualSpeedLevel": 1,
+      "fanSpeedLevel": 0,
+      "screenState": 0,
+      "screenSwitch": 0,
+      "oscillationSwitch": 1,
+      "oscillationState": 1,
+      "muteSwitch": 1,
+      "muteState": 1,
+      "timerRemain": 0,
+      "temperature": 717,
+      "humidity": 40,
+      "thermalComfort": 65,
+      "errorCode": 0,
+      "sleepPreference": {
+        "sleepPreferenceType": "default",
+        "oscillationSwitch": 0,
+        "initFanSpeedLevel": 0,
+        "fallAsleepRemain": 0,
+        "autoChangeFanLevelSwitch": 0
+      },
+      "scheduleCount": 0,
+      "displayingType": 0
+    }
+  }
+}

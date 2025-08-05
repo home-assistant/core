@@ -22,6 +22,7 @@ from .helpers import get_instance_from_options, get_sorted_mac_addresses
 class WebminUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """The Webmin data update coordinator."""
 
+    config_entry: ConfigEntry
     mac_address: str
     unique_id: str
 
@@ -29,7 +30,11 @@ class WebminUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Initialize the Webmin data update coordinator."""
 
         super().__init__(
-            hass, logger=LOGGER, name=DOMAIN, update_interval=DEFAULT_SCAN_INTERVAL
+            hass,
+            logger=LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=DEFAULT_SCAN_INTERVAL,
         )
 
         self.instance, base_url = get_instance_from_options(hass, config_entry.options)
@@ -53,7 +58,6 @@ class WebminUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 (DOMAIN, format_mac(mac_address)) for mac_address in mac_addresses
             }
         else:
-            assert self.config_entry
             self.unique_id = self.config_entry.entry_id
 
     async def _async_update_data(self) -> dict[str, Any]:

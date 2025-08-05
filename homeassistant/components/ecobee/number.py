@@ -12,13 +12,11 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import EcobeeData
-from .const import DOMAIN
+from . import EcobeeConfigEntry, EcobeeData
 from .entity import EcobeeBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,11 +52,11 @@ VENTILATOR_NUMBERS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: EcobeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ecobee thermostat number entity."""
-    data: EcobeeData = hass.data[DOMAIN]
+    data = config_entry.runtime_data
 
     assert data is not None
 

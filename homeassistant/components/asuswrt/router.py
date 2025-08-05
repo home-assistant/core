@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 import logging
-from types import MappingProxyType
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyasuswrt import AsusWrtError
 
@@ -41,6 +40,9 @@ from .const import (
     SENSORS_CONNECTED_DEVICE,
 )
 
+if TYPE_CHECKING:
+    from . import AsusWrtConfigEntry
+
 CONF_REQ_RELOAD = [CONF_DNSMASQ, CONF_INTERFACE, CONF_REQUIRE_IP]
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -53,10 +55,13 @@ _LOGGER = logging.getLogger(__name__)
 class AsusWrtSensorDataHandler:
     """Data handler for AsusWrt sensor."""
 
-    def __init__(self, hass: HomeAssistant, api: AsusWrtBridge) -> None:
+    def __init__(
+        self, hass: HomeAssistant, api: AsusWrtBridge, entry: AsusWrtConfigEntry
+    ) -> None:
         """Initialize a AsusWrt sensor data handler."""
         self._hass = hass
         self._api = api
+        self._entry = entry
         self._connected_devices = 0
 
     async def _get_connected_devices(self) -> dict[str, int]:
@@ -92,6 +97,7 @@ class AsusWrtSensorDataHandler:
             update_method=method,
             # Polling interval. Will only be polled if there are subscribers.
             update_interval=SCAN_INTERVAL if should_poll else None,
+            config_entry=self._entry,
         )
         await coordinator.async_refresh()
 
@@ -322,7 +328,9 @@ class AsusWrtRouter:
         if self._sensors_data_handler:
             return
 
-        self._sensors_data_handler = AsusWrtSensorDataHandler(self.hass, self._api)
+        self._sensors_data_handler = AsusWrtSensorDataHandler(
+            self.hass, self._api, self._entry
+        )
         self._sensors_data_handler.update_device_count(self._connected_devices)
 
         sensors_types = await self._api.async_get_available_sensors()
@@ -363,7 +371,7 @@ class AsusWrtRouter:
         """Add a function to call when router is closed."""
         self._on_close.append(func)
 
-    def update_options(self, new_options: MappingProxyType[str, Any]) -> bool:
+    def update_options(self, new_options: Mapping[str, Any]) -> bool:
         """Update router options."""
         req_reload = False
         for name, new_opt in new_options.items():

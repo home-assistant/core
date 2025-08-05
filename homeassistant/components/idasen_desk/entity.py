@@ -5,7 +5,7 @@ from __future__ import annotations
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import IdasenDeskCoordinator
+from .coordinator import IdasenDeskCoordinator
 
 
 class IdasenDeskEntity(CoordinatorEntity[IdasenDeskCoordinator]):

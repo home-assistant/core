@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "washer_state": {
+        "default": "mdi:washing-machine"
+      },
+      "dryer_state": {
+        "default": "mdi:tumble-dryer"
+      }
+    }
+  }
+}

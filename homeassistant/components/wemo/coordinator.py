@@ -29,7 +29,7 @@ from homeassistant.helpers.device_registry import CONNECTION_UPNP, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
-from .models import async_wemo_data
+from .models import DATA_WEMO
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,13 +88,17 @@ class Options:
 class DeviceCoordinator(DataUpdateCoordinator[None]):
     """Home Assistant wrapper for a pyWeMo device."""
 
+    config_entry: ConfigEntry
     options: Options | None = None
 
-    def __init__(self, hass: HomeAssistant, wemo: WeMoDevice) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, wemo: WeMoDevice
+    ) -> None:
         """Initialize DeviceCoordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=wemo.name,
             update_interval=timedelta(seconds=30),
         )
@@ -285,7 +289,7 @@ async def async_register_device(
     hass: HomeAssistant, config_entry: ConfigEntry, wemo: WeMoDevice
 ) -> DeviceCoordinator:
     """Register a device with home assistant and enable pywemo event callbacks."""
-    device = DeviceCoordinator(hass, wemo)
+    device = DeviceCoordinator(hass, config_entry, wemo)
     await device.async_refresh()
     if not device.last_update_success and device.last_exception:
         raise device.last_exception
@@ -312,9 +316,9 @@ def async_get_coordinator(hass: HomeAssistant, device_id: str) -> DeviceCoordina
 
 @callback
 def _async_coordinators(hass: HomeAssistant) -> dict[str, DeviceCoordinator]:
-    return async_wemo_data(hass).config_entry_data.device_coordinators
+    return hass.data[DATA_WEMO].config_entry_data.device_coordinators
 
 
 @callback
 def _async_registry(hass: HomeAssistant) -> SubscriptionRegistry:
-    return async_wemo_data(hass).registry
+    return hass.data[DATA_WEMO].registry

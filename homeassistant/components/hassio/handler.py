@@ -24,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.singleton import singleton
 from homeassistant.loader import bind_hass
 
-from .const import ATTR_MESSAGE, ATTR_RESULT, DOMAIN, X_HASS_SOURCE
+from .const import ATTR_MESSAGE, ATTR_RESULT, DATA_COMPONENT, X_HASS_SOURCE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ async def async_update_diagnostics(hass: HomeAssistant, diagnostics: bool) -> bo
 
     The caller of the function should handle HassioAPIError.
     """
-    hassio: HassIO = hass.data[DOMAIN]
+    hassio = hass.data[DATA_COMPONENT]
     return await hassio.update_diagnostics(diagnostics)
 
 
@@ -85,7 +85,7 @@ async def async_create_backup(
 
     The caller of the function should handle HassioAPIError.
     """
-    hassio: HassIO = hass.data[DOMAIN]
+    hassio = hass.data[DATA_COMPONENT]
     backup_type = "partial" if partial else "full"
     command = f"/backups/new/{backup_type}"
     return await hassio.send_command(command, payload=payload, timeout=None)
@@ -94,7 +94,7 @@ async def async_create_backup(
 @api_data
 async def async_get_green_settings(hass: HomeAssistant) -> dict[str, bool]:
     """Return settings specific to Home Assistant Green."""
-    hassio: HassIO = hass.data[DOMAIN]
+    hassio = hass.data[DATA_COMPONENT]
     return await hassio.send_command("/os/boards/green", method="get")
 
 
@@ -106,7 +106,7 @@ async def async_set_green_settings(
 
     Returns an empty dict.
     """
-    hassio: HassIO = hass.data[DOMAIN]
+    hassio = hass.data[DATA_COMPONENT]
     return await hassio.send_command(
         "/os/boards/green", method="post", payload=settings
     )
@@ -115,7 +115,7 @@ async def async_set_green_settings(
 @api_data
 async def async_get_yellow_settings(hass: HomeAssistant) -> dict[str, bool]:
     """Return settings specific to Home Assistant Yellow."""
-    hassio: HassIO = hass.data[DOMAIN]
+    hassio = hass.data[DATA_COMPONENT]
     return await hassio.send_command("/os/boards/yellow", method="get")
 
 
@@ -127,7 +127,7 @@ async def async_set_yellow_settings(
 
     Returns an empty dict.
     """
-    hassio: HassIO = hass.data[DOMAIN]
+    hassio = hass.data[DATA_COMPONENT]
     return await hassio.send_command(
         "/os/boards/yellow", method="post", payload=settings
     )
@@ -248,12 +248,14 @@ class HassIO:
         return await self.send_command("/homeassistant/options", payload=options)
 
     @_api_bool
-    def update_hass_timezone(self, timezone: str) -> Coroutine:
+    def update_hass_config(self, timezone: str, country: str | None) -> Coroutine:
         """Update Home-Assistant timezone data on Hass.io.
 
         This method returns a coroutine.
         """
-        return self.send_command("/supervisor/options", payload={"timezone": timezone})
+        return self.send_command(
+            "/supervisor/options", payload={"timezone": timezone, "country": country}
+        )
 
     @_api_bool
     def update_diagnostics(self, diagnostics: bool) -> Coroutine:
@@ -333,7 +335,7 @@ class HassIO:
 @singleton(KEY_SUPERVISOR_CLIENT)
 def get_supervisor_client(hass: HomeAssistant) -> SupervisorClient:
     """Return supervisor client."""
-    hassio: HassIO = hass.data[DOMAIN]
+    hassio = hass.data[DATA_COMPONENT]
     return SupervisorClient(
         str(hassio.base_url),
         os.environ.get("SUPERVISOR_TOKEN", ""),

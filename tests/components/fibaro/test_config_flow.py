@@ -2,8 +2,8 @@
 
 from unittest.mock import Mock
 
+from pyfibaro.fibaro_client import FibaroAuthenticationFailed, FibaroConnectFailed
 import pytest
-from requests.exceptions import HTTPError
 
 from homeassistant import config_entries
 from homeassistant.components.fibaro import DOMAIN
@@ -23,8 +23,10 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry", "mock_fibaro_client")
 async def _recovery_after_failure_works(
     hass: HomeAssistant, mock_fibaro_client: Mock, result: FlowResult
 ) -> None:
-    mock_fibaro_client.connect.side_effect = None
-    mock_fibaro_client.connect.return_value = True
+    mock_fibaro_client.connect_with_credentials.side_effect = None
+    mock_fibaro_client.connect_with_credentials.return_value = (
+        mock_fibaro_client.read_info()
+    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -48,8 +50,10 @@ async def _recovery_after_failure_works(
 async def _recovery_after_reauth_failure_works(
     hass: HomeAssistant, mock_fibaro_client: Mock, result: FlowResult
 ) -> None:
-    mock_fibaro_client.connect.side_effect = None
-    mock_fibaro_client.connect.return_value = True
+    mock_fibaro_client.connect_with_credentials.side_effect = None
+    mock_fibaro_client.connect_with_credentials.return_value = (
+        mock_fibaro_client.read_info()
+    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -101,7 +105,9 @@ async def test_config_flow_user_initiated_auth_failure(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    mock_fibaro_client.connect.side_effect = HTTPError(response=Mock(status_code=403))
+    mock_fibaro_client.connect_with_credentials.side_effect = (
+        FibaroAuthenticationFailed()
+    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -119,7 +125,7 @@ async def test_config_flow_user_initiated_auth_failure(
     await _recovery_after_failure_works(hass, mock_fibaro_client, result)
 
 
-async def test_config_flow_user_initiated_unknown_failure_1(
+async def test_config_flow_user_initiated_connect_failure(
     hass: HomeAssistant, mock_fibaro_client: Mock
 ) -> None:
     """Unknown failure in flow manually initialized by the user."""
@@ -131,37 +137,7 @@ async def test_config_flow_user_initiated_unknown_failure_1(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    mock_fibaro_client.connect.side_effect = HTTPError(response=Mock(status_code=500))
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_URL: TEST_URL,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    await _recovery_after_failure_works(hass, mock_fibaro_client, result)
-
-
-async def test_config_flow_user_initiated_unknown_failure_2(
-    hass: HomeAssistant, mock_fibaro_client: Mock
-) -> None:
-    """Unknown failure in flow manually initialized by the user."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    mock_fibaro_client.connect.side_effect = Exception()
+    mock_fibaro_client.connect_with_credentials.side_effect = FibaroConnectFailed()
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -208,7 +184,7 @@ async def test_reauth_connect_failure(
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
 
-    mock_fibaro_client.connect.side_effect = Exception()
+    mock_fibaro_client.connect_with_credentials.side_effect = FibaroConnectFailed()
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -233,7 +209,9 @@ async def test_reauth_auth_failure(
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
 
-    mock_fibaro_client.connect.side_effect = HTTPError(response=Mock(status_code=403))
+    mock_fibaro_client.connect_with_credentials.side_effect = (
+        FibaroAuthenticationFailed()
+    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

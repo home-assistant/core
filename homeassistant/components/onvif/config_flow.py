@@ -11,11 +11,11 @@ from urllib.parse import urlparse
 from onvif.util import is_auth_error, stringify_onvif_error
 import voluptuous as vol
 from wsdiscovery.discovery import ThreadedWSDiscovery as WSDiscovery
+from wsdiscovery.qname import QName
 from wsdiscovery.scope import Scope
 from wsdiscovery.service import Service
 from zeep.exceptions import Fault
 
-from homeassistant.components import dhcp
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
 from homeassistant.components.stream import (
     CONF_RTSP_TRANSPORT,
@@ -39,6 +39,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
     CONF_DEVICE_ID,
@@ -58,16 +59,22 @@ CONF_MANUAL_INPUT = "Manually configure ONVIF device"
 
 def wsdiscovery() -> list[Service]:
     """Get ONVIF Profile S devices from network."""
-    discovery = WSDiscovery(ttl=4)
+    discovery = WSDiscovery(ttl=4, relates_to=True)
     try:
         discovery.start()
         return discovery.searchServices(
-            scopes=[Scope("onvif://www.onvif.org/Profile/Streaming")]
+            types=[
+                QName(
+                    "http://www.onvif.org/ver10/network/wsdl",
+                    "NetworkVideoTransmitter",
+                    "dp0",
+                )
+            ],
+            scopes=[Scope("onvif://www.onvif.org/Profile/Streaming")],
+            timeout=10,
         )
     finally:
         discovery.stop()
-        # Stop the threads started by WSDiscovery since otherwise there is a leak.
-        discovery._stopThreads()  # noqa: SLF001
 
 
 async def async_discovery(hass: HomeAssistant) -> list[dict[str, Any]]:
@@ -170,7 +177,7 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle dhcp discovery."""
         hass = self.hass

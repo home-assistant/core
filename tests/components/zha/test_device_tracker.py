@@ -18,7 +18,7 @@ from homeassistant.components.zha.helpers import (
 )
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import find_entity_id, send_attributes_report
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE

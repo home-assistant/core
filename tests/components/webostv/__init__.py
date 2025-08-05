@@ -1,9 +1,8 @@
-"""Tests for the WebOS TV integration."""
+"""Tests for the LG webOS TV integration."""
 
 from homeassistant.components.webostv.const import DOMAIN
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .const import CLIENT_KEY, FAKE_UUID, HOST, TV_NAME
 
@@ -25,11 +24,7 @@ async def setup_webostv(
     )
     entry.add_to_hass(hass)
 
-    await async_setup_component(
-        hass,
-        DOMAIN,
-        {DOMAIN: {CONF_HOST: HOST}},
-    )
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     return entry

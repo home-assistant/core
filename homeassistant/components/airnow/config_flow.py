@@ -13,13 +13,13 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
 
@@ -126,7 +126,7 @@ class AirNowConfigFlow(ConfigFlow, domain=DOMAIN):
         return AirNowOptionsFlowHandler()
 
 
-class AirNowOptionsFlowHandler(OptionsFlow):
+class AirNowOptionsFlowHandler(OptionsFlowWithReload):
     """Handle an options flow for AirNow."""
 
     async def async_step_init(

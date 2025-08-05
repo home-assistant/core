@@ -24,6 +24,7 @@ from .coordinator import (
     InfoUpdateCoordinator,
     JobUpdateCoordinator,
     LegacyStatusCoordinator,
+    PrusaLinkUpdateCoordinator,
     StatusCoordinator,
 )
 
@@ -47,11 +48,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data[CONF_PASSWORD],
     )
 
-    coordinators = {
-        "legacy_status": LegacyStatusCoordinator(hass, api),
-        "status": StatusCoordinator(hass, api),
-        "job": JobUpdateCoordinator(hass, api),
-        "info": InfoUpdateCoordinator(hass, api),
+    coordinators: dict[str, PrusaLinkUpdateCoordinator] = {
+        "legacy_status": LegacyStatusCoordinator(hass, entry, api),
+        "status": StatusCoordinator(hass, entry, api),
+        "job": JobUpdateCoordinator(hass, entry, api),
+        "info": InfoUpdateCoordinator(hass, entry, api),
     }
     for coordinator in coordinators.values():
         await coordinator.async_config_entry_first_refresh()

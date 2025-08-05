@@ -1,7 +1,11 @@
 """Common stuff for Comelit SimpleHome tests."""
 
-from aiocomelit import ComelitVedoAreaObject, ComelitVedoZoneObject
-from aiocomelit.api import ComelitSerialBridgeObject
+from aiocomelit.api import (
+    AlarmDataObject,
+    ComelitSerialBridgeObject,
+    ComelitVedoAreaObject,
+    ComelitVedoZoneObject,
+)
 from aiocomelit.const import (
     CLIMATE,
     COVER,
@@ -9,46 +13,46 @@ from aiocomelit.const import (
     LIGHT,
     OTHER,
     SCENARIO,
-    VEDO,
     WATT,
     AlarmAreaState,
     AlarmZoneState,
 )
 
-from homeassistant.components.comelit.const import DOMAIN
-from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
+BRIDGE_HOST = "fake_bridge_host"
+BRIDGE_PORT = 80
+BRIDGE_PIN = 1234
 
-MOCK_CONFIG = {
-    DOMAIN: {
-        CONF_DEVICES: [
-            {
-                CONF_HOST: "fake_host",
-                CONF_PORT: 80,
-                CONF_PIN: 1234,
-            },
-            {
-                CONF_HOST: "fake_vedo_host",
-                CONF_PORT: 8080,
-                CONF_PIN: 1234,
-                CONF_TYPE: VEDO,
-            },
-        ]
-    }
-}
+VEDO_HOST = "fake_vedo_host"
+VEDO_PORT = 8080
+VEDO_PIN = 5678
 
-MOCK_USER_BRIDGE_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
-MOCK_USER_VEDO_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][1]
-
-FAKE_PIN = 5678
+FAKE_PIN = 0000
 
 BRIDGE_DEVICE_QUERY = {
-    CLIMATE: {},
+    CLIMATE: {
+        0: ComelitSerialBridgeObject(
+            index=0,
+            name="Climate0",
+            status=0,
+            human_status="off",
+            type="climate",
+            val=[
+                [221, 0, "U", "M", 50, 0, 0, "U"],
+                [650, 0, "U", "M", 500, 0, 0, "U"],
+                [0, 0],
+            ],
+            protected=0,
+            zone="Living room",
+            power=0.0,
+            power_unit=WATT,
+        ),
+    },
     COVER: {
         0: ComelitSerialBridgeObject(
             index=0,
             name="Cover0",
             status=0,
-            human_status="closed",
+            human_status="stopped",
             type="cover",
             val=0,
             protected=0,
@@ -71,30 +75,43 @@ BRIDGE_DEVICE_QUERY = {
             power_unit=WATT,
         )
     },
-    OTHER: {},
+    OTHER: {
+        0: ComelitSerialBridgeObject(
+            index=0,
+            name="Switch0",
+            status=0,
+            human_status="off",
+            type="other",
+            val=0,
+            protected=0,
+            zone="Bathroom",
+            power=0.0,
+            power_unit=WATT,
+        ),
+    },
     IRRIGATION: {},
     SCENARIO: {},
 }
 
-VEDO_DEVICE_QUERY = {
-    "aree": {
+VEDO_DEVICE_QUERY = AlarmDataObject(
+    alarm_areas={
         0: ComelitVedoAreaObject(
             index=0,
             name="Area0",
             p1=True,
-            p2=False,
+            p2=True,
             ready=False,
-            armed=False,
+            armed=0,
             alarm=False,
             alarm_memory=False,
             sabotage=False,
             anomaly=False,
             in_time=False,
             out_time=False,
-            human_status=AlarmAreaState.UNKNOWN,
+            human_status=AlarmAreaState.DISARMED,
         )
     },
-    "zone": {
+    alarm_zones={
         0: ComelitVedoZoneObject(
             index=0,
             name="Zone0",
@@ -103,4 +120,4 @@ VEDO_DEVICE_QUERY = {
             human_status=AlarmZoneState.REST,
         )
     },
-}
+)

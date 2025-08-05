@@ -8,7 +8,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SmappeeConfigEntry
 from .const import DOMAIN
@@ -37,7 +37,7 @@ ICON_MAPPING = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: SmappeeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Smappee binary sensor."""
     smappee_base = config_entry.runtime_data

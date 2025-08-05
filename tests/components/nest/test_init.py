@@ -9,10 +9,12 @@ relevant modes.
 """
 
 from collections.abc import Generator
+import datetime
+from http import HTTPStatus
 import logging
-from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+import aiohttp
 from google_nest_sdm.exceptions import (
     ApiException,
     AuthException,
@@ -22,6 +24,7 @@ from google_nest_sdm.exceptions import (
 import pytest
 
 from homeassistant.components.nest import DOMAIN
+from homeassistant.components.nest.const import OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -29,12 +32,14 @@ from .common import (
     PROJECT_ID,
     SUBSCRIBER_ID,
     TEST_CONFIG_NEW_SUBSCRIPTION,
-    FakeSubscriber,
     PlatformSetup,
-    YieldFixture,
 )
 
+from tests.test_util.aiohttp import AiohttpClientMocker
+
 PLATFORM = "sensor"
+
+EXPIRED_TOKEN_TIMESTAMP = datetime.datetime(2022, 4, 8).timestamp()
 
 
 @pytest.fixture
@@ -59,25 +64,6 @@ def warning_caplog(
     """Fixture to capture nest init warning messages."""
     with caplog.at_level(logging.WARNING, logger="homeassistant.components.nest"):
         yield caplog
-
-
-@pytest.fixture
-def subscriber_side_effect() -> Any | None:
-    """Fixture to inject failures into FakeSubscriber start."""
-    return None
-
-
-@pytest.fixture
-def failing_subscriber(
-    subscriber_side_effect: Any | None,
-) -> YieldFixture[FakeSubscriber]:
-    """Fixture overriding default subscriber behavior to allow failure injection."""
-    subscriber = FakeSubscriber()
-    with patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber.start_async",
-        side_effect=subscriber_side_effect,
-    ):
-        yield subscriber
 
 
 async def test_setup_success(
@@ -125,10 +111,9 @@ async def test_setup_configuration_failure(
 
 
 @pytest.mark.parametrize("subscriber_side_effect", [SubscriberException()])
-async def test_setup_susbcriber_failure(
+async def test_setup_subscriber_failure(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    failing_subscriber,
     setup_base_platform,
 ) -> None:
     """Test configuration error."""
@@ -145,7 +130,6 @@ async def test_setup_device_manager_failure(
 ) -> None:
     """Test device manager api failure."""
     with (
-        patch("homeassistant.components.nest.api.GoogleNestSubscriber.start_async"),
         patch(
             "homeassistant.components.nest.api.GoogleNestSubscriber.async_get_device_manager",
             side_effect=ApiException(),
@@ -160,12 +144,60 @@ async def test_setup_device_manager_failure(
     assert entries[0].state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.parametrize("token_expiration_time", [EXPIRED_TOKEN_TIMESTAMP])
+@pytest.mark.parametrize(
+    ("token_response_args", "expected_state", "expected_steps"),
+    [
+        # Cases that retry integration setup
+        (
+            {"status": HTTPStatus.INTERNAL_SERVER_ERROR},
+            ConfigEntryState.SETUP_RETRY,
+            [],
+        ),
+        ({"exc": aiohttp.ClientError("No internet")}, ConfigEntryState.SETUP_RETRY, []),
+        # Cases that require the user to reauthenticate in a config flow
+        (
+            {"status": HTTPStatus.BAD_REQUEST},
+            ConfigEntryState.SETUP_ERROR,
+            ["reauth_confirm"],
+        ),
+        (
+            {"status": HTTPStatus.FORBIDDEN},
+            ConfigEntryState.SETUP_ERROR,
+            ["reauth_confirm"],
+        ),
+    ],
+)
+async def test_expired_token_refresh_error(
+    hass: HomeAssistant,
+    setup_base_platform: PlatformSetup,
+    aioclient_mock: AiohttpClientMocker,
+    token_response_args: dict,
+    expected_state: ConfigEntryState,
+    expected_steps: list[str],
+) -> None:
+    """Test errors when attempting to refresh the auth token."""
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        **token_response_args,
+    )
+
+    await setup_base_platform()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is expected_state
+
+    flows = hass.config_entries.flow.async_progress()
+    assert expected_steps == [flow["step_id"] for flow in flows]
+
+
 @pytest.mark.parametrize("subscriber_side_effect", [AuthException()])
 async def test_subscriber_auth_failure(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     setup_base_platform,
-    failing_subscriber,
 ) -> None:
     """Test subscriber throws an authentication error."""
     await setup_base_platform()
@@ -184,7 +216,6 @@ async def test_subscriber_configuration_failure(
     hass: HomeAssistant,
     error_caplog: pytest.LogCaptureFixture,
     setup_base_platform,
-    failing_subscriber,
 ) -> None:
     """Test configuration error."""
     await setup_base_platform()
@@ -210,14 +241,12 @@ async def test_unload_entry(hass: HomeAssistant, setup_platform) -> None:
 
 async def test_remove_entry(
     hass: HomeAssistant,
-    setup_base_platform,
+    setup_base_platform: PlatformSetup,
+    aioclient_mock: AiohttpClientMocker,
+    subscriber: AsyncMock,
 ) -> None:
     """Test successful unload of a ConfigEntry."""
-    with patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber",
-        return_value=FakeSubscriber(),
-    ):
-        await setup_base_platform()
+    await setup_base_platform()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
@@ -227,14 +256,18 @@ async def test_remove_entry(
     assert entry.data.get("subscriber_id") == SUBSCRIBER_ID
     assert entry.data.get("project_id") == PROJECT_ID
 
-    with (
-        patch("homeassistant.components.nest.api.GoogleNestSubscriber.subscriber_id"),
-        patch(
-            "homeassistant.components.nest.api.GoogleNestSubscriber.delete_subscription",
-        ) as delete,
-    ):
-        assert await hass.config_entries.async_remove(entry.entry_id)
-        assert delete.called
+    aioclient_mock.clear_requests()
+    aioclient_mock.delete(
+        f"https://pubsub.googleapis.com/v1/{SUBSCRIBER_ID}",
+        json={},
+    )
+
+    assert not subscriber.stop.called
+
+    assert await hass.config_entries.async_remove(entry.entry_id)
+
+    assert aioclient_mock.call_count == 1
+    assert subscriber.stop.called
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert not entries
@@ -243,7 +276,7 @@ async def test_remove_entry(
 async def test_home_assistant_stop(
     hass: HomeAssistant,
     setup_platform: PlatformSetup,
-    subscriber: FakeSubscriber,
+    subscriber: AsyncMock,
 ) -> None:
     """Test successful subscriber shutdown when HomeAssistant stops."""
     await setup_platform()
@@ -253,31 +286,37 @@ async def test_home_assistant_stop(
     entry = entries[0]
     assert entry.state is ConfigEntryState.LOADED
 
+    assert not subscriber.stop.called
     await hass.async_stop()
-    assert subscriber.stop_calls == 1
+    assert subscriber.stop.called
 
 
 async def test_remove_entry_delete_subscriber_failure(
-    hass: HomeAssistant, setup_base_platform
+    hass: HomeAssistant,
+    setup_base_platform: PlatformSetup,
+    aioclient_mock: AiohttpClientMocker,
+    subscriber: AsyncMock,
 ) -> None:
     """Test a failure when deleting the subscription."""
-    with patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber",
-        return_value=FakeSubscriber(),
-    ):
-        await setup_base_platform()
+    await setup_base_platform()
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     entry = entries[0]
     assert entry.state is ConfigEntryState.LOADED
 
-    with patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber.delete_subscription",
-        side_effect=SubscriberException(),
-    ) as delete:
-        assert await hass.config_entries.async_remove(entry.entry_id)
-        assert delete.called
+    aioclient_mock.clear_requests()
+    aioclient_mock.delete(
+        f"https://pubsub.googleapis.com/v1/{SUBSCRIBER_ID}",
+        status=HTTPStatus.NOT_FOUND,
+    )
+
+    assert not subscriber.stop.called
+
+    assert await hass.config_entries.async_remove(entry.entry_id)
+
+    assert aioclient_mock.call_count == 1
+    assert subscriber.stop.called
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert not entries

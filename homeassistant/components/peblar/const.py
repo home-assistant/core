@@ -23,7 +23,7 @@ PEBLAR_CHARGE_LIMITER_TO_HOME_ASSISTANT = {
     ChargeLimiter.INSTALLATION_LIMIT: "installation_limit",
     ChargeLimiter.LOCAL_MODBUS_API: "local_modbus_api",
     ChargeLimiter.LOCAL_REST_API: "local_rest_api",
-    ChargeLimiter.LOCAL_SCHEDULED: "local_scheduled",
+    ChargeLimiter.LOCAL_SCHEDULED_CHARGING: "local_scheduled_charging",
     ChargeLimiter.OCPP_SMART_CHARGING: "ocpp_smart_charging",
     ChargeLimiter.OVERCURRENT_PROTECTION: "overcurrent_protection",
     ChargeLimiter.PHASE_IMBALANCE: "phase_imbalance",

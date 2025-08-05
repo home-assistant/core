@@ -11,7 +11,6 @@ from flux_led.protocol import MusicMode
 from flux_led.utils import rgbcw_brightness, rgbcw_to_rgbwc, rgbw_brightness
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
@@ -25,9 +24,8 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import CONF_EFFECT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -39,7 +37,6 @@ from .const import (
     CONF_SPEED_PCT,
     CONF_TRANSITION,
     DEFAULT_EFFECT_SPEED,
-    DOMAIN,
     MIN_CCT_BRIGHTNESS,
     MIN_RGB_BRIGHTNESS,
     MULTI_BRIGHTNESS_COLOR_MODES,
@@ -47,7 +44,7 @@ from .const import (
     TRANSITION_JUMP,
     TRANSITION_STROBE,
 )
-from .coordinator import FluxLedUpdateCoordinator
+from .coordinator import FluxLedConfigEntry, FluxLedUpdateCoordinator
 from .entity import FluxOnOffEntity
 from .util import (
     _effect_brightness,
@@ -135,11 +132,11 @@ SET_ZONES_DICT: VolDictType = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: FluxLedConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Flux lights."""
-    coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(

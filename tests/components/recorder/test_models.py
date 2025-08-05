@@ -5,6 +5,7 @@ from unittest.mock import PropertyMock
 
 import pytest
 
+from homeassistant import core as ha
 from homeassistant.components.recorder.const import SupportedDialect
 from homeassistant.components.recorder.db_schema import (
     EventData,
@@ -18,7 +19,6 @@ from homeassistant.components.recorder.models import (
     process_timestamp_to_utc_isoformat,
 )
 from homeassistant.const import EVENT_STATE_CHANGED
-import homeassistant.core as ha
 from homeassistant.exceptions import InvalidEntityFormatError
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import json_loads

@@ -355,6 +355,7 @@ async def test_browse_media(
         "children_media_class": "app",
         "can_play": False,
         "can_expand": True,
+        "can_search": False,
         "thumbnail": None,
         "not_shown": 0,
         "children": [
@@ -366,6 +367,7 @@ async def test_browse_media(
                 "children_media_class": None,
                 "can_play": False,
                 "can_expand": False,
+                "can_search": False,
                 "thumbnail": "https://www.youtube.com/icon.png",
             },
             {
@@ -376,6 +378,7 @@ async def test_browse_media(
                 "children_media_class": None,
                 "can_play": False,
                 "can_expand": False,
+                "can_search": False,
                 "thumbnail": "",
             },
         ],
@@ -391,7 +394,9 @@ async def test_media_player_connection_closed(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     mock_api.send_key_command.side_effect = ConnectionClosed()
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError, match="Connection to the Android TV device is closed"
+    ):
         await hass.services.async_call(
             "media_player",
             "media_pause",
@@ -400,7 +405,9 @@ async def test_media_player_connection_closed(
         )
 
     mock_api.send_launch_app_command.side_effect = ConnectionClosed()
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError, match="Connection to the Android TV device is closed"
+    ):
         await hass.services.async_call(
             "media_player",
             "play_media",

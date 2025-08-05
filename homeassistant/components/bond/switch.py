@@ -12,7 +12,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BondConfigEntry
 from .const import ATTR_POWER_STATE, SERVICE_SET_POWER_TRACKED_STATE
@@ -22,7 +22,7 @@ from .entity import BondEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BondConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Bond generic devices."""
     data = entry.runtime_data

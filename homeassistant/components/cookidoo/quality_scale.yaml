@@ -63,7 +63,7 @@ rules:
   stale-devices:
     status: exempt
     comment: No stale entities possible
-  diagnostics: todo
+  diagnostics: done
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done

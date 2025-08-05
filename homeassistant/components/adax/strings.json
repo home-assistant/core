@@ -5,14 +5,14 @@
         "data": {
           "connection_type": "Select connection type"
         },
-        "description": "Select connection type. Local requires heaters with bluetooth"
+        "description": "Select connection type. Local requires heaters with Bluetooth"
       },
       "local": {
         "data": {
           "wifi_ssid": "Wi-Fi SSID",
-          "wifi_pswd": "Wi-Fi Password"
+          "wifi_pswd": "Wi-Fi password"
         },
-        "description": "Reset the heater by pressing + and OK until display shows 'Reset'. Then press and hold OK button on the heater until the blue led starts blinking before pressing Submit. Configuring heater might take some minutes."
+        "description": "Reset the heater by pressing + and OK until display shows 'Reset'. Then press and hold OK button on the heater until the blue LED starts blinking before pressing Submit. Configuring heater might take some minutes."
       },
       "cloud": {
         "data": {

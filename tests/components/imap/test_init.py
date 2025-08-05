@@ -171,11 +171,8 @@ async def test_receiving_message_successfully(
     assert data["subject"] == "Test subject"
     assert data["uid"] == "1"
     assert "Test body" in data["text"]
-    assert (
-        valid_date
-        and isinstance(data["date"], datetime)
-        or not valid_date
-        and data["date"] is None
+    assert (valid_date and isinstance(data["date"], datetime)) or (
+        not valid_date and data["date"] is None
     )
 
 
@@ -581,11 +578,8 @@ async def test_reset_last_message(
     assert data["subject"] == "Test subject"
     assert data["text"]
     assert data["initial"]
-    assert (
-        valid_date
-        and isinstance(data["date"], datetime)
-        or not valid_date
-        and data["date"] is None
+    assert (valid_date and isinstance(data["date"], datetime)) or (
+        not valid_date and data["date"] is None
     )
 
     # Simulate an update where no messages are found (needed for pushed coordinator)
@@ -732,9 +726,10 @@ async def test_message_data(
     [
         ("{{ subject }}", "Test subject", None),
         ('{{ "@example.com" in sender }}', True, None),
+        ('{{ "body" in text }}', True, None),
         ("{% bad template }}", None, "Error rendering IMAP custom template"),
     ],
-    ids=["subject_test", "sender_filter", "template_error"],
+    ids=["subject_test", "sender_filter", "body_filter", "template_error"],
 )
 async def test_custom_template(
     hass: HomeAssistant,

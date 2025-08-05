@@ -22,7 +22,7 @@ from homeassistant.generated.amazon_polly import (
     SUPPORTED_REGIONS,
     SUPPORTED_VOICES,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (

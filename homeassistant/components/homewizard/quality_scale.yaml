@@ -47,7 +47,10 @@ rules:
   devices: done
   diagnostics: done
   discovery-update-info: done
-  discovery: done
+  discovery:
+    status: done
+    comment: |
+      DHCP IP address updates are not supported for the v2 API.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
@@ -66,10 +69,7 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  repair-issues:
-    status: exempt
-    comment: |
-      This integration does not raise any repairable issues.
+  repair-issues: done
   stale-devices:
     status: exempt
     comment: |

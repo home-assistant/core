@@ -6,9 +6,14 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE, CONF_NAME, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -41,6 +46,7 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+DEPRECATED_ISSUE_ID = f"deprecated_system_packages_config_flow_integration_{DOMAIN}"
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -52,6 +58,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Configure Gammu state machine."""
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        DEPRECATED_ISSUE_ID,
+        breaks_in_ha_version="2025.12.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_system_packages_config_flow_integration",
+        translation_placeholders={
+            "integration_title": "SMS notifications via GSM-modem",
+        },
+    )
 
     device = entry.data[CONF_DEVICE]
     connection_mode = "at"
@@ -64,8 +83,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not gateway:
         raise ConfigEntryNotReady(f"Cannot find device {device}")
 
-    signal_coordinator = SignalCoordinator(hass, gateway)
-    network_coordinator = NetworkCoordinator(hass, gateway)
+    signal_coordinator = SignalCoordinator(hass, entry, gateway)
+    network_coordinator = NetworkCoordinator(hass, entry, gateway)
 
     # Fetch initial data so we have data when entities subscribe
     await signal_coordinator.async_config_entry_first_refresh()
@@ -100,5 +119,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok:
         gateway = hass.data[DOMAIN].pop(SMS_GATEWAY)[GATEWAY]
         await gateway.terminate_async()
+
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
+        async_delete_issue(hass, HOMEASSISTANT_DOMAIN, DEPRECATED_ISSUE_ID)
 
     return unload_ok

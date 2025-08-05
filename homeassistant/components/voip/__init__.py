@@ -30,9 +30,9 @@ _IP_WILDCARD = "0.0.0.0"
 
 __all__ = [
     "DOMAIN",
+    "async_remove_config_entry_device",
     "async_setup_entry",
     "async_unload_entry",
-    "async_remove_config_entry_device",
 ]
 
 

@@ -1,5 +1,42 @@
 # serializer version: 1
-# name: test_sensor
+# name: test_sensor[sensor.de_jongweg_utrecht_air_quality_index-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.de_jongweg_utrecht_air_quality_index',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.AQI: 'aqi'>,
+    'original_icon': None,
+    'original_name': 'Air quality index',
+    'platform': 'waqi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '4584_air_quality',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.de_jongweg_utrecht_air_quality_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
@@ -15,39 +52,104 @@
     'state': '29',
   })
 # ---
-# name: test_sensor.1
+# name: test_sensor[sensor.de_jongweg_utrecht_carbon_monoxide-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.de_jongweg_utrecht_carbon_monoxide',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Carbon monoxide',
+    'platform': 'waqi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'carbon_monoxide',
+    'unique_id': '4584_carbon_monoxide',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.de_jongweg_utrecht_carbon_monoxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
-      'device_class': 'humidity',
-      'friendly_name': 'de Jongweg, Utrecht Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.de_jongweg_utrecht_humidity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '80',
-  })
-# ---
-# name: test_sensor.10
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
-      'friendly_name': 'de Jongweg, Utrecht Visbility using nephelometry',
+      'friendly_name': 'de Jongweg, Utrecht Carbon monoxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.de_jongweg_utrecht_visbility_using_nephelometry',
+    'entity_id': 'sensor.de_jongweg_utrecht_carbon_monoxide',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '80',
+    'state': '2.3',
   })
 # ---
-# name: test_sensor.11
+# name: test_sensor[sensor.de_jongweg_utrecht_dominant_pollutant-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'co',
+        'no2',
+        'o3',
+        'so2',
+        'pm10',
+        'pm25',
+        'neph',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.de_jongweg_utrecht_dominant_pollutant',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Dominant pollutant',
+    'platform': 'waqi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dominant_pollutant',
+    'unique_id': '4584_dominant_pollutant',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.de_jongweg_utrecht_dominant_pollutant-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
@@ -71,7 +173,309 @@
     'state': 'o3',
   })
 # ---
-# name: test_sensor.2
+# name: test_sensor[sensor.de_jongweg_utrecht_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.de_jongweg_utrecht_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'waqi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '4584_humidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[sensor.de_jongweg_utrecht_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      'device_class': 'humidity',
+      'friendly_name': 'de Jongweg, Utrecht Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.de_jongweg_utrecht_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
+# ---
+# name: test_sensor[sensor.de_jongweg_utrecht_nitrogen_dioxide-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.de_jongweg_utrecht_nitrogen_dioxide',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Nitrogen dioxide',
+    'platform': 'waqi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'nitrogen_dioxide',
+    'unique_id': '4584_nitrogen_dioxide',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.de_jongweg_utrecht_nitrogen_dioxide-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      'friendly_name': 'de Jongweg, Utrecht Nitrogen dioxide',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.de_jongweg_utrecht_nitrogen_dioxide',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.3',
+  })
+# ---
+# name: test_sensor[sensor.de_jongweg_utrecht_ozone-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.de_jongweg_utrecht_ozone',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Ozone',
+    'platform': 'waqi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ozone',
+    'unique_id': '4584_ozone',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.de_jongweg_utrecht_ozone-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      'friendly_name': 'de Jongweg, Utrecht Ozone',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.de_jongweg_utrecht_ozone',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '29.4',
+  })
+# ---
+# name: test_sensor[sensor.de_jongweg_utrecht_pm10-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.de_jongweg_utrecht_pm10',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'PM10',
+    'platform': 'waqi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pm10',
+    'unique_id': '4584_pm10',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.de_jongweg_utrecht_pm10-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      'friendly_name': 'de Jongweg, Utrecht PM10',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.de_jongweg_utrecht_pm10',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12',
+  })
+# ---
+# name: test_sensor[sensor.de_jongweg_utrecht_pm2_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.de_jongweg_utrecht_pm2_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'PM2.5',
+    'platform': 'waqi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'pm25',
+    'unique_id': '4584_pm25',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.de_jongweg_utrecht_pm2_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      'friendly_name': 'de Jongweg, Utrecht PM2.5',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.de_jongweg_utrecht_pm2_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '17',
+  })
+# ---
+# name: test_sensor[sensor.de_jongweg_utrecht_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.de_jongweg_utrecht_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Pressure',
+    'platform': 'waqi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '4584_pressure',
+    'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+  })
+# ---
+# name: test_sensor[sensor.de_jongweg_utrecht_pressure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
@@ -88,7 +492,99 @@
     'state': '1008.8',
   })
 # ---
-# name: test_sensor.3
+# name: test_sensor[sensor.de_jongweg_utrecht_sulphur_dioxide-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.de_jongweg_utrecht_sulphur_dioxide',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sulphur dioxide',
+    'platform': 'waqi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sulphur_dioxide',
+    'unique_id': '4584_sulphur_dioxide',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.de_jongweg_utrecht_sulphur_dioxide-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
+      'friendly_name': 'de Jongweg, Utrecht Sulphur dioxide',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.de_jongweg_utrecht_sulphur_dioxide',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.3',
+  })
+# ---
+# name: test_sensor[sensor.de_jongweg_utrecht_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.de_jongweg_utrecht_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'waqi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '4584_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensor[sensor.de_jongweg_utrecht_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
@@ -105,93 +601,55 @@
     'state': '16',
   })
 # ---
-# name: test_sensor.4
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
-      'friendly_name': 'de Jongweg, Utrecht Carbon monoxide',
+# name: test_sensor[sensor.de_jongweg_utrecht_visibility_using_nephelometry-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
-    'context': <ANY>,
-    'entity_id': 'sensor.de_jongweg_utrecht_carbon_monoxide',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.3',
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.de_jongweg_utrecht_visibility_using_nephelometry',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Visibility using nephelometry',
+    'platform': 'waqi',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'neph',
+    'unique_id': '4584_neph',
+    'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor.5
+# name: test_sensor[sensor.de_jongweg_utrecht_visibility_using_nephelometry-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
-      'friendly_name': 'de Jongweg, Utrecht Nitrogen dioxide',
+      'friendly_name': 'de Jongweg, Utrecht Visibility using nephelometry',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.de_jongweg_utrecht_nitrogen_dioxide',
+    'entity_id': 'sensor.de_jongweg_utrecht_visibility_using_nephelometry',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2.3',
-  })
-# ---
-# name: test_sensor.6
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
-      'friendly_name': 'de Jongweg, Utrecht Ozone',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.de_jongweg_utrecht_ozone',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '29.4',
-  })
-# ---
-# name: test_sensor.7
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
-      'friendly_name': 'de Jongweg, Utrecht Sulphur dioxide',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.de_jongweg_utrecht_sulphur_dioxide',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2.3',
-  })
-# ---
-# name: test_sensor.8
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
-      'friendly_name': 'de Jongweg, Utrecht PM10',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.de_jongweg_utrecht_pm10',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '12',
-  })
-# ---
-# name: test_sensor.9
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'attribution': 'RIVM - Rijksinstituut voor Volksgezondheid en Milieum, Landelijk Meetnet Luchtkwaliteit and World Air Quality Index Project',
-      'friendly_name': 'de Jongweg, Utrecht PM2.5',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.de_jongweg_utrecht_pm2_5',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '17',
+    'state': '80',
   })
 # ---

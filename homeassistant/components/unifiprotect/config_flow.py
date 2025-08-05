@@ -14,16 +14,16 @@ from uiprotect.exceptions import ClientError, NotAuthorized
 from unifi_discovery import async_console_is_alive
 import voluptuous as vol
 
-from homeassistant.components import dhcp, ssdp
 from homeassistant.config_entries import (
     SOURCE_IGNORE,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
+    CONF_API_KEY,
     CONF_HOST,
     CONF_ID,
     CONF_PASSWORD,
@@ -36,6 +36,8 @@ from homeassistant.helpers.aiohttp_client import (
     async_create_clientsession,
     async_get_clientsession,
 )
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_integration
@@ -43,7 +45,6 @@ from homeassistant.util.network import is_ip_address
 
 from .const import (
     CONF_ALL_UPDATES,
-    CONF_ALLOW_EA,
     CONF_DISABLE_RTSP,
     CONF_MAX_MEDIA,
     CONF_OVERRIDE_CHOST,
@@ -107,14 +108,14 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         self._discovered_device: dict[str, str] = {}
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery via dhcp."""
         _LOGGER.debug("Starting discovery via: %s", discovery_info)
         return await self._async_discovery_handoff()
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered UniFi device."""
         _LOGGER.debug("Starting discovery via: %s", discovery_info)
@@ -214,6 +215,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME)
                     ): str,
                     vol.Required(CONF_PASSWORD): str,
+                    vol.Required(CONF_API_KEY): str,
                 }
             ),
             errors=errors,
@@ -223,7 +225,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlow:
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
@@ -237,7 +239,6 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_ALL_UPDATES: False,
                 CONF_OVERRIDE_CHOST: False,
                 CONF_MAX_MEDIA: DEFAULT_MAX_MEDIA,
-                CONF_ALLOW_EA: False,
             },
         )
 
@@ -248,6 +249,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         session = async_create_clientsession(
             self.hass, cookie_jar=CookieJar(unsafe=True)
         )
+        public_api_session = async_get_clientsession(self.hass)
 
         host = user_input[CONF_HOST]
         port = user_input.get(CONF_PORT, DEFAULT_PORT)
@@ -255,10 +257,12 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
 
         protect = ProtectApiClient(
             session=session,
+            public_api_session=public_api_session,
             host=host,
             port=port,
             username=user_input[CONF_USERNAME],
             password=user_input[CONF_PASSWORD],
+            api_key=user_input[CONF_API_KEY],
             verify_ssl=verify_ssl,
             cache_dir=Path(self.hass.config.path(STORAGE_DIR, "unifiprotect")),
             config_dir=Path(self.hass.config.path(STORAGE_DIR, "unifiprotect")),
@@ -273,7 +277,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug(ex)
             errors[CONF_PASSWORD] = "invalid_auth"
         except ClientError as ex:
-            _LOGGER.debug(ex)
+            _LOGGER.error(ex)
             errors["base"] = "cannot_connect"
         else:
             if nvr_data.version < MIN_REQUIRED_PROTECT_V:
@@ -287,6 +291,14 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             auth_user = bootstrap.users.get(bootstrap.auth_user_id)
             if auth_user and auth_user.cloud_account:
                 errors["base"] = "cloud_user"
+        try:
+            await protect.get_meta_info()
+        except NotAuthorized as ex:
+            _LOGGER.debug(ex)
+            errors[CONF_API_KEY] = "invalid_auth"
+        except ClientError as ex:
+            _LOGGER.error(ex)
+            errors["base"] = "cannot_connect"
 
         return nvr_data, errors
 
@@ -319,12 +331,18 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         }
         return self.async_show_form(
             step_id="reauth_confirm",
+            description_placeholders={
+                "local_user_documentation_url": await async_local_user_documentation_url(
+                    self.hass
+                ),
+            },
             data_schema=vol.Schema(
                 {
                     vol.Required(
                         CONF_USERNAME, default=form_data.get(CONF_USERNAME)
                     ): str,
                     vol.Required(CONF_PASSWORD): str,
+                    vol.Required(CONF_API_KEY): str,
                 }
             ),
             errors=errors,
@@ -367,13 +385,14 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME, default=user_input.get(CONF_USERNAME)
                     ): str,
                     vol.Required(CONF_PASSWORD): str,
+                    vol.Required(CONF_API_KEY): str,
                 }
             ),
             errors=errors,
         )
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle options."""
 
     async def async_step_init(
@@ -407,10 +426,6 @@ class OptionsFlowHandler(OptionsFlow):
                             CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA
                         ),
                     ): vol.All(vol.Coerce(int), vol.Range(min=100, max=10000)),
-                    vol.Optional(
-                        CONF_ALLOW_EA,
-                        default=self.config_entry.options.get(CONF_ALLOW_EA, False),
-                    ): bool,
                 }
             ),
         )

@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from homeassistant.const import CONF_NAME, CONF_URL
+from yarl import URL
+
+from homeassistant.const import CONF_URL
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -35,7 +37,11 @@ class HabiticaBase(CoordinatorEntity[HabiticaDataUpdateCoordinator]):
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
             model=NAME,
-            name=coordinator.config_entry.data[CONF_NAME],
-            configuration_url=coordinator.config_entry.data[CONF_URL],
+            name=coordinator.data.user.profile.name,
+            configuration_url=(
+                URL(coordinator.config_entry.data[CONF_URL])
+                / "profile"
+                / coordinator.config_entry.unique_id
+            ),
             identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
         )

@@ -26,17 +26,25 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type AquacellConfigEntry = ConfigEntry[AquacellCoordinator]
+
 
 class AquacellCoordinator(DataUpdateCoordinator[dict[str, Softener]]):
     """My aquacell coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: AquacellConfigEntry
 
-    def __init__(self, hass: HomeAssistant, aquacell_api: AquacellApi) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: AquacellConfigEntry,
+        aquacell_api: AquacellApi,
+    ) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="Aquacell Coordinator",
             update_interval=UPDATE_INTERVAL,
         )

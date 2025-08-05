@@ -19,7 +19,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AirTouch4ConfigEntry
@@ -64,7 +64,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AirTouch4ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Airtouch 4."""
     coordinator = config_entry.runtime_data
@@ -142,7 +142,7 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         return AT_TO_HA_STATE[self._airtouch.acs[self._ac_number].AcMode]
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
         airtouch_modes = self._airtouch.GetSupportedCoolingModesForAc(self._ac_number)
         modes = [AT_TO_HA_STATE[mode] for mode in airtouch_modes]
@@ -226,12 +226,12 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
         return super()._handle_coordinator_update()
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return Minimum Temperature for AC of this group."""
         return self._airtouch.acs[self._unit.BelongsToAc].MinSetpoint
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return Max Temperature for AC of this group."""
         return self._airtouch.acs[self._unit.BelongsToAc].MaxSetpoint
 

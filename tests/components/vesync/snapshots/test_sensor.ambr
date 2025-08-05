@@ -4,6 +4,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -17,7 +18,6 @@
           'air-purifier',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -27,7 +27,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -43,6 +42,7 @@
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -63,6 +63,7 @@
       'original_name': 'Filter lifetime',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'filter_life',
       'unique_id': 'air-purifier-filter-life',
@@ -74,6 +75,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -94,6 +96,7 @@
       'original_name': 'Air quality',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'air_quality',
       'unique_id': 'air-purifier-air-quality',
@@ -111,7 +114,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': 'excellent',
   })
 # ---
 # name: test_sensor_state[Air Purifier 131s][sensor.air_purifier_131s_filter_lifetime]
@@ -126,7 +129,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '25',
   })
 # ---
 # name: test_sensor_state[Air Purifier 200s][devices]
@@ -134,6 +137,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -147,7 +151,6 @@
           'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -157,7 +160,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -173,6 +175,7 @@
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -193,6 +196,7 @@
       'original_name': 'Filter lifetime',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'filter_life',
       'unique_id': 'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55-filter-life',
@@ -220,6 +224,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -233,7 +238,6 @@
           '400s-purifier',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -243,7 +247,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -259,6 +262,7 @@
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -279,6 +283,7 @@
       'original_name': 'Filter lifetime',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'filter_life',
       'unique_id': '400s-purifier-filter-life',
@@ -290,6 +295,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -310,6 +316,7 @@
       'original_name': 'Air quality',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'air_quality',
       'unique_id': '400s-purifier-air-quality',
@@ -323,6 +330,7 @@
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -343,6 +351,7 @@
       'original_name': 'PM2.5',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '400s-purifier-pm25',
@@ -399,6 +408,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -412,7 +422,6 @@
           '600s-purifier',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -422,7 +431,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -438,6 +446,7 @@
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -458,6 +467,7 @@
       'original_name': 'Filter lifetime',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'filter_life',
       'unique_id': '600s-purifier-filter-life',
@@ -469,6 +479,7 @@
       'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -489,6 +500,7 @@
       'original_name': 'Air quality',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'air_quality',
       'unique_id': '600s-purifier-air-quality',
@@ -502,6 +514,7 @@
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -522,6 +535,7 @@
       'original_name': 'PM2.5',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': None,
       'unique_id': '600s-purifier-pm25',
@@ -578,6 +592,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -591,7 +606,6 @@
           'dimmable-bulb',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -601,7 +615,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -616,6 +629,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -629,7 +643,6 @@
           'dimmable-switch',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -639,7 +652,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -651,25 +663,186 @@
 # ---
 # name: test_sensor_state[Humidifier 200s][devices]
   list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          '200s-humidifier4321',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'Classic200S',
+      'model_id': None,
+      'name': 'Humidifier 200s',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
   ])
 # ---
 # name: test_sensor_state[Humidifier 200s][entities]
   list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.humidifier_200s_humidity',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+      'original_icon': None,
+      'original_name': 'Humidity',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': '200s-humidifier4321-humidity',
+      'unit_of_measurement': '%',
+    }),
   ])
+# ---
+# name: test_sensor_state[Humidifier 200s][sensor.humidifier_200s_humidity]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Humidifier 200s Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.humidifier_200s_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '35',
+  })
 # ---
 # name: test_sensor_state[Humidifier 600S][devices]
   list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          '600s-humidifier',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LUH-A602S-WUS',
+      'model_id': None,
+      'name': 'Humidifier 600S',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
   ])
 # ---
 # name: test_sensor_state[Humidifier 600S][entities]
   list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.humidifier_600s_humidity',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+      'original_icon': None,
+      'original_name': 'Humidity',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': '600s-humidifier-humidity',
+      'unit_of_measurement': '%',
+    }),
   ])
+# ---
+# name: test_sensor_state[Humidifier 600S][sensor.humidifier_600s_humidity]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Humidifier 600S Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.humidifier_600s_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '35',
+  })
 # ---
 # name: test_sensor_state[Outlet][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -683,7 +856,6 @@
           'outlet',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -693,7 +865,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -709,6 +880,7 @@
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -723,12 +895,16 @@
       }),
       'name': None,
       'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 0,
+        }),
       }),
       'original_device_class': <SensorDeviceClass.POWER: 'power'>,
       'original_icon': None,
       'original_name': 'Current power',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'current_power',
       'unique_id': 'outlet-power',
@@ -742,6 +918,7 @@
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -756,12 +933,16 @@
       }),
       'name': None,
       'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
       }),
       'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
       'original_icon': None,
       'original_name': 'Energy use today',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'energy_today',
       'unique_id': 'outlet-energy',
@@ -775,6 +956,7 @@
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -789,12 +971,16 @@
       }),
       'name': None,
       'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
       }),
       'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
       'original_icon': None,
       'original_name': 'Energy use weekly',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'energy_week',
       'unique_id': 'outlet-energy-weekly',
@@ -808,6 +994,7 @@
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -822,12 +1009,16 @@
       }),
       'name': None,
       'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
       }),
       'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
       'original_icon': None,
       'original_name': 'Energy use monthly',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'energy_month',
       'unique_id': 'outlet-energy-monthly',
@@ -841,6 +1032,7 @@
         'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -855,12 +1047,16 @@
       }),
       'name': None,
       'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
       }),
       'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
       'original_icon': None,
       'original_name': 'Energy use yearly',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'energy_year',
       'unique_id': 'outlet-energy-yearly',
@@ -874,6 +1070,7 @@
         'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
       'device_class': None,
       'device_id': <ANY>,
       'disabled_by': None,
@@ -888,12 +1085,16 @@
       }),
       'name': None,
       'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 0,
+        }),
       }),
       'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
       'original_icon': None,
       'original_name': 'Current voltage',
       'platform': 'vesync',
       'previous_unique_id': None,
+      'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'current_voltage',
       'unique_id': 'outlet-voltage',
@@ -997,11 +1198,49 @@
     'state': '0',
   })
 # ---
+# name: test_sensor_state[SmartTowerFan][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'smarttowerfan',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LTF-F422S-KEU',
+      'model_id': None,
+      'name': 'SmartTowerFan',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_sensor_state[SmartTowerFan][entities]
+  list([
+  ])
+# ---
 # name: test_sensor_state[Temperature Light][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1015,7 +1254,6 @@
           'tunable-bulb',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -1025,7 +1263,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -1040,6 +1277,7 @@
     DeviceRegistryEntrySnapshot({
       'area_id': None,
       'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
       'configuration_url': None,
       'connections': set({
       }),
@@ -1053,7 +1291,6 @@
           'switch',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
@@ -1063,7 +1300,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),

@@ -32,9 +32,9 @@
       "air_quality": {
         "name": "Air Quality mode",
         "state": {
-          "off": "Off",
-          "on": "On",
-          "auto": "Auto"
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]",
+          "auto": "[%key:common::state::auto%]"
         }
       },
       "modes": {

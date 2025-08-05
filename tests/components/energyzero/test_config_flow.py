@@ -2,8 +2,6 @@
 
 from unittest.mock import MagicMock
 
-from syrupy.assertion import SnapshotAssertion
-
 from homeassistant.components.energyzero.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -15,7 +13,6 @@ from tests.common import MockConfigEntry
 async def test_full_user_flow(
     hass: HomeAssistant,
     mock_setup_entry: MagicMock,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the full user configuration flow."""
     result = await hass.config_entries.flow.async_init(
@@ -32,7 +29,8 @@ async def test_full_user_flow(
     )
 
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
-    assert result2 == snapshot
+    assert result2.get("title") == "EnergyZero"
+    assert result2.get("data") == {}
 
     assert len(mock_setup_entry.mock_calls) == 1
 

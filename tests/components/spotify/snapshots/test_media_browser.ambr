@@ -3,10 +3,12 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': True,
         'can_play': False,
+        'can_search': False,
         'children_media_class': <MediaClass.PLAYLIST: 'playlist'>,
         'media_class': <MediaClass.DIRECTORY: 'directory'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/current_user_playlists',
@@ -17,6 +19,7 @@
       dict({
         'can_expand': True,
         'can_play': False,
+        'can_search': False,
         'children_media_class': <MediaClass.ARTIST: 'artist'>,
         'media_class': <MediaClass.DIRECTORY: 'directory'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/current_user_followed_artists',
@@ -27,6 +30,7 @@
       dict({
         'can_expand': True,
         'can_play': False,
+        'can_search': False,
         'children_media_class': <MediaClass.ALBUM: 'album'>,
         'media_class': <MediaClass.DIRECTORY: 'directory'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/current_user_saved_albums',
@@ -37,6 +41,7 @@
       dict({
         'can_expand': True,
         'can_play': False,
+        'can_search': False,
         'children_media_class': <MediaClass.TRACK: 'track'>,
         'media_class': <MediaClass.DIRECTORY: 'directory'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/current_user_saved_tracks',
@@ -47,6 +52,7 @@
       dict({
         'can_expand': True,
         'can_play': False,
+        'can_search': False,
         'children_media_class': <MediaClass.PODCAST: 'podcast'>,
         'media_class': <MediaClass.DIRECTORY: 'directory'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/current_user_saved_shows',
@@ -57,6 +63,7 @@
       dict({
         'can_expand': True,
         'can_play': False,
+        'can_search': False,
         'children_media_class': <MediaClass.TRACK: 'track'>,
         'media_class': <MediaClass.DIRECTORY: 'directory'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/current_user_recently_played',
@@ -67,6 +74,7 @@
       dict({
         'can_expand': True,
         'can_play': False,
+        'can_search': False,
         'children_media_class': <MediaClass.ARTIST: 'artist'>,
         'media_class': <MediaClass.DIRECTORY: 'directory'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/current_user_top_artists',
@@ -77,6 +85,7 @@
       dict({
         'can_expand': True,
         'can_play': False,
+        'can_search': False,
         'children_media_class': <MediaClass.TRACK: 'track'>,
         'media_class': <MediaClass.DIRECTORY: 'directory'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/current_user_top_tracks',
@@ -87,6 +96,7 @@
       dict({
         'can_expand': True,
         'can_play': False,
+        'can_search': False,
         'children_media_class': <MediaClass.ALBUM: 'album'>,
         'media_class': <MediaClass.DIRECTORY: 'directory'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/new_releases',
@@ -108,10 +118,12 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': True,
         'can_play': True,
+        'can_search': False,
         'children_media_class': <MediaClass.TRACK: 'track'>,
         'media_class': <MediaClass.PLAYLIST: 'playlist'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:playlist:4WkWJ0EjHEFASDevhM8oPw',
@@ -122,6 +134,7 @@
       dict({
         'can_expand': True,
         'can_play': True,
+        'can_search': False,
         'children_media_class': <MediaClass.TRACK: 'track'>,
         'media_class': <MediaClass.PLAYLIST: 'playlist'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:playlist:1RHirWgH1weMsBLi4KOK9d',
@@ -143,10 +156,12 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': True,
         'can_play': True,
+        'can_search': False,
         'children_media_class': <MediaClass.TRACK: 'track'>,
         'media_class': <MediaClass.PLAYLIST: 'playlist'>,
         'media_content_id': 'spotify://32oesphrnacjcf7vw5bf6odx3/spotify:playlist:4WkWJ0EjHEFASDevhM8oPw',
@@ -157,6 +172,7 @@
       dict({
         'can_expand': True,
         'can_play': True,
+        'can_search': False,
         'children_media_class': <MediaClass.TRACK: 'track'>,
         'media_class': <MediaClass.PLAYLIST: 'playlist'>,
         'media_content_id': 'spotify://32oesphrnacjcf7vw5bf6odx3/spotify:playlist:1RHirWgH1weMsBLi4KOK9d',
@@ -178,10 +194,12 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': True,
         'can_play': False,
+        'can_search': False,
         'children_media_class': None,
         'media_class': <MediaClass.APP: 'app'>,
         'media_content_id': 'spotify://01J5TX5A0FF6G5V0QJX6HBC94T',
@@ -192,6 +210,7 @@
       dict({
         'can_expand': True,
         'can_play': False,
+        'can_search': False,
         'children_media_class': None,
         'media_class': <MediaClass.APP: 'app'>,
         'media_content_id': 'spotify://32oesphrnacjcf7vw5bf6odx3',
@@ -213,10 +232,12 @@
   dict({
     'can_expand': True,
     'can_play': True,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': False,
         'can_play': True,
+        'can_search': False,
         'children_media_class': None,
         'media_class': <MediaClass.TRACK: 'track'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:track:6akJGriy4njdP8fZTPGjwz',
@@ -227,6 +248,7 @@
       dict({
         'can_expand': False,
         'can_play': True,
+        'can_search': False,
         'children_media_class': None,
         'media_class': <MediaClass.TRACK: 'track'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:track:7N02bJK1amhplZ8yAapRS5',
@@ -248,10 +270,12 @@
   dict({
     'can_expand': True,
     'can_play': True,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': True,
         'can_play': True,
+        'can_search': False,
         'children_media_class': <MediaClass.TRACK: 'track'>,
         'media_class': <MediaClass.ALBUM: 'album'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:album:56jg3KJcYmfL7RzYmG2O1Q',
@@ -262,6 +286,7 @@
       dict({
         'can_expand': True,
         'can_play': True,
+        'can_search': False,
         'children_media_class': <MediaClass.TRACK: 'track'>,
         'media_class': <MediaClass.ALBUM: 'album'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:album:1l86t4bTNT2j1X0ZBCIv6R',
@@ -283,10 +308,12 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': True,
         'can_play': True,
+        'can_search': False,
         'children_media_class': <MediaClass.ALBUM: 'album'>,
         'media_class': <MediaClass.ARTIST: 'artist'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:artist:0lLY20XpZ9yDobkbHI7u1y',
@@ -297,6 +324,7 @@
       dict({
         'can_expand': True,
         'can_play': True,
+        'can_search': False,
         'children_media_class': <MediaClass.ALBUM: 'album'>,
         'media_class': <MediaClass.ARTIST: 'artist'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:artist:0p4nmQO2msCgU4IF37Wi3j',
@@ -318,10 +346,12 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': True,
         'can_play': True,
+        'can_search': False,
         'children_media_class': <MediaClass.TRACK: 'track'>,
         'media_class': <MediaClass.PLAYLIST: 'playlist'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:playlist:4WkWJ0EjHEFASDevhM8oPw',
@@ -332,6 +362,7 @@
       dict({
         'can_expand': True,
         'can_play': True,
+        'can_search': False,
         'children_media_class': <MediaClass.TRACK: 'track'>,
         'media_class': <MediaClass.PLAYLIST: 'playlist'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:playlist:1RHirWgH1weMsBLi4KOK9d',
@@ -353,10 +384,12 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': False,
         'can_play': True,
+        'can_search': False,
         'children_media_class': None,
         'media_class': <MediaClass.TRACK: 'track'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:track:71dMjqJ8UJV700zYs5YZCh',
@@ -367,6 +400,7 @@
       dict({
         'can_expand': False,
         'can_play': True,
+        'can_search': False,
         'children_media_class': None,
         'media_class': <MediaClass.TRACK: 'track'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:track:71dMjqJ8UJV700zYs5YZCh',
@@ -388,10 +422,12 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': True,
         'can_play': True,
+        'can_search': False,
         'children_media_class': <MediaClass.TRACK: 'track'>,
         'media_class': <MediaClass.ALBUM: 'album'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:album:57MSBg5pBQZH5bfLVDmeuP',
@@ -402,6 +438,7 @@
       dict({
         'can_expand': True,
         'can_play': True,
+        'can_search': False,
         'children_media_class': <MediaClass.TRACK: 'track'>,
         'media_class': <MediaClass.ALBUM: 'album'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:album:3DQueEd1Ft9PHWgovDzPKh',
@@ -423,10 +460,12 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': True,
         'can_play': True,
+        'can_search': False,
         'children_media_class': <MediaClass.EPISODE: 'episode'>,
         'media_class': <MediaClass.PODCAST: 'podcast'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:show:5OzkclFjD6iAjtAuo7aIYt',
@@ -437,6 +476,7 @@
       dict({
         'can_expand': True,
         'can_play': True,
+        'can_search': False,
         'children_media_class': <MediaClass.EPISODE: 'episode'>,
         'media_class': <MediaClass.PODCAST: 'podcast'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:show:6XYRres0KZtnTqKcLavWR2',
@@ -458,10 +498,12 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': False,
         'can_play': True,
+        'can_search': False,
         'children_media_class': None,
         'media_class': <MediaClass.TRACK: 'track'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:track:2pj2A25YQK4uMxhZheNx7R',
@@ -472,6 +514,7 @@
       dict({
         'can_expand': False,
         'can_play': True,
+        'can_search': False,
         'children_media_class': None,
         'media_class': <MediaClass.TRACK: 'track'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:track:2lKOI1nwP5qZtZC7TGQVY8',
@@ -493,10 +536,12 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': True,
         'can_play': True,
+        'can_search': False,
         'children_media_class': <MediaClass.ALBUM: 'album'>,
         'media_class': <MediaClass.ARTIST: 'artist'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:artist:74Yus6IHfa3tWZzXXAYtS2',
@@ -507,6 +552,7 @@
       dict({
         'can_expand': True,
         'can_play': True,
+        'can_search': False,
         'children_media_class': <MediaClass.ALBUM: 'album'>,
         'media_class': <MediaClass.ARTIST: 'artist'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:artist:6s5ubAp65wXoTZefE01RNR',
@@ -528,10 +574,12 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': False,
         'can_play': True,
+        'can_search': False,
         'children_media_class': None,
         'media_class': <MediaClass.TRACK: 'track'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:track:3oRoMXsP2NRzm51lldj1RO',
@@ -542,6 +590,7 @@
       dict({
         'can_expand': False,
         'can_play': True,
+        'can_search': False,
         'children_media_class': None,
         'media_class': <MediaClass.TRACK: 'track'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:track:69zgu5rlAie3IPZOEXLxyS',
@@ -563,10 +612,12 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': True,
         'can_play': True,
+        'can_search': False,
         'children_media_class': <MediaClass.TRACK: 'track'>,
         'media_class': <MediaClass.ALBUM: 'album'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:album:5SGtrmYbIo0Dsg4kJ4qjM6',
@@ -577,6 +628,7 @@
       dict({
         'can_expand': True,
         'can_play': True,
+        'can_search': False,
         'children_media_class': <MediaClass.TRACK: 'track'>,
         'media_class': <MediaClass.ALBUM: 'album'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:album:713lZ7AF55fEFSQgcttj9y',
@@ -598,10 +650,12 @@
   dict({
     'can_expand': True,
     'can_play': True,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': False,
         'can_play': True,
+        'can_search': False,
         'children_media_class': None,
         'media_class': <MediaClass.TRACK: 'track'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:track:4rzfv0JLZfVhOhbSQ8o5jZ',
@@ -612,6 +666,7 @@
       dict({
         'can_expand': False,
         'can_play': True,
+        'can_search': False,
         'children_media_class': None,
         'media_class': <MediaClass.TRACK: 'track'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:track:5o3jMYOSbaVz3tkgwhELSV',
@@ -622,6 +677,7 @@
       dict({
         'can_expand': False,
         'can_play': True,
+        'can_search': False,
         'children_media_class': None,
         'media_class': <MediaClass.TRACK: 'track'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:track:4Cy0NHJ8Gh0xMdwyM9RkQm',
@@ -632,6 +688,7 @@
       dict({
         'can_expand': False,
         'can_play': True,
+        'can_search': False,
         'children_media_class': None,
         'media_class': <MediaClass.TRACK: 'track'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:track:6hvFrZNocdt2FcKGCSY5NI',
@@ -642,6 +699,7 @@
       dict({
         'can_expand': False,
         'can_play': True,
+        'can_search': False,
         'children_media_class': None,
         'media_class': <MediaClass.TRACK: 'track'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:track:2E2znCPaS8anQe21GLxcvJ',
@@ -652,6 +710,7 @@
       dict({
         'can_expand': False,
         'can_play': True,
+        'can_search': False,
         'children_media_class': None,
         'media_class': <MediaClass.EPISODE: 'episode'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:episode:3o0RYoo5iOMKSmEbunsbvW',
@@ -673,10 +732,12 @@
   dict({
     'can_expand': True,
     'can_play': True,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': False,
         'can_play': True,
+        'can_search': False,
         'children_media_class': None,
         'media_class': <MediaClass.EPISODE: 'episode'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:episode:3ssmxnilHYaKhwRWoBGMbU',
@@ -687,6 +748,7 @@
       dict({
         'can_expand': False,
         'can_play': True,
+        'can_search': False,
         'children_media_class': None,
         'media_class': <MediaClass.EPISODE: 'episode'>,
         'media_content_id': 'spotify://01j5tx5a0ff6g5v0qjx6hbc94t/spotify:episode:1bbj9aqeeZ3UMUlcWN0S03',

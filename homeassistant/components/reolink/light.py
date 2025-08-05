@@ -16,7 +16,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import (
     ReolinkChannelCoordinatorEntity,
@@ -57,7 +57,7 @@ LIGHT_ENTITIES = (
     ReolinkLightEntityDescription(
         key="floodlight",
         cmd_key="GetWhiteLed",
-        cmd_id=291,
+        cmd_id=[291, 289, 438],
         translation_key="floodlight",
         supported=lambda api, ch: api.supported(ch, "floodLight"),
         is_on_fn=lambda api, ch: api.whiteled_state(ch),
@@ -92,7 +92,7 @@ HOST_LIGHT_ENTITIES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ReolinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Reolink light entities."""
     reolink_data: ReolinkData = config_entry.runtime_data

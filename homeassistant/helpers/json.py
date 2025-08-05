@@ -12,7 +12,7 @@ from typing import TYPE_CHECKING, Any, Final
 import orjson
 
 from homeassistant.util.file import write_utf8_file, write_utf8_file_atomic
-from homeassistant.util.json import (  # noqa: F401
+from homeassistant.util.json import (
     JSON_DECODE_EXCEPTIONS as _JSON_DECODE_EXCEPTIONS,
     JSON_ENCODE_EXCEPTIONS as _JSON_ENCODE_EXCEPTIONS,
     SerializationError,
@@ -235,10 +235,7 @@ def find_paths_unserializable_data(
 
     This method is slow! Only use for error handling.
     """
-    from homeassistant.core import (  # pylint: disable=import-outside-toplevel
-        Event,
-        State,
-    )
+    from homeassistant.core import Event, State  # noqa: PLC0415
 
     to_process = deque([(bad_data, "$")])
     invalid = {}

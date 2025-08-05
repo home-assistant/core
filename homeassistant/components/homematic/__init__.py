@@ -24,8 +24,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (

@@ -11,10 +11,11 @@ from peblar import Peblar, PeblarUserConfiguration, SmartChargingMode
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import PeblarConfigEntry, PeblarUserConfigurationDataUpdateCoordinator
 from .entity import PeblarEntity
+from .helpers import peblar_exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -48,7 +49,7 @@ DESCRIPTIONS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PeblarConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Peblar select based on a config entry."""
     async_add_entities(
@@ -74,6 +75,7 @@ class PeblarSelectEntity(
         """Return the selected entity option to represent the entity state."""
         return self.entity_description.current_fn(self.coordinator.data)
 
+    @peblar_exception_handler
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.select_fn(self.coordinator.peblar, option)

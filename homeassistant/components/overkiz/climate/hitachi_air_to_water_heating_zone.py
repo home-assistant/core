@@ -119,5 +119,5 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
         temperature = cast(float, kwargs.get(ATTR_TEMPERATURE))
 
         await self.executor.async_execute_command(
-            OverkizCommand.SET_THERMOSTAT_SETTING_CONTROL_ZONE_1, int(temperature)
+            OverkizCommand.SET_THERMOSTAT_SETTING_CONTROL_ZONE_1, float(temperature)
         )

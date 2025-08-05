@@ -71,16 +71,6 @@
           "disable_multi_pan": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::uninstall_addon::data::disable_multi_pan%]"
         }
       },
-      "install_flasher_addon": {
-        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::install_flasher_addon::title%]"
-      },
-      "configure_flasher_addon": {
-        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::configure_flasher_addon::title%]"
-      },
-      "start_flasher_addon": {
-        "title": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::start_flasher_addon::title%]",
-        "description": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::step::start_flasher_addon::description%]"
-      },
       "pick_firmware": {
         "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::title%]",
         "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::description%]",
@@ -88,18 +78,6 @@
           "pick_firmware_thread": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::menu_options::pick_firmware_thread%]",
           "pick_firmware_zigbee": "[%key:component::homeassistant_hardware::firmware_picker::options::step::pick_firmware::menu_options::pick_firmware_zigbee%]"
         }
-      },
-      "install_zigbee_flasher_addon": {
-        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_zigbee_flasher_addon::title%]",
-        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::install_zigbee_flasher_addon::description%]"
-      },
-      "run_zigbee_flasher_addon": {
-        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::run_zigbee_flasher_addon::title%]",
-        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::run_zigbee_flasher_addon::description%]"
-      },
-      "zigbee_flasher_failed": {
-        "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_flasher_failed::title%]",
-        "description": "[%key:component::homeassistant_hardware::firmware_picker::options::step::zigbee_flasher_failed::description%]"
       },
       "confirm_zigbee": {
         "title": "[%key:component::homeassistant_hardware::firmware_picker::options::step::confirm_zigbee::title%]",
@@ -139,15 +117,22 @@
       "otbr_addon_already_running": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::otbr_addon_already_running%]",
       "zha_still_using_stick": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::zha_still_using_stick%]",
       "otbr_still_using_stick": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::otbr_still_using_stick%]",
-      "unsupported_firmware": "The radio firmware on your {model} could not be determined. Make sure that no other integration or addon is currently trying to communicate with the device."
+      "unsupported_firmware": "The radio firmware on your {model} could not be determined. Make sure that no other integration or add-on is currently trying to communicate with the device.",
+      "fw_download_failed": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::fw_download_failed%]",
+      "fw_install_failed": "[%key:component::homeassistant_hardware::firmware_picker::options::abort::fw_install_failed%]"
     },
     "progress": {
       "install_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::install_addon%]",
       "start_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]",
       "start_otbr_addon": "[%key:component::homeassistant_hardware::silabs_multiprotocol_hardware::options::progress::start_addon%]",
-      "install_zigbee_flasher_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::install_zigbee_flasher_addon%]",
-      "run_zigbee_flasher_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::run_zigbee_flasher_addon%]",
-      "uninstall_zigbee_flasher_addon": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::uninstall_zigbee_flasher_addon%]"
+      "install_firmware": "[%key:component::homeassistant_hardware::firmware_picker::options::progress::install_firmware%]"
+    }
+  },
+  "entity": {
+    "update": {
+      "radio_firmware": {
+        "name": "Radio firmware"
+      }
     }
   }
 }

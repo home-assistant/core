@@ -56,7 +56,7 @@ from tests.common import MockConfigEntry
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Mock config entry."""
+    """Mock config entry for Beosound Balance."""
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_SERIAL_NUMBER,
@@ -66,8 +66,8 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_config_entry_2() -> MockConfigEntry:
-    """Mock config entry."""
+def mock_config_entry_core() -> MockConfigEntry:
+    """Mock config entry for Beoconnect Core."""
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_SERIAL_NUMBER_2,
@@ -76,16 +76,17 @@ def mock_config_entry_2() -> MockConfigEntry:
     )
 
 
-@pytest.fixture
-async def mock_media_player(
+@pytest.fixture(name="integration")
+async def integration_fixture(
     hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
     mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Mock media_player entity."""
+    """Set up the Bang & Olufsen integration."""
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.fixture

@@ -5,6 +5,7 @@ import logging
 
 from pyrituals import Diffuser
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -16,9 +17,12 @@ _LOGGER = logging.getLogger(__name__)
 class RitualsDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching Rituals Perfume Genie device data from single endpoint."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         diffuser: Diffuser,
         update_interval: timedelta,
     ) -> None:
@@ -27,6 +31,7 @@ class RitualsDataUpdateCoordinator(DataUpdateCoordinator[None]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=f"{DOMAIN}-{diffuser.hublot}",
             update_interval=update_interval,
         )

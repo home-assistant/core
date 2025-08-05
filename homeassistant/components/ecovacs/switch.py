@@ -9,7 +9,7 @@ from deebot_client.events import EnableEvent
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EcovacsConfigEntry
 from .entity import (
@@ -17,7 +17,7 @@ from .entity import (
     EcovacsDescriptionEntity,
     EcovacsEntity,
 )
-from .util import get_supported_entitites
+from .util import get_supported_entities
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -105,11 +105,11 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsSwitchEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EcovacsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add entities for passed config_entry in HA."""
     controller = config_entry.runtime_data
-    entities: list[EcovacsEntity] = get_supported_entitites(
+    entities: list[EcovacsEntity] = get_supported_entities(
         controller, EcovacsSwitchEntity, ENTITY_DESCRIPTIONS
     )
     if entities:
@@ -131,7 +131,7 @@ class EcovacsSwitchEntity(
         await super().async_added_to_hass()
 
         async def on_event(event: EnableEvent) -> None:
-            self._attr_is_on = event.enable
+            self._attr_is_on = event.enabled
             self.async_write_ha_state()
 
         self._subscribe(self._capability.event, on_event)

@@ -23,7 +23,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,6 +104,15 @@ def _resize_image(image, opts):
     new_width = opts.max_width
     (old_width, old_height) = img.size
     old_size = len(image)
+
+    # If no max_width specified, only apply quality changes if requested
+    if new_width is None:
+        if opts.quality is None:
+            return image
+        imgbuf = io.BytesIO()
+        img.save(imgbuf, "JPEG", optimize=True, quality=quality)
+        return imgbuf.getvalue()
+
     if old_width <= new_width:
         if opts.quality is None:
             _LOGGER.debug("Image is smaller-than/equal-to requested width")

@@ -8,15 +8,14 @@ import logging
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import SettingDataUpdateCoordinator
+from .const import CONF_SERVICE_CODE
+from .coordinator import PlenticoreConfigEntry, SettingDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +30,7 @@ class PlenticoreSwitchEntityDescription(SwitchEntityDescription):
     on_label: str
     off_value: str
     off_label: str
+    installer_required: bool = False
 
 
 SWITCH_SETTINGS_DATA = [
@@ -44,24 +44,33 @@ SWITCH_SETTINGS_DATA = [
         off_value="2",
         off_label="Automatic economical",
     ),
+    PlenticoreSwitchEntityDescription(
+        module_id="devices:local",
+        key="Battery:ManualCharge",
+        name="Battery Manual Charge",
+        is_on="1",
+        on_value="1",
+        on_label="On",
+        off_value="0",
+        off_label="Off",
+        installer_required=True,
+    ),
 ]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: PlenticoreConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add kostal plenticore Switch."""
-    plenticore = hass.data[DOMAIN][entry.entry_id]
+    plenticore = entry.runtime_data
 
     entities = []
 
     available_settings_data = await plenticore.client.get_settings()
     settings_data_update_coordinator = SettingDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        "Settings Data",
-        timedelta(seconds=30),
-        plenticore,
+        hass, entry, _LOGGER, "Settings Data", timedelta(seconds=30), plenticore
     )
     for description in SWITCH_SETTINGS_DATA:
         if (
@@ -77,7 +86,13 @@ async def async_setup_entry(
                 description.key,
             )
             continue
-
+        if entry.data.get(CONF_SERVICE_CODE) is None and description.installer_required:
+            _LOGGER.debug(
+                "Skipping installer required setting data %s/%s",
+                description.module_id,
+                description.key,
+            )
+            continue
         entities.append(
             PlenticoreDataSwitch(
                 settings_data_update_coordinator,

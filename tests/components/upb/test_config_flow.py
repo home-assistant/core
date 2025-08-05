@@ -13,15 +13,20 @@ from homeassistant.data_entry_flow import FlowResultType
 def mocked_upb(sync_complete=True, config_ok=True):
     """Mock UPB lib."""
 
-    def _upb_lib_connect(callback):
+    def _add_handler(_, callback):
         callback()
+
+    def _dummy_add_handler(_, _callback):
+        pass
 
     upb_mock = AsyncMock()
     type(upb_mock).network_id = PropertyMock(return_value="42")
     type(upb_mock).config_ok = PropertyMock(return_value=config_ok)
     type(upb_mock).disconnect = MagicMock()
-    if sync_complete:
-        upb_mock.async_connect.side_effect = _upb_lib_connect
+    type(upb_mock).add_handler = MagicMock()
+    upb_mock.add_handler.side_effect = (
+        _add_handler if sync_complete else _dummy_add_handler
+    )
     return patch(
         "homeassistant.components.upb.config_flow.upb_lib.UpbPim", return_value=upb_mock
     )

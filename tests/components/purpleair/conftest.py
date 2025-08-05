@@ -8,7 +8,7 @@ from aiopurpleair.endpoints.sensors import NearbySensorResult
 from aiopurpleair.models.sensors import GetSensorsResponse
 import pytest
 
-from homeassistant.components.purpleair import DOMAIN
+from homeassistant.components.purpleair.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
@@ -20,7 +20,7 @@ TEST_SENSOR_INDEX2 = 567890
 
 @pytest.fixture(name="api")
 def api_fixture(get_sensors_response: GetSensorsResponse) -> Mock:
-    """Define a fixture to return a mocked aiopurple API object."""
+    """Define a fixture to return a mocked aiopurpleair API object."""
     return Mock(
         async_check_api_key=AsyncMock(),
         get_map_url=Mock(return_value="http://example.com"),

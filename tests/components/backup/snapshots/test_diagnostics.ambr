@@ -1,0 +1,39 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'backup_agents': list([
+      dict({
+        'agent_id': 'backup.local',
+        'name': 'local',
+      }),
+    ]),
+    'backup_config': dict({
+      'agents': dict({
+      }),
+      'automatic_backups_configured': False,
+      'create_backup': dict({
+        'agent_ids': list([
+        ]),
+        'include_addons': None,
+        'include_all_addons': False,
+        'include_database': True,
+        'include_folders': None,
+        'name': None,
+        'password': None,
+      }),
+      'last_attempted_automatic_backup': None,
+      'last_completed_automatic_backup': None,
+      'retention': dict({
+        'copies': None,
+        'days': None,
+      }),
+      'schedule': dict({
+        'days': list([
+        ]),
+        'recurrence': 'never',
+        'state': 'never',
+        'time': None,
+      }),
+    }),
+  })
+# ---

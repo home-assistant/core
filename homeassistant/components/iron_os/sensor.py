@@ -23,7 +23,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import IronOSConfigEntry
@@ -184,7 +184,7 @@ PINECIL_SENSOR_DESCRIPTIONS: tuple[IronOSSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: IronOSConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors from a config entry."""
     coordinator = entry.runtime_data.live_data

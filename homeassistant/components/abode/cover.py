@@ -7,7 +7,7 @@ from jaraco.abode.devices.cover import Cover
 from homeassistant.components.cover import CoverEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AbodeSystem
 from .const import DOMAIN
@@ -15,7 +15,9 @@ from .entity import AbodeDevice
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Abode cover devices."""
     data: AbodeSystem = hass.data[DOMAIN]

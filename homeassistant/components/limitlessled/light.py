@@ -34,7 +34,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE, STATE_ON
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType

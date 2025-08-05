@@ -6,7 +6,6 @@ from afsapi import ConnectionError, InvalidPinException, NotImplementedException
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp
 from homeassistant.components.frontier_silicon.const import (
     CONF_WEBFSAPI_URL,
     DEFAULT_PIN,
@@ -15,13 +14,14 @@ from homeassistant.components.frontier_silicon.const import (
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-MOCK_DISCOVERY = ssdp.SsdpServiceInfo(
+MOCK_DISCOVERY = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_udn="uuid:3dcc7100-f76c-11dd-87af-00226124ca30",
     ssdp_st="mock_st",
@@ -30,7 +30,7 @@ MOCK_DISCOVERY = ssdp.SsdpServiceInfo(
     upnp={"SPEAKER-NAME": "Speaker Name"},
 )
 
-INVALID_MOCK_DISCOVERY = ssdp.SsdpServiceInfo(
+INVALID_MOCK_DISCOVERY = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_udn="uuid:3dcc7100-f76c-11dd-87af-00226124ca30",
     ssdp_st="mock_st",

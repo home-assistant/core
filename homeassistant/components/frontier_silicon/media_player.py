@@ -20,11 +20,11 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import FrontierSiliconConfigEntry
 from .browse_media import browse_node, browse_top_level
 from .const import DOMAIN, MEDIA_CONTENT_ID_PRESET
 
@@ -33,12 +33,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: FrontierSiliconConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Frontier Silicon entity."""
 
-    afsapi: AFSAPI = hass.data[DOMAIN][config_entry.entry_id]
+    afsapi = config_entry.runtime_data
 
     async_add_entities(
         [
@@ -244,7 +244,7 @@ class AFSAPIDevice(MediaPlayerEntity):
         """Send volume up command."""
         volume = await self.fs_device.get_volume()
         volume = int(volume or 0) + 1
-        await self.fs_device.set_volume(min(volume, self._max_volume))
+        await self.fs_device.set_volume(min(volume, self._max_volume or 1))
 
     async def async_volume_down(self) -> None:
         """Send volume down command."""

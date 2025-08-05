@@ -10,7 +10,7 @@
       "departure2": {
         "default": "mdi:bus-clock"
       },
-      "duration": {
+      "trip_duration": {
         "default": "mdi:timeline-clock"
       },
       "transfers": {

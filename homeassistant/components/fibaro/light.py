@@ -19,7 +19,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FibaroConfigEntry
 from .entity import FibaroEntity
@@ -51,7 +51,7 @@ def scaleto99(value: int | None) -> int:
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FibaroConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Perform the setup for Fibaro controller devices."""
     controller = entry.runtime_data
@@ -83,8 +83,8 @@ class FibaroLight(FibaroEntity, LightEntity):
         )
         supports_dimming = (
             fibaro_device.has_interface("levelChange")
-            and "setValue" in fibaro_device.actions
-        )
+            or fibaro_device.type == "com.fibaro.multilevelSwitch"
+        ) and "setValue" in fibaro_device.actions
 
         if supports_color and supports_white_v:
             self._attr_supported_color_modes = {ColorMode.RGBW}

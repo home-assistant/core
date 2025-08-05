@@ -7,8 +7,8 @@
   },
   "services": {
     "get_items": {
-      "name": "Get to-do list items",
-      "description": "Get items on a to-do list.",
+      "name": "Get items",
+      "description": "Gets items on a to-do list.",
       "fields": {
         "status": {
           "name": "Status",
@@ -17,8 +17,8 @@
       }
     },
     "add_item": {
-      "name": "Add to-do list item",
-      "description": "Add a new to-do list item.",
+      "name": "Add item",
+      "description": "Adds a new to-do list item.",
       "fields": {
         "item": {
           "name": "Item name",
@@ -39,12 +39,12 @@
       }
     },
     "update_item": {
-      "name": "Update to-do list item",
-      "description": "Update an existing to-do list item based on its name.",
+      "name": "Update item",
+      "description": "Updates an existing to-do list item based on its name or UID.",
       "fields": {
         "item": {
-          "name": "Item name",
-          "description": "The current name of the to-do item."
+          "name": "Item name or UID",
+          "description": "The name/summary of the to-do item. If you have items with duplicate names, you can reference specific ones using their UID instead."
         },
         "rename": {
           "name": "Rename item",
@@ -55,30 +55,30 @@
           "description": "A status or confirmation of the to-do item."
         },
         "due_date": {
-          "name": "Due date",
-          "description": "The date the to-do item is expected to be completed."
+          "name": "[%key:component::todo::services::add_item::fields::due_date::name%]",
+          "description": "[%key:component::todo::services::add_item::fields::due_date::description%]"
         },
         "due_datetime": {
-          "name": "Due date and time",
-          "description": "The date and time the to-do item is expected to be completed."
+          "name": "[%key:component::todo::services::add_item::fields::due_datetime::name%]",
+          "description": "[%key:component::todo::services::add_item::fields::due_datetime::description%]"
         },
         "description": {
-          "name": "Description",
-          "description": "A more complete description of the to-do item than provided by the item name."
+          "name": "[%key:component::todo::services::add_item::fields::description::name%]",
+          "description": "[%key:component::todo::services::add_item::fields::description::description%]"
         }
       }
     },
     "remove_completed_items": {
-      "name": "Remove all completed to-do list items",
-      "description": "Remove all to-do list items that have been completed."
+      "name": "Remove completed items",
+      "description": "Removes all to-do list items that have been completed."
     },
     "remove_item": {
-      "name": "Remove a to-do list item",
-      "description": "Remove an existing to-do list item by its name.",
+      "name": "Remove item",
+      "description": "Removes an existing to-do list item by its name or UID.",
       "fields": {
         "item": {
-          "name": "Item name",
-          "description": "The name for the to-do list item."
+          "name": "[%key:component::todo::services::update_item::fields::item::name%]",
+          "description": "[%key:component::todo::services::update_item::fields::item::description%]"
         }
       }
     }

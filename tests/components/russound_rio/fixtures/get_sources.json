@@ -1,7 +1,14 @@
 {
   "1": {
     "name": "Aux",
-    "type": "Miscellaneous Audio"
+    "type": "RNET AM/FM Tuner (Internal)",
+    "presets": {
+      "1": "WOOD",
+      "2": "89.7 MHz FM",
+      "7": "WWKR",
+      "8": "WKLA",
+      "11": "WGN"
+    }
   },
   "2": {
     "name": "Spotify",

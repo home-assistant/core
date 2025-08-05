@@ -29,7 +29,7 @@ from uiprotect.data import (
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import TYPE_EMPTY_VALUE
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
@@ -193,7 +193,7 @@ async def _set_liveview(obj: Viewer, liveview_id: str) -> None:
 CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ProtectSelectEntityDescription(
         key="recording_mode",
-        name="Recording mode",
+        translation_key="recording_mode",
         icon="mdi:video-outline",
         entity_category=EntityCategory.CONFIG,
         ufp_options=DEVICE_RECORDING_MODES,
@@ -204,7 +204,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ),
     ProtectSelectEntityDescription(
         key="infrared",
-        name="Infrared mode",
+        translation_key="infrared_mode",
         icon="mdi:circle-opacity",
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_led_ir",
@@ -216,7 +216,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ),
     ProtectSelectEntityDescription[Camera](
         key="doorbell_text",
-        name="Doorbell text",
+        translation_key="doorbell_text",
         icon="mdi:card-text",
         entity_category=EntityCategory.CONFIG,
         device_class=DEVICE_CLASS_LCD_MESSAGE,
@@ -228,7 +228,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ),
     ProtectSelectEntityDescription(
         key="chime_type",
-        name="Chime type",
+        translation_key="chime_type",
         icon="mdi:bell",
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_chime",
@@ -240,7 +240,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ),
     ProtectSelectEntityDescription(
         key="hdr_mode",
-        name="HDR mode",
+        translation_key="hdr_mode",
         icon="mdi:brightness-7",
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_hdr",
@@ -254,7 +254,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
 LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ProtectSelectEntityDescription[Light](
         key=_KEY_LIGHT_MOTION,
-        name="Light mode",
+        translation_key="light_mode",
         icon="mdi:spotlight",
         entity_category=EntityCategory.CONFIG,
         ufp_options=MOTION_MODE_TO_LIGHT_MODE,
@@ -264,7 +264,7 @@ LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ),
     ProtectSelectEntityDescription[Light](
         key="paired_camera",
-        name="Paired camera",
+        translation_key="paired_camera",
         icon="mdi:cctv",
         entity_category=EntityCategory.CONFIG,
         ufp_value="camera_id",
@@ -277,7 +277,7 @@ LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
 SENSE_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ProtectSelectEntityDescription(
         key="mount_type",
-        name="Mount type",
+        translation_key="mount_type",
         icon="mdi:screwdriver",
         entity_category=EntityCategory.CONFIG,
         ufp_options=MOUNT_TYPES,
@@ -288,7 +288,7 @@ SENSE_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ),
     ProtectSelectEntityDescription[Sensor](
         key="paired_camera",
-        name="Paired camera",
+        translation_key="paired_camera",
         icon="mdi:cctv",
         entity_category=EntityCategory.CONFIG,
         ufp_value="camera_id",
@@ -301,7 +301,7 @@ SENSE_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
 DOORLOCK_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ProtectSelectEntityDescription[Doorlock](
         key="paired_camera",
-        name="Paired camera",
+        translation_key="paired_camera",
         icon="mdi:cctv",
         entity_category=EntityCategory.CONFIG,
         ufp_value="camera_id",
@@ -314,7 +314,7 @@ DOORLOCK_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
 VIEWER_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ProtectSelectEntityDescription[Viewer](
         key="viewer",
-        name="Liveview",
+        translation_key="liveview",
         icon="mdi:view-dashboard",
         entity_category=None,
         ufp_options_fn=_get_viewer_options,
@@ -334,7 +334,9 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: UFPConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: UFPConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up number entities for UniFi Protect integration."""
     data = entry.runtime_data

@@ -21,19 +21,7 @@ class ObsoleteImportMatch:
 _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
     "functools": [
         ObsoleteImportMatch(
-            reason="replaced by propcache.cached_property",
-            constant=re.compile(r"^cached_property$"),
-        ),
-    ],
-    "homeassistant.backports.enum": [
-        ObsoleteImportMatch(
-            reason="We can now use the Python 3.11 provided enum.StrEnum instead",
-            constant=re.compile(r"^StrEnum$"),
-        ),
-    ],
-    "homeassistant.backports.functools": [
-        ObsoleteImportMatch(
-            reason="replaced by propcache.cached_property",
+            reason="replaced by propcache.api.cached_property",
             constant=re.compile(r"^cached_property$"),
         ),
     ],
@@ -127,6 +115,12 @@ _OBSOLETE_IMPORT: dict[str, list[ObsoleteImportMatch]] = {
         ObsoleteImportMatch(
             reason="replaced by US_CUSTOMARY_SYSTEM",
             constant=re.compile(r"^IMPERIAL_SYSTEM$"),
+        ),
+    ],
+    "propcache": [
+        ObsoleteImportMatch(
+            reason="importing from propcache.api recommended",
+            constant=re.compile(r"^(under_)?cached_property$"),
         ),
     ],
 }
@@ -227,6 +221,11 @@ class HassImportsFormatChecker(BaseChecker):
             "hass-import-constant-alias",
             "Used when a constant should be imported as an alias",
         ),
+        "W7427": (
+            "`%s` alias is unnecessary for `%s`",
+            "hass-import-constant-unnecessary-alias",
+            "Used when a constant alias is unnecessary",
+        ),
     }
     options = ()
 
@@ -268,17 +267,24 @@ class HassImportsFormatChecker(BaseChecker):
         self, current_package: str, node: nodes.ImportFrom
     ) -> None:
         """Check for improper 'from ._ import _' invocations."""
-        if (
-            node.level <= 1
-            or not current_package.startswith("homeassistant.components.")
-            and not current_package.startswith("tests.components.")
+        if not current_package.startswith(
+            ("homeassistant.components.", "tests.components.")
         ):
             return
+
         split_package = current_package.split(".")
+        current_component = split_package[2]
+
+        self._check_for_constant_alias(node, current_component, current_component)
+
+        if node.level <= 1:
+            # No need to check relative import
+            return
+
         if not node.modname and len(split_package) == node.level + 1:
             for name in node.names:
                 # Allow relative import to component root
-                if name[0] != split_package[2]:
+                if name[0] != current_component:
                     self.add_message("hass-absolute-import", node=node)
                     return
             return
@@ -293,6 +299,15 @@ class HassImportsFormatChecker(BaseChecker):
     ) -> bool:
         """Check for hass-import-constant-alias."""
         if current_component == imported_component:
+            # Check for `from homeassistant.components.self import DOMAIN as XYZ`
+            for name, alias in node.names:
+                if name == "DOMAIN" and (alias is not None and alias != "DOMAIN"):
+                    self.add_message(
+                        "hass-import-constant-unnecessary-alias",
+                        node=node,
+                        args=(alias, "DOMAIN"),
+                    )
+                    return False
             return True
 
         # Check for `from homeassistant.components.other import DOMAIN`

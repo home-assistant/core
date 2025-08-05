@@ -9,9 +9,9 @@ from linkplay.discovery import linkplay_factory_httpapi_bridge
 from linkplay.exceptions import LinkPlayRequestException
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MODEL
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 from .utils import async_get_client_session
@@ -27,9 +27,12 @@ class LinkPlayConfigFlow(ConfigFlow, domain=DOMAIN):
         self.data: dict[str, Any] = {}
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle Zeroconf discovery."""
+
+        # Do not probe the device if the host is already configured
+        self._async_abort_entries_match({CONF_HOST: discovery_info.host})
 
         session: ClientSession = await async_get_client_session(self.hass)
         bridge: LinkPlayBridge | None = None

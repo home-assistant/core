@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from chip.clusters import Objects as clusters
-from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
@@ -17,7 +16,7 @@ from homeassistant.components.fan import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity
 from .helpers import get_matter
@@ -46,7 +45,7 @@ PRESET_SLEEP_WIND = "sleep_wind"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter fan from Config Entry."""
     matter = get_matter(hass)
@@ -97,24 +96,16 @@ class MatterFan(MatterEntity, FanEntity):
         # clear the wind setting if its currently set
         if self._attr_preset_mode in [PRESET_NATURAL_WIND, PRESET_SLEEP_WIND]:
             await self._set_wind_mode(None)
-        await self.matter_client.write_attribute(
-            node_id=self._endpoint.node.node_id,
-            attribute_path=create_attribute_path_from_attribute(
-                self._endpoint.endpoint_id,
-                clusters.FanControl.Attributes.FanMode,
-            ),
+        await self.write_attribute(
             value=clusters.FanControl.Enums.FanModeEnum.kOff,
+            matter_attribute=clusters.FanControl.Attributes.FanMode,
         )
 
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
-        await self.matter_client.write_attribute(
-            node_id=self._endpoint.node.node_id,
-            attribute_path=create_attribute_path_from_attribute(
-                self._endpoint.endpoint_id,
-                clusters.FanControl.Attributes.PercentSetting,
-            ),
+        await self.write_attribute(
             value=percentage,
+            matter_attribute=clusters.FanControl.Attributes.PercentSetting,
         )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -128,41 +119,33 @@ class MatterFan(MatterEntity, FanEntity):
         if self._attr_preset_mode in [PRESET_NATURAL_WIND, PRESET_SLEEP_WIND]:
             await self._set_wind_mode(None)
 
-        await self.matter_client.write_attribute(
-            node_id=self._endpoint.node.node_id,
-            attribute_path=create_attribute_path_from_attribute(
-                self._endpoint.endpoint_id,
-                clusters.FanControl.Attributes.FanMode,
-            ),
+        await self.write_attribute(
             value=FAN_MODE_MAP[preset_mode],
+            matter_attribute=clusters.FanControl.Attributes.FanMode,
         )
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
-        await self.matter_client.write_attribute(
-            node_id=self._endpoint.node.node_id,
-            attribute_path=create_attribute_path_from_attribute(
-                self._endpoint.endpoint_id,
-                clusters.FanControl.Attributes.RockSetting,
+        await self.write_attribute(
+            value=(
+                self.get_matter_attribute_value(
+                    clusters.FanControl.Attributes.RockSupport
+                )
+                if oscillating
+                else 0
             ),
-            value=self.get_matter_attribute_value(
-                clusters.FanControl.Attributes.RockSupport
-            )
-            if oscillating
-            else 0,
+            matter_attribute=clusters.FanControl.Attributes.RockSetting,
         )
 
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
-        await self.matter_client.write_attribute(
-            node_id=self._endpoint.node.node_id,
-            attribute_path=create_attribute_path_from_attribute(
-                self._endpoint.endpoint_id,
-                clusters.FanControl.Attributes.AirflowDirection,
+        await self.write_attribute(
+            value=(
+                clusters.FanControl.Enums.AirflowDirectionEnum.kReverse
+                if direction == DIRECTION_REVERSE
+                else clusters.FanControl.Enums.AirflowDirectionEnum.kForward
             ),
-            value=clusters.FanControl.Enums.AirflowDirectionEnum.kReverse
-            if direction == DIRECTION_REVERSE
-            else clusters.FanControl.Enums.AirflowDirectionEnum.kForward,
+            matter_attribute=clusters.FanControl.Attributes.AirflowDirection,
         )
 
     async def _set_wind_mode(self, wind_mode: str | None) -> None:
@@ -173,13 +156,9 @@ class MatterFan(MatterEntity, FanEntity):
             wind_setting = WindBitmap.kSleepWind
         else:
             wind_setting = 0
-        await self.matter_client.write_attribute(
-            node_id=self._endpoint.node.node_id,
-            attribute_path=create_attribute_path_from_attribute(
-                self._endpoint.endpoint_id,
-                clusters.FanControl.Attributes.WindSetting,
-            ),
+        await self.write_attribute(
             value=wind_setting,
+            matter_attribute=clusters.FanControl.Attributes.WindSetting,
         )
 
     @callback

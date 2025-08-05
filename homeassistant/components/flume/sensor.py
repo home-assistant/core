@@ -11,18 +11,13 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfVolume
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
     DEVICE_SCAN_INTERVAL,
-    DOMAIN,
-    FLUME_AUTH,
-    FLUME_DEVICES,
-    FLUME_HTTP_SESSION,
     FLUME_TYPE_SENSOR,
     KEY_DEVICE_ID,
     KEY_DEVICE_LOCATION,
@@ -30,7 +25,7 @@ from .const import (
     KEY_DEVICE_LOCATION_TIMEZONE,
     KEY_DEVICE_TYPE,
 )
-from .coordinator import FlumeDeviceDataUpdateCoordinator
+from .coordinator import FlumeConfigEntry, FlumeDeviceDataUpdateCoordinator
 from .entity import FlumeEntity
 from .util import get_valid_flume_devices
 
@@ -112,15 +107,15 @@ def make_flume_datas(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: FlumeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Flume sensor."""
 
-    flume_domain_data = hass.data[DOMAIN][config_entry.entry_id]
-    flume_devices = flume_domain_data[FLUME_DEVICES]
-    flume_auth: FlumeAuth = flume_domain_data[FLUME_AUTH]
-    http_session: Session = flume_domain_data[FLUME_HTTP_SESSION]
+    flume_domain_data = config_entry.runtime_data
+    flume_devices = flume_domain_data.devices
+    flume_auth = flume_domain_data.auth
+    http_session = flume_domain_data.http_session
     flume_devices = [
         device
         for device in get_valid_flume_devices(flume_devices)
@@ -137,7 +132,7 @@ async def async_setup_entry(
         flume_device = flume_datas[device_id]
 
         coordinator = FlumeDeviceDataUpdateCoordinator(
-            hass=hass, flume_device=flume_device
+            hass=hass, config_entry=config_entry, flume_device=flume_device
         )
 
         flume_entity_list.extend(

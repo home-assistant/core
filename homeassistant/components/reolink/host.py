@@ -12,6 +12,7 @@ from typing import Any, Literal
 import aiohttp
 from aiohttp.web import Request
 from reolink_aio.api import ALLOWED_SPECIAL_CHARS, Host
+from reolink_aio.baichuan import DEFAULT_BC_PORT
 from reolink_aio.enums import SubType
 from reolink_aio.exceptions import NotSupportedError, ReolinkError, SubscriptionError
 
@@ -30,15 +31,26 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.storage import Store
 from homeassistant.util.ssl import SSLCipherList
 
-from .const import CONF_USE_HTTPS, DOMAIN
+from .const import (
+    BATTERY_ALL_WAKE_UPDATE_INTERVAL,
+    BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
+    BATTERY_WAKE_UPDATE_INTERVAL,
+    CONF_BC_ONLY,
+    CONF_BC_PORT,
+    CONF_SUPPORTS_PRIVACY_MODE,
+    CONF_USE_HTTPS,
+    DOMAIN,
+)
 from .exceptions import (
     PasswordIncompatible,
     ReolinkSetupException,
     ReolinkWebhookException,
     UserNotAdmin,
 )
+from .util import ReolinkConfigEntry, get_store
 
 DEFAULT_TIMEOUT = 30
 FIRST_TCP_PUSH_TIMEOUT = 10
@@ -48,10 +60,6 @@ SUBSCRIPTION_RENEW_THRESHOLD = 300
 POLL_INTERVAL_NO_PUSH = 5
 LONG_POLL_COOLDOWN = 0.75
 LONG_POLL_ERROR_COOLDOWN = 30
-
-# Conserve battery by not waking the battery cameras each minute during normal update
-# Most props are cached in the Home Hub and updated, but some are skipped
-BATTERY_WAKE_UPDATE_INTERVAL = 3600  # seconds
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,9 +72,12 @@ class ReolinkHost:
         hass: HomeAssistant,
         config: Mapping[str, Any],
         options: Mapping[str, Any],
+        config_entry: ReolinkConfigEntry | None = None,
     ) -> None:
         """Initialize Reolink Host. Could be either NVR, or Camera."""
         self._hass: HomeAssistant = hass
+        self._config_entry = config_entry
+        self._config = config
         self._unique_id: str = ""
 
         def get_aiohttp_session() -> aiohttp.ClientSession:
@@ -86,15 +97,19 @@ class ReolinkHost:
             protocol=options[CONF_PROTOCOL],
             timeout=DEFAULT_TIMEOUT,
             aiohttp_get_session_callback=get_aiohttp_session,
+            bc_port=config.get(CONF_BC_PORT, DEFAULT_BC_PORT),
+            bc_only=config.get(CONF_BC_ONLY, False),
         )
 
-        self.last_wake: float = 0
+        self.last_wake: defaultdict[int, float] = defaultdict(float)
+        self.last_all_wake: float = 0
         self.update_cmd: defaultdict[str, defaultdict[int | None, int]] = defaultdict(
             lambda: defaultdict(int)
         )
         self.firmware_ch_list: list[int | None] = []
 
         self.starting: bool = True
+        self.privacy_mode: bool | None = None
         self.credential_errors: int = 0
 
         self.webhook_id: str | None = None
@@ -112,7 +127,9 @@ class ReolinkHost:
         self._poll_job = HassJob(self._async_poll_all_motion, cancel_on_shutdown=True)
         self._fast_poll_error: bool = False
         self._long_poll_task: asyncio.Task | None = None
+        self._lost_subscription_start: bool = False
         self._lost_subscription: bool = False
+        self.cancel_refresh_privacy_mode: CALLBACK_TYPE | None = None
 
     @callback
     def async_register_update_cmd(self, cmd: str, channel: int | None = None) -> None:
@@ -141,11 +158,37 @@ class ReolinkHost:
     async def async_init(self) -> None:
         """Connect to Reolink host."""
         if not self._api.valid_password():
+            if (
+                len(self._config[CONF_PASSWORD]) >= 32
+                and self._config_entry is not None
+            ):
+                ir.async_create_issue(
+                    self._hass,
+                    DOMAIN,
+                    f"password_too_long_{self._config_entry.entry_id}",
+                    is_fixable=True,
+                    severity=ir.IssueSeverity.ERROR,
+                    translation_key="password_too_long",
+                    translation_placeholders={"name": self._config_entry.title},
+                )
+
             raise PasswordIncompatible(
-                "Reolink password contains incompatible special character, "
-                "please change the password to only contain characters: "
-                f"a-z, A-Z, 0-9 or {ALLOWED_SPECIAL_CHARS}"
+                "Reolink password contains incompatible special character or "
+                "is too long, please change the password to only contain characters: "
+                f"a-z, A-Z, 0-9 or {ALLOWED_SPECIAL_CHARS} "
+                "and not be longer than 31 characters"
             )
+
+        store: Store[str] | None = None
+        if self._config_entry is not None:
+            ir.async_delete_issue(
+                self._hass, DOMAIN, f"password_too_long_{self._config_entry.entry_id}"
+            )
+            store = get_store(self._hass, self._config_entry.entry_id)
+            if self._config.get(CONF_SUPPORTS_PRIVACY_MODE) and (
+                data := await store.async_load()
+            ):
+                self._api.set_raw_host_data(data)
 
         await self._api.get_host_data()
 
@@ -158,6 +201,19 @@ class ReolinkHost:
                 f"'{self._api.user_level}', only admin users can change camera settings"
             )
 
+        self.privacy_mode = self._api.baichuan.privacy_mode()
+
+        if (
+            store
+            and self._api.supported(None, "privacy_mode")
+            and not self.privacy_mode
+        ):
+            _LOGGER.debug(
+                "Saving raw host data for next reload in case privacy mode is enabled"
+            )
+            data = self._api.get_raw_host_data()
+            await store.async_save(data)
+
         onvif_supported = self._api.supported(None, "ONVIF")
         self._onvif_push_supported = onvif_supported
         self._onvif_long_poll_supported = onvif_supported
@@ -166,19 +222,27 @@ class ReolinkHost:
         enable_onvif = None
         enable_rtmp = None
 
-        if not self._api.rtsp_enabled:
+        if not self._api.rtsp_enabled and not self._api.baichuan_only:
             _LOGGER.debug(
                 "RTSP is disabled on %s, trying to enable it", self._api.nvr_name
             )
             enable_rtsp = True
 
-        if not self._api.onvif_enabled and onvif_supported:
+        if (
+            not self._api.onvif_enabled
+            and onvif_supported
+            and not self._api.baichuan_only
+        ):
             _LOGGER.debug(
                 "ONVIF is disabled on %s, trying to enable it", self._api.nvr_name
             )
             enable_onvif = True
 
-        if not self._api.rtmp_enabled and self._api.protocol == "rtmp":
+        if (
+            not self._api.rtmp_enabled
+            and self._api.protocol == "rtmp"
+            and not self._api.baichuan_only
+        ):
             _LOGGER.debug(
                 "RTMP is disabled on %s, trying to enable it", self._api.nvr_name
             )
@@ -299,7 +363,7 @@ class ReolinkHost:
                 )
 
         # start long polling if ONVIF push failed immediately
-        if not self._onvif_push_supported:
+        if not self._onvif_push_supported and not self._api.baichuan.privacy_mode():
             _LOGGER.debug(
                 "Camera model %s does not support ONVIF push, using ONVIF long polling instead",
                 self._api.model,
@@ -410,11 +474,36 @@ class ReolinkHost:
 
     async def update_states(self) -> None:
         """Call the API of the camera device to update the internal states."""
-        wake = False
-        if time() - self.last_wake > BATTERY_WAKE_UPDATE_INTERVAL:
+        wake: dict[int, bool] = {}
+        now = time()
+        for channel in self._api.stream_channels:
             # wake the battery cameras for a complete update
-            wake = True
-            self.last_wake = time()
+            if not self._api.supported(channel, "battery"):
+                wake[channel] = True
+            elif (
+                (
+                    not self._api.sleeping(channel)
+                    and now - self.last_wake[channel]
+                    > BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL
+                )
+                or (now - self.last_wake[channel] > BATTERY_WAKE_UPDATE_INTERVAL)
+                or (now - self.last_all_wake > BATTERY_ALL_WAKE_UPDATE_INTERVAL)
+            ):
+                # let a waking update coincide with the camera waking up by itself unless it did not wake for BATTERY_WAKE_UPDATE_INTERVAL
+                wake[channel] = True
+                self.last_wake[channel] = now
+            else:
+                wake[channel] = False
+
+            # check privacy mode if enabled
+            if self._api.baichuan.privacy_mode(channel):
+                await self._api.baichuan.get_privacy_mode(channel)
+
+        if all(wake.values()):
+            self.last_all_wake = now
+
+        if self._api.baichuan.privacy_mode():
+            return  # API is shutdown, no need to check states
 
         await self._api.get_states(cmd_list=self.update_cmd, wake=wake)
 
@@ -459,8 +548,8 @@ class ReolinkHost:
                 if initial:
                     raise
                 # make sure the long_poll_task is always created to try again later
-                if not self._lost_subscription:
-                    self._lost_subscription = True
+                if not self._lost_subscription_start:
+                    self._lost_subscription_start = True
                     _LOGGER.error(
                         "Reolink %s event long polling subscription lost: %s",
                         self._api.nvr_name,
@@ -468,15 +557,15 @@ class ReolinkHost:
                     )
             except ReolinkError as err:
                 # make sure the long_poll_task is always created to try again later
-                if not self._lost_subscription:
-                    self._lost_subscription = True
+                if not self._lost_subscription_start:
+                    self._lost_subscription_start = True
                     _LOGGER.error(
                         "Reolink %s event long polling subscription lost: %s",
                         self._api.nvr_name,
                         err,
                     )
             else:
-                self._lost_subscription = False
+                self._lost_subscription_start = False
             self._long_poll_task = asyncio.create_task(self._async_long_polling())
 
     async def _async_stop_long_polling(self) -> None:
@@ -526,7 +615,12 @@ class ReolinkHost:
             )
             return
 
-        await self._api.subscribe(self._webhook_url)
+        try:
+            await self._api.subscribe(self._webhook_url)
+        except NotSupportedError as err:
+            self._onvif_push_supported = False
+            _LOGGER.debug(err)
+            return
 
         _LOGGER.debug(
             "Host %s: subscribed successfully to webhook %s",
@@ -543,8 +637,15 @@ class ReolinkHost:
             self.unregister_webhook()
             await self._api.unsubscribe()
 
+        if self._api.baichuan.privacy_mode():
+            return  # API is shutdown, no need to subscribe
+
         try:
-            if self._onvif_push_supported and not self._api.baichuan.events_active:
+            if (
+                self._onvif_push_supported
+                and not self._api.baichuan.events_active
+                and self._cancel_tcp_push_check is None
+            ):
                 await self._renew(SubType.push)
 
             if self._onvif_long_poll_supported and self._long_poll_task is not None:
@@ -666,7 +767,9 @@ class ReolinkHost:
             try:
                 channels = await self._api.pull_point_request()
             except ReolinkError as ex:
-                if not self._long_poll_error:
+                if not self._long_poll_error and self._api.subscribed(
+                    SubType.long_poll
+                ):
                     _LOGGER.error("Error while requesting ONVIF pull point: %s", ex)
                     await self._api.unsubscribe(sub_type=SubType.long_poll)
                 self._long_poll_error = True

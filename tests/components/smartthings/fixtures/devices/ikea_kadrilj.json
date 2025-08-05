@@ -1,0 +1,78 @@
+{
+  "items": [
+    {
+      "deviceId": "71afed1c-006d-4e48-b16e-e7f88f9fd638",
+      "name": "window-treatment-battery",
+      "label": "Kitchen IKEA KADRILJ Window blind",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "fa41d7d3-4c03-327f-b0ce-2edc829f0e34",
+      "deviceManufacturerCode": "IKEA of Sweden",
+      "locationId": "5b5f96b5-0286-4f4a-86ef-d5d5c1a78cb8",
+      "ownerId": "f43fd9e5-2ecd-4aae-aeac-73a8e5cb04da",
+      "roomId": "89f675a1-1f16-451c-8ab1-a7fdacc5852d",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "windowShade",
+              "version": 1
+            },
+            {
+              "id": "windowShadePreset",
+              "version": 1
+            },
+            {
+              "id": "windowShadeLevel",
+              "version": 1
+            },
+            {
+              "id": "battery",
+              "version": 1
+            },
+            {
+              "id": "firmwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Blind",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2023-04-26T18:19:06.792Z",
+      "parentDeviceId": "3ffe04c4-a12c-41f5-b83d-c1b28eca2b5f",
+      "profile": {
+        "id": "6d9804bc-9e56-3823-95be-4b315669c481"
+      },
+      "zigbee": {
+        "eui": "000D6FFFFE2AD0E7",
+        "networkId": "3009",
+        "driverId": "46b8bada-1a55-4f84-8915-47ce2cad3621",
+        "executingLocally": true,
+        "hubId": "3ffe04c4-a12c-41f5-b83d-c1b28eca2b5f",
+        "provisioningState": "NONFUNCTIONAL"
+      },
+      "type": "ZIGBEE",
+      "restrictionTier": 0,
+      "allowed": null,
+      "indoorMap": {
+        "coordinates": [10.0, 36.0, 98.0],
+        "rotation": [270.0, 0.0, 0.0],
+        "visible": true,
+        "data": null
+      },
+      "executionContext": "LOCAL",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

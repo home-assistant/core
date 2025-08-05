@@ -59,6 +59,9 @@
     },
     "enable_climate_react": {
       "service": "mdi:wizard-hat"
+    },
+    "get_device_capabilities": {
+      "service": "mdi:shape-outline"
     }
   }
 }

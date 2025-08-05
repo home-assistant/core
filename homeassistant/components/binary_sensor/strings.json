@@ -124,15 +124,15 @@
     "battery": {
       "name": "Battery",
       "state": {
-        "off": "Normal",
-        "on": "Low"
+        "off": "[%key:common::state::normal%]",
+        "on": "[%key:common::state::low%]"
       }
     },
     "battery_charging": {
       "name": "Charging",
       "state": {
         "off": "Not charging",
-        "on": "Charging"
+        "on": "[%key:common::state::charging%]"
       }
     },
     "carbon_monoxide": {
@@ -145,7 +145,7 @@
     "cold": {
       "name": "Cold",
       "state": {
-        "off": "[%key:component::binary_sensor::entity_component::battery::state::off%]",
+        "off": "[%key:common::state::normal%]",
         "on": "Cold"
       }
     },
@@ -180,7 +180,7 @@
     "heat": {
       "name": "Heat",
       "state": {
-        "off": "[%key:component::binary_sensor::entity_component::battery::state::off%]",
+        "off": "[%key:common::state::normal%]",
         "on": "Hot"
       }
     },

@@ -2,7 +2,7 @@
 
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AutomowerConfigEntry
 from .coordinator import AutomowerDataUpdateCoordinator
@@ -15,15 +15,20 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AutomowerConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker platform."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        AutomowerDeviceTrackerEntity(mower_id, coordinator)
-        for mower_id in coordinator.data
-        if coordinator.data[mower_id].capabilities.position
-    )
+
+    def _async_add_new_devices(mower_ids: set[str]) -> None:
+        async_add_entities(
+            AutomowerDeviceTrackerEntity(mower_id, coordinator)
+            for mower_id in mower_ids
+            if coordinator.data[mower_id].capabilities.position
+        )
+
+    coordinator.new_devices_callbacks.append(_async_add_new_devices)
+    _async_add_new_devices(set(coordinator.data))
 
 
 class AutomowerDeviceTrackerEntity(AutomowerBaseEntity, TrackerEntity):

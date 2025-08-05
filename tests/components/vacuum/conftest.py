@@ -5,11 +5,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, VacuumEntityFeature
+from homeassistant.components.vacuum import DOMAIN, VacuumEntityFeature
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, frame
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MockVacuum
 
@@ -68,7 +69,7 @@ async def setup_vacuum_platform_test_entity(
     ) -> bool:
         """Set up test config entry."""
         await hass.config_entries.async_forward_entry_setups(
-            config_entry, [VACUUM_DOMAIN]
+            config_entry, [Platform.VACUUM]
         )
         return True
 
@@ -87,14 +88,14 @@ async def setup_vacuum_platform_test_entity(
     async def async_setup_entry_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test vacuum platform via config entry."""
         async_add_entities([entity])
 
     mock_platform(
         hass,
-        f"{TEST_DOMAIN}.{VACUUM_DOMAIN}",
+        f"{TEST_DOMAIN}.{DOMAIN}",
         MockPlatform(async_setup_entry=async_setup_entry_platform),
     )
 

@@ -56,12 +56,12 @@ async def basic_group_options_schema(
     entity_selector: selector.Selector[Any] | vol.Schema
     if handler is None:
         entity_selector = selector.selector(
-            {"entity": {"domain": domain, "multiple": True}}
+            {"entity": {"domain": domain, "multiple": True, "reorder": True}}
         )
     else:
         entity_selector = entity_selector_without_own_entities(
             cast(SchemaOptionsFlowHandler, handler.parent_handler),
-            selector.EntitySelectorConfig(domain=domain, multiple=True),
+            selector.EntitySelectorConfig(domain=domain, multiple=True, reorder=True),
         )
 
     return vol.Schema(
@@ -78,7 +78,9 @@ def basic_group_config_schema(domain: str | list[str]) -> vol.Schema:
         {
             vol.Required("name"): selector.TextSelector(),
             vol.Required(CONF_ENTITIES): selector.EntitySelector(
-                selector.EntitySelectorConfig(domain=domain, multiple=True),
+                selector.EntitySelectorConfig(
+                    domain=domain, multiple=True, reorder=True
+                ),
             ),
             vol.Required(CONF_HIDE_MEMBERS, default=False): selector.BooleanSelector(),
         }
@@ -139,9 +141,7 @@ async def light_switch_options_schema(
     """Generate options schema."""
     return (await basic_group_options_schema(domain, handler)).extend(
         {
-            vol.Required(
-                CONF_ALL, default=False, description={"advanced": True}
-            ): selector.BooleanSelector(),
+            vol.Required(CONF_ALL, default=False): selector.BooleanSelector(),
         }
     )
 

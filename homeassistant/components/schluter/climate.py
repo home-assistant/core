@@ -118,12 +118,12 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
         return self.coordinator.data[self._serial_number].set_point_temp
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Identify min_temp in Schluter API."""
         return self.coordinator.data[self._serial_number].min_temp
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Identify max_temp in Schluter API."""
         return self.coordinator.data[self._serial_number].max_temp
 

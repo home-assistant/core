@@ -50,8 +50,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, State
-import homeassistant.util.color as color_util
-import homeassistant.util.dt as dt_util
+from homeassistant.util import color as color_util, dt as dt_util
 
 from .const import (
     API_TEMP_UNITS,
@@ -1439,7 +1438,7 @@ class AlexaModeController(AlexaCapability):
         # Fan preset_mode
         if self.instance == f"{fan.DOMAIN}.{fan.ATTR_PRESET_MODE}":
             mode = self.entity.attributes.get(fan.ATTR_PRESET_MODE, None)
-            if mode in self.entity.attributes.get(fan.ATTR_PRESET_MODES, None):
+            if mode in self.entity.attributes.get(fan.ATTR_PRESET_MODES, ()):
                 return f"{fan.ATTR_PRESET_MODE}.{mode}"
 
         # Humidifier mode

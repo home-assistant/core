@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 from pyvesync.helpers import Helpers
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.matchers import path_type
 
 from homeassistant.components.vesync.const import DOMAIN
@@ -101,6 +101,9 @@ async def test_async_get_device_diagnostics__single_fan(
                 "home_assistant.entities.2.state.last_changed": (str,),
                 "home_assistant.entities.2.state.last_reported": (str,),
                 "home_assistant.entities.2.state.last_updated": (str,),
+                "home_assistant.entities.3.state.last_changed": (str,),
+                "home_assistant.entities.3.state.last_reported": (str,),
+                "home_assistant.entities.3.state.last_updated": (str,),
             }
         )
     )

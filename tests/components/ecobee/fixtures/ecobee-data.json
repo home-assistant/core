@@ -67,7 +67,7 @@
         "hasHeatPump": false,
         "humidity": "30"
       },
-      "equipmentStatus": "fan",
+      "equipmentStatus": "fan,humidifier",
       "events": [
         {
           "name": "Event1",

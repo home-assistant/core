@@ -209,10 +209,7 @@ class RfxtrxOptionsFlow(OptionsFlow):
             except ValueError:
                 errors[CONF_COMMAND_OFF] = "invalid_input_2262_off"
 
-            try:
-                off_delay = none_or_int(user_input.get(CONF_OFF_DELAY), 10)
-            except ValueError:
-                errors[CONF_OFF_DELAY] = "invalid_input_off_delay"
+            off_delay = user_input.get(CONF_OFF_DELAY)
 
             if not errors:
                 devices = {}
@@ -252,11 +249,11 @@ class RfxtrxOptionsFlow(OptionsFlow):
                     vol.Optional(
                         CONF_OFF_DELAY,
                         description={"suggested_value": device_data[CONF_OFF_DELAY]},
-                    ): str,
+                    ): int,
                 }
             else:
                 off_delay_schema = {
-                    vol.Optional(CONF_OFF_DELAY): str,
+                    vol.Optional(CONF_OFF_DELAY): int,
                 }
             data_schema.update(off_delay_schema)
 

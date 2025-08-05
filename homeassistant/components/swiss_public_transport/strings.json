@@ -2,7 +2,7 @@
   "config": {
     "error": {
       "cannot_connect": "Cannot connect to server",
-      "bad_config": "Request failed due to bad config: Check at [stationboard]({stationboard_url}) if your station names are valid",
+      "bad_config": "Request failed due to bad config: Check the stationboard linked above if your station names are valid",
       "too_many_via_stations": "Too many via stations, only up to 5 via stations are allowed per connection.",
       "unknown": "An unknown error was raised by python-opendata-transport"
     },
@@ -17,20 +17,26 @@
         "data": {
           "from": "Start station",
           "to": "End station",
-          "via": "List of up to 5 via stations",
+          "via": "Via stations",
           "time_station": "Select the relevant station",
           "time_mode": "Select a time mode"
         },
         "data_description": {
+          "from": "The station where the connection starts",
+          "to": "The station where the connection ends",
+          "via": "List of up to 5 stations the route must go through",
           "time_station": "Usually the departure time of a connection when it leaves the start station is tracked. Alternatively, track the time when the connection arrives at its end station.",
           "time_mode": "Time mode lets you change the departure timing and fix it to a specific time (e.g. 7:12:00 AM every morning) or add a moving offset (e.g. +00:05:00 taking into account the time to walk to the station)."
         },
-        "description": "Provide start and end station for your connection,\nand optionally up to 5 via stations.\n\nCheck the [stationboard]({stationboard_url}) for valid stations.",
+        "description": "Provide start and end station for your connection, and optionally up to 5 via stations.\n\nCheck the [stationboard]({stationboard_url}) for valid stations.",
         "title": "Swiss Public Transport"
       },
       "time_fixed": {
         "data": {
           "time_fixed": "Time of day"
+        },
+        "data_description": {
+          "time_fixed": "The time of day for the connection"
         },
         "description": "Please select the relevant time for the connection (e.g. 7:12:00 AM every morning).",
         "title": "Swiss Public Transport"
@@ -38,6 +44,9 @@
       "time_offset": {
         "data": {
           "time_offset": "Time offset"
+        },
+        "data_description": {
+          "time_offset": "The time offset added to the earliest possible connection"
         },
         "description": "Please select the relevant offset to add to the earliest possible connection (e.g. add +00:05:00 offset, taking into account the time to walk to the station)",
         "title": "Swiss Public Transport"
@@ -55,8 +64,8 @@
       "departure2": {
         "name": "Departure +2"
       },
-      "duration": {
-        "name": "Duration"
+      "trip_duration": {
+        "name": "Trip duration"
       },
       "transfers": {
         "name": "Transfers"
@@ -74,8 +83,8 @@
   },
   "services": {
     "fetch_connections": {
-      "name": "Fetch Connections",
-      "description": "Fetch a list of connections from the swiss public transport.",
+      "name": "Fetch connections",
+      "description": "Fetches a list of connections from Swiss public transport.",
       "fields": {
         "config_entry_id": {
           "name": "Instance",
@@ -83,7 +92,7 @@
         },
         "limit": {
           "name": "Limit",
-          "description": "Number of connections to fetch from [1-15]"
+          "description": "Number of connections to fetch."
         }
       }
     }

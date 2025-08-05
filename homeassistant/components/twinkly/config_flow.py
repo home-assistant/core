@@ -9,10 +9,10 @@ from aiohttp import ClientError
 from ttls.client import Twinkly
 from voluptuous import Required, Schema
 
-from homeassistant.components import dhcp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DEV_ID, DEV_MODEL, DEV_NAME, DOMAIN
 
@@ -58,7 +58,7 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle dhcp discovery for twinkly."""
         self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
@@ -80,6 +80,9 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
             return self._create_entry_from_device(device_info, host)
 
         self._set_confirm_only()
+        self.context["title_placeholders"] = {
+            "name": device_info[DEV_NAME],
+        }
         placeholders = {
             "model": device_info[DEV_MODEL],
             "name": device_info[DEV_NAME],

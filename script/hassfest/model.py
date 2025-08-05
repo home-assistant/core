@@ -157,8 +157,10 @@ class Integration:
     @property
     def core(self) -> bool:
         """Core integration."""
-        return self.path.as_posix().startswith(
-            self._config.core_integrations_path.as_posix()
+        return (
+            self.path.absolute()
+            .as_posix()
+            .startswith(self._config.core_integrations_path.as_posix())
         )
 
     @property
@@ -219,6 +221,15 @@ class Integration:
     def add_warning(self, *args: Any, **kwargs: Any) -> None:
         """Add a warning."""
         self.warnings.append(Error(*args, **kwargs))
+
+    def add_warning_or_error(
+        self, warning_only: bool, *args: Any, **kwargs: Any
+    ) -> None:
+        """Add an error or a warning."""
+        if warning_only:
+            self.add_warning(*args, **kwargs)
+        else:
+            self.add_error(*args, **kwargs)
 
     def load_manifest(self) -> None:
         """Load manifest."""

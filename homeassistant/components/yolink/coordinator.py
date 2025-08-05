@@ -9,11 +9,12 @@ import logging
 from yolink.device import YoLinkDevice
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ATTR_DEVICE_STATE, DOMAIN, YOLINK_OFFLINE_TIME
+from .const import ATTR_DEVICE_STATE, ATTR_LORA_INFO, DOMAIN, YOLINK_OFFLINE_TIME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,9 +22,12 @@ _LOGGER = logging.getLogger(__name__)
 class YoLinkCoordinator(DataUpdateCoordinator[dict]):
     """YoLink DataUpdateCoordinator."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         device: YoLinkDevice,
         paired_device: YoLinkDevice | None = None,
     ) -> None:
@@ -34,11 +38,16 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         data at first update
         """
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=30)
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=timedelta(minutes=30),
         )
         self.device = device
         self.paired_device = paired_device
         self.dev_online = True
+        self.dev_net_type = None
 
     async def _async_update_data(self) -> dict:
         """Fetch device state."""
@@ -68,7 +77,15 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         except YoLinkAuthFailError as yl_auth_err:
             raise ConfigEntryAuthFailed from yl_auth_err
         except YoLinkClientError as yl_client_err:
+            _LOGGER.error(
+                "Failed to obtain device status, device: %s, error: %s ",
+                self.device.device_id,
+                yl_client_err,
+            )
             raise UpdateFailed from yl_client_err
         if device_state is not None:
+            dev_lora_info = device_state.get(ATTR_LORA_INFO)
+            if dev_lora_info is not None:
+                self.dev_net_type = dev_lora_info.get("devNetType")
             return device_state
         return {}

@@ -1,0 +1,135 @@
+{
+  "id": -1,
+  "name": "homee",
+  "profile": 1,
+  "image": "default",
+  "favorite": 0,
+  "order": 0,
+  "protocol": 0,
+  "routing": 0,
+  "state": 1,
+  "state_changed": 16,
+  "added": 16,
+  "history": 1,
+  "cube_type": 0,
+  "note": "",
+  "services": 0,
+  "phonetic_name": "",
+  "owner": 0,
+  "security": 0,
+  "attributes": [
+    {
+      "id": 1,
+      "node_id": -1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 200,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 2.0,
+      "unit": "n/a",
+      "step_value": 1.0,
+      "editable": 1,
+      "type": 205,
+      "state": 1,
+      "last_changed": 1735815716,
+      "changed_by": 2,
+      "changed_by_id": 4,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "history": {
+          "day": 182,
+          "week": 26,
+          "month": 6,
+          "stepped": true
+        }
+      }
+    },
+    {
+      "id": 18,
+      "node_id": -1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 100,
+      "current_value": 15.0,
+      "target_value": 15.0,
+      "last_value": 15.0,
+      "unit": "%",
+      "step_value": 0.1,
+      "editable": 0,
+      "type": 311,
+      "state": 1,
+      "last_changed": 1739390161,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "history": {
+          "day": 1,
+          "week": 26,
+          "month": 6
+        }
+      }
+    },
+    {
+      "id": 19,
+      "node_id": -1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 100,
+      "current_value": 5.0,
+      "target_value": 5.0,
+      "last_value": 10.0,
+      "unit": "%",
+      "step_value": 0.1,
+      "editable": 0,
+      "type": 312,
+      "state": 1,
+      "last_changed": 1739390161,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "history": {
+          "day": 1,
+          "week": 26,
+          "month": 6
+        }
+      }
+    },
+    {
+      "id": 20,
+      "node_id": -1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 100,
+      "current_value": 10.0,
+      "target_value": 10.0,
+      "last_value": 10.0,
+      "unit": "%",
+      "step_value": 0.1,
+      "editable": 0,
+      "type": 313,
+      "state": 1,
+      "last_changed": 1739390161,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "history": {
+          "day": 1,
+          "week": 26,
+          "month": 6
+        }
+      }
+    }
+  ]
+}

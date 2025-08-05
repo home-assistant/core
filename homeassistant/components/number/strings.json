@@ -31,6 +31,9 @@
         }
       }
     },
+    "absolute_humidity": {
+      "name": "[%key:component::sensor::entity_component::absolute_humidity::name%]"
+    },
     "apparent_power": {
       "name": "[%key:component::sensor::entity_component::apparent_power::name%]"
     },
@@ -130,6 +133,9 @@
     "pressure": {
       "name": "[%key:component::sensor::entity_component::pressure::name%]"
     },
+    "reactive_energy": {
+      "name": "[%key:component::sensor::entity_component::reactive_energy::name%]"
+    },
     "reactive_power": {
       "name": "[%key:component::sensor::entity_component::reactive_power::name%]"
     },
@@ -168,6 +174,9 @@
     },
     "weight": {
       "name": "[%key:component::sensor::entity_component::weight::name%]"
+    },
+    "wind_direction": {
+      "name": "[%key:component::sensor::entity_component::wind_direction::name%]"
     },
     "wind_speed": {
       "name": "[%key:component::sensor::entity_component::wind_speed::name%]"
