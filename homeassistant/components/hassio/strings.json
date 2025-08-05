@@ -123,17 +123,25 @@
       "title": "Unhealthy system - Docker misconfigured",
       "description": "System is currently unhealthy because Docker is configured incorrectly. Use the link to learn more and how to fix this."
     },
-    "unhealthy_supervisor": {
-      "title": "Unhealthy system - Supervisor update failed",
-      "description": "System is currently unhealthy because an attempt to update Supervisor to the latest version has failed. Use the link to learn more and how to fix this."
+    "unhealthy_duplicate_os_installation": {
+      "description": "System is currently unhealthy because it has detected multiple Home Assistant OS installations. Use the link to learn more and how to fix this.",
+      "title": "Unhealthy system - Duplicate Home Assistant OS installation"
+    },
+    "unhealthy_oserror_bad_message": {
+      "description": "System is currently unhealthy because the operating system has reported an error: Bad message. Use the link to learn more and how to fix this.",
+      "title": "Unhealthy system - Operating System error: Bad message"
+    },
+    "unhealthy_privileged": {
+      "title": "Unhealthy system - Not privileged",
+      "description": "System is currently unhealthy because it does not have privileged access to the docker runtime. Use the link to learn more and how to fix this."
     },
     "unhealthy_setup": {
       "title": "Unhealthy system - Setup failed",
       "description": "System is currently unhealthy because setup failed to complete. There are a number of reasons this can occur, use the link to learn more and how to fix this."
     },
-    "unhealthy_privileged": {
-      "title": "Unhealthy system - Not privileged",
-      "description": "System is currently unhealthy because it does not have privileged access to the docker runtime. Use the link to learn more and how to fix this."
+    "unhealthy_supervisor": {
+      "title": "Unhealthy system - Supervisor update failed",
+      "description": "System is currently unhealthy because an attempt to update Supervisor to the latest version has failed. Use the link to learn more and how to fix this."
     },
     "unhealthy_untrusted": {
       "title": "Unhealthy system - Untrusted code",
