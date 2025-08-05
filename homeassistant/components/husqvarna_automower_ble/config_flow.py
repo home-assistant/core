@@ -245,6 +245,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     data = {
                         CONF_ADDRESS: self.address,
+                        CONF_CLIENT_ID: channel_id,
                         CONF_PIN: self.pin,
                     }
 
