@@ -36,7 +36,9 @@ from .typing import UNDEFINED, UndefinedType
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
-_DataT = TypeVar("_DataT", default=dict[str, Any])
+_DataT = TypeVar("_DataT")
+_BaseDataUpdateCoordinatorT = TypeVar("_BaseDataUpdateCoordinatorT")
+_DataUpdateCoordinatorT = TypeVar("_DataUpdateCoordinatorT")
 
 
 class UpdateFailed(HomeAssistantError):
@@ -539,9 +541,7 @@ class TimestampDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
             self.last_update_success_time = utcnow()
 
 
-class BaseCoordinatorEntity[
-    _BaseDataUpdateCoordinatorT: BaseDataUpdateCoordinatorProtocol
-](entity.Entity):
+class BaseCoordinatorEntity(entity.Entity, Generic[_BaseDataUpdateCoordinatorT]):
     """Base class for all Coordinator entities."""
 
     def __init__(
@@ -578,11 +578,7 @@ class BaseCoordinatorEntity[
         """
 
 
-class CoordinatorEntity[
-    _DataUpdateCoordinatorT: DataUpdateCoordinator[Any] = DataUpdateCoordinator[
-        dict[str, Any]
-    ]
-](BaseCoordinatorEntity[_DataUpdateCoordinatorT]):
+class CoordinatorEntity(BaseCoordinatorEntity[_DataUpdateCoordinatorT], Generic[_DataUpdateCoordinatorT]):
     """A class for entities using DataUpdateCoordinator."""
 
     def __init__(
