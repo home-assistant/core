@@ -20,7 +20,11 @@
         "default": "mdi:gas-station"
       },
       "charger_connection_status": {
-        "default": "mdi:ev-plug-ccs2"
+        "default": "mdi:power-plug-off",
+        "state": {
+          "connected": "mdi:power-plug",
+          "fault": "mdi:flash-alert"
+        }
       },
       "charging_power": {
         "default": "mdi:gauge-empty",
@@ -44,22 +48,22 @@
         }
       },
       "distance_to_empty_battery": {
-        "default": "mdi:gauge-empty"
+        "default": "mdi:battery-outline"
       },
       "distance_to_empty_tank": {
         "default": "mdi:gauge-empty"
       },
       "distance_to_service": {
-        "default": "mdi:wrench-clock"
+        "default": "mdi:wrench-check"
       },
       "engine_time_to_service": {
-        "default": "mdi:wrench-clock"
+        "default": "mdi:wrench-cog"
       },
       "estimated_charging_time": {
         "default": "mdi:battery-clock"
       },
       "fuel_amount": {
-        "default": "mdi:gas-station"
+        "default": "mdi:fuel"
       },
       "odometer": {
         "default": "mdi:counter"
