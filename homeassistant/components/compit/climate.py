@@ -49,7 +49,7 @@ COMPIT_MODE_MAP = {
     CompitHVACMode.OFF: HVACMode.OFF,
 }
 
-HVAC_MODE_TO_COMCOMPIT_MODE = {v: k for k, v in COMPIT_MODE_MAP.items()}
+HVAC_MODE_TO_COMPIT_MODE = {v: k for k, v in COMPIT_MODE_MAP.items()}
 
 
 async def async_setup_entry(
@@ -229,7 +229,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target HVAC mode."""
 
-        if not (mode := HVAC_MODE_TO_COMCOMPIT_MODE.get(hvac_mode)):
+        if not (mode := HVAC_MODE_TO_COMPIT_MODE.get(hvac_mode)):
             raise ValueError(f"Invalid hvac mode {hvac_mode}")
 
         await self.async_call_api(PARAM_HVAC_MODE, mode.value)

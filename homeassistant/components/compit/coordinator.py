@@ -29,6 +29,7 @@ class CompitDataUpdateCoordinator(DataUpdateCoordinator[dict[int, DeviceInstance
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         gates: list[Gate],
         api: CompitAPI,
         device_definitions: DeviceDefinitions,
@@ -39,7 +40,13 @@ class CompitDataUpdateCoordinator(DataUpdateCoordinator[dict[int, DeviceInstance
         self.gates = gates
         self.device_definitions = device_definitions
 
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
+            config_entry=config_entry,
+        )
 
     async def _async_update_data(self) -> dict[int, DeviceInstance]:
         """Update data via library."""

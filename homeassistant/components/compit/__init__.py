@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CompitConfigEntry) -> bo
             raise ConfigEntryError("Invalid data returned from api") from e
 
         coordinator = CompitDataUpdateCoordinator(
-            hass, system_info.gates, api, device_definitions
+            hass, entry, system_info.gates, api, device_definitions
         )
         await coordinator.async_config_entry_first_refresh()
         entry.runtime_data = coordinator
