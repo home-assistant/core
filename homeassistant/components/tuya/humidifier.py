@@ -28,7 +28,7 @@ from .util import ActionDPCodeNotFoundError
 class TuyaHumidifierEntityDescription(HumidifierEntityDescription):
     """Describe an Tuya (de)humidifier entity."""
 
-    # DPCode, to use. If None, the key will be used as DPCode
+    # DPCode, to use for the main switch
     dpcode: tuple[DPCode, ...]
 
     current_humidity: DPCode | None = None
