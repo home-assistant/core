@@ -206,13 +206,15 @@ async def test_async_step_reauth_confirm_success_after_error(
         assert result["errors"] == {}
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_PASSWORD: "new-password"}
+            result["flow_id"],
+            {CONF_PASSWORD: "new-password"},
         )
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_auth"}
 
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_PASSWORD: "correct-password"}
+            result["flow_id"],
+            {CONF_EMAIL: CONFIG_INPUT[CONF_EMAIL], CONF_PASSWORD: "correct-password"},
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "reauth_successful"
