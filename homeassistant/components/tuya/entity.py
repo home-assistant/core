@@ -24,6 +24,65 @@ _DPTYPE_MAPPING: dict[str, DPType] = {
 }
 
 
+def find_device_dpcode(
+    device: CustomerDevice,
+    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    *,
+    prefer_function: bool = False,
+    dptype: DPType | None = None,
+) -> DPCode | EnumTypeData | IntegerTypeData | None:
+    """Find a matching DP code available on for this device."""
+    if dpcodes is None:
+        return None
+
+    if isinstance(dpcodes, str):
+        dpcodes = (DPCode(dpcodes),)
+    elif not isinstance(dpcodes, tuple):
+        dpcodes = (dpcodes,)
+
+    order = ["status_range", "function"]
+    if prefer_function:
+        order = ["function", "status_range"]
+
+    # When we are not looking for a specific datatype, we can append status for
+    # searching
+    if not dptype:
+        order.append("status")
+
+    for dpcode in dpcodes:
+        for key in order:
+            if dpcode not in getattr(device, key):
+                continue
+            if (
+                dptype == DPType.ENUM
+                and getattr(device, key)[dpcode].type == DPType.ENUM
+            ):
+                if not (
+                    enum_type := EnumTypeData.from_json(
+                        dpcode, getattr(device, key)[dpcode].values
+                    )
+                ):
+                    continue
+                return enum_type
+
+            if (
+                dptype == DPType.INTEGER
+                and getattr(device, key)[dpcode].type == DPType.INTEGER
+            ):
+                if not (
+                    integer_type := IntegerTypeData.from_json(
+                        dpcode, getattr(device, key)[dpcode].values
+                    )
+                ):
+                    continue
+                return integer_type
+
+            if dptype not in (DPType.ENUM, DPType.INTEGER):
+                return dpcode
+
+    return None
+
+
 class TuyaEntity(Entity):
     """Tuya base device."""
 
@@ -88,55 +147,9 @@ class TuyaEntity(Entity):
         dptype: DPType | None = None,
     ) -> DPCode | EnumTypeData | IntegerTypeData | None:
         """Find a matching DP code available on for this device."""
-        if dpcodes is None:
-            return None
-
-        if isinstance(dpcodes, str):
-            dpcodes = (DPCode(dpcodes),)
-        elif not isinstance(dpcodes, tuple):
-            dpcodes = (dpcodes,)
-
-        order = ["status_range", "function"]
-        if prefer_function:
-            order = ["function", "status_range"]
-
-        # When we are not looking for a specific datatype, we can append status for
-        # searching
-        if not dptype:
-            order.append("status")
-
-        for dpcode in dpcodes:
-            for key in order:
-                if dpcode not in getattr(self.device, key):
-                    continue
-                if (
-                    dptype == DPType.ENUM
-                    and getattr(self.device, key)[dpcode].type == DPType.ENUM
-                ):
-                    if not (
-                        enum_type := EnumTypeData.from_json(
-                            dpcode, getattr(self.device, key)[dpcode].values
-                        )
-                    ):
-                        continue
-                    return enum_type
-
-                if (
-                    dptype == DPType.INTEGER
-                    and getattr(self.device, key)[dpcode].type == DPType.INTEGER
-                ):
-                    if not (
-                        integer_type := IntegerTypeData.from_json(
-                            dpcode, getattr(self.device, key)[dpcode].values
-                        )
-                    ):
-                        continue
-                    return integer_type
-
-                if dptype not in (DPType.ENUM, DPType.INTEGER):
-                    return dpcode
-
-        return None
+        return find_device_dpcode(
+            self.device, dpcodes, prefer_function=prefer_function, dptype=dptype
+        )
 
     def get_dptype(
         self, dpcode: DPCode | None, prefer_function: bool = False
