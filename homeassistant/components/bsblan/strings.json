@@ -41,6 +41,11 @@
           "passkey": "[%key:component::bsblan::config::step::user::data::passkey%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "passkey": "[%key:component::bsblan::config::step::user::data_description::passkey%]",
+          "username": "[%key:component::bsblan::config::step::user::data_description::username%]",
+          "password": "[%key:component::bsblan::config::step::user::data_description::password%]"
         }
       }
     },
