@@ -2,7 +2,16 @@
 
 import dataclasses
 
-from bsblan import BSBLAN, BSBLANConfig, Device, Info, StaticState
+from bsblan import (
+    BSBLAN,
+    BSBLANAuthError,
+    BSBLANConfig,
+    BSBLANConnectionError,
+    BSBLANError,
+    Device,
+    Info,
+    StaticState,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -13,6 +22,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_PASSKEY
@@ -54,10 +68,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
     coordinator = BSBLanUpdateCoordinator(hass, entry, bsblan)
     await coordinator.async_config_entry_first_refresh()
 
-    # Fetch all required data concurrently
-    device = await bsblan.device()
-    info = await bsblan.info()
-    static = await bsblan.static_values()
+    try:
+        # Fetch all required data sequentially
+        device = await bsblan.device()
+        info = await bsblan.info()
+        static = await bsblan.static_values()
+    except BSBLANConnectionError as err:
+        raise ConfigEntryNotReady(
+            f"Failed to retrieve static device data from BSB-Lan device at {entry.data[CONF_HOST]}"
+        ) from err
+    except BSBLANAuthError as err:
+        raise ConfigEntryAuthFailed(
+            "Authentication failed while retrieving static device data"
+        ) from err
+    except BSBLANError as err:
+        raise ConfigEntryError(
+            "An unknown error occurred while retrieving static device data"
+        ) from err
 
     entry.runtime_data = BSBLanData(
         client=bsblan,
