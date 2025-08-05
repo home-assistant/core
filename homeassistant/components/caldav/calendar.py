@@ -258,7 +258,10 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
             event = self.coordinator.calendar.search(uid=uid, event=True, expand=False)
             if not event:
                 return
-            event[0].delete()
+            try:
+                event[0].delete()
+            except IndexError:
+                _LOGGER.error("Event with uid %s not found", uid)
 
         await self.hass.async_add_executor_job(_delete_event)
 
