@@ -79,7 +79,7 @@ class TuyaEntity(Entity):
         prefer_function: bool = False,
         dptype: DPType,
     ) -> EnumTypeData | IntegerTypeData | None:
-        """Find a matching DP code available on for this device."""
+        """Find type information for a matching DP code available for this device."""
         if dptype not in (DPType.ENUM, DPType.INTEGER):
             raise NotImplementedError("Only ENUM and INTEGER types are supported")
 
