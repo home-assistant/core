@@ -70,7 +70,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         self._attr_unique_id = serial_number
 
         self.serial_number = serial_number
-        self._attr_is_locked = False
+        self._attr_is_locked = None
         self._attr_changed_by = None
         self._attr_changed_method: str | None = None
 
@@ -200,3 +200,8 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
             "lockMethod"
         ]
         super()._handle_coordinator_update()
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self._handle_coordinator_update()
