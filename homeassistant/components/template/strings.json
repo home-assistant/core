@@ -753,7 +753,7 @@
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",
           "state": "[%key:component::template::config::step::sensor::data_description::state%]",
-          "unit_of_measurement": "[%key:component::template::config::step::sensor::data_description::state%]"
+          "unit_of_measurement": "[%key:component::template::config::step::sensor::data_description::unit_of_measurement%]"
         },
         "sections": {
           "advanced_options": {
