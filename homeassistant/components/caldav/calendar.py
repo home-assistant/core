@@ -195,7 +195,9 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         if unique_id is not None:
             self._attr_unique_id = unique_id
         self._supports_offset = supports_offset
-        self._attr_supported_features = CalendarEntityFeature.CREATE_EVENT
+        self._attr_supported_features = (
+            CalendarEntityFeature.CREATE_EVENT | CalendarEntityFeature.DELETE_EVENT
+        )
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -241,6 +243,24 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         await self.hass.async_add_executor_job(
             self.coordinator.calendar.add_event, ics_data
         )
+
+    async def async_delete_event(
+        self,
+        uid: str,
+        recurrence_id: str | None = None,
+        recurrence_range: str | None = None,
+    ) -> None:
+        """Delete an event on the calendar."""
+        _LOGGER.debug("Delete event: %s", uid)
+
+        def _delete_event() -> None:
+            """Search for an event and delete it."""
+            event = self.coordinator.calendar.search(uid=uid, event=True, expand=False)
+            if not event:
+                return
+            event[0].delete()
+
+        await self.hass.async_add_executor_job(_delete_event)
 
     @callback
     def _handle_coordinator_update(self) -> None:

@@ -76,6 +76,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                 continue
             event_list.append(
                 CalendarEvent(
+                    uid=get_attr_value(vevent, "uid"),
                     summary=get_attr_value(vevent, "summary") or "",
                     start=self.to_local(vevent.dtstart.value),
                     end=self.to_local(self.get_end_date(vevent)),
@@ -171,6 +172,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         )
         self.offset = offset
         return CalendarEvent(
+            uid=get_attr_value(vevent, "uid"),
             summary=summary,
             start=self.to_local(vevent.dtstart.value),
             end=self.to_local(self.get_end_date(vevent)),
