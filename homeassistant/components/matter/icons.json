@@ -99,6 +99,9 @@
       "esa_opt_out_state": {
         "default": "mdi:home-lightning-bolt"
       },
+      "esa_state": {
+        "default": "mdi:home-lightning-bolt"
+      },
       "evse_state": {
         "default": "mdi:ev-station"
       },
