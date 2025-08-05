@@ -2556,6 +2556,473 @@
     'state': '0.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_cleaning_area-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.v20_cleaning_area',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cleaning area',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cleaning_area',
+    'unique_id': 'tuya.bfa951ca98fcf64fddqlmtclean_area',
+    'unit_of_measurement': '㎡',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_cleaning_area-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'V20 Cleaning area',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '㎡',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.v20_cleaning_area',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_cleaning_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.v20_cleaning_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cleaning time',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cleaning_time',
+    'unique_id': 'tuya.bfa951ca98fcf64fddqlmtclean_time',
+    'unit_of_measurement': 'min',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_cleaning_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'V20 Cleaning time',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.v20_cleaning_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_duster_cloth_lifetime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.v20_duster_cloth_lifetime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Duster cloth lifetime',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'duster_cloth_life',
+    'unique_id': 'tuya.bfa951ca98fcf64fddqlmtduster_cloth',
+    'unit_of_measurement': 'min',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_duster_cloth_lifetime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'V20 Duster cloth lifetime',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.v20_duster_cloth_lifetime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9000.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_filter_lifetime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.v20_filter_lifetime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Filter lifetime',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'filter_life',
+    'unique_id': 'tuya.bfa951ca98fcf64fddqlmtfilter',
+    'unit_of_measurement': 'min',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_filter_lifetime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'V20 Filter lifetime',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.v20_filter_lifetime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8956.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_rolling_brush_lifetime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.v20_rolling_brush_lifetime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rolling brush lifetime',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rolling_brush_life',
+    'unique_id': 'tuya.bfa951ca98fcf64fddqlmtroll_brush',
+    'unit_of_measurement': 'min',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_rolling_brush_lifetime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'V20 Rolling brush lifetime',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.v20_rolling_brush_lifetime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '17948.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_side_brush_lifetime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.v20_side_brush_lifetime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Side brush lifetime',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'side_brush_life',
+    'unique_id': 'tuya.bfa951ca98fcf64fddqlmtedge_brush',
+    'unit_of_measurement': 'min',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_side_brush_lifetime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'V20 Side brush lifetime',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.v20_side_brush_lifetime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8944.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_total_cleaning_area-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.v20_total_cleaning_area',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total cleaning area',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_cleaning_area',
+    'unique_id': 'tuya.bfa951ca98fcf64fddqlmttotal_clean_area',
+    'unit_of_measurement': '㎡',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_total_cleaning_area-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'V20 Total cleaning area',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': '㎡',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.v20_total_cleaning_area',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '24.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_total_cleaning_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.v20_total_cleaning_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total cleaning time',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_cleaning_time',
+    'unique_id': 'tuya.bfa951ca98fcf64fddqlmttotal_clean_time',
+    'unit_of_measurement': 'min',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_total_cleaning_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'V20 Total cleaning time',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.v20_total_cleaning_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '42.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_total_cleaning_times-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.v20_total_cleaning_times',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total cleaning times',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_cleaning_times',
+    'unique_id': 'tuya.bfa951ca98fcf64fddqlmttotal_clean_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_total_cleaning_times-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'V20 Total cleaning times',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.v20_total_cleaning_times',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sp_sdd5f5f2dl5wydjf][sensor.c9_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
