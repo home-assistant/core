@@ -35,10 +35,10 @@ def download_file(service: ServiceCall) -> None:
 
     entry = service.hass.config_entries.async_loaded_entries(DOMAIN)[0]
     download_path = entry.data[CONF_DOWNLOAD_DIR]
-    url = service.data[ATTR_URL]
-    subdir = service.data.get(ATTR_SUBDIR)
-    filename = service.data.get(ATTR_FILENAME)
-    overwrite = service.data.get(ATTR_OVERWRITE)
+    url: str = service.data[ATTR_URL]
+    subdir: str | None = service.data.get(ATTR_SUBDIR)
+    target_filename: str | None = service.data.get(ATTR_FILENAME)
+    overwrite: bool = service.data[ATTR_OVERWRITE]
 
     if subdir:
         # Check the path
@@ -62,7 +62,7 @@ def download_file(service: ServiceCall) -> None:
     def do_download() -> None:
         """Download the file."""
         final_path = None
-        nonlocal filename
+        filename = target_filename
         try:
             req = requests.get(url, stream=True, timeout=10)
 
