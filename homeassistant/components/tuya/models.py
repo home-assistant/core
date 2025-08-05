@@ -6,10 +6,22 @@ import base64
 from dataclasses import dataclass
 import json
 import struct
-from typing import Self
+from typing import Literal, Self, overload
 
-from .const import DPCode
+from tuya_sharing import CustomerDevice
+
+from .const import DPCode, DPType
 from .util import remap_value
+
+_DPTYPE_MAPPING: dict[str, DPType] = {
+    "bitmap": DPType.BITMAP,
+    "bool": DPType.BOOLEAN,
+    "enum": DPType.ENUM,
+    "json": DPType.JSON,
+    "raw": DPType.RAW,
+    "string": DPType.STRING,
+    "value": DPType.INTEGER,
+}
 
 
 @dataclass
@@ -136,3 +148,114 @@ class ElectricityTypeData(ComplexTypeData):
         return cls(
             electriccurrent=str(electriccurrent), power=str(power), voltage=str(voltage)
         )
+
+
+@overload
+def find_dpcode(
+    device: CustomerDevice,
+    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    *,
+    prefer_function: bool = False,
+    dptype: Literal[DPType.ENUM],
+) -> EnumTypeData | None: ...
+
+
+@overload
+def find_dpcode(
+    device: CustomerDevice,
+    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    *,
+    prefer_function: bool = False,
+    dptype: Literal[DPType.INTEGER],
+) -> IntegerTypeData | None: ...
+
+
+@overload
+def find_dpcode(
+    device: CustomerDevice,
+    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    *,
+    prefer_function: bool = False,
+) -> DPCode | None: ...
+
+
+def find_dpcode(
+    device: CustomerDevice,
+    dpcodes: str | DPCode | tuple[DPCode, ...] | None,
+    *,
+    prefer_function: bool = False,
+    dptype: DPType | None = None,
+) -> DPCode | EnumTypeData | IntegerTypeData | None:
+    """Find a matching DP code available on for this device."""
+    if dpcodes is None:
+        return None
+
+    if isinstance(dpcodes, str):
+        dpcodes = (DPCode(dpcodes),)
+    elif not isinstance(dpcodes, tuple):
+        dpcodes = (dpcodes,)
+
+    order = ["status_range", "function"]
+    if prefer_function:
+        order = ["function", "status_range"]
+
+    # When we are not looking for a specific datatype, we can append status for
+    # searching
+    if not dptype:
+        order.append("status")
+
+    for dpcode in dpcodes:
+        for key in order:
+            if dpcode not in getattr(device, key):
+                continue
+            if (
+                dptype == DPType.ENUM
+                and getattr(device, key)[dpcode].type == DPType.ENUM
+            ):
+                if not (
+                    enum_type := EnumTypeData.from_json(
+                        dpcode, getattr(device, key)[dpcode].values
+                    )
+                ):
+                    continue
+                return enum_type
+
+            if (
+                dptype == DPType.INTEGER
+                and getattr(device, key)[dpcode].type == DPType.INTEGER
+            ):
+                if not (
+                    integer_type := IntegerTypeData.from_json(
+                        dpcode, getattr(device, key)[dpcode].values
+                    )
+                ):
+                    continue
+                return integer_type
+
+            if dptype not in (DPType.ENUM, DPType.INTEGER):
+                return dpcode
+
+    return None
+
+
+def get_dptype(
+    self, dpcode: DPCode | None, prefer_function: bool = False
+) -> DPType | None:
+    """Find a matching DPCode data type available on for this device."""
+    if dpcode is None:
+        return None
+
+    order = ["status_range", "function"]
+    if prefer_function:
+        order = ["function", "status_range"]
+    for key in order:
+        if dpcode in getattr(self.device, key):
+            current_type = getattr(self.device, key)[dpcode].type
+            try:
+                return DPType(current_type)
+            except ValueError:
+                # Sometimes, we get ill-formed DPTypes from the cloud,
+                # this fixes them and maps them to the correct DPType.
+                return _DPTYPE_MAPPING.get(current_type)
+
+    return None

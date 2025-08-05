@@ -23,7 +23,7 @@ from homeassistant.util.percentage import (
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
 from .entity import TuyaEntity
-from .models import EnumTypeData, IntegerTypeData
+from .models import EnumTypeData, IntegerTypeData, find_dpcode
 
 TUYA_SUPPORT_TYPE = {
     # Dehumidifier
@@ -90,13 +90,18 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         """Init Tuya Fan Device."""
         super().__init__(device, device_manager)
 
-        self._switch = self.find_dpcode(
-            (DPCode.SWITCH_FAN, DPCode.FAN_SWITCH, DPCode.SWITCH), prefer_function=True
+        self._switch = find_dpcode(
+            self.device,
+            (DPCode.SWITCH_FAN, DPCode.FAN_SWITCH, DPCode.SWITCH),
+            prefer_function=True,
         )
 
         self._attr_preset_modes = []
-        if enum_type := self.find_dpcode(
-            (DPCode.FAN_MODE, DPCode.MODE), dptype=DPType.ENUM, prefer_function=True
+        if enum_type := find_dpcode(
+            self.device,
+            (DPCode.FAN_MODE, DPCode.MODE),
+            dptype=DPType.ENUM,
+            prefer_function=True,
         ):
             self._presets = enum_type
             self._attr_supported_features |= FanEntityFeature.PRESET_MODE
@@ -109,25 +114,27 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
             DPCode.SPEED,
             DPCode.FAN_SPEED_ENUM,
         )
-        if int_type := self.find_dpcode(
-            dpcodes, dptype=DPType.INTEGER, prefer_function=True
+        if int_type := find_dpcode(
+            self.device, dpcodes, dptype=DPType.INTEGER, prefer_function=True
         ):
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
             self._speed = int_type
-        elif enum_type := self.find_dpcode(
-            dpcodes, dptype=DPType.ENUM, prefer_function=True
+        elif enum_type := find_dpcode(
+            self.device, dpcodes, dptype=DPType.ENUM, prefer_function=True
         ):
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
             self._speeds = enum_type
 
-        if dpcode := self.find_dpcode(
-            (DPCode.SWITCH_HORIZONTAL, DPCode.SWITCH_VERTICAL), prefer_function=True
+        if dpcode := find_dpcode(
+            self.device,
+            (DPCode.SWITCH_HORIZONTAL, DPCode.SWITCH_VERTICAL),
+            prefer_function=True,
         ):
             self._oscillate = dpcode
             self._attr_supported_features |= FanEntityFeature.OSCILLATE
 
-        if enum_type := self.find_dpcode(
-            DPCode.FAN_DIRECTION, dptype=DPType.ENUM, prefer_function=True
+        if enum_type := find_dpcode(
+            self.device, DPCode.FAN_DIRECTION, dptype=DPType.ENUM, prefer_function=True
         ):
             self._direction = enum_type
             self._attr_supported_features |= FanEntityFeature.DIRECTION

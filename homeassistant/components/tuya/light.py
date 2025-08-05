@@ -28,7 +28,7 @@ from homeassistant.util import color as color_util
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType, WorkMode
 from .entity import TuyaEntity
-from .models import IntegerTypeData
+from .models import IntegerTypeData, find_dpcode, get_dptype
 from .util import remap_value
 
 
@@ -515,25 +515,30 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         color_modes: set[ColorMode] = {ColorMode.ONOFF}
 
         # Determine DPCodes
-        self._color_mode_dpcode = self.find_dpcode(
-            description.color_mode, prefer_function=True
+        self._color_mode_dpcode = find_dpcode(
+            self.device, description.color_mode, prefer_function=True
         )
 
-        if int_type := self.find_dpcode(
-            description.brightness, dptype=DPType.INTEGER, prefer_function=True
+        if int_type := find_dpcode(
+            self.device,
+            description.brightness,
+            dptype=DPType.INTEGER,
+            prefer_function=True,
         ):
             self._brightness = int_type
             color_modes.add(ColorMode.BRIGHTNESS)
-            self._brightness_max = self.find_dpcode(
-                description.brightness_max, dptype=DPType.INTEGER
+            self._brightness_max = find_dpcode(
+                self.device, description.brightness_max, dptype=DPType.INTEGER
             )
-            self._brightness_min = self.find_dpcode(
-                description.brightness_min, dptype=DPType.INTEGER
+            self._brightness_min = find_dpcode(
+                self.device, description.brightness_min, dptype=DPType.INTEGER
             )
 
         if (
-            dpcode := self.find_dpcode(description.color_data, prefer_function=True)
-        ) and self.get_dptype(dpcode) == DPType.JSON:
+            dpcode := find_dpcode(
+                self.device, description.color_data, prefer_function=True
+            )
+        ) and get_dptype(self.device, dpcode) == DPType.JSON:
             self._color_data_dpcode = dpcode
             color_modes.add(ColorMode.HS)
             if dpcode in self.device.function:
@@ -557,8 +562,11 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                     self._color_data_type = DEFAULT_COLOR_TYPE_DATA_V2
 
         # Check if the light has color temperature
-        if int_type := self.find_dpcode(
-            description.color_temp, dptype=DPType.INTEGER, prefer_function=True
+        if int_type := find_dpcode(
+            self.device,
+            description.color_temp,
+            dptype=DPType.INTEGER,
+            prefer_function=True,
         ):
             self._color_temp = int_type
             color_modes.add(ColorMode.COLOR_TEMP)
@@ -567,8 +575,11 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         elif (
             color_supported(color_modes)
             and (
-                color_mode_enum := self.find_dpcode(
-                    description.color_mode, dptype=DPType.ENUM, prefer_function=True
+                color_mode_enum := find_dpcode(
+                    self.device,
+                    description.color_mode,
+                    dptype=DPType.ENUM,
+                    prefer_function=True,
                 )
             )
             and WorkMode.WHITE.value in color_mode_enum.range

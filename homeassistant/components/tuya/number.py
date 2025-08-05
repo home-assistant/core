@@ -25,7 +25,7 @@ from .const import (
     DPType,
 )
 from .entity import TuyaEntity
-from .models import IntegerTypeData
+from .models import IntegerTypeData, find_dpcode
 from .util import ActionDPCodeNotFoundError
 
 # All descriptions can be found here. Mostly the Integer data types in the
@@ -409,8 +409,8 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
 
-        if int_type := self.find_dpcode(
-            description.key, dptype=DPType.INTEGER, prefer_function=True
+        if int_type := find_dpcode(
+            self.device, description.key, dptype=DPType.INTEGER, prefer_function=True
         ):
             self._number = int_type
             self._attr_native_max_value = self._number.max_scaled
