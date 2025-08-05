@@ -31,6 +31,9 @@ PARAM_TARGET_TEMPERATURE = "__tpokzadana"
 PARAM_SET_TARGET_TEMPERATURE = "__tempzadpracareczna"
 CLIMATE_DEVICE_CLASS = 10
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 class CompitHVACMode(Enum):
     """Enum for available HVAC modes."""
