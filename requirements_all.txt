@@ -573,7 +573,7 @@ av==13.1.0
 # avion==0.10
 
 # homeassistant.components.axis
-axis==64
+axis==65
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.7
