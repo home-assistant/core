@@ -239,7 +239,7 @@ def find_dpcode(
 
 
 def get_dptype(
-    self, dpcode: DPCode | None, prefer_function: bool = False
+    device: CustomerDevice, dpcode: DPCode | None, prefer_function: bool = False
 ) -> DPType | None:
     """Find a matching DPCode data type available on for this device."""
     if dpcode is None:
@@ -249,8 +249,8 @@ def get_dptype(
     if prefer_function:
         order = ["function", "status_range"]
     for key in order:
-        if dpcode in getattr(self.device, key):
-            current_type = getattr(self.device, key)[dpcode].type
+        if dpcode in getattr(device, key):
+            current_type = getattr(device, key)[dpcode].type
             try:
                 return DPType(current_type)
             except ValueError:
