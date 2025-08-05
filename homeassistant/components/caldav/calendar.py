@@ -4,14 +4,18 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
+from typing import Any
+import uuid
 
 import caldav
+from icalendar import Calendar, Event
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA as CALENDAR_PLATFORM_SCHEMA,
     CalendarEntity,
+    CalendarEntityFeature,
     CalendarEvent,
     is_offset_reached,
 )
@@ -191,6 +195,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         if unique_id is not None:
             self._attr_unique_id = unique_id
         self._supports_offset = supports_offset
+        self._attr_supported_features = CalendarEntityFeature.CREATE_EVENT
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -202,6 +207,40 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
         return await self.coordinator.async_get_events(hass, start_date, end_date)
+
+    async def async_create_event(self, **kwargs: Any) -> None:
+        """Create a new event in the calendar."""
+        _LOGGER.debug("Event: %s", kwargs)
+
+        _summary = kwargs.get("summary")
+        _start = kwargs.get("dtstart")
+        _end = kwargs.get("dtend")
+        _tzinfo = kwargs.get("tzinfo")
+        _description = kwargs.get("description")
+        _rrule = kwargs.get("rrule")
+
+        event = Event()
+        event.add("summary", _summary)
+        event.add("dtstart", _start)
+        event.add("dtend", _end)
+        event.add("dtstamp", datetime.now(_tzinfo))
+        event.add("description", _description)
+        event["uid"] = str(uuid.uuid4())
+        if _rrule:
+            # If rrule is "" or None it icalendar errors out.
+            event.add("rrule", _rrule)
+
+        cal = Calendar()
+        cal.add("prodid", "-//homeassistant.io//CALDAV//EN")
+        cal.add("version", "2.0")
+        cal.add_component(event)
+        ics_data = cal.to_ical().decode("utf-8")
+
+        _LOGGER.debug("ICS data %s", ics_data)
+
+        await self.hass.async_add_executor_job(
+            self.coordinator.calendar.add_event, ics_data
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
