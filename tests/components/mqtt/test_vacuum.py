@@ -386,7 +386,16 @@ async def test_status_with_deprecated_battery_feature(
         "MQTT vacuum entity vacuum.mqtttest implements "
         "the battery feature which is deprecated." in caplog.text
     )
+
+    # assert a repair issue was created for the entity
     assert len(events) == 1
+    assert events[0].event_type == "repairs_issue_registry_updated"
+    assert events[0].data["action"] == "create"
+    assert events[0].data["domain"] == mqtt.DOMAIN
+    assert (
+        events[0].data["issue_id"]
+        == "deprecated_vacuum_battery_feature_vacuum.mqtttest"
+    )
 
 
 @pytest.mark.parametrize(

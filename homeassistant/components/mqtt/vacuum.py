@@ -107,7 +107,6 @@ ALL_SERVICES = (
     | VacuumEntityFeature.FAN_SPEED
     | VacuumEntityFeature.SEND_COMMAND
 )
-DEPRECATED_SERVICES = VacuumEntityFeature.BATTERY
 
 
 def services_to_strings(
