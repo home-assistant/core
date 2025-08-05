@@ -280,8 +280,8 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         """Update the entity state attributes."""
         self._state_attrs.update(payload)
         self._attr_fan_speed = self._state_attrs.get(FAN_SPEED, 0)
-        # Use of the battery feature was deprecated in HA Core 2025.9
-        # and will removed with HA Core 2026.3
+        # Use of the battery feature was deprecated in HA Core 2025.8
+        # and will be removed with HA Core 2026.2
         self._attr_battery_level = max(0, min(100, self._state_attrs.get(BATTERY, 0)))
 
     @callback
