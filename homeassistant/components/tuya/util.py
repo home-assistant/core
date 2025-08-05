@@ -12,7 +12,7 @@ from .const import DOMAIN, DPCode
 def get_dpcode(
     device: CustomerDevice, dpcodes: str | DPCode | tuple[DPCode, ...] | None
 ) -> DPCode | None:
-    """Get the DPCode from the device or return None."""
+    """Get the first matching DPCode from the device or return None."""
     if dpcodes is None:
         return None
 
