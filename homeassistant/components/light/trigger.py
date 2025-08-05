@@ -28,11 +28,10 @@ BEHAVIOR_FIRST = "first"
 BEHAVIOR_LAST = "last"
 BEHAVIOR_ANY = "any"
 
-STATE_PLATFORM_TYPE = f"{DOMAIN}.state"
+STATE_PLATFORM_TYPE = f"state"
 STATE_TRIGGER_SCHEMA = vol.All(
     cv.TRIGGER_BASE_SCHEMA.extend(
         {
-            vol.Required(CONF_PLATFORM): STATE_PLATFORM_TYPE,
             vol.Required(CONF_STATE): vol.In([STATE_ON, STATE_OFF]),
             vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                 [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
@@ -123,7 +122,7 @@ class StateTrigger(Trigger):
                 {
                     "trigger": {
                         **trigger_data,
-                        CONF_PLATFORM: STATE_PLATFORM_TYPE,
+                        CONF_PLATFORM: self.config[CONF_PLATFORM],
                         ATTR_ENTITY_ID: entity_id,
                         "from_state": from_state,
                         "to_state": to_state,
