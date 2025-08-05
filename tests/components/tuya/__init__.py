@@ -44,7 +44,7 @@ DEVICE_MOCKS = {
     "cs_vmxuxszzjwp5smli": [
         # https://github.com/home-assistant/core/issues/119865
         # Platform.FAN, missing DPCodes in device status
-        Platform.HUMIDIFIER
+        Platform.HUMIDIFIER,
     ],
     "cs_zibqa9dutqyaxym2": [
         Platform.BINARY_SENSOR,
