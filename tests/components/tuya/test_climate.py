@@ -11,6 +11,8 @@ from tuya_sharing import CustomerDevice
 from homeassistant.components.climate import (
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
+    SERVICE_SET_HUMIDITY,
+    SERVICE_SET_TEMPERATURE,
 )
 from homeassistant.components.tuya import ManagerCompat
 from homeassistant.const import Platform
@@ -64,7 +66,37 @@ async def test_platform_setup_no_discovery(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["kt_serenelife_slpac905wuk_air_conditioner"],
+    ["kt_5wnlzekkstwcdsvm"],
+)
+async def test_set_temperature(
+    hass: HomeAssistant,
+    mock_manager: ManagerCompat,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Test set temperature service."""
+    entity_id = "climate.air_conditioner"
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": entity_id,
+            "temperature": 22.7,
+        },
+    )
+    await hass.async_block_till_done()
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id, [{"code": "temp_set", "value": 22}]
+    )
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["kt_5wnlzekkstwcdsvm"],
 )
 async def test_fan_mode_windspeed(
     hass: HomeAssistant,
@@ -95,7 +127,7 @@ async def test_fan_mode_windspeed(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["kt_serenelife_slpac905wuk_air_conditioner"],
+    ["kt_5wnlzekkstwcdsvm"],
 )
 async def test_fan_mode_no_valid_code(
     hass: HomeAssistant,
@@ -122,6 +154,34 @@ async def test_fan_mode_no_valid_code(
             {
                 "entity_id": entity_id,
                 "fan_mode": 2,
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["kt_5wnlzekkstwcdsvm"],
+)
+async def test_set_humidity_not_supported(
+    hass: HomeAssistant,
+    mock_manager: ManagerCompat,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Test set humidity service (not available on this device)."""
+    entity_id = "climate.air_conditioner"
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    with pytest.raises(ServiceNotSupported):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HUMIDITY,
+            {
+                "entity_id": entity_id,
+                "humidity": 50,
             },
             blocking=True,
         )

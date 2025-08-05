@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
@@ -28,3 +29,18 @@ class HusqvarnaAutomowerBleEntity(CoordinatorEntity[HusqvarnaCoordinator]):
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.coordinator.mower.is_connected()
+
+
+class HusqvarnaAutomowerBleDescriptorEntity(HusqvarnaAutomowerBleEntity):
+    """Coordinator entity for entities with entity description."""
+
+    def __init__(
+        self, coordinator: HusqvarnaCoordinator, description: EntityDescription
+    ) -> None:
+        """Initialize description entity."""
+        super().__init__(coordinator)
+
+        self._attr_unique_id = (
+            f"{coordinator.address}_{coordinator.channel_id}_{description.key}"
+        )
+        self.entity_description = description

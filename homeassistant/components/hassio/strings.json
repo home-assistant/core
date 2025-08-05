@@ -9,6 +9,7 @@
       "healthy": "Healthy",
       "host_os": "Host operating system",
       "installed_addons": "Installed add-ons",
+      "nameservers": "Nameservers",
       "supervisor_api": "Supervisor API",
       "supervisor_version": "Supervisor version",
       "supported": "Supported",
@@ -225,6 +226,10 @@
     "unsupported_virtualization_image": {
       "title": "Unsupported system - Incorrect OS image for virtualization",
       "description": "System is unsupported because the Home Assistant OS image in use is not intended for use in a virtualized environment. Use the link to learn more and how to fix this."
+    },
+    "unsupported_os_version": {
+      "title": "Unsupported system - Home Assistant OS version",
+      "description": "System is unsupported because the Home Assistant OS version in use is not supported. Use the link to learn more and how to fix this."
     }
   },
   "entity": {
@@ -238,7 +243,7 @@
         "name": "OS Agent version"
       },
       "apparmor_version": {
-        "name": "Apparmor version"
+        "name": "AppArmor version"
       },
       "cpu_percent": {
         "name": "CPU percent"

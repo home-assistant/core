@@ -5,8 +5,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from openai import AsyncOpenAI
-from python_open_router import OpenRouterClient, OpenRouterError
+from python_open_router import (
+    Model,
+    OpenRouterClient,
+    OpenRouterError,
+    SupportedParameter,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -20,7 +24,6 @@ from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_MODEL
 from homeassistant.core import callback
 from homeassistant.helpers import llm
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -45,7 +48,10 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
-        return {"conversation": ConversationFlowHandler}
+        return {
+            "conversation": ConversationFlowHandler,
+            "ai_task_data": AITaskDataFlowHandler,
+        }
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -80,12 +86,25 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class ConversationFlowHandler(ConfigSubentryFlow):
-    """Handle subentry flow."""
+class OpenRouterSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for OpenRouter."""
 
     def __init__(self) -> None:
         """Initialize the subentry flow."""
-        self.options: dict[str, str] = {}
+        self.models: dict[str, Model] = {}
+
+    async def _get_models(self) -> None:
+        """Fetch models from OpenRouter."""
+        entry = self._get_entry()
+        client = OpenRouterClient(
+            entry.data[CONF_API_KEY], async_get_clientsession(self.hass)
+        )
+        models = await client.get_models()
+        self.models = {model.id: model for model in models}
+
+
+class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
+    """Handle subentry flow."""
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -95,14 +114,20 @@ class ConversationFlowHandler(ConfigSubentryFlow):
             if not user_input.get(CONF_LLM_HASS_API):
                 user_input.pop(CONF_LLM_HASS_API, None)
             return self.async_create_entry(
-                title=self.options[user_input[CONF_MODEL]], data=user_input
+                title=self.models[user_input[CONF_MODEL]].name, data=user_input
             )
-        entry = self._get_entry()
-        client = AsyncOpenAI(
-            base_url="https://openrouter.ai/api/v1",
-            api_key=entry.data[CONF_API_KEY],
-            http_client=get_async_client(self.hass),
-        )
+        try:
+            await self._get_models()
+        except OpenRouterError:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+        options = [
+            SelectOptionDict(value=model.id, label=model.name)
+            for model in self.models.values()
+        ]
+
         hass_apis: list[SelectOptionDict] = [
             SelectOptionDict(
                 label=api.name,
@@ -110,10 +135,6 @@ class ConversationFlowHandler(ConfigSubentryFlow):
             )
             for api in llm.async_get_apis(self.hass)
         ]
-        options = []
-        async for model in client.with_options(timeout=10.0).models.list():
-            options.append(SelectOptionDict(value=model.id, label=model.name))  # type: ignore[attr-defined]
-            self.options[model.id] = model.name  # type: ignore[attr-defined]
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
@@ -136,6 +157,43 @@ class ConversationFlowHandler(ConfigSubentryFlow):
                         default=RECOMMENDED_CONVERSATION_OPTIONS[CONF_LLM_HASS_API],
                     ): SelectSelector(
                         SelectSelectorConfig(options=hass_apis, multiple=True)
+                    ),
+                }
+            ),
+        )
+
+
+class AITaskDataFlowHandler(OpenRouterSubentryFlowHandler):
+    """Handle subentry flow."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """User flow to create a sensor subentry."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self.models[user_input[CONF_MODEL]].name, data=user_input
+            )
+        try:
+            await self._get_models()
+        except OpenRouterError:
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+        options = [
+            SelectOptionDict(value=model.id, label=model.name)
+            for model in self.models.values()
+            if SupportedParameter.STRUCTURED_OUTPUTS in model.supported_parameters
+        ]
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_MODEL): SelectSelector(
+                        SelectSelectorConfig(
+                            options=options, mode=SelectSelectorMode.DROPDOWN, sort=True
+                        ),
                     ),
                 }
             ),
