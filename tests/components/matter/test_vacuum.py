@@ -311,11 +311,11 @@ async def test_get_areas(
     )
     assert response == {
         "vacuum.mock_vacuum": {
-            "areas": [
-                {"area_id": 7, "map_id": 3, "name": "My Location A"},
-                {"area_id": 1234567, "map_id": 3, "name": "My Location B"},
-                {"area_id": 2290649224, "map_id": 245, "name": "My Location C"},
-            ],
+            "areas": {
+                7: {"map_id": 3, "name": "My Location A"},
+                1234567: {"map_id": 3, "name": "My Location B"},
+                2290649224: {"map_id": 245, "name": ""},
+            },
             "maps": [
                 {"map_id": 3, "name": "My Map XX"},
                 {"map_id": 245, "name": "My Map YY"},

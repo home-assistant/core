@@ -32,7 +32,7 @@ from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
-ATTR_AREAS = "areas"
+# ATTR_AREAS = "areas"
 ATTR_CURRENT_AREA = "current_area"
 
 
@@ -193,8 +193,8 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         if not supported_areas:
             raise HomeAssistantError("Can't get areas from the device.")
 
-        # Extract areaID, mapID, and locationName from each area
-        areas = []
+        # Group by area_id: {area_id: {"map_id": ..., "name": ...}}
+        areas = {}
         for area in supported_areas:
             area_id = getattr(area, "areaID", None)
             map_id = getattr(area, "mapID", None)
@@ -204,13 +204,8 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
                 location_info = getattr(area_info, "locationInfo", None)
                 if location_info is not None:
                     location_name = getattr(location_info, "locationName", None)
-            areas.append(
-                {
-                    "area_id": area_id,
-                    "map_id": map_id,
-                    "name": location_name,
-                }
-            )
+            if area_id is not None:
+                areas[area_id] = {"map_id": map_id, "name": location_name}
 
         # Optionally, also extract supported maps if available
         supported_maps = self.get_matter_attribute_value(
@@ -240,8 +235,8 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
         if not supported_areas:
             raise HomeAssistantError("Can't get areas from the device.")
 
-        # Extract areaID, mapID, and locationName from each area
-        areas = []
+        # Group by area_id: {area_id: {"map_id": ..., "name": ...}}
+        areas = {}
         for area in supported_areas:
             area_id = getattr(area, "areaID", None)
             map_id = getattr(area, "mapID", None)
@@ -251,13 +246,8 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
                 location_info = getattr(area_info, "locationInfo", None)
                 if location_info is not None:
                     location_name = getattr(location_info, "locationName", None)
-            areas.append(
-                {
-                    "area_id": area_id,
-                    "map_id": map_id,
-                    "name": location_name,
-                }
-            )
+            if area_id is not None:
+                areas[area_id] = {"map_id": map_id, "name": location_name}
 
         # Optionally, also extract supported maps if available
         supported_maps = self.get_matter_attribute_value(
@@ -321,12 +311,11 @@ class MatterVacuum(MatterEntity, StateVacuumEntity):
             current_area = self.get_matter_attribute_value(
                 clusters.ServiceArea.Attributes.CurrentArea
             )
-        # get CurrentArea name from the areas
-        if current_area is not None and self._attr_areas is not None:
-            for area in self._attr_areas.get("areas", []):
-                if area.get("area_id") == self._attr_current_area:
-                    self._attr_current_area = area.get("name")
-                    break
+            # get the current area "name" attribute from the areas dict if exists or return the area ID
+            self._attr_current_area = (
+                self._attr_areas["areas"].get(current_area, {}).get("name")
+                or current_area
+            )
 
         # optional battery level
         if VacuumEntityFeature.BATTERY & self._attr_supported_features:
