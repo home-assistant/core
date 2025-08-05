@@ -72,7 +72,7 @@ PUBLISHERS = {
     WEATHER: "async_update_weather_stations",
     AIR_CARE: "async_update_air_care",
     PUBLIC: "async_update_public_weather",
-    OPENING: "async_update_weather_stations",
+    OPENING: "async_update_status",
     EVENT: "async_update_events",
 }
 
@@ -93,14 +93,34 @@ DEFAULT_INTERVALS = {
 SCAN_INTERVAL = 60
 
 
-@dataclass
 class NetatmoDevice:
-    """Netatmo device class."""
+    """Netatmo device."""
 
-    data_handler: NetatmoDataHandler
-    device: pyatmo.modules.Module
-    parent_id: str
-    signal_name: str
+    def __init__(
+        self,
+        data_handler: NetatmoDataHandler,
+        device: pyatmo.Home | pyatmo.Module,
+        parent_id: str,
+        signal_name: str,
+    ) -> None:
+        """Initialize the Netatmo device."""
+        self.data_handler = data_handler
+        self.device = device
+        self.module = device  # This line is the key fix
+        self.parent_id = parent_id
+        self.signal_name = signal_name
+
+    @property
+    def station_id(self) -> str:
+        """Return the Netatmo station id."""
+        return self.device.entity_id
+
+    @property
+    def home_id(self) -> str:
+        """Return the Netatmo home id."""
+        if isinstance(self.device, pyatmo.Home):
+            return self.device.entity_id
+        return self.device.home.entity_id
 
 
 @dataclass
@@ -314,7 +334,6 @@ class NetatmoDataHandler:
         """Dispatch the creation of entities."""
         await self.subscribe(WEATHER, WEATHER, None)
         await self.subscribe(AIR_CARE, AIR_CARE, None)
-        await self.subscribe(OPENING, OPENING, None)
 
         self.setup_air_care()
 
@@ -323,6 +342,7 @@ class NetatmoDataHandler:
 
             await self.subscribe(HOME, signal_home, None, home_id=home.entity_id)
             await self.subscribe(EVENT, signal_home, None, home_id=home.entity_id)
+            await self.subscribe(OPENING, signal_home, None, home_id=home.entity_id)
 
             self.setup_climate_schedule_select(home, signal_home)
             self.setup_rooms(home, signal_home)
