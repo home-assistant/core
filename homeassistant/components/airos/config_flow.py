@@ -6,11 +6,11 @@ import logging
 from typing import Any
 
 from airos.exceptions import (
-    ConnectionAuthenticationError,
-    ConnectionSetupError,
-    DataMissingError,
-    DeviceConnectionError,
-    KeyDataMissingError,
+    AirOSConnectionAuthenticationError,
+    AirOSConnectionSetupError,
+    AirOSDataMissingError,
+    AirOSDeviceConnectionError,
+    AirOSKeyDataMissingError,
 )
 import voluptuous as vol
 
@@ -59,13 +59,13 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
                 airos_data = await airos_device.status()
 
             except (
-                ConnectionSetupError,
-                DeviceConnectionError,
+                AirOSConnectionSetupError,
+                AirOSDeviceConnectionError,
             ):
                 errors["base"] = "cannot_connect"
-            except (ConnectionAuthenticationError, DataMissingError):
+            except (AirOSConnectionAuthenticationError, AirOSDataMissingError):
                 errors["base"] = "invalid_auth"
-            except KeyDataMissingError:
+            except AirOSKeyDataMissingError:
                 errors["base"] = "key_data_missing"
             except Exception:
                 _LOGGER.exception("Unexpected exception")

@@ -7,6 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/qbus",
   "integration_type": "hub",
   "iot_class": "local_push",
+  "loggers": ["qbusmqttapi"],
   "mqtt": [
     "cloudapp/QBUSMQTTGW/state",
     "cloudapp/QBUSMQTTGW/config",
