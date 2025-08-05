@@ -42,12 +42,14 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: MieleConfigEntry,
         api: AsyncConfigEntryAuth,
     ) -> None:
         """Initialize the Miele data coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=120),
         )

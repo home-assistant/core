@@ -63,6 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         _LOGGER,
         name=f"Météo-France forecast for city {entry.title}",
+        config_entry=entry,
         update_method=_async_update_data_forecast_forecast,
         update_interval=SCAN_INTERVAL,
     )
@@ -80,6 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         _LOGGER,
         name=f"Météo-France rain for city {entry.title}",
+        config_entry=entry,
         update_method=_async_update_data_rain,
         update_interval=SCAN_INTERVAL_RAIN,
     )
@@ -103,6 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 hass,
                 _LOGGER,
                 name=f"Météo-France alert for department {department}",
+                config_entry=entry,
                 update_method=_async_update_data_alert,
                 update_interval=SCAN_INTERVAL,
             )

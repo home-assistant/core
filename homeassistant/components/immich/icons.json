@@ -11,5 +11,10 @@
         "default": "mdi:file-video"
       }
     }
+  },
+  "services": {
+    "upload_file": {
+      "service": "mdi:upload"
+    }
   }
 }

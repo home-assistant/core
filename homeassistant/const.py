@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2025
-MINOR_VERSION: Final = 8
+MINOR_VERSION: Final = 9
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -245,6 +245,7 @@ CONF_PLATFORM: Final = "platform"
 CONF_PORT: Final = "port"
 CONF_PREFIX: Final = "prefix"
 CONF_PROFILE_NAME: Final = "profile_name"
+CONF_PROMPT: Final = "prompt"
 CONF_PROTOCOL: Final = "protocol"
 CONF_PROXY_SSL: Final = "proxy_ssl"
 CONF_QUOTE: Final = "quote"

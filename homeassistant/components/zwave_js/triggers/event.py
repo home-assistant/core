@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import functools
 
-from pydantic.v1 import ValidationError
+from pydantic import ValidationError
 import voluptuous as vol
 from zwave_js_server.model.controller import CONTROLLER_EVENT_MODEL_MAP
 from zwave_js_server.model.driver import DRIVER_EVENT_MODEL_MAP, Driver
@@ -34,8 +34,11 @@ from ..helpers import (
 )
 from .trigger_helpers import async_bypass_dynamic_config_validation
 
+# Relative platform type should be <SUBMODULE_NAME>
+RELATIVE_PLATFORM_TYPE = f"{__name__.rsplit('.', maxsplit=1)[-1]}"
+
 # Platform type should be <DOMAIN>.<SUBMODULE_NAME>
-PLATFORM_TYPE = f"{DOMAIN}.{__name__.rsplit('.', maxsplit=1)[-1]}"
+PLATFORM_TYPE = f"{DOMAIN}.{RELATIVE_PLATFORM_TYPE}"
 
 
 def validate_non_node_event_source(obj: dict) -> dict:
@@ -78,7 +81,7 @@ def validate_event_data(obj: dict) -> dict:
     except ValidationError as exc:
         # Filter out required field errors if keys can be missing, and if there are
         # still errors, raise an exception
-        if [error for error in exc.errors() if error["type"] != "value_error.missing"]:
+        if [error for error in exc.errors() if error["type"] != "missing"]:
             raise vol.MultipleInvalid from exc
     return obj
 
