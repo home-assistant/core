@@ -46,14 +46,12 @@ def download_file(service: ServiceCall) -> None:
             raise_if_invalid_path(subdir)
         except ValueError as err:
             raise ServiceValidationError(
-                f"Invalid subdirectory, got: {subdir}",
                 translation_domain=DOMAIN,
                 translation_key="subdir_invalid",
                 translation_placeholders={"subdir": subdir},
             ) from err
         if os.path.isabs(subdir):
             raise ServiceValidationError(
-                f"Subdirectory must be relative, got: {subdir}",
                 translation_domain=DOMAIN,
                 translation_key="subdir_not_relative",
                 translation_placeholders={"subdir": subdir},
