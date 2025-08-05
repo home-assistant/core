@@ -41,6 +41,11 @@ DEVICE_MOCKS = {
         Platform.SENSOR,
         Platform.SWITCH,
     ],
+    "cs_qhxmvae667uap4zh": [
+        # https://github.com/home-assistant/core/issues/141278
+        Platform.FAN,
+        Platform.HUMIDIFIER,
+    ],
     "cs_vmxuxszzjwp5smli": [
         # https://github.com/home-assistant/core/issues/119865
         Platform.FAN,
@@ -214,6 +219,16 @@ DEVICE_MOCKS = {
         # https://github.com/home-assistant/core/issues/143499
         Platform.SENSOR,
     ],
+    "fs_g0ewlb1vmwqljzji": [
+        # https://github.com/home-assistant/core/issues/141231
+        Platform.FAN,
+        Platform.LIGHT,
+        Platform.SELECT,
+    ],
+    "fs_ibytpo6fpnugft1c": [
+        # https://github.com/home-assistant/core/issues/135541
+        Platform.FAN,
+    ],
     "gyd_lgekqfxdabipm3tn": [
         # https://github.com/home-assistant/core/issues/133173
         Platform.LIGHT,
@@ -225,6 +240,11 @@ DEVICE_MOCKS = {
     ],
     "kg_gbm9ata1zrzaez4a": [
         # https://github.com/home-assistant/core/issues/148347
+        Platform.SWITCH,
+    ],
+    "kj_CAjWAxBUZt7QZHfz": [
+        # https://github.com/home-assistant/core/issues/146023
+        Platform.FAN,
         Platform.SWITCH,
     ],
     "kj_yrzylxax1qspdgpp": [
@@ -293,6 +313,15 @@ DEVICE_MOCKS = {
         # https://github.com/orgs/home-assistant/discussions/100
         Platform.BINARY_SENSOR,
         Platform.SENSOR,
+    ],
+    "sd_lr33znaodtyarrrz": [
+        # https://github.com/home-assistant/core/issues/141278
+        Platform.BUTTON,
+        Platform.NUMBER,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+        Platform.VACUUM,
     ],
     "sfkzq_o6dagifntoafakst": [
         # https://github.com/home-assistant/core/issues/148116
