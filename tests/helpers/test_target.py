@@ -670,7 +670,7 @@ async def test_async_track_target_selector_state_change_event_filter(
 
     @callback
     def entity_filter(entity_ids: set[str]) -> set[str]:
-        return [entity_id for entity_id in entity_ids if entity_id != filtered_entity]
+        return {entity_id for entity_id in entity_ids if entity_id != filtered_entity}
 
     @callback
     def state_change_callback(event: target.TargetStateChangedData):
