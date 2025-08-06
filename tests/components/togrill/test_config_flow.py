@@ -63,7 +63,7 @@ async def test_failed_connect(
     assert result == snapshot
 
 
-async def test_failed_request(
+async def test_failed_read(
     hass: HomeAssistant,
     mock_client: Mock,
     snapshot: SnapshotAssertion,
@@ -77,7 +77,7 @@ async def test_failed_request(
     )
     assert result == snapshot
 
-    mock_client.request.side_effect = BleakError("something went wrong")
+    mock_client.read.side_effect = BleakError("something went wrong")
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

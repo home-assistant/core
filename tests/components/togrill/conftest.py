@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from togrill_bluetooth.client import Client
-from togrill_bluetooth.packets import Packet, PacketA0Notify
+from togrill_bluetooth.packets import Packet, PacketA0Notify, PacketNotify
 
 from homeassistant.components.togrill.const import CONF_PROBE_COUNT, DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_MODEL
@@ -55,7 +55,9 @@ def mock_client(enable_bluetooth: None, mock_client_class: Mock) -> Generator[Mo
     client_object = Mock(spec=Client)
     client_object.mocked_notify = None
 
-    async def _connect(address: str, callback: Callable[[Packet], None]) -> Mock:
+    async def _connect(
+        address: str, callback: Callable[[Packet], None] | None = None
+    ) -> Mock:
         client_object.mocked_notify = callback
         return client_object
 
@@ -66,8 +68,14 @@ def mock_client(enable_bluetooth: None, mock_client_class: Mock) -> Generator[Mo
         if packet_type is PacketA0Notify:
             client_object.mocked_notify(PacketA0Notify(0, 0, 0, 0, 0, False, 0, False))
 
+    async def _read(packet_type: type[PacketNotify]) -> PacketNotify:
+        if packet_type is PacketA0Notify:
+            return PacketA0Notify(0, 0, 0, 0, 0, False, 0, False)
+        raise NotImplementedError
+
     mock_client_class.connect.side_effect = _connect
     client_object.request.side_effect = _request
+    client_object.read.side_effect = _read
     client_object.disconnect.side_effect = _disconnect
     client_object.is_connected = True
 

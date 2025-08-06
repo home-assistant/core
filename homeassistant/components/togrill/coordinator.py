@@ -18,7 +18,9 @@ from homeassistant.components.bluetooth import (
     async_register_callback,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -26,6 +28,11 @@ type ToGrillConfigEntry = ConfigEntry[ToGrillCoordinator]
 
 SCAN_INTERVAL = timedelta(seconds=30)
 LOGGER = logging.getLogger(__name__)
+
+
+def get_version_string(packet: PacketA0Notify) -> str:
+    """Construct a version string from packet data."""
+    return f"{packet.version_major}.{packet.version_minor}"
 
 
 class DeviceNotFound(UpdateFailed):
@@ -59,10 +66,7 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[int, Packet]]):
         )
         self.address = address
         self.data = {}
-        self.device_info = DeviceInfo(
-            name=config_entry.title, connections={(CONNECTION_BLUETOOTH, address)}
-        )
-
+        self.device_info = DeviceInfo(connections={(CONNECTION_BLUETOOTH, address)})
         self.client = None
 
         config_entry.async_on_unload(
@@ -73,6 +77,33 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[int, Packet]]):
                 BluetoothScanningMode.ACTIVE,
             )
         )
+
+    async def _connect_and_update_registry(self) -> Client:
+        """Update device registry data."""
+        device = bluetooth.async_ble_device_from_address(
+            self.hass, self.address, connectable=True
+        )
+        if not device:
+            raise DeviceNotFound("Unable to find device")
+
+        client = await Client.connect(device, self._notify_callback)
+        try:
+            packet_a0 = await client.read(PacketA0Notify)
+            config_entry = self.config_entry
+
+            device_registry = dr.async_get(self.hass)
+            device_registry.async_get_or_create(
+                config_entry_id=config_entry.entry_id,
+                connections={(CONNECTION_BLUETOOTH, self.address)},
+                name=config_entry.data[CONF_MODEL],
+                model=config_entry.data[CONF_MODEL],
+                sw_version=get_version_string(packet_a0),
+            )
+        except Exception:
+            await client.disconnect()
+            raise
+
+        return client
 
     async def async_shutdown(self) -> None:
         """Shutdown coordinator and disconnect from device."""
@@ -88,13 +119,7 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[int, Packet]]):
         if self.client:
             return self.client
 
-        device = bluetooth.async_ble_device_from_address(
-            self.hass, self.address, connectable=True
-        )
-        if not device:
-            raise DeviceNotFound("Unable to find device")
-
-        self.client = await Client.connect(device, self._notify_callback)
+        self.client = await self._connect_and_update_registry()
         return self.client
 
     def _notify_callback(self, packet: Packet):

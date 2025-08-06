@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_setup[battery][sensor.mock_title_battery-entry]
+# name: test_setup[battery][sensor.pro_05_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -14,7 +14,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_title_battery',
+    'entity_id': 'sensor.pro_05_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -39,23 +39,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_setup[battery][sensor.mock_title_battery-state]
+# name: test_setup[battery][sensor.pro_05_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Mock Title Battery',
+      'friendly_name': 'Pro-05 Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_battery',
+    'entity_id': 'sensor.pro_05_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '45',
   })
 # ---
-# name: test_setup[battery][sensor.mock_title_probe_1-entry]
+# name: test_setup[battery][sensor.pro_05_probe_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -70,7 +70,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_title_probe_1',
+    'entity_id': 'sensor.pro_05_probe_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -95,23 +95,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[battery][sensor.mock_title_probe_1-state]
+# name: test_setup[battery][sensor.pro_05_probe_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Mock Title Probe 1',
+      'friendly_name': 'Pro-05 Probe 1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_probe_1',
+    'entity_id': 'sensor.pro_05_probe_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_setup[battery][sensor.mock_title_probe_2-entry]
+# name: test_setup[battery][sensor.pro_05_probe_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -126,7 +126,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_title_probe_2',
+    'entity_id': 'sensor.pro_05_probe_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -151,71 +151,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[battery][sensor.mock_title_probe_2-state]
+# name: test_setup[battery][sensor.pro_05_probe_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Mock Title Probe 2',
+      'friendly_name': 'Pro-05 Probe 2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_probe_2',
+    'entity_id': 'sensor.pro_05_probe_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_setup[battery][sensor.mock_title_version-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_title_version',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Version',
-    'platform': 'togrill',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'version',
-    'unique_id': '00000000-0000-0000-0000-000000000001_version',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_setup[battery][sensor.mock_title_version-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Version',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_title_version',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1.5',
-  })
-# ---
-# name: test_setup[no_data][sensor.mock_title_battery-entry]
+# name: test_setup[no_data][sensor.pro_05_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -230,7 +182,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_title_battery',
+    'entity_id': 'sensor.pro_05_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -255,23 +207,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_setup[no_data][sensor.mock_title_battery-state]
+# name: test_setup[no_data][sensor.pro_05_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Mock Title Battery',
+      'friendly_name': 'Pro-05 Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_battery',
+    'entity_id': 'sensor.pro_05_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_setup[no_data][sensor.mock_title_probe_1-entry]
+# name: test_setup[no_data][sensor.pro_05_probe_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -286,7 +238,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_title_probe_1',
+    'entity_id': 'sensor.pro_05_probe_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -311,23 +263,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[no_data][sensor.mock_title_probe_1-state]
+# name: test_setup[no_data][sensor.pro_05_probe_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Mock Title Probe 1',
+      'friendly_name': 'Pro-05 Probe 1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_probe_1',
+    'entity_id': 'sensor.pro_05_probe_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_setup[no_data][sensor.mock_title_probe_2-entry]
+# name: test_setup[no_data][sensor.pro_05_probe_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -342,7 +294,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_title_probe_2',
+    'entity_id': 'sensor.pro_05_probe_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -367,71 +319,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[no_data][sensor.mock_title_probe_2-state]
+# name: test_setup[no_data][sensor.pro_05_probe_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Mock Title Probe 2',
+      'friendly_name': 'Pro-05 Probe 2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_probe_2',
+    'entity_id': 'sensor.pro_05_probe_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_setup[no_data][sensor.mock_title_version-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_title_version',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Version',
-    'platform': 'togrill',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'version',
-    'unique_id': '00000000-0000-0000-0000-000000000001_version',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_setup[no_data][sensor.mock_title_version-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Version',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_title_version',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_setup[temp_data][sensor.mock_title_battery-entry]
+# name: test_setup[temp_data][sensor.pro_05_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -446,7 +350,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_title_battery',
+    'entity_id': 'sensor.pro_05_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -471,23 +375,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_setup[temp_data][sensor.mock_title_battery-state]
+# name: test_setup[temp_data][sensor.pro_05_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Mock Title Battery',
+      'friendly_name': 'Pro-05 Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_battery',
+    'entity_id': 'sensor.pro_05_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_setup[temp_data][sensor.mock_title_probe_1-entry]
+# name: test_setup[temp_data][sensor.pro_05_probe_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -502,7 +406,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_title_probe_1',
+    'entity_id': 'sensor.pro_05_probe_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -527,23 +431,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[temp_data][sensor.mock_title_probe_1-state]
+# name: test_setup[temp_data][sensor.pro_05_probe_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Mock Title Probe 1',
+      'friendly_name': 'Pro-05 Probe 1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_probe_1',
+    'entity_id': 'sensor.pro_05_probe_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
 # ---
-# name: test_setup[temp_data][sensor.mock_title_probe_2-entry]
+# name: test_setup[temp_data][sensor.pro_05_probe_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -558,7 +462,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_title_probe_2',
+    'entity_id': 'sensor.pro_05_probe_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -583,71 +487,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[temp_data][sensor.mock_title_probe_2-state]
+# name: test_setup[temp_data][sensor.pro_05_probe_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Mock Title Probe 2',
+      'friendly_name': 'Pro-05 Probe 2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_probe_2',
+    'entity_id': 'sensor.pro_05_probe_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_setup[temp_data][sensor.mock_title_version-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_title_version',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Version',
-    'platform': 'togrill',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'version',
-    'unique_id': '00000000-0000-0000-0000-000000000001_version',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_setup[temp_data][sensor.mock_title_version-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Version',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_title_version',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_setup[temp_data_missing_probe][sensor.mock_title_battery-entry]
+# name: test_setup[temp_data_missing_probe][sensor.pro_05_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -662,7 +518,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_title_battery',
+    'entity_id': 'sensor.pro_05_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -687,23 +543,23 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_setup[temp_data_missing_probe][sensor.mock_title_battery-state]
+# name: test_setup[temp_data_missing_probe][sensor.pro_05_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Mock Title Battery',
+      'friendly_name': 'Pro-05 Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_battery',
+    'entity_id': 'sensor.pro_05_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_setup[temp_data_missing_probe][sensor.mock_title_probe_1-entry]
+# name: test_setup[temp_data_missing_probe][sensor.pro_05_probe_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -718,7 +574,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_title_probe_1',
+    'entity_id': 'sensor.pro_05_probe_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -743,23 +599,23 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[temp_data_missing_probe][sensor.mock_title_probe_1-state]
+# name: test_setup[temp_data_missing_probe][sensor.pro_05_probe_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Mock Title Probe 1',
+      'friendly_name': 'Pro-05 Probe 1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_probe_1',
+    'entity_id': 'sensor.pro_05_probe_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10',
   })
 # ---
-# name: test_setup[temp_data_missing_probe][sensor.mock_title_probe_2-entry]
+# name: test_setup[temp_data_missing_probe][sensor.pro_05_probe_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -774,7 +630,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mock_title_probe_2',
+    'entity_id': 'sensor.pro_05_probe_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -799,67 +655,19 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[temp_data_missing_probe][sensor.mock_title_probe_2-state]
+# name: test_setup[temp_data_missing_probe][sensor.pro_05_probe_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Mock Title Probe 2',
+      'friendly_name': 'Pro-05 Probe 2',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_probe_2',
+    'entity_id': 'sensor.pro_05_probe_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
-  })
-# ---
-# name: test_setup[temp_data_missing_probe][sensor.mock_title_version-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_title_version',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Version',
-    'platform': 'togrill',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'version',
-    'unique_id': '00000000-0000-0000-0000-000000000001_version',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_setup[temp_data_missing_probe][sensor.mock_title_version-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Version',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_title_version',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
   })
 # ---

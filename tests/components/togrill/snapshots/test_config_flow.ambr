@@ -117,7 +117,7 @@
     'type': <FlowResultType.ABORT: 'abort'>,
   })
 # ---
-# name: test_failed_request
+# name: test_failed_read
   FlowResultSnapshot({
     'data_schema': list([
       dict({
@@ -142,7 +142,7 @@
     'type': <FlowResultType.FORM: 'form'>,
   })
 # ---
-# name: test_failed_request.1
+# name: test_failed_read.1
   FlowResultSnapshot({
     'description_placeholders': None,
     'flow_id': <ANY>,

@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 from bleak.exc import BleakError
 from togrill_bluetooth import SUPPORTED_DEVICES
 from togrill_bluetooth.client import Client
-from togrill_bluetooth.packets import Packet, PacketA0Notify
+from togrill_bluetooth.packets import PacketA0Notify
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
@@ -31,22 +30,14 @@ async def read_config_data(
 ) -> dict[str, Any]:
     """Read config from device."""
 
-    packet_a0_future = asyncio.Future[PacketA0Notify]()
-
-    def _notify_callback(packet: Packet):
-        if isinstance(packet, PacketA0Notify):
-            packet_a0_future.set_result(packet)
-
     try:
-        client = await Client.connect(info.device, _notify_callback)
+        client = await Client.connect(info.device)
     except BleakError as exc:
         LOGGER.debug("Failed to connect", exc_info=True)
         raise AbortFlow("failed_to_read_config") from exc
 
     try:
-        await client.request(PacketA0Notify)
-        async with asyncio.timeout(_TIMEOUT):
-            packet_a0 = await packet_a0_future
+        packet_a0 = await client.read(PacketA0Notify)
     except BleakError as exc:
         LOGGER.debug("Failed to read data", exc_info=True)
         raise AbortFlow("failed_to_read_config") from exc

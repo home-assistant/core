@@ -62,3 +62,31 @@ async def test_client_reconnect(
 
     await hass.async_block_till_done()
     assert coordinator.last_update_success
+
+
+async def test_client_fail_during_connection_reads(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_entry: MockConfigEntry,
+    mock_client: Mock,
+    mock_client_class: Mock,
+) -> None:
+    """Test that coordinator handles a disconnected client."""
+
+    inject_bluetooth_service_info(hass, TOGRILL_SERVICE_INFO)
+
+    await setup_entry(hass, mock_entry, [])
+
+    coordinator: ToGrillCoordinator = mock_entry.runtime_data
+    await coordinator.async_refresh()
+    assert coordinator.last_update_success
+
+    mock_client.is_connected = False
+    mock_client.read.side_effect = BleakError("Failed to read data")
+
+    await coordinator.async_refresh()
+    assert not coordinator.last_update_success
+    assert isinstance(coordinator.last_exception, DeviceFailed)
+
+    # make sure client is closed first normally, then on failure
+    assert mock_client.disconnect.call_count == 2

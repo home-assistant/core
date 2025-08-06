@@ -61,11 +61,6 @@ def _get_temperature_description(probe_number: int):
     )
 
 
-def _get_version_string(packet: Packet) -> str:
-    assert isinstance(packet, PacketA0Notify)
-    return f"{packet.version_major}.{packet.version_minor}"
-
-
 ENTITY_DESCRIPTIONS = (
     ToGrillSensorEntityDescription(
         key="battery",
@@ -77,13 +72,6 @@ ENTITY_DESCRIPTIONS = (
         suggested_display_precision=0,
         packet_type=PacketA0Notify.type,
         packet_extract=lambda packet: cast(PacketA0Notify, packet).battery,
-    ),
-    ToGrillSensorEntityDescription(
-        key="version",
-        translation_key="version",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        packet_type=PacketA0Notify.type,
-        packet_extract=_get_version_string,
     ),
     *[
         _get_temperature_description(probe_number)
