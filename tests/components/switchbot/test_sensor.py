@@ -321,11 +321,11 @@ async def test_hub2_sensor(hass: HomeAssistant) -> None:
     assert light_level_sensor.state == "4"
     assert light_level_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Light level"
 
-    light_level_sensor = hass.states.get("sensor.test_name_illuminance")
-    light_level_sensor_attrs = light_level_sensor.attributes
-    assert light_level_sensor.state == "30"
-    assert light_level_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Illuminance"
-    assert light_level_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "lx"
+    illuminance_sensor = hass.states.get("sensor.test_name_illuminance")
+    illuminance_sensor = light_level_sensor.attributes
+    assert illuminance_sensor.state == "30"
+    assert illuminance_sensor[ATTR_FRIENDLY_NAME] == "test-name Illuminance"
+    assert illuminance_sensor[ATTR_UNIT_OF_MEASUREMENT] == "lx"
 
     rssi_sensor = hass.states.get("sensor.test_name_bluetooth_signal")
     rssi_sensor_attrs = rssi_sensor.attributes
