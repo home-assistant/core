@@ -16,8 +16,3 @@ class ToGrillEntity(CoordinatorEntity[ToGrillCoordinator]):
         """Initialize coordinator entity."""
         super().__init__(coordinator)
         self._attr_device_info = coordinator.device_info
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self.coordinator.last_update_success and self._attr_available
