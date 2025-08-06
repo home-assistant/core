@@ -163,12 +163,13 @@ async def test_switch_speech_enhancement(
     model: str,
     attribute: str,
 ) -> None:
-    """Test for correct Sonos switch states."""
+    """Tests the speech enhancement switch and attribute substitution for different models."""
+    entity_id = "switch.zone_a_speech_enhancement"
     speaker_info["model_name"] = model
     soco.get_speaker_info.return_value = speaker_info
     setattr(soco, attribute, True)
     await async_setup_sonos()
-    switch = entity_registry.entities["switch.zone_a_speech_enhancement"]
+    switch = entity_registry.entities[entity_id]
     state = hass.states.get(switch.entity_id)
     assert state.state == STATE_ON
 
@@ -183,7 +184,7 @@ async def test_switch_speech_enhancement(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.zone_a_speech_enhancement"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
     assert getattr(soco, attribute) is True

@@ -887,7 +887,7 @@ def ungroup_speakers(coordinator: MockSoCo, group_member: MockSoCo) -> None:
 def create_rendering_control_event(
     soco: MockSoCo,
 ) -> SonosMockEvent:
-    """Create a Sonos Event for zone group state, with the option of creating the uui_ds_in_group."""
+    """Create a Sonos Event for speaker rendering control."""
     variables = {
         "dialog_level": 1,
         "speech_enhance_enable": 1,
