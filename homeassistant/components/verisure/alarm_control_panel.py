@@ -68,7 +68,7 @@ class VerisureAlarm(
         LOGGER.debug("Verisure set arm state %s", state)
         result = None
         attempts = 0
-        while result != "OK":
+        while result is None:
             if attempts == 30:
                 break
             if attempts > 1:
