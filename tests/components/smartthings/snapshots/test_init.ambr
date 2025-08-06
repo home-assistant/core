@@ -30,7 +30,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -63,7 +62,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Toilet',
     'sw_version': None,
     'via_device_id': None,
   })
@@ -96,7 +94,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -129,7 +126,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
@@ -162,7 +158,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -195,7 +190,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
@@ -228,7 +222,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -261,7 +254,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
@@ -294,7 +286,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
@@ -327,7 +318,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': 'ASM-KR-TP1-22-ACMB1M_16240426',
     'via_device_id': None,
   })
@@ -360,7 +350,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': 'AEH-WW-TP1-22-AE6000_17240903',
     'via_device_id': None,
   })
@@ -393,7 +382,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
@@ -426,7 +414,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': 'ARTIK051_PRAC_20K_11230313',
     'via_device_id': None,
   })
@@ -459,7 +446,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': 'ARA-WW-TP1-22-COMMON_11240702',
     'via_device_id': None,
   })
@@ -492,7 +478,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
@@ -525,7 +510,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -558,7 +542,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': 'AKS-WW-TP2-20-MICROWAVE-OTR_40230125',
     'via_device_id': None,
   })
@@ -591,7 +574,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': 'AKS-WW-TP1X-21-OVEN_40211229',
     'via_device_id': None,
   })
@@ -624,7 +606,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': 'AKS-WW-TP1-20-OVEN-3-CR_40240205',
     'via_device_id': None,
   })
@@ -657,7 +638,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': 'A-RFWW-TP2-21-COMMON_20220110',
     'via_device_id': None,
   })
@@ -690,7 +670,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '20240616.213423',
     'via_device_id': None,
   })
@@ -723,8 +702,39 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': 'A-RFWW-TP1-22-REV1_20241030',
+    'via_device_id': None,
+  })
+# ---
+# name: test_devices[da_rvc_map_01011]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'https://account.smartthings.com',
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '05accb39-2017-c98b-a5ab-04a81f4d3d9a',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Samsung Electronics',
+    'model': 'JETBOT_COMBO_9X00_24K',
+    'model_id': None,
+    'name': 'Robot vacuum',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '20250123.105306',
     'via_device_id': None,
   })
 # ---
@@ -756,7 +766,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': '1.0',
     'via_device_id': None,
   })
@@ -789,7 +798,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '20250317.1',
     'via_device_id': None,
   })
@@ -822,7 +830,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '20250317.1',
     'via_device_id': None,
   })
@@ -855,7 +862,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '20250317.1',
     'via_device_id': None,
   })
@@ -888,7 +894,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': 'DA_DW_A51_20_COMMON_30230714',
     'via_device_id': None,
   })
@@ -921,7 +926,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': 'DA_DF_TP2_20_COMMON_30230807',
     'via_device_id': None,
   })
@@ -954,7 +958,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': 'DA_WM_A51_20_COMMON_30230708',
     'via_device_id': None,
   })
@@ -987,7 +990,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': 'DA_WM_A51_20_COMMON_30230708',
     'via_device_id': None,
   })
@@ -1020,7 +1022,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': 'DA_WM_TP2_20_COMMON_30230804',
     'via_device_id': None,
   })
@@ -1053,7 +1054,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': 'DA_WM_A51_20_COMMON_30230708',
     'via_device_id': None,
   })
@@ -1086,7 +1086,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': 'DA_WM_TP1_21_COMMON_30240927',
     'via_device_id': None,
   })
@@ -1119,7 +1118,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -1152,7 +1150,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '250206213001',
     'via_device_id': None,
   })
@@ -1185,7 +1182,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '250206151734',
     'via_device_id': None,
   })
@@ -1218,7 +1214,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '250308073247',
     'via_device_id': None,
   })
@@ -1251,7 +1246,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
@@ -1284,7 +1278,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -1317,7 +1310,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
@@ -1350,7 +1342,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -1383,7 +1374,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -1416,7 +1406,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -1449,7 +1438,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -1482,7 +1470,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.122.2',
     'via_device_id': None,
   })
@@ -1515,7 +1502,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.122.2',
     'via_device_id': None,
   })
@@ -1548,7 +1534,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': 'HW-Q80RWWB-1012.6',
     'via_device_id': None,
   })
@@ -1581,7 +1566,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -1614,7 +1598,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -1647,7 +1630,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': 'V310XXU1AWK1',
     'via_device_id': None,
   })
@@ -1680,7 +1662,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -1713,7 +1694,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -1746,7 +1726,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
@@ -1779,7 +1758,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '6004971003',
     'via_device_id': None,
   })
@@ -1812,7 +1790,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': 'SKY40147',
     'via_device_id': None,
   })
@@ -1845,7 +1822,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
@@ -1878,7 +1854,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
@@ -1911,7 +1886,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.3.1 Build 240621 Rel.162048',
     'via_device_id': None,
   })
@@ -1944,7 +1918,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': 'SAT-iMX8M23WWC-1010.5',
     'via_device_id': None,
   })
@@ -1977,7 +1950,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': 'SAT-MT8532D24WWC-1016.0',
     'via_device_id': None,
   })
@@ -2010,7 +1982,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': 'latest',
     'via_device_id': None,
   })
@@ -2043,7 +2014,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': 'T-KTMAKUC-1290.3',
     'via_device_id': None,
   })
@@ -2076,7 +2046,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
@@ -2109,7 +2078,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
@@ -2142,7 +2110,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
@@ -2175,7 +2142,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': None,
     'via_device_id': None,
   })
@@ -2212,7 +2178,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'Theater',
     'sw_version': '000.055.00005',
     'via_device_id': None,
   })

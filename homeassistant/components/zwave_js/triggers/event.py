@@ -5,9 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 import functools
 
-from pydantic.v1 import ValidationError
+from pydantic import ValidationError
 import voluptuous as vol
-from zwave_js_server.client import Client
 from zwave_js_server.model.controller import CONTROLLER_EVENT_MODEL_MAP
 from zwave_js_server.model.driver import DRIVER_EVENT_MODEL_MAP, Driver
 from zwave_js_server.model.node import NODE_EVENT_MODEL_MAP
@@ -26,7 +25,6 @@ from ..const import (
     ATTR_EVENT_SOURCE,
     ATTR_NODE_ID,
     ATTR_PARTIAL_DICT_MATCH,
-    DATA_CLIENT,
     DOMAIN,
 )
 from ..helpers import (
@@ -80,7 +78,7 @@ def validate_event_data(obj: dict) -> dict:
     except ValidationError as exc:
         # Filter out required field errors if keys can be missing, and if there are
         # still errors, raise an exception
-        if [error for error in exc.errors() if error["type"] != "value_error.missing"]:
+        if [error for error in exc.errors() if error["type"] != "missing"]:
             raise vol.MultipleInvalid from exc
     return obj
 
@@ -219,7 +217,7 @@ async def async_attach_trigger(
             entry_id = config[ATTR_CONFIG_ENTRY_ID]
             entry = hass.config_entries.async_get_entry(entry_id)
             assert entry
-            client: Client = entry.runtime_data[DATA_CLIENT]
+            client = entry.runtime_data.client
             driver = client.driver
             assert driver
             drivers.add(driver)

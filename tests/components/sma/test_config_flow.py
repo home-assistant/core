@@ -30,13 +30,13 @@ from tests.conftest import MockConfigEntry
 DHCP_DISCOVERY = DhcpServiceInfo(
     ip="1.1.1.1",
     hostname="SMA123456",
-    macaddress="0015BB00abcd",
+    macaddress="0015bb00abcd",
 )
 
 DHCP_DISCOVERY_DUPLICATE = DhcpServiceInfo(
     ip="1.1.1.1",
     hostname="SMA123456789",
-    macaddress="0015BB00abcd",
+    macaddress="0015bb00abcd",
 )
 
 DHCP_DISCOVERY_DUPLICATE_001 = DhcpServiceInfo(

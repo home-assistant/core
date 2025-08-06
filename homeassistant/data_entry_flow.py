@@ -677,9 +677,10 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
                 and key in suggested_values
             ):
                 new_section_key = copy.copy(key)
-                schema[new_section_key] = val
-                val.schema = self.add_suggested_values_to_schema(
-                    val.schema, suggested_values[key]
+                new_val = copy.copy(val)
+                schema[new_section_key] = new_val
+                new_val.schema = self.add_suggested_values_to_schema(
+                    new_val.schema, suggested_values[key]
                 )
                 continue
 

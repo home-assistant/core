@@ -28,6 +28,7 @@
     'HTTPS': True,
     'IPC cams': dict({
       '0': dict({
+        'WiFi signal': -45,
         'encoding main': 'h264',
         'firmware version': 'v1.1.0.0.0.0000',
         'hardware version': 'IPC_00001',
@@ -37,8 +38,8 @@
     'ONVIF enabled': True,
     'RTMP enabled': True,
     'RTSP enabled': True,
-    'WiFi connection': False,
-    'WiFi signal': None,
+    'WiFi connection': True,
+    'WiFi signal': -45,
     'abilities': dict({
       'abilityChn': list([
         dict({
@@ -73,6 +74,10 @@
         'null': 1,
       }),
       '299': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      '594': dict({
         '0': 1,
         'null': 1,
       }),
