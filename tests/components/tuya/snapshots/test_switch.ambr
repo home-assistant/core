@@ -1354,6 +1354,54 @@
     'state': 'on',
   })
 # ---
+# name: test_platform_setup_and_discovery[mzj_qavcakohisj5adyh][switch.sous_vide_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.sous_vide_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Start',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'start',
+    'unique_id': 'tuya.bff434eca843ffc9afmthvstart',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[mzj_qavcakohisj5adyh][switch.sous_vide_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Sous Vide Start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.sous_vide_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_platform_setup_and_discovery[pc_t2afic7i3v1bwhfp][switch.bubbelbad_socket_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

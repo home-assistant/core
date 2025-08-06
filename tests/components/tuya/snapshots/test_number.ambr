@@ -469,6 +469,122 @@
     'state': '3.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[mzj_qavcakohisj5adyh][number.sous_vide_cook_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 92.5,
+      'min': 25.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.sous_vide_cook_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cook temperature',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cook_temperature',
+    'unique_id': 'tuya.bff434eca843ffc9afmthvcook_temperature',
+    'unit_of_measurement': '℃',
+  })
+# ---
+# name: test_platform_setup_and_discovery[mzj_qavcakohisj5adyh][number.sous_vide_cook_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Sous Vide Cook temperature',
+      'max': 92.5,
+      'min': 25.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 0.1,
+      'unit_of_measurement': '℃',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.sous_vide_cook_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[mzj_qavcakohisj5adyh][number.sous_vide_cook_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 5999.0,
+      'min': 1.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.sous_vide_cook_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cook time',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cook_time',
+    'unique_id': 'tuya.bff434eca843ffc9afmthvcook_time',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[mzj_qavcakohisj5adyh][number.sous_vide_cook_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Sous Vide Cook time',
+      'max': 5999.0,
+      'min': 1.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.sous_vide_cook_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][number.v20_volume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
