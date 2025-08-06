@@ -1,4 +1,4 @@
-"""Support for switch entities."""
+"""Support for sensor entities."""
 
 from __future__ import annotations
 
@@ -29,7 +29,6 @@ from .entity import ToGrillEntity
 class ToGrillSensorEntityDescription(SensorEntityDescription):
     """Description of entity."""
 
-    has_entity_name: bool = True
     packet_type: int
     packet_extract: Callable[[Packet], StateType]
     entity_supported: Callable[[Mapping[str, Any]], bool] = lambda _: True
@@ -116,6 +115,7 @@ class ToGrillSensor(ToGrillEntity, SensorEntity):
     """Representation of a sensor."""
 
     entity_description: ToGrillSensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
         self,
