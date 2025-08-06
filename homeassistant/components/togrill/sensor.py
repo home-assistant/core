@@ -102,7 +102,6 @@ class ToGrillSensor(ToGrillEntity, SensorEntity):
     """Representation of a sensor."""
 
     entity_description: ToGrillSensorEntityDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
