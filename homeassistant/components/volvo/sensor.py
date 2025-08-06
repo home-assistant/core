@@ -35,7 +35,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_BATTERY_CAPACITY
+from .const import API_NONE_VALUE, DATA_BATTERY_CAPACITY
 from .coordinator import VolvoBaseCoordinator, VolvoConfigEntry
 from .entity import VolvoEntity, VolvoEntityDescription, value_to_translation_key
 
@@ -392,7 +392,7 @@ class VolvoSensor(VolvoEntity, SensorEntity):
             native_value = str(native_value)
             native_value = (
                 value_to_translation_key(native_value)
-                if native_value.upper() != "UNSPECIFIED"
+                if native_value.upper() != API_NONE_VALUE
                 else None
             )
 

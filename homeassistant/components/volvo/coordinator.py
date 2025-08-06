@@ -28,6 +28,7 @@ from .const import DATA_BATTERY_CAPACITY, DOMAIN
 VERY_SLOW_INTERVAL = 60
 SLOW_INTERVAL = 15
 MEDIUM_INTERVAL = 2
+FAST_INTERVAL = 1
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -170,9 +171,13 @@ class VolvoVerySlowIntervalCoordinator(VolvoBaseCoordinator):
         self,
     ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
         return [
+            self.api.async_get_brakes_status,
             self.api.async_get_diagnostics,
+            self.api.async_get_engine_warnings,
             self.api.async_get_odometer,
             self.api.async_get_statistics,
+            self.api.async_get_tyre_states,
+            self.api.async_get_warnings,
         ]
 
     async def _async_update_data(self) -> CoordinatorData:
@@ -246,10 +251,45 @@ class VolvoMediumIntervalCoordinator(VolvoBaseCoordinator):
     async def _async_determine_api_calls(
         self,
     ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
+        api_calls: list[Any] = []
+
         if self.vehicle.has_battery_engine():
             capabilities = await self.api.async_get_energy_capabilities()
 
             if capabilities.get("isSupported", False):
-                return [self.api.async_get_energy_state]
+                api_calls.append(self.api.async_get_energy_state)
 
-        return []
+        if self.vehicle.has_combustion_engine():
+            api_calls.append(self.api.async_get_engine_status)
+
+        return api_calls
+
+
+class VolvoFastIntervalCoordinator(VolvoBaseCoordinator):
+    """Volvo coordinator with fast update rate."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: VolvoConfigEntry,
+        api: VolvoCarsApi,
+        vehicle: VolvoCarsVehicle,
+    ) -> None:
+        """Initialize the coordinator."""
+
+        super().__init__(
+            hass,
+            entry,
+            api,
+            vehicle,
+            timedelta(minutes=FAST_INTERVAL),
+            "Volvo fast interval coordinator",
+        )
+
+    async def _async_determine_api_calls(
+        self,
+    ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
+        return [
+            self.api.async_get_doors_status,
+            self.api.async_get_window_states,
+        ]
