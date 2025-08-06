@@ -8,6 +8,7 @@ from aiowebostv import WebOsClient, WebOsTvPairError
 
 from homeassistant.components import notify as hass_notify
 from homeassistant.const import (
+    ATTR_CONFIG_ENTRY_ID,
     CONF_CLIENT_SECRET,
     CONF_HOST,
     CONF_NAME,
@@ -20,13 +21,7 @@ from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    ATTR_CONFIG_ENTRY_ID,
-    DATA_HASS_CONFIG,
-    DOMAIN,
-    PLATFORMS,
-    WEBOSTV_EXCEPTIONS,
-)
+from .const import DATA_HASS_CONFIG, DOMAIN, PLATFORMS, WEBOSTV_EXCEPTIONS
 from .helpers import WebOsTvConfigEntry, update_client_key
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
