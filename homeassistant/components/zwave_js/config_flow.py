@@ -27,7 +27,6 @@ from homeassistant.components.hassio import (
 )
 from homeassistant.config_entries import (
     SOURCE_USB,
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -62,11 +61,14 @@ from .const import (
     CONF_S2_UNAUTHENTICATED_KEY,
     CONF_USB_PATH,
     CONF_USE_ADDON,
-    DATA_CLIENT,
     DOMAIN,
-    DRIVER_READY_TIMEOUT,
 )
-from .helpers import CannotConnect, async_get_version_info
+from .helpers import (
+    CannotConnect,
+    async_get_version_info,
+    async_wait_for_driver_ready_event,
+)
+from .models import ZwaveJSConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,6 +93,10 @@ MIN_MIGRATION_SDK_VERSION = AwesomeVersion("6.61")
 
 NETWORK_TYPE_NEW = "new"
 NETWORK_TYPE_EXISTING = "existing"
+ZWAVE_JS_UI_MIGRATION_INSTRUCTIONS = (
+    "https://www.home-assistant.io/integrations/zwave_js/"
+    "#how-to-migrate-from-one-adapter-to-a-new-adapter-using-z-wave-js-ui"
+)
 
 
 def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
@@ -185,7 +191,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.backup_filepath: Path | None = None
         self.use_addon = False
         self._migrating = False
-        self._reconfigure_config_entry: ConfigEntry | None = None
+        self._reconfigure_config_entry: ZwaveJSConfigEntry | None = None
         self._usb_discovery = False
         self._recommended_install = False
 
@@ -444,7 +450,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 None,
             )
             if not self._reconfigure_config_entry:
-                return self.async_abort(reason="addon_required")
+                return self.async_abort(
+                    reason="addon_required",
+                    description_placeholders={
+                        "zwave_js_ui_migration": ZWAVE_JS_UI_MIGRATION_INSTRUCTIONS,
+                    },
+                )
 
         vid = discovery_info.vid
         pid = discovery_info.pid
@@ -888,7 +899,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
         if not self._usb_discovery and not config_entry.data.get(CONF_USE_ADDON):
-            return self.async_abort(reason="addon_required")
+            return self.async_abort(
+                reason="addon_required",
+                description_placeholders={
+                    "zwave_js_ui_migration": ZWAVE_JS_UI_MIGRATION_INSTRUCTIONS,
+                },
+            )
 
         try:
             driver = self._get_driver()
@@ -1397,19 +1413,15 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     event["bytesWritten"] / event["total"] * 0.5 + 0.5
                 )
 
-        @callback
-        def set_driver_ready(event: dict) -> None:
-            "Set the driver ready event."
-            wait_driver_ready.set()
-
         driver = self._get_driver()
         controller = driver.controller
-        wait_driver_ready = asyncio.Event()
         unsubs = [
             controller.on("nvm convert progress", forward_progress),
             controller.on("nvm restore progress", forward_progress),
-            driver.once("driver ready", set_driver_ready),
         ]
+
+        wait_for_driver_ready = async_wait_for_driver_ready_event(config_entry, driver)
+
         try:
             await controller.async_restore_nvm(
                 self.backup_data, {"preserveRoutes": False}
@@ -1418,8 +1430,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             raise AbortFlow(f"Failed to restore network: {err}") from err
         else:
             with suppress(TimeoutError):
-                async with asyncio.timeout(DRIVER_READY_TIMEOUT):
-                    await wait_driver_ready.wait()
+                await wait_for_driver_ready()
             try:
                 version_info = await async_get_version_info(
                     self.hass, config_entry.data[CONF_URL]
@@ -1436,10 +1447,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(
                     config_entry, unique_id=str(version_info.home_id)
                 )
-            await self.hass.config_entries.async_reload(config_entry.entry_id)
 
-            # Reload the config entry two times to clean up
-            # the stale device entry.
+            # The config entry will be also be reloaded when the driver is ready,
+            # by the listener in the package module,
+            # and two reloads are needed to clean up the stale controller device entry.
             # Since both the old and the new controller have the same node id,
             # but different hardware identifiers, the integration
             # will create a new device for the new controller, on the first reload,
@@ -1456,7 +1467,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         assert config_entry is not None
         if config_entry.state != ConfigEntryState.LOADED:
             raise AbortFlow("Configuration entry is not loaded")
-        client: Client = config_entry.runtime_data[DATA_CLIENT]
+        client: Client = config_entry.runtime_data.client
         assert client.driver is not None
         return client.driver
 

@@ -26,14 +26,14 @@ def alexa_api_call[_T: AmazonEntity, **_P](
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="cannot_connect",
+                translation_key="cannot_connect_with_error",
                 translation_placeholders={"error": repr(err)},
             ) from err
         except CannotRetrieveData as err:
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="cannot_retrieve_data",
+                translation_key="cannot_retrieve_data_with_error",
                 translation_placeholders={"error": repr(err)},
             ) from err
 

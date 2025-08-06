@@ -314,6 +314,7 @@ async def test_option_flow_led_settings_fail_2(
         (STEP_PICK_FIRMWARE_THREAD, ApplicationType.SPINEL, "2.4.4.0"),
     ],
 )
+@pytest.mark.usefixtures("addon_store_info")
 async def test_firmware_options_flow(
     step: str, fw_type: ApplicationType, fw_version: str, hass: HomeAssistant
 ) -> None:
@@ -371,7 +372,7 @@ async def test_firmware_options_flow(
             side_effect=mock_async_step_pick_firmware_zigbee,
         ),
         patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareConfigFlow._ensure_thread_addon_setup",
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareInstallFlow._ensure_thread_addon_setup",
             return_value=None,
         ),
         patch(

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_devices[mock_subentry_data0]
+# name: test_devices[mock_conversation_subentry_data0]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -21,12 +21,11 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
 # ---
-# name: test_devices[mock_subentry_data1]
+# name: test_devices[mock_conversation_subentry_data1]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -48,7 +47,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })

@@ -7,7 +7,7 @@ from pyHomee import Homee, HomeeAuthFailedException, HomeeConnectionFailedExcept
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
@@ -53,12 +53,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeeConfigEntry) -> boo
     try:
         await homee.get_access_token()
     except HomeeConnectionFailedException as exc:
-        raise ConfigEntryNotReady(
-            f"Connection to Homee failed: {exc.__cause__}"
-        ) from exc
+        raise ConfigEntryNotReady(f"Connection to Homee failed: {exc.reason}") from exc
     except HomeeAuthFailedException as exc:
-        raise ConfigEntryNotReady(
-            f"Authentication to Homee failed: {exc.__cause__}"
+        raise ConfigEntryAuthFailed(
+            f"Authentication to Homee failed: {exc.reason}"
         ) from exc
 
     hass.loop.create_task(homee.run())

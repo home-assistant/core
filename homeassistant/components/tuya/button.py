@@ -17,6 +17,14 @@ from .entity import TuyaEntity
 # All descriptions can be found here.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 BUTTONS: dict[str, tuple[ButtonEntityDescription, ...]] = {
+    # Wake Up Light II
+    # Not documented
+    "hxd": (
+        ButtonEntityDescription(
+            key=DPCode.SWITCH_USB6,
+            translation_key="snooze",
+        ),
+    ),
     # Robot Vacuum
     # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
     "sd": (
@@ -44,14 +52,6 @@ BUTTONS: dict[str, tuple[ButtonEntityDescription, ...]] = {
             key=DPCode.RESET_ROLL_BRUSH,
             translation_key="reset_roll_brush",
             entity_category=EntityCategory.CONFIG,
-        ),
-    ),
-    # Wake Up Light II
-    # Not documented
-    "hxd": (
-        ButtonEntityDescription(
-            key=DPCode.SWITCH_USB6,
-            translation_key="snooze",
         ),
     ),
 }

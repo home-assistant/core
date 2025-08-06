@@ -1,5 +1,6 @@
 """Selectors for KNX."""
 
+from collections.abc import Hashable, Iterable
 from enum import Enum
 from typing import Any
 
@@ -7,6 +8,31 @@ import voluptuous as vol
 
 from ..validation import ga_validator, maybe_ga_validator
 from .const import CONF_DPT, CONF_GA_PASSIVE, CONF_GA_STATE, CONF_GA_WRITE
+
+
+class GroupSelect(vol.Any):
+    """Use the first validated value.
+
+    This is a version of vol.Any with custom error handling to
+    show proper invalid markers for sub-schema items in the UI.
+    """
+
+    def _exec(self, funcs: Iterable, v: Any, path: list[Hashable] | None = None) -> Any:
+        """Execute the validation functions."""
+        errors: list[vol.Invalid] = []
+        for func in funcs:
+            try:
+                if path is None:
+                    return func(v)
+                return func(path, v)
+            except vol.Invalid as e:
+                errors.append(e)
+        if errors:
+            raise next(
+                (err for err in errors if "extra keys not allowed" not in err.msg),
+                errors[0],
+            )
+        raise vol.AnyInvalid(self.msg or "no valid value found", path=path)
 
 
 class GASelector:

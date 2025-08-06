@@ -1,5 +1,5 @@
 {
   "domain": "third_reality",
   "name": "Third Reality",
-  "iot_standards": ["zigbee"]
+  "iot_standards": ["matter", "zigbee"]
 }

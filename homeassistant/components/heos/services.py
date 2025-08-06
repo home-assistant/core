@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import ATTR_MEDIA_VOLUME_LEVEL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
+from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -44,7 +44,8 @@ HEOS_SIGN_IN_SCHEMA = vol.Schema(
 HEOS_SIGN_OUT_SCHEMA = vol.Schema({})
 
 
-def register(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register HEOS services."""
     hass.services.async_register(
         DOMAIN,
