@@ -53,8 +53,8 @@
     },
     {
       "manufacturer_id": 12884,
-      "manufacturer_data_start": [0, 62],
-      "connectable": true
+      "manufacturer_data_start": [0, 62, 0],
+      "connectable": false
     }
   ],
   "codeowners": ["@bdraco"],

@@ -402,11 +402,12 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "manufacturer_id": 12628,
     },
     {
-        "connectable": True,
+        "connectable": False,
         "domain": "inkbird",
         "manufacturer_data_start": [
             0,
             62,
+            0,
         ],
         "manufacturer_id": 12884,
     },
