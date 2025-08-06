@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ToGrillConfigEntry
-from .const import CONF_PROBE_COUNT
+from .const import CONF_PROBE_COUNT, MAX_PROBE_COUNT
 from .coordinator import ToGrillCoordinator
 from .entity import ToGrillEntity
 
@@ -85,12 +85,10 @@ ENTITY_DESCRIPTIONS = (
         packet_type=PacketA0Notify.type,
         packet_extract=_get_version_string,
     ),
-    _get_temperature_description(1),
-    _get_temperature_description(2),
-    _get_temperature_description(3),
-    _get_temperature_description(4),
-    _get_temperature_description(5),
-    _get_temperature_description(6),
+    *[
+        _get_temperature_description(probe_number)
+        for probe_number in range(1, MAX_PROBE_COUNT + 1)
+    ],
 )
 
 

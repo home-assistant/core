@@ -2,4 +2,6 @@
 
 DOMAIN = "togrill"
 
+MAX_PROBE_COUNT = 6
+
 CONF_PROBE_COUNT = "probe_count"
