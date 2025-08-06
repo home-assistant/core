@@ -94,21 +94,3 @@ class HinenSensor(HinenDeviceEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.entity_description.value_fn(self.coordinator.data[self._device_id])
-
-    # @property
-    # def entity_picture(self) -> str | None:
-    #     """Return the value reported by the sensor."""
-    #     if not self.available:
-    #         return None
-    #     return self.entity_description.entity_picture_fn(
-    #         self.coordinator.data[self._channel_id]
-    #     )
-
-    # @property
-    # def extra_state_attributes(self) -> dict[str, Any] | None:
-    #     """Return the extra state attributes."""
-    #     if self.entity_description.attributes_fn:
-    #         return self.entity_description.attributes_fn(
-    #             self.coordinator.data[self._channel_id]
-    #         )
-    #     return None

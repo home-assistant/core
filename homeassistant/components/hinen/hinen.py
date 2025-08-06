@@ -84,7 +84,7 @@ class HinenOpen:
     ) -> ClientResponse:
         """Make post request with authorization."""
         headers = {"Authorization": f"{self._user_auth_token}"}
-        self.logger.debug("making POST request to %s", url)
+        self.logger.debug("making PUT request to %s", url)
         response = await session.put(url, headers=headers, json=data)
         return await self._check_request_return(response)
 

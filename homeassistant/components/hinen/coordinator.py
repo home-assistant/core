@@ -16,12 +16,10 @@ from .const import (
     ATTR_ALERT_STATUS,
     ATTR_DEVICE_NAME,
     ATTR_STATUS,
-    ATTR_WORD_MODE,
     CONF_DEVICES,
     DOMAIN,
     LOGGER,
     PROPERTIES,
-    WORK_MODE,
 )
 from .hinen_exception import HinenBackendError, UnauthorizedError
 
@@ -57,14 +55,6 @@ class HinenDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     ATTR_DEVICE_NAME: device_detail.device_name,
                     ATTR_STATUS: device_detail.status,
                     ATTR_ALERT_STATUS: device_detail.alert_status,
-                    ATTR_WORD_MODE: next(
-                        (
-                            prop.value
-                            for prop in device_detail.properties
-                            if prop.identifier == WORK_MODE
-                        ),
-                        None,
-                    ),
                     **{
                         key: next(
                             (
