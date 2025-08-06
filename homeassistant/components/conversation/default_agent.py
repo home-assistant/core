@@ -1083,10 +1083,25 @@ class DefaultAgent(ConversationEntity):
             name_text = name_value.text_in.text.strip().lower()
             self._exposed_names_trie.insert(name_text, name_value)
 
+        # Get preset modes for all exposed fans
+        fan_preset_modes: set[str] = set()
+        for state in self.hass.states.async_all():
+            if state.domain != "fan":
+                continue
+
+            if not async_should_expose(self.hass, DOMAIN, state.entity_id):
+                continue
+
+            if preset_modes := state.attributes.get("preset_modes"):
+                fan_preset_modes.update(preset_modes)
+
         self._slot_lists = {
             "area": TextSlotList.from_tuples(area_names, allow_template=False),
             "name": name_list,
             "floor": TextSlotList.from_tuples(floor_names, allow_template=False),
+            "fan_preset_modes": TextSlotList.from_strings(
+                fan_preset_modes, allow_template=False
+            ),
         }
 
         self._listen_clear_slot_list()
