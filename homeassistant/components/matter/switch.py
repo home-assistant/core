@@ -190,17 +190,8 @@ DISCOVERY_SCHEMAS = [
             device_types.AirPurifier,
             device_types.BasicVideoPlayer,
             device_types.CastingVideoPlayer,
-            device_types.CookSurface,
-            device_types.Cooktop,
-            device_types.Dishwasher,
-            device_types.ExtractorHood,
-            device_types.HeatingCoolingUnit,
-            device_types.LaundryDryer,
-            device_types.LaundryWasher,
-            device_types.Oven,
             device_types.Pump,
             device_types.PumpController,
-            device_types.Refrigerator,
             device_types.RoboticVacuumCleaner,
             device_types.RoomAirConditioner,
             device_types.Speaker,
@@ -284,5 +275,35 @@ DISCOVERY_SCHEMAS = [
         ),
         value_contains=clusters.EnergyEvse.Commands.EnableCharging.command_id,
         allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterNumericSwitchEntityDescription(
+            key="MatterDeadFrontToggle",
+            device_class=SwitchDeviceClass.SWITCH,
+            translation_key="dead_front",
+            device_to_ha={
+                True: False,  # True means device is out of the "dead front" state, so HA should show switch as off
+                False: True,  # False means device in "dead front" state, so HA should show switch as on
+            }.get,
+            ha_to_device={
+                False: True,  # HA showing switch as off means device is in "dead front" state, so send True
+                True: False,  # HA showing switch as on means device is out of "dead front" state, so send False
+            }.get,
+        ),
+        entity_class=MatterNumericSwitch,
+        required_attributes=(clusters.OnOff.Attributes.OnOff,),
+        device_type=(
+            device_types.CookSurface,
+            device_types.Cooktop,
+            device_types.Dishwasher,
+            device_types.ExtractorHood,
+            device_types.HeatingCoolingUnit,
+            device_types.LaundryDryer,
+            device_types.LaundryWasher,
+            device_types.MicrowaveOven,
+            device_types.Oven,
+            device_types.Refrigerator,
+        ),
     ),
 ]
