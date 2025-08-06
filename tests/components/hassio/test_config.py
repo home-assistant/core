@@ -101,7 +101,7 @@ def mock_all(
     )
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_hassio_user_id() -> Generator[None]:
     """Mock the HASSIO user ID for snapshot testing."""
     original_user_init = User.__init__
