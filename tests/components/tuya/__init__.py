@@ -274,6 +274,12 @@ DEVICE_MOCKS = {
         Platform.BINARY_SENSOR,
         Platform.SENSOR,
     ],
+    "mzj_qavcakohisj5adyh": [
+        # https://github.com/home-assistant/core/issues/141278
+        Platform.NUMBER,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
     "pc_t2afic7i3v1bwhfp": [
         # https://github.com/home-assistant/core/issues/149704
         Platform.SWITCH,
@@ -428,9 +434,15 @@ DEVICE_MOCKS = {
         Platform.BINARY_SENSOR,
         Platform.SENSOR,
     ],
+    "ywcgq_h8lvyoahr6s6aybf": [
+        # https://github.com/home-assistant/core/issues/145932
+        Platform.NUMBER,
+        Platform.SENSOR,
+    ],
     "ywcgq_wtzwyhkev3b4ubns": [
-        # https://community.home-assistant.io/t/something-is-wrong-with-tuya-tank-level-sensors-with-the-new-official-integration/689321
-        # not (yet) supported
+        # https://github.com/home-assistant/core/issues/103818
+        Platform.NUMBER,
+        Platform.SENSOR,
     ],
     "zndb_ze8faryrxr0glqnn": [
         # https://github.com/home-assistant/core/issues/138372
