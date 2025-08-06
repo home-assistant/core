@@ -101,12 +101,11 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
 
-    entities: list[ToGrillSensor] = [
+    async_add_entities(
         ToGrillSensor(coordinator, entity_description)
         for entity_description in ENTITY_DESCRIPTIONS
         if entity_description.entity_supported(entry.data)
-    ]
-    async_add_entities(entities)
+    )
 
 
 class ToGrillSensor(ToGrillEntity, SensorEntity):
