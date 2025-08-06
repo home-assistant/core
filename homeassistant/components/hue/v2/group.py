@@ -258,12 +258,12 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
                 )
                 if color_temp.mirek is not None and color_temp.mirek_valid:
                     lights_in_colortemp_mode += 1
-                # accumulate temp color values
-                if light.on.on and color_temp.mirek is not None:
-                    temp_total += color_util.color_temperature_mired_to_kelvin(
-                        color_temp.mirek
-                    )
-                    temp_count += 1
+                    # accumulate temp color values
+                    if light.on.on:
+                        temp_total += color_util.color_temperature_mired_to_kelvin(
+                            color_temp.mirek
+                        )
+                        temp_count += 1
             if color := light.color:
                 lights_with_color_support += 1
                 # default to xy values from the first capable light
