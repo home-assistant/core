@@ -92,11 +92,20 @@ class HassEventLoopPolicy(asyncio.DefaultEventLoopPolicy):
 
 
 @callback
-def _async_loop_exception_handler(_: Any, context: dict[str, Any]) -> None:
+def _async_loop_exception_handler(
+    loop: asyncio.AbstractEventLoop,
+    context: dict[str, Any],
+) -> None:
     """Handle all exception inside the core loop."""
+    fatal_reason: str | None = None
     kwargs = {}
     if exception := context.get("exception"):
         kwargs["exc_info"] = (type(exception), exception, exception.__traceback__)
+        if isinstance(exception, OSError) and exception.errno == 24:
+            # Too many open files – something is leaking them, and it's likely
+            # to be quite unrecoverable if the event loop can't pump messages
+            # (e.g. unable to accept a socket).
+            fatal_reason = str(exception)
 
     logger = logging.getLogger(__package__)
     if source_traceback := context.get("source_traceback"):
@@ -116,6 +125,11 @@ def _async_loop_exception_handler(_: Any, context: dict[str, Any]) -> None:
         context.get("task"),
         **kwargs,  # type: ignore[arg-type]
     )
+
+    if fatal_reason:
+        logger.error("Fatal error on event loop: %s, shutting it down", fatal_reason)
+        loop.stop()
+        loop.close()
 
 
 async def setup_and_run_hass(runtime_config: RuntimeConfig) -> int:
