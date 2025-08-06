@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
 from .entity import TuyaEntity
-from .models import IntegerTypeData
+from .models import IntegerTypeData, find_dpcode
 from .util import ActionDPCodeNotFoundError
 
 
@@ -105,28 +105,34 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
         self._attr_unique_id = f"{super().unique_id}{description.key}"
 
         # Determine main switch DPCode
-        self._switch_dpcode = self.find_dpcode(
-            description.dpcode or DPCode(description.key), prefer_function=True
+        self._switch_dpcode = find_dpcode(
+            self.device,
+            description.dpcode or DPCode(description.key),
+            prefer_function=True,
         )
 
         # Determine humidity parameters
-        if int_type := self.find_dpcode(
-            description.humidity, dptype=DPType.INTEGER, prefer_function=True
+        if int_type := find_dpcode(
+            self.device,
+            description.humidity,
+            dptype=DPType.INTEGER,
+            prefer_function=True,
         ):
             self._set_humidity = int_type
             self._attr_min_humidity = int(int_type.min_scaled)
             self._attr_max_humidity = int(int_type.max_scaled)
 
         # Determine current humidity DPCode
-        if int_type := self.find_dpcode(
+        if int_type := find_dpcode(
+            self.device,
             description.current_humidity,
             dptype=DPType.INTEGER,
         ):
             self._current_humidity = int_type
 
         # Determine mode support and provided modes
-        if enum_type := self.find_dpcode(
-            DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
+        if enum_type := find_dpcode(
+            self.device, DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
         ):
             self._attr_supported_features |= HumidifierEntityFeature.MODES
             self._attr_available_modes = enum_type.range

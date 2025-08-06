@@ -40,7 +40,14 @@ from .const import (
     UnitOfMeasurement,
 )
 from .entity import TuyaEntity
-from .models import ComplexTypeData, ElectricityTypeData, EnumTypeData, IntegerTypeData
+from .models import (
+    ComplexTypeData,
+    ElectricityTypeData,
+    EnumTypeData,
+    IntegerTypeData,
+    find_dpcode,
+    get_dptype,
+)
 
 
 @dataclass(frozen=True)
@@ -1513,18 +1520,18 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             f"{super().unique_id}{description.key}{description.subkey or ''}"
         )
 
-        if int_type := self.find_dpcode(description.key, dptype=DPType.INTEGER):
+        if int_type := find_dpcode(self.device, description.key, dptype=DPType.INTEGER):
             self._type_data = int_type
             self._type = DPType.INTEGER
             if description.native_unit_of_measurement is None:
                 self._attr_native_unit_of_measurement = int_type.unit
-        elif enum_type := self.find_dpcode(
-            description.key, dptype=DPType.ENUM, prefer_function=True
+        elif enum_type := find_dpcode(
+            self.device, description.key, dptype=DPType.ENUM, prefer_function=True
         ):
             self._type_data = enum_type
             self._type = DPType.ENUM
         else:
-            self._type = self.get_dptype(DPCode(description.key))
+            self._type = get_dptype(self.device, DPCode(description.key))
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.

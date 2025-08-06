@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
 from .entity import TuyaEntity
-from .models import IntegerTypeData
+from .models import IntegerTypeData, find_dpcode
 
 
 @dataclass(frozen=True)
@@ -202,13 +202,13 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self._attr_supported_features = CoverEntityFeature(0)
 
         # Check if this cover is based on a switch or has controls
-        if self.find_dpcode(description.key, prefer_function=True):
+        if find_dpcode(self.device, description.key, prefer_function=True):
             if device.function[description.key].type == "Boolean":
                 self._attr_supported_features |= (
                     CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
                 )
-            elif enum_type := self.find_dpcode(
-                description.key, dptype=DPType.ENUM, prefer_function=True
+            elif enum_type := find_dpcode(
+                self.device, description.key, dptype=DPType.ENUM, prefer_function=True
             ):
                 if description.open_instruction_value in enum_type.range:
                     self._attr_supported_features |= CoverEntityFeature.OPEN
@@ -218,8 +218,11 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
                     self._attr_supported_features |= CoverEntityFeature.STOP
 
         # Determine type to use for setting the position
-        if int_type := self.find_dpcode(
-            description.set_position, dptype=DPType.INTEGER, prefer_function=True
+        if int_type := find_dpcode(
+            self.device,
+            description.set_position,
+            dptype=DPType.INTEGER,
+            prefer_function=True,
         ):
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
             self._set_position = int_type
@@ -227,13 +230,17 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             self._current_position = int_type
 
         # Determine type for getting the position
-        if int_type := self.find_dpcode(
-            description.current_position, dptype=DPType.INTEGER, prefer_function=True
+        if int_type := find_dpcode(
+            self.device,
+            description.current_position,
+            dptype=DPType.INTEGER,
+            prefer_function=True,
         ):
             self._current_position = int_type
 
         # Determine type to use for setting the tilt
-        if int_type := self.find_dpcode(
+        if int_type := find_dpcode(
+            self.device,
             (DPCode.ANGLE_HORIZONTAL, DPCode.ANGLE_VERTICAL),
             dptype=DPType.INTEGER,
             prefer_function=True,
@@ -292,8 +299,11 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
     def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         value: bool | str = True
-        if self.find_dpcode(
-            self.entity_description.key, dptype=DPType.ENUM, prefer_function=True
+        if find_dpcode(
+            self.device,
+            self.entity_description.key,
+            dptype=DPType.ENUM,
+            prefer_function=True,
         ):
             value = self.entity_description.open_instruction_value
 
@@ -316,8 +326,11 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
     def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         value: bool | str = False
-        if self.find_dpcode(
-            self.entity_description.key, dptype=DPType.ENUM, prefer_function=True
+        if find_dpcode(
+            self.device,
+            self.entity_description.key,
+            dptype=DPType.ENUM,
+            prefer_function=True,
         ):
             value = self.entity_description.close_instruction_value
 
