@@ -47,7 +47,7 @@ async def test_setup(
     mock_client: Mock,
     packets,
 ) -> None:
-    """Test the acaia binary sensors."""
+    """Test the sensors."""
 
     inject_bluetooth_service_info(hass, TOGRILL_SERVICE_INFO)
 
