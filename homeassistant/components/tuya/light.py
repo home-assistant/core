@@ -29,7 +29,7 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType, WorkMode
 from .entity import TuyaEntity
 from .models import IntegerTypeData
-from .util import get_dpcode, remap_value
+from .util import get_dpcode, get_dptype, remap_value
 
 
 @dataclass
@@ -478,9 +478,9 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 description.brightness_min, dptype=DPType.INTEGER
             )
 
-        if (
-            dpcode := get_dpcode(self.device, description.color_data)
-        ) and self.get_dptype(dpcode, prefer_function=True) == DPType.JSON:
+        if (dpcode := get_dpcode(self.device, description.color_data)) and (
+            get_dptype(self.device, dpcode) == DPType.JSON
+        ):
             self._color_data_dpcode = dpcode
             color_modes.add(ColorMode.HS)
             if dpcode in self.device.function:
