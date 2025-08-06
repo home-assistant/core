@@ -935,7 +935,7 @@
     'state': '0.1',
   })
 # ---
-# name: test_platform_setup_and_discovery[ywcgq_wtzwyhkev3b4ubns][number.nivel_del_tanque_a_alarm_maximum-entry]
+# name: test_platform_setup_and_discovery[ywcgq_wtzwyhkev3b4ubns][number.house_water_level_alarm_maximum-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -953,7 +953,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.nivel_del_tanque_a_alarm_maximum',
+    'entity_id': 'number.house_water_level_alarm_maximum',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -971,14 +971,14 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_maximum',
-    'unique_id': 'tuya.bf27a4********368f4wmax_set',
+    'unique_id': 'tuya.mocked_device_idmax_set',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_platform_setup_and_discovery[ywcgq_wtzwyhkev3b4ubns][number.nivel_del_tanque_a_alarm_maximum-state]
+# name: test_platform_setup_and_discovery[ywcgq_wtzwyhkev3b4ubns][number.house_water_level_alarm_maximum-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nivel del tanque A Alarm maximum',
+      'friendly_name': 'House Water Level Alarm maximum',
       'max': 100.0,
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -986,14 +986,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.nivel_del_tanque_a_alarm_maximum',
+    'entity_id': 'number.house_water_level_alarm_maximum',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[ywcgq_wtzwyhkev3b4ubns][number.nivel_del_tanque_a_alarm_minimum-entry]
+# name: test_platform_setup_and_discovery[ywcgq_wtzwyhkev3b4ubns][number.house_water_level_alarm_minimum-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1011,7 +1011,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.nivel_del_tanque_a_alarm_minimum',
+    'entity_id': 'number.house_water_level_alarm_minimum',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1029,14 +1029,14 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_minimum',
-    'unique_id': 'tuya.bf27a4********368f4wmini_set',
+    'unique_id': 'tuya.mocked_device_idmini_set',
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_platform_setup_and_discovery[ywcgq_wtzwyhkev3b4ubns][number.nivel_del_tanque_a_alarm_minimum-state]
+# name: test_platform_setup_and_discovery[ywcgq_wtzwyhkev3b4ubns][number.house_water_level_alarm_minimum-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Nivel del tanque A Alarm minimum',
+      'friendly_name': 'House Water Level Alarm minimum',
       'max': 100.0,
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1044,14 +1044,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.nivel_del_tanque_a_alarm_minimum',
+    'entity_id': 'number.house_water_level_alarm_minimum',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '10.0',
+    'state': '0.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[ywcgq_wtzwyhkev3b4ubns][number.nivel_del_tanque_a_installation_height-entry]
+# name: test_platform_setup_and_discovery[ywcgq_wtzwyhkev3b4ubns][number.house_water_level_installation_height-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1069,7 +1069,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.nivel_del_tanque_a_installation_height',
+    'entity_id': 'number.house_water_level_installation_height',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1087,15 +1087,15 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'installation_height',
-    'unique_id': 'tuya.bf27a4********368f4winstallation_height',
+    'unique_id': 'tuya.mocked_device_idinstallation_height',
     'unit_of_measurement': 'm',
   })
 # ---
-# name: test_platform_setup_and_discovery[ywcgq_wtzwyhkev3b4ubns][number.nivel_del_tanque_a_installation_height-state]
+# name: test_platform_setup_and_discovery[ywcgq_wtzwyhkev3b4ubns][number.house_water_level_installation_height-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'Nivel del tanque A Installation height',
+      'friendly_name': 'House Water Level Installation height',
       'max': 2.5,
       'min': 0.2,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1103,14 +1103,14 @@
       'unit_of_measurement': 'm',
     }),
     'context': <ANY>,
-    'entity_id': 'number.nivel_del_tanque_a_installation_height',
+    'entity_id': 'number.house_water_level_installation_height',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.98',
+    'state': '0.56',
   })
 # ---
-# name: test_platform_setup_and_discovery[ywcgq_wtzwyhkev3b4ubns][number.nivel_del_tanque_a_maximum_liquid_depth-entry]
+# name: test_platform_setup_and_discovery[ywcgq_wtzwyhkev3b4ubns][number.house_water_level_maximum_liquid_depth-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1128,7 +1128,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.nivel_del_tanque_a_maximum_liquid_depth',
+    'entity_id': 'number.house_water_level_maximum_liquid_depth',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1146,15 +1146,15 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'maximum_liquid_depth',
-    'unique_id': 'tuya.bf27a4********368f4wliquid_depth_max',
+    'unique_id': 'tuya.mocked_device_idliquid_depth_max',
     'unit_of_measurement': 'm',
   })
 # ---
-# name: test_platform_setup_and_discovery[ywcgq_wtzwyhkev3b4ubns][number.nivel_del_tanque_a_maximum_liquid_depth-state]
+# name: test_platform_setup_and_discovery[ywcgq_wtzwyhkev3b4ubns][number.house_water_level_maximum_liquid_depth-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'Nivel del tanque A Maximum Liquid depth',
+      'friendly_name': 'House Water Level Maximum Liquid depth',
       'max': 2.4,
       'min': 0.1,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1162,10 +1162,10 @@
       'unit_of_measurement': 'm',
     }),
     'context': <ANY>,
-    'entity_id': 'number.nivel_del_tanque_a_maximum_liquid_depth',
+    'entity_id': 'number.house_water_level_maximum_liquid_depth',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.14',
+    'state': '0.1',
   })
 # ---
