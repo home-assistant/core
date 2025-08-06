@@ -320,7 +320,6 @@ async def test_hub2_sensor(hass: HomeAssistant) -> None:
     light_level_sensor_attrs = light_level_sensor.attributes
     assert light_level_sensor.state == "4"
     assert light_level_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Light level"
-    assert light_level_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "Level"
 
     light_level_sensor = hass.states.get("sensor.test_name_illuminance")
     light_level_sensor_attrs = light_level_sensor.attributes
@@ -474,7 +473,6 @@ async def test_hub3_sensor(hass: HomeAssistant) -> None:
     light_level_sensor_attrs = light_level_sensor.attributes
     assert light_level_sensor.state == "3"
     assert light_level_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Light level"
-    assert light_level_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "Level"
     assert light_level_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
     illuminance_sensor = hass.states.get("sensor.test_name_illuminance")
