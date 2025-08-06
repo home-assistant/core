@@ -24,6 +24,8 @@ from .const import CONF_PROBE_COUNT, MAX_PROBE_COUNT
 from .coordinator import ToGrillCoordinator
 from .entity import ToGrillEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(kw_only=True, frozen=True)
 class ToGrillSensorEntityDescription(SensorEntityDescription):
