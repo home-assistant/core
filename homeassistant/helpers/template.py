@@ -2030,7 +2030,7 @@ def apply(value, fn, *args, **kwargs):
 def as_function(macro: jinja2.runtime.Macro) -> Callable[..., Any]:
     """Turn a macro with a 'returns' keyword argument into a function that returns what that argument is called with."""
 
-    def wrapper(value, *args, **kwargs):
+    def wrapper(*args, **kwargs):
         return_value = None
 
         def returns(value):
@@ -2039,7 +2039,7 @@ def as_function(macro: jinja2.runtime.Macro) -> Callable[..., Any]:
             return value
 
         # Call the callable with the value and other args
-        macro(value, *args, **kwargs, returns=returns)
+        macro(*args, **kwargs, returns=returns)
         return return_value
 
     # Remove "macro_" from the macro's name to avoid confusion in the wrapper's name
