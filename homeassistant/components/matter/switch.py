@@ -282,6 +282,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterNumericSwitchEntityDescription(
             key="MatterDeadFrontToggle",
             device_class=SwitchDeviceClass.SWITCH,
+            entity_category=EntityCategory.CONFIG,
             translation_key="dead_front",
             device_to_ha={
                 True: False,  # True means device is out of the "dead front" state, so HA should show switch as off
