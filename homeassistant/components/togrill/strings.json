@@ -24,9 +24,6 @@
   },
   "entity": {
     "sensor": {
-      "version": {
-        "name": "Version"
-      },
       "battery": {
         "name": "Battery"
       },
