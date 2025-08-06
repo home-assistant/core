@@ -405,14 +405,14 @@ DEVICE_MOCKS = {
     "wfcon_b25mh8sxawsgndck": [
         # https://github.com/home-assistant/core/issues/149704
     ],
-    "wg2_nwxr8qcu4seltoro": [
-        # https://github.com/orgs/home-assistant/discussions/430
-        Platform.BINARY_SENSOR,
-    ],
     "wk_aqoouq7x": [
         # https://github.com/home-assistant/core/issues/146263
         Platform.CLIMATE,
         Platform.SWITCH,
+    ],
+    "wg2_nwxr8qcu4seltoro": [
+        # https://github.com/orgs/home-assistant/discussions/430
+        Platform.BINARY_SENSOR,
     ],
     "wk_fi6dne5tu4t1nm6j": [
         # https://github.com/orgs/home-assistant/discussions/243
