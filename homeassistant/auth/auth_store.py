@@ -120,9 +120,6 @@ class AuthStore:
 
         new_user = models.User(**kwargs)
 
-        while new_user.id in self._users:
-            new_user = models.User(**kwargs)
-
         self._users[new_user.id] = new_user
 
         if credentials is None:
