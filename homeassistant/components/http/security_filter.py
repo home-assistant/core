@@ -13,6 +13,8 @@ from aiohttp.web import Application, HTTPBadRequest, Request, StreamResponse, mi
 
 from homeassistant.core import callback
 
+from .const import KEY_HASS
+
 _LOGGER = logging.getLogger(__name__)
 
 # fmt: off
@@ -37,6 +39,8 @@ FILTERS: Final = re.compile(
 )
 # fmt: on
 
+NOTIFICATION_ID_FILTER: Final = "ip_filter"
+
 # Unsafe bytes to be removed per WHATWG spec
 UNSAFE_URL_BYTES = ["\t", "\r", "\n"]
 
@@ -59,34 +63,48 @@ def setup_security_filter(app: Application) -> None:
         """Process request and block commonly known exploit attempts."""
         path_with_query_string = f"{request.path}?{request.query_string}"
 
+        base_msg = None
         for unsafe_byte in UNSAFE_URL_BYTES:
             if unsafe_byte in path_with_query_string:
                 if unsafe_byte in request.query_string:
-                    _LOGGER.warning(
-                        "Filtered a request with unsafe byte query string: %s",
-                        request.raw_path,
+                    base_msg = "Filtered a request from {ip} with unsafe byte query string: {path}"
+                    break
+
+                base_msg = (
+                    "Filtered a request from {ip} with an unsafe byte in path: {path}"
+                )
+                break
+
+        if base_msg is None:
+            if FILTERS.search(_recursive_unquote(path_with_query_string)):
+                # Check the full path with query string first, if its
+                # a hit, than check just the query string to give a more
+                # specific warning.
+                if FILTERS.search(_recursive_unquote(request.query_string)):
+                    base_msg = "Filtered a request from {ip} with a potential harmful query string: {path}"
+                else:
+                    base_msg = (
+                        "Filtered a potential harmful request from {ip} to: {path}"
                     )
-                    raise HTTPBadRequest
-                _LOGGER.warning(
-                    "Filtered a request with an unsafe byte in path: %s",
-                    request.raw_path,
-                )
-                raise HTTPBadRequest
 
-        if FILTERS.search(_recursive_unquote(path_with_query_string)):
-            # Check the full path with query string first, if its
-            # a hit, than check just the query string to give a more
-            # specific warning.
-            if FILTERS.search(_recursive_unquote(request.query_string)):
-                _LOGGER.warning(
-                    "Filtered a request with a potential harmful query string: %s",
-                    request.raw_path,
-                )
-                raise HTTPBadRequest
+        if base_msg is not None:
+            # Circular import with websocket_api
+            # pylint: disable=import-outside-toplevel
+            from ipaddress import ip_address
 
-            _LOGGER.warning(
-                "Filtered a potential harmful request to: %s", request.raw_path
+            from homeassistant.components import persistent_notification
+
+            ip_address_ = ip_address(request.remote)  # type: ignore[arg-type]
+            hass = request.app[KEY_HASS]
+            msg = base_msg.format(ip=ip_address_, path=request.path)
+            _LOGGER.warning(msg)
+            persistent_notification.async_create(
+                hass,
+                f"{msg}, see log for details",
+                "Filtered request",
+                NOTIFICATION_ID_FILTER,
             )
+
             raise HTTPBadRequest
 
         return await handler(request)
