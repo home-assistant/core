@@ -155,7 +155,7 @@ async def _async_update_cloudflare(
                 )
             )
             _LOGGER.debug(
-                "Added Record %s (%s) to Updatetask", record["name"], record["type"]
+                "Updating the content for the record %s (%s)", record["name"], record["type"]
             )
 
         elif (
