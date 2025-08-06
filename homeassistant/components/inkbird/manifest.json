@@ -43,8 +43,17 @@
       "connectable": true
     },
     {
+      "local_name": "Ink@IAM-T2",
+      "connectable": true
+    },
+    {
       "manufacturer_id": 12628,
       "manufacturer_data_start": [65, 67, 45],
+      "connectable": true
+    },
+    {
+      "manufacturer_id": 12884,
+      "manufacturer_data_start": [0, 62],
       "connectable": true
     }
   ],
@@ -53,5 +62,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/inkbird",
   "iot_class": "local_push",
-  "requirements": ["inkbird-ble==0.16.2"]
+  "requirements": ["inkbird-ble==1.1.0"]
 }
