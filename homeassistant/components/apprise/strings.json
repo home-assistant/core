@@ -15,5 +15,11 @@
         }
       }
     }
+  },
+  "issues": {
+    "deprecated_yaml_import_connection_error": {
+      "title": "{domain} YAML configuration import failed",
+      "description": "There was an error connecting to Apprise when trying to import the YAML configuration.\n\nEnsure the YAML configuration is correct and restart Home Assistant to try again or remove the {domain} configuration from your `configuration.yaml` file and continue to [set up the integration]({url}) manually."
+    }
   }
 }
