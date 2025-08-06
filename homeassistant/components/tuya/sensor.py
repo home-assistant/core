@@ -1316,7 +1316,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.LIQUID_LEVEL_PERCENT,
-            translation_key="liquid_level_percent",
+            translation_key="liquid_level",
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
