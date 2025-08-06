@@ -26,6 +26,7 @@ from homeassistant.const import (
     EVENT_THEMES_UPDATED,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.icon import async_get_icons
 from homeassistant.helpers.json import json_dumps_sorted
@@ -364,8 +365,7 @@ def _frontend_root(dev_repo_path: str | None) -> pathlib.Path:
     if dev_repo_path is not None:
         return pathlib.Path(dev_repo_path) / "hass_frontend"
     # Keep import here so that we can import frontend without installing reqs
-    # pylint: disable-next=import-outside-toplevel
-    import hass_frontend
+    import hass_frontend  # noqa: PLC0415
 
     return hass_frontend.where()
 
@@ -544,6 +544,12 @@ async def _async_setup_themes(
         """Reload themes."""
         config = await async_hass_config_yaml(hass)
         new_themes = config.get(DOMAIN, {}).get(CONF_THEMES, {})
+
+        try:
+            THEME_SCHEMA(new_themes)
+        except vol.Invalid as err:
+            raise HomeAssistantError(f"Failed to reload themes: {err}") from err
+
         hass.data[DATA_THEMES] = new_themes
         if hass.data[DATA_DEFAULT_THEME] not in new_themes:
             hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME

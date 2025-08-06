@@ -10,28 +10,25 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, MODELS
-from .coordinator import LaundrifyUpdateCoordinator
+from .coordinator import LaundrifyConfigEntry, LaundrifyUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    entry: LaundrifyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors from a config entry created in the integrations UI."""
 
-    coordinator: LaundrifyUpdateCoordinator = hass.data[DOMAIN][config.entry_id][
-        "coordinator"
-    ]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         LaundrifyPowerPlug(coordinator, device) for device in coordinator.data.values()

@@ -475,8 +475,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
     @callback
     def _async_setup_cleanup(self) -> None:
         """Set up the area registry cleanup."""
-        # pylint: disable-next=import-outside-toplevel
-        from . import (  # Circular dependencies
+        from . import (  # Circular dependencies  # noqa: PLC0415
             floor_registry as fr,
             label_registry as lr,
         )
@@ -543,8 +542,7 @@ def async_entries_for_label(registry: AreaRegistry, label_id: str) -> list[AreaE
 
 def _validate_temperature_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Validate temperature entity."""
-    # pylint: disable=import-outside-toplevel
-    from homeassistant.components.sensor import SensorDeviceClass
+    from homeassistant.components.sensor import SensorDeviceClass  # noqa: PLC0415
 
     if not (state := hass.states.get(entity_id)):
         raise ValueError(f"Entity {entity_id} does not exist")
@@ -558,8 +556,7 @@ def _validate_temperature_entity(hass: HomeAssistant, entity_id: str) -> None:
 
 def _validate_humidity_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Validate humidity entity."""
-    # pylint: disable=import-outside-toplevel
-    from homeassistant.components.sensor import SensorDeviceClass
+    from homeassistant.components.sensor import SensorDeviceClass  # noqa: PLC0415
 
     if not (state := hass.states.get(entity_id)):
         raise ValueError(f"Entity {entity_id} does not exist")

@@ -10,6 +10,7 @@ from opower import (
     CannotConnect,
     InvalidAuth,
     Opower,
+    create_cookie_jar,
     get_supported_utility_names,
     select_utility,
 )
@@ -25,6 +26,7 @@ from .const import CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_UTILITY): vol.In(get_supported_utility_names()),
@@ -39,7 +41,7 @@ async def _validate_login(
 ) -> dict[str, str]:
     """Validate login data and return any errors."""
     api = Opower(
-        async_create_clientsession(hass),
+        async_create_clientsession(hass, cookie_jar=create_cookie_jar()),
         login_data[CONF_UTILITY],
         login_data[CONF_USERNAME],
         login_data[CONF_PASSWORD],
@@ -87,9 +89,15 @@ class OpowerConfigFlow(ConfigFlow, domain=DOMAIN):
             errors = await _validate_login(self.hass, user_input)
             if not errors:
                 return self._async_create_opower_entry(user_input)
-
+        else:
+            user_input = {}
+        user_input.pop(CONF_PASSWORD, None)
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
+            ),
+            errors=errors,
         )
 
     async def async_step_mfa(

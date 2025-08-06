@@ -2,14 +2,17 @@
   "config": {
     "step": {
       "pick_implementation": {
-        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        }
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Spotify integration needs to re-authenticate with Spotify for account: {account}"
-      },
-      "oauth_discovery": {
-        "description": "Home Assistant has found Spotify on your network. Press **Submit** to continue setting up Spotify."
       }
     },
     "abort": {

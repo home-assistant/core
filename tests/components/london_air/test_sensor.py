@@ -8,7 +8,7 @@ from homeassistant.components.london_air.sensor import CONF_LOCATIONS, URL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import load_fixture
+from tests.common import async_load_fixture
 
 VALID_CONFIG = {"sensor": {"platform": "london_air", CONF_LOCATIONS: ["Merton"]}}
 
@@ -19,7 +19,7 @@ async def test_valid_state(
     """Test for operational london_air sensor with proper attributes."""
     requests_mock.get(
         URL,
-        text=load_fixture("london_air.json", "london_air"),
+        text=await async_load_fixture(hass, "london_air.json", "london_air"),
         status_code=HTTPStatus.OK,
     )
     assert await async_setup_component(hass, "sensor", VALID_CONFIG)

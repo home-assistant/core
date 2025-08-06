@@ -15,7 +15,6 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, MASTER_THERMOSTATS
@@ -40,7 +39,7 @@ async def async_setup_entry(
         if not coordinator.new_devices:
             return
 
-        if coordinator.api.smile_name == "Adam":
+        if coordinator.api.smile.name == "Adam":
             async_add_entities(
                 PlugwiseClimateEntity(coordinator, device_id)
                 for device_id in coordinator.new_devices
@@ -86,7 +85,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
         if (
             self.coordinator.api.cooling_present
-            and coordinator.api.smile_name != "Adam"
+            and coordinator.api.smile.name != "Adam"
         ):
             self._attr_supported_features = (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -166,7 +165,7 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         if "regulation_modes" in self._gateway_data:
             hvac_modes.append(HVACMode.OFF)
 
-        if "available_schedules" in self.device:
+        if self.device.get("available_schedules"):
             hvac_modes.append(HVACMode.AUTO)
 
         if self.coordinator.api.cooling_present:
@@ -216,17 +215,6 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
     @plugwise_command
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the hvac mode."""
-        if hvac_mode not in self.hvac_modes:
-            hvac_modes = ", ".join(self.hvac_modes)
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="unsupported_hvac_mode_requested",
-                translation_placeholders={
-                    "hvac_mode": hvac_mode,
-                    "hvac_modes": hvac_modes,
-                },
-            )
-
         if hvac_mode == self.hvac_mode:
             return
 

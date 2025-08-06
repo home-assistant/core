@@ -222,16 +222,14 @@ class WebhookFlowHandler(config_entries.ConfigFlow):
             return self.async_show_form(step_id="user")
 
         # Local import to be sure cloud is loaded and setup
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.cloud import (
+        from homeassistant.components.cloud import (  # noqa: PLC0415
             async_active_subscription,
             async_create_cloudhook,
             async_is_connected,
         )
 
         # Local import to be sure webhook is loaded and setup
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.webhook import (
+        from homeassistant.components.webhook import (  # noqa: PLC0415
             async_generate_id,
             async_generate_url,
         )
@@ -281,7 +279,6 @@ async def webhook_async_remove_entry(
         return
 
     # Local import to be sure cloud is loaded and setup
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.cloud import async_delete_cloudhook
+    from homeassistant.components.cloud import async_delete_cloudhook  # noqa: PLC0415
 
     await async_delete_cloudhook(hass, entry.data["webhook_id"])

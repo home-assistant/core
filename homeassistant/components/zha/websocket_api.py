@@ -772,7 +772,7 @@ async def websocket_device_cluster_commands(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Return a list of cluster commands."""
-    import voluptuous_serialize  # pylint: disable=import-outside-toplevel
+    import voluptuous_serialize  # noqa: PLC0415
 
     zha_gateway = get_zha_gateway(hass)
     ieee: EUI64 = msg[ATTR_IEEE]
@@ -1080,7 +1080,7 @@ async def websocket_get_configuration(
 ) -> None:
     """Get ZHA configuration."""
     config_entry: ConfigEntry = get_config_entry(hass)
-    import voluptuous_serialize  # pylint: disable=import-outside-toplevel
+    import voluptuous_serialize  # noqa: PLC0415
 
     def custom_serializer(schema: Any) -> Any:
         """Serialize additional types for voluptuous_serialize."""

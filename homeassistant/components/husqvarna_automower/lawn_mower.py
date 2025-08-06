@@ -18,9 +18,9 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AutomowerConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, ERROR_STATES
 from .coordinator import AutomowerDataUpdateCoordinator
-from .entity import AutomowerAvailableEntity, handle_sending_exception
+from .entity import AutomowerBaseEntity, handle_sending_exception
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ async def async_setup_entry(
     )
 
 
-class AutomowerLawnMowerEntity(AutomowerAvailableEntity, LawnMowerEntity):
+class AutomowerLawnMowerEntity(AutomowerBaseEntity, LawnMowerEntity):
     """Defining each mower Entity."""
 
     _attr_name = None
@@ -108,17 +108,27 @@ class AutomowerLawnMowerEntity(AutomowerAvailableEntity, LawnMowerEntity):
     def activity(self) -> LawnMowerActivity:
         """Return the state of the mower."""
         mower_attributes = self.mower_attributes
+        if mower_attributes.mower.state in ERROR_STATES:
+            return LawnMowerActivity.ERROR
         if mower_attributes.mower.state in PAUSED_STATES:
             return LawnMowerActivity.PAUSED
-        if (mower_attributes.mower.state == "RESTRICTED") or (
-            mower_attributes.mower.activity in DOCKED_ACTIVITIES
+        if mower_attributes.mower.activity == MowerActivities.GOING_HOME:
+            return LawnMowerActivity.RETURNING
+        if (
+            mower_attributes.mower.state is MowerStates.RESTRICTED
+            or mower_attributes.mower.activity in DOCKED_ACTIVITIES
         ):
             return LawnMowerActivity.DOCKED
         if mower_attributes.mower.state in MowerStates.IN_OPERATION:
-            if mower_attributes.mower.activity == MowerActivities.GOING_HOME:
-                return LawnMowerActivity.RETURNING
             return LawnMowerActivity.MOWING
         return LawnMowerActivity.ERROR
+
+    @property
+    def available(self) -> bool:
+        """Return the available attribute of the entity."""
+        return (
+            super().available and self.mower_attributes.mower.state != MowerStates.OFF
+        )
 
     @property
     def work_areas(self) -> dict[int, WorkArea] | None:

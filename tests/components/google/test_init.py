@@ -14,7 +14,7 @@ from aiohttp.client_exceptions import ClientError
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.google import DOMAIN, SERVICE_ADD_EVENT
+from homeassistant.components.google import DOMAIN
 from homeassistant.components.google.calendar import SERVICE_CREATE_EVENT
 from homeassistant.components.google.const import CONF_CALENDAR_ACCESS
 from homeassistant.config_entries import ConfigEntryState
@@ -61,12 +61,6 @@ def assert_state(actual: State | None, expected: State | None) -> None:
     params=[
         (
             DOMAIN,
-            SERVICE_ADD_EVENT,
-            {"calendar_id": CALENDAR_ID},
-            None,
-        ),
-        (
-            DOMAIN,
             SERVICE_CREATE_EVENT,
             {},
             {"entity_id": TEST_API_ENTITY},
@@ -78,7 +72,7 @@ def assert_state(actual: State | None, expected: State | None) -> None:
             {"entity_id": TEST_API_ENTITY},
         ),
     ],
-    ids=("google.add_event", "google.create_event", "calendar.create_event"),
+    ids=("google.create_event", "calendar.create_event"),
 )
 def add_event_call_service(
     hass: HomeAssistant,

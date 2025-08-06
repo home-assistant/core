@@ -1,6 +1,6 @@
 """The tests for Z-Wave JS automation triggers."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 import voluptuous as vol
@@ -11,14 +11,11 @@ from zwave_js_server.model.node import Node
 from homeassistant.components import automation
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
-from homeassistant.components.zwave_js.trigger import (
-    _get_trigger_platform,
-    async_validate_trigger_config,
-)
+from homeassistant.components.zwave_js.trigger import TRIGGERS
 from homeassistant.components.zwave_js.triggers.trigger_helpers import (
     async_bypass_dynamic_config_validation,
 )
-from homeassistant.const import CONF_PLATFORM, SERVICE_RELOAD
+from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -977,22 +974,10 @@ async def test_zwave_js_event_invalid_config_entry_id(
     caplog.clear()
 
 
-async def test_async_validate_trigger_config(hass: HomeAssistant) -> None:
-    """Test async_validate_trigger_config."""
-    mock_platform = AsyncMock()
-    with patch(
-        "homeassistant.components.zwave_js.trigger._get_trigger_platform",
-        return_value=mock_platform,
-    ):
-        mock_platform.async_validate_trigger_config.return_value = {}
-        await async_validate_trigger_config(hass, {})
-        mock_platform.async_validate_trigger_config.assert_awaited()
-
-
 async def test_invalid_trigger_configs(hass: HomeAssistant) -> None:
     """Test invalid trigger configs."""
     with pytest.raises(vol.Invalid):
-        await async_validate_trigger_config(
+        await TRIGGERS["event"].async_validate_config(
             hass,
             {
                 "platform": f"{DOMAIN}.event",
@@ -1003,7 +988,7 @@ async def test_invalid_trigger_configs(hass: HomeAssistant) -> None:
         )
 
     with pytest.raises(vol.Invalid):
-        await async_validate_trigger_config(
+        await TRIGGERS["value_updated"].async_validate_config(
             hass,
             {
                 "platform": f"{DOMAIN}.value_updated",
@@ -1041,7 +1026,7 @@ async def test_zwave_js_trigger_config_entry_unloaded(
     await hass.config_entries.async_unload(integration.entry_id)
 
     # Test full validation for both events
-    assert await async_validate_trigger_config(
+    assert await TRIGGERS["value_updated"].async_validate_config(
         hass,
         {
             "platform": f"{DOMAIN}.value_updated",
@@ -1051,7 +1036,7 @@ async def test_zwave_js_trigger_config_entry_unloaded(
         },
     )
 
-    assert await async_validate_trigger_config(
+    assert await TRIGGERS["event"].async_validate_config(
         hass,
         {
             "platform": f"{DOMAIN}.event",
@@ -1113,12 +1098,6 @@ async def test_zwave_js_trigger_config_entry_unloaded(
             "event": "nvm convert progress",
         },
     )
-
-
-def test_get_trigger_platform_failure() -> None:
-    """Test _get_trigger_platform."""
-    with pytest.raises(ValueError):
-        _get_trigger_platform({CONF_PLATFORM: "zwave_js.invalid"})
 
 
 async def test_server_reconnect_event(
