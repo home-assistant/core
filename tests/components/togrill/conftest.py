@@ -87,9 +87,10 @@ def mock_client(enable_bluetooth: None, mock_client_class: Mock) -> Generator[Mo
 def mock_client_class() -> Generator[Mock]:
     """Auto mock bluetooth."""
 
-    client_class = Mock()
     with (
-        patch("homeassistant.components.togrill.config_flow.Client", new=client_class),
+        patch(
+            "homeassistant.components.togrill.config_flow.Client", autospec=True
+        ) as client_class,
         patch("homeassistant.components.togrill.coordinator.Client", new=client_class),
     ):
         yield client_class
