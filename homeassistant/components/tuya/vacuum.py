@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
 from .entity import TuyaEntity
-from .models import EnumTypeData, IntegerTypeData
+from .models import EnumTypeData
 
 TUYA_MODE_RETURN_HOME = "chargego"
 TUYA_STATUS_TO_HA = {
@@ -77,7 +77,6 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
     """Tuya Vacuum Device."""
 
     _fan_speed: EnumTypeData | None = None
-    _battery_level: IntegerTypeData | None = None
     _attr_name = None
 
     def __init__(self, device: CustomerDevice, device_manager: Manager) -> None:
@@ -117,19 +116,6 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
             self._fan_speed = enum_type
             self._attr_fan_speed_list = enum_type.range
             self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
-
-        if int_type := self.find_dpcode(DPCode.ELECTRICITY_LEFT, dptype=DPType.INTEGER):
-            self._attr_supported_features |= VacuumEntityFeature.BATTERY
-            self._battery_level = int_type
-
-    @property
-    def battery_level(self) -> int | None:
-        """Return Tuya device state."""
-        if self._battery_level is None or not (
-            status := self.device.status.get(DPCode.ELECTRICITY_LEFT)
-        ):
-            return None
-        return round(self._battery_level.scale_value(status))
 
     @property
     def fan_speed(self) -> str | None:

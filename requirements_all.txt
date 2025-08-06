@@ -1130,10 +1130,10 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.4.1
 
 # homeassistant.components.bluetooth
-habluetooth==4.0.1
+habluetooth==4.0.2
 
 # homeassistant.components.cloud
-hass-nabucasa==0.111.0
+hass-nabucasa==0.111.1
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1307,7 +1307,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.8.4.154919
+knx-frontend==2025.8.6.52906
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -3203,7 +3203,7 @@ zeroconf==0.147.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.65
+zha==0.0.66
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
