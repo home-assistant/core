@@ -121,7 +121,7 @@ class ToGrillSensor(ToGrillEntity, SensorEntity):
     ) -> None:
         """Initialize sensor."""
 
-        super().__init__(coordinator, entity_description.packet_type)
+        super().__init__(coordinator)
         self.entity_description = entity_description
         self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.address}_{entity_description.key}"

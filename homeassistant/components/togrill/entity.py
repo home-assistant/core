@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import ToGrillCoordinator
@@ -14,9 +12,9 @@ class ToGrillEntity(CoordinatorEntity[ToGrillCoordinator]):
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator: ToGrillCoordinator, context: Any = None) -> None:
+    def __init__(self, coordinator: ToGrillCoordinator) -> None:
         """Initialize coordinator entity."""
-        super().__init__(coordinator, context)
+        super().__init__(coordinator)
         self._attr_device_info = coordinator.device_info
 
     @property
