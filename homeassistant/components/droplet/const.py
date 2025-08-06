@@ -3,15 +3,10 @@
 import enum
 
 # Keys for values used in the config_entry data dictionary
-CONF_HOST = "droplet_host"
-CONF_PORT = "droplet_port"
-CONF_DEVICE_ID = "device_id"
 CONF_DEVICE_NAME = "name"
 CONF_MANUFACTURER = "manufacturer"
-CONF_MODEL = "model"
 CONF_SW = "sw"
 CONF_SERIAL = "sn"
-CONF_PAIRING_CODE = "pairing_code"
 
 RECONNECT_DELAY = 5
 

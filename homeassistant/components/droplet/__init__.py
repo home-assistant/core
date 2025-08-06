@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from .coordinator import DropletConfigEntry, DropletDataCoordinator
 
@@ -28,16 +26,7 @@ async def async_setup_entry(
     config_entry.runtime_data = droplet_coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    # Reload entry when it's updated.
-    config_entry.async_on_unload(config_entry.add_update_listener(async_reload_entry))
-
-    # Add more exceptions perhaps
-    if not await droplet_coordinator.setup():
-        raise ConfigEntryNotReady("Device is offline")
-
     return True
-
-
 
 
 async def async_unload_entry(

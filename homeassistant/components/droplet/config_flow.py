@@ -9,17 +9,19 @@ from pydroplet.droplet import DropletDiscovery
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import (
+    CONF_CODE,
+    CONF_DEVICE_ID,
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_PORT,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import (
-    CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
-    CONF_HOST,
     CONF_MANUFACTURER,
-    CONF_MODEL,
-    CONF_PAIRING_CODE,
-    CONF_PORT,
     CONF_SERIAL,
     CONF_SW,
     DEVICE_NAME,
@@ -29,11 +31,10 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class FlowHandler(ConfigFlow, domain=DOMAIN):
+class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle Droplet config flow."""
 
-
-    _droplet_discovery: DropletDiscovery | None = None
+    _droplet_discovery: DropletDiscovery
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
@@ -45,10 +46,10 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             discovery_info.name,
             discovery_info.properties,
         )
-        if self._droplet_discovery is None or not self._droplet_discovery.is_valid():
+        if not self._droplet_discovery.is_valid():
             return self.async_abort(reason="invalid_discovery_info")
 
-        await self.async_set_unique_id(f"{self._droplet_discovery.device_id}")
+        await self.async_set_unique_id(self._droplet_discovery.device_id)
 
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: self._droplet_discovery.host}
@@ -61,8 +62,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm the setup."""
         errors: dict[str, str] = {}
-        if self._droplet_discovery is None:
-            return self.async_abort(reason="device_not_found")
         if self._droplet_discovery.device_id is None:
             return self.async_abort(reason="invalid_discovery_info")
         if user_input is not None:
@@ -77,13 +76,13 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 ),
                 CONF_SERIAL: self._droplet_discovery.properties.get(CONF_SERIAL),
                 CONF_SW: self._droplet_discovery.properties.get(CONF_SW),
-                CONF_PAIRING_CODE: user_input[CONF_PAIRING_CODE],
+                CONF_CODE: user_input[CONF_CODE],
             }
 
             # Test if we can connect before returning
             session = async_get_clientsession(self.hass)
             if await self._droplet_discovery.try_connect(
-                session, user_input[CONF_PAIRING_CODE]
+                session, user_input[CONF_CODE]
             ):
                 return self.async_create_entry(
                     title=self._droplet_discovery.device_id,
@@ -94,7 +93,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="confirm",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_PAIRING_CODE): str,
+                    vol.Required(CONF_CODE): str,
                 }
             ),
             description_placeholders={

@@ -11,20 +11,20 @@ from dateutil.relativedelta import MO, relativedelta
 from pydroplet.droplet import Droplet
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_CODE,
+    CONF_HOST,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    CONF_HOST,
-    CONF_PAIRING_CODE,
-    CONF_PORT,
-    DOMAIN,
-    RECONNECT_DELAY,
-    AccumulatedVolume,
-)
+from .const import DOMAIN, RECONNECT_DELAY, AccumulatedVolume
 
 ML_L_CONVERSION = 1000
 
@@ -39,7 +39,6 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
 
     config_entry: DropletConfigEntry
     unsub: Callable | None
-    daily_volume_next_reset = dt_util.start_of_local_day() + timedelta(days=1)
 
     def __init__(self, hass: HomeAssistant, entry: DropletConfigEntry) -> None:
         """Initialize the device."""
@@ -49,12 +48,22 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
         self.droplet = Droplet(
             host=entry.data[CONF_HOST],
             port=entry.data[CONF_PORT],
-            token=entry.data[CONF_PAIRING_CODE],
+            token=entry.data[CONF_CODE],
             session=async_get_clientsession(self.hass),
             logger=_LOGGER,
         )
         for interval in AccumulatedVolume:
             self.droplet.add_accumulator(interval, self._make_reset_time(interval))
+
+    async def _async_setup(self) -> None:
+        if not await self.setup():
+            raise ConfigEntryNotReady("Device is offline")
+
+    async def _async_update_data(self) -> None:
+        # Get device data here maybe?
+        # Model and stuff? Since that's not supposed to be part of the config entry
+        # Or set update_method so the builtin method doesn't fail?
+        pass
 
     def _make_reset_time(self, interval: AccumulatedVolume) -> datetime:
         """Calculate reset time for an daily, weekly, or monthly interval."""
@@ -133,3 +142,8 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
     def get_signal_quality(self) -> str:
         """Retrieve Droplet's signal quality."""
         return self.droplet.get_signal_quality()
+
+    def get_device_info(self) -> DeviceInfo:
+        """Get device info from Droplet."""
+        #        info = self.droplet.get_device_info()
+        return DeviceInfo()

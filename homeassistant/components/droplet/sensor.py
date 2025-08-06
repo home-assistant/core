@@ -12,7 +12,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfVolume, UnitOfVolumeFlowRate
+from homeassistant.const import (
+    CONF_MODEL,
+    EntityCategory,
+    UnitOfVolume,
+    UnitOfVolumeFlowRate,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -22,7 +27,6 @@ from homeassistant.util import dt as dt_util
 from .const import (
     CONF_DEVICE_NAME,
     CONF_MANUFACTURER,
-    CONF_MODEL,
     CONF_SERIAL,
     CONF_SW,
     DOMAIN,
@@ -42,6 +46,7 @@ class DropletSensorEntityDescription(SensorEntityDescription):
     """Describes Droplet sensor entity."""
 
     value_fn: Callable[[DropletDataCoordinator], float | str]
+    has_entity_name = True
 
 
 SENSORS: list[DropletSensorEntityDescription] = [
@@ -53,7 +58,6 @@ SENSORS: list[DropletSensorEntityDescription] = [
         suggested_unit_of_measurement=UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
         value_fn=lambda device: device.get_flow_rate(),
     ),
     DropletSensorEntityDescription(
@@ -64,7 +68,6 @@ SENSORS: list[DropletSensorEntityDescription] = [
         suggested_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=2,
         state_class=SensorStateClass.TOTAL,
-        has_entity_name=True,
         value_fn=lambda device: device.get_volume_delta(),
     ),
     DropletSensorEntityDescription(
@@ -75,7 +78,6 @@ SENSORS: list[DropletSensorEntityDescription] = [
         suggested_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=2,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        has_entity_name=True,
         value_fn=lambda device: device.get_daily_volume(),
     ),
     DropletSensorEntityDescription(
@@ -86,7 +88,6 @@ SENSORS: list[DropletSensorEntityDescription] = [
         suggested_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=2,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        has_entity_name=True,
         value_fn=lambda device: device.get_weekly_volume(),
     ),
     DropletSensorEntityDescription(
@@ -97,7 +98,6 @@ SENSORS: list[DropletSensorEntityDescription] = [
         suggested_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=2,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        has_entity_name=True,
         value_fn=lambda device: device.get_monthly_volume(),
     ),
     DropletSensorEntityDescription(
@@ -105,7 +105,6 @@ SENSORS: list[DropletSensorEntityDescription] = [
         translation_key=KEY_SERVER_CONNECTIVITY,
         device_class=SensorDeviceClass.ENUM,
         options=["Connected", "Connecting", "Disconnected"],
-        has_entity_name=True,
         value_fn=lambda device: device.get_server_status(),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -114,7 +113,6 @@ SENSORS: list[DropletSensorEntityDescription] = [
         translation_key=KEY_SIGNAL_QUALITY,
         device_class=SensorDeviceClass.ENUM,
         options=["No Signal", "Weak Signal", "Strong Signal"],
-        has_entity_name=True,
         value_fn=lambda device: device.get_signal_quality(),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
