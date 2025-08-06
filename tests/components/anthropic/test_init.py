@@ -816,8 +816,8 @@ async def test_migrate_entry_to_v2_3(
     device_disabled_by_after_migration: ConfigEntryDisabler | None,
     entity_disabled_by_after_migration: RegistryEntryDisabler | None,
 ) -> None:
-    """Test migration from version 2.3."""
-    # Create a v2.3 config entry with conversation subentries
+    """Test migration to version 2.3."""
+    # Create a v2.2 config entry with conversation subentries
     conversation_subentry_id = "blabla"
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
