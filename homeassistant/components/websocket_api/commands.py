@@ -865,8 +865,7 @@ def handle_expand_target(
         "missing_labels": extracted.missing_labels,
     }
 
-    payload = json_bytes(extracted_dict)
-    connection.send_message(construct_result_message(msg["id"], payload))
+    connection.send_result(msg["id"], extracted_dict)
 
 
 @decorators.websocket_command(
