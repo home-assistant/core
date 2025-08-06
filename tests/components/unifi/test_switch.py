@@ -1783,6 +1783,7 @@ async def test_hub_state_change(
     entity_ids = (
         "switch.block_client_2",
         "switch.mock_name_port_1_poe",
+        "switch.mock_name_port_1",
         "switch.plug_outlet_1",
         "switch.block_media_streaming",
         "switch.unifi_network_plex",
@@ -1802,3 +1803,100 @@ async def test_hub_state_change(
     await mock_websocket_state.reconnect()
     for entity_id in entity_ids:
         assert hass.states.get(entity_id).state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    "device_payload", [[DEVICE_1]]
+)
+async def test_port_control_switches(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_message: WebsocketMessageMock,
+    device_payload: list[dict[str, Any]],
+) -> None:
+    """Test port control entities work."""
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
+
+    ent_reg_entry = entity_registry.async_get("switch.mock_name_port_1")
+    assert ent_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+
+    # Enable entity
+    entity_registry.async_update_entity(
+        entity_id="switch.mock_name_port_1", disabled_by=None
+    )
+    entity_registry.async_update_entity(
+        entity_id="switch.mock_name_port_2", disabled_by=None
+    )
+
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
+
+    # Validate state object
+    assert hass.states.get("switch.mock_name_port_1").state == STATE_ON
+
+    # Update state object - disable port via port_overrides
+    device_1 = deepcopy(device_payload[0])
+    device_1["port_overrides"] = [{"port_idx": 1, "portconf_id": "1a1", "enable": False}]
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.mock_name_port_1").state == STATE_OFF
+
+    # Turn off port
+    aioclient_mock.clear_requests()
+    aioclient_mock.put(
+        f"https://{config_entry_setup.data[CONF_HOST]}:1234"
+        f"/api/s/{config_entry_setup.data[CONF_SITE_ID]}/rest/device/mock-id",
+    )
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {"entity_id": "switch.mock_name_port_1"},
+        blocking=True,
+    )
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
+    await hass.async_block_till_done()
+    assert aioclient_mock.call_count == 1
+    assert aioclient_mock.mock_calls[0][2] == {
+        "port_overrides": [{"enable": False, "port_idx": 1, "portconf_id": "1a1"}]
+    }
+
+    # Turn on port
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_on",
+        {"entity_id": "switch.mock_name_port_1"},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {"entity_id": "switch.mock_name_port_2"},
+        blocking=True,
+    )
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
+    await hass.async_block_till_done()
+    assert aioclient_mock.call_count == 2
+    assert aioclient_mock.mock_calls[1][2] == {
+        "port_overrides": [
+            {"enable": True, "port_idx": 1, "portconf_id": "1a1"},
+            {"enable": False, "port_idx": 2, "portconf_id": "1a2"},
+        ]
+    }
+
+    # Device gets disabled
+    device_1["disabled"] = True
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.mock_name_port_1").state == STATE_UNAVAILABLE
+
+    # Device gets re-enabled
+    device_1["disabled"] = False
+    mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.mock_name_port_1").state == STATE_OFF
