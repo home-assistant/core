@@ -65,7 +65,7 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[int, Packet]]):
 
         self.client = None
 
-        self.config_entry.async_on_unload(
+        config_entry.async_on_unload(
             async_register_callback(
                 hass,
                 self._async_handle_bluetooth_event,
