@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_entry():
+def mock_entry() -> MockConfigEntry:
     """Create hass config fixture."""
     return MockConfigEntry(
         domain=DOMAIN,
