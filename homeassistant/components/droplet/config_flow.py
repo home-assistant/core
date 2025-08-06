@@ -32,7 +32,6 @@ _LOGGER = logging.getLogger(__name__)
 class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle Droplet config flow."""
 
-    VERSION = 1
 
     _droplet_discovery: DropletDiscovery | None = None
 
@@ -61,7 +60,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm the setup."""
-        errors = {}
+        errors: dict[str, str] = {}
         if self._droplet_discovery is None:
             return self.async_abort(reason="device_not_found")
         if self._droplet_discovery.device_id is None:

@@ -23,10 +23,8 @@ async def async_setup_entry(
 ) -> bool:
     """Set up Droplet from a config entry."""
 
-    if TYPE_CHECKING:
-        assert config_entry.unique_id is not None
     droplet_coordinator = DropletDataCoordinator(hass, config_entry)
-
+    await droplet_coordinator.async_config_entry_first_refresh()
     config_entry.runtime_data = droplet_coordinator
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -40,11 +38,6 @@ async def async_setup_entry(
     return True
 
 
-async def async_reload_entry(
-    hass: HomeAssistant, config_entry: DropletConfigEntry
-) -> None:
-    """Reload the config entry when it changed."""
-    hass.config_entries.async_schedule_reload(config_entry.entry_id)
 
 
 async def async_unload_entry(
