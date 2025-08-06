@@ -154,7 +154,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
     device_registry = dr.async_get(hass)
     for device in manager.device_map.values():
         LOGGER.debug(
-            "Add device %s: %s (function: %s, status range: %s)",
+            "Register device %s: %s (function: %s, status range: %s)",
             device.id,
             device.status,
             device.function,
