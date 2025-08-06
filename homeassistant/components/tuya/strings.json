@@ -711,6 +711,20 @@
           "charging": "[%key:common::state::charging%]",
           "charge_done": "Charge done"
         }
+      },
+      "liquid_state": {
+        "name": "Liquid state",
+        "state": {
+          "normal": "[%key:common::state::normal%]",
+          "lower_alarm": "[%key:common::state::low%]",
+          "upper_alarm": "[%key:common::state::high%]"
+        }
+      },
+      "liquid_depth": {
+        "name": "Liquid depth"
+      },
+      "liquid_level": {
+        "name": "Liquid level"
       }
     },
     "switch": {
