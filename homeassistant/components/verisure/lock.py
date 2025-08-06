@@ -140,7 +140,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         target_state = "LOCKED" if state == LockState.LOCKED else "UNLOCKED"
         lock_status = None
         attempts = 0
-        while lock_status != "OK":
+        while lock_status is None:
             if attempts == 30:
                 break
             if attempts > 1:
