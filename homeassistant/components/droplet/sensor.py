@@ -34,7 +34,6 @@ from .const import (
     KEY_SERVER_CONNECTIVITY,
     KEY_SIGNAL_QUALITY,
     KEY_VOLUME,
-    AccumulatedVolume,
 )
 from .coordinator import DropletConfigEntry, DropletDataCoordinator
 
@@ -69,36 +68,6 @@ SENSORS: list[DropletSensorEntityDescription] = [
         suggested_display_precision=2,
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda device: device.get_volume_delta(),
-    ),
-    DropletSensorEntityDescription(
-        key=AccumulatedVolume.DAILY,
-        translation_key=AccumulatedVolume.DAILY,
-        device_class=SensorDeviceClass.WATER,
-        native_unit_of_measurement=UnitOfVolume.LITERS,
-        suggested_unit_of_measurement=UnitOfVolume.GALLONS,
-        suggested_display_precision=2,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda device: device.get_daily_volume(),
-    ),
-    DropletSensorEntityDescription(
-        key=AccumulatedVolume.WEEKLY,
-        translation_key=AccumulatedVolume.WEEKLY,
-        device_class=SensorDeviceClass.WATER,
-        native_unit_of_measurement=UnitOfVolume.LITERS,
-        suggested_unit_of_measurement=UnitOfVolume.GALLONS,
-        suggested_display_precision=2,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda device: device.get_weekly_volume(),
-    ),
-    DropletSensorEntityDescription(
-        key=AccumulatedVolume.MONTHLY,
-        translation_key=AccumulatedVolume.MONTHLY,
-        device_class=SensorDeviceClass.WATER,
-        native_unit_of_measurement=UnitOfVolume.LITERS,
-        suggested_unit_of_measurement=UnitOfVolume.GALLONS,
-        suggested_display_precision=2,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda device: device.get_monthly_volume(),
     ),
     DropletSensorEntityDescription(
         key=KEY_SERVER_CONNECTIVITY,

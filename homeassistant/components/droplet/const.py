@@ -1,7 +1,5 @@
 """Constants for the droplet integration."""
 
-import enum
-
 # Keys for values used in the config_entry data dictionary
 CONF_DEVICE_NAME = "name"
 CONF_MANUFACTURER = "manufacturer"
@@ -17,11 +15,3 @@ KEY_CURRENT_FLOW_RATE = "current_flow_rate"
 KEY_VOLUME = "volume"
 KEY_SIGNAL_QUALITY = "signal_quality"
 KEY_SERVER_CONNECTIVITY = "server_connectivity"
-
-
-class AccumulatedVolume(enum.StrEnum):
-    """Represent a time interval."""
-
-    DAILY = "daily_volume"
-    WEEKLY = "weekly_volume"
-    MONTHLY = "monthly_volume"
