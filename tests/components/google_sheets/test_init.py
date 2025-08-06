@@ -213,6 +213,33 @@ async def test_append_sheet(
     assert len(mock_client.mock_calls) == 8
 
 
+async def test_fetch_sheet(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test service call appending to a sheet."""
+    await setup_integration()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+
+    with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
+        await hass.services.async_call(
+            DOMAIN,
+            "fetch_sheet",
+            {
+                "config_entry": config_entry.entry_id,
+                "worksheet": "Sheet1",
+                "rows": 2,
+            },
+            blocking=True,
+            return_response=True,
+        )
+    assert len(mock_client.mock_calls) == 5
+
+
 async def test_append_sheet_multiple_rows(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
