@@ -9,6 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant import config_entries
 from homeassistant.components.togrill.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import TOGRILL_SERVICE_INFO, TOGRILL_SERVICE_INFO_NO_NAME
 
@@ -30,13 +31,20 @@ async def test_user_selection(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result == snapshot
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={"address": "00000000-0000-0000-0000-000000000001"},
     )
-    assert result == snapshot
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "address": "00000000-0000-0000-0000-000000000001",
+        "model": "Pro-05",
+        "probe_count": 0,
+    }
+    assert result["title"] == "Pro-05"
 
 
 async def test_failed_connect(
@@ -54,13 +62,15 @@ async def test_failed_connect(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result == snapshot
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={"address": "00000000-0000-0000-0000-000000000001"},
     )
-    assert result == snapshot
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "failed_to_read_config"
 
 
 async def test_failed_read(
@@ -75,7 +85,8 @@ async def test_failed_read(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result == snapshot
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
     mock_client.read.side_effect = BleakError("something went wrong")
 
@@ -83,7 +94,8 @@ async def test_failed_read(
         result["flow_id"],
         user_input={"address": "00000000-0000-0000-0000-000000000001"},
     )
-    assert result == snapshot
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "failed_to_read_config"
 
 
 async def test_no_devices(
@@ -97,7 +109,8 @@ async def test_no_devices(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result == snapshot
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
 
 
 async def test_bluetooth(
@@ -112,10 +125,16 @@ async def test_bluetooth(
 
     result = next(iter(hass.config_entries.flow.async_progress_by_handler(DOMAIN)))
 
-    assert result == snapshot
+    assert result["step_id"] == "bluetooth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={},
     )
-    assert result == snapshot
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "address": "00000000-0000-0000-0000-000000000001",
+        "model": "Pro-05",
+        "probe_count": 0,
+    }
+    assert result["title"] == "Pro-05"
