@@ -8,7 +8,7 @@ import logging
 from typing import Any, cast
 
 import pyatmo
-from pyatmo.modules import PublicWeatherArea
+from pyatmo.modules import Module, PublicWeatherArea
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -397,7 +397,9 @@ async def async_setup_entry(
 
     @callback
     def _create_battery_entity(netatmo_device: NetatmoDevice) -> None:
-        if not hasattr(netatmo_device.device, "battery"):
+        if not isinstance(netatmo_device.device, Module) or not hasattr(
+            netatmo_device.device, "battery"
+        ):
             return
         entity = NetatmoClimateBatterySensor(netatmo_device)
         async_add_entities([entity])
@@ -408,6 +410,9 @@ async def async_setup_entry(
 
     @callback
     def _create_weather_sensor_entity(netatmo_device: NetatmoDevice) -> None:
+        if not isinstance(netatmo_device.device, Module):
+            return
+
         async_add_entities(
             NetatmoWeatherSensor(netatmo_device, description)
             for description in SENSOR_TYPES
@@ -422,6 +427,9 @@ async def async_setup_entry(
 
     @callback
     def _create_sensor_entity(netatmo_device: NetatmoDevice) -> None:
+        if not isinstance(netatmo_device.device, Module):
+            return
+
         _LOGGER.debug(
             "Adding %s sensor %s",
             netatmo_device.device.device_category,
@@ -561,15 +569,18 @@ class NetatmoClimateBatterySensor(NetatmoModuleEntity, SensorEntity):
         super().__init__(netatmo_device)
         self.entity_description = BATTERY_SENSOR_DESCRIPTION
 
-        self._publishers.extend(
-            [
-                {
-                    "name": HOME,
-                    "home_id": netatmo_device.device.home.entity_id,
-                    SIGNAL_NAME: netatmo_device.signal_name,
-                },
-            ]
-        )
+        if isinstance(netatmo_device.device, Module):
+            self._publishers.extend(
+                [
+                    {
+                        "name": HOME,
+                        "home_id": netatmo_device.device.home.entity_id,
+                        SIGNAL_NAME: netatmo_device.signal_name,
+                    },
+                ]
+            )
+        else:
+            self._publishers.extend([])
 
         self._attr_unique_id = f"{netatmo_device.parent_id}-{self.device.entity_id}-{self.entity_description.key}"
         self._attr_device_info = DeviceInfo(
