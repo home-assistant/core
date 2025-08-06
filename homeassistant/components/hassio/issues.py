@@ -103,6 +103,7 @@ ISSUE_KEYS_FOR_REPAIRS = {
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
+    "issue_system_disk_lifetime",
 }
 
 _LOGGER = logging.getLogger(__name__)
