@@ -224,7 +224,7 @@
         "name": "Installation height"
       },
       "maximum_liquid_depth": {
-        "name": "Maximum Liquid depth"
+        "name": "Maximum liquid depth"
       }
     },
     "select": {

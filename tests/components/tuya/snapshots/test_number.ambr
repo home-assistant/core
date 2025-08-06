@@ -906,7 +906,7 @@
     }),
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
-    'original_name': 'Maximum Liquid depth',
+    'original_name': 'Maximum liquid depth',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -920,7 +920,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'Rainwater Tank Level Maximum Liquid depth',
+      'friendly_name': 'Rainwater Tank Level Maximum liquid depth',
       'max': 2.7,
       'min': 0.1,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1140,7 +1140,7 @@
     }),
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
-    'original_name': 'Maximum Liquid depth',
+    'original_name': 'Maximum liquid depth',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1154,7 +1154,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'House Water Level Maximum Liquid depth',
+      'friendly_name': 'House Water Level Maximum liquid depth',
       'max': 2.4,
       'min': 0.1,
       'mode': <NumberMode.AUTO: 'auto'>,
