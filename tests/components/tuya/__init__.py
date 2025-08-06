@@ -356,10 +356,34 @@ DEVICE_MOCKS = {
         Platform.SIREN,
         Platform.SWITCH,
     ],
+    "tdq_1aegphq4yfd50e6b": [
+        # https://github.com/home-assistant/core/issues/143209
+        Platform.SELECT,
+        Platform.SWITCH,
+    ],
+    "tdq_9htyiowaf5rtdhrv": [
+        # https://github.com/home-assistant/core/issues/143209
+        Platform.SELECT,
+        Platform.SWITCH,
+    ],
     "tdq_cq1p0nt0a4rixnex": [
         # https://github.com/home-assistant/core/issues/146845
         Platform.SELECT,
         Platform.SWITCH,
+    ],
+    "tdq_nockvv2k39vbrxxk": [
+        # https://github.com/home-assistant/core/issues/145849
+        Platform.SWITCH,
+    ],
+    "tdq_pu8uhxhwcp3tgoz7": [
+        # https://github.com/home-assistant/core/issues/141278
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
+    "tdq_uoa3mayicscacseb": [
+        # https://github.com/home-assistant/core/issues/128911
+        # SDK information is empty
     ],
     "tyndj_pyakuuoc": [
         # https://github.com/home-assistant/core/issues/149704
