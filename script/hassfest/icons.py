@@ -126,7 +126,7 @@ CONDITION_ICONS_SCHEMA = cv.schema_with_slug_keys(
             vol.Optional("condition"): icon_value_validator,
         }
     ),
-    slug_validator=translation_key_validator,
+    slug_validator=cv.underscore_slug,
 )
 
 
