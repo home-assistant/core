@@ -126,7 +126,6 @@ SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
         key=API_ABS_HUMID,
         device_class=SensorDeviceClass.ABSOLUTE_HUMIDITY,
         native_unit_of_measurement=CONCENTRATION_GRAMS_PER_CUBIC_METER,
-        translation_key="absolute_humidity",
         unique_id_tag="absolute_humidity",
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
