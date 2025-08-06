@@ -151,7 +151,7 @@ class NetatmoModuleEntity(NetatmoDeviceEntity):
     """Netatmo module entity base class."""
 
     device: Module
-    _attr_configuration_url: str
+    _attr_configuration_url: str | None
 
     def __init__(self, device: NetatmoDevice) -> None:
         """Set up a Netatmo module entity."""
