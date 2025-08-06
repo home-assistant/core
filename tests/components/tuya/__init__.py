@@ -434,7 +434,7 @@ DEVICE_MOCKS = {
         Platform.SENSOR,
     ],
     "ywcgq_wtzwyhkev3b4ubns": [
-        # https://community.home-assistant.io/t/something-is-wrong-with-tuya-tank-level-sensors-with-the-new-official-integration/689321
+        # https://github.com/home-assistant/core/issues/103818
         Platform.NUMBER,
         Platform.SENSOR,
     ],
