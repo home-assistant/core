@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switches[cooktop][switch.mock_cooktop_dead_front_1-entry]
+# name: test_switches[cooktop][switch.mock_cooktop_control_panel_lock_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.mock_cooktop_dead_front_1',
+    'entity_id': 'switch.mock_cooktop_control_panel_lock_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,7 +24,7 @@
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
-    'original_name': 'Dead front (1)',
+    'original_name': 'Control panel lock (1)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -34,21 +34,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[cooktop][switch.mock_cooktop_dead_front_1-state]
+# name: test_switches[cooktop][switch.mock_cooktop_control_panel_lock_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
-      'friendly_name': 'Mock Cooktop Dead front (1)',
+      'friendly_name': 'Mock Cooktop Control panel lock (1)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.mock_cooktop_dead_front_1',
+    'entity_id': 'switch.mock_cooktop_control_panel_lock_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switches[cooktop][switch.mock_cooktop_dead_front_2-entry]
+# name: test_switches[cooktop][switch.mock_cooktop_control_panel_lock_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -61,7 +61,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.mock_cooktop_dead_front_2',
+    'entity_id': 'switch.mock_cooktop_control_panel_lock_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -73,7 +73,7 @@
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
-    'original_name': 'Dead front (2)',
+    'original_name': 'Control panel lock (2)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -83,14 +83,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[cooktop][switch.mock_cooktop_dead_front_2-state]
+# name: test_switches[cooktop][switch.mock_cooktop_control_panel_lock_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
-      'friendly_name': 'Mock Cooktop Dead front (2)',
+      'friendly_name': 'Mock Cooktop Control panel lock (2)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.mock_cooktop_dead_front_2',
+    'entity_id': 'switch.mock_cooktop_control_panel_lock_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -341,7 +341,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[laundry_dryer][switch.mock_laundrydryer_dead_front-entry]
+# name: test_switches[laundry_dryer][switch.mock_laundrydryer_control_panel_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -354,7 +354,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.mock_laundrydryer_dead_front',
+    'entity_id': 'switch.mock_laundrydryer_control_panel_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -366,7 +366,7 @@
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
-    'original_name': 'Dead front',
+    'original_name': 'Control panel lock',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -376,14 +376,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[laundry_dryer][switch.mock_laundrydryer_dead_front-state]
+# name: test_switches[laundry_dryer][switch.mock_laundrydryer_control_panel_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
-      'friendly_name': 'Mock Laundrydryer Dead front',
+      'friendly_name': 'Mock Laundrydryer Control panel lock',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.mock_laundrydryer_dead_front',
+    'entity_id': 'switch.mock_laundrydryer_control_panel_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -488,7 +488,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[oven][switch.mock_oven_dead_front_3-entry]
+# name: test_switches[oven][switch.mock_oven_control_panel_lock_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -501,7 +501,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.mock_oven_dead_front_3',
+    'entity_id': 'switch.mock_oven_control_panel_lock_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -513,7 +513,7 @@
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
-    'original_name': 'Dead front (3)',
+    'original_name': 'Control panel lock (3)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -523,21 +523,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[oven][switch.mock_oven_dead_front_3-state]
+# name: test_switches[oven][switch.mock_oven_control_panel_lock_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
-      'friendly_name': 'Mock Oven Dead front (3)',
+      'friendly_name': 'Mock Oven Control panel lock (3)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.mock_oven_dead_front_3',
+    'entity_id': 'switch.mock_oven_control_panel_lock_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_switches[oven][switch.mock_oven_dead_front_4-entry]
+# name: test_switches[oven][switch.mock_oven_control_panel_lock_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -550,7 +550,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.mock_oven_dead_front_4',
+    'entity_id': 'switch.mock_oven_control_panel_lock_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -562,7 +562,7 @@
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
-    'original_name': 'Dead front (4)',
+    'original_name': 'Control panel lock (4)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -572,14 +572,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[oven][switch.mock_oven_dead_front_4-state]
+# name: test_switches[oven][switch.mock_oven_control_panel_lock_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
-      'friendly_name': 'Mock Oven Dead front (4)',
+      'friendly_name': 'Mock Oven Control panel lock (4)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.mock_oven_dead_front_4',
+    'entity_id': 'switch.mock_oven_control_panel_lock_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -732,7 +732,7 @@
     'state': 'on',
   })
 # ---
-# name: test_switches[silabs_refrigerator][switch.refrigerator_dead_front-entry]
+# name: test_switches[silabs_refrigerator][switch.refrigerator_control_panel_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -745,7 +745,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.refrigerator_dead_front',
+    'entity_id': 'switch.refrigerator_control_panel_lock',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -757,7 +757,7 @@
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
-    'original_name': 'Dead front',
+    'original_name': 'Control panel lock',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -767,14 +767,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[silabs_refrigerator][switch.refrigerator_dead_front-state]
+# name: test_switches[silabs_refrigerator][switch.refrigerator_control_panel_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
-      'friendly_name': 'Refrigerator Dead front',
+      'friendly_name': 'Refrigerator Control panel lock',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.refrigerator_dead_front',
+    'entity_id': 'switch.refrigerator_control_panel_lock',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
