@@ -84,7 +84,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.68.2
+PySwitchbot==0.68.3
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -573,7 +573,7 @@ av==13.1.0
 # avion==0.10
 
 # homeassistant.components.axis
-axis==64
+axis==65
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.7
@@ -1133,10 +1133,10 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.4.1
 
 # homeassistant.components.bluetooth
-habluetooth==4.0.1
+habluetooth==4.0.2
 
 # homeassistant.components.cloud
-hass-nabucasa==0.111.0
+hass-nabucasa==0.111.1
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1310,7 +1310,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.8.4.154919
+knx-frontend==2025.8.6.52906
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -2808,7 +2808,7 @@ smart-meter-texas==0.5.5
 snapcast==2.3.6
 
 # homeassistant.components.sonos
-soco==0.30.9
+soco==0.30.11
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
@@ -3170,7 +3170,7 @@ yalexs-ble==3.1.2
 
 # homeassistant.components.august
 # homeassistant.components.yale
-yalexs==8.10.0
+yalexs==8.11.1
 
 # homeassistant.components.yeelight
 yeelight==0.7.16
@@ -3206,7 +3206,7 @@ zeroconf==0.147.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.65
+zha==0.0.66
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
