@@ -6,7 +6,6 @@ import logging
 from typing import cast
 
 from pyatmo.modules import Module
-from pyatmo.modules.device_types import DeviceCategory as NetatmoDeviceCategory
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -31,7 +30,7 @@ def process_opening_status(device: Module) -> bool | None:
 
     if status == "closed":
         return False
-    if status in ["open", "not_detected"]:
+    if status in ["open", "not_detected", "no_news"]:
         return True
     return None
 
@@ -75,7 +74,7 @@ async def async_setup_entry(
     @callback
     def _create_binary_sensor_entity(netatmo_device: NetatmoDevice) -> None:
         """Create new binary sensor entities."""
-        entities = []
+        entities: list[NetatmoBinarySensor] = []
 
         if not hasattr(netatmo_device, "module") or not isinstance(
             netatmo_device.module, Module
@@ -85,26 +84,29 @@ async def async_setup_entry(
             )
             return
 
-        # Logic for creating opening sensors
-        if netatmo_device.module.device_category == NetatmoDeviceCategory.opening:
-            entities.extend(
-                [
-                    NetatmoBinarySensor(netatmo_device, description)
-                    for description in OPENING_BINARY_SENSOR_TYPES
-                ]
-            )
-
-        # Logic for creating common sensors (like reachable)
         entities.extend(
-            [
-                NetatmoBinarySensor(netatmo_device, description)
-                for description in NETATMO_BINARY_SENSOR_TYPES
-                if hasattr(netatmo_device.module, description.key)
-            ]
+            NetatmoBinarySensor(netatmo_device, description)
+            for description in NETATMO_BINARY_SENSOR_TYPES
         )
 
+        if hasattr(netatmo_device.module, "status"):
+            entities.extend(
+                NetatmoBinarySensor(netatmo_device, description)
+                for description in OPENING_BINARY_SENSOR_TYPES
+            )
+
         if entities:
+            _LOGGER.debug(
+                "Adding %s entities for device %s",
+                len(entities),
+                netatmo_device.device.name,
+            )
             async_add_entities(entities)
+        else:
+            _LOGGER.debug(
+                "No binary sensor entities created for device %s",
+                netatmo_device.device.name,
+            )
 
     entry.async_on_unload(
         async_dispatcher_connect(
@@ -117,26 +119,19 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
     """Implementation of a Netatmo binary sensor."""
 
     entity_description: NetatmoBinarySensorEntityDescription
+    _attr_has_entity_name = True
 
     def __init__(
-        self, device: NetatmoDevice, description: NetatmoBinarySensorEntityDescription
+        self,
+        netatmo_device: NetatmoDevice,
+        description: NetatmoBinarySensorEntityDescription,
     ) -> None:
         """Initialize a Netatmo binary sensor."""
+        self._attr_unique_id = f"{netatmo_device.device.entity_id}-{description.key}"
+        self._attr_configuration_url = getattr(netatmo_device.device, "url", None)
+
+        super().__init__(netatmo_device)
         self.entity_description = description
-        self._attr_translation_key = description.netatmo_name
-        self._attr_unique_id = f"{device.device.entity_id}-{description.key}"
-
-        if isinstance(description.netatmo_name, str):
-            self._attr_translation_key = description.netatmo_name
-        else:
-            self._attr_translation_key = "Undefined"
-
-        if hasattr(device.device, "url") and device.device.url:
-            self._attr_configuration_url = device.device.url
-        else:
-            self._attr_configuration_url = ""
-
-        super().__init__(device)
 
     @property
     def is_on(self) -> bool | None:
@@ -149,14 +144,20 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         status = None
         module = cast(Module, getattr(self.device, "module", None))
 
-        if module:
-            status = self.entity_description.value_fn(module)
-            _LOGGER.debug(
-                "Updating sensor '%s' for module '%s' with status: %s",
-                self.entity_description.key,
-                module.name,
-                status,
-            )
+        if not module or not module.reachable:
+            if self.available:
+                self._attr_available = False
+            self.async_write_ha_state()
+            return
 
+        status = self.entity_description.value_fn(module)
+        _LOGGER.debug(
+            "Updating sensor '%s' for module '%s' with status: %s",
+            self.entity_description.key,
+            module.name,
+            status,
+        )
+
+        self._attr_available = True
         self._attr_is_on = status
         self.async_write_ha_state()
