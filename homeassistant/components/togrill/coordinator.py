@@ -19,7 +19,7 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 type ToGrillConfigEntry = ConfigEntry[ToGrillCoordinator]
@@ -47,7 +47,6 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[int, Packet]]):
         hass: HomeAssistant,
         config_entry: ToGrillConfigEntry,
         logger: logging.Logger,
-        device_info: DeviceInfo,
         address: str,
     ) -> None:
         """Initialize global data updater."""
@@ -60,7 +59,10 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[int, Packet]]):
         )
         self.address = address
         self.data = {}
-        self.device_info = device_info
+        self.device_info = DeviceInfo(
+            name=config_entry.title, connections={(CONNECTION_BLUETOOTH, address)}
+        )
+
         self.client = None
 
         self.config_entry.async_on_unload(

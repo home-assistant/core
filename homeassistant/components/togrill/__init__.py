@@ -7,7 +7,6 @@ import logging
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 
 from .coordinator import DeviceNotFound, ToGrillConfigEntry, ToGrillCoordinator
 
@@ -19,11 +18,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ToGrillConfigEntry) -> b
     """Set up ToGrill Bluetooth from a config entry."""
 
     address = entry.data[CONF_ADDRESS]
-    device_info = DeviceInfo(
-        name=entry.title, connections={(CONNECTION_BLUETOOTH, address)}
-    )
 
-    coordinator = ToGrillCoordinator(hass, entry, _LOGGER, device_info, address)
+    coordinator = ToGrillCoordinator(hass, entry, _LOGGER, address)
     try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady as exc:
