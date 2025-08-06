@@ -245,7 +245,7 @@ class DeviceListener(SharingDeviceListener):
         self.hass.add_job(self.async_remove_device, device.id)
 
         LOGGER.debug(
-            "Add new device %s: %s (function: %s, status range: %s)",
+            "Add device %s: %s (function: %s, status range: %s)",
             device.id,
             device.status,
             device.function,
