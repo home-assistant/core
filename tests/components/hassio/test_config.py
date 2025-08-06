@@ -1,5 +1,7 @@
 """Test websocket API."""
 
+from collections.abc import Iterator
+import itertools
 from typing import Any
 from unittest.mock import AsyncMock, patch
 from uuid import UUID
@@ -17,6 +19,17 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
 MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
+
+
+def uuid_generator() -> Iterator[UUID]:
+    """Generate UUIDs for testing.
+
+    Returns a fixed UUID first (for snapshot consistency),
+    then generates sequential UUIDs to avoid collisions.
+    """
+    yield UUID(bytes=b"very_very_random", version=4)
+    for i in itertools.count():
+        yield UUID(f"12345678-1234-5678-1234-{i:012d}")
 
 
 @pytest.fixture(autouse=True)
@@ -153,7 +166,10 @@ async def test_load_config_store(
 
     with (
         patch("homeassistant.components.hassio.config.STORE_DELAY_SAVE", 0),
-        patch("uuid.uuid4", return_value=UUID(bytes=b"very_very_random", version=4)),
+        patch(
+            "homeassistant.auth.models.uuid.uuid4",
+            side_effect=uuid_generator(),
+        ),
     ):
         assert await async_setup_component(hass, "hassio", {})
         await hass.async_block_till_done()
@@ -173,7 +189,10 @@ async def test_save_config_store(
     """Test saving the config store."""
     with (
         patch("homeassistant.components.hassio.config.STORE_DELAY_SAVE", 0),
-        patch("uuid.uuid4", return_value=UUID(bytes=b"very_very_random", version=4)),
+        patch(
+            "homeassistant.auth.models.uuid.uuid4",
+            side_effect=uuid_generator(),
+        ),
     ):
         assert await async_setup_component(hass, "hassio", {})
         await hass.async_block_till_done()
