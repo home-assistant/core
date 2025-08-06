@@ -3291,6 +3291,54 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_platform_setup_and_discovery[wg2_haclbl0qkqlf2qds][switch.home_gateway_mute-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.home_gateway_mute',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mute',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mute',
+    'unique_id': 'tuya.bf315df1a84540f70dlppumuffling',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[wg2_haclbl0qkqlf2qds][switch.home_gateway_mute-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Home Gateway Mute',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.home_gateway_mute',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_platform_setup_and_discovery[wk_aqoouq7x][switch.clima_cucina_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

@@ -785,6 +785,15 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Gateway control
+    # https://developer.tuya.com/en/docs/iot/wg?id=Kbcdadk79ejok
+    "wg2": (
+        SwitchEntityDescription(
+            key=DPCode.MUFFLING,
+            translation_key="mute",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Thermostat
     # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
     "wk": (
