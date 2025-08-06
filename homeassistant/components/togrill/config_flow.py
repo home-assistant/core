@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from typing import Any
 
 from bleak.exc import BleakError
@@ -22,8 +21,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
 
 from .const import CONF_PROBE_COUNT, DOMAIN
+from .coordinator import LOGGER
 
-_LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 10
 
 
@@ -41,7 +40,7 @@ async def read_config_data(
     try:
         client = await Client.connect(info.device, _notify_callback)
     except BleakError as exc:
-        _LOGGER.debug("Failed to connect", exc_info=True)
+        LOGGER.debug("Failed to connect", exc_info=True)
         raise AbortFlow("failed_to_read_config") from exc
 
     try:
@@ -49,7 +48,7 @@ async def read_config_data(
         async with asyncio.timeout(_TIMEOUT):
             packet_a0 = await packet_a0_future
     except BleakError as exc:
-        _LOGGER.debug("Failed to read data", exc_info=True)
+        LOGGER.debug("Failed to read data", exc_info=True)
         raise AbortFlow("failed_to_read_config") from exc
     finally:
         await client.disconnect()

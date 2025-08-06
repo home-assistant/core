@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-import logging
-
 from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .coordinator import DeviceNotFound, ToGrillConfigEntry, ToGrillCoordinator
+from .coordinator import LOGGER, DeviceNotFound, ToGrillConfigEntry, ToGrillCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ToGrillConfigEntry) -> bool:
@@ -19,7 +16,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ToGrillConfigEntry) -> b
 
     address = entry.data[CONF_ADDRESS]
 
-    coordinator = ToGrillCoordinator(hass, entry, _LOGGER, address)
+    coordinator = ToGrillCoordinator(hass, entry, LOGGER, address)
     try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady as exc:
