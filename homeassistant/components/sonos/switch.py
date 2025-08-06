@@ -72,9 +72,8 @@ POLL_REQUIRED = (
 
 WEEKEND_DAYS = (0, 6)
 
-# Mapping of model names to feature attributes
-# that need to be substituted for compatibility.
-# This is used to handle differences in feature names across Sonos models.
+# Mapping of model names to feature attributes that need to be substituted.
+# This is used to handle differences in attributes across Sonos models.
 MODEL_FEATURE_SUBSTITUTIONS: dict[str, dict[str, str]] = {
     MODEL_SONOS_ARC_ULTRA: {
         ATTR_SPEECH_ENHANCEMENT: ATTR_SPEECH_ENHANCEMENT_ENABLED,
