@@ -213,6 +213,18 @@
       },
       "siren_duration": {
         "name": "Siren duration"
+      },
+      "alarm_maximum": {
+        "name": "Alarm maximum"
+      },
+      "alarm_minimum": {
+        "name": "Alarm minimum"
+      },
+      "installation_height": {
+        "name": "Installation height"
+      },
+      "maximum_liquid_depth": {
+        "name": "Maximum Liquid depth"
       }
     },
     "select": {
