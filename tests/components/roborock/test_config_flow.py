@@ -199,7 +199,7 @@ async def test_config_flow_failures_code_login(
 
 
 async def test_options_flow_drawables(
-    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
+    hass: HomeAssistant, bypass_api_fixture, mock_roborock_entry: MockConfigEntry
 ) -> None:
     """Test that the options flow works."""
     with patch("homeassistant.components.roborock.roborock_storage"):
@@ -267,6 +267,7 @@ async def test_reauth_flow(
     assert result["reason"] == "reauth_successful"
     assert mock_roborock_entry.unique_id == ROBOROCK_RRUID
     assert mock_roborock_entry.data["user_data"]["rriot"]["s"] == "new_password_hash"
+    await hass.async_block_till_done()
 
 
 async def test_account_already_configured(
