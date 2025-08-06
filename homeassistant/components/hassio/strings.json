@@ -128,7 +128,7 @@
       "title": "Unhealthy system - Duplicate Home Assistant OS installation"
     },
     "unhealthy_oserror_bad_message": {
-      "description": "System is currently unhealthy because the operating system has reported an error: Bad message. For troubleshooting information, select Learn more.",
+      "description": "System is currently unhealthy because the operating system has reported an OS error: Bad message. For troubleshooting information, select Learn more.",
       "title": "Unhealthy system - Operating System error: Bad message"
     },
     "unhealthy_privileged": {
