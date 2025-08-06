@@ -126,12 +126,15 @@ class ToGrillSensor(ToGrillEntity, SensorEntity):
         self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.address}_{entity_description.key}"
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self.native_value is not None
+
     def _handle_coordinator_update(self) -> None:
-        packet = self.coordinator.data.get(self.entity_description.packet_type)
         value = None
-        if packet:
+        if packet := self.coordinator.data.get(self.entity_description.packet_type):
             value = self.entity_description.packet_extract(packet)
 
         self._attr_native_value = value
-        self._attr_available = value is not None
         super()._handle_coordinator_update()
