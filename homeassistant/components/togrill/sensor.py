@@ -120,10 +120,9 @@ class ToGrillSensor(ToGrillEntity, SensorEntity):
         """Return if entity is available."""
         return super().available and self.native_value is not None
 
-    def _handle_coordinator_update(self) -> None:
-        value = None
+    @property
+    def native_value(self) -> StateType:
+        """Get current value."""
         if packet := self.coordinator.data.get(self.entity_description.packet_type):
-            value = self.entity_description.packet_extract(packet)
-
-        self._attr_native_value = value
-        super()._handle_coordinator_update()
+            return self.entity_description.packet_extract(packet)
+        return None
