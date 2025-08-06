@@ -166,7 +166,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
             manufacturer="Tuya",
             name=device.name,
             # Note: the model is overridden via entity.device_info property
-            # when the entity is created. It no entities are generated, it will
+            # when the entity is created. If no entities are generated, it will
             # stay as unsupported
             model=f"{device.product_name} (unsupported)",
             model_id=device.product_id,
