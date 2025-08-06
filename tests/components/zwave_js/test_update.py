@@ -269,7 +269,7 @@ async def test_update_entity_sleep(
     zen_31: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test update occurs when device is asleep after it wakes up."""
+    """Test update occurs when device is asleep."""
     event = Event(
         "sleep",
         data={"source": "node", "event": "sleep", "nodeId": zen_31.node_id},
@@ -283,29 +283,13 @@ async def test_update_entity_sleep(
     await hass.async_block_till_done()
 
     # Two nodes in total, the controller node and the zen_31 node.
-    # The zen_31 node is asleep,
-    # so we should only check for updates for the controller node.
-    assert client.async_send_command.call_count == 1
-    args = client.async_send_command.call_args[0][0]
-    assert args["command"] == "controller.get_available_firmware_updates"
-    assert args["nodeId"] == 1
-
-    client.async_send_command.reset_mock()
-
-    event = Event(
-        "wake up",
-        data={"source": "node", "event": "wake up", "nodeId": zen_31.node_id},
-    )
-    zen_31.receive_event(event)
-    await hass.async_block_till_done()
-
-    # Now that the zen_31 node is awake we can check for updates for it.
-    # The controller node has already been checked,
-    # so won't get another check now.
-    assert client.async_send_command.call_count == 1
-    args = client.async_send_command.call_args[0][0]
-    assert args["command"] == "controller.get_available_firmware_updates"
-    assert args["nodeId"] == 94
+    # We should check for updates for both nodes, including the sleeping one
+    # since the firmware check no longer requires device communication first.
+    assert client.async_send_command.call_count == 2
+    # Check calls were made for both nodes
+    call_args = [call[0][0] for call in client.async_send_command.call_args_list]
+    assert any(args["nodeId"] == 1 for args in call_args)  # Controller node
+    assert any(args["nodeId"] == 94 for args in call_args)  # zen_31 node
 
 
 async def test_update_entity_dead(
@@ -1158,28 +1142,3 @@ async def test_update_entity_no_latest_version(
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_SKIPPED_VERSION] is None
     assert state.attributes[ATTR_LATEST_VERSION] == latest_version
-
-
-async def test_update_entity_unload_asleep_node(
-    hass: HomeAssistant,
-    client: MagicMock,
-    wallmote_central_scene: Node,
-    integration: MockConfigEntry,
-) -> None:
-    """Test unloading config entry after attempting an update for an asleep node."""
-    config_entry = integration
-    assert client.async_send_command.call_count == 0
-
-    client.async_send_command.reset_mock()
-    client.async_send_command.return_value = {"updates": []}
-
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
-    await hass.async_block_till_done()
-
-    # Once call completed for the (awake) controller node.
-    assert client.async_send_command.call_count == 1
-    assert len(wallmote_central_scene._listeners["wake up"]) == 1
-
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    assert client.async_send_command.call_count == 1
-    assert len(wallmote_central_scene._listeners["wake up"]) == 0
