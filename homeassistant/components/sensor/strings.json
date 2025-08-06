@@ -223,7 +223,7 @@
       "name": "Moisture"
     },
     "monetary": {
-      "name": "Balance"
+      "name": "Monetary balance"
     },
     "nitrogen_dioxide": {
       "name": "Nitrogen dioxide"
