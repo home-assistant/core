@@ -27,7 +27,9 @@ _LOGGER = logging.getLogger(__name__)
 _TIMEOUT = 10
 
 
-async def read_config_data(hass: HomeAssistant, info: BluetoothServiceInfoBleak):
+async def read_config_data(
+    hass: HomeAssistant, info: BluetoothServiceInfoBleak
+) -> dict[str, Any]:
     """Read config from device."""
 
     packet_a0_future = asyncio.Future[PacketA0Notify]()
