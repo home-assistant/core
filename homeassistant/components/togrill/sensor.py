@@ -128,9 +128,10 @@ class ToGrillSensor(ToGrillEntity, SensorEntity):
 
     def _handle_coordinator_update(self) -> None:
         packet = self.coordinator.data.get(self.entity_description.packet_type)
-        if not packet:
-            self._attr_native_value = None
-            return
-        self._attr_native_value = self.entity_description.packet_extract(packet)
-        self._attr_available = self._attr_native_value is not None
+        value = None
+        if packet:
+            value = self.entity_description.packet_extract(packet)
+
+        self._attr_native_value = value
+        self._attr_available = value is not None
         super()._handle_coordinator_update()
