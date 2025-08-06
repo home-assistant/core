@@ -573,7 +573,7 @@ av==13.1.0
 # avion==0.10
 
 # homeassistant.components.axis
-axis==64
+axis==65
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.7
@@ -2805,7 +2805,7 @@ smart-meter-texas==0.5.5
 snapcast==2.3.6
 
 # homeassistant.components.sonos
-soco==0.30.9
+soco==0.30.11
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
@@ -3167,7 +3167,7 @@ yalexs-ble==3.1.2
 
 # homeassistant.components.august
 # homeassistant.components.yale
-yalexs==8.10.0
+yalexs==8.11.1
 
 # homeassistant.components.yeelight
 yeelight==0.7.16
