@@ -25,6 +25,7 @@ def mock_entry() -> MockConfigEntry:
             CONF_MODEL: "Pro-05",
             CONF_PROBE_COUNT: 2,
         },
+        unique_id=TOGRILL_SERVICE_INFO.address,
     )
 
 

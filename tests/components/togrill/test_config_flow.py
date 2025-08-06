@@ -45,6 +45,7 @@ async def test_user_selection(
         "probe_count": 0,
     }
     assert result["title"] == "Pro-05"
+    assert result["result"].unique_id == "00000000-0000-0000-0000-000000000001"
 
 
 async def test_failed_connect(
@@ -138,3 +139,4 @@ async def test_bluetooth(
         "probe_count": 0,
     }
     assert result["title"] == "Pro-05"
+    assert result["result"].unique_id == "00000000-0000-0000-0000-000000000001"
