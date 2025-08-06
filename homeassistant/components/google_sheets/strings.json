@@ -62,7 +62,7 @@
     },
     "fetch_sheet": {
       "name": "Fetch from sheet",
-      "description": "Fetcg data from a worksheet in Google Sheets.",
+      "description": "Fetches data from a worksheet in Google Sheets.",
       "fields": {
         "config_entry": {
           "name": "Sheet",
