@@ -86,9 +86,11 @@ UNSUPPORTED_REASONS = {
 UNSUPPORTED_SKIP_REPAIR = {"privileged"}
 UNHEALTHY_REASONS = {
     "docker",
-    "supervisor",
-    "setup",
+    "duplicate_os_installation",
+    "oserror_bad_message",
     "privileged",
+    "setup",
+    "supervisor",
     "untrusted",
 }
 
