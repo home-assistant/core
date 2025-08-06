@@ -1794,7 +1794,7 @@ pymiele==0.5.2
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.9.2
+pymodbus==3.11.0
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
