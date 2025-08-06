@@ -18,7 +18,7 @@ from aiohomeconnect.model.error import HomeConnectError
 import voluptuous as vol
 
 from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -522,7 +522,8 @@ async def async_service_start_program(call: ServiceCall) -> None:
     await _async_service_program(call, True)
 
 
-def register_actions(hass: HomeAssistant) -> None:
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register custom actions."""
 
     hass.services.async_register(

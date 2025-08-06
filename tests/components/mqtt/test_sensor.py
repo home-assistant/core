@@ -924,6 +924,30 @@ async def test_invalid_unit_of_measurement(
                         "device_class": None,
                         "unit_of_measurement": None,
                     },
+                    {
+                        "name": "Test 4",
+                        "state_topic": "test-topic",
+                        "device_class": "ph",
+                        "unit_of_measurement": "",
+                    },
+                    {
+                        "name": "Test 5",
+                        "state_topic": "test-topic",
+                        "device_class": "ph",
+                        "unit_of_measurement": " ",
+                    },
+                    {
+                        "name": "Test 6",
+                        "state_topic": "test-topic",
+                        "device_class": None,
+                        "unit_of_measurement": "",
+                    },
+                    {
+                        "name": "Test 7",
+                        "state_topic": "test-topic",
+                        "device_class": None,
+                        "unit_of_measurement": " ",
+                    },
                 ]
             }
         }
@@ -936,10 +960,25 @@ async def test_valid_device_class_and_uom(
     await mqtt_mock_entry()
 
     state = hass.states.get("sensor.test_1")
+    assert state is not None
     assert state.attributes["device_class"] == "temperature"
     state = hass.states.get("sensor.test_2")
+    assert state is not None
     assert "device_class" not in state.attributes
     state = hass.states.get("sensor.test_3")
+    assert state is not None
+    assert "device_class" not in state.attributes
+    state = hass.states.get("sensor.test_4")
+    assert state is not None
+    assert state.attributes["device_class"] == "ph"
+    state = hass.states.get("sensor.test_5")
+    assert state is not None
+    assert state.attributes["device_class"] == "ph"
+    state = hass.states.get("sensor.test_6")
+    assert state is not None
+    assert "device_class" not in state.attributes
+    state = hass.states.get("sensor.test_7")
+    assert state is not None
     assert "device_class" not in state.attributes
 
 

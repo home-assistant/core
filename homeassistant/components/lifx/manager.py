@@ -28,7 +28,10 @@ from homeassistant.components.light import (
 from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.service import async_extract_referenced_entity_ids
+from homeassistant.helpers.target import (
+    TargetSelectorData,
+    async_extract_referenced_entity_ids,
+)
 
 from .const import _ATTR_COLOR_TEMP, ATTR_THEME, DOMAIN
 from .coordinator import LIFXConfigEntry, LIFXUpdateCoordinator
@@ -268,7 +271,9 @@ class LIFXManager:
 
         async def service_handler(service: ServiceCall) -> None:
             """Apply a service, i.e. start an effect."""
-            referenced = async_extract_referenced_entity_ids(self.hass, service)
+            referenced = async_extract_referenced_entity_ids(
+                self.hass, TargetSelectorData(service.data)
+            )
             all_referenced = referenced.referenced | referenced.indirectly_referenced
             if all_referenced:
                 await self.start_effect(all_referenced, service.service, **service.data)
@@ -499,6 +504,5 @@ class LIFXManager:
             if self.entry_id_to_entity_id[entry.entry_id] in entity_ids:
                 coordinators.append(entry.runtime_data)
                 bulbs.append(entry.runtime_data.device)
-
         if start_effect_func := self._effect_dispatch.get(service):
             await start_effect_func(self, bulbs, coordinators, **kwargs)

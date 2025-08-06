@@ -38,8 +38,6 @@ CONF_USE_ADDON = "use_addon"
 CONF_DATA_COLLECTION_OPTED_IN = "data_collection_opted_in"
 DOMAIN = "zwave_js"
 
-DATA_CLIENT = "client"
-DATA_OLD_SERVER_LOG_LEVEL = "old_server_log_level"
 
 EVENT_DEVICE_ADDED_TO_REGISTRY = f"{DOMAIN}_device_added_to_registry"
 EVENT_VALUE_UPDATED = "value updated"
@@ -94,7 +92,6 @@ ATTR_CURRENT_VALUE = "current_value"
 ATTR_CURRENT_VALUE_RAW = "current_value_raw"
 ATTR_DESCRIPTION = "description"
 ATTR_EVENT_SOURCE = "event_source"
-ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 ATTR_PARTIAL_DICT_MATCH = "partial_dict_match"
 
 # service constants
@@ -203,7 +200,3 @@ COVER_TILT_PROPERTY_KEYS: set[str | int | None] = {
     WindowCoveringPropertyKey.VERTICAL_SLATS_ANGLE,
     WindowCoveringPropertyKey.VERTICAL_SLATS_ANGLE_NO_POSITION,
 }
-
-# Other constants
-
-DRIVER_READY_TIMEOUT = 60

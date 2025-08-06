@@ -49,7 +49,6 @@ from homeassistant.components.hassio import DOMAIN
 from homeassistant.components.hassio.backup import RESTORE_JOB_ID_ENV
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 
 from .test_init import MOCK_ENVIRON
@@ -326,7 +325,6 @@ async def setup_backup_integration(
     hass: HomeAssistant, hassio_enabled: None, supervisor_client: AsyncMock
 ) -> None:
     """Set up Backup integration."""
-    async_initialize_backup(hass)
     assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
     await hass.async_block_till_done()
 
@@ -466,7 +464,6 @@ async def test_agent_info(
     client = await hass_ws_client(hass)
     supervisor_client.mounts.info.return_value = mounts
 
-    async_initialize_backup(hass)
     assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
 
     await client.send_json_auto_id({"type": "backup/agents/info"})
@@ -1474,7 +1471,6 @@ async def test_reader_writer_create_per_agent_encryption(
     )
     supervisor_client.jobs.get_job.return_value = TEST_JOB_NOT_DONE
     supervisor_client.mounts.info.return_value = mounts
-    async_initialize_backup(hass)
     assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
 
     for command in commands:
@@ -2610,7 +2606,6 @@ async def test_restore_progress_after_restart(
 
     supervisor_client.jobs.get_job.return_value = get_job_result
 
-    async_initialize_backup(hass)
     with patch.dict(os.environ, MOCK_ENVIRON | {RESTORE_JOB_ID_ENV: TEST_JOB_ID}):
         assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
 
@@ -2634,7 +2629,6 @@ async def test_restore_progress_after_restart_report_progress(
 
     supervisor_client.jobs.get_job.return_value = TEST_JOB_NOT_DONE
 
-    async_initialize_backup(hass)
     with patch.dict(os.environ, MOCK_ENVIRON | {RESTORE_JOB_ID_ENV: TEST_JOB_ID}):
         assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
 
@@ -2717,7 +2711,6 @@ async def test_restore_progress_after_restart_unknown_job(
 
     supervisor_client.jobs.get_job.side_effect = SupervisorError
 
-    async_initialize_backup(hass)
     with patch.dict(os.environ, MOCK_ENVIRON | {RESTORE_JOB_ID_ENV: TEST_JOB_ID}):
         assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
 
@@ -2817,7 +2810,6 @@ async def test_config_load_config_info(
 
     hass_storage.update(storage_data)
 
-    async_initialize_backup(hass)
     assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
     await hass.async_block_till_done()
 

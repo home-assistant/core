@@ -71,9 +71,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             cv.make_entity_service_schema(
                 {
                     vol.Optional("message"): str,
-                    vol.Optional("media_id"): str,
-                    vol.Optional("preannounce"): bool,
-                    vol.Optional("preannounce_media_id"): str,
+                    vol.Optional("media_id"): _media_id_validator,
+                    vol.Optional("preannounce", default=True): bool,
+                    vol.Optional("preannounce_media_id"): _media_id_validator,
                 }
             ),
             cv.has_at_least_one_key("message", "media_id"),
@@ -81,15 +81,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "async_internal_announce",
         [AssistSatelliteEntityFeature.ANNOUNCE],
     )
+
     component.async_register_entity_service(
         "start_conversation",
         vol.All(
             cv.make_entity_service_schema(
                 {
                     vol.Optional("start_message"): str,
-                    vol.Optional("start_media_id"): str,
-                    vol.Optional("preannounce"): bool,
-                    vol.Optional("preannounce_media_id"): str,
+                    vol.Optional("start_media_id"): _media_id_validator,
+                    vol.Optional("preannounce", default=True): bool,
+                    vol.Optional("preannounce_media_id"): _media_id_validator,
                     vol.Optional("extra_system_prompt"): str,
                 }
             ),
@@ -113,7 +114,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ask_question_args = {
             "question": call.data.get("question"),
             "question_media_id": call.data.get("question_media_id"),
-            "preannounce": call.data.get("preannounce", False),
+            "preannounce": call.data.get("preannounce", True),
             "answers": call.data.get("answers"),
         }
 
@@ -135,9 +136,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             {
                 vol.Required(ATTR_ENTITY_ID): cv.entity_domain(DOMAIN),
                 vol.Optional("question"): str,
-                vol.Optional("question_media_id"): str,
-                vol.Optional("preannounce"): bool,
-                vol.Optional("preannounce_media_id"): str,
+                vol.Optional("question_media_id"): _media_id_validator,
+                vol.Optional("preannounce", default=True): bool,
+                vol.Optional("preannounce_media_id"): _media_id_validator,
                 vol.Optional("answers"): [
                     {
                         vol.Required("id"): str,
@@ -204,3 +205,20 @@ def has_one_non_empty_item(value: list[str]) -> list[str]:
             raise vol.Invalid("sentences cannot be empty")
 
     return value
+
+
+# Validator for media_id fields that accepts both string and media selector format
+_media_id_validator = vol.Any(
+    cv.string,  # Plain string format
+    vol.All(
+        vol.Schema(
+            {
+                vol.Required("media_content_id"): cv.string,
+                vol.Required("media_content_type"): cv.string,
+                vol.Remove("metadata"): dict,  # Ignore metadata if present
+            }
+        ),
+        # Extract media_content_id from media selector format
+        lambda x: x["media_content_id"],
+    ),
+)

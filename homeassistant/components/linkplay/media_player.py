@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from linkplay.bridge import LinkPlayBridge
 from linkplay.consts import EqualizerMode, LoopMode, PlayingMode, PlayingStatus
@@ -315,14 +315,19 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
             return []
 
         shared_data = self.hass.data[DOMAIN][SHARED_DATA]
+        leader_id: str | None = None
+        followers = []
 
-        return [
-            entity_id
-            for entity_id, bridge in shared_data.entity_to_bridge.items()
-            if bridge
-            in [multiroom.leader.device.uuid]
-            + [follower.device.uuid for follower in multiroom.followers]
-        ]
+        # find leader and followers
+        for ent_id, uuid in shared_data.entity_to_bridge.items():
+            if uuid == multiroom.leader.device.uuid:
+                leader_id = ent_id
+            elif uuid in {f.device.uuid for f in multiroom.followers}:
+                followers.append(ent_id)
+
+        if TYPE_CHECKING:
+            assert leader_id is not None
+        return [leader_id, *followers]
 
     @property
     def media_image_url(self) -> str | None:

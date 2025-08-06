@@ -50,7 +50,7 @@ async def test_trigger_subtype(hass: HomeAssistant) -> None:
         "homeassistant.helpers.trigger.async_get_integration",
         return_value=MagicMock(async_get_platform=AsyncMock()),
     ) as integration_mock:
-        await _async_get_trigger_platform(hass, {"platform": "test.subtype"})
+        await _async_get_trigger_platform(hass, "test.subtype")
         assert integration_mock.call_args == call(hass, "test")
 
 
@@ -461,7 +461,7 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
             """Initialize trigger."""
 
         @classmethod
-        async def async_validate_trigger_config(
+        async def async_validate_config(
             cls, hass: HomeAssistant, config: ConfigType
         ) -> ConfigType:
             """Validate config."""
@@ -470,7 +470,7 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
     class MockTrigger1(MockTrigger):
         """Mock trigger 1."""
 
-        async def async_attach_trigger(
+        async def async_attach(
             self,
             action: TriggerActionType,
             trigger_info: TriggerInfo,
@@ -481,7 +481,7 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
     class MockTrigger2(MockTrigger):
         """Mock trigger 2."""
 
-        async def async_attach_trigger(
+        async def async_attach(
             self,
             action: TriggerActionType,
             trigger_info: TriggerInfo,
@@ -493,8 +493,8 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
         hass: HomeAssistant,
     ) -> dict[str, type[Trigger]]:
         return {
-            "test": MockTrigger1,
-            "test.trig_2": MockTrigger2,
+            "_": MockTrigger1,
+            "trig_2": MockTrigger2,
         }
 
     mock_integration(hass, MockModule("test"))
@@ -534,7 +534,7 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
     "sun_trigger_descriptions",
     [
         """
-        sun:
+        _:
           fields:
             event:
               example: sunrise
@@ -551,7 +551,7 @@ async def test_platform_multiple_triggers(hass: HomeAssistant) -> None:
         .anchor: &anchor
           - sunrise
           - sunset
-        sun:
+        _:
           fields:
             event:
               example: sunrise
@@ -569,7 +569,15 @@ async def test_async_get_all_descriptions(
 ) -> None:
     """Test async_get_all_descriptions."""
     tag_trigger_descriptions = """
-        tag: {}
+        _:
+          fields:
+            entity:
+              selector:
+                entity:
+                  filter:
+                    domain: alarm_control_panel
+                    supported_features:
+                      - alarm_control_panel.AlarmControlPanelEntityFeature.ARM_HOME
         """
 
     assert await async_setup_component(hass, DOMAIN_SUN, {})
@@ -599,7 +607,7 @@ async def test_async_get_all_descriptions(
 
     # Test we only load triggers.yaml for integrations with triggers,
     # system_health has no triggers
-    assert proxy_load_triggers_files.mock_calls[0][1][1] == unordered(
+    assert proxy_load_triggers_files.mock_calls[0][1][0] == unordered(
         [
             await async_get_integration(hass, DOMAIN_SUN),
         ]
@@ -607,13 +615,20 @@ async def test_async_get_all_descriptions(
 
     # system_health does not have triggers and should not be in descriptions
     assert descriptions == {
-        DOMAIN_SUN: {
+        "sun": {
             "fields": {
                 "event": {
                     "example": "sunrise",
-                    "selector": {"select": {"options": ["sunrise", "sunset"]}},
+                    "selector": {
+                        "select": {
+                            "custom_value": False,
+                            "multiple": False,
+                            "options": ["sunrise", "sunset"],
+                            "sort": False,
+                        }
+                    },
                 },
-                "offset": {"selector": {"time": None}},
+                "offset": {"selector": {"time": {}}},
             }
         }
     }
@@ -635,17 +650,39 @@ async def test_async_get_all_descriptions(
         new_descriptions = await trigger.async_get_all_descriptions(hass)
     assert new_descriptions is not descriptions
     assert new_descriptions == {
-        DOMAIN_SUN: {
+        "sun": {
             "fields": {
                 "event": {
                     "example": "sunrise",
-                    "selector": {"select": {"options": ["sunrise", "sunset"]}},
+                    "selector": {
+                        "select": {
+                            "custom_value": False,
+                            "multiple": False,
+                            "options": ["sunrise", "sunset"],
+                            "sort": False,
+                        }
+                    },
                 },
-                "offset": {"selector": {"time": None}},
+                "offset": {"selector": {"time": {}}},
             }
         },
-        DOMAIN_TAG: {
-            "fields": {},
+        "tag": {
+            "fields": {
+                "entity": {
+                    "selector": {
+                        "entity": {
+                            "filter": [
+                                {
+                                    "domain": ["alarm_control_panel"],
+                                    "supported_features": [1],
+                                }
+                            ],
+                            "multiple": False,
+                            "reorder": False,
+                        },
+                    },
+                },
+            }
         },
     }
 
@@ -699,7 +736,7 @@ async def test_async_get_all_descriptions_with_bad_description(
 ) -> None:
     """Test async_get_all_descriptions."""
     sun_service_descriptions = """
-        sun:
+        _:
           fields: not_a_dict
     """
 
@@ -723,7 +760,7 @@ async def test_async_get_all_descriptions_with_bad_description(
 
     assert (
         "Unable to parse triggers.yaml for the sun integration: "
-        "expected a dictionary for dictionary value @ data['sun']['fields']"
+        "expected a dictionary for dictionary value @ data['_']['fields']"
     ) in caplog.text
 
 
@@ -738,3 +775,45 @@ async def test_invalid_trigger_platform(
     await async_setup_component(hass, "test", {})
 
     assert "Integration test does not provide trigger support, skipping" in caplog.text
+
+
+@patch("annotatedyaml.loader.load_yaml")
+@patch.object(Integration, "has_triggers", return_value=True)
+async def test_subscribe_triggers(
+    mock_has_triggers: Mock,
+    mock_load_yaml: Mock,
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test trigger.async_subscribe_platform_events."""
+    sun_trigger_descriptions = """
+        _: {}
+        """
+
+    def _load_yaml(fname, secrets=None):
+        if fname.endswith("sun/triggers.yaml"):
+            trigger_descriptions = sun_trigger_descriptions
+        else:
+            raise FileNotFoundError
+        with io.StringIO(trigger_descriptions) as file:
+            return parse_yaml(file)
+
+    mock_load_yaml.side_effect = _load_yaml
+
+    async def broken_subscriber(_):
+        """Simulate a broken subscriber."""
+        raise Exception("Boom!")  # noqa: TRY002
+
+    trigger_events = []
+
+    async def good_subscriber(new_triggers: set[str]):
+        """Simulate a working subscriber."""
+        trigger_events.append(new_triggers)
+
+    trigger.async_subscribe_platform_events(hass, broken_subscriber)
+    trigger.async_subscribe_platform_events(hass, good_subscriber)
+
+    assert await async_setup_component(hass, "sun", {})
+
+    assert trigger_events == [{"sun"}]
+    assert "Error while notifying trigger platform listener" in caplog.text

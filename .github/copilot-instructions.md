@@ -45,6 +45,12 @@ rules:
 
 **When Reviewing/Creating Code**: Always check the integration's quality scale level and exemption status before applying rules.
 
+## Code Review Guidelines
+
+**When reviewing code, do NOT comment on:**
+- **Missing imports** - We use static analysis tooling to catch that
+- **Code formatting** - We have ruff as a formatting tool that will catch those if needed (unless specifically instructed otherwise in these instructions)
+
 ## Python Requirements
 
 - **Compatibility**: Python 3.13+
@@ -96,8 +102,14 @@ rules:
 - **coordinator.py**: Centralize data fetching logic
   ```python
   class MyCoordinator(DataUpdateCoordinator[MyData]):
-      def __init__(self, hass: HomeAssistant, client: MyClient) -> None:
-          super().__init__(hass, logger=LOGGER, name=DOMAIN, update_interval=timedelta(minutes=1))
+      def __init__(self, hass: HomeAssistant, client: MyClient, config_entry: ConfigEntry) -> None:
+          super().__init__(
+              hass, 
+              logger=LOGGER, 
+              name=DOMAIN, 
+              update_interval=timedelta(minutes=1),
+              config_entry=config_entry,  # ✅ Pass config_entry - it's accepted and recommended
+          )
   ```
 - **entity.py**: Base entity definitions to reduce duplication
   ```python
@@ -203,13 +215,24 @@ rules:
 - **Standard Pattern**: Use for efficient data management
   ```python
   class MyCoordinator(DataUpdateCoordinator):
+      def __init__(self, hass: HomeAssistant, client: MyClient, config_entry: ConfigEntry) -> None:
+          super().__init__(
+              hass,
+              logger=LOGGER,
+              name=DOMAIN,
+              update_interval=timedelta(minutes=5),
+              config_entry=config_entry,  # ✅ Pass config_entry - it's accepted and recommended
+          )
+          self.client = client
+      
       async def _async_update_data(self):
           try:
-              return await self.api.fetch_data()
+              return await self.client.fetch_data()
           except ApiError as err:
               raise UpdateFailed(f"API communication error: {err}")
   ```
 - **Error Types**: Use `UpdateFailed` for API errors, `ConfigEntryAuthFailed` for auth issues
+- **Config Entry**: Always pass `config_entry` parameter to coordinator - it's accepted and recommended
 
 ## Integration Guidelines
 
@@ -220,6 +243,10 @@ rules:
   - Connection-critical config: Store in `ConfigEntry.data`
   - Non-critical settings: Store in `ConfigEntry.options`
 - **Validation**: Always validate user input before creating entries
+- **Config Entry Naming**: 
+  - ❌ Do NOT allow users to set config entry names in config flows
+  - Names are automatically generated or can be customized later in UI
+  - ✅ Exception: Helper integrations MAY allow custom names in config flow
 - **Connection Testing**: Test device/service connection during config flow:
   ```python
   try:
@@ -366,7 +393,8 @@ rules:
 
 ### Polling
 - Use update coordinator pattern when possible
-- Polling intervals are NOT user-configurable
+- **Polling intervals are NOT user-configurable**: Never add scan_interval, update_interval, or polling frequency options to config flows or config entries
+- **Integration determines intervals**: Set `update_interval` programmatically based on integration logic, not user input
 - **Minimum Intervals**:
   - Local network: 5 seconds
   - Cloud services: 60 seconds
@@ -384,6 +412,57 @@ rules:
   - `ConfigEntryNotReady`: Temporary setup issues (device offline)
   - `ConfigEntryAuthFailed`: Authentication problems
   - `ConfigEntryError`: Permanent setup issues
+- **Try/Catch Best Practices**:
+  - Only wrap code that can throw exceptions
+  - Keep try blocks minimal - process data after the try/catch
+  - **Avoid bare exceptions** except in specific cases:
+    - ❌ Generally not allowed: `except:` or `except Exception:`
+    - ✅ Allowed in config flows to ensure robustness
+    - ✅ Allowed in functions/methods that run in background tasks
+  - Bad pattern:
+    ```python
+    try:
+        data = await device.get_data()  # Can throw
+        # ❌ Don't process data inside try block
+        processed = data.get("value", 0) * 100
+        self._attr_native_value = processed
+    except DeviceError:
+        _LOGGER.error("Failed to get data")
+    ```
+  - Good pattern:
+    ```python
+    try:
+        data = await device.get_data()  # Can throw
+    except DeviceError:
+        _LOGGER.error("Failed to get data")
+        return
+    
+    # ✅ Process data outside try block
+    processed = data.get("value", 0) * 100
+    self._attr_native_value = processed
+    ```
+- **Bare Exception Usage**:
+  ```python
+  # ❌ Not allowed in regular code
+  try:
+      data = await device.get_data()
+  except Exception:  # Too broad
+      _LOGGER.error("Failed")
+  
+  # ✅ Allowed in config flow for robustness
+  async def async_step_user(self, user_input=None):
+      try:
+          await self._test_connection(user_input)
+      except Exception:  # Allowed here
+          errors["base"] = "unknown"
+  
+  # ✅ Allowed in background tasks
+  async def _background_refresh():
+      try:
+          await coordinator.async_refresh()
+      except Exception:  # Allowed in task
+          _LOGGER.exception("Unexpected error in background task")
+  ```
 - **Setup Failure Patterns**:
   ```python
   try:
@@ -444,6 +523,30 @@ rules:
 - IP addresses, hostnames, URLs
 - Device names
 - Email addresses, usernames
+
+### Entity Descriptions
+- **Lambda/Anonymous Functions**: Often used in EntityDescription for value transformation
+- **Multiline Lambdas**: When lambdas exceed line length, wrap in parentheses for readability
+- **Bad pattern**:
+  ```python
+  SensorEntityDescription(
+      key="temperature",
+      name="Temperature",
+      value_fn=lambda data: round(data["temp_value"] * 1.8 + 32, 1) if data.get("temp_value") is not None else None,  # ❌ Too long
+  )
+  ```
+- **Good pattern**:
+  ```python
+  SensorEntityDescription(
+      key="temperature", 
+      name="Temperature",
+      value_fn=lambda data: (  # ✅ Parenthesis on same line as lambda
+          round(data["temp_value"] * 1.8 + 32, 1)
+          if data.get("temp_value") is not None
+          else None
+      ),
+  )
+  ```
 
 ### Entity Naming
 - **Use has_entity_name**: Set `_attr_has_entity_name = True`
@@ -846,6 +949,31 @@ return {"api_key": entry.data[CONF_API_KEY]}  # ❌ Exposes secrets
 
 # Accessing hass.data directly in tests
 coordinator = hass.data[DOMAIN][entry.entry_id]  # ❌ Don't access hass.data
+
+# User-configurable polling intervals
+# In config flow
+vol.Optional("scan_interval", default=60): cv.positive_int  # ❌ Not allowed
+# In coordinator
+update_interval = timedelta(minutes=entry.data.get("scan_interval", 1))  # ❌ Not allowed
+
+# User-configurable config entry names (non-helper integrations)
+vol.Optional("name", default="My Device"): cv.string  # ❌ Not allowed in regular integrations
+
+# Too much code in try block
+try:
+    response = await client.get_data()  # Can throw
+    # ❌ Data processing should be outside try block
+    temperature = response["temperature"] / 10
+    humidity = response["humidity"] 
+    self._attr_native_value = temperature
+except ClientError:
+    _LOGGER.error("Failed to fetch data")
+
+# Bare exceptions in regular code
+try:
+    value = await sensor.read_value()
+except Exception:  # ❌ Too broad - catch specific exceptions
+    _LOGGER.error("Failed to read sensor")
 ```
 
 ### ✅ **Use These Patterns Instead**
@@ -875,6 +1003,21 @@ return async_redact_data(data, {"api_key", "password"})  # ✅ Safe
 async def init_integration(hass, mock_config_entry, mock_api):
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)  # ✅ Proper setup
+
+# Integration-determined polling intervals (not user-configurable)
+SCAN_INTERVAL = timedelta(minutes=5)  # ✅ Common pattern: constant in const.py
+
+class MyCoordinator(DataUpdateCoordinator[MyData]):
+    def __init__(self, hass: HomeAssistant, client: MyClient, config_entry: ConfigEntry) -> None:
+        # ✅ Integration determines interval based on device capabilities, connection type, etc.
+        interval = timedelta(minutes=1) if client.is_local else SCAN_INTERVAL
+        super().__init__(
+            hass, 
+            logger=LOGGER, 
+            name=DOMAIN, 
+            update_interval=interval,
+            config_entry=config_entry,  # ✅ Pass config_entry - it's accepted and recommended
+        )
 ```
 
 ### Entity Performance Optimization
@@ -1012,7 +1155,7 @@ _LOGGER.debug("Processing data: %s", data)  # Use lazy logging
 ### Validation Commands
 ```bash
 # Check specific integration
-python -m script.hassfest --integration my_integration
+python -m script.hassfest --integration-path homeassistant/components/my_integration
 
 # Validate quality scale
 # Check quality_scale.yaml against current rules
