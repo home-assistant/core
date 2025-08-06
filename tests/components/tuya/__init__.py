@@ -274,6 +274,12 @@ DEVICE_MOCKS = {
         Platform.BINARY_SENSOR,
         Platform.SENSOR,
     ],
+    "mzj_qavcakohisj5adyh": [
+        # https://github.com/home-assistant/core/issues/141278
+        Platform.NUMBER,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
     "pc_t2afic7i3v1bwhfp": [
         # https://github.com/home-assistant/core/issues/149704
         Platform.SWITCH,
