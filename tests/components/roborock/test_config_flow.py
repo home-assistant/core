@@ -263,11 +263,11 @@ async def test_reauth_flow(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
         )
+        await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_roborock_entry.unique_id == ROBOROCK_RRUID
     assert mock_roborock_entry.data["user_data"]["rriot"]["s"] == "new_password_hash"
-    await hass.async_block_till_done()
 
 
 async def test_account_already_configured(
