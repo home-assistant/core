@@ -1,4 +1,208 @@
 # serializer version: 1
+# name: test_platform_setup_and_discovery[cl_3r8gc33pnqsxfe1g][cover.lounge_dark_blind_curtain-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.lounge_dark_blind_curtain',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
+    'original_icon': None,
+    'original_name': 'Curtain',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': 'curtain',
+    'unique_id': 'tuya.mocked_device_idcontrol',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[cl_3r8gc33pnqsxfe1g][cover.lounge_dark_blind_curtain-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'curtain',
+      'friendly_name': 'Lounge Dark Blind Curtain',
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.lounge_dark_blind_curtain',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_platform_setup_and_discovery[cl_cpbo62rn][cover.blinds_curtain-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.blinds_curtain',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
+    'original_icon': None,
+    'original_name': 'Curtain',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': 'curtain',
+    'unique_id': 'tuya.bf216113c71bf01a18jtl0control',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[cl_cpbo62rn][cover.blinds_curtain-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 36,
+      'device_class': 'curtain',
+      'friendly_name': 'blinds Curtain',
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.blinds_curtain',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_platform_setup_and_discovery[cl_ebt12ypvexnixvtf][cover.kitchen_blinds_blind-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.kitchen_blinds_blind',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
+    'original_icon': None,
+    'original_name': 'Blind',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': 'blind',
+    'unique_id': 'tuya.mocked_device_idswitch_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[cl_ebt12ypvexnixvtf][cover.kitchen_blinds_blind-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 100,
+      'device_class': 'blind',
+      'friendly_name': 'Kitchen Blinds Blind',
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.kitchen_blinds_blind',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'open',
+  })
+# ---
+# name: test_platform_setup_and_discovery[cl_qqdxfdht][cover.bedroom_blinds_curtain-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.bedroom_blinds_curtain',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
+    'original_icon': None,
+    'original_name': 'Curtain',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 15>,
+    'translation_key': 'curtain',
+    'unique_id': 'tuya.bfb9c4958fd06d141djpqacontrol',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[cl_qqdxfdht][cover.bedroom_blinds_curtain-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_position': 0,
+      'device_class': 'curtain',
+      'friendly_name': 'bedroom blinds Curtain',
+      'supported_features': <CoverEntityFeature: 15>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.bedroom_blinds_curtain',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
 # name: test_platform_setup_and_discovery[cl_zah67ekd][cover.kitchen_blinds_curtain-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
