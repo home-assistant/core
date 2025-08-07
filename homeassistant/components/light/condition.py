@@ -12,7 +12,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, split_entity_id
-from homeassistant.helpers import config_validation as cv, target
+from homeassistant.helpers import config_validation as cv, selector, target
 from homeassistant.helpers.condition import (
     Condition,
     ConditionCheckerType,
@@ -36,7 +36,7 @@ STATE_CONDITION_SCHEMA = vol.Schema(
         vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
             [BEHAVIOR_ONE, BEHAVIOR_ANY, BEHAVIOR_ALL]
         ),
-        vol.Required(CONF_TARGET): cv.ENTITY_SERVICE_FIELDS,
+        vol.Required(CONF_TARGET): selector.TargetSelector.TARGET_SELECTION_SCHEMA,
     },
 )
 
