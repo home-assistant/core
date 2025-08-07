@@ -12,12 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    CONF_MODEL,
-    EntityCategory,
-    UnitOfVolume,
-    UnitOfVolumeFlowRate,
-)
+from homeassistant.const import EntityCategory, UnitOfVolume, UnitOfVolumeFlowRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -25,11 +20,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    CONF_DEVICE_NAME,
-    CONF_MANUFACTURER,
-    CONF_SERIAL,
-    CONF_SW,
-    DOMAIN,
     KEY_CURRENT_FLOW_RATE,
     KEY_SERVER_CONNECTIVITY,
     KEY_SIGNAL_QUALITY,
@@ -73,7 +63,7 @@ SENSORS: list[DropletSensorEntityDescription] = [
         key=KEY_SERVER_CONNECTIVITY,
         translation_key=KEY_SERVER_CONNECTIVITY,
         device_class=SensorDeviceClass.ENUM,
-        options=["Connected", "Connecting", "Disconnected"],
+        options=["Connected", "Connecting", "Disconnected", "Unknown"],
         value_fn=lambda device: device.get_server_status(),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -81,7 +71,7 @@ SENSORS: list[DropletSensorEntityDescription] = [
         key=KEY_SIGNAL_QUALITY,
         translation_key=KEY_SIGNAL_QUALITY,
         device_class=SensorDeviceClass.ENUM,
-        options=["No Signal", "Weak Signal", "Strong Signal"],
+        options=["No Signal", "Weak Signal", "Strong Signal", "Unknown"],
         value_fn=lambda device: device.get_signal_quality(),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -122,16 +112,10 @@ class DropletSensor(CoordinatorEntity[DropletDataCoordinator], SensorEntity):
         unique_id = coordinator.config_entry.unique_id
         self._attr_unique_id = f"{entity_description.key}_{unique_id}"
 
-        entry_data = coordinator.config_entry.data
-        if unique_id is not None:
-            self._attr_device_info = DeviceInfo(
-                manufacturer=entry_data[CONF_MANUFACTURER],
-                model=entry_data[CONF_MODEL],
-                name=entry_data[CONF_DEVICE_NAME],
-                identifiers={(DOMAIN, unique_id)},
-                sw_version=entry_data[CONF_SW],
-                serial_number=entry_data[CONF_SERIAL],
-            )
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Get Droplet's metadata."""
+        return self.coordinator.dev_info
 
     @property
     def available(self) -> bool:
