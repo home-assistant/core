@@ -227,8 +227,8 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         event.add("dtend", _end)
         event.add("dtstamp", datetime.now(_tzinfo))
         event.add("description", _description)
-        event["uid"] = str(uuid.uuid4())
-        if _rrule:
+        event.add("uid", str(uuid.uuid4()))
+        if _rrule is not None and _rrule != "":
             # If rrule is "" or None it icalendar errors out.
             event.add("rrule", _rrule)
 
