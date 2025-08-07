@@ -429,7 +429,7 @@
     'state': '55',
   })
 # ---
-# name: test_meter[device_info3-3][sensor.hub_3_name_light_level-entry]
+# name: test_meter[device_info3-3][sensor.hub_3_name_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -444,7 +444,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.hub_3_name_light_level',
+    'entity_id': 'sensor.hub_3_name_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -456,25 +456,24 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Light level',
+    'original_name': None,
     'platform': 'switchbot_cloud',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light_level',
     'unique_id': 'hub3-id_lightLevel',
-    'unit_of_measurement': 'Level',
+    'unit_of_measurement': None,
   })
 # ---
-# name: test_meter[device_info3-3][sensor.hub_3_name_light_level-state]
+# name: test_meter[device_info3-3][sensor.hub_3_name_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hub-3-name Light level',
+      'friendly_name': 'Hub-3-name None',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'Level',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hub_3_name_light_level',
+    'entity_id': 'sensor.hub_3_name_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

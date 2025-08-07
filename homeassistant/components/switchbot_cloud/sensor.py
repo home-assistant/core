@@ -94,7 +94,6 @@ CO2_DESCRIPTION = SensorEntityDescription(
 LIGHTLEVEL_DESCRIPTION = SensorEntityDescription(
     key="lightLevel",
     translation_key="light_level",
-    native_unit_of_measurement="Level",
     state_class=SensorStateClass.MEASUREMENT,
 )
 
