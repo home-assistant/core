@@ -136,5 +136,6 @@
     "liquid_depth_max": 100,
     "liquid_level_percent": 100
   },
-  "terminal_id": "REDACTED"
+  "terminal_id": "REDACTED",
+  "id": "5aebc542e69c4a27"
 }

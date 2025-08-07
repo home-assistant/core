@@ -33,7 +33,7 @@
     "cook_temperature": {
       "type": "Integer",
       "value": {
-        "unit": "℃",
+        "unit": "\u2103",
         "min": 250,
         "max": 925,
         "scale": 1,
@@ -81,7 +81,7 @@
     "cook_temperature": {
       "type": "Integer",
       "value": {
-        "unit": "℃",
+        "unit": "\u2103",
         "min": 250,
         "max": 925,
         "scale": 1,
@@ -91,7 +91,7 @@
     "temp_current": {
       "type": "Integer",
       "value": {
-        "unit": "℃",
+        "unit": "\u2103",
         "min": 0,
         "max": 1000,
         "scale": 1,

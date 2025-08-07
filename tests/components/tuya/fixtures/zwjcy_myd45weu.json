@@ -37,7 +37,7 @@
     "temp_current": {
       "type": "Integer",
       "value": {
-        "unit": "℃",
+        "unit": "\u2103",
         "min": -30,
         "max": 70,
         "scale": 0,

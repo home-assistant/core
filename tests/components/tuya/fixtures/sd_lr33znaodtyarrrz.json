@@ -195,7 +195,7 @@
     "clean_area": {
       "type": "Integer",
       "value": {
-        "unit": "㎡",
+        "unit": "\u33a1",
         "min": 0,
         "max": 9999,
         "scale": 0,
@@ -366,7 +366,7 @@
     "total_clean_area": {
       "type": "Integer",
       "value": {
-        "unit": "㎡",
+        "unit": "\u33a1",
         "min": 0,
         "max": 99999,
         "scale": 0,

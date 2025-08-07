@@ -33,7 +33,7 @@
     "temp_set": {
       "type": "Integer",
       "value": {
-        "unit": "℃",
+        "unit": "\u2103",
         "min": 5,
         "max": 90,
         "scale": 0,
@@ -43,7 +43,7 @@
     "upper_temp": {
       "type": "Integer",
       "value": {
-        "unit": "℃",
+        "unit": "\u2103",
         "min": 30,
         "max": 90,
         "scale": 0,
@@ -53,7 +53,7 @@
     "lower_temp": {
       "type": "Integer",
       "value": {
-        "unit": "℃",
+        "unit": "\u2103",
         "min": 5,
         "max": 20,
         "scale": 0,
@@ -63,7 +63,7 @@
     "temp_correction": {
       "type": "Integer",
       "value": {
-        "unit": "摄氏度",
+        "unit": "\u6444\u6c0f\u5ea6",
         "min": -9,
         "max": 9,
         "scale": 0,
@@ -103,7 +103,7 @@
     "temp_set": {
       "type": "Integer",
       "value": {
-        "unit": "℃",
+        "unit": "\u2103",
         "min": 5,
         "max": 90,
         "scale": 0,
@@ -113,7 +113,7 @@
     "upper_temp": {
       "type": "Integer",
       "value": {
-        "unit": "℃",
+        "unit": "\u2103",
         "min": 30,
         "max": 90,
         "scale": 0,
@@ -123,7 +123,7 @@
     "temp_current": {
       "type": "Integer",
       "value": {
-        "unit": "℃",
+        "unit": "\u2103",
         "min": 0,
         "max": 900,
         "scale": 1,
@@ -133,7 +133,7 @@
     "lower_temp": {
       "type": "Integer",
       "value": {
-        "unit": "℃",
+        "unit": "\u2103",
         "min": 5,
         "max": 20,
         "scale": 0,
@@ -143,7 +143,7 @@
     "temp_correction": {
       "type": "Integer",
       "value": {
-        "unit": "摄氏度",
+        "unit": "\u6444\u6c0f\u5ea6",
         "min": -9,
         "max": 9,
         "scale": 0,
