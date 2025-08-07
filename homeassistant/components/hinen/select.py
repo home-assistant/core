@@ -15,9 +15,9 @@ from .const import (
     AUTH,
     COORDINATOR,
     DOMAIN,
-    VPP_WORD_MODE,
-    VPP_WORK_MODE_NONE,
-    VPP_WORK_MODE_OPTIONS,
+    WORK_MODE_NONE,
+    WORK_MODE_OPTIONS,
+    WORK_MODE_SETTING,
 )
 from .coordinator import HinenDataUpdateCoordinator
 from .entity import HinenDeviceEntity
@@ -33,9 +33,9 @@ class HinenSelectEntityDescription(SelectEntityDescription):
 
 SELECT_TYPES = [
     HinenSelectEntityDescription(
-        key="vpp_work_mode",
-        translation_key="vpp_work_mode",
-        options=list(VPP_WORK_MODE_OPTIONS.values()),
+        key=WORK_MODE_SETTING,
+        translation_key=WORK_MODE_SETTING,
+        options=list(WORK_MODE_OPTIONS.values()),
         entity_category=EntityCategory.CONFIG,
     )
 ]
@@ -76,21 +76,19 @@ class HinenWorkModeSelect(HinenDeviceEntity, SelectEntity):
         """Return the current work mode."""
         if not self.coordinator.data:
             return None
-        mode = self.coordinator.data[self._device_id][VPP_WORD_MODE]
+        mode = self.coordinator.data[self._device_id][WORK_MODE_SETTING]
         _LOGGER.debug("current mode_value: %s", mode)
-        return VPP_WORK_MODE_OPTIONS.get(
-            mode, VPP_WORK_MODE_OPTIONS[VPP_WORK_MODE_NONE]
-        )
+        return WORK_MODE_OPTIONS.get(mode, WORK_MODE_OPTIONS[WORK_MODE_NONE])
 
     async def async_select_option(self, option: str) -> None:
         """Change the work mode."""
         mode_value = None
-        for key, value in VPP_WORK_MODE_OPTIONS.items():
+        for key, value in WORK_MODE_OPTIONS.items():
             if value == option:
                 mode_value = key
                 break
         _LOGGER.debug("mode_value: %s", mode_value)
         if mode_value is not None:
             await self.hinen_open.set_device_work_mode(mode_value, self._device_id)
-            self.coordinator.data[self._device_id][VPP_WORD_MODE] = mode_value
+            self.coordinator.data[self._device_id][WORK_MODE_SETTING] = mode_value
             self.async_write_ha_state()

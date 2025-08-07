@@ -23,32 +23,34 @@ ATTR_DEVICE_NAME = "device_name"
 REGION_CODE = "regionCode"
 CLIENT_SECRET = "clientSecret"
 # Work mode constants
-VPP_WORK_MODE_NONE = 0
-VPP_WORK_MODE_SELF_CONSUMPTION = 1
-VPP_WORK_MODE_SELF_CONSUMPTION_CHARGE_ONLY = 2
-VPP_WORK_MODE_SPECIFIED_POWER_CHARGE = 3
-VPP_WORK_MODE_SPECIFIED_POWER_DISCHARGE = 4
-VPP_WORK_MODE_BATTERY_IDLE = 5
-VPP_WORK_MODE_CHARGE_DISCHARGE_TIME = 6
+WORK_MODE_NONE = 0
+WORK_MODE_SELF_CONSUMPTION = 10
+WORK_MODE_BATTERY_PRIORITY = 11
+WORK_MODE_GRID_PRIORITY = 12
+WORK_MODE_TIME_PERIOD = 13
+WORK_MODE_POWER_KEEPING = 14
 
-VPP_WORK_MODE_OPTIONS = {
-    VPP_WORK_MODE_NONE: "none",
-    VPP_WORK_MODE_SELF_CONSUMPTION: "Self-use",
-    VPP_WORK_MODE_SELF_CONSUMPTION_CHARGE_ONLY: "Self-use(Generate only)",
-    VPP_WORK_MODE_SPECIFIED_POWER_CHARGE: "Specified power charging",
-    VPP_WORK_MODE_SPECIFIED_POWER_DISCHARGE: "Specified power discharge",
-    VPP_WORK_MODE_BATTERY_IDLE: "Battery idle",
-    VPP_WORK_MODE_CHARGE_DISCHARGE_TIME: "Charging and discharge time period",
+WORK_MODE_OPTIONS = {
+    WORK_MODE_NONE: "none",
+    WORK_MODE_SELF_CONSUMPTION: "self_consumption",
+    WORK_MODE_BATTERY_PRIORITY: "battery_priority",
+    WORK_MODE_GRID_PRIORITY: "grid_priority",
+    WORK_MODE_TIME_PERIOD: "time_period",
+    WORK_MODE_POWER_KEEPING: "power_keeping",
 }
 
-VPP_WORD_MODE = "vpp_work_mode"
+WORK_MODE_SETTING = "work_mode_setting"
 LOAD_FIRST_STOP_SOC = "load_first_stop_soc"
 CHARGE_STOP_SOC = "charge_stop_soc"
 GRID_FIRST_STOP_SOC = "grid_first_stop_soc"
 CHARGE_POWER_SET = "charge_power_set"
 DISCHARGE_POWER_SET = "discharge_power_set"
 CD_PERIOD_TIMES2 = "cd_period_times2"
-
+CUMULATIVE_CONSUMPTION = "cumulative_consumption"
+CUMULATIVE_PRODUCTION_ACTIVE = "cumulative_production_active"
+CUMULATIVE_GRID_FEED_IN = "cumulative_grid_feed_in"
+TOTAL_CHARGING_ENERGY = "total_charging_energy"
+TOTAL_DISCHARGING_ENERGY = "total_discharging_energy"
 
 PROPERTIES = {
     LOAD_FIRST_STOP_SOC: "LoadFirstStopSOC",
@@ -57,11 +59,16 @@ PROPERTIES = {
     CHARGE_POWER_SET: "ChargePowerSet",
     DISCHARGE_POWER_SET: "DischargePowerSet",
     CD_PERIOD_TIMES2: "CDPeriodTimes2",
-    VPP_WORD_MODE: "VPPWorkMode",
+    WORK_MODE_SETTING: "WorkModeSetting",
+    CUMULATIVE_CONSUMPTION: "CumulativeConsumption",
+    CUMULATIVE_PRODUCTION_ACTIVE: "CumulativeProductionActive",
+    CUMULATIVE_GRID_FEED_IN: "CumulativeGridFeedIn",
+    TOTAL_CHARGING_ENERGY: "TotalChargingEnergy",
+    TOTAL_DISCHARGING_ENERGY: "TotalDischargingEnergy",
 }
 
 ATTR_AUTH_LANGUAGE = "page_language"
 ATTR_REDIRECTION_URL = "redirection_url"
-SUPPORTED_LANGUAGES = [("en_US", "English"), ("zh_CN", "Chinese")]
+SUPPORTED_LANGUAGES = [("en_US", "English"), ("zh_CN", "简体中文")]
 
 CLIENT_ID = "W4lHyHTK"

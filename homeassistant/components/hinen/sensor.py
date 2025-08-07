@@ -6,20 +6,28 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_SERIAL_NUMBER
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
     ATTR_ALERT_STATUS,
-    ATTR_DEVICE_NAME,
     ATTR_STATUS,
     AUTH,
     COORDINATOR,
+    CUMULATIVE_CONSUMPTION,
+    CUMULATIVE_GRID_FEED_IN,
+    CUMULATIVE_PRODUCTION_ACTIVE,
     DOMAIN,
+    TOTAL_CHARGING_ENERGY,
+    TOTAL_DISCHARGING_ENERGY,
 )
 from .coordinator import HinenDataUpdateCoordinator
 from .entity import HinenDeviceEntity
@@ -39,21 +47,70 @@ class HinenSensorEntityDescription(SensorEntityDescription):
 
 SENSOR_TYPES = [
     HinenSensorEntityDescription(
-        key="status",
-        translation_key="status",
-        available_fn=lambda device_detail: device_detail[ATTR_DEVICE_NAME] is not None,
+        key=ATTR_STATUS,
+        translation_key=ATTR_STATUS,
+        available_fn=lambda device_detail: device_detail[ATTR_STATUS] is not None,
         value_fn=lambda device_detail: DeviceStatus.get_display_name(
             device_detail[ATTR_STATUS]
         ),
     ),
     HinenSensorEntityDescription(
-        key="alert_status",
-        translation_key="alert_status",
-        available_fn=lambda device_detail: device_detail[ATTR_SERIAL_NUMBER]
-        is not None,
+        key=ATTR_ALERT_STATUS,
+        translation_key=ATTR_ALERT_STATUS,
+        available_fn=lambda device_detail: device_detail[ATTR_ALERT_STATUS] is not None,
         value_fn=lambda device_detail: DeviceAlertStatus.get_display_name(
             device_detail[ATTR_ALERT_STATUS]
         ),
+    ),
+    HinenSensorEntityDescription(
+        key=CUMULATIVE_CONSUMPTION,
+        translation_key=CUMULATIVE_CONSUMPTION,
+        available_fn=lambda device_detail: device_detail[CUMULATIVE_CONSUMPTION]
+        is not None,
+        value_fn=lambda device_detail: device_detail[CUMULATIVE_CONSUMPTION],
+        native_unit_of_measurement="kWh",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+    ),
+    HinenSensorEntityDescription(
+        key=CUMULATIVE_PRODUCTION_ACTIVE,
+        translation_key=CUMULATIVE_PRODUCTION_ACTIVE,
+        available_fn=lambda device_detail: device_detail[CUMULATIVE_PRODUCTION_ACTIVE]
+        is not None,
+        value_fn=lambda device_detail: device_detail[CUMULATIVE_PRODUCTION_ACTIVE],
+        native_unit_of_measurement="kWh",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+    ),
+    HinenSensorEntityDescription(
+        key=CUMULATIVE_GRID_FEED_IN,
+        translation_key=CUMULATIVE_GRID_FEED_IN,
+        available_fn=lambda device_detail: device_detail[CUMULATIVE_GRID_FEED_IN]
+        is not None,
+        value_fn=lambda device_detail: device_detail[CUMULATIVE_GRID_FEED_IN],
+        native_unit_of_measurement="kWh",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+    ),
+    HinenSensorEntityDescription(
+        key=TOTAL_CHARGING_ENERGY,
+        translation_key=TOTAL_CHARGING_ENERGY,
+        available_fn=lambda device_detail: device_detail[TOTAL_CHARGING_ENERGY]
+        is not None,
+        value_fn=lambda device_detail: device_detail[TOTAL_CHARGING_ENERGY],
+        native_unit_of_measurement="kWh",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+    ),
+    HinenSensorEntityDescription(
+        key=TOTAL_DISCHARGING_ENERGY,
+        translation_key=TOTAL_DISCHARGING_ENERGY,
+        available_fn=lambda device_detail: device_detail[TOTAL_DISCHARGING_ENERGY]
+        is not None,
+        value_fn=lambda device_detail: device_detail[TOTAL_DISCHARGING_ENERGY],
+        native_unit_of_measurement="kWh",
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
     ),
 ]
 

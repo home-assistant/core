@@ -8,7 +8,7 @@ from typing import Any, TypeVar
 from aiohttp import ClientError, ClientResponse, ClientSession
 from yarl import URL
 
-from .const import PROPERTIES
+from .const import PROPERTIES, WORK_MODE_SETTING
 from .hinen_exception import (
     ForbiddenError,
     HinenAPIError,
@@ -90,8 +90,13 @@ class HinenOpen:
 
     async def _check_request_return(self, response: ClientResponse) -> ClientResponse:
         if response.status == 500:
-            msg = "Internal Server Error"
-            raise HinenBackendError(msg)
+            msg = (await response.json()).get("msg")
+            traceId = (await response.json()).get("traceId")
+            raise HinenBackendError(
+                "Internal Server Error"
+                + ("" if msg is None else f" - {msg!s}")
+                + ("" if traceId is None else f" - {traceId!s}"),
+            )
         if response.status == 400:
             msg = (await response.json()).get("msg")
             traceId = (await response.json()).get("traceId")
@@ -206,7 +211,7 @@ class HinenOpen:
     async def set_device_work_mode(self, work_mode: int, device_id: str):
         """Set device work mode."""
         hinen_device_control = HinenDeviceControl(
-            deviceId=device_id, map={"VPPWorkMode": work_mode}
+            deviceId=device_id, map={PROPERTIES[WORK_MODE_SETTING]: work_mode}
         )
 
         async for _ in self._build_generator(

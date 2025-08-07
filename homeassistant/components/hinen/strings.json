@@ -1,0 +1,197 @@
+{
+  "config": {
+    "abort": {
+      "access_not_configured": "Please read the below message we got from Google:\n\n{message}",
+      "no_device": "Please create a Hinen Device to be able to use the integration. Instructions can be found at {support_url}.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "wrong_account": "Wrong account: please authenticate with the right account."
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "title": "Authentication jump settings",
+        "description": "1. Your Hinen user information and device information will be stored in your Home Assistant system. Hinen cannot guarantee the security of the Home Assistant storage mechanism. You are responsible for preventing your information from being stolen. \r\n2. This integration is maintained by the open source community and may have stability issues or other issues. When you encounter related issues with this integration, you should seek help from the open source community rather than contact Hinen customer service. \r\n3. You need to have some technical capabilities to maintain your local operating environment, and this integration is not friendly to novice users. \r\n4. Please read README carefully before using this integration. \r\n5. In order for users to use the integration stably and avoid interface abuse, this integration is only allowed in Home Assistant. Please refer to LICENSE for details.",
+        "data": {
+          "redirection_url": "Redirect address",
+          "page_language": "Certification page language"
+        }
+      },
+      "devices": {
+        "data": {
+          "devices": "Hinen devices"
+        },
+        "description": "Select the device you want to add."
+      },
+      "reauth_confirm": {
+        "description": "The Hinen integration needs to re-authenticate your account",
+        "title": "Authentication expired for {name}"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "[%key:component::hinen::config::step::devices::description%]",
+        "data": {
+          "devices": "[%key:component::hinen::config::step::devices::data::devices%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "alert_status": {
+        "name": "Alert Status"
+      },
+      "status": {
+        "name": "Status"
+      },
+      "cumulative_consumption": {
+        "name": "Cumulative Consumption"
+      },
+      "cumulative_production_active": {
+        "name": "Cumulative Production Active"
+      },
+      "cumulative_grid_feed_in": {
+        "name": "Cumulative Grid Feedin"
+      },
+      "total_charging_energy": {
+        "name": "Total Charging Energy"
+      },
+      "total_discharging_energy": {
+        "name": "Total Discharging Energy"
+      }
+    },
+    "select": {
+      "work_mode_setting": {
+        "name": "Work Mode",
+        "state": {
+          "none": "None",
+          "self_consumption": "Self Consumption",
+          "battery_priority": "Battery Priority",
+          "grid_priority": "Grid Priority",
+          "time_period": "Time Period",
+          "power_keeping": "Power Keeping"
+        }
+      }
+    },
+    "number": {
+      "load_first_stop_soc": {
+        "name": "Looad first stop SOC"
+      },
+      "charge_stop_soc": {
+        "name": "Charge Stop SOC"
+      },
+      "grid_first_stop_soc": {
+        "name": "Grid First Stop SOC"
+      },
+      "charge_power_set": {
+        "name": "Charge Power Set"
+      },
+      "discharge_power_set": {
+        "name": "Discharge Power Set"
+      },
+      "cd_period_times_1_start": {
+        "name": "CD Period 1 Start"
+      },
+      "cd_period_times_1_rate": {
+        "name": "CD Period 1 Rate"
+      },
+      "cd_period_times_1_end": {
+        "name": "CD Period 1 End"
+      },
+      "cd_period_times_1_stop_soc": {
+        "name": "CD Period 1 Stop SOC"
+      },
+      "cd_period_times_2_start": {
+        "name": "CD Period 2 Start"
+      },
+      "cd_period_times_2_rate": {
+        "name": "CD Period 2 Rate"
+      },
+      "cd_period_times_2_end": {
+        "name": "CD Period 2 End"
+      },
+      "cd_period_times_2_stop_soc": {
+        "name": "CD Period 2 Stop SOC"
+      },
+      "cd_period_times_3_start": {
+        "name": "CD Period 3 Start"
+      },
+      "cd_period_times_3_rate": {
+        "name": "CD Period 3 Rate"
+      },
+      "cd_period_times_3_end": {
+        "name": "CD Period 3 End"
+      },
+      "cd_period_times_3_stop_soc": {
+        "name": "CD Period 3 Stop SOC"
+      },
+      "cd_period_times_4_start": {
+        "name": "CD Period 4 Start"
+      },
+      "cd_period_times_4_rate": {
+        "name": "CD Period 4 Rate"
+      },
+      "cd_period_times_4_end": {
+        "name": "CD Period 4 End"
+      },
+      "cd_period_times_4_stop_soc": {
+        "name": "CD Period 4 Stop SOC"
+      },
+      "cd_period_times_5_start": {
+        "name": "CD Period 5 Start"
+      },
+      "cd_period_times_5_rate": {
+        "name": "CD Period 5 Rate"
+      },
+      "cd_period_times_5_end": {
+        "name": "CD Period 5 End"
+      },
+      "cd_period_times_5_stop_soc": {
+        "name": "CD Period 5 Stop SOC"
+      },
+      "cd_period_times_6_start": {
+        "name": "CD Period 6 Start"
+      },
+      "cd_period_times_6_rate": {
+        "name": "CD Period 6 Rate"
+      },
+      "cd_period_times_6_end": {
+        "name": "CD Period 6 End"
+      },
+      "cd_period_times_6_stop_soc": {
+        "name": "CD Period 6 Stop SOC"
+      }
+    },
+    "switch": {
+      "cd_period_times_1_enable": {
+        "name": "CD Period 1 Enable"
+      },
+      "cd_period_times_2_enable": {
+        "name": "CD Period 2 Enable"
+      },
+      "cd_period_times_3_enable": {
+        "name": "CD Period 3 Enable"
+      },
+      "cd_period_times_4_enable": {
+        "name": "CD Period 4 Enable"
+      },
+      "cd_period_times_5_enable": {
+        "name": "CD Period 5 Enable"
+      },
+      "cd_period_times_6_enable": {
+        "name": "CD Period 6 Enable"
+      }
+    }
+  }
+}
