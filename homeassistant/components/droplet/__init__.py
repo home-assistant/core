@@ -39,9 +39,7 @@ async def async_unload_entry(
     ):
         coordinator = config_entry.runtime_data
 
-        # Ensure disconnected and cleanup stop sub
-        if not await coordinator.droplet.disconnect():
-            logger.error("Failed to disconnect from Droplet!")
+        # This will call droplet's disconnect method
         if coordinator.unsub:
             coordinator.unsub()
 

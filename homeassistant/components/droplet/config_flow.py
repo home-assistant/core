@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydroplet.droplet import DropletDiscovery
+from pydroplet.droplet import DropletConnection, DropletDiscovery
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -38,7 +38,8 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._droplet_discovery.is_valid():
             return self.async_abort(reason="invalid_discovery_info")
 
-        await self.async_set_unique_id(self._droplet_discovery.device_id)
+        # In this case, device ID was part of the zeroconf discovery info
+        await self.async_set_unique_id(await self._droplet_discovery.get_device_id())
 
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: self._droplet_discovery.host}
@@ -52,21 +53,22 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm the setup."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            device_data = {
-                CONF_HOST: self._droplet_discovery.host,
-                CONF_PORT: self._droplet_discovery.port,
-                CONF_DEVICE_ID: self._droplet_discovery.device_id,
-                CONF_NAME: DEVICE_NAME,
-                CONF_CODE: user_input[CONF_CODE],
-            }
-
             # Test if we can connect before returning
             session = async_get_clientsession(self.hass)
             if await self._droplet_discovery.try_connect(
                 session, user_input[CONF_CODE]
             ):
+                device_id: str = await self._droplet_discovery.get_device_id()
+                device_data = {
+                    CONF_HOST: self._droplet_discovery.host,
+                    CONF_PORT: self._droplet_discovery.port,
+                    CONF_DEVICE_ID: device_id,
+                    CONF_NAME: DEVICE_NAME,
+                    CONF_CODE: user_input[CONF_CODE],
+                }
+
                 return self.async_create_entry(
-                    title=self._droplet_discovery.device_id,
+                    title=device_id,
                     data=device_data,
                 )
             errors["base"] = "failed_connect"
@@ -78,7 +80,7 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             description_placeholders={
-                "device_name": self._droplet_discovery.device_id,
+                "device_name": await self._droplet_discovery.get_device_id(),
             },
             errors=errors,
         )
@@ -87,4 +89,36 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        return self.async_abort(reason="not_supported")
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            self._droplet_discovery = DropletDiscovery(
+                user_input[CONF_HOST], DropletConnection.DEFAULT_PORT, ""
+            )
+            session = async_get_clientsession(self.hass)
+            if await self._droplet_discovery.try_connect(
+                session, user_input[CONF_CODE]
+            ) and (device_id := await self._droplet_discovery.get_device_id()):
+                device_data = {
+                    CONF_HOST: self._droplet_discovery.host,
+                    CONF_PORT: self._droplet_discovery.port,
+                    CONF_DEVICE_ID: device_id,
+                    CONF_NAME: DEVICE_NAME,
+                    CONF_CODE: user_input[CONF_CODE],
+                }
+                await self.async_set_unique_id(device_id)
+                self._abort_if_unique_id_configured(
+                    description_placeholders={CONF_DEVICE_ID: device_id}
+                )
+
+                return self.async_create_entry(
+                    title=device_id,
+                    data=device_data,
+                )
+            errors["base"] = "failed_connect"
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_HOST): str, vol.Required(CONF_CODE): str}
+            ),
+            errors=errors,
+        )

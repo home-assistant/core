@@ -1,6 +1,18 @@
 {
   "config": {
     "step": {
+      "user": {
+        "title": "Configure Droplet integration",
+        "description": "Manually enter Droplet's connection details.",
+        "data": {
+          "host": "Hostname",
+          "code": "Pairing code"
+        },
+        "data_description": {
+          "host": "Droplet's IP address",
+          "code": "Code from the Droplet app."
+        }
+      },
       "confirm": {
         "title": "Confirm association",
         "description": "Enter pairing code to connect to {device_name}.",
@@ -13,7 +25,7 @@
       }
     },
     "abort": {
-      "not_supported": "Droplet uses auto-discovery. See Droplet app for setup instructions."
+      "already_configured": "{device_id} is already configured!"
     },
     "error": {
       "failed_connect": "Failed to connect to Droplet!"
@@ -24,10 +36,7 @@
       "current_flow_rate": { "name": "Flow rate" },
       "server_connectivity": { "name": "Server status" },
       "signal_quality": { "name": "Signal quality" },
-      "volume": { "name": "Live volume" },
-      "daily_volume": { "name": "Daily volume" },
-      "weekly_volume": { "name": "Weekly volume" },
-      "monthly_volume": { "name": "Monthly volume" }
+      "volume": { "name": "Live volume" }
     }
   }
 }

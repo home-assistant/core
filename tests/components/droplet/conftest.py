@@ -29,6 +29,7 @@ class MockClientBehaviors(Enum):
 
     GOOD = auto()
     FAIL_OPEN = auto()
+    NO_DEVICE_ID = auto()
 
 
 class MockWSConnection:
@@ -42,7 +43,7 @@ class MockWSConnection:
     async def receive(self, timeout):
         """Mock receiving a message."""
         match self.action:
-            case MockClientBehaviors.GOOD:
+            case MockClientBehaviors.GOOD | MockClientBehaviors.NO_DEVICE_ID:
                 return aiohttp.WSMessage(
                     aiohttp.WSMsgType.TEXT,
                     data=json.dumps({"flow": "1.01"}),
@@ -50,8 +51,14 @@ class MockWSConnection:
                 )
             case MockClientBehaviors.FAIL_OPEN:
                 return aiohttp.WSMessage(aiohttp.WSMsgType.CLOSED, data="", extra=None)
+
+    async def receive_json(self, timeout):
+        """Mock the receive_json websockets function."""
+        match self.action:
+            case MockClientBehaviors.GOOD:
+                return {"ids": "Droplet-1234"}
             case _:
-                return None
+                raise json.JSONDecodeError("error", "", 0)
 
     async def close(self) -> bool:
         """Mock closing websocket."""
@@ -73,3 +80,18 @@ def mock_droplet() -> Generator[MagicMock]:
     with patch("pydroplet.droplet.Droplet", autospec=True) as droplet_mock:
         droplet = droplet_mock.return_value
         yield droplet
+
+
+def mock_setup():
+    """Mock setup function."""
+    return True
+
+
+@pytest.fixture
+def mock_coordinator_setup():
+    """Mock the droplet coordinator's setup."""
+    with patch(
+        "homeassistant.components.droplet.coordinator.DropletDataCoordinator.setup",
+        new_callable=mock_setup,
+    ) as coordinator_mock:
+        yield coordinator_mock
