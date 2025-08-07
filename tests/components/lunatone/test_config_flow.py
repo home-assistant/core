@@ -118,7 +118,7 @@ async def test_full_flow_fail_on_timeout_before_starting_dali_device_scan(
 
         mock_lunatone_scan.async_cancel.assert_called_once()
         mock_lunatone_scan.async_update.assert_called()
-        assert mock_lunatone_scan.async_update.call_count == 360
+        assert mock_lunatone_scan.async_update.call_count == 1800
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.ABORT
@@ -140,7 +140,7 @@ async def test_full_flow_fail_on_timeout_after_starting_dali_device_scan(
     mock_lunatone_scan: AsyncMock,
 ) -> None:
     """Test full flow."""
-    type(mock_lunatone_scan).is_busy = PropertyMock(side_effect=[False] + [True] * 360)
+    type(mock_lunatone_scan).is_busy = PropertyMock(side_effect=[False] + [True] * 1800)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -164,7 +164,7 @@ async def test_full_flow_fail_on_timeout_after_starting_dali_device_scan(
 
         mock_lunatone_scan.async_cancel.assert_called_once()
         mock_lunatone_scan.async_update.assert_called()
-        assert mock_lunatone_scan.async_update.call_count == 361
+        assert mock_lunatone_scan.async_update.call_count == 1801
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.ABORT
