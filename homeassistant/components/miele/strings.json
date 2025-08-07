@@ -136,7 +136,7 @@
       "programmed": "{entity_name} is programmed",
       "rinse_hold": "{entity_name} is in rinse hold",
       "in_use": "{entity_name} is in use",
-      "service": "{entity_name} is in service",
+      "service": "{entity_name} is in service state",
       "supercooling": "{entity_name} Supercooling is active",
       "supercooling_superfreezing": "{entity_name} Supercooling/superfreezing is active",
       "superfreezing": "{entity_name} Superfreezing is active",
