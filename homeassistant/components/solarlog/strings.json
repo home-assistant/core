@@ -58,6 +58,15 @@
   },
   "entity": {
     "sensor": {
+      "charge_level": {
+        "name": "Charge level"
+      },
+      "charging_power": {
+        "name": "Charging battery"
+      },
+      "discharging_power": {
+        "name": "Discharging battery"
+      },
       "last_update": {
         "name": "Last update"
       },
