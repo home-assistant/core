@@ -31,11 +31,11 @@ from homeassistant.helpers.typing import ConfigType
 from .const import DOMAIN
 
 ATTR_BEHAVIOR: Final = "behavior"
-BEHAVIOR_FIRST = "first"
-BEHAVIOR_LAST = "last"
-BEHAVIOR_ANY = "any"
+BEHAVIOR_FIRST: Final = "first"
+BEHAVIOR_LAST: Final = "last"
+BEHAVIOR_ANY: Final = "any"
 
-STATE_PLATFORM_TYPE = "state"
+STATE_PLATFORM_TYPE: Final = "state"
 STATE_TRIGGER_SCHEMA = vol.All(
     cv.TRIGGER_BASE_SCHEMA.extend(
         {
