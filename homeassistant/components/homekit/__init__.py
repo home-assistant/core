@@ -224,10 +224,7 @@ RESET_ACCESSORY_SERVICE_SCHEMA = vol.Schema(
 )
 
 
-UNPAIR_SERVICE_SCHEMA = vol.All(
-    vol.Schema(cv.ENTITY_SERVICE_FIELDS),
-    cv.has_at_least_one_key(ATTR_DEVICE_ID),
-)
+UNPAIR_SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): str})
 
 
 @callback
