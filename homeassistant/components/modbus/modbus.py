@@ -39,6 +39,7 @@ from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_ADDRESS,
+    ATTR_DEVICE_ID,
     ATTR_HUB,
     ATTR_SLAVE,
     ATTR_UNIT,
@@ -381,7 +382,7 @@ class ModbusHub:
     ) -> ModbusPDU | None:
         """Call sync. pymodbus."""
         kwargs: dict[str, Any] = (
-            {ATTR_SLAVE: slave} if slave is not None else {ATTR_SLAVE: 1}
+            {ATTR_DEVICE_ID: slave} if slave is not None else {ATTR_DEVICE_ID: 1}
         )
         entry = self._pb_request[use_call]
 

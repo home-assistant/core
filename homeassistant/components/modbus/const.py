@@ -104,6 +104,7 @@ UDP = "udp"
 
 # service call attributes
 ATTR_ADDRESS = CONF_ADDRESS
+ATTR_DEVICE_ID = "device_id"
 ATTR_HUB = "hub"
 ATTR_UNIT = "unit"
 ATTR_SLAVE = "slave"
