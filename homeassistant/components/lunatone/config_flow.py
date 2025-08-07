@@ -28,13 +28,12 @@ _LOGGER = logging.getLogger(__name__)
 class DALIDeviceScanMethod(StrEnum):
     """DALI device scan methods."""
 
-    DO_NOTHING = "do_nothing"
     CURRENT_DEVICE_LIST = "current_device_list"
     SYSTEM_EXTENSION = "system_extension"
     NEW_INSTALLATION = "new_installation"
 
 
-DEFAULT_DALI_DEVICE_SCAN_METHOD: Final = DALIDeviceScanMethod.DO_NOTHING
+DEFAULT_DALI_DEVICE_SCAN_METHOD: Final = DALIDeviceScanMethod.CURRENT_DEVICE_LIST
 DALI_DEVICE_SCAN_METHODS: Final[list[str]] = [
     option.value for option in DALIDeviceScanMethod
 ]
@@ -135,8 +134,6 @@ class LunatoneConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             method = user_input[CONF_SCAN_METHOD]
-            if method == DALIDeviceScanMethod.DO_NOTHING:  # Skip device scan
-                return await self.async_step_finish({})
             self._dali_device_scan_task = self.hass.async_create_task(
                 self._async_start_dali_device_scan(method)
             )

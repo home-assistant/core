@@ -31,35 +31,6 @@ def mock_lunatone_scan(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]:
         yield scan
 
 
-async def test_full_flow_no_scan(
-    hass: HomeAssistant,
-    mock_lunatone_info: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """Test full flow without DALI device scan."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_URL: "http://10.0.0.131"},
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "dali"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_SCAN_METHOD: DALIDeviceScanMethod.DO_NOTHING},
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test 12345"
-    assert result["data"] == {CONF_URL: "http://10.0.0.131"}
-
-
 @pytest.mark.parametrize(
     "scan_method",
     [

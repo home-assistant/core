@@ -52,7 +52,6 @@
   "selector": {
     "device_scan_method": {
       "options": {
-        "do_nothing": "No device scan",
         "current_device_list": "Update current device list",
         "system_extension": "Find new devices",
         "new_installation": "New installation"
