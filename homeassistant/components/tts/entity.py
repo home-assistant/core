@@ -198,6 +198,8 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
 
         Return a tuple of file extension and data as bytes.
         """
+        self.__last_tts_loaded = dt_util.utcnow().isoformat()
+        self.async_write_ha_state()
         return await self.hass.async_add_executor_job(
             partial(self.get_tts_audio, message, language, options=options)
         )

@@ -976,14 +976,25 @@ class SpeechManager:
         if engine_instance.name is None or engine_instance.name is UNDEFINED:
             raise HomeAssistantError("TTS engine name is not set.")
 
-        if isinstance(engine_instance, Provider):
+        if isinstance(engine_instance, Provider) or (
+            isinstance(engine_instance, TextToSpeechEntity)
+            and (not engine_instance.async_supports_streaming_input())
+        ):
+            # Non-streaming
             if isinstance(message_or_stream, str):
                 message = message_or_stream
             else:
                 message = "".join([chunk async for chunk in message_or_stream])
-            extension, data = await engine_instance.async_internal_get_tts_audio(
-                message, language, options
-            )
+
+            if isinstance(engine_instance, Provider):
+                # Legacy API
+                extension, data = await engine_instance.async_internal_get_tts_audio(
+                    message, language, options
+                )
+            else:
+                extension, data = await engine_instance.async_get_tts_audio(
+                    message, language, options
+                )
 
             if data is None or extension is None:
                 raise HomeAssistantError(
@@ -996,6 +1007,7 @@ class SpeechManager:
             data_gen = make_data_generator(data)
 
         else:
+            # Streaming
             if isinstance(message_or_stream, str):
 
                 async def gen_stream() -> AsyncGenerator[str]:
