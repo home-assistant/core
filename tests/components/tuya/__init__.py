@@ -17,6 +17,8 @@ DEVICE_MOCKS = {
     "cl_3r8gc33pnqsxfe1g": [
         # https://github.com/tuya/tuya-home-assistant/issues/754
         Platform.COVER,
+        Platform.SENSOR,
+        Platform.SWITCH,
     ],
     "cl_cpbo62rn": [
         # https://github.com/orgs/home-assistant/discussions/539
