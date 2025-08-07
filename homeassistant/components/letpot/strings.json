@@ -51,7 +51,7 @@
     },
     "select": {
       "display_temperature_unit": {
-        "name": "Display temperature unit",
+        "name": "Temperature unit on display",
         "state": {
           "celsius": "Celsius",
           "fahrenheit": "Fahrenheit"
