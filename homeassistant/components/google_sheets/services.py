@@ -82,7 +82,7 @@ def _append_to_sheet(call: ServiceCall, entry: GoogleSheetsConfigEntry) -> None:
 
 
 def _fetch_from_sheet(call: ServiceCall, entry: GoogleSheetsConfigEntry) -> dict:
-    """Run append in the executor."""
+    """Run fetch in the executor."""
     service = Client(Credentials(entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]))  # type: ignore[no-untyped-call]
     try:
         sheet = service.open_by_key(entry.unique_id)
@@ -110,7 +110,7 @@ async def _async_append_to_sheet(call: ServiceCall) -> None:
 
 
 async def _async_fetch_from_sheet(call: ServiceCall) -> ServiceResponse:
-    """Append new line of data to a Google Sheets document."""
+    """Fetch lines of data from a Google Sheets document."""
     entry: GoogleSheetsConfigEntry | None = call.hass.config_entries.async_get_entry(
         call.data[DATA_CONFIG_ENTRY]
     )

@@ -218,7 +218,7 @@ async def test_fetch_sheet(
     setup_integration: ComponentSetup,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test service call appending to a sheet."""
+    """Test service call fetching from a sheet."""
     await setup_integration()
 
     entries = hass.config_entries.async_entries(DOMAIN)
