@@ -1074,7 +1074,7 @@ igloohome-api==0.1.1
 imeon_inverter_api==0.3.14
 
 # homeassistant.components.imgw_pib
-imgw_pib==1.5.2
+imgw_pib==1.5.3
 
 # homeassistant.components.incomfort
 incomfort-client==0.6.9
@@ -1086,7 +1086,7 @@ influxdb-client==1.48.0
 influxdb==5.3.1
 
 # homeassistant.components.inkbird
-inkbird-ble==0.16.2
+inkbird-ble==1.1.0
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.5.0
@@ -1159,7 +1159,7 @@ led-ble==1.1.7
 lektricowifi==0.1
 
 # homeassistant.components.letpot
-letpot==0.5.0
+letpot==0.6.1
 
 # homeassistant.components.foscam
 libpyfoscamcgi==0.0.6
@@ -1794,7 +1794,7 @@ pymiele==0.5.2
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.9.2
+pymodbus==3.11.0
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
