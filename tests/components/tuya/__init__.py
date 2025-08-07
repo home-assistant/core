@@ -14,6 +14,25 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 DEVICE_MOCKS = {
+    "cl_3r8gc33pnqsxfe1g": [
+        # https://github.com/tuya/tuya-home-assistant/issues/754
+        Platform.COVER,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
+    "cl_cpbo62rn": [
+        # https://github.com/orgs/home-assistant/discussions/539
+        Platform.COVER,
+        Platform.SELECT,
+    ],
+    "cl_ebt12ypvexnixvtf": [
+        # https://github.com/tuya/tuya-home-assistant/issues/754
+        Platform.COVER,
+    ],
+    "cl_qqdxfdht": [
+        # https://github.com/orgs/home-assistant/discussions/539
+        Platform.COVER,
+    ],
     "cl_zah67ekd": [
         # https://github.com/home-assistant/core/issues/71242
         Platform.COVER,
@@ -40,6 +59,11 @@ DEVICE_MOCKS = {
         Platform.SELECT,
         Platform.SENSOR,
         Platform.SWITCH,
+    ],
+    "cs_qhxmvae667uap4zh": [
+        # https://github.com/home-assistant/core/issues/141278
+        Platform.FAN,
+        Platform.HUMIDIFIER,
     ],
     "cs_vmxuxszzjwp5smli": [
         # https://github.com/home-assistant/core/issues/119865
@@ -214,6 +238,16 @@ DEVICE_MOCKS = {
         # https://github.com/home-assistant/core/issues/143499
         Platform.SENSOR,
     ],
+    "fs_g0ewlb1vmwqljzji": [
+        # https://github.com/home-assistant/core/issues/141231
+        Platform.FAN,
+        Platform.LIGHT,
+        Platform.SELECT,
+    ],
+    "fs_ibytpo6fpnugft1c": [
+        # https://github.com/home-assistant/core/issues/135541
+        Platform.FAN,
+    ],
     "gyd_lgekqfxdabipm3tn": [
         # https://github.com/home-assistant/core/issues/133173
         Platform.LIGHT,
@@ -225,6 +259,11 @@ DEVICE_MOCKS = {
     ],
     "kg_gbm9ata1zrzaez4a": [
         # https://github.com/home-assistant/core/issues/148347
+        Platform.SWITCH,
+    ],
+    "kj_CAjWAxBUZt7QZHfz": [
+        # https://github.com/home-assistant/core/issues/146023
+        Platform.FAN,
         Platform.SWITCH,
     ],
     "kj_yrzylxax1qspdgpp": [
@@ -253,6 +292,12 @@ DEVICE_MOCKS = {
         # https://github.com/home-assistant/core/issues/108301
         Platform.BINARY_SENSOR,
         Platform.SENSOR,
+    ],
+    "mzj_qavcakohisj5adyh": [
+        # https://github.com/home-assistant/core/issues/141278
+        Platform.NUMBER,
+        Platform.SENSOR,
+        Platform.SWITCH,
     ],
     "pc_t2afic7i3v1bwhfp": [
         # https://github.com/home-assistant/core/issues/149704
@@ -294,6 +339,15 @@ DEVICE_MOCKS = {
         Platform.BINARY_SENSOR,
         Platform.SENSOR,
     ],
+    "sd_lr33znaodtyarrrz": [
+        # https://github.com/home-assistant/core/issues/141278
+        Platform.BUTTON,
+        Platform.NUMBER,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+        Platform.VACUUM,
+    ],
     "sfkzq_o6dagifntoafakst": [
         # https://github.com/home-assistant/core/issues/148116
         Platform.SWITCH,
@@ -306,13 +360,34 @@ DEVICE_MOCKS = {
     ],
     "sp_drezasavompxpcgm": [
         # https://github.com/home-assistant/core/issues/149704
+        Platform.CAMERA,
         Platform.LIGHT,
         Platform.SELECT,
         Platform.SWITCH,
     ],
     "sp_rjKXWRohlvOTyLBu": [
         # https://github.com/home-assistant/core/issues/149704
+        Platform.CAMERA,
         Platform.LIGHT,
+        Platform.SELECT,
+        Platform.SWITCH,
+    ],
+    "sp_sdd5f5f2dl5wydjf": [
+        # https://github.com/home-assistant/core/issues/144087
+        Platform.CAMERA,
+        Platform.NUMBER,
+        Platform.SENSOR,
+        Platform.SELECT,
+        Platform.SIREN,
+        Platform.SWITCH,
+    ],
+    "tdq_1aegphq4yfd50e6b": [
+        # https://github.com/home-assistant/core/issues/143209
+        Platform.SELECT,
+        Platform.SWITCH,
+    ],
+    "tdq_9htyiowaf5rtdhrv": [
+        # https://github.com/home-assistant/core/issues/143209
         Platform.SELECT,
         Platform.SWITCH,
     ],
@@ -320,6 +395,20 @@ DEVICE_MOCKS = {
         # https://github.com/home-assistant/core/issues/146845
         Platform.SELECT,
         Platform.SWITCH,
+    ],
+    "tdq_nockvv2k39vbrxxk": [
+        # https://github.com/home-assistant/core/issues/145849
+        Platform.SWITCH,
+    ],
+    "tdq_pu8uhxhwcp3tgoz7": [
+        # https://github.com/home-assistant/core/issues/141278
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
+    "tdq_uoa3mayicscacseb": [
+        # https://github.com/home-assistant/core/issues/128911
+        # SDK information is empty
     ],
     "tyndj_pyakuuoc": [
         # https://github.com/home-assistant/core/issues/149704
@@ -334,6 +423,10 @@ DEVICE_MOCKS = {
         # https://github.com/home-assistant/core/issues/146263
         Platform.CLIMATE,
         Platform.SWITCH,
+    ],
+    "wg2_nwxr8qcu4seltoro": [
+        # https://github.com/orgs/home-assistant/discussions/430
+        Platform.BINARY_SENSOR,
     ],
     "wk_fi6dne5tu4t1nm6j": [
         # https://github.com/orgs/home-assistant/discussions/243
@@ -360,12 +453,22 @@ DEVICE_MOCKS = {
         Platform.BINARY_SENSOR,
         Platform.SENSOR,
     ],
+    "ywcgq_h8lvyoahr6s6aybf": [
+        # https://github.com/home-assistant/core/issues/145932
+        Platform.NUMBER,
+        Platform.SENSOR,
+    ],
     "ywcgq_wtzwyhkev3b4ubns": [
-        # https://community.home-assistant.io/t/something-is-wrong-with-tuya-tank-level-sensors-with-the-new-official-integration/689321
-        # not (yet) supported
+        # https://github.com/home-assistant/core/issues/103818
+        Platform.NUMBER,
+        Platform.SENSOR,
     ],
     "zndb_ze8faryrxr0glqnn": [
         # https://github.com/home-assistant/core/issues/138372
+        Platform.SENSOR,
+    ],
+    "zwjcy_myd45weu": [
+        # https://github.com/orgs/home-assistant/discussions/482
         Platform.SENSOR,
     ],
 }

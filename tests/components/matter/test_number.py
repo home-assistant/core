@@ -172,7 +172,7 @@ async def test_pump_level(
     # CurrentLevel on LevelControl cluster
     state = hass.states.get("number.mock_pump_setpoint")
     assert state
-    assert state.state == "127.0"
+    assert state.state == "100.0"
 
     set_node_attribute(matter_node, 1, 8, 0, 100)
     await trigger_subscription_callback(hass, matter_client)
