@@ -256,12 +256,13 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         def _delete_event() -> None:
             """Search for an event and delete it."""
             event = self.coordinator.calendar.search(uid=uid, event=True, expand=False)
-            if not event:
+            if not isinstance(event, list):
+                _LOGGER.error("Expected a list of events, got %s", type(event))
                 return
-            try:
-                event[0].delete()
-            except IndexError:
-                _LOGGER.error("Event with uid %s not found", uid)
+            assert len(event) <= 1, (
+                "Expected at most one event, got multiple. This should not happen."
+            )
+            event[0].delete()
 
         await self.hass.async_add_executor_job(_delete_event)
 
