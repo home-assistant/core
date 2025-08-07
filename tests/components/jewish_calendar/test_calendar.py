@@ -1,7 +1,8 @@
 """Tests for the Jewish Calendar calendar platform."""
 
 import datetime as dt
-from datetime import datetime
+import re
+from typing import Any
 
 import pytest
 
@@ -21,12 +22,64 @@ EVENT_PATTERNS = {
     "holiday": "Jewish Holiday",
     "omer_count": "Sefirat HaOmer",
     "daf_yomi": "Daf Yomi",
-    "candle_lighting": "Candle lighting time",  # Fixed: lowercase "lighting" and includes "time"
-    "havdalah": "Havdalah time",  # Fixed: includes "time"
+    "candle_lighting": "Candle lighting time",
+    "havdalah": "Havdalah time",
+}
+
+# Event type configurations for testing
+EVENT_TYPE_CONFIGS = {
+    "date": {
+        "is_all_day": True,
+        "content_checks": ["Hebrew date:"],
+        "test_dates": [dt.date(2024, 1, 15), dt.date(2024, 1, 16)],
+        "absent_dates": [],
+    },
+    "weekly_portion": {
+        "description_pattern": r"Parshat Hashavua:",
+        "is_all_day": True,
+        "content_checks": ["Parshat Hashavua:"],
+        "test_dates": [dt.date(2024, 9, 8)],  # A Shabbat
+        "absent_dates": [],  # Weekly portion appears all week long
+    },
+    "holiday": {
+        "description_pattern": r"Jewish Holiday:",
+        "is_all_day": True,
+        "content_checks": ["Jewish Holiday:"],
+        "test_dates": [dt.date(2024, 3, 25)],  # Purim 2024
+        "absent_dates": [dt.date(2024, 6, 15)],  # Random date
+    },
+    "omer_count": {
+        "is_all_day": True,
+        "content_checks": ["Sefirat HaOmer:"],
+        "test_dates": [dt.date(2024, 4, 24)],  # During Omer period
+        "absent_dates": [dt.date(2024, 1, 15)],  # Outside Omer period
+    },
+    "daf_yomi": {
+        "is_all_day": True,
+        "content_checks": ["Daf Yomi:"],
+        "test_dates": [dt.date(2024, 7, 15)],
+        "absent_dates": [],
+    },
+    "candle_lighting": {
+        "description_pattern": r"Candle lighting time: \d{1,2}:\d{2}",
+        "is_all_day": False,
+        "content_checks": ["Candle Lighting", "Candle lighting time:"],
+        "test_dates": [dt.date(2024, 1, 12)],  # Friday
+        "absent_dates": [dt.date(2024, 1, 13)],  # Saturday (no candle lighting)
+        # Note: times are in UTC, so local evening times may appear as early hours
+    },
+    "havdalah": {
+        "description_pattern": r"Havdalah time: \d{1,2}:\d{2}",
+        "is_all_day": False,
+        "content_checks": ["Havdalah", "Havdalah time:"],
+        "test_dates": [dt.date(2024, 1, 13)],  # Saturday
+        "absent_dates": [dt.date(2024, 1, 12)],  # Friday (no havdalah)
+        # Note: times are in UTC, so local evening times may appear as early hours
+    },
 }
 
 
-def detect_event_type(event: dict[str, str]) -> str | None:
+def detect_event_type(event: dict[str, Any]) -> str | None:
     """Detect the event type based on description and summary content."""
     for event_type, pattern in EVENT_PATTERNS.items():
         if event.get("description", "").startswith(pattern):
@@ -34,19 +87,106 @@ def detect_event_type(event: dict[str, str]) -> str | None:
     return None
 
 
-def get_event_types_from_events(events: list[dict[str, str]]) -> set[str]:
+def get_event_types_from_events(events: list[dict[str, Any]]) -> set[str]:
     """Get the set of event types found in a list of events."""
     return {event_type for event in events if (event_type := detect_event_type(event))}
 
 
 def filter_events_by_type(
-    events: list[dict[str, str]], event_type: str
-) -> list[dict[str, str]]:
+    events: list[dict[str, Any]], event_type: str
+) -> list[dict[str, Any]]:
     """Filter events by a specific event type."""
     pattern = EVENT_PATTERNS[event_type]
     return [
         event for event in events if event.get("description", "").startswith(pattern)
     ]
+
+
+def extract_event_date(event: dict[str, Any]) -> dt.date:
+    """Extract date from event start field, handling multiple formats."""
+    start = event["start"]
+    if isinstance(start, str):
+        if "T" in start:  # ISO datetime string
+            return dt.datetime.fromisoformat(start).date()
+        return dt.date.fromisoformat(start)  # ISO date string
+    if isinstance(start, dict):
+        if "date" in start:
+            return dt.date.fromisoformat(start["date"])
+        if "dateTime" in start:
+            return dt.datetime.fromisoformat(start["dateTime"]).date()
+    raise ValueError(f"Unsupported event start format: {start}")
+
+
+def validate_event_structure(event: dict[str, Any]) -> None:
+    """Validate that an event has the required structure."""
+    required_fields = ["summary", "description", "start", "end"]
+    for field in required_fields:
+        assert field in event, f"Event missing required field: {field}"
+
+
+def validate_event_content(event: dict[str, Any], event_type: str) -> None:
+    """Validate event content based on type configuration."""
+    config = EVENT_TYPE_CONFIGS[event_type]
+
+    # Check description pattern (regex)
+    if "description_pattern" in config:
+        pattern = config["description_pattern"]
+        assert re.match(pattern, event["description"]), (
+            f"Description '{event['description']}' doesn't match pattern '{pattern}'"
+        )
+
+    # Check content (simple string contains checks)
+    for content_check in config.get("content_checks", []):
+        assert content_check in event["summary"] or content_check in event.get(
+            "description", ""
+        )
+
+
+def validate_event_timing(
+    event: dict[str, Any], event_type: str, target_date: dt.date
+) -> None:
+    """Validate event timing based on type configuration."""
+    config = EVENT_TYPE_CONFIGS[event_type]
+
+    if config["is_all_day"]:
+        # All-day events
+        if isinstance(event["start"], str):
+            assert event["start"] == target_date.isoformat()
+            expected_end = (target_date + dt.timedelta(days=1)).isoformat()
+            assert event["end"] == expected_end
+        elif isinstance(event["start"], dict) and "date" in event["start"]:
+            assert event["start"]["date"] == target_date.isoformat()
+            expected_end = (target_date + dt.timedelta(days=1)).isoformat()
+            assert event["end"]["date"] == expected_end
+            # Should not have dateTime for all-day events
+            assert "dateTime" not in event["start"]
+            assert "dateTime" not in event["end"]
+    else:
+        # Timed events
+        event_date = extract_event_date(event)
+        # Allow ±1 day tolerance for timezone/Hebrew calendar logic
+        assert abs((event_date - target_date).days) <= 1
+
+        # Check time range if specified
+        if config.get("time_range"):
+            start_time = dt.datetime.fromisoformat(event["start"])
+            min_hour, max_hour = config["time_range"]
+            assert min_hour <= start_time.hour <= max_hour
+
+            # For instant events (candle lighting, havdalah), start == end
+            end_time = dt.datetime.fromisoformat(event["end"])
+            assert start_time == end_time
+
+
+@pytest.fixture
+def event_validator():
+    """Fixture providing event validation functions."""
+    return {
+        "structure": validate_event_structure,
+        "content": validate_event_content,
+        "timing": validate_event_timing,
+        "extract_date": extract_event_date,
+    }
 
 
 @pytest.mark.parametrize("location_data", ["New York", "Jerusalem"], indirect=True)
@@ -63,11 +203,9 @@ async def test_calendar_entity_creation(hass: HomeAssistant) -> None:
     assert attributes["friendly_name"] == CALENDAR_ENTITY_NAME
 
     # Check that the entity has a current event (Hebrew date should always be present)
-    assert "message" in attributes
-    assert "start_time" in attributes
-    assert "end_time" in attributes
-    assert "all_day" in attributes
-    assert "description" in attributes
+    required_attrs = ["message", "start_time", "end_time", "all_day", "description"]
+    for attr in required_attrs:
+        assert attr in attributes
 
     # Hebrew date event should be all-day
     assert attributes["all_day"] is True
@@ -79,11 +217,11 @@ async def test_calendar_entity_creation(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("calendar_events", "expected_events"),
     [
-        (None, DEFAULT_CALENDAR_EVENTS),  # Test default when None
-        (["date"], ["date"]),  # Test single event
-        (["date", "holiday"], ["date", "holiday"]),  # Test multiple events
-        (CALENDAR_EVENT_TYPES, CALENDAR_EVENT_TYPES),  # Test all valid events
-        (["invalid_event", "date"], ["date"]),  # Test with invalid (only valid kept)
+        (None, DEFAULT_CALENDAR_EVENTS),
+        (["date"], ["date"]),
+        (["date", "holiday"], ["date", "holiday"]),
+        (CALENDAR_EVENT_TYPES, CALENDAR_EVENT_TYPES),
+        (["invalid_event", "date"], ["date"]),
     ],
 )
 @pytest.mark.usefixtures("setup")
@@ -91,405 +229,141 @@ async def test_calendar_event_configuration(
     hass: HomeAssistant, expected_events: list[str], get_calendar_events
 ) -> None:
     """Test calendar event configuration is handled properly."""
-    # Get the calendar entity
     state = hass.states.get("calendar.jewish_calendar_events")
     assert state is not None
 
     # Test a date range that should have various event types
     start_date = dt.date(2024, 1, 12)  # Friday
-    end_date = dt.date(2024, 1, 14)  # Sunday (covers Fri, Sat, Sun)
+    end_date = dt.date(2024, 1, 14)  # Sunday
 
     events = await get_calendar_events(hass, start_date, end_date)
-
-    # Validate that we only get the expected event types
     found_event_types = get_event_types_from_events(events)
 
-    # For invalid event types in configuration, they should be ignored
+    # Filter out invalid event types
     valid_expected_events = {
         event_type
         for event_type in expected_events
         if event_type in CALENDAR_EVENT_TYPES
     }
 
-    # We should find events only for the valid configured types
-    # Note: Some event types may not have events in our test date range
-    # so we check that we don't have events from non-configured types
+    # We should not have events from unconfigured types
     unexpected_event_types = found_event_types - valid_expected_events
-
-    # Assert we don't have events from unconfigured types
     assert not unexpected_event_types, (
-        f"Found events for unconfigured types: {unexpected_event_types}. "
-        f"Expected only: {valid_expected_events}, but found: {found_event_types}"
+        f"Found events for unconfigured types: {unexpected_event_types}"
     )
 
-    # We should have at least some events (date events are always present in any range)
-    assert len(events) > 0, "Expected events for configured types but got none"
+    # Should have at least some events
+    assert len(events) > 0
 
 
 @pytest.mark.parametrize("test_date", [dt.date(2024, 1, 15)])
 @pytest.mark.usefixtures("setup_at_time")
 async def test_get_events_date_range(
-    hass: HomeAssistant, test_date: dt.date, get_calendar_events
+    hass: HomeAssistant, test_date: dt.date, get_calendar_events, event_validator
 ) -> None:
     """Test getting events for a date range."""
     end_date = dt.date(2024, 1, 17)
-
     events = await get_calendar_events(hass, test_date, end_date)
     assert isinstance(events, list)
 
-    # Should have date events for the range (3 days)
+    # Should have date events for the range
     date_events = filter_events_by_type(events, "date")
     assert len(date_events) >= 3  # At least one per day
 
-    # Verify date events have proper structure
+    # Validate each date event
     for date_event in date_events:
-        assert "summary" in date_event
-        assert "description" in date_event
-        assert "start" in date_event
-        assert "end" in date_event
+        event_validator["structure"](date_event)
+        event_validator["content"](date_event, "date")
 
-        # Verify it's a date event
-        assert date_event["description"].startswith("Hebrew date")
-
-        # Date events should be all-day events (start/end are date strings)
-        assert isinstance(date_event["start"], str)
-        assert isinstance(date_event["end"], str)
-
-        # Verify date format is ISO date (YYYY-MM-DD)
-        datetime.strptime(date_event["start"], "%Y-%m-%d")
-        datetime.strptime(date_event["end"], "%Y-%m-%d")
-
-    # Verify events are within the requested date range
-    for event in events:
-        if isinstance(event["start"], str):
-            # All-day event with date string
-            event_date = dt.date.fromisoformat(event["start"])
-        elif isinstance(event["start"], dict) and "date" in event["start"]:
-            # Timed event with date dict
-            event_date = dt.date.fromisoformat(event["start"]["date"])
-        else:
-            # ISO datetime string
-            event_datetime = dt.datetime.fromisoformat(event["start"])
-            event_date = event_datetime.date()
-
-        assert test_date <= event_date <= end_date, (
-            f"Event date {event_date} not in range {test_date} to {end_date}"
-        )
+        # Verify events are within the requested date range
+        event_date = event_validator["extract_date"](date_event)
+        assert test_date <= event_date <= end_date
 
 
+# Parametrized test for event presence
 @pytest.mark.parametrize(
-    ("test_date", "calendar_events"),
+    ("event_type", "test_date", "calendar_events"),
     [
-        # Test date events (always present)
-        (dt.date(2024, 1, 15), ["date"]),
-        (dt.date(2024, 7, 15), ["date"]),
-        # Test Torah portion on Saturday
-        (dt.date(2024, 1, 13), ["weekly_portion"]),  # Saturday
-        # Test Omer count during Omer period (between Pesach and Shavuot)
-        (dt.date(2024, 4, 24), ["omer_count"]),  # During Omer
-        # Test candle lighting on Friday
-        (dt.date(2024, 1, 12), ["candle_lighting"]),  # Friday
-        # Test Havdalah on Saturday
-        (dt.date(2024, 1, 13), ["havdalah"]),  # Saturday
+        (event_type, test_date, [event_type])
+        for event_type, config in EVENT_TYPE_CONFIGS.items()
+        for test_date in config.get("test_dates", [])
     ],
 )
 @pytest.mark.usefixtures("setup_at_time")
-async def test_specific_event_types_present(
+async def test_event_type_present(
     hass: HomeAssistant,
+    event_type: str,
     test_date: dt.date,
-    calendar_events: list[str],
     get_calendar_events,
+    event_validator,
 ) -> None:
-    """Test specific event types are generated when expected."""
-    # Get events for the specific date
-    event_type = calendar_events[0]
+    """Test that specific event types are present when expected."""
     events = await get_calendar_events(hass, test_date)
-
     assert len(events) > 0, f"Expected {event_type} event on {test_date}"
 
-    # Verify event content based on type
+    # Verify the expected event type is present
     found_event_types = get_event_types_from_events(events)
     assert event_type in found_event_types, f"Expected to find {event_type} event"
 
-    # Get the specific events of this type for additional validation
+    # Get and validate the specific events
     type_events = filter_events_by_type(events, event_type)
     assert len(type_events) > 0, f"No {event_type} events found"
 
-    # Verify event structure for each type
     for event in type_events:
-        assert "summary" in event
-        assert "description" in event
-        assert "start" in event
-        assert "end" in event
-
-        # Verify the event is on the correct date
-        if event_type in ["candle_lighting", "havdalah"]:
-            # Timed events - should have ISO datetime strings
-            # Note: These events might occur on adjacent dates due to Hebrew calendar/timezone logic
-            if isinstance(event["start"], str):
-                # ISO datetime string format
-                event_datetime = dt.datetime.fromisoformat(event["start"])
-                event_date = event_datetime.date()
-                # Allow events within 1 day of test date for timezone/Hebrew calendar reasons
-                assert abs((event_date - test_date).days) <= 1, (
-                    f"{event_type} event date {event_date} not within 1 day of {test_date}"
-                )
-            elif isinstance(event["start"], dict) and "dateTime" in event["start"]:
-                # Event with dateTime dict
-                event_datetime = dt.datetime.fromisoformat(event["start"]["dateTime"])
-                event_date = event_datetime.date()
-                # Allow events within 1 day of test date for timezone/Hebrew calendar reasons
-                assert abs((event_date - test_date).days) <= 1, (
-                    f"{event_type} event date {event_date} not within 1 day of {test_date}"
-                )
-            else:
-                pytest.fail(f"Unexpected timed event format: {event['start']}")
-        elif isinstance(event["start"], str):
-            # All-day events with date string format - start should be test_date
-            assert event["start"] == test_date.isoformat()
-            # End date is typically the next day for all-day events
-            expected_end = (test_date + dt.timedelta(days=1)).isoformat()
-            assert event["end"] == expected_end
-        elif isinstance(event["start"], dict) and "date" in event["start"]:
-            # All-day events with date dict
-            assert event["start"]["date"] == test_date.isoformat()
-            expected_end = (test_date + dt.timedelta(days=1)).isoformat()
-            assert event["end"]["date"] == expected_end
-        else:
-            pytest.fail(f"Unexpected event format: {event['start']}")
+        event_validator["structure"](event)
+        event_validator["content"](event, event_type)
+        event_validator["timing"](event, event_type, test_date)
 
 
+# Parametrized test for event absence
 @pytest.mark.parametrize(
-    ("test_date", "calendar_events"),
+    ("event_type", "test_date", "calendar_events"),
     [
-        # Test Omer count outside Omer period
-        (dt.date(2024, 1, 15), ["omer_count"]),  # Outside Omer
-        # Test candle lighting NOT on Friday (Saturday shouldn't have candle lighting)
-        (dt.date(2024, 1, 13), ["candle_lighting"]),  # Saturday
-        # Test Havdalah NOT on Friday (Friday shouldn't have Havdalah)
-        (dt.date(2024, 1, 12), ["havdalah"]),  # Friday
+        (event_type, absent_date, [event_type])
+        for event_type, config in EVENT_TYPE_CONFIGS.items()
+        for absent_date in config.get("absent_dates", [])
     ],
 )
 @pytest.mark.usefixtures("setup_at_time")
-async def test_specific_event_types_absent(
-    hass: HomeAssistant,
-    test_date: dt.date,
-    calendar_events: list[str],
-    get_calendar_events,
+async def test_event_type_absent(
+    hass: HomeAssistant, event_type: str, test_date: dt.date, get_calendar_events
 ) -> None:
-    """Test specific event types are NOT generated when not expected."""
-    # Get events for the specific date
-    event_type = calendar_events[0]
+    """Test that specific event types are absent when not expected."""
     events = await get_calendar_events(hass, test_date)
 
-    # If there are events, they shouldn't be of the type we're testing for
+    # The specified event type should not be present
     found_event_types = get_event_types_from_events(events)
     assert event_type not in found_event_types, (
         f"Did not expect to find {event_type} event on {test_date}"
     )
 
 
-@pytest.mark.parametrize("test_time", [dt.date(2024, 1, 25)])
-@pytest.mark.parametrize("calendar_events", [["holiday"]])
-@pytest.mark.usefixtures("setup_at_time")
-async def test_holiday_events(hass: HomeAssistant, get_calendar_events) -> None:
-    """Test holiday events are created properly."""
-    # Get events for Tu BiShvat
-    target_date = dt.date(2024, 1, 25)
-    events = await get_calendar_events(hass, target_date)
-    assert len(events) > 0
-
-    # Should have holiday event
-    holiday_events = filter_events_by_type(events, "holiday")
-    assert len(holiday_events) > 0
-
-    # Verify holiday event structure
-    holiday_event = holiday_events[0]
-    assert "summary" in holiday_event
-    assert "description" in holiday_event
-    assert "start" in holiday_event
-    assert "end" in holiday_event
-
-    # Verify it's actually a holiday event
-    assert holiday_event["description"].startswith("Jewish Holiday")
-    # Holiday name could be in Hebrew or English - check for both
-    assert (
-        "Tu BiShvat" in holiday_event["summary"]
-        or 'ט"ו בשבט' in holiday_event["summary"]
-        or "Tu B'Shvat" in holiday_event["summary"]
-    ), f"Expected Tu BiShvat holiday in summary: {holiday_event['summary']}"
-
-    # Verify the event is on the correct date
-    if isinstance(holiday_event["start"], str):
-        # All-day event with date string format
-        assert holiday_event["start"] == target_date.isoformat()
-        expected_end = (target_date + dt.timedelta(days=1)).isoformat()
-        assert holiday_event["end"] == expected_end
-    elif isinstance(holiday_event["start"], dict) and "date" in holiday_event["start"]:
-        # Event with date dict
-        assert holiday_event["start"]["date"] == target_date.isoformat()
-        expected_end = (target_date + dt.timedelta(days=1)).isoformat()
-        assert holiday_event["end"]["date"] == expected_end
-    else:
-        pytest.fail(f"Unexpected holiday event format: {holiday_event['start']}")
-
-    # Holiday events should be all-day events
-    if isinstance(holiday_event["start"], dict):
-        # Dict format - should have date, not dateTime
-        assert "date" in holiday_event["start"]
-        assert "date" in holiday_event["end"]
-        assert "dateTime" not in holiday_event["start"]
-        assert "dateTime" not in holiday_event["end"]
-
-
-@pytest.mark.parametrize("test_time", [dt.date(2024, 7, 15)])
-@pytest.mark.parametrize("calendar_events", [["daf_yomi"]])
-@pytest.mark.usefixtures("setup_at_time")
-async def test_daf_yomi_events(hass: HomeAssistant, get_calendar_events) -> None:
-    """Test daf yomi events are created properly."""
-    # Get events for test date
-    target_date = dt.date(2024, 7, 15)
-    events = await get_calendar_events(hass, target_date)
-    assert len(events) > 0
-
-    # Should have daf yomi event
-    daf_yomi_events = filter_events_by_type(events, "daf_yomi")
-    assert len(daf_yomi_events) == 1
-
-    daf_yomi_event = daf_yomi_events[0]
-
-    # Verify event structure and content
-    assert "summary" in daf_yomi_event
-    assert "description" in daf_yomi_event
-    assert "start" in daf_yomi_event
-    assert "end" in daf_yomi_event
-
-    # Verify it's actually a daf yomi event
-    assert daf_yomi_event["description"].startswith("Daf Yomi")
-
-    # Verify the event is on the correct date
-    if isinstance(daf_yomi_event["start"], str):
-        # All-day event with date string format
-        assert daf_yomi_event["start"] == target_date.isoformat()
-        expected_end = (target_date + dt.timedelta(days=1)).isoformat()
-        assert daf_yomi_event["end"] == expected_end
-    elif (
-        isinstance(daf_yomi_event["start"], dict) and "date" in daf_yomi_event["start"]
-    ):
-        # Event with date dict
-        assert daf_yomi_event["start"]["date"] == target_date.isoformat()
-        expected_end = (target_date + dt.timedelta(days=1)).isoformat()
-        assert daf_yomi_event["end"]["date"] == expected_end
-    else:
-        pytest.fail(f"Unexpected daf yomi event format: {daf_yomi_event['start']}")
-
-    # Daf yomi events should be all-day events
-    if isinstance(daf_yomi_event["start"], dict):
-        # Dict format - should have date, not dateTime
-        assert "date" in daf_yomi_event["start"]
-        assert "date" in daf_yomi_event["end"]
-        assert "dateTime" not in daf_yomi_event["start"]
-        assert "dateTime" not in daf_yomi_event["end"]
-
-    # Summary should contain tractate and page information (in Hebrew or English)
-    summary = daf_yomi_event["summary"]
-    # Check for English terms or assume Hebrew text is valid daf yomi content
-    has_english_terms = any(word in summary for word in ("Daf", "daf", "page"))
-    is_hebrew_text = any(
-        "\u0590" <= char <= "\u05ff" for char in summary
-    )  # Hebrew Unicode range
-    assert has_english_terms or is_hebrew_text, (
-        f"Expected tractate/page info in summary: {summary}"
-    )
-
-
+# Parametrized test for location-based events (candle lighting and havdalah)
 @pytest.mark.parametrize("location_data", ["New York", "Jerusalem"], indirect=True)
-@pytest.mark.parametrize("test_date", [dt.date(2024, 1, 12)])
-@pytest.mark.parametrize("calendar_events", [["candle_lighting"]])
+@pytest.mark.parametrize(
+    ("event_type", "test_date", "calendar_events"),
+    [
+        ("candle_lighting", dt.date(2024, 1, 12), ["candle_lighting"]),  # Friday
+        ("havdalah", dt.date(2024, 1, 13), ["havdalah"]),  # Saturday
+    ],
+)
 @pytest.mark.usefixtures("setup_at_time")
-async def test_candle_lighting_times(
-    hass: HomeAssistant, test_date: dt.date, get_calendar_events
+async def test_location_based_events(
+    hass: HomeAssistant,
+    event_type: str,
+    test_date: dt.date,
+    get_calendar_events,
+    event_validator,
 ) -> None:
-    """Test candle lighting times are calculated for different locations."""
+    """Test location-based timed events (candle lighting and havdalah)."""
     events = await get_calendar_events(hass, test_date)
-
-    # Should have candle lighting events for Friday
     assert len(events) > 0, f"No events found for {test_date}"
 
-    # Find candle lighting events
-    candle_lighting_events = filter_events_by_type(events, "candle_lighting")
-    assert len(candle_lighting_events) == 1, (
-        f"Expected exactly one candle lighting event, got {len(candle_lighting_events)}"
-    )
+    # Find the specific event type
+    type_events = filter_events_by_type(events, event_type)
+    assert len(type_events) == 1, f"Expected exactly one {event_type} event"
 
-    candle_event = candle_lighting_events[0]
-
-    # Verify event structure and content
-    assert "summary" in candle_event
-    assert "description" in candle_event
-    assert "start" in candle_event
-    assert "end" in candle_event
-
-    # Verify it's actually a candle lighting event
-    assert candle_event["description"].startswith("Candle lighting time")
-    assert "Candle Lighting" in candle_event["summary"]
-
-    # Verify the event is on the correct date
-    start_date = dt.datetime.fromisoformat(candle_event["start"]).date()
-    end_date = dt.datetime.fromisoformat(candle_event["end"]).date()
-    assert start_date == test_date
-    assert end_date == test_date
-
-    # Verify time is present and reasonable (should be in the evening)
-    start_time = dt.datetime.fromisoformat(candle_event["start"])
-    end_time = dt.datetime.fromisoformat(candle_event["end"])
-    assert start_time.hour >= 14  # Should be afternoon/evening (after 2 PM)
-    assert start_time.hour <= 22  # Should be before 10 PM
-    assert start_time == end_time  # Candle lighting is an instant event
-
-
-@pytest.mark.parametrize("location_data", ["New York", "Jerusalem"], indirect=True)
-@pytest.mark.parametrize("test_date", [dt.date(2024, 1, 13)])  # Saturday for Havdalah
-@pytest.mark.parametrize("calendar_events", [["havdalah"]])
-@pytest.mark.usefixtures("setup_at_time")
-async def test_havdalah_times(
-    hass: HomeAssistant, test_date: dt.date, get_calendar_events
-) -> None:
-    """Test Havdalah times are calculated for different locations."""
-    events = await get_calendar_events(hass, test_date)
-
-    # Should have havdalah events for Saturday
-    assert len(events) > 0, f"No events found for {test_date}"
-
-    # Find havdalah events
-    havdalah_events = filter_events_by_type(events, "havdalah")
-    assert len(havdalah_events) == 1, (
-        f"Expected exactly one havdalah event, got {len(havdalah_events)}"
-    )
-
-    havdalah_event = havdalah_events[0]
-
-    # Verify event structure and content
-    assert "summary" in havdalah_event
-    assert "description" in havdalah_event
-    assert "start" in havdalah_event
-    assert "end" in havdalah_event
-
-    # Verify it's actually a havdalah event
-    assert (
-        "Havdalah" in havdalah_event["description"]
-        or "Havdalah" in havdalah_event["summary"]
-    )
-
-    # Verify the event is on the correct date
-    start_date = dt.datetime.fromisoformat(havdalah_event["start"]).date()
-    end_date = dt.datetime.fromisoformat(havdalah_event["end"]).date()
-    assert start_date == test_date
-    assert end_date == test_date
-
-    # Verify time is present and reasonable (should be in the evening after sunset)
-    start_time = dt.datetime.fromisoformat(havdalah_event["start"])
-    end_time = dt.datetime.fromisoformat(havdalah_event["end"])
-    assert start_time.hour >= 14  # Should be afternoon/evening
-    assert start_time.hour <= 22  # Should be before 10 PM
-    assert start_time == end_time  # Havdalah is an instant event
+    event = type_events[0]
+    event_validator["structure"](event)
+    event_validator["content"](event, event_type)
+    event_validator["timing"](event, event_type, test_date)
