@@ -986,15 +986,9 @@ class SpeechManager:
             else:
                 message = "".join([chunk async for chunk in message_or_stream])
 
-            if isinstance(engine_instance, Provider):
-                # Legacy API
-                extension, data = await engine_instance.async_internal_get_tts_audio(
-                    message, language, options
-                )
-            else:
-                extension, data = await engine_instance.async_get_tts_audio(
-                    message, language, options
-                )
+            extension, data = await engine_instance.async_internal_get_tts_audio(
+                message, language, options
+            )
 
             if data is None or extension is None:
                 raise HomeAssistantError(
