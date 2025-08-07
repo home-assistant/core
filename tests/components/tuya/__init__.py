@@ -362,6 +362,11 @@ DEVICE_MOCKS = {
         Platform.SELECT,
         Platform.SIREN,
     ],
+    "sj_tgvtvdoc": [
+        # https://github.com/orgs/home-assistant/discussions/482
+        Platform.BINARY_SENSOR,
+        Platform.SENSOR,
+    ],
     "sp_drezasavompxpcgm": [
         # https://github.com/home-assistant/core/issues/149704
         Platform.CAMERA,
