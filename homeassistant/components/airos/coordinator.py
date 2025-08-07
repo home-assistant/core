@@ -6,10 +6,10 @@ import logging
 
 from airos.airos8 import AirOS, AirOSData
 from airos.exceptions import (
-    ConnectionAuthenticationError,
-    ConnectionSetupError,
-    DataMissingError,
-    DeviceConnectionError,
+    AirOSConnectionAuthenticationError,
+    AirOSConnectionSetupError,
+    AirOSDataMissingError,
+    AirOSDeviceConnectionError,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -47,18 +47,22 @@ class AirOSDataUpdateCoordinator(DataUpdateCoordinator[AirOSData]):
         try:
             await self.airos_device.login()
             return await self.airos_device.status()
-        except (ConnectionAuthenticationError,) as err:
+        except (AirOSConnectionAuthenticationError,) as err:
             _LOGGER.exception("Error authenticating with airOS device")
             raise ConfigEntryError(
                 translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
-        except (ConnectionSetupError, DeviceConnectionError, TimeoutError) as err:
+        except (
+            AirOSConnectionSetupError,
+            AirOSDeviceConnectionError,
+            TimeoutError,
+        ) as err:
             _LOGGER.error("Error connecting to airOS device: %s", err)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             ) from err
-        except (DataMissingError,) as err:
+        except (AirOSDataMissingError,) as err:
             _LOGGER.error("Expected data not returned by airOS device: %s", err)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
