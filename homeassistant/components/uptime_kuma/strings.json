@@ -36,6 +36,16 @@
           "verify_ssl": "[%key:component::uptime_kuma::config::step::user::data_description::verify_ssl%]",
           "api_key": "[%key:component::uptime_kuma::config::step::user::data_description::api_key%]"
         }
+      },
+      "hassio_confirm": {
+        "title": "Uptime Kuma via Home Assistant add-on",
+        "description": "Do you want to configure Home Assistant to connect to the Uptime Kuma service provided by the add-on: {addon}?",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::uptime_kuma::config::step::user::data_description::api_key%]"
+        }
       }
     },
     "error": {
