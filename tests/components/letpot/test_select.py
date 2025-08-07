@@ -38,7 +38,7 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.parametrize("device_type", ["LPH62"])
+@pytest.mark.parametrize("device_type", ["LPH31"])
 async def test_set_select(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -53,14 +53,14 @@ async def test_set_select(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
         {
-            ATTR_ENTITY_ID: "select.garden_light_mode",
-            ATTR_OPTION: LightMode.FLOWER.name.lower(),
+            ATTR_ENTITY_ID: "select.garden_light_brightness",
+            ATTR_OPTION: "high",
         },
         blocking=True,
     )
 
-    mock_device_client.set_light_mode.assert_awaited_once_with(
-        f"{device_type}ABCD", LightMode.FLOWER
+    mock_device_client.set_light_brightness.assert_awaited_once_with(
+        f"{device_type}ABCD", 1000
     )
 
 
