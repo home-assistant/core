@@ -101,7 +101,7 @@ def async_register_commands(
     async_reg(hass, handle_call_service)
     async_reg(hass, handle_entity_source)
     async_reg(hass, handle_execute_script)
-    async_reg(hass, handle_expand_target)
+    async_reg(hass, handle_extract_from_target)
     async_reg(hass, handle_fire_event)
     async_reg(hass, handle_get_config)
     async_reg(hass, handle_get_services)
@@ -838,15 +838,15 @@ def handle_entity_source(
 @callback
 @decorators.websocket_command(
     {
-        vol.Required("type"): "expand_target",
+        vol.Required("type"): "extract_from_target",
         vol.Required("target"): cv.ENTITY_SERVICE_FIELDS,
         vol.Optional("expand_group", default=False): bool,
     }
 )
-def handle_expand_target(
+def handle_extract_from_target(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Handle expand target command."""
+    """Handle extract from target command."""
 
     selector_data = target_helpers.TargetSelectorData(msg["target"])
     extracted = target_helpers.async_extract_referenced_entity_ids(

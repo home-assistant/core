@@ -109,7 +109,7 @@ def _apply_entities_changes(state_dict: dict, change_dict: dict) -> None:
             del state_dict[STATE_KEY_LONG_NAMES[key]][item]
 
 
-def _assert_expand_target_command_result(
+def _assert_extract_from_target_command_result(
     msg: dict[str, Any],
     entities: set[str] | None = None,
     devices: set[str] | None = None,
@@ -3145,7 +3145,7 @@ async def test_wait_integration_startup(
     assert "test" in hass.config.components
 
 
-async def test_expand_target(
+async def test_extract_from_target(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
     area_registry: ar.AreaRegistry,
@@ -3153,11 +3153,11 @@ async def test_expand_target(
     entity_registry: er.EntityRegistry,
     label_registry: lr.LabelRegistry,
 ) -> None:
-    """Test expand_target command with mixed target types including entities, devices, areas, and labels."""
+    """Test extract_from_target command with mixed target types including entities, devices, areas, and labels."""
 
     async def call_command(target: dict[str, str]) -> Any:
         await websocket_client.send_json_auto_id(
-            {"type": "expand_target", "target": target}
+            {"type": "extract_from_target", "target": target}
         )
         return await websocket_client.receive_json()
 
@@ -3223,10 +3223,10 @@ async def test_expand_target(
     )
 
     msg = await call_command({"entity_id": ["light.unknown_entity"]})
-    _assert_expand_target_command_result(msg, entities={"light.unknown_entity"})
+    _assert_extract_from_target_command_result(msg, entities={"light.unknown_entity"})
 
     msg = await call_command({"device_id": [device1.id, device2.id]})
-    _assert_expand_target_command_result(
+    _assert_extract_from_target_command_result(
         msg,
         entities={
             device1_entity1.entity_id,
@@ -3237,7 +3237,7 @@ async def test_expand_target(
     )
 
     msg = await call_command({"area_id": [kitchen_area.id, living_room_area.id]})
-    _assert_expand_target_command_result(
+    _assert_extract_from_target_command_result(
         msg,
         entities={area_device_entity.entity_id, area_entity.entity_id},
         areas={kitchen_area.id, living_room_area.id},
@@ -3245,7 +3245,7 @@ async def test_expand_target(
     )
 
     msg = await call_command({"label_id": [label1.label_id, label2.label_id]})
-    _assert_expand_target_command_result(
+    _assert_extract_from_target_command_result(
         msg,
         entities={label_device_entity.entity_id, label_entity.entity_id},
         devices={label2_device.id},
@@ -3261,7 +3261,7 @@ async def test_expand_target(
             "label_id": [label1.label_id],
         },
     )
-    _assert_expand_target_command_result(
+    _assert_extract_from_target_command_result(
         msg,
         entities={
             "light.direct",
@@ -3275,10 +3275,10 @@ async def test_expand_target(
     )
 
 
-async def test_expand_target_expand_group(
+async def test_extract_from_target_expand_group(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
-    """Test expand_target command with expand_group parameter."""
+    """Test extract_from_target command with expand_group parameter."""
     await async_setup_component(
         hass,
         "group",
@@ -3298,35 +3298,35 @@ async def test_expand_target_expand_group(
     # Test without expand_group (default False)
     await websocket_client.send_json_auto_id(
         {
-            "type": "expand_target",
+            "type": "extract_from_target",
             "target": {"entity_id": ["group.test_group"]},
         }
     )
     msg = await websocket_client.receive_json()
-    _assert_expand_target_command_result(msg, entities={"group.test_group"})
+    _assert_extract_from_target_command_result(msg, entities={"group.test_group"})
 
     # Test with expand_group=True
     await websocket_client.send_json_auto_id(
         {
-            "type": "expand_target",
+            "type": "extract_from_target",
             "target": {"entity_id": ["group.test_group"]},
             "expand_group": True,
         }
     )
     msg = await websocket_client.receive_json()
-    _assert_expand_target_command_result(
+    _assert_extract_from_target_command_result(
         msg,
         entities={"light.kitchen", "light.living_room"},
     )
 
 
-async def test_expand_target_missing_entities(
+async def test_extract_from_target_missing_entities(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
-    """Test expand_target command with missing device IDs, area IDs, etc."""
+    """Test extract_from_target command with missing device IDs, area IDs, etc."""
     await websocket_client.send_json_auto_id(
         {
-            "type": "expand_target",
+            "type": "extract_from_target",
             "target": {
                 "device_id": ["non_existent_device"],
                 "area_id": ["non_existent_area"],
@@ -3337,7 +3337,7 @@ async def test_expand_target_missing_entities(
 
     msg = await websocket_client.receive_json()
     # Non-existent devices/areas are still referenced but reported as missing
-    _assert_expand_target_command_result(
+    _assert_extract_from_target_command_result(
         msg,
         devices={"non_existent_device"},
         areas={"non_existent_area"},
@@ -3347,28 +3347,28 @@ async def test_expand_target_missing_entities(
     )
 
 
-async def test_expand_target_empty_target(
+async def test_extract_from_target_empty_target(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
-    """Test expand_target command with empty target."""
+    """Test extract_from_target command with empty target."""
     await websocket_client.send_json_auto_id(
         {
-            "type": "expand_target",
+            "type": "extract_from_target",
             "target": {},
         }
     )
 
     msg = await websocket_client.receive_json()
-    _assert_expand_target_command_result(msg)
+    _assert_extract_from_target_command_result(msg)
 
 
-async def test_expand_target_validation_error(
+async def test_extract_from_target_validation_error(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
-    """Test expand_target command with invalid target data."""
+    """Test extract_from_target command with invalid target data."""
     await websocket_client.send_json_auto_id(
         {
-            "type": "expand_target",
+            "type": "extract_from_target",
             "target": "invalid",  # Should be a dict, not string
         }
     )
