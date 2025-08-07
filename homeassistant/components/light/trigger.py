@@ -19,7 +19,7 @@ from homeassistant.core import (
     callback,
     split_entity_id,
 )
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.event import process_state_match
 from homeassistant.helpers.target import (
     TargetStateChangedData,
@@ -43,7 +43,7 @@ STATE_TRIGGER_SCHEMA = vol.All(
             vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                 [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
             ),
-            vol.Required(CONF_TARGET): cv.ENTITY_SERVICE_FIELDS,
+            vol.Required(CONF_TARGET): selector.TargetSelector.TARGET_SELECTION_SCHEMA,
         },
     )
 )
