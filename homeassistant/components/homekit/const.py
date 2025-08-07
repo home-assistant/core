@@ -132,6 +132,12 @@ TYPE_AIR_PURIFIER = "air_purifier"
 
 # #### Categories ####
 CATEGORY_RECEIVER = 34
+CATEGORY_SET_TOP_BOX = 35
+CATEGORY_STREAMING_STICK = 36
+
+# ### Additional Media Player Types ###
+TYPE_SET_TOP_BOX = "set_top_box"
+TYPE_STREAMING_STICK = "streaming_stick"
 
 # #### Services ####
 SERV_ACCESSORY_INFO = "AccessoryInformation"

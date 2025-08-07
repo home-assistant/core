@@ -40,6 +40,8 @@ from .accessories import TYPES, HomeAccessory
 from .const import (
     ATTR_KEY_NAME,
     CATEGORY_RECEIVER,
+    CATEGORY_SET_TOP_BOX,
+    CATEGORY_STREAMING_STICK,
     CHAR_ACTIVE,
     CHAR_CONFIGURED_NAME,
     CHAR_MUTE,
@@ -412,3 +414,31 @@ class ReceiverMediaPlayer(TelevisionMediaPlayer):
     def __init__(self, *args: Any) -> None:
         """Initialize a Receiver Media Player accessory object."""
         super().__init__(*args, category=CATEGORY_RECEIVER)
+
+
+@TYPES.register("SetTopBoxMediaPlayer")
+class SetTopBoxMediaPlayer(TelevisionMediaPlayer):
+    """Generate a Set-Top Box Media Player accessory.
+
+    For HomeKit, a Set-Top Box Media Player is exactly the same as a
+    Television Media Player except it has a different category
+    which will tell HomeKit how to render the device.
+    """
+
+    def __init__(self, *args: Any) -> None:
+        """Initialize a Set-Top Box Media Player accessory object."""
+        super().__init__(*args, category=CATEGORY_SET_TOP_BOX)
+
+
+@TYPES.register("StreamingStickMediaPlayer")
+class StreamingStickMediaPlayer(TelevisionMediaPlayer):
+    """Generate a Streaming Stick Media Player accessory.
+
+    For HomeKit, a Streaming Stick Media Player is exactly the same as a
+    Television Media Player except it has a different category
+    which will tell HomeKit how to render the device.
+    """
+
+    def __init__(self, *args: Any) -> None:
+        """Initialize a Streaming Stick Media Player accessory object."""
+        super().__init__(*args, category=CATEGORY_STREAMING_STICK)
