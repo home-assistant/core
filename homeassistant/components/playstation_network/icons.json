@@ -42,6 +42,13 @@
           "availabletocommunicate": "mdi:cellphone",
           "offline": "mdi:account-off-outline"
         }
+      },
+      "now_playing": {
+        "default": "mdi:controller",
+        "state": {
+          "unknown": "mdi:controller-off",
+          "unavailable": "mdi:controller-off"
+        }
       }
     },
     "image": {
