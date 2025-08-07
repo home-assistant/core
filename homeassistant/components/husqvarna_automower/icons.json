@@ -8,6 +8,9 @@
     "button": {
       "sync_clock": {
         "default": "mdi:clock-check-outline"
+      },
+      "reset_cutting_blade_usage_time": {
+        "default": "mdi:saw-blade"
       }
     },
     "number": {
@@ -23,6 +26,9 @@
     "sensor": {
       "error": {
         "default": "mdi:alert-circle-outline"
+      },
+      "inactive_reason": {
+        "default": "mdi:sleep"
       },
       "my_lawn_last_time_completed": {
         "default": "mdi:clock-outline"

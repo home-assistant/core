@@ -209,6 +209,16 @@
         }
       }
     },
+    "turn_away_mode_on": {
+      "name": "Set away mode",
+      "description": "Turns on away mode for the water heater",
+      "fields": {
+        "duration_days": {
+          "name": "Duration in days",
+          "description": "Number of days to keep away mode active (1-365)"
+        }
+      }
+    },
     "turn_off": {
       "name": "Turn off heating",
       "description": "Turns off heating for one hour or until min temperature is reached",

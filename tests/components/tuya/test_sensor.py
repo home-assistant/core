@@ -48,7 +48,7 @@ async def test_platform_setup_no_discovery(
     mock_device: CustomerDevice,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test platform setup and discovery."""
+    """Test platform setup without discovery."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
     assert not er.async_entries_for_config_entry(

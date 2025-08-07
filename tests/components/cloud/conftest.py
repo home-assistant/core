@@ -74,6 +74,7 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
         mock_cloud.payments = MagicMock(
             spec=payments_api.PaymentsApi,
             subscription_info=AsyncMock(),
+            migrate_paypal_agreement=AsyncMock(),
         )
         mock_cloud.ice_servers = MagicMock(
             spec=IceServers,

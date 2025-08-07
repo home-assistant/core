@@ -8,7 +8,7 @@ from collections.abc import AsyncGenerator, Callable
 from dataclasses import replace
 import mimetypes
 from pathlib import Path
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from google.genai import Client
 from google.genai.errors import APIError, ClientError
@@ -31,7 +31,7 @@ import voluptuous as vol
 from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
-from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
@@ -59,6 +59,9 @@ from .const import (
     RECOMMENDED_TOP_P,
     TIMEOUT_MILLIS,
 )
+
+if TYPE_CHECKING:
+    from . import GoogleGenerativeAIConfigEntry
 
 # Max number of back and forth with the LLM to generate a response
 MAX_TOOL_ITERATIONS = 10
@@ -313,7 +316,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: GoogleGenerativeAIConfigEntry,
         subentry: ConfigSubentry,
         default_model: str = RECOMMENDED_CHAT_MODEL,
     ) -> None:
@@ -438,6 +441,14 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         user_message = chat_log.content[-1]
         assert isinstance(user_message, conversation.UserContent)
         chat_request: str | list[Part] = user_message.content
+        if user_message.attachments:
+            files = await async_prepare_files_for_prompt(
+                self.hass,
+                self._genai_client,
+                [a.path for a in user_message.attachments],
+            )
+            chat_request = [chat_request, *files]
+
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
@@ -508,7 +519,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
 async def async_prepare_files_for_prompt(
     hass: HomeAssistant, client: Client, files: list[Path]
 ) -> list[File]:
-    """Append files to a prompt.
+    """Upload files so they can be attached to a prompt.
 
     Caller needs to ensure that the files are allowed.
     """
