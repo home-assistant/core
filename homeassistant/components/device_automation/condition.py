@@ -80,7 +80,7 @@ class DeviceCondition(Condition):
 
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "device": DeviceCondition,
+    "_device": DeviceCondition,
 }
 
 
