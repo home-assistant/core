@@ -357,7 +357,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "xnyjcn": (
         SelectEntityDescription(
             key=DPCode.WORK_MODE,
-            translation_key="work_mode",
+            translation_key="inverter_work_mode",
             entity_category=EntityCategory.CONFIG,
         ),
     ),

@@ -497,8 +497,8 @@
           "interim": "Interim"
         }
       },
-      "work_mode": {
-        "name": "Work mode",
+      "inverter_work_mode": {
+        "name": "Inverter work mode",
         "state": {
           "self_powered": "Self-powered",
           "time_of_use": "Time of use",
