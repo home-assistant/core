@@ -444,6 +444,11 @@ DEVICE_MOCKS = {
         Platform.NUMBER,
         Platform.SENSOR,
     ],
+    "zndb_4ggkyflayu1h1ho9": [
+        # New fixture for energy meter with multiple energy readings and supply frequency
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
     "zndb_ze8faryrxr0glqnn": [
         # https://github.com/home-assistant/core/issues/138372
         Platform.SENSOR,
