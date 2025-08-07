@@ -1,0 +1,22 @@
+state:
+  target:
+    entity:
+      domain: light
+  fields:
+    state:
+      required: true
+      default: "on"
+      selector:
+        select:
+          options:
+            - "off"
+            - "on"
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          options:
+            - first
+            - last
+            - any
