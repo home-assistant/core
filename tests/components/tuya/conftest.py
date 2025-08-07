@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util import dt as dt_util
 
-from . import MockDeviceListener
+from . import DEVICE_MOCKS, MockDeviceListener
 
 from tests.common import MockConfigEntry, async_load_json_object_fixture
 
@@ -140,7 +140,18 @@ def mock_device_code() -> str:
 
 @pytest.fixture
 async def mock_device(hass: HomeAssistant, mock_device_code: str) -> CustomerDevice:
-    """Mock a Tuya CustomerDevice."""
+    """Load a single Tuya CustomerDevice fixture."""
+    return await _create_device(hass, mock_device_code)
+
+
+@pytest.fixture
+async def mock_devices(hass: HomeAssistant) -> list[CustomerDevice]:
+    """Load all Tuya CustomerDevice fixtures."""
+    return [await _create_device(hass, key) for key in DEVICE_MOCKS]
+
+
+async def _create_device(hass: HomeAssistant, mock_device_code: str) -> CustomerDevice:
+    """Create Tuya CustomerDevice from fixture file."""
     details = await async_load_json_object_fixture(
         hass, f"{mock_device_code}.json", DOMAIN
     )
