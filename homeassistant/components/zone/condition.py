@@ -147,7 +147,7 @@ class ZoneCondition(Condition):
 
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "zone": ZoneCondition,
+    "_": ZoneCondition,
 }
 
 

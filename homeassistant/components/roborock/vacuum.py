@@ -109,7 +109,6 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         | VacuumEntityFeature.STOP
         | VacuumEntityFeature.RETURN_HOME
         | VacuumEntityFeature.FAN_SPEED
-        | VacuumEntityFeature.BATTERY
         | VacuumEntityFeature.SEND_COMMAND
         | VacuumEntityFeature.LOCATE
         | VacuumEntityFeature.CLEAN_SPOT
@@ -141,11 +140,6 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         """Return the status of the vacuum cleaner."""
         assert self._device_status.state is not None
         return STATE_CODE_TO_STATE.get(self._device_status.state)
-
-    @property
-    def battery_level(self) -> int | None:
-        """Return the battery level of the vacuum cleaner."""
-        return self._device_status.battery
 
     @property
     def fan_speed(self) -> str | None:
