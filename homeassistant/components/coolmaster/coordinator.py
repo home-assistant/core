@@ -55,12 +55,9 @@ class CoolmasterDataUpdateCoordinator(
             except OSError as error:
                 retries_left -= 1
                 if retries_left == 0:
-                    _LOGGER.error(
-                        "Error communicating with Coolmaster (aborting after %d retries): %s",
-                        MAX_RETRIES,
-                        str(error),
-                    )
-                    raise UpdateFailed from error
+                    raise UpdateFailed(
+                        f"Error communicating with Coolmaster (aborting after {MAX_RETRIES} retries): {error}"
+                    ) from error
                 _LOGGER.debug(
                     "Error communicating with coolmaster (%d retries left): %s",
                     retries_left,
