@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_PLATFORM,
     CONF_STATE,
+    CONF_TARGET,
     STATE_OFF,
     STATE_ON,
 )
@@ -125,7 +126,7 @@ async def test_light_state_trigger_behavior_any(
                 "trigger": {
                     CONF_PLATFORM: "light.state",
                     CONF_STATE: state,
-                    **trigger_target_config,
+                    CONF_TARGET: {**trigger_target_config},
                 },
                 "action": {
                     "service": "test.automation",
@@ -185,7 +186,7 @@ async def test_light_state_trigger_behavior_first(
                     CONF_PLATFORM: "light.state",
                     CONF_STATE: state,
                     "behavior": "first",
-                    **trigger_target_config,
+                    CONF_TARGET: {**trigger_target_config},
                 },
                 "action": {
                     "service": "test.automation",
@@ -254,7 +255,7 @@ async def test_light_state_trigger_behavior_last(
                     CONF_PLATFORM: "light.state",
                     CONF_STATE: state,
                     "behavior": "last",
-                    **trigger_target_config,
+                    CONF_TARGET: {**trigger_target_config},
                 },
                 "action": {
                     "service": "test.automation",

@@ -8,6 +8,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PLATFORM,
     CONF_STATE,
+    CONF_TARGET,
     STATE_OFF,
     STATE_ON,
 )
@@ -42,10 +43,9 @@ STATE_TRIGGER_SCHEMA = vol.All(
             vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
                 [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
             ),
-            **cv.ENTITY_SERVICE_FIELDS,
+            vol.Required(CONF_TARGET): cv.ENTITY_SERVICE_FIELDS,
         },
-    ),
-    cv.has_at_least_one_key(*cv.ENTITY_SERVICE_FIELDS),
+    )
 )
 
 
@@ -73,7 +73,6 @@ class StateTrigger(Trigger):
         job = HassJob(action, f"light state trigger {trigger_info}")
         trigger_data = trigger_info["trigger_data"]
 
-        behavior = self.config.get(ATTR_BEHAVIOR)
         match_config_state = process_state_match(self.config.get(CONF_STATE))
 
         def check_all_match(entity_ids: set[str]) -> bool:
@@ -94,6 +93,8 @@ class StateTrigger(Trigger):
                 )
                 == 1
             )
+
+        behavior = self.config.get(ATTR_BEHAVIOR)
 
         @callback
         def state_change_listener(
@@ -144,8 +145,9 @@ class StateTrigger(Trigger):
                 if split_entity_id(entity_id)[0] == DOMAIN
             }
 
+        target_config = self.config.get(CONF_TARGET, {})
         return async_track_target_selector_state_change_event(
-            self.hass, self.config, state_change_listener, entity_filter
+            self.hass, target_config, state_change_listener, entity_filter
         )
 
 
