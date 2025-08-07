@@ -19,6 +19,9 @@
     "--security-opt",
     "label=disable"
   ],
+  "mounts": [
+    "source=${localEnv:HOME}/dev/python-snoo,target=/mnt/python-snoo,type=bind"
+  ],
   "customizations": {
     "vscode": {
       "extensions": [
