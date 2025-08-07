@@ -263,6 +263,10 @@ DEVICE_MOCKS = {
         # https://github.com/home-assistant/core/pull/148646
         Platform.CLIMATE,
     ],
+    "ldcg_9kbbfeho": [
+        # https://github.com/orgs/home-assistant/discussions/482
+        Platform.SENSOR,
+    ],
     "mal_gyitctrjj1kefxp2": [
         # Alarm Host support
         Platform.ALARM_CONTROL_PANEL,
