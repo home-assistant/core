@@ -12,9 +12,9 @@ from tests.common import MockConfigEntry
 
 mock_value_step_user = {
     "title": "1R & 1IN Board",
-    "relay_count": 1,
-    "input_count": 1,
-    "is_old": False,
+    "relays": 1,
+    "inputs": 1,
+    "temps": False,
 }
 
 
@@ -57,8 +57,8 @@ async def test_form(hass: HomeAssistant) -> None:
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["data"]
     assert result3["data"]["title"] == "1R & 1IN Board"
-    assert result3["data"]["is_old"] is False
-    assert result3["data"]["relay_count"] == result3["data"]["input_count"] == 1
+    assert result3["data"]["temps"] is False
+    assert result3["data"]["relays"] == result3["data"]["inputs"] == 1
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
