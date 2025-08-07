@@ -67,8 +67,8 @@
       "light_mode": {
         "name": "Light mode",
         "state": {
-          "flower": "Fruits / flowers",
-          "vegetable": "Veggie / herbs"
+          "flower": "Fruits/Flowers",
+          "vegetable": "Veggie/Herbs"
         }
       }
     },

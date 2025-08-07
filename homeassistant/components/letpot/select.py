@@ -55,7 +55,6 @@ async def _set_brightness_low_high_value(
 class LetPotSelectEntityDescription(LetPotEntityDescription, SelectEntityDescription):
     """Describes a LetPot select entity."""
 
-    options_fn: Callable[[LetPotDeviceCoordinator], list[str]]
     value_fn: Callable[[LetPotDeviceCoordinator], str | None]
     set_value_fn: Callable[[LetPotDeviceClient, str, str], Coroutine[Any, Any, None]]
 
@@ -64,7 +63,7 @@ SELECTORS: tuple[LetPotSelectEntityDescription, ...] = (
     LetPotSelectEntityDescription(
         key="display_temperature_unit",
         translation_key="display_temperature_unit",
-        options_fn=lambda _: [x.name.lower() for x in TemperatureUnit],
+        options=[x.name.lower() for x in TemperatureUnit],
         value_fn=(
             lambda coordinator: coordinator.data.temperature_unit.name.lower()
             if coordinator.data.temperature_unit is not None
@@ -86,7 +85,7 @@ SELECTORS: tuple[LetPotSelectEntityDescription, ...] = (
     LetPotSelectEntityDescription(
         key="light_brightness_low_high",
         translation_key="light_brightness",
-        options_fn=lambda _: [
+        options=[
             LightBrightnessLowHigh.LOW.value,
             LightBrightnessLowHigh.HIGH.value,
         ],
@@ -103,7 +102,7 @@ SELECTORS: tuple[LetPotSelectEntityDescription, ...] = (
     LetPotSelectEntityDescription(
         key="light_mode",
         translation_key="light_mode",
-        options_fn=lambda _: [x.name.lower() for x in LightMode],
+        options=[x.name.lower() for x in LightMode],
         value_fn=(
             lambda coordinator: coordinator.data.light_mode.name.lower()
             if coordinator.data.light_mode is not None
@@ -126,13 +125,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up LetPot select entities based on a config entry and device status/features."""
     coordinators = entry.runtime_data
-    entities: list[SelectEntity] = [
+    async_add_entities(
         LetPotSelectEntity(coordinator, description)
         for description in SELECTORS
         for coordinator in coordinators
         if description.supported_fn(coordinator)
-    ]
-    async_add_entities(entities)
+    )
 
 
 class LetPotSelectEntity(LetPotEntity, SelectEntity):
@@ -149,7 +147,6 @@ class LetPotSelectEntity(LetPotEntity, SelectEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{coordinator.device.serial_number}_{description.key}"
-        self._attr_options = self.entity_description.options_fn(coordinator)
 
     @property
     def current_option(self) -> str | None:
