@@ -4977,7 +4977,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_a_current',
-    'unique_id': 'tuya.6c0887b46a2eaf56e0ui7dphase_aelectriccurrent',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzphase_aelectriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -5033,7 +5033,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_a_power',
-    'unique_id': 'tuya.6c0887b46a2eaf56e0ui7dphase_apower',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzphase_apower',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -5089,7 +5089,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_a_voltage',
-    'unique_id': 'tuya.6c0887b46a2eaf56e0ui7dphase_avoltage',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzphase_avoltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -5145,7 +5145,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy',
-    'unique_id': 'tuya.6c0887b46a2eaf56e0ui7dforward_energy_total',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzforward_energy_total',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -5201,7 +5201,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_production',
-    'unique_id': 'tuya.6c0887b46a2eaf56e0ui7dreverse_energy_total',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzreverse_energy_total',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
