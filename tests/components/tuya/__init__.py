@@ -443,6 +443,7 @@ DEVICE_MOCKS = {
     ],
     "wk_gogb05wrtredz3bs": [
         # https://github.com/home-assistant/core/issues/136337
+        Platform.BINARY_SENSOR,
         Platform.CLIMATE,
         Platform.NUMBER,
         Platform.SWITCH,
