@@ -1028,7 +1028,7 @@
     'supported_features': 0,
     'translation_key': 'output_power_limit',
     'unique_id': 'tuya.6cd9ce33d5275082e9inhvoutput_power_limit',
-    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    'unit_of_measurement': 'W',
   })
 # ---
 # name: test_platform_setup_and_discovery[xnyjcn_pb0tc75khaik8qbg][number.cbe_pro_2_output_power_limit-state]
@@ -1040,7 +1040,7 @@
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1.0,
-      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+      'unit_of_measurement': 'W',
     }),
     'context': <ANY>,
     'entity_id': 'number.cbe_pro_2_output_power_limit',
