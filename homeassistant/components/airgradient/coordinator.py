@@ -51,9 +51,16 @@ class AirGradientCoordinator(DataUpdateCoordinator[AirGradientData]):
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
-        self._current_version = (
-            await self.client.get_current_measures()
-        ).firmware_version
+        try:
+            self._current_version = (
+                await self.client.get_current_measures()
+            ).firmware_version
+        except AirGradientError as error:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"error": str(error)},
+            ) from error
 
     async def _async_update_data(self) -> AirGradientData:
         try:

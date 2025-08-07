@@ -8,9 +8,10 @@ from operator import attrgetter
 from typing import TYPE_CHECKING, Any
 
 from aioautomower.model import (
+    ExternalReasons,
+    InactiveReasons,
     MowerAttributes,
     MowerModes,
-    MowerStates,
     RestrictedReasons,
     WorkArea,
 )
@@ -27,6 +28,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import AutomowerConfigEntry
+from .const import ERROR_STATES
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import (
     AutomowerBaseEntity,
@@ -69,10 +71,10 @@ ERROR_KEYS = [
     "cutting_drive_motor_2_defect",
     "cutting_drive_motor_3_defect",
     "cutting_height_blocked",
+    "cutting_height_problem",
     "cutting_height_problem_curr",
     "cutting_height_problem_dir",
     "cutting_height_problem_drive",
-    "cutting_height_problem",
     "cutting_motor_problem",
     "cutting_stopped_slope_too_steep",
     "cutting_system_blocked",
@@ -115,7 +117,6 @@ ERROR_KEYS = [
     "no_accurate_position_from_satellites",
     "no_confirmed_position",
     "no_drive",
-    "no_error",
     "no_loop_signal",
     "no_power_in_charging_station",
     "no_response_from_charger",
@@ -166,19 +167,17 @@ ERROR_KEYS = [
     "zone_generator_problem",
 ]
 
-ERROR_STATES = [
-    MowerStates.ERROR_AT_POWER_UP,
-    MowerStates.ERROR,
-    MowerStates.FATAL_ERROR,
-    MowerStates.OFF,
-    MowerStates.STOPPED,
-    MowerStates.WAIT_POWER_UP,
-    MowerStates.WAIT_UPDATING,
+
+ERROR_KEY_LIST = sorted(
+    set(ERROR_KEYS) | {state.lower() for state in ERROR_STATES} | {"no_error"}
+)
+
+INACTIVE_REASONS: list = [
+    InactiveReasons.NONE,
+    InactiveReasons.PLANNING,
+    InactiveReasons.SEARCHING_FOR_SATELLITES,
 ]
 
-ERROR_KEY_LIST = list(
-    dict.fromkeys(ERROR_KEYS + [state.lower() for state in ERROR_STATES])
-)
 
 RESTRICTED_REASONS: list = [
     RestrictedReasons.ALL_WORK_AREAS_COMPLETED,
@@ -191,9 +190,35 @@ RESTRICTED_REASONS: list = [
     RestrictedReasons.PARK_OVERRIDE,
     RestrictedReasons.SENSOR,
     RestrictedReasons.WEEK_SCHEDULE,
+    ExternalReasons.AMAZON_ALEXA,
+    ExternalReasons.DEVELOPER_PORTAL,
+    ExternalReasons.GARDENA_SMART_SYSTEM,
+    ExternalReasons.GOOGLE_ASSISTANT,
+    ExternalReasons.HOME_ASSISTANT,
+    ExternalReasons.IFTTT,
+    ExternalReasons.IFTTT_APPLETS,
+    ExternalReasons.IFTTT_CALENDAR_CONNECTION,
+    ExternalReasons.SMART_ROUTINE,
+    ExternalReasons.SMART_ROUTINE_FROST_GUARD,
+    ExternalReasons.SMART_ROUTINE_RAIN_GUARD,
+    ExternalReasons.SMART_ROUTINE_WILDLIFE_PROTECTION,
 ]
 
 STATE_NO_WORK_AREA_ACTIVE = "no_work_area_active"
+
+
+@callback
+def _get_restricted_reason(data: MowerAttributes) -> str:
+    """Return the restricted reason.
+
+    If there is an external reason, return that instead, if it's available.
+    """
+    if (
+        data.planner.restricted_reason == RestrictedReasons.EXTERNAL
+        and data.planner.external_reason is not None
+    ):
+        return data.planner.external_reason
+    return data.planner.restricted_reason
 
 
 @callback
@@ -401,7 +426,15 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         translation_key="restricted_reason",
         device_class=SensorDeviceClass.ENUM,
         option_fn=lambda data: RESTRICTED_REASONS,
-        value_fn=attrgetter("planner.restricted_reason"),
+        value_fn=_get_restricted_reason,
+    ),
+    AutomowerSensorEntityDescription(
+        key="inactive_reason",
+        translation_key="inactive_reason",
+        exists_fn=lambda data: data.capabilities.work_areas,
+        device_class=SensorDeviceClass.ENUM,
+        option_fn=lambda data: INACTIVE_REASONS,
+        value_fn=attrgetter("mower.inactive_reason"),
     ),
     AutomowerSensorEntityDescription(
         key="work_area",
@@ -533,6 +566,11 @@ class AutomowerSensorEntity(AutomowerBaseEntity, SensorEntity):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         return self.entity_description.extra_state_attributes_fn(self.mower_attributes)
+
+    @property
+    def available(self) -> bool:
+        """Return the available attribute of the entity."""
+        return super().available and self.native_value is not None
 
 
 class WorkAreaSensorEntity(WorkAreaAvailableEntity, SensorEntity):

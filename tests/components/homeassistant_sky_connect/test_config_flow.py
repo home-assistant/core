@@ -6,6 +6,7 @@ import pytest
 
 from homeassistant.components.hassio import AddonInfo, AddonState
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
+    STEP_PICK_FIRMWARE_THREAD,
     STEP_PICK_FIRMWARE_ZIGBEE,
 )
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
@@ -18,6 +19,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     FirmwareInfo,
 )
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
@@ -28,14 +30,31 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("usb_data", "model"),
+    ("step", "usb_data", "model", "fw_type", "fw_version"),
     [
-        (USB_DATA_SKY, "Home Assistant SkyConnect"),
-        (USB_DATA_ZBT1, "Home Assistant Connect ZBT-1"),
+        (
+            STEP_PICK_FIRMWARE_ZIGBEE,
+            USB_DATA_SKY,
+            "Home Assistant SkyConnect",
+            ApplicationType.EZSP,
+            "7.4.4.0 build 0",
+        ),
+        (
+            STEP_PICK_FIRMWARE_THREAD,
+            USB_DATA_ZBT1,
+            "Home Assistant Connect ZBT-1",
+            ApplicationType.SPINEL,
+            "2.4.4.0",
+        ),
     ],
 )
 async def test_config_flow(
-    usb_data: UsbServiceInfo, model: str, hass: HomeAssistant
+    step: str,
+    usb_data: UsbServiceInfo,
+    model: str,
+    fw_type: ApplicationType,
+    fw_version: str,
+    hass: HomeAssistant,
 ) -> None:
     """Test the config flow for SkyConnect."""
     result = await hass.config_entries.flow.async_init(
@@ -46,37 +65,60 @@ async def test_config_flow(
     assert result["step_id"] == "pick_firmware"
     assert result["description_placeholders"]["model"] == model
 
-    async def mock_async_step_pick_firmware_zigbee(self, data):
-        return await self.async_step_confirm_zigbee(user_input={})
+    async def mock_install_firmware_step(
+        self,
+        fw_update_url: str,
+        fw_type: str,
+        firmware_name: str,
+        expected_installed_firmware_type: ApplicationType,
+        step_id: str,
+        next_step_id: str,
+    ) -> ConfigFlowResult:
+        if next_step_id == "start_otbr_addon":
+            next_step_id = "pre_confirm_otbr"
+
+        return await getattr(self, f"async_step_{next_step_id}")(user_input={})
 
     with (
         patch(
-            "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareConfigFlow.async_step_pick_firmware_zigbee",
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareConfigFlow._ensure_thread_addon_setup",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareConfigFlow._install_firmware_step",
             autospec=True,
-            side_effect=mock_async_step_pick_firmware_zigbee,
+            side_effect=mock_install_firmware_step,
         ),
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
             return_value=FirmwareInfo(
                 device=usb_data.device,
-                firmware_type=ApplicationType.EZSP,
-                firmware_version="7.4.4.0 build 0",
+                firmware_type=fw_type,
+                firmware_version=fw_version,
                 owners=[],
                 source="probe",
             ),
         ),
     ):
-        result = await hass.config_entries.flow.async_configure(
+        confirm_result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
+            user_input={"next_step_id": step},
         )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert confirm_result["type"] is FlowResultType.FORM
+        assert confirm_result["step_id"] == (
+            "confirm_zigbee" if step == STEP_PICK_FIRMWARE_ZIGBEE else "confirm_otbr"
+        )
 
-    config_entry = result["result"]
+        create_result = await hass.config_entries.flow.async_configure(
+            confirm_result["flow_id"], user_input={}
+        )
+
+    assert create_result["type"] is FlowResultType.CREATE_ENTRY
+    config_entry = create_result["result"]
     assert config_entry.data == {
-        "firmware": "ezsp",
-        "firmware_version": "7.4.4.0 build 0",
+        "firmware": fw_type.value,
+        "firmware_version": fw_version,
         "device": usb_data.device,
         "manufacturer": usb_data.manufacturer,
         "pid": usb_data.pid,
@@ -86,13 +128,17 @@ async def test_config_flow(
         "vid": usb_data.vid,
     }
 
-    # Ensure a ZHA discovery flow has been created
     flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    zha_flow = flows[0]
-    assert zha_flow["handler"] == "zha"
-    assert zha_flow["context"]["source"] == "hardware"
-    assert zha_flow["step_id"] == "confirm"
+
+    if step == STEP_PICK_FIRMWARE_ZIGBEE:
+        # Ensure a ZHA discovery flow has been created
+        assert len(flows) == 1
+        zha_flow = flows[0]
+        assert zha_flow["handler"] == "zha"
+        assert zha_flow["context"]["source"] == "hardware"
+        assert zha_flow["step_id"] == "confirm"
+    else:
+        assert len(flows) == 0
 
 
 @pytest.mark.parametrize(
@@ -133,7 +179,7 @@ async def test_options_flow(
     assert result["description_placeholders"]["model"] == model
 
     async def mock_async_step_pick_firmware_zigbee(self, data):
-        return await self.async_step_confirm_zigbee(user_input={})
+        return await self.async_step_pre_confirm_zigbee()
 
     with (
         patch(
@@ -152,13 +198,19 @@ async def test_options_flow(
             ),
         ),
     ):
-        result = await hass.config_entries.options.async_configure(
+        confirm_result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={"next_step_id": STEP_PICK_FIRMWARE_ZIGBEE},
         )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"] is True
+        assert confirm_result["type"] is FlowResultType.FORM
+        assert confirm_result["step_id"] == "confirm_zigbee"
+
+        create_result = await hass.config_entries.options.async_configure(
+            confirm_result["flow_id"], user_input={}
+        )
+
+    assert create_result["type"] is FlowResultType.CREATE_ENTRY
 
     assert config_entry.data == {
         "firmware": "ezsp",

@@ -4,7 +4,7 @@ import voluptuous as vol
 from yolink.client_request import ClientRequest
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
@@ -25,6 +25,7 @@ _SPEAKER_HUB_PLAY_CALL_OPTIONAL_ATTRS = (
 )
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register services for YoLink integration."""
 

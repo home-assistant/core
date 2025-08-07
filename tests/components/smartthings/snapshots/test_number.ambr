@@ -298,8 +298,8 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': -15,
-      'min': -23,
+      'max': -15.0,
+      'min': -23.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1,
     }),
@@ -337,8 +337,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Frigo Freezer temperature',
-      'max': -15,
-      'min': -23,
+      'max': -15.0,
+      'min': -23.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
@@ -348,7 +348,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-17',
+    'state': '-22.0',
   })
 # ---
 # name: test_all_entities[da_ref_normal_01011][number.frigo_fridge_temperature-entry]
@@ -357,8 +357,8 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max': 7,
-      'min': 1,
+      'max': 7.0,
+      'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1,
     }),
@@ -396,8 +396,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
       'friendly_name': 'Frigo Fridge temperature',
-      'max': 7,
-      'min': 1,
+      'max': 7.0,
+      'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
@@ -407,7 +407,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '6',
+    'state': '2.0',
   })
 # ---
 # name: test_all_entities[da_wm_wm_000001][number.washer_rinse_cycles-entry]
