@@ -3,7 +3,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import cast
 
 from pyatmo.modules import Module
 
@@ -17,7 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import NETATMO_CREATE_BINARY_SENSOR
+from .const import CONF_URL_SECURITY, NETATMO_CREATE_BINARY_SENSOR
 from .data_handler import NetatmoDevice
 from .entity import NetatmoModuleEntity
 
@@ -47,7 +46,7 @@ NETATMO_BINARY_SENSOR_TYPES: tuple[NetatmoBinarySensorEntityDescription, ...] = 
     NetatmoBinarySensorEntityDescription(
         key="reachable",
         translation_key="reachable",
-        netatmo_name=None,
+        netatmo_name="Connectivity",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         value_fn=lambda module: module.reachable,
     ),
@@ -58,7 +57,7 @@ OPENING_BINARY_SENSOR_TYPES: tuple[NetatmoBinarySensorEntityDescription, ...] = 
         key="open_status",
         translation_key="open_status",
         device_class=BinarySensorDeviceClass.OPENING,
-        netatmo_name="Door Tag Status",
+        netatmo_name="Opening",
         value_fn=process_opening_status,
     ),
 )
@@ -128,7 +127,11 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
     ) -> None:
         """Initialize a Netatmo binary sensor."""
         self._attr_unique_id = f"{netatmo_device.device.entity_id}-{description.key}"
-        self._attr_configuration_url = getattr(netatmo_device.device, "url", None)
+        name_suffix = (
+            description.netatmo_name or description.key.replace("_", " ").title()
+        )
+        self._attr_name = name_suffix
+        self._attr_configuration_url = CONF_URL_SECURITY
 
         super().__init__(netatmo_device)
         self.entity_description = description
@@ -141,8 +144,8 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        status = None
-        module = cast(Module, getattr(self.device, "module", None))
+        value = None
+        module = self.device
 
         if not module or not module.reachable:
             if self.available:
@@ -150,14 +153,14 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
             self.async_write_ha_state()
             return
 
-        status = self.entity_description.value_fn(module)
+        value = self.entity_description.value_fn(module)
         _LOGGER.debug(
             "Updating sensor '%s' for module '%s' with status: %s",
             self.entity_description.key,
             module.name,
-            status,
+            value,
         )
 
         self._attr_available = True
-        self._attr_is_on = status
+        self._attr_is_on = value
         self.async_write_ha_state()
