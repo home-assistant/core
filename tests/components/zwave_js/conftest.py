@@ -565,12 +565,6 @@ def mock_listen_block_fixture() -> asyncio.Event:
     return asyncio.Event()
 
 
-@pytest.fixture(name="listen_result")
-def listen_result_fixture() -> asyncio.Future[None]:
-    """Mock a listen result."""
-    return asyncio.Future()
-
-
 @pytest.fixture(name="client")
 def mock_client_fixture(
     controller_state: dict[str, Any],
@@ -578,7 +572,6 @@ def mock_client_fixture(
     version_state: dict[str, Any],
     log_config_state: dict[str, Any],
     listen_block: asyncio.Event,
-    listen_result: asyncio.Future[None],
 ):
     """Mock a client."""
     with patch(
@@ -587,15 +580,16 @@ def mock_client_fixture(
         client = client_class.return_value
 
         async def connect():
+            listen_block.clear()
             await asyncio.sleep(0)
             client.connected = True
 
         async def listen(driver_ready: asyncio.Event) -> None:
             driver_ready.set()
             await listen_block.wait()
-            await listen_result
 
         async def disconnect():
+            listen_block.set()
             client.connected = False
 
         client.connect = AsyncMock(side_effect=connect)

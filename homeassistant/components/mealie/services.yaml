@@ -24,6 +24,27 @@ get_recipe:
       selector:
         text:
 
+get_recipes:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: mealie
+    search_terms:
+      required: false
+      selector:
+        text:
+    result_limit:
+      required: false
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 100
+          mode: box
+          unit_of_measurement: recipes
+
 import_recipe:
   fields:
     config_entry_id:
