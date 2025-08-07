@@ -333,7 +333,7 @@ class StateVacuumEntity(
                 f"is setting the {property} which has been deprecated."
                 f" Integration {self.platform.platform_name} should implement a sensor"
                 " instead with a correct device class and link it to the same device",
-                core_integration_behavior=ReportBehavior.LOG,
+                core_integration_behavior=ReportBehavior.IGNORE,
                 custom_integration_behavior=ReportBehavior.LOG,
                 breaks_in_ha_version="2026.8",
                 integration_domain=self.platform.platform_name,
@@ -358,7 +358,7 @@ class StateVacuumEntity(
                 f" Integration {self.platform.platform_name} should remove this as part of migrating"
                 " the battery level and icon to a sensor",
                 core_behavior=ReportBehavior.LOG,
-                core_integration_behavior=ReportBehavior.LOG,
+                core_integration_behavior=ReportBehavior.IGNORE,
                 custom_integration_behavior=ReportBehavior.LOG,
                 breaks_in_ha_version="2026.8",
                 integration_domain=self.platform.platform_name,
