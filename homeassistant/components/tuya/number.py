@@ -351,7 +351,6 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             key=DPCode.OUTPUT_POWER_LIMIT,
             translation_key="output_power_limit",
             device_class=NumberDeviceClass.POWER,
-            native_unit_of_measurement=UnitOfPower.KILO_WATT,
             entity_category=EntityCategory.CONFIG,
         ),
     ),
