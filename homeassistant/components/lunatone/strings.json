@@ -15,10 +15,10 @@
       },
       "dali": {
         "data": {
-          "device_scan_method": "Select a DALI device scan method"
+          "device_scan_method": "Select a DALI device scan method:"
         },
         "data_description": {
-          "device_scan_method": "Available DALI device scan methods"
+          "device_scan_method": "Available scan methods"
         }
       },
       "finish": {
@@ -52,7 +52,7 @@
   "selector": {
     "device_scan_method": {
       "options": {
-        "current_device_list": "Update current device list",
+        "current_device_list": "Refresh current device list",
         "system_extension": "Find new devices",
         "new_installation": "New installation"
       }
