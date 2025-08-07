@@ -59,17 +59,15 @@ class StateTrigger(Trigger):
 
     @override
     @classmethod
-    async def async_validate_trigger_config(
+    async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
         return cast(ConfigType, STATE_TRIGGER_SCHEMA(config))
 
     @override
-    async def async_attach_trigger(
-        self,
-        action: TriggerActionType,
-        trigger_info: TriggerInfo,
+    async def async_attach(
+        self, action: TriggerActionType, trigger_info: TriggerInfo
     ) -> CALLBACK_TYPE:
         """Attach the trigger."""
         job = HassJob(action, f"light state trigger {trigger_info}")
