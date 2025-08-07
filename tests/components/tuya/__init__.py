@@ -14,6 +14,23 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 DEVICE_MOCKS = {
+    "cl_3r8gc33pnqsxfe1g": [
+        # https://github.com/tuya/tuya-home-assistant/issues/754
+        Platform.COVER,
+    ],
+    "cl_cpbo62rn": [
+        # https://github.com/orgs/home-assistant/discussions/539
+        Platform.COVER,
+        Platform.SELECT,
+    ],
+    "cl_ebt12ypvexnixvtf": [
+        # https://github.com/tuya/tuya-home-assistant/issues/754
+        Platform.COVER,
+    ],
+    "cl_qqdxfdht": [
+        # https://github.com/orgs/home-assistant/discussions/539
+        Platform.COVER,
+    ],
     "cl_zah67ekd": [
         # https://github.com/home-assistant/core/issues/71242
         Platform.COVER,
