@@ -21,7 +21,7 @@
     "temp_set": {
       "type": "Integer",
       "value": {
-        "unit": "℃",
+        "unit": "\u2103",
         "min": 5,
         "max": 700,
         "scale": 1,
@@ -41,7 +41,7 @@
     "temp_set": {
       "type": "Integer",
       "value": {
-        "unit": "℃",
+        "unit": "\u2103",
         "min": 5,
         "max": 700,
         "scale": 1,
@@ -51,7 +51,7 @@
     "temp_current": {
       "type": "Integer",
       "value": {
-        "unit": "℃",
+        "unit": "\u2103",
         "min": 0,
         "max": 900,
         "scale": 1,

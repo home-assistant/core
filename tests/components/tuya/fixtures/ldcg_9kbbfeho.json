@@ -3,7 +3,7 @@
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "name": "Luminosité",
+  "name": "Luminosit\u00e9",
   "category": "ldcg",
   "product_id": "9kbbfeho",
   "product_name": "Luminance sensor",

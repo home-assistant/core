@@ -6,7 +6,7 @@
   "name": "NP DownStairs North",
   "category": "wsdcg",
   "product_id": "g2y6z3p3ja2qhyav",
-  "product_name": "温湿度传感器wifi",
+  "product_name": "\u6e29\u6e7f\u5ea6\u4f20\u611f\u5668wifi",
   "online": true,
   "sub": false,
   "time_zone": "+10:30",
@@ -17,7 +17,7 @@
     "maxtemp_set": {
       "type": "Integer",
       "value": {
-        "unit": "℃",
+        "unit": "\u2103",
         "min": -200,
         "max": 600,
         "scale": 1,
@@ -27,7 +27,7 @@
     "minitemp_set": {
       "type": "Integer",
       "value": {
-        "unit": "℃",
+        "unit": "\u2103",
         "min": -200,
         "max": 600,
         "scale": 1,
@@ -59,7 +59,7 @@
     "va_temperature": {
       "type": "Integer",
       "value": {
-        "unit": "℃",
+        "unit": "\u2103",
         "min": -200,
         "max": 600,
         "scale": 1,
@@ -89,7 +89,7 @@
     "maxtemp_set": {
       "type": "Integer",
       "value": {
-        "unit": "℃",
+        "unit": "\u2103",
         "min": -200,
         "max": 600,
         "scale": 1,
@@ -99,7 +99,7 @@
     "minitemp_set": {
       "type": "Integer",
       "value": {
-        "unit": "℃",
+        "unit": "\u2103",
         "min": -200,
         "max": 600,
         "scale": 1,

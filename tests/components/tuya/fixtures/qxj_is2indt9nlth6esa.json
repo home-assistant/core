@@ -18,7 +18,7 @@
     "temp_current": {
       "type": "Integer",
       "value": {
-        "unit": "℃",
+        "unit": "\u2103",
         "min": -99,
         "max": 600,
         "scale": 1,
@@ -44,7 +44,7 @@
     "temp_current_external": {
       "type": "Integer",
       "value": {
-        "unit": "℃",
+        "unit": "\u2103",
         "min": -400,
         "max": 1200,
         "scale": 1,
