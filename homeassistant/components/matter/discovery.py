@@ -19,6 +19,7 @@ from .event import DISCOVERY_SCHEMAS as EVENT_SCHEMAS
 from .fan import DISCOVERY_SCHEMAS as FAN_SCHEMAS
 from .light import DISCOVERY_SCHEMAS as LIGHT_SCHEMAS
 from .lock import DISCOVERY_SCHEMAS as LOCK_SCHEMAS
+from .media_player import DISCOVERY_SCHEMAS as MEDIA_PLAYER_SCHEMAS
 from .models import UNSET, MatterDiscoverySchema, MatterEntityInfo
 from .number import DISCOVERY_SCHEMAS as NUMBER_SCHEMAS
 from .select import DISCOVERY_SCHEMAS as SELECT_SCHEMAS
@@ -38,6 +39,7 @@ DISCOVERY_SCHEMAS: dict[Platform, list[MatterDiscoverySchema]] = {
     Platform.FAN: FAN_SCHEMAS,
     Platform.LIGHT: LIGHT_SCHEMAS,
     Platform.LOCK: LOCK_SCHEMAS,
+    Platform.MEDIA_PLAYER: MEDIA_PLAYER_SCHEMAS,
     Platform.NUMBER: NUMBER_SCHEMAS,
     Platform.SELECT: SELECT_SCHEMAS,
     Platform.SENSOR: SENSOR_SCHEMAS,
