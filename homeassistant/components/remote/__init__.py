@@ -47,6 +47,7 @@ ATTR_DELAY_SECS = "delay_secs"
 ATTR_HOLD_SECS = "hold_secs"
 ATTR_ALTERNATIVE = "alternative"
 ATTR_TIMEOUT = "timeout"
+ATTR_FREQUENCY = "frequency"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
@@ -58,7 +59,6 @@ SERVICE_SYNC = "sync"
 DEFAULT_NUM_REPEATS = 1
 DEFAULT_DELAY_SECS = 0.4
 DEFAULT_HOLD_SECS = 0
-
 
 class RemoteEntityFeature(IntFlag):
     """Supported features of the remote entity."""
@@ -118,6 +118,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             vol.Optional(ATTR_DEVICE): cv.string,
             vol.Optional(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(ATTR_COMMAND_TYPE): cv.string,
+            vol.Optional(ATTR_FREQUENCY): vol.Coerce(float),
             vol.Optional(ATTR_ALTERNATIVE): cv.boolean,
             vol.Optional(ATTR_TIMEOUT): cv.positive_int,
         },

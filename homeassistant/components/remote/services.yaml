@@ -80,6 +80,14 @@ learn_command:
           options:
             - "ir"
             - "rf"
+    frequency:
+      default: 315
+      selector:
+        number:
+          min: 300
+          max: 500
+          step: 1
+          unit_of_measurement: MHz
     alternative:
       selector:
         boolean:
