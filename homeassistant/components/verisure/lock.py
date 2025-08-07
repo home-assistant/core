@@ -72,7 +72,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         self.serial_number = serial_number
         self._attr_is_locked = None
         self._attr_changed_by = None
-        self._attr_changed_method: str | None = None
+        self._changed_method: str | None = None
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -95,11 +95,6 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         )
 
     @property
-    def changed_method(self) -> str | None:
-        """Last change triggered by."""
-        return self._attr_changed_method
-
-    @property
     def code_format(self) -> str:
         """Return the configured code format."""
         digits = self.coordinator.config_entry.options.get(
@@ -108,9 +103,9 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         return f"^\\d{{{digits}}}$"
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
+    def extra_state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
-        return {"method": self.changed_method}
+        return {"method": self._changed_method}
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Send unlock command."""
@@ -196,7 +191,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
             .get("user", {})
             .get("name")
         )
-        self._attr_changed_method = self.coordinator.data["locks"][self.serial_number][
+        self._changed_method = self.coordinator.data["locks"][self.serial_number][
             "lockMethod"
         ]
         super()._handle_coordinator_update()
