@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 import struct
 from typing import Any, cast
 
@@ -44,6 +43,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_hub
 from .const import (
+    _LOGGER,
     CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_WRITE_COIL,
@@ -103,8 +103,6 @@ from .const import (
 )
 from .entity import BaseStructPlatform
 from .modbus import ModbusHub
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
