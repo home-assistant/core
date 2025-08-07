@@ -11,7 +11,12 @@ from zwave_js_server.model.controller import CONTROLLER_EVENT_MODEL_MAP
 from zwave_js_server.model.driver import DRIVER_EVENT_MODEL_MAP, Driver
 from zwave_js_server.model.node import NODE_EVENT_MODEL_MAP
 
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PLATFORM
+from homeassistant.const import (
+    ATTR_CONFIG_ENTRY_ID,
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    CONF_PLATFORM,
+)
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -19,7 +24,6 @@ from homeassistant.helpers.trigger import Trigger, TriggerActionType, TriggerInf
 from homeassistant.helpers.typing import ConfigType
 
 from ..const import (
-    ATTR_CONFIG_ENTRY_ID,
     ATTR_EVENT,
     ATTR_EVENT_DATA,
     ATTR_EVENT_SOURCE,
@@ -34,8 +38,11 @@ from ..helpers import (
 )
 from .trigger_helpers import async_bypass_dynamic_config_validation
 
+# Relative platform type should be <SUBMODULE_NAME>
+RELATIVE_PLATFORM_TYPE = f"{__name__.rsplit('.', maxsplit=1)[-1]}"
+
 # Platform type should be <DOMAIN>.<SUBMODULE_NAME>
-PLATFORM_TYPE = f"{DOMAIN}.{__name__.rsplit('.', maxsplit=1)[-1]}"
+PLATFORM_TYPE = f"{DOMAIN}.{RELATIVE_PLATFORM_TYPE}"
 
 
 def validate_non_node_event_source(obj: dict) -> dict:
@@ -260,13 +267,13 @@ class EventTrigger(Trigger):
         self._hass = hass
 
     @classmethod
-    async def async_validate_trigger_config(
+    async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
         return await async_validate_trigger_config(hass, config)
 
-    async def async_attach_trigger(
+    async def async_attach(
         self,
         action: TriggerActionType,
         trigger_info: TriggerInfo,

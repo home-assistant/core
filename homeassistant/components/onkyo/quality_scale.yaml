@@ -8,10 +8,7 @@ rules:
   brands: done
   common-modules: done
   config-flow: done
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      Coverage is 100%, but the tests need to be improved.
+  config-flow-test-coverage: done
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
@@ -39,9 +36,9 @@ rules:
   parallel-updates: todo
   reauthentication-flow:
     status: exempt
-    comment: |
-      This integration does not require authentication.
-  test-coverage: todo
+    comment: This integration does not require authentication.
+  test-coverage: done
+
   # Gold
   devices: todo
   diagnostics: todo

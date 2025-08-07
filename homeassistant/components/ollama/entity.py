@@ -170,11 +170,13 @@ async def _transform_stream(
 class OllamaBaseLLMEntity(Entity):
     """Ollama base LLM entity."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, entry: OllamaConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the entity."""
         self.entry = entry
         self.subentry = subentry
-        self._attr_name = subentry.title
         self._attr_unique_id = subentry.subentry_id
 
         model, _, version = subentry.data[CONF_MODEL].partition(":")

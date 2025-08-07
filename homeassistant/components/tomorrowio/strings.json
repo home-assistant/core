@@ -23,10 +23,10 @@
   "options": {
     "step": {
       "init": {
-        "title": "Update Tomorrow.io Options",
+        "title": "Update Tomorrow.io options",
         "description": "If you choose to enable the `nowcast` forecast entity, you can configure the number of minutes between each forecast. The number of forecasts provided depends on the number of minutes chosen between forecasts.",
         "data": {
-          "timestep": "Min. Between NowCast Forecasts"
+          "timestep": "Minutes between NowCast forecasts"
         }
       }
     }
