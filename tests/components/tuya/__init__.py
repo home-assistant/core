@@ -467,6 +467,10 @@ DEVICE_MOCKS = {
         # https://github.com/home-assistant/core/issues/138372
         Platform.SENSOR,
     ],
+    "zwjcy_myd45weu": [
+        # https://github.com/orgs/home-assistant/discussions/482
+        Platform.SENSOR,
+    ],
 }
 
 
