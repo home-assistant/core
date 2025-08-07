@@ -10,7 +10,6 @@ from typing import Any
 import aiohttp
 from awesomeversion import AwesomeVersion
 from lunatone_rest_api_client import Device
-from lunatone_rest_api_client.models import ControlData
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
@@ -92,11 +91,11 @@ class LunatoneLight(LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        await self._device.async_control(ControlData(switchable=True))
+        await self._device.switch_on()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        await self._device.async_control(ControlData(switchable=False))
+        await self._device.switch_off()
 
     async def async_update(self) -> None:
         """Fetch new state data for this light.

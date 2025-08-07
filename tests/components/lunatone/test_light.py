@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import aiohttp
 from awesomeversion import AwesomeVersion
 from lunatone_rest_api_client import Device
-from lunatone_rest_api_client.models import ControlData, DeviceData, DevicesData
+from lunatone_rest_api_client.models import DeviceData, DevicesData
 import pytest
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
@@ -104,9 +104,7 @@ async def test_switch_off(
     )
     await hass.async_block_till_done()
 
-    mock_lunatone_devices.devices[0].async_control.assert_called_once_with(
-        ControlData(switchable=False)
-    )
+    mock_lunatone_devices.devices[0].switch_off.assert_called_once_with()
 
 
 async def test_switch_on(
@@ -132,9 +130,7 @@ async def test_switch_on(
     )
     await hass.async_block_till_done()
 
-    mock_lunatone_devices.devices[0].async_control.assert_called_once_with(
-        ControlData(switchable=True)
-    )
+    mock_lunatone_devices.devices[0].switch_on.assert_called_once()
 
 
 async def test_availability_on_error(
