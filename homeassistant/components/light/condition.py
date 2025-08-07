@@ -27,8 +27,8 @@ BEHAVIOR_ONE: Final = "one"
 BEHAVIOR_ANY: Final = "any"
 BEHAVIOR_ALL: Final = "all"
 
-STATE_CONDITION_TYPE = "state"
-STATE_CONDITION_SCHEMA = vol.All(
+STATE_CONDITION_TYPE: Final = "state"
+STATE_CONDITION_SCHEMA = vol.Schema(
     {
         **cv.CONDITION_BASE_SCHEMA,
         vol.Required(CONF_CONDITION): f"{DOMAIN}.{STATE_CONDITION_TYPE}",
