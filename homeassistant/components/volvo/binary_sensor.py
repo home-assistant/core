@@ -359,14 +359,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up binary sensors."""
     coordinators = entry.runtime_data
-    entities = [
+    async_add_entities(
         VolvoBinarySensor(coordinator, description)
         for coordinator in coordinators
         for description in _DESCRIPTIONS
         if description.api_field in coordinator.data
-    ]
-
-    async_add_entities(entities)
+    )
 
 
 class VolvoBinarySensor(VolvoEntity, BinarySensorEntity):
