@@ -4957,7 +4957,7 @@
     'state': '1.2',
   })
 # ---
-# name: test_platform_setup_and_discovery[zndb_4ggkyflayu1h1ho9][sensor.xoca_dac212xc_v2_s1_total_energy_production-entry]
+# name: test_platform_setup_and_discovery[zndb_4ggkyflayu1h1ho9][sensor.xoca_dac212xc_v2_s1_total_production-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4992,12 +4992,12 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'total_energy_production',
+    'translation_key': 'total_production',
     'unique_id': 'tuya.6c0887b46a2eaf56e0ui7dreverse_energy_total',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
-# name: test_platform_setup_and_discovery[zndb_4ggkyflayu1h1ho9][sensor.xoca_dac212xc_v2_s1_total_energy_production-state]
+# name: test_platform_setup_and_discovery[zndb_4ggkyflayu1h1ho9][sensor.xoca_dac212xc_v2_s1_total_production-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
