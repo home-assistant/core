@@ -266,6 +266,13 @@ DEVICE_MOCKS = {
         Platform.FAN,
         Platform.SWITCH,
     ],
+    "kj_fsxtzzhujkrak2oy": [
+        # https://github.com/orgs/home-assistant/discussions/439
+        Platform.FAN,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
     "kj_yrzylxax1qspdgpp": [
         # https://github.com/orgs/home-assistant/discussions/61
         Platform.FAN,
