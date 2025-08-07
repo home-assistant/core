@@ -494,6 +494,11 @@ DEVICE_MOCKS = {
         Platform.NUMBER,
         Platform.SENSOR,
     ],
+    "zndb_4ggkyflayu1h1ho9": [
+        # https://github.com/home-assistant/core/pull/149317
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
     "zndb_ze8faryrxr0glqnn": [
         # https://github.com/home-assistant/core/issues/138372
         Platform.SENSOR,
