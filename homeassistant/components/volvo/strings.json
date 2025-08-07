@@ -1,9 +1,6 @@
 {
   "common": {
-    "high_pressure": "High pressure",
-    "low_pressure": "Low pressure",
-    "pressure": "Pressure",
-    "very_low_pressure": "Very low pressure"
+    "pressure": "Pressure"
   },
   "config": {
     "step": {
@@ -200,10 +197,10 @@
           "pressure": {
             "name": "[%key:component::volvo::common::pressure%]",
             "state": {
-              "high_pressure": "[%key:component::volvo::common::high_pressure%]",
-              "low_pressure": "[%key:component::volvo::common::low_pressure%]",
+              "high_pressure": "[%key:common::state::high%]",
+              "low_pressure": "[%key:common::state::low%]",
               "no_warning": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
-              "very_low_pressure": "[%key:component::volvo::common::very_low_pressure%]"
+              "very_low_pressure": "[%key:common::state::very_low%]"
             }
           }
         }
@@ -214,10 +211,10 @@
           "pressure": {
             "name": "[%key:component::volvo::common::pressure%]",
             "state": {
-              "high_pressure": "[%key:component::volvo::common::high_pressure%]",
-              "low_pressure": "[%key:component::volvo::common::low_pressure%]",
+              "high_pressure": "[%key:common::state::high%]",
+              "low_pressure": "[%key:common::state::low%]",
               "no_warning": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
-              "very_low_pressure": "[%key:component::volvo::common::very_low_pressure%]"
+              "very_low_pressure": "[%key:common::state::very_low%]"
             }
           }
         }
@@ -228,10 +225,10 @@
           "pressure": {
             "name": "[%key:component::volvo::common::pressure%]",
             "state": {
-              "high_pressure": "[%key:component::volvo::common::high_pressure%]",
-              "low_pressure": "[%key:component::volvo::common::low_pressure%]",
+              "high_pressure": "[%key:common::state::high%]",
+              "low_pressure": "[%key:common::state::low%]",
               "no_warning": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
-              "very_low_pressure": "[%key:component::volvo::common::very_low_pressure%]"
+              "very_low_pressure": "[%key:common::state::very_low%]"
             }
           }
         }
@@ -242,10 +239,10 @@
           "pressure": {
             "name": "[%key:component::volvo::common::pressure%]",
             "state": {
-              "high_pressure": "[%key:component::volvo::common::high_pressure%]",
-              "low_pressure": "[%key:component::volvo::common::low_pressure%]",
+              "high_pressure": "[%key:common::state::high%]",
+              "low_pressure": "[%key:common::state::low%]",
               "no_warning": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
-              "very_low_pressure": "[%key:component::volvo::common::very_low_pressure%]"
+              "very_low_pressure": "[%key:common::state::very_low%]"
             }
           }
         }

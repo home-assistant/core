@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from volvocarsapi.models import VolvoCarsApiBaseModel, VolvoCarsValue
@@ -31,7 +30,6 @@ class VolvoBinarySensorDescription(
     on_values: tuple[str, ...]
     api_value_in_attributes: bool = False
     api_value_attribute_name: str = ""
-    api_value_attribute_fn: Callable[[dict[str, VolvoCarsValue]], str] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -393,23 +391,22 @@ class VolvoBinarySensor(VolvoEntity, BinarySensorEntity):
             return
 
         assert isinstance(api_field, VolvoCarsValue)
+        assert isinstance(api_field.value, str)
+
+        value = api_field.value
 
         self._attr_is_on = (
-            api_field.value in self.entity_description.on_values
-            if isinstance(api_field.value, str)
-            and api_field.value.upper() != API_NONE_VALUE
+            value in self.entity_description.on_values
+            if value.upper() != API_NONE_VALUE
             else None
         )
 
         if self.entity_description.api_value_in_attributes:
             attribute_value = (
-                api_field.value
-                if self.entity_description.api_value_attribute_fn is None
-                else self.entity_description.api_value_attribute_fn(api_field.value)
+                value_to_translation_key(value)
+                if value.upper() != API_NONE_VALUE
+                else None
             )
-
-            if isinstance(attribute_value, str):
-                attribute_value = value_to_translation_key(attribute_value)
 
             self._attr_extra_state_attributes[
                 self.entity_description.api_value_attribute_name
