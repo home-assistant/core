@@ -84,6 +84,5 @@
     "master_language": "chinese_simplified"
   },
   "set_up": false,
-  "support_local": true,
-  "terminal_id": "REDACTED"
+  "support_local": true
 }

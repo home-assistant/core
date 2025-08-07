@@ -176,6 +176,5 @@
     "record_mode": 1
   },
   "set_up": true,
-  "support_local": false,
-  "terminal_id": "REDACTED"
+  "support_local": false
 }

@@ -131,6 +131,5 @@
     "online_state": "online"
   },
   "set_up": true,
-  "support_local": true,
-  "terminal_id": "REDACTED"
+  "support_local": true
 }

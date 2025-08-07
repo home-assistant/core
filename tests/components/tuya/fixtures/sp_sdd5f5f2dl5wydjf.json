@@ -377,6 +377,5 @@
     "initiative_message": ""
   },
   "set_up": true,
-  "support_local": false,
-  "terminal_id": "REDACTED"
+  "support_local": false
 }

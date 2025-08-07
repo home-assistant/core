@@ -89,6 +89,5 @@
     "control_back_mode": "forward"
   },
   "set_up": true,
-  "support_local": true,
-  "terminal_id": "REDACTED"
+  "support_local": true
 }

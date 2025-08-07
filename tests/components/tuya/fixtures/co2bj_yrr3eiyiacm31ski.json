@@ -168,6 +168,5 @@
     "ch2o_value": 2
   },
   "set_up": true,
-  "support_local": true,
-  "terminal_id": "REDACTED"
+  "support_local": true
 }

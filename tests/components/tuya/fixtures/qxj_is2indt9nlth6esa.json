@@ -59,6 +59,5 @@
     "temp_current_external": -130
   },
   "set_up": false,
-  "support_local": true,
-  "terminal_id": "REDACTED"
+  "support_local": true
 }
