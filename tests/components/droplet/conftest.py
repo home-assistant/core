@@ -8,7 +8,8 @@ from unittest.mock import MagicMock, patch
 import aiohttp
 import pytest
 
-from homeassistant.components.droplet.const import CONF_HOST, DOMAIN
+from homeassistant.components.droplet.const import DOMAIN
+from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
 
@@ -52,9 +53,10 @@ class MockWSConnection:
             case _:
                 return None
 
-    async def close(self):
+    async def close(self) -> bool:
         """Mock closing websocket."""
         self.closed = True
+        return True
 
 
 def mock_try_connect(behavior):

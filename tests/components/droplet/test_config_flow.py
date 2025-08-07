@@ -31,12 +31,7 @@ async def test_zeroconf_setup(hass: HomeAssistant) -> None:
         hostname="Droplet-1234",
         type="_droplet._tcp.local.",
         name="Droplet-1234",
-        properties={
-            "manufacturer": "Hydrific, part of LIXIL",
-            "model": "Droplet 1.0",
-            "sw": "1.0.0",
-            "sn": "F467",
-        },
+        properties={},
     )
     result = await hass.config_entries.flow.async_init(
         "droplet",
@@ -49,21 +44,17 @@ async def test_zeroconf_setup(hass: HomeAssistant) -> None:
 
     with mock_try_connect(MockClientBehaviors.GOOD):
         result = await hass.config_entries.flow.async_configure(
-            result.get("flow_id"), user_input={"pairing_code": "12223"}
+            result.get("flow_id"), user_input={"code": "12223"}
         )
     await hass.async_block_till_done()
     assert result is not None
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("data") == {
         "device_id": "Droplet-1234",
-        "droplet_host": "192.168.1.54",
-        "droplet_port": 443,
-        "manufacturer": "Hydrific, part of LIXIL",
-        "model": "Droplet 1.0",
+        "host": "192.168.1.54",
+        "port": 443,
+        "code": "12223",
         "name": "Droplet",
-        "pairing_code": "12223",
-        "sn": "F467",
-        "sw": "1.0.0",
     }
 
 
@@ -98,7 +89,7 @@ async def test_zeroconf_update(
     assert result.get("reason") == "already_configured"
 
     entries = hass.config_entries.async_entries("droplet")
-    assert entries[0].data.get("droplet_host") == new_host
+    assert entries[0].data.get("host") == new_host
 
 
 async def test_zeroconf_invalid_discovery(hass: HomeAssistant) -> None:
@@ -144,7 +135,7 @@ async def test_confirm_failed_connect(
 
     with mock_try_connect(MockClientBehaviors.FAIL_OPEN):
         result = await hass.config_entries.flow.async_configure(
-            result.get("flow_id"), user_input={"pairing_code": "12223"}
+            result.get("flow_id"), user_input={"code": "12223"}
         )
         await hass.async_block_till_done()
         assert result is not None

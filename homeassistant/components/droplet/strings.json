@@ -5,10 +5,10 @@
         "title": "Confirm association",
         "description": "Enter pairing code to connect to {device_name}.",
         "data": {
-          "pairing_code": "Pairing code"
+          "code": "Pairing code"
         },
         "data_description": {
-          "pairing_code": "Code from the Droplet app."
+          "code": "Code from the Droplet app."
         }
       }
     },

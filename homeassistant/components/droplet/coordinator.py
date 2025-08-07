@@ -83,28 +83,19 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
     async def setup(self) -> bool:
         """Set up droplet client."""
 
-        async def listen() -> None:
-            """Listen for state changes via WebSocket."""
-            while True:
-                connected = await self.droplet.connect()
-                if connected:
-                    # This will only return if there was a broken connection
-                    await self.droplet.listen(callback=self.async_set_updated_data)
-
-                self.async_set_updated_data(None)
-                await asyncio.sleep(RECONNECT_DELAY)
-
         async def disconnect(_: Event) -> None:
             """Close WebSocket connection."""
             self.unsub = None
-            await self.droplet.disconnect()
+            await self.droplet.stop_listening()
 
         # Clean disconnect WebSocket on Home Assistant shutdown
         self.unsub = self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, disconnect
         )
         self.config_entry.async_create_background_task(
-            self.hass, listen(), "droplet-listen"
+            self.hass,
+            self.droplet.listen_forever(RECONNECT_DELAY, self.async_set_updated_data),
+            "droplet-listen",
         )
         return True
 
