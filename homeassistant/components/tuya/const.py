@@ -110,6 +110,7 @@ class DPCode(StrEnum):
     ANION = "anion"  # Ionizer unit
     ARM_DOWN_PERCENT = "arm_down_percent"
     ARM_UP_PERCENT = "arm_up_percent"
+    ATMOSPHERIC_PRESSTURE = "atmospheric_pressture"  # Typo is in Tuya API
     BASIC_ANTI_FLICKER = "basic_anti_flicker"
     BASIC_DEVICE_VOLUME = "basic_device_volume"
     BASIC_FLIP = "basic_flip"
@@ -224,8 +225,13 @@ class DPCode(StrEnum):
     HUMIDITY = "humidity"  # Humidity
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity
     HUMIDITY_INDOOR = "humidity_indoor"  # Indoor humidity
+    HUMIDITY_OUTDOOR = "humidity_outdoor"  # Outdoor humidity
+    HUMIDITY_OUTDOOR_1 = "humidity_outdoor_1"  # Outdoor humidity
+    HUMIDITY_OUTDOOR_2 = "humidity_outdoor_2"  # Outdoor humidity
+    HUMIDITY_OUTDOOR_3 = "humidity_outdoor_3"  # Outdoor humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
+    INSTALLATION_HEIGHT = "installation_height"
     IPC_WORK_MODE = "ipc_work_mode"
     LED_TYPE_1 = "led_type_1"
     LED_TYPE_2 = "led_type_2"
@@ -236,12 +242,18 @@ class DPCode(StrEnum):
     LEVEL_CURRENT = "level_current"
     LIGHT = "light"  # Light
     LIGHT_MODE = "light_mode"
+    LIQUID_DEPTH = "liquid_depth"
+    LIQUID_DEPTH_MAX = "liquid_depth_max"
+    LIQUID_LEVEL_PERCENT = "liquid_level_percent"
+    LIQUID_STATE = "liquid_state"
     LOCK = "lock"  # Lock / Child lock
     MASTER_MODE = "master_mode"  # alarm mode
     MASTER_STATE = "master_state"  # alarm state
     MACH_OPERATE = "mach_operate"
     MANUAL_FEED = "manual_feed"
     MATERIAL = "material"  # Material
+    MAX_SET = "max_set"
+    MINI_SET = "mini_set"
     MODE = "mode"  # Working mode / Mode
     MOODLIGHTING = "moodlighting"  # Mood light
     MOTION_RECORD = "motion_record"
@@ -369,6 +381,15 @@ class DPCode(StrEnum):
     TEMP_CURRENT_EXTERNAL = (
         "temp_current_external"  # Current external temperature in Celsius
     )
+    TEMP_CURRENT_EXTERNAL_1 = (
+        "temp_current_external_1"  # Current external temperature in Celsius
+    )
+    TEMP_CURRENT_EXTERNAL_2 = (
+        "temp_current_external_2"  # Current external temperature in Celsius
+    )
+    TEMP_CURRENT_EXTERNAL_3 = (
+        "temp_current_external_3"  # Current external temperature in Celsius
+    )
     TEMP_CURRENT_EXTERNAL_F = (
         "temp_current_external_f"  # Current external temperature in Fahrenheit
     )
@@ -414,6 +435,7 @@ class DPCode(StrEnum):
     WINDOW_CHECK = "window_check"
     WINDOW_STATE = "window_state"
     WINDSPEED = "windspeed"
+    WINDSPEED_AVG = "windspeed_avg"
     WIRELESS_BATTERYLOCK = "wireless_batterylock"
     WIRELESS_ELECTRICITY = "wireless_electricity"
     WORK_MODE = "work_mode"  # Working mode

@@ -4,7 +4,7 @@
       "addon_get_discovery_info_failed": "Failed to get Z-Wave add-on discovery info.",
       "addon_info_failed": "Failed to get Z-Wave add-on info.",
       "addon_install_failed": "Failed to install the Z-Wave add-on.",
-      "addon_required": "The Z-Wave migration flow requires the integration to be configured using the Z-Wave Supervisor add-on. You can still use the Backup and Restore buttons to migrate your network manually.",
+      "addon_required": "The Z-Wave migration flow requires the integration to be configured using the Z-Wave Supervisor add-on. If you are using Z-Wave JS UI, please follow our [migration instructions]({zwave_js_ui_migration}).",
       "addon_set_config_failed": "Failed to set Z-Wave configuration.",
       "addon_start_failed": "Failed to start the Z-Wave add-on.",
       "addon_stop_failed": "Failed to stop the Z-Wave add-on.",

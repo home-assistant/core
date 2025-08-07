@@ -100,13 +100,13 @@ class ZoneCondition(Condition):
         self._config = config
 
     @classmethod
-    async def async_validate_condition_config(
+    async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
         return _CONDITION_SCHEMA(config)  # type: ignore[no-any-return]
 
-    async def async_condition_from_config(self) -> ConditionCheckerType:
+    async def async_get_checker(self) -> ConditionCheckerType:
         """Wrap action method with zone based condition."""
         entity_ids = self._config.get(CONF_ENTITY_ID, [])
         zone_entity_ids = self._config.get(CONF_ZONE, [])
@@ -147,7 +147,7 @@ class ZoneCondition(Condition):
 
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "zone": ZoneCondition,
+    "_": ZoneCondition,
 }
 
 

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[sfkzq_valve_controller][valve.sprinkler_cesare_switch-entry]
+# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,57 +12,7 @@
     'disabled_by': None,
     'domain': 'valve',
     'entity_category': None,
-    'entity_id': 'valve.sprinkler_cesare_switch',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <ValveDeviceClass.WATER: 'water'>,
-    'original_icon': None,
-    'original_name': 'Switch',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': <ValveEntityFeature: 3>,
-    'translation_key': 'switch',
-    'unique_id': 'tuya.bfb9bfc18eeaed2d85yt5mswitch',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[sfkzq_valve_controller][valve.sprinkler_cesare_switch-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'water',
-      'friendly_name': 'Sprinkler Cesare Switch',
-      'supported_features': <ValveEntityFeature: 3>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'valve.sprinkler_cesare_switch',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'closed',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sfkzq_valve_controller][valve.sprinkler_cesare_switch_1-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'valve',
-    'entity_category': None,
-    'entity_id': 'valve.sprinkler_cesare_switch_1',
+    'entity_id': 'valve.jie_hashui_fa_switch_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -80,26 +30,26 @@
     'suggested_object_id': None,
     'supported_features': <ValveEntityFeature: 3>,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.bfb9bfc18eeaed2d85yt5mswitch_1',
+    'unique_id': 'tuya.6c6fec8c06c8d3261chmbcswitch_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_valve_controller][valve.sprinkler_cesare_switch_1-state]
+# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
-      'friendly_name': 'Sprinkler Cesare Switch 1',
+      'friendly_name': '接HA水阀 Switch 1',
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'valve.sprinkler_cesare_switch_1',
+    'entity_id': 'valve.jie_hashui_fa_switch_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'closed',
+    'state': 'open',
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_valve_controller][valve.sprinkler_cesare_switch_2-entry]
+# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -112,7 +62,7 @@
     'disabled_by': None,
     'domain': 'valve',
     'entity_category': None,
-    'entity_id': 'valve.sprinkler_cesare_switch_2',
+    'entity_id': 'valve.jie_hashui_fa_switch_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -130,26 +80,26 @@
     'suggested_object_id': None,
     'supported_features': <ValveEntityFeature: 3>,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.bfb9bfc18eeaed2d85yt5mswitch_2',
+    'unique_id': 'tuya.6c6fec8c06c8d3261chmbcswitch_2',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_valve_controller][valve.sprinkler_cesare_switch_2-state]
+# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
-      'friendly_name': 'Sprinkler Cesare Switch 2',
+      'friendly_name': '接HA水阀 Switch 2',
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'valve.sprinkler_cesare_switch_2',
+    'entity_id': 'valve.jie_hashui_fa_switch_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'closed',
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_valve_controller][valve.sprinkler_cesare_switch_3-entry]
+# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -162,7 +112,7 @@
     'disabled_by': None,
     'domain': 'valve',
     'entity_category': None,
-    'entity_id': 'valve.sprinkler_cesare_switch_3',
+    'entity_id': 'valve.jie_hashui_fa_switch_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -180,26 +130,26 @@
     'suggested_object_id': None,
     'supported_features': <ValveEntityFeature: 3>,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.bfb9bfc18eeaed2d85yt5mswitch_3',
+    'unique_id': 'tuya.6c6fec8c06c8d3261chmbcswitch_3',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_valve_controller][valve.sprinkler_cesare_switch_3-state]
+# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
-      'friendly_name': 'Sprinkler Cesare Switch 3',
+      'friendly_name': '接HA水阀 Switch 3',
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'valve.sprinkler_cesare_switch_3',
+    'entity_id': 'valve.jie_hashui_fa_switch_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'closed',
+    'state': 'open',
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_valve_controller][valve.sprinkler_cesare_switch_4-entry]
+# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -212,7 +162,7 @@
     'disabled_by': None,
     'domain': 'valve',
     'entity_category': None,
-    'entity_id': 'valve.sprinkler_cesare_switch_4',
+    'entity_id': 'valve.jie_hashui_fa_switch_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -230,26 +180,26 @@
     'suggested_object_id': None,
     'supported_features': <ValveEntityFeature: 3>,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.bfb9bfc18eeaed2d85yt5mswitch_4',
+    'unique_id': 'tuya.6c6fec8c06c8d3261chmbcswitch_4',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_valve_controller][valve.sprinkler_cesare_switch_4-state]
+# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
-      'friendly_name': 'Sprinkler Cesare Switch 4',
+      'friendly_name': '接HA水阀 Switch 4',
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'valve.sprinkler_cesare_switch_4',
+    'entity_id': 'valve.jie_hashui_fa_switch_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'closed',
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_valve_controller][valve.sprinkler_cesare_switch_5-entry]
+# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -262,7 +212,7 @@
     'disabled_by': None,
     'domain': 'valve',
     'entity_category': None,
-    'entity_id': 'valve.sprinkler_cesare_switch_5',
+    'entity_id': 'valve.jie_hashui_fa_switch_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -280,26 +230,26 @@
     'suggested_object_id': None,
     'supported_features': <ValveEntityFeature: 3>,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.bfb9bfc18eeaed2d85yt5mswitch_5',
+    'unique_id': 'tuya.6c6fec8c06c8d3261chmbcswitch_5',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_valve_controller][valve.sprinkler_cesare_switch_5-state]
+# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
-      'friendly_name': 'Sprinkler Cesare Switch 5',
+      'friendly_name': '接HA水阀 Switch 5',
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'valve.sprinkler_cesare_switch_5',
+    'entity_id': 'valve.jie_hashui_fa_switch_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'closed',
+    'state': 'open',
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_valve_controller][valve.sprinkler_cesare_switch_6-entry]
+# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -312,7 +262,7 @@
     'disabled_by': None,
     'domain': 'valve',
     'entity_category': None,
-    'entity_id': 'valve.sprinkler_cesare_switch_6',
+    'entity_id': 'valve.jie_hashui_fa_switch_6',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -330,26 +280,26 @@
     'suggested_object_id': None,
     'supported_features': <ValveEntityFeature: 3>,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.bfb9bfc18eeaed2d85yt5mswitch_6',
+    'unique_id': 'tuya.6c6fec8c06c8d3261chmbcswitch_6',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_valve_controller][valve.sprinkler_cesare_switch_6-state]
+# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
-      'friendly_name': 'Sprinkler Cesare Switch 6',
+      'friendly_name': '接HA水阀 Switch 6',
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'valve.sprinkler_cesare_switch_6',
+    'entity_id': 'valve.jie_hashui_fa_switch_6',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'closed',
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_valve_controller][valve.sprinkler_cesare_switch_7-entry]
+# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_7-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -362,7 +312,7 @@
     'disabled_by': None,
     'domain': 'valve',
     'entity_category': None,
-    'entity_id': 'valve.sprinkler_cesare_switch_7',
+    'entity_id': 'valve.jie_hashui_fa_switch_7',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -380,26 +330,26 @@
     'suggested_object_id': None,
     'supported_features': <ValveEntityFeature: 3>,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.bfb9bfc18eeaed2d85yt5mswitch_7',
+    'unique_id': 'tuya.6c6fec8c06c8d3261chmbcswitch_7',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_valve_controller][valve.sprinkler_cesare_switch_7-state]
+# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_7-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
-      'friendly_name': 'Sprinkler Cesare Switch 7',
+      'friendly_name': '接HA水阀 Switch 7',
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'valve.sprinkler_cesare_switch_7',
+    'entity_id': 'valve.jie_hashui_fa_switch_7',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'closed',
+    'state': 'open',
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_valve_controller][valve.sprinkler_cesare_switch_8-entry]
+# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_8-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -412,7 +362,7 @@
     'disabled_by': None,
     'domain': 'valve',
     'entity_category': None,
-    'entity_id': 'valve.sprinkler_cesare_switch_8',
+    'entity_id': 'valve.jie_hashui_fa_switch_8',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -430,19 +380,19 @@
     'suggested_object_id': None,
     'supported_features': <ValveEntityFeature: 3>,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.bfb9bfc18eeaed2d85yt5mswitch_8',
+    'unique_id': 'tuya.6c6fec8c06c8d3261chmbcswitch_8',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_valve_controller][valve.sprinkler_cesare_switch_8-state]
+# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_8-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
-      'friendly_name': 'Sprinkler Cesare Switch 8',
+      'friendly_name': '接HA水阀 Switch 8',
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'valve.sprinkler_cesare_switch_8',
+    'entity_id': 'valve.jie_hashui_fa_switch_8',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
