@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import re
 
 from aiohttp import web
@@ -12,26 +13,29 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.const import CONF_EMAIL, CONF_NAME, DEGREE
+from homeassistant.components.torque.torque_pids import PIDS_INFO
+from homeassistant.const import (
+    ATTR_ICON,
+    ATTR_NAME,
+    ATTR_UNIT_OF_MEASUREMENT,
+    CONF_EMAIL,
+    CONF_NAME,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.util import slugify
 
 API_PATH = "/api/torque"
 
 DEFAULT_NAME = "vehicle"
 DOMAIN = "torque"
 
-ENTITY_NAME_FORMAT = "{0} {1}"
-
 SENSOR_EMAIL_FIELD = "eml"
-SENSOR_NAME_KEY = r"userFullName(\w+)"
-SENSOR_UNIT_KEY = r"userUnit(\w+)"
 SENSOR_VALUE_KEY = r"k(\w+)"
 
-NAME_KEY = re.compile(SENSOR_NAME_KEY)
-UNIT_KEY = re.compile(SENSOR_UNIT_KEY)
 VALUE_KEY = re.compile(SENSOR_VALUE_KEY)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
@@ -40,6 +44,8 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 def convert_pid(value):
@@ -54,10 +60,15 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Torque platform."""
-    vehicle: str | None = config.get(CONF_NAME)
+    vehicle: str = config[CONF_NAME]
     email: str | None = config.get(CONF_EMAIL)
-    sensors: dict[int, TorqueSensor] = {}
+    sensors: dict[str, TorqueSensor] = {}
 
+    _LOGGER.debug(
+        "Setting up Torque platform with vehicle: %s, email: %s",
+        vehicle,
+        email,
+    )
     hass.http.register_view(
         TorqueReceiveDataView(email, vehicle, sensors, async_add_entities)
     )
@@ -72,8 +83,8 @@ class TorqueReceiveDataView(HomeAssistantView):
     def __init__(
         self,
         email: str | None,
-        vehicle: str | None,
-        sensors: dict[int, TorqueSensor],
+        vehicle: str,
+        sensors: dict[str, TorqueSensor],
         async_add_entities: AddEntitiesCallback,
     ) -> None:
         """Initialize a Torque view."""
@@ -85,77 +96,99 @@ class TorqueReceiveDataView(HomeAssistantView):
     @callback
     def get(self, request: web.Request) -> str | None:
         """Handle Torque data request."""
-        data = request.query
+        data: dict[str, str] = request.query
+        _LOGGER.debug("Received data: %s", data)
 
         if self.email is not None and self.email != data[SENSOR_EMAIL_FIELD]:
+            _LOGGER.debug(
+                "Wrong email address: %s != %s",
+                self.email,
+                data[SENSOR_EMAIL_FIELD],
+            )
             return None
 
-        names = {}
-        units = {}
-        for key in data:
-            is_name = NAME_KEY.match(key)
-            is_unit = UNIT_KEY.match(key)
-            is_value = VALUE_KEY.match(key)
-
-            if is_name:
-                pid = convert_pid(is_name.group(1))
-                names[pid] = data[key]
-            elif is_unit:
-                pid = convert_pid(is_unit.group(1))
-
-                temp_unit = data[key]
-                if "\\xC2\\xB0" in temp_unit:
-                    temp_unit = temp_unit.replace("\\xC2\\xB0", DEGREE)
-
-                units[pid] = temp_unit
-            elif is_value:
-                pid = convert_pid(is_value.group(1))
-                if pid in self.sensors:
-                    self.sensors[pid].async_on_update(data[key])
+        vehicle_id = data["id"]
+        pids = {}
+        for key, value in data.items():
+            if key_match := VALUE_KEY.match(key):
+                _LOGGER.debug("Found PID key: %s (hexa)", key)
+                pid = key_match.group(1)
+                pids.update({pid: value})
+            elif key in ("v", "eml", "time", "id", "session"):
+                _LOGGER.debug("Ignoring info key: %s with value: %s", key, value)
+            else:
+                _LOGGER.warning("Unrecognized key: %s", key)
+                continue
 
         new_sensor_entities: list[TorqueSensor] = []
-        for pid, name in names.items():
+        for pid, value in pids.items():
             if pid not in self.sensors:
+                _LOGGER.debug("Creating new sensor for PID %s", pid)
+
+                # Try to find PID info using string key first, then convert to int if not found
+                pid_info = PIDS_INFO.get(pid, PIDS_INFO.get(convert_pid(pid), {}))
+
+                if not pid_info:
+                    _LOGGER.warning("No PID info found for PID %s", pid)
+
                 torque_sensor_entity = TorqueSensor(
-                    ENTITY_NAME_FORMAT.format(self.vehicle, name), units.get(pid)
+                    vehicle_name=self.vehicle,
+                    vehicle_id=vehicle_id,
+                    pid=pid,
+                    name=pid_info.get(ATTR_NAME, pid),
+                    unit=pid_info.get(ATTR_UNIT_OF_MEASUREMENT),
+                    icon=pid_info.get(ATTR_ICON, "mdi:car"),
+                    initial_state=value,
                 )
                 new_sensor_entities.append(torque_sensor_entity)
                 self.sensors[pid] = torque_sensor_entity
+            else:
+                _LOGGER.debug("Updating existing sensor for PID %s", pid)
+                self.sensors[pid].async_on_update(value)
 
         if new_sensor_entities:
             self.async_add_entities(new_sensor_entities)
 
+        _LOGGER.debug("End of Torque data processing for %s", self.vehicle)
         return "OK!"
 
 
 class TorqueSensor(SensorEntity):
     """Representation of a Torque sensor."""
 
-    def __init__(self, name, unit):
+    def __init__(
+        self,
+        vehicle_name: str,
+        vehicle_id: str,
+        pid: str,
+        name: str | None,
+        unit: str | None,
+        icon: str | None,
+        initial_state: str | None = None,
+    ) -> None:
         """Initialize the sensor."""
-        self._name = name
-        self._unit = unit
-        self._state = None
+        self._attr_unique_id = f"{slugify(vehicle_id)}_{pid}"
+        self._attr_name = f"{vehicle_name} {name}" if name else vehicle_name
+        self._attr_native_unit_of_measurement = unit
+        self._attr_icon = icon
+        self._state = initial_state
+        self._pid = pid  # Store the PID for reference
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, slugify(vehicle_id))},
+            name=vehicle_name,
+        )
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def native_unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit
-
-    @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def icon(self):
-        """Return the default icon of the sensor."""
-        return "mdi:car"
+    def extra_state_attributes(self) -> dict[str, str] | None:
+        """Return additional attributes about the sensor."""
+        if self._pid:
+            return {"pid": self._pid}
+        return None
 
     @callback
     def async_on_update(self, value):
