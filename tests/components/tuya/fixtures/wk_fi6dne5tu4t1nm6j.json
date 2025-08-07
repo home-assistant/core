@@ -27,7 +27,7 @@
     "temp_set": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": 50,
         "max": 350,
         "scale": 1,
@@ -37,7 +37,7 @@
     "temp_correction": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": -99,
         "max": 99,
         "scale": 1,
@@ -47,7 +47,7 @@
     "upper_temp": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": 150,
         "max": 350,
         "scale": 1,
@@ -57,7 +57,7 @@
     "lower_temp": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": 50,
         "max": 140,
         "scale": 1,
@@ -91,7 +91,7 @@
     "temp_set": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": 50,
         "max": 350,
         "scale": 1,
@@ -101,7 +101,7 @@
     "temp_current": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": 0,
         "max": 800,
         "scale": 1,
@@ -111,7 +111,7 @@
     "temp_correction": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": -99,
         "max": 99,
         "scale": 1,
@@ -127,7 +127,7 @@
     "upper_temp": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": 150,
         "max": 350,
         "scale": 1,
@@ -137,7 +137,7 @@
     "lower_temp": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": 50,
         "max": 140,
         "scale": 1,

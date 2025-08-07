@@ -6,7 +6,7 @@
   "name": "Air Conditioner",
   "category": "kt",
   "product_id": "5wnlzekkstwcdsvm",
-  "product_name": "\u79fb\u52a8\u7a7a\u8c03 YPK--\uff08\u53cc\u6a21+\u84dd\u7259\uff09\u4f4e\u529f\u8017",
+  "product_name": "移动空调 YPK--（双模+蓝牙）低功耗",
   "online": true,
   "sub": false,
   "time_zone": "+01:00",
@@ -21,7 +21,7 @@
     "temp_set": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103 \u2109",
+        "unit": "℃ ℉",
         "min": 16,
         "max": 86,
         "scale": 0,
@@ -43,7 +43,7 @@
     "temp_set": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103 \u2109",
+        "unit": "℃ ℉",
         "min": 16,
         "max": 86,
         "scale": 0,
@@ -53,7 +53,7 @@
     "temp_current": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103 \u2109",
+        "unit": "℃ ℉",
         "min": -7,
         "max": 98,
         "scale": 0,

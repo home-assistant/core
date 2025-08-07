@@ -64,7 +64,7 @@
     "balance_energy": {
       "type": "Integer",
       "value": {
-        "unit": "kW\u00b7h",
+        "unit": "kW·h",
         "min": 0,
         "max": 99999999,
         "scale": 3,
@@ -82,7 +82,7 @@
     "charge_energy_once": {
       "type": "Integer",
       "value": {
-        "unit": "kW\u00b7h",
+        "unit": "kW·h",
         "min": 1,
         "max": 999999,
         "scale": 2,

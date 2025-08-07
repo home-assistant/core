@@ -17,7 +17,7 @@
     "forward_energy_total": {
       "type": "Integer",
       "value": {
-        "unit": "kW\u00b7h",
+        "unit": "kW·h",
         "min": 0,
         "max": 99999999,
         "scale": 2,
@@ -49,7 +49,7 @@
     "forward_energy_total": {
       "type": "Integer",
       "value": {
-        "unit": "kW\u00b7h",
+        "unit": "kW·h",
         "min": 0,
         "max": 99999999,
         "scale": 2,
@@ -59,7 +59,7 @@
     "reverse_energy_total": {
       "type": "Integer",
       "value": {
-        "unit": "kW\u00b7h",
+        "unit": "kW·h",
         "min": 0,
         "max": 99999999,
         "scale": 2,

@@ -6,7 +6,7 @@
   "name": "Clima cucina",
   "category": "wk",
   "product_id": "aqoouq7x",
-  "product_name": "T7-Air conditioner thermostat\uff08ZIGBEE)",
+  "product_name": "T7-Air conditioner thermostat（ZIGBEE)",
   "online": true,
   "sub": true,
   "time_zone": "+02:00",
@@ -27,7 +27,7 @@
     "temp_set": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": 5,
         "max": 35,
         "scale": 0,
@@ -59,7 +59,7 @@
     "temp_set": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": 5,
         "max": 35,
         "scale": 0,
@@ -69,7 +69,7 @@
     "temp_current": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": 0,
         "max": 50,
         "scale": 0,

@@ -49,7 +49,7 @@
     "temp_current": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": -400,
         "max": 600,
         "scale": 1,
@@ -141,7 +141,7 @@
     "temp_current_external": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": -400,
         "max": 600,
         "scale": 1,
@@ -161,7 +161,7 @@
     "temp_current_external_1": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": -400,
         "max": 600,
         "scale": 1,
@@ -181,7 +181,7 @@
     "temp_current_external_2": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": -400,
         "max": 600,
         "scale": 1,
@@ -201,7 +201,7 @@
     "temp_current_external_3": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": -400,
         "max": 600,
         "scale": 1,
@@ -324,7 +324,7 @@
     "dew_point_temp": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": -400,
         "max": 800,
         "scale": 1,
@@ -334,7 +334,7 @@
     "feellike_temp": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": -650,
         "max": 500,
         "scale": 1,
@@ -344,7 +344,7 @@
     "heat_index": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": 260,
         "max": 500,
         "scale": 1,
@@ -354,7 +354,7 @@
     "windchill_index": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": -650,
         "max": 600,
         "scale": 1,

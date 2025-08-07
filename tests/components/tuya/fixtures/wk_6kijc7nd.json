@@ -3,7 +3,7 @@
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "name": "\u041a\u0430\u0431\u0456\u043d\u0435\u0442",
+  "name": "Кабінет",
   "category": "wk",
   "product_id": "6kijc7nd",
   "product_name": "Thermostat Tervix Pro Line ZigBee color",
@@ -35,7 +35,7 @@
     "temp_set": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": 50,
         "max": 950,
         "scale": 1,
@@ -45,7 +45,7 @@
     "upper_temp": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": 350,
         "max": 950,
         "scale": 1,
@@ -55,7 +55,7 @@
     "temp_correction": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": -9,
         "max": 9,
         "scale": 0,
@@ -99,7 +99,7 @@
     "temp_set": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": 50,
         "max": 950,
         "scale": 1,
@@ -109,7 +109,7 @@
     "upper_temp": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": 350,
         "max": 950,
         "scale": 1,
@@ -119,7 +119,7 @@
     "temp_current": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": 0,
         "max": 995,
         "scale": 1,
@@ -135,7 +135,7 @@
     "temp_correction": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": -9,
         "max": 9,
         "scale": 0,

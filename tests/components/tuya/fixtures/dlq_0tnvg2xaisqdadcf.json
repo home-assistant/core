@@ -6,11 +6,11 @@
   "mqtt_connected": null,
   "disabled_by": null,
   "disabled_polling": false,
-  "name": "\u4e00\u8def\u5e26\u8ba1\u91cf\u78c1\u4fdd\u6301\u901a\u65ad\u5668",
+  "name": "一路带计量磁保持通断器",
   "model": "",
   "category": "dlq",
   "product_id": "0tnvg2xaisqdadcf",
-  "product_name": "\u4e00\u8def\u5e26\u8ba1\u91cf\u78c1\u4fdd\u6301\u901a\u65ad\u5668",
+  "product_name": "一路带计量磁保持通断器",
   "online": true,
   "sub": false,
   "time_zone": "+01:00",
@@ -207,7 +207,7 @@
     "temp_value": {
       "type": "Integer",
       "value": {
-        "unit": "\u2103",
+        "unit": "℃",
         "min": 0,
         "max": 999,
         "scale": 0,
