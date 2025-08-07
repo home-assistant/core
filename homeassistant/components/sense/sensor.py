@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import SenseConfigEntry
 from .const import (
@@ -116,6 +117,18 @@ async def async_setup_entry(
             )
 
     async_add_entities(entities)
+
+
+def _align_trend_start_to_local_midnight(dt: datetime | None, scale: Scale) -> datetime | None:
+    """Convert UTC trend start to local midnight for daily statistics."""
+    if dt is None:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=dt_util.UTC)
+    local_dt = dt.astimezone(dt_util.DEFAULT_TIME_ZONE)
+    if scale == Scale.DAY:
+        local_dt = local_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    return local_dt
 
 
 class SensePowerSensor(SenseEntity, SensorEntity):
@@ -222,7 +235,8 @@ class SenseTrendsSensor(SenseEntity, SensorEntity):
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if any."""
         if self._attr_state_class == SensorStateClass.TOTAL:
-            return self._gateway.trend_start(self._scale)
+            dt = self._gateway.trend_start(self._scale)
+            return _align_trend_start_to_local_midnight(dt, self._scale)
         return None
 
 
@@ -280,3 +294,17 @@ class SenseDeviceEnergySensor(SenseDeviceEntity, SensorEntity):
     def native_value(self) -> float:
         """Return the state of the sensor."""
         return self._device.energy_kwh[self._scale]
+
+    @property
+    def last_reset(self) -> datetime | None:
+        """Return the time when the sensor was last reset, if any."""
+        dt: datetime | None = None
+        if hasattr(self._device, "trend_start"):
+            trend_start = getattr(self._device, "trend_start")
+            if callable(trend_start):
+                dt = trend_start(self._scale)
+            else:
+                return None
+        else:
+            return None
+        return _align_trend_start_to_local_midnight(dt, self._scale)
