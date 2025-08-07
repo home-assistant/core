@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "152027113c6105cce49c",
   "name": "HL400",
   "category": "kj",
   "product_id": "CAjWAxBUZt7QZHfz",
@@ -82,5 +80,6 @@
     "pm25": 45
   },
   "set_up": true,
-  "support_local": true
+  "support_local": true,
+  "terminal_id": "REDACTED"
 }

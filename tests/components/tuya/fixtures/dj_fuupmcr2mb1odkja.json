@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "bf0914a82b06ecf151xsf5",
   "name": "Slaapkamer",
   "category": "dj",
   "product_id": "fuupmcr2mb1odkja",
@@ -334,5 +332,6 @@
     "remote_switch": true
   },
   "set_up": true,
-  "support_local": true
+  "support_local": true,
+  "terminal_id": "REDACTED"
 }

@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "bf3c2c83660b8e19e152jb",
   "name": "\u041a\u0430\u0431\u0456\u043d\u0435\u0442",
   "category": "wk",
   "product_id": "6kijc7nd",
@@ -185,5 +183,6 @@
     "sensor_choose": "all"
   },
   "set_up": true,
-  "support_local": true
+  "support_local": true,
+  "terminal_id": "REDACTED"
 }

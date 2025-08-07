@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "23536058083a8dc57d96",
   "name": "PIXI Smart Drinking Fountain",
   "category": "cwysj",
   "product_id": "z3rpyvznfcch99aa",
@@ -128,5 +126,6 @@
     "water_level": "level_3"
   },
   "set_up": true,
-  "support_local": true
+  "support_local": true,
+  "terminal_id": "REDACTED"
 }

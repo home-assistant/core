@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "bfdb773e4ae317e3915h2i",
   "name": "Solar zijpad",
   "category": "tyndj",
   "product_id": "pyakuuoc",
@@ -141,5 +139,6 @@
     "battery_state": "low"
   },
   "set_up": true,
-  "support_local": true
+  "support_local": true,
+  "terminal_id": "REDACTED"
 }

@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "63362034840d8eb9029f",
   "name": "Garage",
   "category": "dj",
   "product_id": "hpc8ddyfv85haxa7",
@@ -152,5 +150,6 @@
     "switch_1": false
   },
   "set_up": true,
-  "support_local": true
+  "support_local": true,
+  "terminal_id": "REDACTED"
 }

@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "8670375210521cf1349c",
   "name": " Smoke detector upstairs ",
   "category": "ywbj",
   "product_id": "gf9dejhmzffgdyfj",
@@ -61,5 +59,6 @@
     "muffling": false
   },
   "set_up": true,
-  "support_local": true
+  "support_local": true,
+  "terminal_id": "REDACTED"
 }

@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaus.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "REDACTED",
   "name": "Garage light",
   "category": "dj",
   "product_id": "mki13ie507rlry4r",
@@ -454,5 +452,6 @@
     "control_data": ""
   },
   "set_up": true,
-  "support_local": true
+  "support_local": true,
+  "terminal_id": "REDACTED"
 }

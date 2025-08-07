@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "bff00f6abe0563b284t77p",
   "name": "Frysen",
   "category": "qxj",
   "product_id": "is2indt9nlth6esa",
@@ -61,5 +59,6 @@
     "temp_current_external": -130
   },
   "set_up": false,
-  "support_local": true
+  "support_local": true,
+  "terminal_id": "REDACTED"
 }
