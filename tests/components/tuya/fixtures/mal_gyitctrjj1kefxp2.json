@@ -221,5 +221,6 @@
     "sub_state": "normal"
   },
   "set_up": true,
-  "support_local": true
+  "support_local": true,
+  "terminal_id": "REDACTED"
 }

@@ -91,5 +91,6 @@
     "countdown_set": "cancel",
     "countdown_left": 0,
     "fault": 0
-  }
+  },
+  "terminal_id": "REDACTED"
 }

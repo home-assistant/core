@@ -38,5 +38,6 @@
   "status": {
     "switch": false,
     "battery": 100
-  }
+  },
+  "terminal_id": "REDACTED"
 }

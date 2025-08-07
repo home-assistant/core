@@ -89,5 +89,6 @@
     "work_state": "closing",
     "situation_set": "fully_open",
     "fault": 0
-  }
+  },
+  "terminal_id": "REDACTED"
 }
