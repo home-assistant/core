@@ -10,7 +10,7 @@
         }
       },
       "credentials": {
-        "title": "Enter Credentials",
+        "title": "Enter credentials",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
@@ -34,7 +34,7 @@
       },
       "mfa_code": {
         "title": "Enter security code",
-        "description": "A security code has been sent via your selected method. Please enter it below to complete login.",
+        "description": Please enter the security code below to complete login.",
         "data": {
           "mfa_code": "Security code"
         },
