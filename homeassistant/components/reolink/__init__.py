@@ -59,7 +59,7 @@ PLATFORMS = [
     Platform.UPDATE,
 ]
 DEVICE_UPDATE_INTERVAL = timedelta(seconds=60)
-FIRMWARE_UPDATE_INTERVAL = timedelta(hours=12)
+FIRMWARE_UPDATE_INTERVAL = timedelta(hours=24)
 NUM_CRED_ERRORS = 3
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -243,10 +243,6 @@ async def async_setup_entry(
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    config_entry.async_on_unload(
-        config_entry.add_update_listener(entry_update_listener)
-    )
-
     return True
 
 
@@ -293,13 +289,6 @@ async def register_callbacks(
                 145,
                 channel,
             )
-
-
-async def entry_update_listener(
-    hass: HomeAssistant, config_entry: ReolinkConfigEntry
-) -> None:
-    """Update the configuration of the host entity."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_unload_entry(

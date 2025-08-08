@@ -15,6 +15,7 @@ from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.config_entries import ConfigEntry
@@ -8007,7 +8008,10 @@ async def test_get_reconfigure_entry(
 async def test_subentry_get_entry(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
-    """Test subentry _get_entry and _get_reconfigure_subentry behavior."""
+    """Test subentry _get_entry and _get_reconfigure_subentry behavior.
+
+    Also tests related helpers _entry_id, _subentry_type, _reconfigure_subentry_id
+    """
     subentry_id = "mock_subentry_id"
     entry = MockConfigEntry(
         data={},
@@ -8043,18 +8047,8 @@ async def test_subentry_get_entry(
 
             async def _async_step_confirm(self):
                 """Confirm input."""
-                try:
-                    entry = self._get_entry()
-                except ValueError as err:
-                    reason = str(err)
-                else:
-                    reason = f"Found entry {entry.title}"
-                try:
-                    entry_id = self._entry_id
-                except ValueError:
-                    reason = f"{reason}: -"
-                else:
-                    reason = f"{reason}: {entry_id}"
+                reason = f"Found entry {self._get_entry().title},{self._entry_id}: "
+                reason = f"{reason}subentry_type={self._subentry_type}"
 
                 try:
                     subentry = self._get_reconfigure_subentry()
@@ -8082,9 +8076,9 @@ async def test_subentry_get_entry(
     # A reconfigure flow finds the config entry and subentry
     with mock_config_flow("test", TestFlow):
         result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
-        assert (
-            result["reason"]
-            == "Found entry entry_title: mock_entry_id/Found subentry Test: mock_subentry_id"
+        assert result["reason"] == (
+            "Found entry entry_title,mock_entry_id: subentry_type=test/"
+            "Found subentry Test: mock_subentry_id"
         )
 
     # The subentry_id does not exist
@@ -8096,9 +8090,9 @@ async def test_subentry_get_entry(
                 "subentry_id": "01JRemoved",
             },
         )
-        assert (
-            result["reason"]
-            == "Found entry entry_title: mock_entry_id/Subentry not found: 01JRemoved"
+        assert result["reason"] == (
+            "Found entry entry_title,mock_entry_id: subentry_type=test/"
+            "Subentry not found: 01JRemoved"
         )
 
     # A user flow finds the config entry but not the subentry
@@ -8106,9 +8100,9 @@ async def test_subentry_get_entry(
         result = await manager.subentries.async_init(
             (entry.entry_id, "test"), context={"source": config_entries.SOURCE_USER}
         )
-        assert (
-            result["reason"]
-            == "Found entry entry_title: mock_entry_id/Source is user, expected reconfigure: -"
+        assert result["reason"] == (
+            "Found entry entry_title,mock_entry_id: subentry_type=test/"
+            "Source is user, expected reconfigure: -"
         )
 
 
@@ -8654,6 +8648,95 @@ async def test_options_flow_config_entry(
     )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "abort"
+
+
+@pytest.mark.parametrize(
+    (
+        "option_flow_base_class",
+        "number_of_update_listeners",
+        "expected_configure_result",
+        "expected_number_of_unloads",
+    ),
+    [
+        (config_entries.OptionsFlow, 0, does_not_raise(), 0),
+        (config_entries.OptionsFlowWithReload, 0, does_not_raise(), 1),
+        (config_entries.OptionsFlow, 1, does_not_raise(), 0),
+        (
+            config_entries.OptionsFlowWithReload,
+            1,
+            pytest.raises(
+                ValueError,
+                match="Config entry update listeners should not be used with OptionsFlowWithReload",
+            ),
+            0,
+        ),
+    ],
+)
+async def test_options_flow_automatic_reload(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    option_flow_base_class: type[config_entries.OptionsFlow],
+    number_of_update_listeners: int,
+    expected_configure_result: AbstractContextManager,
+    expected_number_of_unloads: int,
+) -> None:
+    """Test options flow with automatic reload when updated."""
+    original_entry = MockConfigEntry(
+        domain="test", title="Test", data={}, options={"test": "first"}
+    )
+    original_entry.add_to_hass(hass)
+
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+        """Mock setup entry."""
+        for _ in range(number_of_update_listeners):
+            entry.add_update_listener(Mock())
+        return True
+
+    unload_entry_mock = AsyncMock(return_value=True)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=async_setup_entry,
+            async_unload_entry=unload_entry_mock,
+        ),
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    await hass.config_entries.async_setup(original_entry.entry_id)
+    assert original_entry.state is config_entries.ConfigEntryState.LOADED
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        @staticmethod
+        @callback
+        def async_get_options_flow(config_entry):
+            """Test options flow."""
+
+            class _OptionsFlow(option_flow_base_class):
+                """Test flow."""
+
+                async def async_step_init(self, user_input=None):
+                    """Test user step."""
+                    if user_input is not None:
+                        return self.async_create_entry(data=user_input)
+                    return self.async_show_form(
+                        step_id="init", data_schema=vol.Schema({"test": str})
+                    )
+
+            return _OptionsFlow()
+
+    with mock_config_flow("test", TestFlow):
+        result = await hass.config_entries.options.async_init(original_entry.entry_id)
+        with expected_configure_result:
+            await hass.config_entries.options.async_configure(
+                result["flow_id"], {"test": "updated"}
+            )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(unload_entry_mock.mock_calls) == expected_number_of_unloads
 
 
 @pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])

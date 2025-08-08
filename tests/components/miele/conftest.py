@@ -20,8 +20,8 @@ from .const import CLIENT_ID, CLIENT_SECRET
 
 from tests.common import (
     MockConfigEntry,
-    async_load_fixture,
     async_load_json_object_fixture,
+    load_json_value_fixture,
 )
 
 
@@ -99,13 +99,13 @@ async def action_fixture(hass: HomeAssistant, load_action_file: str) -> MieleAct
 @pytest.fixture(scope="package")
 def load_programs_file() -> str:
     """Fixture for loading programs file."""
-    return "programs_washing_machine.json"
+    return "programs.json"
 
 
 @pytest.fixture
 async def programs_fixture(hass: HomeAssistant, load_programs_file: str) -> list[dict]:
     """Fixture for available programs."""
-    return await async_load_fixture(hass, load_programs_file, DOMAIN)
+    return load_json_value_fixture(load_programs_file, DOMAIN)
 
 
 @pytest.fixture
@@ -117,7 +117,7 @@ def mock_miele_client(
     """Mock a Miele client."""
 
     with patch(
-        "homeassistant.components.miele.AsyncConfigEntryAuth",
+        "homeassistant.components.miele.MieleAPI",
         autospec=True,
     ) as mock_client:
         client = mock_client.return_value
@@ -125,6 +125,7 @@ def mock_miele_client(
         client.get_devices.return_value = device_fixture
         client.get_actions.return_value = action_fixture
         client.get_programs.return_value = programs_fixture
+        client.set_program.return_value = None
 
         yield client
 

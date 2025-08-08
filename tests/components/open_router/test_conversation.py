@@ -1,20 +1,21 @@
 """Tests for the OpenRouter integration."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
 from openai.types import CompletionUsage
 from openai.types.chat import (
     ChatCompletion,
     ChatCompletionMessage,
-    ChatCompletionMessageToolCall,
+    ChatCompletionMessageFunctionToolCall,
 )
 from openai.types.chat.chat_completion import Choice
-from openai.types.chat.chat_completion_message_tool_call import Function
+from openai.types.chat.chat_completion_message_function_tool_call_param import Function
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
+from homeassistant.const import Platform
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import entity_registry as er, intent
 
@@ -40,7 +41,11 @@ async def test_all_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
-    await setup_integration(hass, mock_config_entry)
+    with patch(
+        "homeassistant.components.open_router.PLATFORMS",
+        [Platform.CONVERSATION],
+    ):
+        await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -65,7 +70,7 @@ async def test_default_prompt(
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert mock_chat_log.content[1:] == snapshot
     call = mock_openai_client.chat.completions.create.call_args_list[0][1]
-    assert call["model"] == "gpt-3.5-turbo"
+    assert call["model"] == "openai/gpt-3.5-turbo"
     assert call["extra_headers"] == {
         "HTTP-Referer": "https://www.home-assistant.io/integrations/open_router",
         "X-Title": "Home Assistant",
@@ -128,7 +133,7 @@ async def test_function_call(
                         role="assistant",
                         function_call=None,
                         tool_calls=[
-                            ChatCompletionMessageToolCall(
+                            ChatCompletionMessageFunctionToolCall(
                                 id="call_call_1",
                                 function=Function(
                                     arguments='{"param1":"call1"}',

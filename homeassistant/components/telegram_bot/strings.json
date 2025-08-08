@@ -66,6 +66,7 @@
       }
     },
     "error": {
+      "telegram_error": "Error from Telegram: {error_message}",
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
       "invalid_proxy_url": "{proxy_url_error}",
       "no_url_available": "URL is required since you have not configured an external URL in Home Assistant",

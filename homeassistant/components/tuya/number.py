@@ -26,6 +26,7 @@ from .const import (
 )
 from .entity import TuyaEntity
 from .models import IntegerTypeData
+from .util import ActionDPCodeNotFoundError
 
 # All descriptions can be found here. Mostly the Integer data types in the
 # default instructions set of each category end up being a number.
@@ -266,32 +267,38 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "tgkg": (
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_1,
-            translation_key="minimum_brightness",
+            translation_key="indexed_minimum_brightness",
+            translation_placeholders={"index": "1"},
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_1,
-            translation_key="maximum_brightness",
+            translation_key="indexed_maximum_brightness",
+            translation_placeholders={"index": "1"},
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_2,
-            translation_key="minimum_brightness_2",
+            translation_key="indexed_minimum_brightness",
+            translation_placeholders={"index": "2"},
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_2,
-            translation_key="maximum_brightness_2",
+            translation_key="indexed_maximum_brightness",
+            translation_placeholders={"index": "2"},
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_3,
-            translation_key="minimum_brightness_3",
+            translation_key="indexed_minimum_brightness",
+            translation_placeholders={"index": "3"},
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_3,
-            translation_key="maximum_brightness_3",
+            translation_key="indexed_maximum_brightness",
+            translation_placeholders={"index": "3"},
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -300,22 +307,26 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
     "tgq": (
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_1,
-            translation_key="minimum_brightness",
+            translation_key="indexed_minimum_brightness",
+            translation_placeholders={"index": "1"},
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_1,
-            translation_key="maximum_brightness",
+            translation_key="indexed_maximum_brightness",
+            translation_placeholders={"index": "1"},
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MIN_2,
-            translation_key="minimum_brightness_2",
+            translation_key="indexed_minimum_brightness",
+            translation_placeholders={"index": "2"},
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.BRIGHTNESS_MAX_2,
-            translation_key="maximum_brightness_2",
+            translation_key="indexed_maximum_brightness",
+            translation_placeholders={"index": "2"},
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -325,6 +336,32 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.TEMP_CORRECTION,
             translation_key="temp_correction",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Tank Level Sensor
+    # Note: Undocumented
+    "ywcgq": (
+        NumberEntityDescription(
+            key=DPCode.MAX_SET,
+            translation_key="alarm_maximum",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.MINI_SET,
+            translation_key="alarm_minimum",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.INSTALLATION_HEIGHT,
+            translation_key="installation_height",
+            device_class=NumberDeviceClass.DISTANCE,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.LIQUID_DEPTH_MAX,
+            translation_key="maximum_liquid_depth",
+            device_class=NumberDeviceClass.DISTANCE,
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -463,7 +500,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
     def set_native_value(self, value: float) -> None:
         """Set new value."""
         if self._number is None:
-            raise RuntimeError("Cannot set value, device doesn't provide type data")
+            raise ActionDPCodeNotFoundError(self.device, self.entity_description.key)
 
         self._send_command(
             [
