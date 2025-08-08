@@ -42,7 +42,7 @@ def async_get_config_for_device(
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
-    """Set up the Teslemetry services."""
+    """Set up the Tessie services."""
 
     async def service_share(call: ServiceCall) -> None:
         device_id = call.data[CONF_DEVICE_ID]
