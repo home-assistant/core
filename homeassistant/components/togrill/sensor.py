@@ -66,7 +66,6 @@ def _get_temperature_description(probe_number: int):
 ENTITY_DESCRIPTIONS = (
     ToGrillSensorEntityDescription(
         key="battery",
-        translation_key="battery",
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,

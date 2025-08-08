@@ -16,7 +16,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ToGrillConfigEntry) -> b
 
     address = entry.data[CONF_ADDRESS]
 
-    coordinator = ToGrillCoordinator(hass, entry, LOGGER, address)
+    coordinator = ToGrillCoordinator(hass, entry)
     try:
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady as exc:

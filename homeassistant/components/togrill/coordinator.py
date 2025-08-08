@@ -47,27 +47,24 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[int, Packet]]):
     """Class to manage fetching data."""
 
     config_entry: ToGrillConfigEntry
-    client: Client | None
+    client: Client | None = None
 
     def __init__(
         self,
         hass: HomeAssistant,
         config_entry: ToGrillConfigEntry,
-        logger: logging.Logger,
-        address: str,
     ) -> None:
         """Initialize global data updater."""
         super().__init__(
             hass=hass,
-            logger=logger,
+            logger=LOGGER,
             config_entry=config_entry,
             name="ToGrill",
             update_interval=SCAN_INTERVAL,
         )
-        self.address = address
+        self.address = config_entry.data[CONF_ADDRESS]
         self.data = {}
         self.device_info = DeviceInfo(connections={(CONNECTION_BLUETOOTH, address)})
-        self.client = None
 
         config_entry.async_on_unload(
             async_register_callback(
