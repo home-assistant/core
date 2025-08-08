@@ -737,6 +737,9 @@
       },
       "liquid_level": {
         "name": "Liquid level"
+      },
+      "supply_frequency": {
+        "name": "Supply frequency"
       }
     },
     "switch": {

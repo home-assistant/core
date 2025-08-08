@@ -238,6 +238,11 @@ DEVICE_MOCKS = {
         # https://github.com/home-assistant/core/issues/143499
         Platform.SENSOR,
     ],
+    "dlq_cnpkf4xdmd9v49iq": [
+        # https://github.com/home-assistant/core/pull/149320
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
     "fs_g0ewlb1vmwqljzji": [
         # https://github.com/home-assistant/core/issues/141231
         Platform.FAN,
