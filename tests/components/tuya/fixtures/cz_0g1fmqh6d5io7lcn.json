@@ -21,7 +21,7 @@
     "countdown_1": {
       "type": "Integer",
       "value": {
-        "unit": "\u79d2",
+        "unit": "秒",
         "min": 0,
         "max": 86400,
         "scale": 0,
@@ -37,7 +37,7 @@
     "countdown_1": {
       "type": "Integer",
       "value": {
-        "unit": "\u79d2",
+        "unit": "秒",
         "min": 0,
         "max": 86400,
         "scale": 0,

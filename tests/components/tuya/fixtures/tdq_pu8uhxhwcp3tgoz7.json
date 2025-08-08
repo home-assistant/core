@@ -71,7 +71,7 @@
     "add_ele": {
       "type": "Integer",
       "value": {
-        "unit": "kW\u00b7h",
+        "unit": "kW·h",
         "min": 0,
         "max": 50000,
         "scale": 3,
