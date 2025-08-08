@@ -364,12 +364,12 @@ class ValveBase(HomeAccessory):
     @callback
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
-        self._update_duration_chars()
         current_state = 1 if new_state.state in self.open_states else 0
         _LOGGER.debug("%s: Set active state to %s", self.entity_id, current_state)
         self.char_active.set_value(current_state)
         _LOGGER.debug("%s: Set in_use state to %s", self.entity_id, current_state)
         self.char_in_use.set_value(current_state)
+        self._update_duration_chars()
 
     def _update_duration_chars(self) -> None:
         """Update valve duration related properties if characteristics are available."""
@@ -414,12 +414,12 @@ class ValveBase(HomeAccessory):
             _LOGGER.debug(
                 "%s: No linked end time entity state available", self.entity_id
             )
-            return self.get_duration()
+            return self.get_duration() if self.char_in_use.value else 0
 
         end_time = dt_util.parse_datetime(end_time_state)
         if end_time is None:
             _LOGGER.debug("%s: Cannot parse linked end time entity", self.entity_id)
-            return self.get_duration()
+            return self.get_duration() if self.char_in_use.value else 0
 
         remaining_time = (end_time - dt_util.utcnow()).total_seconds()
         return max(int(remaining_time), 0)
