@@ -115,16 +115,20 @@ class VerisureAlarm(
             "ARMED_AWAY", self.coordinator.verisure.arm_away(code)
         )
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _update_alarm_attributes(self) -> None:
+        """Update alarm state and changed by from coordinator data."""
         self._attr_alarm_state = ALARM_STATE_TO_HA.get(
             self.coordinator.data["alarm"]["statusType"]
         )
         self._attr_changed_by = self.coordinator.data["alarm"].get("name")
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_alarm_attributes()
         super()._handle_coordinator_update()
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        self._handle_coordinator_update()
+        self._update_alarm_attributes()

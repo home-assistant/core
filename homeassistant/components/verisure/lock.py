@@ -180,23 +180,20 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         except VerisureError as ex:
             LOGGER.error("Could not enable autolock, %s", ex)
 
+    def _update_lock_attributes(self) -> None:
+        """Update lock state, changed by, and method from coordinator data."""
+        lock_data = self.coordinator.data["locks"][self.serial_number]
+        self._attr_is_locked = lock_data["lockStatus"] == "LOCKED"
+        self._attr_changed_by = lock_data.get("user", {}).get("name")
+        self._changed_method = lock_data["lockMethod"]
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_is_locked = (
-            self.coordinator.data["locks"][self.serial_number]["lockStatus"] == "LOCKED"
-        )
-        self._attr_changed_by = (
-            self.coordinator.data["locks"][self.serial_number]
-            .get("user", {})
-            .get("name")
-        )
-        self._changed_method = self.coordinator.data["locks"][self.serial_number][
-            "lockMethod"
-        ]
+        self._update_lock_attributes()
         super()._handle_coordinator_update()
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        self._handle_coordinator_update()
+        self._update_lock_attributes()
