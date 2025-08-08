@@ -29,6 +29,7 @@ from google.genai.types import (
     Schema,
     Tool,
     ToolListUnion,
+    UrlContext,
 )
 import voluptuous as vol
 from voluptuous_openapi import convert
@@ -50,6 +51,7 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
+    CONF_URL_CONTEXT,
     CONF_USE_GOOGLE_SEARCH_TOOL,
     DOMAIN,
     FILE_POLLING_INTERVAL_SECONDS,
@@ -358,6 +360,10 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         if options.get(CONF_USE_GOOGLE_SEARCH_TOOL) is True:
             tools = tools or []
             tools.append(Tool(google_search=GoogleSearch()))
+
+        if options.get(CONF_URL_CONTEXT) is True:
+            tools = tools or []
+            tools.append(Tool(url_context=UrlContext()))
 
         model_name = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
         # Avoid INVALID_ARGUMENT Developer instruction is not enabled for <model>
