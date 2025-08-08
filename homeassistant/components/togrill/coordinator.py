@@ -7,6 +7,7 @@ import logging
 
 from bleak.exc import BleakError
 from togrill_bluetooth.client import Client
+from togrill_bluetooth.exceptions import DecodeError
 from togrill_bluetooth.packets import Packet, PacketA0Notify, PacketA1Notify
 
 from homeassistant.components import bluetooth
@@ -88,7 +89,7 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[int, Packet]]):
         client = await Client.connect(device, self._notify_callback)
         try:
             packet_a0 = await client.read(PacketA0Notify)
-        except BleakError as exc:
+        except (BleakError, DecodeError) as exc:
             await client.disconnect()
             raise DeviceFailed(f"Device failed {exc}") from exc
 
