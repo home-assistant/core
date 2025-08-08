@@ -9,6 +9,7 @@ from typing import Any, cast
 
 import pyatmo
 from pyatmo.modules import Module, PublicWeatherArea
+from pyatmo.modules.device_types import DeviceCategory as NetatmoDeviceCategory
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -44,6 +45,7 @@ from homeassistant.helpers.typing import StateType
 from .const import (
     CONF_URL_ENERGY,
     CONF_URL_PUBLIC_WEATHER,
+    CONF_URL_SECURITY,
     CONF_WEATHER_AREAS,
     DATA_HANDLER,
     DOMAIN,
@@ -388,12 +390,110 @@ BATTERY_SENSOR_DESCRIPTION = NetatmoSensorEntityDescription(
 )
 
 
+class NetatmoBatterySensor(NetatmoModuleEntity, SensorEntity):
+    """Implementation of new Netatmo battery sensor."""
+
+    entity_description: NetatmoSensorEntityDescription
+
+    def __init__(self, netatmo_device: NetatmoDevice) -> None:
+        """Initialize the sensor."""
+        self.entity_description = BATTERY_SENSOR_DESCRIPTION
+
+        self.device = cast(Module, netatmo_device.device)
+
+        self._attr_unique_id = (
+            f"{netatmo_device.device.entity_id}-{self.entity_description.key}"
+        )
+        name_suffix = (
+            self.entity_description.netatmo_name
+            or self.entity_description.key.replace("_", " ").title()
+        )
+        self._attr_name = name_suffix
+
+        if self.device.device_category is NetatmoDeviceCategory.climate:
+            self._attr_configuration_url = CONF_URL_ENERGY
+        elif self.device.device_category is NetatmoDeviceCategory.opening:
+            self._attr_configuration_url = CONF_URL_SECURITY
+        else:
+            self._attr_configuration_url = None
+
+        super().__init__(netatmo_device)
+
+        _LOGGER.debug(
+            "Adding battery sensor for device %s",
+            netatmo_device.device.name,
+        )
+
+        self._publishers.extend(
+            [
+                {
+                    "name": HOME,
+                    "home_id": self.device.home.entity_id,
+                    SIGNAL_NAME: netatmo_device.signal_name,
+                },
+            ]
+        )
+
+    @callback
+    def async_update_callback(self) -> None:
+        """Update the entity's state."""
+        if not self.device.reachable:
+            if self.available:
+                self._attr_available = False
+            self._async_write_ha_state()
+            return
+
+        self._attr_available = True
+        value = cast(
+            StateType, getattr(self.device, self.entity_description.netatmo_name)
+        )
+        if value is not None:
+            self._attr_native_value = value
+        self._async_write_ha_state()
+        return
+
+
+def _add_entities_from_home(
+    data_handler: NetatmoDataHandler, async_add_entities: Callable
+) -> None:
+    """Factory function to create battery sensors for each module."""
+    entities = []
+    module: Module
+
+    for home in data_handler.account.homes.values():
+        signal_name: str = f"{HOME}-{home.entity_id}"
+        for room in home.rooms.values():
+            for module in room.modules.values():
+                if module.device_category is NetatmoDeviceCategory.opening:
+                    _LOGGER.debug(
+                        "Dispatching battery sensor for device %s", module.name
+                    )
+                    entities.append(
+                        NetatmoBatterySensor(
+                            NetatmoDevice(
+                                data_handler,
+                                module,
+                                room.entity_id,
+                                signal_name,
+                            )
+                        )
+                    )
+
+    if entities:
+        async_add_entities(entities)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Netatmo sensor platform."""
+
+    data_handler: NetatmoDataHandler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
+
+    _add_entities_from_home(data_handler, async_add_entities)
+    async_dispatcher_connect(hass, NETATMO_CREATE_BATTERY, async_add_entities)
 
     @callback
     def _create_battery_entity(netatmo_device: NetatmoDevice) -> None:
