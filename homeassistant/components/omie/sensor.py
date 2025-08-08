@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 import logging
-from typing import Any, TypeVar, cast
+from typing import TypeVar, cast
 from zoneinfo import ZoneInfo
 
 from homeassistant.components.sensor import (
@@ -70,14 +69,6 @@ async def async_setup_entry(
         return ZoneInfo(hass.config.time_zone)
 
     class OMIEPriceEntity(SensorEntity):
-        _entity_component_unrecorded_attributes = frozenset(
-            {
-                f"{day}_{attr}"
-                for day in ("today", "tomorrow")
-                for attr in ("hours", "provisional")
-            }
-        )
-
         def __init__(self, key: str) -> None:
             """Initialize the sensor."""
             self.entity_description = OMIEPriceEntityDescription(key)
@@ -107,11 +98,6 @@ async def async_setup_entry(
 
                 self._attr_available = hour_start in today_hours
                 self._attr_native_value = today_hours.get(hour_start, STATE_UNKNOWN)
-                self._attr_extra_state_attributes = (
-                    {}
-                    | _format_day_attributes("today", today_hours)
-                    | _format_day_attributes("tomorrow", tomorrow_hours)
-                )
 
                 self.async_schedule_update_ha_state()
 
@@ -151,19 +137,9 @@ async def async_setup_entry(
 
 
 def _hours_of_day(
-    hours: Mapping[datetime, _DataT], time_zone: ZoneInfo, day: date
+    hours: dict[datetime, _DataT], time_zone: ZoneInfo, day: date
 ) -> dict[datetime, _DataT | None]:
     return {
         hour: hours.get(hour.astimezone(CET))
         for hour in enumerate_hours_of_day(time_zone, day)
-    }
-
-
-def _format_day_attributes(
-    day_name: str, hourly_data: Mapping[datetime, _DataT | None]
-) -> dict[str, Any]:
-    return {
-        f"{day_name}_hours": hourly_data,
-        f"{day_name}_provisional": len(hourly_data or {}) == 0
-        or None in hourly_data.values(),
     }
