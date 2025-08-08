@@ -239,6 +239,9 @@ multidict>=6.4.2
 # Stable Alpine current only ships cargo 1.83.0
 # No wheels upstream available for armhf & armv7
 rpds-py==0.24.0
+
+# Constraint num2words to 0.5.14 as 0.5.15 and 0.5.16 were removed from PyPI
+num2words==0.5.14
 """
 
 GENERATED_MESSAGE = (
