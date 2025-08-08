@@ -1431,7 +1431,7 @@ class TargetSelector(Selector[TargetSelectorConfig]):
         }
     )
 
-    TARGET_SELECTION_SCHEMA = vol.Schema(cv.TARGET_SERVICE_FIELDS)
+    TARGET_SELECTION_SCHEMA = vol.Schema(cv.TARGET_SERVICE_FIELDS_TEMPLATED)
 
     def __init__(self, config: TargetSelectorConfig | None = None) -> None:
         """Instantiate a selector."""

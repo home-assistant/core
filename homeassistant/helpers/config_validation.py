@@ -1360,7 +1360,7 @@ _ENTITY_SERVICE_FIELDS_TEMPLATED: VolDictType = {
     ),
 }
 
-_TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
+TARGET_SERVICE_FIELDS_TEMPLATED: VolDictType = {
     # Same as ENTITY_SERVICE_FIELDS_TEMPLATED but supports specifying entity
     # by entity registry ID.
     **_ENTITY_SERVICE_FIELDS_TEMPLATED,
@@ -1501,7 +1501,7 @@ SERVICE_SCHEMA = vol.All(
             ),
             vol.Optional(CONF_ENTITY_ID): comp_entity_ids,
             vol.Optional(CONF_TARGET): vol.Any(
-                _TARGET_SERVICE_FIELDS_TEMPLATED, dynamic_template
+                TARGET_SERVICE_FIELDS_TEMPLATED, dynamic_template
             ),
             vol.Optional(CONF_RESPONSE_VARIABLE): str,
             # The frontend stores data here. Don't use in core.
