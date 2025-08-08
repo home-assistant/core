@@ -61,6 +61,7 @@ from .const import (
     CONF_REASONING_EFFORT,
     CONF_TEMPERATURE,
     CONF_TOP_P,
+    CONF_VERBOSITY,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_CONTEXT_SIZE,
@@ -75,6 +76,7 @@ from .const import (
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
+    RECOMMENDED_VERBOSITY,
     RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
 )
 
@@ -346,14 +348,18 @@ class OpenAIBaseLLMEntity(Entity):
         if tools:
             model_args["tools"] = tools
 
-        if model_args["model"].startswith("o"):
+        if model_args["model"].startswith(("o", "gpt-5")):
             model_args["reasoning"] = {
                 "effort": options.get(
                     CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
                 )
             }
-        else:
-            model_args["store"] = False
+            model_args["include"] = ["reasoning.encrypted_content"]
+
+        if model_args["model"].startswith("gpt-5"):
+            model_args["text"] = {
+                "verbosity": options.get(CONF_VERBOSITY, RECOMMENDED_VERBOSITY)
+            }
 
         messages = [
             m
