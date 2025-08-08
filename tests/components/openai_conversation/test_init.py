@@ -297,6 +297,7 @@ async def test_generate_image_service_fallback_dall_e(
 
     with patch(
         "openai.resources.images.AsyncImages.generate",
+        new_callable=AsyncMock,
         side_effect=[
             PermissionDeniedError(
                 response=httpx.Response(
