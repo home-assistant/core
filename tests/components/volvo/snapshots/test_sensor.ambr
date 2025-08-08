@@ -585,7 +585,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '327',
+    'state': '250',
   })
 # ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_distance_to_service-entry]
