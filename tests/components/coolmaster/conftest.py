@@ -117,7 +117,7 @@ class CoolMasterNetErrorMock:
     def __init__(self, *_args: Any, **kwargs: Any) -> None:
         """Initialize the CoolMasterNetMock."""
         self._units = copy.deepcopy(TEST_UNITS)
-        self._status_count = 0
+        self._fail_count = 0
 
     async def info(self) -> dict[str, Any]:
         """Return info about the bridge device."""
@@ -125,8 +125,8 @@ class CoolMasterNetErrorMock:
 
     async def status(self) -> dict[str, CoolMasterNetUnitMock]:
         """Return the units."""
-        if self._status_count % 2 == 0:
-            self._status_count += 1
+        if self._fail_count > 0:
+            self._fail_count -= 1
             raise OSError("Simulated communication error")
         return {
             unit_id: CoolMasterNetUnitMock(unit_id, attributes)
@@ -159,7 +159,7 @@ async def load_int(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture
-async def load_int_with_error(hass: HomeAssistant) -> MockConfigEntry:
+async def config_entry_with_errors(hass: HomeAssistant) -> MockConfigEntry:
     """Set up the Coolmaster integration in Home Assistant."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
