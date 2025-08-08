@@ -17,5 +17,30 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "total_charging_time": {
+        "name": "Total charging time"
+      },
+      "total_cutting_time": {
+        "name": "Total cutting time"
+      },
+      "total_running_time": {
+        "name": "Total running time"
+      },
+      "total_searching_time": {
+        "name": "Total searching time"
+      },
+      "number_of_charging_cycles": {
+        "name": "Number of charging cycles"
+      },
+      "number_of_collisions": {
+        "name": "Number of collisions"
+      },
+      "cutting_blade_usage_time": {
+        "name": "Cutting blade usage time"
+      }
+    }
   }
 }
