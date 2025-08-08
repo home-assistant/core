@@ -6,12 +6,11 @@ import logging
 from typing import Any
 
 import sqlalchemy
+import voluptuous as vol
 from sqlalchemy.engine import Engine, Result
 from sqlalchemy.exc import MultipleResultsFound, NoSuchColumnError, SQLAlchemyError
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
-import sqlparse
 from sqlparse.exceptions import SQLParseError
-import voluptuous as vol
 
 from homeassistant.components.recorder import CONF_DB_URL, get_instance
 from homeassistant.components.sensor import (
@@ -31,12 +30,12 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import callback
+from homeassistant.core import async_get_hass, callback
 from homeassistant.data_entry_flow import section
 from homeassistant.helpers import selector
 
 from .const import CONF_ADVANCED_OPTIONS, CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
-from .util import resolve_db_url
+from .util import check_and_render_sql_query, resolve_db_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,14 +88,20 @@ CONFIG_SCHEMA: vol.Schema = vol.Schema(
 
 def validate_sql_select(value: str) -> str:
     """Validate that value is a SQL SELECT query."""
-    if len(query := sqlparse.parse(value.lstrip().lstrip(";"))) > 1:
-        raise MultipleResultsFound
-    if len(query) == 0 or (query_type := query[0].get_type()) == "UNKNOWN":
-        raise ValueError
-    if query_type != "SELECT":
-        _LOGGER.debug("The SQL query %s is of type %s", query, query_type)
-        raise SQLParseError
-    return str(query[0])
+    hass = async_get_hass()
+    try:
+        return check_and_render_sql_query(hass, value)
+    except ValueError as err:
+        err_text = err.args[0]
+        _LOGGER.debug("Invalid query '%s' results in '%s'", value, err_text)
+        if err_text == "Multiple SQL statements are not allowed":
+            raise MultipleResultsFound from err
+        if err_text in (
+            "SQL query must be of type SELECT",
+            "SQL query must start with SELECT",
+        ):
+            raise SQLParseError from err
+        raise
 
 
 def validate_db_connection(db_url: str) -> bool:

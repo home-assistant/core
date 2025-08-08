@@ -25,6 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     CONF_PICTURE,
@@ -40,7 +41,7 @@ from .const import (
     PLATFORMS,
 )
 from .services import async_setup_services
-from .util import redact_credentials, validate_sql_select
+from .util import check_and_render_sql_query, redact_credentials, validate_sql_select
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +50,9 @@ QUERY_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_COLUMN_NAME): cv.string,
         vol.Required(CONF_NAME): cv.template,
-        vol.Required(CONF_QUERY): vol.All(cv.string, validate_sql_select),
+        vol.Required(CONF_QUERY): vol.All(
+            cv.template, ValueTemplate.from_template, validate_sql_select
+        ),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
             cv.template, ValueTemplate.from_template

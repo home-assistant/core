@@ -24,7 +24,6 @@ from homeassistant.components.sql.const import (
     CONF_QUERY,
     DOMAIN,
 )
-from homeassistant.components.sql.util import generate_lambda_stmt
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -39,7 +38,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -641,17 +639,14 @@ async def test_query_recover_from_rollback(
         CONF_UNIQUE_ID: "very_unique_id",
     }
     await init_integration(hass, title="Select value SQL query", options=options)
-    platforms = async_get_platforms(hass, "sql")
-    sql_entity = platforms[0].entities["sensor.select_value_sql_query"]
 
     state = hass.states.get("sensor.select_value_sql_query")
     assert state.state == "5"
     assert state.attributes["value"] == 5
 
-    with patch.object(
-        sql_entity,
-        "_lambda_stmt",
-        generate_lambda_stmt("Faulty syntax create operational issue"),
+    with patch(
+        "homeassistant.components.sql.sensor._generate_lambda_stmt",
+        return_value=_generate_lambda_stmt("Faulty syntax create operational issue"),
     ):
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)
