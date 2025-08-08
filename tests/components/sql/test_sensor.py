@@ -107,6 +107,33 @@ async def test_query_value_template(
     }
 
 
+async def test_template_query(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the SQL sensor with a query template."""
+    config = {
+        "db_url": "sqlite://",
+        "query": "SELECT {% if states('sensor.input1')=='on' %} 5 {% else %} 6 {% endif %} as value",
+        "column": "value",
+        "name": "count_tables",
+        "value_template": "{{ value | int }}",
+    }
+    await init_integration(hass, config)
+
+    state = hass.states.get("sensor.count_tables")
+    assert state.state == "6"
+
+    hass.states.async_set("sensor.input1", "on")
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.count_tables")
+    assert state.state == "5"
+
+
 async def test_query_value_template_invalid(
     recorder_mock: Recorder, hass: HomeAssistant
 ) -> None:
@@ -120,6 +147,25 @@ async def test_query_value_template_invalid(
 
     state = hass.states.get("sensor.count_tables")
     assert state.state == "5.01"
+
+
+async def test_broken_template_query(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the SQL sensor with a query template which is broken."""
+    config = {
+        "db_url": "sqlite://",
+        "query": "SELECT {{ 5 as value",
+        "column": "value",
+        "name": "count_tables",
+        "value_template": "{{ value | int }}",
+    }
+    await init_integration(hass, config)
+
+    state = hass.states.get("sensor.count_tables")
+    assert not state
 
 
 async def test_query_limit(recorder_mock: Recorder, hass: HomeAssistant) -> None:
