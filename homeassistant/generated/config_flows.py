@@ -346,6 +346,7 @@ FLOWS = {
         "lg_netcast",
         "lg_soundbar",
         "lg_thinq",
+        "libre_hardware_monitor",
         "lidarr",
         "lifx",
         "linkplay",
