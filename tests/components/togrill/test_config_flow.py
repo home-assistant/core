@@ -10,8 +10,9 @@ from homeassistant.components.togrill.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import TOGRILL_SERVICE_INFO, TOGRILL_SERVICE_INFO_NO_NAME
+from . import TOGRILL_SERVICE_INFO, TOGRILL_SERVICE_INFO_NO_NAME, setup_entry
 
+from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
@@ -101,6 +102,24 @@ async def test_no_devices(
     """Test missing device."""
 
     inject_bluetooth_service_info(hass, TOGRILL_SERVICE_INFO_NO_NAME)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_devices_found"
+
+
+async def test_duplicate_setup(
+    hass: HomeAssistant,
+    mock_entry: MockConfigEntry,
+) -> None:
+    """Test we can not setup a device again."""
+
+    inject_bluetooth_service_info(hass, TOGRILL_SERVICE_INFO)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    await setup_entry(hass, mock_entry, [])
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
