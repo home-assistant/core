@@ -366,6 +366,7 @@
           "select": "Template a select",
           "sensor": "Template a sensor",
           "switch": "Template a switch",
+          "update": "Template a update",
           "vacuum": "Template a vacuum"
         },
         "title": "Template helper"
@@ -396,6 +397,44 @@
           }
         },
         "title": "Template switch"
+      },
+      "update": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "device_class": "[%key:component::template::common::device_class%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "installed_version": "[%key:component::update::entity_component::_::state_attributes::installed_version::name%]",
+          "latest_version": "[%key:component::update::entity_component::_::state_attributes::latest_version::name%]",
+          "install": "Actions on install",
+          "in_progress": "[%key:component::update::entity_component::_::state_attributes::in_progress::name%]",
+          "release_summary": "[%key:component::update::entity_component::_::state_attributes::release_summary::name%]",
+          "release_url": "[%key:component::update::entity_component::_::state_attributes::release_url::name%]",
+          "title": "[%key:component::update::entity_component::_::state_attributes::title::name%]",
+          "update_percent": "Update percent"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "installed_version": "Defines a template to get the installed version.",
+          "latest_version": "Defines a template to get the latest version.",
+          "install": "Defines actions to run when the update is installed.  Receives varables `version` and `backup`",
+          "in_progress": "Defines a template to get the in progress status.",
+          "release_summary": "Defines a template to get the release summary.",
+          "release_url": "Defines a template to get the release url.",
+          "title": "Defines a template to get the update title.",
+          "update_percent": "Defines a template to get the update completion percent."
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::common::advanced_options%]",
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
+            }
+          }
+        },
+        "title": "Template update"
       },
       "vacuum": {
         "data": {
@@ -801,6 +840,44 @@
         },
         "title": "[%key:component::template::config::step::switch::title%]"
       },
+      "update": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "device_class": "[%key:component::template::common::device_class%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "installed_version": "[%key:component::update::entity_component::_::state_attributes::installed_version::name%]",
+          "latest_version": "[%key:component::update::entity_component::_::state_attributes::latest_version::name%]",
+          "install": "[%key:component::template::config::step::update::data::install%]",
+          "in_progress": "[%key:component::update::entity_component::_::state_attributes::in_progress::name%]",
+          "release_summary": "[%key:component::update::entity_component::_::state_attributes::release_summary::name%]",
+          "release_url": "[%key:component::update::entity_component::_::state_attributes::release_url::name%]",
+          "title": "[%key:component::update::entity_component::_::state_attributes::title::name%]",
+          "update_percent": "[%key:component::template::config::step::update::data::update_percent%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "installed_version": "[%key:component::template::config::step::update::data_description::installed_version%]",
+          "latest_version": "[%key:component::template::config::step::update::data_description::latest_version%]",
+          "install": "[%key:component::template::config::step::update::data_description::install%]",
+          "in_progress": "[%key:component::template::config::step::update::data_description::in_progress%]",
+          "release_summary": "[%key:component::template::config::step::update::data_description::release_summary%]",
+          "release_url": "[%key:component::template::config::step::update::data_description::release_url%]",
+          "title": "[%key:component::template::config::step::update::data_description::title%]",
+          "update_percent": "[%key:component::template::config::step::update::data_description::update_percent%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::common::advanced_options%]",
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
+            }
+          }
+        },
+        "title": "Template update"
+      },
       "vacuum": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
@@ -977,6 +1054,11 @@
     "sensor_unit_of_measurement": {
       "options": {
         "none": "No unit of measurement"
+      }
+    },
+    "update_device_class": {
+      "options": {
+        "firmware": "[%key:component::update::entity_component::firmware::name%]"
       }
     }
   },
