@@ -44,10 +44,15 @@ def _mock_device_info(device_type: str) -> LetPotDeviceInfo:
 def _mock_device_features(device_type: str) -> DeviceFeature:
     """Return mock device feature support for the given type."""
     if device_type == "LPH31":
-        return DeviceFeature.LIGHT_BRIGHTNESS_LOW_HIGH | DeviceFeature.PUMP_STATUS
+        return (
+            DeviceFeature.CATEGORY_HYDROPONIC_GARDEN
+            | DeviceFeature.LIGHT_BRIGHTNESS_LOW_HIGH
+            | DeviceFeature.PUMP_STATUS
+        )
     if device_type == "LPH63":
         return (
-            DeviceFeature.LIGHT_BRIGHTNESS_LEVELS
+            DeviceFeature.CATEGORY_HYDROPONIC_GARDEN
+            | DeviceFeature.LIGHT_BRIGHTNESS_LEVELS
             | DeviceFeature.NUTRIENT_BUTTON
             | DeviceFeature.PUMP_AUTO
             | DeviceFeature.PUMP_STATUS

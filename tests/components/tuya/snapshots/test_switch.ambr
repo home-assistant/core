@@ -1,4 +1,52 @@
 # serializer version: 1
+# name: test_platform_setup_and_discovery[cl_3r8gc33pnqsxfe1g][switch.lounge_dark_blind_reverse-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.lounge_dark_blind_reverse',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Reverse',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'reverse',
+    'unique_id': 'tuya.g1efxsqnp33cg8r3lccontrol_back',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[cl_3r8gc33pnqsxfe1g][switch.lounge_dark_blind_reverse-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Lounge Dark Blind Reverse',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.lounge_dark_blind_reverse',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_platform_setup_and_discovery[cs_ka2wfrdoogpvgzfi][switch.dehumidifer_child_lock-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -30,7 +78,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.mock_device_idchild_lock',
+    'unique_id': 'tuya.ifzgvpgoodrfw2akscchild_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -79,7 +127,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ionizer',
-    'unique_id': 'tuya.mock_device_idanion',
+    'unique_id': 'tuya.ifzgvpgoodrfw2akscanion',
     'unit_of_measurement': None,
   })
 # ---
@@ -128,7 +176,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqchild_lock',
+    'unique_id': 'tuya.2myxayqtud9aqbizscchild_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -177,7 +225,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch',
-    'unique_id': 'tuya.bf6574iutyikgwkxswitch',
+    'unique_id': 'tuya.rl39uwgaqwjwcswitch',
     'unit_of_measurement': None,
   })
 # ---
@@ -225,7 +273,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_reset',
-    'unique_id': 'tuya.23536058083a8dc57d96filter_reset',
+    'unique_id': 'tuya.aa99hccfnzvypr3zjsywcfilter_reset',
     'unit_of_measurement': None,
   })
 # ---
@@ -273,7 +321,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
-    'unique_id': 'tuya.23536058083a8dc57d96switch',
+    'unique_id': 'tuya.aa99hccfnzvypr3zjsywcswitch',
     'unit_of_measurement': None,
   })
 # ---
@@ -321,7 +369,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'reset_of_water_usage_days',
-    'unique_id': 'tuya.23536058083a8dc57d96water_reset',
+    'unique_id': 'tuya.aa99hccfnzvypr3zjsywcwater_reset',
     'unit_of_measurement': None,
   })
 # ---
@@ -369,7 +417,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_sterilization',
-    'unique_id': 'tuya.23536058083a8dc57d96uv',
+    'unique_id': 'tuya.aa99hccfnzvypr3zjsywcuv',
     'unit_of_measurement': None,
   })
 # ---
@@ -417,7 +465,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_pump_reset',
-    'unique_id': 'tuya.23536058083a8dc57d96pump_reset',
+    'unique_id': 'tuya.aa99hccfnzvypr3zjsywcpump_reset',
     'unit_of_measurement': None,
   })
 # ---
@@ -465,7 +513,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.01155072c4dd573f92b8switch_1',
+    'unique_id': 'tuya.ncl7oi5d6hqmf1g0zcswitch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -514,7 +562,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.eb0c772dabbb19d653ssi5switch_1',
+    'unique_id': 'tuya.tcdk0skzcpisexj2zcswitch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -563,7 +611,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.eb0c772dabbb19d653ssi5switch_2',
+    'unique_id': 'tuya.tcdk0skzcpisexj2zcswitch_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -612,7 +660,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.53703774d8f15ba9efd3switch_1',
+    'unique_id': 'tuya.2k8wyjo7iidkohuczcswitch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -661,7 +709,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.bf7a2cdaf3ce28d2f7uqnhswitch_1',
+    'unique_id': 'tuya.zspxfhsvgn2hgtndzcswitch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -710,7 +758,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.051724052462ab286504switch_1',
+    'unique_id': 'tuya.l8uxezzkc7c5a0jhzcswitch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -759,7 +807,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.bf4c0c538bfe408aa9gr2echild_lock',
+    'unique_id': 'tuya.pdasfna8fswh4a0tzcchild_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -807,7 +855,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.bf4c0c538bfe408aa9gr2eswitch_1',
+    'unique_id': 'tuya.pdasfna8fswh4a0tzcswitch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -856,7 +904,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.mocked_device_idchild_lock',
+    'unique_id': 'tuya.fcdadqsiax2gvnt0qldchild_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -904,7 +952,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch',
-    'unique_id': 'tuya.mocked_device_idswitch',
+    'unique_id': 'tuya.fcdadqsiax2gvnt0qldswitch',
     'unit_of_measurement': None,
   })
 # ---
@@ -952,7 +1000,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.0665305284f3ebe9fdc1switch_1',
+    'unique_id': 'tuya.a4zeazrz1ata9mbggkswitch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1001,7 +1049,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.152027113c6105cce49clock',
+    'unique_id': 'tuya.zfHZQ7tZUBxAWjACjklock',
     'unit_of_measurement': None,
   })
 # ---
@@ -1049,7 +1097,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ionizer',
-    'unique_id': 'tuya.152027113c6105cce49canion',
+    'unique_id': 'tuya.zfHZQ7tZUBxAWjACjkanion',
     'unit_of_measurement': None,
   })
 # ---
@@ -1097,7 +1145,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
-    'unique_id': 'tuya.152027113c6105cce49cswitch',
+    'unique_id': 'tuya.zfHZQ7tZUBxAWjACjkswitch',
     'unit_of_measurement': None,
   })
 # ---
@@ -1145,7 +1193,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_sterilization',
-    'unique_id': 'tuya.152027113c6105cce49cuv',
+    'unique_id': 'tuya.zfHZQ7tZUBxAWjACjkuv',
     'unit_of_measurement': None,
   })
 # ---
@@ -1193,7 +1241,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
-    'unique_id': 'tuya.CENSOREDswitch',
+    'unique_id': 'tuya.ppgdpsq1xaxlyzryjkswitch',
     'unit_of_measurement': None,
   })
 # ---
@@ -1241,7 +1289,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ionizer',
-    'unique_id': 'tuya.mock_device_idanion',
+    'unique_id': 'tuya.lflvu8cazha8af9jskanion',
     'unit_of_measurement': None,
   })
 # ---
@@ -1289,7 +1337,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'arm_beep',
-    'unique_id': 'tuya.123123aba12312312dazubswitch_alarm_sound',
+    'unique_id': 'tuya.2pxfek1jjrtctiyglamswitch_alarm_sound',
     'unit_of_measurement': None,
   })
 # ---
@@ -1337,7 +1385,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'siren',
-    'unique_id': 'tuya.123123aba12312312dazubswitch_alarm_light',
+    'unique_id': 'tuya.2pxfek1jjrtctiyglamswitch_alarm_light',
     'unit_of_measurement': None,
   })
 # ---
@@ -1352,6 +1400,54 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_platform_setup_and_discovery[mzj_qavcakohisj5adyh][switch.sous_vide_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.sous_vide_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Start',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'start',
+    'unique_id': 'tuya.hyda5jsihokacvaqjzmstart',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[mzj_qavcakohisj5adyh][switch.sous_vide_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Sous Vide Start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.sous_vide_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
   })
 # ---
 # name: test_platform_setup_and_discovery[pc_t2afic7i3v1bwhfp][switch.bubbelbad_socket_1-entry]
@@ -1385,7 +1481,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.bf2206da15147500969d6eswitch_1',
+    'unique_id': 'tuya.pfhwb1v3i7cifa2tcpswitch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1434,7 +1530,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.bf2206da15147500969d6eswitch_2',
+    'unique_id': 'tuya.pfhwb1v3i7cifa2tcpswitch_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -1483,7 +1579,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.15727703c4dd5709cd78switch_1',
+    'unique_id': 'tuya.gt1q9tldv1opojrtcpswitch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -1532,7 +1628,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_socket',
-    'unique_id': 'tuya.15727703c4dd5709cd78switch_2',
+    'unique_id': 'tuya.gt1q9tldv1opojrtcpswitch_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -1581,7 +1677,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch',
-    'unique_id': 'tuya.bf83514d9c14b426f0fz5yswitch',
+    'unique_id': 'tuya.qyy1auihjyoogvb7zdccqswitch',
     'unit_of_measurement': None,
   })
 # ---
@@ -1629,7 +1725,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'do_not_disturb',
-    'unique_id': 'tuya.bfa951ca98fcf64fddqlmtswitch_disturb',
+    'unique_id': 'tuya.zrrraytdoanz33rldsswitch_disturb',
     'unit_of_measurement': None,
   })
 # ---
@@ -1677,7 +1773,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'switch',
-    'unique_id': 'tuya.bfb9bfc18eeaed2d85yt5mswitch',
+    'unique_id': 'tuya.tskafaotnfigad6oqzkfsswitch',
     'unit_of_measurement': None,
   })
 # ---
@@ -1725,7 +1821,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flip',
-    'unique_id': 'tuya.bf7b8e59f8cd49f425mmfmbasic_flip',
+    'unique_id': 'tuya.mgcpxpmovasazerdpsbasic_flip',
     'unit_of_measurement': None,
   })
 # ---
@@ -1773,7 +1869,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_alarm',
-    'unique_id': 'tuya.bf7b8e59f8cd49f425mmfmmotion_switch',
+    'unique_id': 'tuya.mgcpxpmovasazerdpsmotion_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -1821,7 +1917,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sound_detection',
-    'unique_id': 'tuya.bf7b8e59f8cd49f425mmfmdecibel_switch',
+    'unique_id': 'tuya.mgcpxpmovasazerdpsdecibel_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -1869,7 +1965,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'time_watermark',
-    'unique_id': 'tuya.bf7b8e59f8cd49f425mmfmbasic_osd',
+    'unique_id': 'tuya.mgcpxpmovasazerdpsbasic_osd',
     'unit_of_measurement': None,
   })
 # ---
@@ -1917,7 +2013,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'video_recording',
-    'unique_id': 'tuya.bf7b8e59f8cd49f425mmfmrecord_switch',
+    'unique_id': 'tuya.mgcpxpmovasazerdpsrecord_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -1965,7 +2061,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flip',
-    'unique_id': 'tuya.bf9d5b7ea61ea4c9a6rom9basic_flip',
+    'unique_id': 'tuya.uBLyTOvlhoRWXKjrpsbasic_flip',
     'unit_of_measurement': None,
   })
 # ---
@@ -2013,7 +2109,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_alarm',
-    'unique_id': 'tuya.bf9d5b7ea61ea4c9a6rom9motion_switch',
+    'unique_id': 'tuya.uBLyTOvlhoRWXKjrpsmotion_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -2061,7 +2157,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sound_detection',
-    'unique_id': 'tuya.bf9d5b7ea61ea4c9a6rom9decibel_switch',
+    'unique_id': 'tuya.uBLyTOvlhoRWXKjrpsdecibel_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -2109,7 +2205,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'time_watermark',
-    'unique_id': 'tuya.bf9d5b7ea61ea4c9a6rom9basic_osd',
+    'unique_id': 'tuya.uBLyTOvlhoRWXKjrpsbasic_osd',
     'unit_of_measurement': None,
   })
 # ---
@@ -2157,7 +2253,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'video_recording',
-    'unique_id': 'tuya.bf9d5b7ea61ea4c9a6rom9record_switch',
+    'unique_id': 'tuya.uBLyTOvlhoRWXKjrpsrecord_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -2205,7 +2301,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'flip',
-    'unique_id': 'tuya.bf3f8b448bbc123e29oghfbasic_flip',
+    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsbasic_flip',
     'unit_of_measurement': None,
   })
 # ---
@@ -2253,7 +2349,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_alarm',
-    'unique_id': 'tuya.bf3f8b448bbc123e29oghfmotion_switch',
+    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsmotion_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -2301,7 +2397,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_recording',
-    'unique_id': 'tuya.bf3f8b448bbc123e29oghfmotion_record',
+    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsmotion_record',
     'unit_of_measurement': None,
   })
 # ---
@@ -2349,7 +2445,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_tracking',
-    'unique_id': 'tuya.bf3f8b448bbc123e29oghfmotion_tracking',
+    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsmotion_tracking',
     'unit_of_measurement': None,
   })
 # ---
@@ -2397,7 +2493,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'time_watermark',
-    'unique_id': 'tuya.bf3f8b448bbc123e29oghfbasic_osd',
+    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsbasic_osd',
     'unit_of_measurement': None,
   })
 # ---
@@ -2445,7 +2541,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'video_recording',
-    'unique_id': 'tuya.bf3f8b448bbc123e29oghfrecord_switch',
+    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsrecord_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -2493,7 +2589,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wide_dynamic_range',
-    'unique_id': 'tuya.bf3f8b448bbc123e29oghfbasic_wdr',
+    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsbasic_wdr',
     'unit_of_measurement': None,
   })
 # ---
@@ -2541,7 +2637,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.bfa008a4f82a56616c69uzswitch_1',
+    'unique_id': 'tuya.b6e05dfy4qhpgea1qdtswitch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -2590,7 +2686,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.bff35871a2f4430058vs8uswitch_1',
+    'unique_id': 'tuya.vrhdtr5fawoiyth9qdtswitch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -2639,7 +2735,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.bf082711d275c0c883vb4pswitch_1',
+    'unique_id': 'tuya.xenxir4a0tn0p1qcqdtswitch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -2688,7 +2784,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.bf082711d275c0c883vb4pswitch_2',
+    'unique_id': 'tuya.xenxir4a0tn0p1qcqdtswitch_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -2737,7 +2833,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.bf082711d275c0c883vb4pswitch_3',
+    'unique_id': 'tuya.xenxir4a0tn0p1qcqdtswitch_3',
     'unit_of_measurement': None,
   })
 # ---
@@ -2786,7 +2882,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.bf082711d275c0c883vb4pswitch_4',
+    'unique_id': 'tuya.xenxir4a0tn0p1qcqdtswitch_4',
     'unit_of_measurement': None,
   })
 # ---
@@ -2835,7 +2931,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.d7ca553b5f406266350pocchild_lock',
+    'unique_id': 'tuya.kxxrbv93k2vvkconqdtchild_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -2883,7 +2979,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.d7ca553b5f406266350pocswitch_1',
+    'unique_id': 'tuya.kxxrbv93k2vvkconqdtswitch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -2932,7 +3028,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.d7ca553b5f406266350pocswitch_2',
+    'unique_id': 'tuya.kxxrbv93k2vvkconqdtswitch_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -2981,7 +3077,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.d7ca553b5f406266350pocswitch_3',
+    'unique_id': 'tuya.kxxrbv93k2vvkconqdtswitch_3',
     'unit_of_measurement': None,
   })
 # ---
@@ -3030,7 +3126,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.d7ca553b5f406266350pocswitch_4',
+    'unique_id': 'tuya.kxxrbv93k2vvkconqdtswitch_4',
     'unit_of_measurement': None,
   })
 # ---
@@ -3079,7 +3175,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.d7ca553b5f406266350pocswitch_5',
+    'unique_id': 'tuya.kxxrbv93k2vvkconqdtswitch_5',
     'unit_of_measurement': None,
   })
 # ---
@@ -3128,7 +3224,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.d7ca553b5f406266350pocswitch_6',
+    'unique_id': 'tuya.kxxrbv93k2vvkconqdtswitch_6',
     'unit_of_measurement': None,
   })
 # ---
@@ -3177,7 +3273,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.bf0dc19ab84dc3627ep2unswitch_1',
+    'unique_id': 'tuya.7zogt3pcwhxhu8upqdtswitch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -3226,7 +3322,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_saving',
-    'unique_id': 'tuya.bfdb773e4ae317e3915h2iswitch_save_energy',
+    'unique_id': 'tuya.couukaypjdnytswitch_save_energy',
     'unit_of_measurement': None,
   })
 # ---
@@ -3241,6 +3337,54 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[wk_6kijc7nd][switch.kabinet_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.kabinet_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': 'tuya.dn7cjik6kwchild_lock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[wk_6kijc7nd][switch.kabinet_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Кабінет Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.kabinet_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_platform_setup_and_discovery[wk_aqoouq7x][switch.clima_cucina_child_lock-entry]
@@ -3274,7 +3418,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.bf6fc1645146455a2efrexchild_lock',
+    'unique_id': 'tuya.x7quooqakwchild_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -3322,7 +3466,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
-    'unique_id': 'tuya.bfb45cb8a9452fba66lexgchild_lock',
+    'unique_id': 'tuya.j6mn1t4ut5end6ifkwchild_lock',
     'unit_of_measurement': None,
   })
 # ---
@@ -3337,5 +3481,149 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[wk_gogb05wrtredz3bs][switch.smart_thermostats_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.smart_thermostats_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': 'tuya.sb3zdertrw50bgogkwchild_lock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[wk_gogb05wrtredz3bs][switch.smart_thermostats_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'smart thermostats Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.smart_thermostats_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[wk_y5obtqhuztqsf2mj][switch.term_prizemi_child_lock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.term_prizemi_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': 'tuya.jm2fsqtzuhqtbo5ykwchild_lock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[wk_y5obtqhuztqsf2mj][switch.term_prizemi_child_lock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Term - Prizemi Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.term_prizemi_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[zndb_4ggkyflayu1h1ho9][switch.xoca_dac212xc_v2_s1_switch-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.xoca_dac212xc_v2_s1_switch',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Switch',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'switch',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzswitch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[zndb_4ggkyflayu1h1ho9][switch.xoca_dac212xc_v2_s1_switch-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'XOCA-DAC212XC V2-S1 Switch',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.xoca_dac212xc_v2_s1_switch',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
   })
 # ---
