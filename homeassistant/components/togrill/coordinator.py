@@ -18,7 +18,7 @@ from homeassistant.components.bluetooth import (
     async_register_callback,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MODEL
+from homeassistant.const import CONF_ADDRESS, CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
@@ -64,7 +64,9 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[int, Packet]]):
         )
         self.address = config_entry.data[CONF_ADDRESS]
         self.data = {}
-        self.device_info = DeviceInfo(connections={(CONNECTION_BLUETOOTH, address)})
+        self.device_info = DeviceInfo(
+            connections={(CONNECTION_BLUETOOTH, self.address)}
+        )
 
         config_entry.async_on_unload(
             async_register_callback(

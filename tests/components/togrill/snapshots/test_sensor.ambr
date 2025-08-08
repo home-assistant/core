@@ -34,7 +34,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'battery',
+    'translation_key': None,
     'unique_id': '00000000-0000-0000-0000-000000000001_battery',
     'unit_of_measurement': '%',
   })
@@ -202,7 +202,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'battery',
+    'translation_key': None,
     'unique_id': '00000000-0000-0000-0000-000000000001_battery',
     'unit_of_measurement': '%',
   })
@@ -370,7 +370,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'battery',
+    'translation_key': None,
     'unique_id': '00000000-0000-0000-0000-000000000001_battery',
     'unit_of_measurement': '%',
   })
@@ -538,7 +538,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'battery',
+    'translation_key': None,
     'unique_id': '00000000-0000-0000-0000-000000000001_battery',
     'unit_of_measurement': '%',
   })
