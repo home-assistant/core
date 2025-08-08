@@ -8,13 +8,12 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from pymiele import MieleAction, MieleDevice
+from pymiele import MieleAction, MieleAPI, MieleDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .api import AsyncConfigEntryAuth
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,7 +42,7 @@ class MieleDataUpdateCoordinator(DataUpdateCoordinator[MieleCoordinatorData]):
         self,
         hass: HomeAssistant,
         config_entry: MieleConfigEntry,
-        api: AsyncConfigEntryAuth,
+        api: MieleAPI,
     ) -> None:
         """Initialize the Miele data coordinator."""
         super().__init__(

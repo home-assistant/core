@@ -65,7 +65,7 @@ async def test_platform_setup_no_discovery(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cs_arete_two_12l_dehumidifier_air_purifier"],
+    ["cs_zibqa9dutqyaxym2"],
 )
 async def test_turn_on(
     hass: HomeAssistant,
@@ -92,7 +92,7 @@ async def test_turn_on(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cs_arete_two_12l_dehumidifier_air_purifier"],
+    ["cs_zibqa9dutqyaxym2"],
 )
 async def test_turn_off(
     hass: HomeAssistant,
@@ -119,7 +119,7 @@ async def test_turn_off(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cs_arete_two_12l_dehumidifier_air_purifier"],
+    ["cs_zibqa9dutqyaxym2"],
 )
 async def test_set_humidity(
     hass: HomeAssistant,
@@ -149,7 +149,7 @@ async def test_set_humidity(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cs_smart_dry_plus"],
+    ["cs_vmxuxszzjwp5smli"],
 )
 async def test_turn_on_unsupported(
     hass: HomeAssistant,
@@ -179,7 +179,7 @@ async def test_turn_on_unsupported(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cs_smart_dry_plus"],
+    ["cs_vmxuxszzjwp5smli"],
 )
 async def test_turn_off_unsupported(
     hass: HomeAssistant,
@@ -209,7 +209,7 @@ async def test_turn_off_unsupported(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cs_smart_dry_plus"],
+    ["cs_vmxuxszzjwp5smli"],
 )
 async def test_set_humidity_unsupported(
     hass: HomeAssistant,

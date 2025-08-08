@@ -14,7 +14,6 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mealie.const import (
-    ATTR_CONFIG_ENTRY_ID,
     ATTR_END_DATE,
     ATTR_ENTRY_TYPE,
     ATTR_INCLUDE_TAGS,
@@ -35,7 +34,7 @@ from homeassistant.components.mealie.services import (
     SERVICE_SET_MEALPLAN,
     SERVICE_SET_RANDOM_MEALPLAN,
 )
-from homeassistant.const import ATTR_DATE
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_DATE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 

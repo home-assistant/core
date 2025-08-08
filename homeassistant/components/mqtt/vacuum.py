@@ -17,7 +17,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolSchemaType
@@ -25,11 +25,11 @@ from homeassistant.util.json import json_loads_object
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .const import CONF_COMMAND_TOPIC, CONF_RETAIN, CONF_STATE_TOPIC
-from .entity import MqttEntity, async_setup_entity_entry_helper
+from .const import CONF_COMMAND_TOPIC, CONF_RETAIN, CONF_STATE_TOPIC, DOMAIN
+from .entity import IssueSeverity, MqttEntity, async_setup_entity_entry_helper
 from .models import ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
-from .util import valid_publish_topic
+from .util import learn_more_url, valid_publish_topic
 
 PARALLEL_UPDATES = 0
 
@@ -84,6 +84,8 @@ SERVICE_TO_STRING: dict[VacuumEntityFeature, str] = {
     VacuumEntityFeature.STOP: "stop",
     VacuumEntityFeature.RETURN_HOME: "return_home",
     VacuumEntityFeature.FAN_SPEED: "fan_speed",
+    # Use of the battery feature was deprecated in HA Core 2025.8
+    # and will be removed with HA Core 2026.2
     VacuumEntityFeature.BATTERY: "battery",
     VacuumEntityFeature.STATUS: "status",
     VacuumEntityFeature.SEND_COMMAND: "send_command",
@@ -96,7 +98,6 @@ DEFAULT_SERVICES = (
     VacuumEntityFeature.START
     | VacuumEntityFeature.STOP
     | VacuumEntityFeature.RETURN_HOME
-    | VacuumEntityFeature.BATTERY
     | VacuumEntityFeature.CLEAN_SPOT
 )
 ALL_SERVICES = (
@@ -251,10 +252,35 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             )
         }
 
+    async def mqtt_async_added_to_hass(self) -> None:
+        """Check for use of deprecated battery features."""
+        if self.supported_features & VacuumEntityFeature.BATTERY:
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                f"deprecated_vacuum_battery_feature_{self.entity_id}",
+                issue_domain=vacuum.DOMAIN,
+                breaks_in_ha_version="2026.2",
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                learn_more_url=learn_more_url(vacuum.DOMAIN),
+                translation_placeholders={"entity_id": self.entity_id},
+                translation_key="deprecated_vacuum_battery_feature",
+            )
+            _LOGGER.warning(
+                "MQTT vacuum entity %s implements the battery feature "
+                "which is deprecated. This will stop working "
+                "in Home Assistant 2026.2. Implement a separate entity "
+                "for the battery status instead",
+                self.entity_id,
+            )
+
     def _update_state_attributes(self, payload: dict[str, Any]) -> None:
         """Update the entity state attributes."""
         self._state_attrs.update(payload)
         self._attr_fan_speed = self._state_attrs.get(FAN_SPEED, 0)
+        # Use of the battery feature was deprecated in HA Core 2025.8
+        # and will be removed with HA Core 2026.2
         self._attr_battery_level = max(0, min(100, self._state_attrs.get(BATTERY, 0)))
 
     @callback

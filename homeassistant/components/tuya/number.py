@@ -339,6 +339,32 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Tank Level Sensor
+    # Note: Undocumented
+    "ywcgq": (
+        NumberEntityDescription(
+            key=DPCode.MAX_SET,
+            translation_key="alarm_maximum",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.MINI_SET,
+            translation_key="alarm_minimum",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.INSTALLATION_HEIGHT,
+            translation_key="installation_height",
+            device_class=NumberDeviceClass.DISTANCE,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.LIQUID_DEPTH_MAX,
+            translation_key="maximum_liquid_depth",
+            device_class=NumberDeviceClass.DISTANCE,
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Vibration Sensor
     # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
     "zd": (

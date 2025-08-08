@@ -348,7 +348,6 @@ FLOWS = {
         "lg_thinq",
         "lidarr",
         "lifx",
-        "linear_garage_door",
         "linkplay",
         "litejet",
         "litterrobot",

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -26,11 +25,9 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import get_hub
-from .const import CONF_SLAVE_COUNT, CONF_VIRTUAL_COUNT
+from .const import _LOGGER, CONF_SLAVE_COUNT, CONF_VIRTUAL_COUNT
 from .entity import BaseStructPlatform
 from .modbus import ModbusHub
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 

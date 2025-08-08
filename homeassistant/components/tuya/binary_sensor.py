@@ -314,6 +314,16 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TAMPER_BINARY_SENSOR,
     ),
+    # Zigbee gateway
+    # Undocumented
+    "wg2": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.MASTER_STATE,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            on_value="alarm",
+        ),
+    ),
     # Thermostatic Radiator Valve
     # Not documented
     "wkf": (

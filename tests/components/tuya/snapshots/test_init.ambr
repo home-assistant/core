@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_unsupported_device[ydkt_dolceclima_unsupported]
+# name: test_unsupported_device[ydkt_jevroj5aguwdbs2e]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -15,7 +15,7 @@
       'identifiers': set({
         tuple(
           'tuya',
-          'mock_device_id',
+          'e2sbdwuga5jorvejtkdy',
         ),
       }),
       'labels': set({

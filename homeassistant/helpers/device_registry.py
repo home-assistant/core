@@ -1221,14 +1221,17 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             ("name", name),
             ("name_by_user", name_by_user),
             ("serial_number", serial_number),
-            # Can be removed when suggested_area is removed from DeviceEntry
-            ("suggested_area", suggested_area),
             ("sw_version", sw_version),
             ("via_device_id", via_device_id),
         ):
             if value is not UNDEFINED and value != getattr(old, attr_name):
                 new_values[attr_name] = value
                 old_values[attr_name] = getattr(old, attr_name)
+
+        # Can be removed when suggested_area is removed from DeviceEntry
+        if suggested_area is not UNDEFINED and suggested_area != old._suggested_area:  # noqa: SLF001
+            new_values["suggested_area"] = suggested_area
+            old_values["suggested_area"] = old._suggested_area  # noqa: SLF001
 
         if old.is_new:
             new_values["is_new"] = False

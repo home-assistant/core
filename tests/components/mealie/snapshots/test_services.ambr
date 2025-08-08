@@ -1247,7 +1247,7 @@
       'image': 'SuPW',
       'ingredients': list([
         dict({
-          'is_food': True,
+          'is_food': None,
           'note': '130g dark couverture chocolate (min. 55% cocoa content)',
           'quantity': 1.0,
           'reference_id': 'a3adfe78-d157-44d8-98be-9c133e45bb4e',
@@ -1261,7 +1261,7 @@
           'unit': None,
         }),
         dict({
-          'is_food': True,
+          'is_food': None,
           'note': '150g softened butter',
           'quantity': 1.0,
           'reference_id': 'f6ce06bf-8b02-43e6-8316-0dc3fb0da0fc',
@@ -1763,7 +1763,7 @@
       'image': 'SuPW',
       'ingredients': list([
         dict({
-          'is_food': True,
+          'is_food': None,
           'note': '130g dark couverture chocolate (min. 55% cocoa content)',
           'quantity': 1.0,
           'reference_id': 'a3adfe78-d157-44d8-98be-9c133e45bb4e',
@@ -1777,7 +1777,7 @@
           'unit': None,
         }),
         dict({
-          'is_food': True,
+          'is_food': None,
           'note': '150g softened butter',
           'quantity': 1.0,
           'reference_id': 'f6ce06bf-8b02-43e6-8316-0dc3fb0da0fc',

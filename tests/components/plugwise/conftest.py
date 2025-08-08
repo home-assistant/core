@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -128,6 +128,28 @@ def mock_smile_config_flow() -> Generator[MagicMock]:
         )
 
         yield api
+
+
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture for platforms."""
+    return []
+
+
+@pytest.fixture
+async def setup_platform(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    platforms,
+) -> AsyncGenerator[None]:
+    """Set up one or all platforms."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        yield mock_config_entry
 
 
 @pytest.fixture

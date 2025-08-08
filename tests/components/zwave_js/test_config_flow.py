@@ -1101,7 +1101,7 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
     assert restart_addon.call_args == call("core_zwave_js")
 
     with patch(
-        ("homeassistant.components.zwave_js.config_flow.DRIVER_READY_TIMEOUT"),
+        ("homeassistant.components.zwave_js.helpers.DRIVER_READY_EVENT_TIMEOUT"),
         new=0,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -1111,7 +1111,7 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
         assert client.connect.call_count == 2
 
         await hass.async_block_till_done()
-        assert client.connect.call_count == 4
+        assert client.connect.call_count == 3
         assert entry.state is config_entries.ConfigEntryState.LOADED
         assert client.driver.controller.async_restore_nvm.call_count == 1
         assert len(events) == 2
@@ -3897,7 +3897,7 @@ async def test_reconfigure_migrate_restore_driver_ready_timeout(
     assert restart_addon.call_args == call("core_zwave_js")
 
     with patch(
-        ("homeassistant.components.zwave_js.config_flow.DRIVER_READY_TIMEOUT"),
+        ("homeassistant.components.zwave_js.helpers.DRIVER_READY_EVENT_TIMEOUT"),
         new=0,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -3907,7 +3907,7 @@ async def test_reconfigure_migrate_restore_driver_ready_timeout(
         assert client.connect.call_count == 2
 
         await hass.async_block_till_done()
-        assert client.connect.call_count == 4
+        assert client.connect.call_count == 3
         assert entry.state is config_entries.ConfigEntryState.LOADED
         assert client.driver.controller.async_restore_nvm.call_count == 1
         assert len(events) == 2

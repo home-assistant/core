@@ -53,6 +53,11 @@
           "value_raw": -1800,
           "value_localized": -18.0,
           "unit": "Celsius"
+        },
+        {
+          "value_raw": -2500,
+          "value_localized": -25.0,
+          "unit": "Celsius"
         }
       ],
       "coreTargetTemperature": [],
@@ -68,8 +73,8 @@
           "unit": "Celsius"
         },
         {
-          "value_raw": -32768,
-          "value_localized": null,
+          "value_raw": -2800,
+          "value_localized": -28.0,
           "unit": "Celsius"
         }
       ],

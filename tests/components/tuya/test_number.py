@@ -59,7 +59,7 @@ async def test_platform_setup_no_discovery(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["mal_alarm_host"],
+    ["mal_gyitctrjj1kefxp2"],
 )
 async def test_set_value(
     hass: HomeAssistant,
@@ -89,7 +89,7 @@ async def test_set_value(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["mal_alarm_host"],
+    ["mal_gyitctrjj1kefxp2"],
 )
 async def test_set_value_no_function(
     hass: HomeAssistant,

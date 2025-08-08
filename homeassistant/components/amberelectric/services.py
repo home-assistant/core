@@ -4,6 +4,7 @@ from amberelectric.models.channel import ChannelType
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -16,7 +17,6 @@ from homeassistant.util.json import JsonValueType
 
 from .const import (
     ATTR_CHANNEL_TYPE,
-    ATTR_CONFIG_ENTRY_ID,
     CONTROLLED_LOAD_CHANNEL,
     DOMAIN,
     FEED_IN_CHANNEL,
