@@ -470,6 +470,13 @@ DEVICE_MOCKS = {
         Platform.EVENT,
         Platform.SENSOR,
     ],
+    "xnyjcn_pb0tc75khaik8qbg": [
+        # https://github.com/home-assistant/core/pull/149237
+        Platform.NUMBER,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
     "ydkt_jevroj5aguwdbs2e": [
         # https://github.com/orgs/home-assistant/discussions/288
         # unsupported device - no platforms
