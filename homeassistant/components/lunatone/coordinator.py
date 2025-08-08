@@ -55,10 +55,12 @@ class LunatoneInfoDataUpdateCoordinator(DataUpdateCoordinator[InfoData]):
         try:
             await self.info.async_update()
         except aiohttp.ClientConnectionError as ex:
-            raise UpdateFailed("Unable to retrieve data from Lunatone REST API") from ex
+            raise UpdateFailed(
+                "Unable to retrieve info data from Lunatone REST API"
+            ) from ex
 
         if self.info.data is None:
-            raise UpdateFailed("Did not receive data from Lunatone REST API")
+            raise UpdateFailed("Did not receive info data from Lunatone REST API")
         return self.info.data
 
 
@@ -88,8 +90,10 @@ class LunatoneDevicesDataUpdateCoordinator(DataUpdateCoordinator[DevicesData]):
         try:
             await self.devices.async_update()
         except aiohttp.ClientConnectionError as ex:
-            raise UpdateFailed("Unable to retrieve data from Lunatone REST API") from ex
+            raise UpdateFailed(
+                "Unable to retrieve devices data from Lunatone REST API"
+            ) from ex
 
         if self.devices.data is None:
-            raise UpdateFailed("Did not receive data from Lunatone REST API")
+            raise UpdateFailed("Did not receive devices data from Lunatone REST API")
         return self.devices.data
