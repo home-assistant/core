@@ -1,4 +1,61 @@
 # serializer version: 1
+# name: test_platform_setup_and_discovery[cl_cpbo62rn][select.blinds_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'morning',
+        'night',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.blinds_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Mode',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'curtain_mode',
+    'unique_id': 'tuya.nr26obpclcmode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[cl_cpbo62rn][select.blinds_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'blinds Mode',
+      'options': list([
+        'morning',
+        'night',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.blinds_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'morning',
+  })
+# ---
 # name: test_platform_setup_and_discovery[cl_zah67ekd][select.kitchen_blinds_motor_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -35,7 +92,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'curtain_motor_mode',
-    'unique_id': 'tuya.zah67ekdcontrol_back_mode',
+    'unique_id': 'tuya.dke76hazlccontrol_back_mode',
     'unit_of_measurement': None,
   })
 # ---
@@ -94,7 +151,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
-    'unique_id': 'tuya.eb14fd1dd93ca2ea34vpinalarm_volume',
+    'unique_id': 'tuya.iks13mcaiyie3rryjb2ocalarm_volume',
     'unit_of_measurement': None,
   })
 # ---
@@ -155,7 +212,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'countdown',
-    'unique_id': 'tuya.mock_device_idcountdown_set',
+    'unique_id': 'tuya.ifzgvpgoodrfw2aksccountdown_set',
     'unit_of_measurement': None,
   })
 # ---
@@ -216,7 +273,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'countdown',
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqcountdown_set',
+    'unique_id': 'tuya.2myxayqtud9aqbizsccountdown_set',
     'unit_of_measurement': None,
   })
 # ---
@@ -275,7 +332,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'odor_elimination_mode',
-    'unique_id': 'tuya.bf6574iutyikgwkxwork_mode',
+    'unique_id': 'tuya.rl39uwgaqwjwcwork_mode',
     'unit_of_measurement': None,
   })
 # ---
@@ -333,7 +390,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'light_mode',
-    'unique_id': 'tuya.bf4c0c538bfe408aa9gr2elight_mode',
+    'unique_id': 'tuya.pdasfna8fswh4a0tzclight_mode',
     'unit_of_measurement': None,
   })
 # ---
@@ -392,7 +449,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_status',
-    'unique_id': 'tuya.bf4c0c538bfe408aa9gr2erelay_status',
+    'unique_id': 'tuya.pdasfna8fswh4a0tzcrelay_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -453,7 +510,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'countdown',
-    'unique_id': 'tuya.XXXcountdown_set',
+    'unique_id': 'tuya.ijzjlqwmv1blwe0gsfcountdown_set',
     'unit_of_measurement': None,
   })
 # ---
@@ -517,7 +574,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'countdown',
-    'unique_id': 'tuya.CENSOREDcountdown_set',
+    'unique_id': 'tuya.ppgdpsq1xaxlyzryjkcountdown_set',
     'unit_of_measurement': None,
   })
 # ---
@@ -580,7 +637,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vacuum_mode',
-    'unique_id': 'tuya.bfa951ca98fcf64fddqlmtmode',
+    'unique_id': 'tuya.zrrraytdoanz33rldsmode',
     'unit_of_measurement': None,
   })
 # ---
@@ -640,7 +697,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'vacuum_cistern',
-    'unique_id': 'tuya.bfa951ca98fcf64fddqlmtcistern',
+    'unique_id': 'tuya.zrrraytdoanz33rldscistern',
     'unit_of_measurement': None,
   })
 # ---
@@ -700,7 +757,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
-    'unique_id': 'tuya.bf0984adfeffe10d5a3ofdalarm_volume',
+    'unique_id': 'tuya.kjr0pqg7eunn4vlujbgsalarm_volume',
     'unit_of_measurement': None,
   })
 # ---
@@ -760,7 +817,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_sensitivity',
-    'unique_id': 'tuya.bf7b8e59f8cd49f425mmfmmotion_sensitivity',
+    'unique_id': 'tuya.mgcpxpmovasazerdpsmotion_sensitivity',
     'unit_of_measurement': None,
   })
 # ---
@@ -819,7 +876,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'basic_nightvision',
-    'unique_id': 'tuya.bf7b8e59f8cd49f425mmfmbasic_nightvision',
+    'unique_id': 'tuya.mgcpxpmovasazerdpsbasic_nightvision',
     'unit_of_measurement': None,
   })
 # ---
@@ -877,7 +934,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'record_mode',
-    'unique_id': 'tuya.bf7b8e59f8cd49f425mmfmrecord_mode',
+    'unique_id': 'tuya.mgcpxpmovasazerdpsrecord_mode',
     'unit_of_measurement': None,
   })
 # ---
@@ -934,7 +991,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'decibel_sensitivity',
-    'unique_id': 'tuya.bf7b8e59f8cd49f425mmfmdecibel_sensitivity',
+    'unique_id': 'tuya.mgcpxpmovasazerdpsdecibel_sensitivity',
     'unit_of_measurement': None,
   })
 # ---
@@ -992,7 +1049,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_sensitivity',
-    'unique_id': 'tuya.bf9d5b7ea61ea4c9a6rom9motion_sensitivity',
+    'unique_id': 'tuya.uBLyTOvlhoRWXKjrpsmotion_sensitivity',
     'unit_of_measurement': None,
   })
 # ---
@@ -1050,7 +1107,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'record_mode',
-    'unique_id': 'tuya.bf9d5b7ea61ea4c9a6rom9record_mode',
+    'unique_id': 'tuya.uBLyTOvlhoRWXKjrpsrecord_mode',
     'unit_of_measurement': None,
   })
 # ---
@@ -1107,7 +1164,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'decibel_sensitivity',
-    'unique_id': 'tuya.bf9d5b7ea61ea4c9a6rom9decibel_sensitivity',
+    'unique_id': 'tuya.uBLyTOvlhoRWXKjrpsdecibel_sensitivity',
     'unit_of_measurement': None,
   })
 # ---
@@ -1164,7 +1221,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ipc_work_mode',
-    'unique_id': 'tuya.bf3f8b448bbc123e29oghfipc_work_mode',
+    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsipc_work_mode',
     'unit_of_measurement': None,
   })
 # ---
@@ -1222,7 +1279,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'motion_sensitivity',
-    'unique_id': 'tuya.bf3f8b448bbc123e29oghfmotion_sensitivity',
+    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsmotion_sensitivity',
     'unit_of_measurement': None,
   })
 # ---
@@ -1280,7 +1337,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'record_mode',
-    'unique_id': 'tuya.bf3f8b448bbc123e29oghfrecord_mode',
+    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsrecord_mode',
     'unit_of_measurement': None,
   })
 # ---
@@ -1338,7 +1395,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_status',
-    'unique_id': 'tuya.bfa008a4f82a56616c69uzrelay_status',
+    'unique_id': 'tuya.b6e05dfy4qhpgea1qdtrelay_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -1397,7 +1454,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_status',
-    'unique_id': 'tuya.bff35871a2f4430058vs8urelay_status',
+    'unique_id': 'tuya.vrhdtr5fawoiyth9qdtrelay_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -1456,7 +1513,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_status',
-    'unique_id': 'tuya.bf082711d275c0c883vb4prelay_status',
+    'unique_id': 'tuya.xenxir4a0tn0p1qcqdtrelay_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -1515,7 +1572,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'relay_status',
-    'unique_id': 'tuya.bf0dc19ab84dc3627ep2unrelay_status',
+    'unique_id': 'tuya.7zogt3pcwhxhu8upqdtrelay_status',
     'unit_of_measurement': None,
   })
 # ---
