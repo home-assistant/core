@@ -6528,6 +6528,7 @@ async def test_update_subentry_and_abort(
         "raises",
         "reload",  # True is default
         "setup_call_count",
+        "expected_result",
     ),
     [
         (
@@ -6539,9 +6540,14 @@ async def test_update_subentry_and_abort(
             "Updated title",
             "5678",
             {"vendor": "data2"},
-            None,
+            does_not_raise(),
             True,
             2,
+            {
+                "type": FlowResultType.ABORT,
+                "reason": "reconfigure_successful",
+                "description_placeholders": None,
+            },
         ),
         (
             {
@@ -6552,9 +6558,14 @@ async def test_update_subentry_and_abort(
             "Test",
             "1234",
             {"vendor": "data"},
-            None,
+            does_not_raise(),
             True,
             2,
+            {
+                "type": FlowResultType.ABORT,
+                "reason": "reconfigure_successful",
+                "description_placeholders": None,
+            },
         ),
         (
             {
@@ -6565,18 +6576,28 @@ async def test_update_subentry_and_abort(
             "Test",
             "1234",
             {"vendor": "data"},
-            None,
+            does_not_raise(),
             False,
             1,
+            {
+                "type": FlowResultType.ABORT,
+                "reason": "reconfigure_successful",
+                "description_placeholders": None,
+            },
         ),
         (
             {},
             "Test",
             "1234",
             {"vendor": "data"},
-            None,
+            does_not_raise(),
             True,
             2,
+            {
+                "type": FlowResultType.ABORT,
+                "reason": "reconfigure_successful",
+                "description_placeholders": None,
+            },
         ),
         (
             {
@@ -6585,18 +6606,28 @@ async def test_update_subentry_and_abort(
             "Test",
             "1234",
             {"buyer": "me"},
-            None,
+            does_not_raise(),
             True,
             2,
+            {
+                "type": FlowResultType.ABORT,
+                "reason": "reconfigure_successful",
+                "description_placeholders": None,
+            },
         ),
         (
             {"data_updates": {"buyer": "me"}},
             "Test",
             "1234",
             {"vendor": "data", "buyer": "me"},
-            None,
+            does_not_raise(),
             True,
             2,
+            {
+                "type": FlowResultType.ABORT,
+                "reason": "reconfigure_successful",
+                "description_placeholders": None,
+            },
         ),
         (
             {
@@ -6608,9 +6639,10 @@ async def test_update_subentry_and_abort(
             "Test",
             "1234",
             {"vendor": "data"},
-            ValueError,
+            pytest.raises(ValueError),
             True,
             1,
+            {},
         ),
     ],
     ids=[
@@ -6629,9 +6661,10 @@ async def test_update_subentry_reload_and_abort(
     expected_unique_id: str,
     expected_data: dict[str, Any],
     kwargs: dict[str, Any],
-    raises: type[Exception] | None,
+    raises: AbstractContextManager,
     reload: bool,
     setup_call_count: int,
+    expected_result: dict[str, Any],
 ) -> None:
     """Test updating an entry and reloading."""
     subentry_id = "blabla"
@@ -6682,12 +6715,8 @@ async def test_update_subentry_reload_and_abort(
         ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
             return {"test": TestFlow.SubentryFlowHandler}
 
-    err: Exception
-    with mock_config_flow("comp", TestFlow):
-        try:
-            result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
-        except Exception as ex:  # noqa: BLE001
-            err = ex
+    with mock_config_flow("comp", TestFlow), raises:
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
 
     await hass.async_block_till_done()
 
@@ -6696,11 +6725,8 @@ async def test_update_subentry_reload_and_abort(
     assert subentry.unique_id == expected_unique_id
     assert subentry.data == expected_data
     assert setup_entry.call_count == setup_call_count
-    if raises:
-        assert isinstance(err, raises)
-    else:
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "reconfigure_successful"
+    for k, v in expected_result.items():
+        assert result[k] == v
 
 
 async def test_reconfigure_subentry_create_subentry(hass: HomeAssistant) -> None:
