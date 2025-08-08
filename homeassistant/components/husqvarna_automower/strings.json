@@ -53,6 +53,9 @@
       },
       "sync_clock": {
         "name": "Sync clock"
+      },
+      "reset_cutting_blade_usage_time": {
+        "name": "Reset cutting blade usage time"
       }
     },
     "event": {
