@@ -128,7 +128,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.session_active = True
     host_mock.timeout = 60
     host_mock.renewtimer.return_value = 600
-    host_mock.wifi_connection = False
+    host_mock.wifi_connection.return_value = False
     host_mock.wifi_signal.return_value = -45
     host_mock.whiteled_mode_list.return_value = []
     host_mock.post_recording_time_list.return_value = []

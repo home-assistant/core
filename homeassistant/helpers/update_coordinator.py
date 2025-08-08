@@ -92,7 +92,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             frame.report_usage(
                 "relies on ContextVar, but should pass the config entry explicitly.",
                 core_behavior=frame.ReportBehavior.ERROR,
-                custom_integration_behavior=frame.ReportBehavior.LOG,
+                custom_integration_behavior=frame.ReportBehavior.IGNORE,
                 breaks_in_ha_version="2026.8",
             )
 

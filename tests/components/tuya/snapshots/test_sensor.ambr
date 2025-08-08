@@ -1,4 +1,53 @@
 # serializer version: 1
+# name: test_platform_setup_and_discovery[cl_3r8gc33pnqsxfe1g][sensor.lounge_dark_blind_last_operation_duration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.lounge_dark_blind_last_operation_duration',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Last operation duration',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_operation_duration',
+    'unique_id': 'tuya.g1efxsqnp33cg8r3lctime_total',
+    'unit_of_measurement': 'ms',
+  })
+# ---
+# name: test_platform_setup_and_discovery[cl_3r8gc33pnqsxfe1g][sensor.lounge_dark_blind_last_operation_duration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Lounge Dark Blind Last operation duration',
+      'unit_of_measurement': 'ms',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lounge_dark_blind_last_operation_duration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25400.0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[co2bj_yrr3eiyiacm31ski][sensor.aqi_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -32,7 +81,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
-    'unique_id': 'tuya.eb14fd1dd93ca2ea34vpinbattery_percentage',
+    'unique_id': 'tuya.iks13mcaiyie3rryjb2ocbattery_percentage',
     'unit_of_measurement': '%',
   })
 # ---
@@ -85,7 +134,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'formaldehyde',
-    'unique_id': 'tuya.eb14fd1dd93ca2ea34vpinch2o_value',
+    'unique_id': 'tuya.iks13mcaiyie3rryjb2occh2o_value',
     'unit_of_measurement': 'mg/m3',
   })
 # ---
@@ -137,7 +186,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
-    'unique_id': 'tuya.eb14fd1dd93ca2ea34vpinhumidity_value',
+    'unique_id': 'tuya.iks13mcaiyie3rryjb2ochumidity_value',
     'unit_of_measurement': '%',
   })
 # ---
@@ -193,7 +242,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
-    'unique_id': 'tuya.eb14fd1dd93ca2ea34vpintemp_current',
+    'unique_id': 'tuya.iks13mcaiyie3rryjb2octemp_current',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -246,7 +295,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voc',
-    'unique_id': 'tuya.eb14fd1dd93ca2ea34vpinvoc_value',
+    'unique_id': 'tuya.iks13mcaiyie3rryjb2ocvoc_value',
     'unit_of_measurement': 'mg/m³',
   })
 # ---
@@ -299,7 +348,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
-    'unique_id': 'tuya.mock_device_idhumidity_indoor',
+    'unique_id': 'tuya.ifzgvpgoodrfw2akschumidity_indoor',
     'unit_of_measurement': '%',
   })
 # ---
@@ -352,7 +401,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqhumidity_indoor',
+    'unique_id': 'tuya.2myxayqtud9aqbizschumidity_indoor',
     'unit_of_measurement': '%',
   })
 # ---
@@ -405,7 +454,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
-    'unique_id': 'tuya.bf6574iutyikgwkxbattery_percentage',
+    'unique_id': 'tuya.rl39uwgaqwjwcbattery_percentage',
     'unit_of_measurement': '%',
   })
 # ---
@@ -456,7 +505,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'odor_elimination_status',
-    'unique_id': 'tuya.bf6574iutyikgwkxwork_state_e',
+    'unique_id': 'tuya.rl39uwgaqwjwcwork_state_e',
     'unit_of_measurement': None,
   })
 # ---
@@ -506,7 +555,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_amount',
-    'unique_id': 'tuya.bfd0273e59494eb34esvrxfeed_report',
+    'unique_id': 'tuya.iomszlsve0yyzkfwqswwcfeed_report',
     'unit_of_measurement': '',
   })
 # ---
@@ -561,7 +610,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'filter_duration',
-    'unique_id': 'tuya.23536058083a8dc57d96filter_life',
+    'unique_id': 'tuya.aa99hccfnzvypr3zjsywcfilter_life',
     'unit_of_measurement': 'min',
   })
 # ---
@@ -617,7 +666,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uv_runtime',
-    'unique_id': 'tuya.23536058083a8dc57d96uv_runtime',
+    'unique_id': 'tuya.aa99hccfnzvypr3zjsywcuv_runtime',
     'unit_of_measurement': 's',
   })
 # ---
@@ -668,7 +717,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_level_state',
-    'unique_id': 'tuya.23536058083a8dc57d96water_level',
+    'unique_id': 'tuya.aa99hccfnzvypr3zjsywcwater_level',
     'unit_of_measurement': None,
   })
 # ---
@@ -721,7 +770,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pump_time',
-    'unique_id': 'tuya.23536058083a8dc57d96pump_time',
+    'unique_id': 'tuya.aa99hccfnzvypr3zjsywcpump_time',
     'unit_of_measurement': 'min',
   })
 # ---
@@ -777,7 +826,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'water_time',
-    'unique_id': 'tuya.23536058083a8dc57d96water_time',
+    'unique_id': 'tuya.aa99hccfnzvypr3zjsywcwater_time',
     'unit_of_measurement': 'min',
   })
 # ---
@@ -836,7 +885,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current',
-    'unique_id': 'tuya.eb0c772dabbb19d653ssi5cur_current',
+    'unique_id': 'tuya.tcdk0skzcpisexj2zccur_current',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -892,7 +941,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
-    'unique_id': 'tuya.eb0c772dabbb19d653ssi5cur_power',
+    'unique_id': 'tuya.tcdk0skzcpisexj2zccur_power',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -951,7 +1000,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage',
-    'unique_id': 'tuya.eb0c772dabbb19d653ssi5cur_voltage',
+    'unique_id': 'tuya.tcdk0skzcpisexj2zccur_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1010,7 +1059,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current',
-    'unique_id': 'tuya.051724052462ab286504cur_current',
+    'unique_id': 'tuya.l8uxezzkc7c5a0jhzccur_current',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1066,7 +1115,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
-    'unique_id': 'tuya.051724052462ab286504cur_power',
+    'unique_id': 'tuya.l8uxezzkc7c5a0jhzccur_power',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -1125,7 +1174,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage',
-    'unique_id': 'tuya.051724052462ab286504cur_voltage',
+    'unique_id': 'tuya.l8uxezzkc7c5a0jhzccur_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1184,7 +1233,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'current',
-    'unique_id': 'tuya.mocked_device_idcur_current',
+    'unique_id': 'tuya.fcdadqsiax2gvnt0qldcur_current',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1240,7 +1289,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power',
-    'unique_id': 'tuya.mocked_device_idcur_power',
+    'unique_id': 'tuya.fcdadqsiax2gvnt0qldcur_power',
     'unit_of_measurement': 'W',
   })
 # ---
@@ -1299,7 +1348,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage',
-    'unique_id': 'tuya.mocked_device_idcur_voltage',
+    'unique_id': 'tuya.fcdadqsiax2gvnt0qldcur_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1355,7 +1404,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_a_current',
-    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27phase_aelectriccurrent',
+    'unique_id': 'tuya.obb7p55c0us6rdxkqldphase_aelectriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1411,7 +1460,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_a_power',
-    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27phase_apower',
+    'unique_id': 'tuya.obb7p55c0us6rdxkqldphase_apower',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -1467,7 +1516,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_a_voltage',
-    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27phase_avoltage',
+    'unique_id': 'tuya.obb7p55c0us6rdxkqldphase_avoltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1523,7 +1572,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_b_current',
-    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27phase_belectriccurrent',
+    'unique_id': 'tuya.obb7p55c0us6rdxkqldphase_belectriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1579,7 +1628,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_b_power',
-    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27phase_bpower',
+    'unique_id': 'tuya.obb7p55c0us6rdxkqldphase_bpower',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -1635,7 +1684,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_b_voltage',
-    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27phase_bvoltage',
+    'unique_id': 'tuya.obb7p55c0us6rdxkqldphase_bvoltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1691,7 +1740,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_c_current',
-    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27phase_celectriccurrent',
+    'unique_id': 'tuya.obb7p55c0us6rdxkqldphase_celectriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1747,7 +1796,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_c_power',
-    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27phase_cpower',
+    'unique_id': 'tuya.obb7p55c0us6rdxkqldphase_cpower',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -1803,7 +1852,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_c_voltage',
-    'unique_id': 'tuya.bf5e5bde2c52cb5994cd27phase_cvoltage',
+    'unique_id': 'tuya.obb7p55c0us6rdxkqldphase_cvoltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1821,6 +1870,112 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '220.4',
+  })
+# ---
+# name: test_platform_setup_and_discovery[ldcg_9kbbfeho][sensor.luminosite_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.luminosite_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery',
+    'unique_id': 'tuya.ohefbbk9gcdlbattery_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[ldcg_9kbbfeho][sensor.luminosite_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Luminosité Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.luminosite_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '91.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[ldcg_9kbbfeho][sensor.luminosite_illuminance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.luminosite_illuminance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
+    'original_icon': None,
+    'original_name': 'Illuminance',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'illuminance',
+    'unique_id': 'tuya.ohefbbk9gcdlbright_value',
+    'unit_of_measurement': 'lx',
+  })
+# ---
+# name: test_platform_setup_and_discovery[ldcg_9kbbfeho][sensor.luminosite_illuminance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'illuminance',
+      'friendly_name': 'Luminosité Illuminance',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'lx',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.luminosite_illuminance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '16.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[mcs_7jIGJAymiH8OsFFb][sensor.door_garage_battery-entry]
@@ -1856,7 +2011,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
-    'unique_id': 'tuya.bf5cccf9027080e2dbb9w3battery',
+    'unique_id': 'tuya.bFFsO8HimyAJGIj7scmbattery',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1874,6 +2029,159 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[mzj_qavcakohisj5adyh][sensor.sous_vide_current_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sous_vide_current_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Current temperature',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current_temperature',
+    'unique_id': 'tuya.hyda5jsihokacvaqjzmtemp_current',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[mzj_qavcakohisj5adyh][sensor.sous_vide_current_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Sous Vide Current temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sous_vide_current_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[mzj_qavcakohisj5adyh][sensor.sous_vide_remaining_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sous_vide_remaining_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Remaining time',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'remaining_time',
+    'unique_id': 'tuya.hyda5jsihokacvaqjzmremain_time',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[mzj_qavcakohisj5adyh][sensor.sous_vide_remaining_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Sous Vide Remaining time',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sous_vide_remaining_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[mzj_qavcakohisj5adyh][sensor.sous_vide_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sous_vide_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Status',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sous_vide_status',
+    'unique_id': 'tuya.hyda5jsihokacvaqjzmstatus',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[mzj_qavcakohisj5adyh][sensor.sous_vide_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Sous Vide Status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sous_vide_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
   })
 # ---
 # name: test_platform_setup_and_discovery[pir_3amxzozho9xp4mkh][sensor.rat_trap_hedge_battery_state-entry]
@@ -1907,7 +2215,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_state',
-    'unique_id': 'tuya.73486068483fda10d633battery_state',
+    'unique_id': 'tuya.hkm4px9ohzozxma3ripbattery_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -1957,7 +2265,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
-    'unique_id': 'tuya.bf445324326cbde7c5rg7bbattery_percentage',
+    'unique_id': 'tuya.s3zzjdcfripbattery_percentage',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2008,7 +2316,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_state',
-    'unique_id': 'tuya.20401777500291cfe3a2battery_state',
+    'unique_id': 'tuya.zoytcemodrn39zqwripbattery_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -2023,6 +2331,62 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'middle',
+  })
+# ---
+# name: test_platform_setup_and_discovery[qxj_fsea1lat3vuktbt6][sensor.br_7_in_1_wlan_wetterstation_anthrazit_air_pressure-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_air_pressure',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
+    'original_icon': None,
+    'original_name': 'Air pressure',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'air_pressure',
+    'unique_id': 'tuya.6tbtkuv3tal1aesfjxqatmospheric_pressture',
+    'unit_of_measurement': 'hPa',
+  })
+# ---
+# name: test_platform_setup_and_discovery[qxj_fsea1lat3vuktbt6][sensor.br_7_in_1_wlan_wetterstation_anthrazit_air_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pressure',
+      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Air pressure',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'hPa',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_air_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1004.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[qxj_fsea1lat3vuktbt6][sensor.br_7_in_1_wlan_wetterstation_anthrazit_battery_state-entry]
@@ -2056,7 +2420,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_state',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurzbattery_state',
+    'unique_id': 'tuya.6tbtkuv3tal1aesfjxqbattery_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -2106,7 +2470,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurzhumidity_value',
+    'unique_id': 'tuya.6tbtkuv3tal1aesfjxqhumidity_value',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2159,7 +2523,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'illuminance',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurzbright_value',
+    'unique_id': 'tuya.6tbtkuv3tal1aesfjxqbright_value',
     'unit_of_measurement': 'lx',
   })
 # ---
@@ -2173,6 +2537,218 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_illuminance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[qxj_fsea1lat3vuktbt6][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Outdoor humidity',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'humidity_outdoor',
+    'unique_id': 'tuya.6tbtkuv3tal1aesfjxqhumidity_outdoor',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[qxj_fsea1lat3vuktbt6][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Outdoor humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[qxj_fsea1lat3vuktbt6][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Outdoor humidity channel 1',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'indexed_humidity_outdoor',
+    'unique_id': 'tuya.6tbtkuv3tal1aesfjxqhumidity_outdoor_1',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[qxj_fsea1lat3vuktbt6][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Outdoor humidity channel 1',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '99.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[qxj_fsea1lat3vuktbt6][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Outdoor humidity channel 2',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'indexed_humidity_outdoor',
+    'unique_id': 'tuya.6tbtkuv3tal1aesfjxqhumidity_outdoor_2',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[qxj_fsea1lat3vuktbt6][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Outdoor humidity channel 2',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[qxj_fsea1lat3vuktbt6][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Outdoor humidity channel 3',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'indexed_humidity_outdoor',
+    'unique_id': 'tuya.6tbtkuv3tal1aesfjxqhumidity_outdoor_3',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[qxj_fsea1lat3vuktbt6][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Outdoor humidity channel 3',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2215,7 +2791,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_external',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurztemp_current_external',
+    'unique_id': 'tuya.6tbtkuv3tal1aesfjxqtemp_current_external',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2229,6 +2805,174 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-40.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[qxj_fsea1lat3vuktbt6][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Probe temperature channel 1',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'indexed_temperature_external',
+    'unique_id': 'tuya.6tbtkuv3tal1aesfjxqtemp_current_external_1',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[qxj_fsea1lat3vuktbt6][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Probe temperature channel 1',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '19.3',
+  })
+# ---
+# name: test_platform_setup_and_discovery[qxj_fsea1lat3vuktbt6][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Probe temperature channel 2',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'indexed_temperature_external',
+    'unique_id': 'tuya.6tbtkuv3tal1aesfjxqtemp_current_external_2',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[qxj_fsea1lat3vuktbt6][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Probe temperature channel 2',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25.2',
+  })
+# ---
+# name: test_platform_setup_and_discovery[qxj_fsea1lat3vuktbt6][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Probe temperature channel 3',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'indexed_temperature_external',
+    'unique_id': 'tuya.6tbtkuv3tal1aesfjxqtemp_current_external_3',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[qxj_fsea1lat3vuktbt6][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Probe temperature channel 3',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -2271,7 +3015,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurztemp_current',
+    'unique_id': 'tuya.6tbtkuv3tal1aesfjxqtemp_current',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2289,6 +3033,65 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '24.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[qxj_fsea1lat3vuktbt6][sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_speed-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_speed',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
+    'original_icon': None,
+    'original_name': 'Wind speed',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wind_speed',
+    'unique_id': 'tuya.6tbtkuv3tal1aesfjxqwindspeed_avg',
+    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[qxj_fsea1lat3vuktbt6][sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_speed-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'wind_speed',
+      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Wind speed',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_speed',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[qxj_is2indt9nlth6esa][sensor.frysen_battery_state-entry]
@@ -2322,7 +3125,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_state',
-    'unique_id': 'tuya.bff00f6abe0563b284t77pbattery_state',
+    'unique_id': 'tuya.ase6htln9tdni2sijxqbattery_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -2372,7 +3175,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
-    'unique_id': 'tuya.bff00f6abe0563b284t77phumidity_value',
+    'unique_id': 'tuya.ase6htln9tdni2sijxqhumidity_value',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2428,7 +3231,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature_external',
-    'unique_id': 'tuya.bff00f6abe0563b284t77ptemp_current_external',
+    'unique_id': 'tuya.ase6htln9tdni2sijxqtemp_current_external',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2484,7 +3287,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
-    'unique_id': 'tuya.bff00f6abe0563b284t77ptemp_current',
+    'unique_id': 'tuya.ase6htln9tdni2sijxqtemp_current',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2537,7 +3340,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'gas',
-    'unique_id': 'tuya.ebb9d0eb5014f98cfboxbzgas_sensor_value',
+    'unique_id': 'tuya.cwwk68dyfsh2eqi4jbqrgas_sensor_value',
     'unit_of_measurement': 'ppm',
   })
 # ---
@@ -2554,6 +3357,579 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.v20_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery',
+    'unique_id': 'tuya.zrrraytdoanz33rldselectricity_left',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'V20 Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.v20_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_cleaning_area-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.v20_cleaning_area',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cleaning area',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cleaning_area',
+    'unique_id': 'tuya.zrrraytdoanz33rldsclean_area',
+    'unit_of_measurement': '㎡',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_cleaning_area-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'V20 Cleaning area',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '㎡',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.v20_cleaning_area',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_cleaning_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.v20_cleaning_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cleaning time',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cleaning_time',
+    'unique_id': 'tuya.zrrraytdoanz33rldsclean_time',
+    'unit_of_measurement': 'min',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_cleaning_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'V20 Cleaning time',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.v20_cleaning_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_duster_cloth_lifetime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.v20_duster_cloth_lifetime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Duster cloth lifetime',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'duster_cloth_life',
+    'unique_id': 'tuya.zrrraytdoanz33rldsduster_cloth',
+    'unit_of_measurement': 'min',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_duster_cloth_lifetime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'V20 Duster cloth lifetime',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.v20_duster_cloth_lifetime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9000.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_filter_lifetime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.v20_filter_lifetime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Filter lifetime',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'filter_life',
+    'unique_id': 'tuya.zrrraytdoanz33rldsfilter',
+    'unit_of_measurement': 'min',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_filter_lifetime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'V20 Filter lifetime',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.v20_filter_lifetime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8956.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_rolling_brush_lifetime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.v20_rolling_brush_lifetime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Rolling brush lifetime',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'rolling_brush_life',
+    'unique_id': 'tuya.zrrraytdoanz33rldsroll_brush',
+    'unit_of_measurement': 'min',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_rolling_brush_lifetime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'V20 Rolling brush lifetime',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.v20_rolling_brush_lifetime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '17948.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_side_brush_lifetime-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.v20_side_brush_lifetime',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Side brush lifetime',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'side_brush_life',
+    'unique_id': 'tuya.zrrraytdoanz33rldsedge_brush',
+    'unit_of_measurement': 'min',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_side_brush_lifetime-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'V20 Side brush lifetime',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.v20_side_brush_lifetime',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '8944.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_total_cleaning_area-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.v20_total_cleaning_area',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total cleaning area',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_cleaning_area',
+    'unique_id': 'tuya.zrrraytdoanz33rldstotal_clean_area',
+    'unit_of_measurement': '㎡',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_total_cleaning_area-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'V20 Total cleaning area',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': '㎡',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.v20_total_cleaning_area',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '24.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_total_cleaning_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.v20_total_cleaning_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total cleaning time',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_cleaning_time',
+    'unique_id': 'tuya.zrrraytdoanz33rldstotal_clean_time',
+    'unit_of_measurement': 'min',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_total_cleaning_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'V20 Total cleaning time',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 'min',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.v20_total_cleaning_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '42.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_total_cleaning_times-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.v20_total_cleaning_times',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total cleaning times',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_cleaning_times',
+    'unique_id': 'tuya.zrrraytdoanz33rldstotal_clean_count',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][sensor.v20_total_cleaning_times-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'V20 Total cleaning times',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.v20_total_cleaning_times',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sj_tgvtvdoc][sensor.tournesol_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.tournesol_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery',
+    'unique_id': 'tuya.codvtvgtjsbattery_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sj_tgvtvdoc][sensor.tournesol_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Tournesol Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tournesol_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '98.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[sp_sdd5f5f2dl5wydjf][sensor.c9_battery-entry]
@@ -2589,7 +3965,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
-    'unique_id': 'tuya.bf3f8b448bbc123e29oghfwireless_electricity',
+    'unique_id': 'tuya.fjdyw5ld2f5f5ddspswireless_electricity',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2607,6 +3983,180 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '80.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[tdq_pu8uhxhwcp3tgoz7][sensor.socket3_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.socket3_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.7zogt3pcwhxhu8upqdtcur_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[tdq_pu8uhxhwcp3tgoz7][sensor.socket3_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Socket3 Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.socket3_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[tdq_pu8uhxhwcp3tgoz7][sensor.socket3_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.socket3_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.7zogt3pcwhxhu8upqdtcur_power',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_platform_setup_and_discovery[tdq_pu8uhxhwcp3tgoz7][sensor.socket3_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Socket3 Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.socket3_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[tdq_pu8uhxhwcp3tgoz7][sensor.socket3_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.socket3_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': 'tuya.7zogt3pcwhxhu8upqdtcur_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[tdq_pu8uhxhwcp3tgoz7][sensor.socket3_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Socket3 Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.socket3_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
   })
 # ---
 # name: test_platform_setup_and_discovery[tyndj_pyakuuoc][sensor.solar_zijpad_battery-entry]
@@ -2642,7 +4192,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
-    'unique_id': 'tuya.bfdb773e4ae317e3915h2ibattery_percentage',
+    'unique_id': 'tuya.couukaypjdnytbattery_percentage',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2693,7 +4243,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_state',
-    'unique_id': 'tuya.bfdb773e4ae317e3915h2ibattery_state',
+    'unique_id': 'tuya.couukaypjdnytbattery_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -2743,7 +4293,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
-    'unique_id': 'tuya.bfb45cb8a9452fba66lexgbattery_percentage',
+    'unique_id': 'tuya.j6mn1t4ut5end6ifkwbattery_percentage',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2796,7 +4346,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
-    'unique_id': 'tuya.bf316b8707b061f044th18battery_percentage',
+    'unique_id': 'tuya.vayhq2aj3p3z6y2ggcdswbattery_percentage',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2849,7 +4399,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'humidity',
-    'unique_id': 'tuya.bf316b8707b061f044th18va_humidity',
+    'unique_id': 'tuya.vayhq2aj3p3z6y2ggcdswva_humidity',
     'unit_of_measurement': '%',
   })
 # ---
@@ -2905,7 +4455,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temperature',
-    'unique_id': 'tuya.bf316b8707b061f044th18va_temperature',
+    'unique_id': 'tuya.vayhq2aj3p3z6y2ggcdswva_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -2958,7 +4508,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
-    'unique_id': 'tuya.mocked_device_idbattery_percentage',
+    'unique_id': 'tuya.fvywp3b5mu4zay8lgkxwbattery_percentage',
     'unit_of_measurement': '%',
   })
 # ---
@@ -3011,7 +4561,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery',
-    'unique_id': 'tuya.8670375210521cf1349cbattery_percentage',
+    'unique_id': 'tuya.jfydgffzmhjed9fgjbwybattery_percentage',
     'unit_of_measurement': '%',
   })
 # ---
@@ -3062,7 +4612,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'battery_state',
-    'unique_id': 'tuya.8670375210521cf1349cbattery_state',
+    'unique_id': 'tuya.jfydgffzmhjed9fgjbwybattery_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -3077,6 +4627,598 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'low',
+  })
+# ---
+# name: test_platform_setup_and_discovery[ywcgq_h8lvyoahr6s6aybf][sensor.rainwater_tank_level_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainwater_tank_level_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Distance',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'depth',
+    'unique_id': 'tuya.fbya6s6rhaoyvl8hqgcwyliquid_depth',
+    'unit_of_measurement': 'm',
+  })
+# ---
+# name: test_platform_setup_and_discovery[ywcgq_h8lvyoahr6s6aybf][sensor.rainwater_tank_level_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Rainwater Tank Level Distance',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainwater_tank_level_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.455',
+  })
+# ---
+# name: test_platform_setup_and_discovery[ywcgq_h8lvyoahr6s6aybf][sensor.rainwater_tank_level_liquid_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainwater_tank_level_liquid_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Liquid level',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'liquid_level',
+    'unique_id': 'tuya.fbya6s6rhaoyvl8hqgcwyliquid_level_percent',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[ywcgq_h8lvyoahr6s6aybf][sensor.rainwater_tank_level_liquid_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Rainwater Tank Level Liquid level',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainwater_tank_level_liquid_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '36.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[ywcgq_h8lvyoahr6s6aybf][sensor.rainwater_tank_level_liquid_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainwater_tank_level_liquid_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Liquid state',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'liquid_state',
+    'unique_id': 'tuya.fbya6s6rhaoyvl8hqgcwyliquid_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[ywcgq_h8lvyoahr6s6aybf][sensor.rainwater_tank_level_liquid_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Rainwater Tank Level Liquid state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainwater_tank_level_liquid_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
+  })
+# ---
+# name: test_platform_setup_and_discovery[ywcgq_wtzwyhkev3b4ubns][sensor.house_water_level_distance-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.house_water_level_distance',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Distance',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'depth',
+    'unique_id': 'tuya.snbu4b3vekhywztwqgcwyliquid_depth',
+    'unit_of_measurement': 'm',
+  })
+# ---
+# name: test_platform_setup_and_discovery[ywcgq_wtzwyhkev3b4ubns][sensor.house_water_level_distance-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'House Water Level Distance',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.house_water_level_distance',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.42',
+  })
+# ---
+# name: test_platform_setup_and_discovery[ywcgq_wtzwyhkev3b4ubns][sensor.house_water_level_liquid_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.house_water_level_liquid_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Liquid level',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'liquid_level',
+    'unique_id': 'tuya.snbu4b3vekhywztwqgcwyliquid_level_percent',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[ywcgq_wtzwyhkev3b4ubns][sensor.house_water_level_liquid_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'House Water Level Liquid level',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.house_water_level_liquid_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[ywcgq_wtzwyhkev3b4ubns][sensor.house_water_level_liquid_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.house_water_level_liquid_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Liquid state',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'liquid_state',
+    'unique_id': 'tuya.snbu4b3vekhywztwqgcwyliquid_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[ywcgq_wtzwyhkev3b4ubns][sensor.house_water_level_liquid_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'House Water Level Liquid state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.house_water_level_liquid_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'upper_alarm',
+  })
+# ---
+# name: test_platform_setup_and_discovery[zndb_4ggkyflayu1h1ho9][sensor.xoca_dac212xc_v2_s1_phase_a_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.xoca_dac212xc_v2_s1_phase_a_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Phase A current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_a_current',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzphase_aelectriccurrent',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[zndb_4ggkyflayu1h1ho9][sensor.xoca_dac212xc_v2_s1_phase_a_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'XOCA-DAC212XC V2-S1 Phase A current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.xoca_dac212xc_v2_s1_phase_a_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '599.552',
+  })
+# ---
+# name: test_platform_setup_and_discovery[zndb_4ggkyflayu1h1ho9][sensor.xoca_dac212xc_v2_s1_phase_a_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.xoca_dac212xc_v2_s1_phase_a_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Phase A power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_a_power',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzphase_apower',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[zndb_4ggkyflayu1h1ho9][sensor.xoca_dac212xc_v2_s1_phase_a_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'XOCA-DAC212XC V2-S1 Phase A power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.xoca_dac212xc_v2_s1_phase_a_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6.912',
+  })
+# ---
+# name: test_platform_setup_and_discovery[zndb_4ggkyflayu1h1ho9][sensor.xoca_dac212xc_v2_s1_phase_a_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.xoca_dac212xc_v2_s1_phase_a_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Phase A voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_a_voltage',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzphase_avoltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[zndb_4ggkyflayu1h1ho9][sensor.xoca_dac212xc_v2_s1_phase_a_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'XOCA-DAC212XC V2-S1 Phase A voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.xoca_dac212xc_v2_s1_phase_a_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '52.7',
+  })
+# ---
+# name: test_platform_setup_and_discovery[zndb_4ggkyflayu1h1ho9][sensor.xoca_dac212xc_v2_s1_total_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.xoca_dac212xc_v2_s1_total_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Total energy',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_energy',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzforward_energy_total',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[zndb_4ggkyflayu1h1ho9][sensor.xoca_dac212xc_v2_s1_total_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'XOCA-DAC212XC V2-S1 Total energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.xoca_dac212xc_v2_s1_total_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.2',
+  })
+# ---
+# name: test_platform_setup_and_discovery[zndb_4ggkyflayu1h1ho9][sensor.xoca_dac212xc_v2_s1_total_production-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.xoca_dac212xc_v2_s1_total_production',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Total production',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_production',
+    'unique_id': 'tuya.9oh1h1uyalfykgg4bdnzreverse_energy_total',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[zndb_4ggkyflayu1h1ho9][sensor.xoca_dac212xc_v2_s1_total_production-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'XOCA-DAC212XC V2-S1 Total production',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.xoca_dac212xc_v2_s1_total_production',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.8',
   })
 # ---
 # name: test_platform_setup_and_discovery[zndb_ze8faryrxr0glqnn][sensor.meter_phase_a_current-entry]
@@ -3115,7 +5257,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_a_current',
-    'unique_id': 'tuya.bfe33b4c74661f1f1bgacyphase_aelectriccurrent',
+    'unique_id': 'tuya.nnqlg0rxryraf8ezbdnzphase_aelectriccurrent',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -3171,7 +5313,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_a_power',
-    'unique_id': 'tuya.bfe33b4c74661f1f1bgacyphase_apower',
+    'unique_id': 'tuya.nnqlg0rxryraf8ezbdnzphase_apower',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -3227,7 +5369,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_a_voltage',
-    'unique_id': 'tuya.bfe33b4c74661f1f1bgacyphase_avoltage',
+    'unique_id': 'tuya.nnqlg0rxryraf8ezbdnzphase_avoltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -3245,5 +5387,215 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '233.8',
+  })
+# ---
+# name: test_platform_setup_and_discovery[zwjcy_myd45weu][sensor.patates_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.patates_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery',
+    'unique_id': 'tuya.uew54dymycjwzbattery_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[zwjcy_myd45weu][sensor.patates_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Patates Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.patates_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[zwjcy_myd45weu][sensor.patates_battery_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.patates_battery_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery state',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_state',
+    'unique_id': 'tuya.uew54dymycjwzbattery_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[zwjcy_myd45weu][sensor.patates_battery_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Patates Battery state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.patates_battery_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'low',
+  })
+# ---
+# name: test_platform_setup_and_discovery[zwjcy_myd45weu][sensor.patates_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.patates_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'humidity',
+    'unique_id': 'tuya.uew54dymycjwzhumidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[zwjcy_myd45weu][sensor.patates_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Patates Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.patates_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '97.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[zwjcy_myd45weu][sensor.patates_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.patates_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature',
+    'unique_id': 'tuya.uew54dymycjwztemp_current',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[zwjcy_myd45weu][sensor.patates_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Patates Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.patates_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22.0',
   })
 # ---

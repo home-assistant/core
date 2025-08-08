@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "20401777500291cfe3a2",
   "name": "PIR outside stairs",
   "category": "pir",
   "product_id": "wqz93nrdomectyoz",
