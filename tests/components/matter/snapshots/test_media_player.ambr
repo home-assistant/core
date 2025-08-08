@@ -1,18 +1,19 @@
 # serializer version: 1
-# name: test_media_player[vacuum_cleaner][vacuum.mock_vacuum-entry]
+# name: test_media_player[speaker][media_player.mock_speaker-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'vacuum',
+    'domain': 'media_player',
     'entity_category': None,
-    'entity_id': 'vacuum.mock_vacuum',
+    'entity_id': 'media_player.mock_speaker',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -28,23 +29,23 @@
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <VacuumEntityFeature: 12316>,
+    'supported_features': <MediaPlayerEntityFeature: 396>,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000042-MatterNodeDevice-1-MatterVacuumCleaner-84-1',
+    'unique_id': '00000000000004D2-000000000000006B-MatterNodeDevice-1-MatterMediaPlayer-6-0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_media_player[vacuum_cleaner][vacuum.mock_vacuum-state]
+# name: test_media_player[speaker][media_player.mock_speaker-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Vacuum',
-      'supported_features': <VacuumEntityFeature: 12316>,
+      'friendly_name': 'Mock speaker',
+      'supported_features': <MediaPlayerEntityFeature: 396>,
     }),
     'context': <ANY>,
-    'entity_id': 'vacuum.mock_vacuum',
+    'entity_id': 'media_player.mock_speaker',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'idle',
+    'state': 'off',
   })
 # ---
