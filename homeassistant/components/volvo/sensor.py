@@ -87,7 +87,12 @@ def _charging_power_status_value(field: VolvoCarsValue) -> str | None:
     return None
 
 
-_CHARGING_POWER_STATUS_OPTIONS = ["providing_power", "no_power_available"]
+_CHARGING_POWER_STATUS_OPTIONS = [
+    "fault",
+    "power_available_but_not_activated",
+    "providing_power",
+    "no_power_available",
+]
 
 _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # command-accessibility endpoint
