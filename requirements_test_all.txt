@@ -1170,9 +1170,6 @@ librouteros==3.2.0
 # homeassistant.components.soundtouch
 libsoundtouch==0.8
 
-# homeassistant.components.linear_garage_door
-linear-garage-door==0.2.9
-
 # homeassistant.components.livisi
 livisi==0.0.25
 
