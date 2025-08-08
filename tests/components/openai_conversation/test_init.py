@@ -282,7 +282,7 @@ async def test_generate_image_service(
         ),
     ],
 )
-async def test_generate_image_service_fallback_dalle(
+async def test_generate_image_service_fallback_dall_e(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
