@@ -530,7 +530,7 @@
       "message": "Command failed, {message}"
     },
     "invalid_device": {
-      "message": "The device {device_id} coud not be found or is not part of the Tessie integration"
+      "message": "The device {device_id} could not be found or is not part of the Tessie integration"
     }
   },
   "services": {
