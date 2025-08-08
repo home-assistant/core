@@ -2,19 +2,17 @@
 
 from __future__ import annotations
 
-from homeassistant.const import CONF_ADDRESS, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .coordinator import LOGGER, DeviceNotFound, ToGrillConfigEntry, ToGrillCoordinator
+from .coordinator import DeviceNotFound, ToGrillConfigEntry, ToGrillCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ToGrillConfigEntry) -> bool:
     """Set up ToGrill Bluetooth from a config entry."""
-
-    address = entry.data[CONF_ADDRESS]
 
     coordinator = ToGrillCoordinator(hass, entry)
     try:
