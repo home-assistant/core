@@ -34,7 +34,7 @@
       },
       "mfa_code": {
         "title": "Enter security code",
-        "description": Please enter the security code below to complete login.",
+        "description": "Please enter the security code below to complete login.",
         "data": {
           "mfa_code": "Security code"
         },
