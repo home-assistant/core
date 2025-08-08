@@ -361,7 +361,10 @@ class AnthropicBaseLLMEntity(Entity):
                 "system": system.content,
                 "stream": True,
             }
-            if model in THINKING_MODELS and thinking_budget >= MIN_THINKING_BUDGET:
+            if (
+                model.startswith(tuple(THINKING_MODELS))
+                and thinking_budget >= MIN_THINKING_BUDGET
+            ):
                 model_args["thinking"] = ThinkingConfigEnabledParam(
                     type="enabled", budget_tokens=thinking_budget
                 )
