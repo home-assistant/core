@@ -83,11 +83,14 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
     def _update_from_device(self) -> None:
         """Update from device."""
         self._calculate_features()
-        # state: VacuumActivity | None = None
-        # self._attr_activity = state
-        self._attr_volume_level = 50  # Example volume level
-        self._attr_is_volume_muted = False  # Example mute state
-        self._attr_state = MediaPlayerState.OFF
+        matter_volume = self.get_matter_attribute_value(
+            clusters.LevelControl.Attributes.CurrentLevel
+        )
+        # Convert Matter level (0-254) to HA volume level (0-1)
+        self.attr_volume_level = matter_volume / 254 if matter_volume else 0
+        if self.attr_volume_level == 0:
+            self._attr_is_volume_muted = True
+        self._attr_state = MediaPlayerState.ON
 
     @callback
     def _calculate_features(self) -> None:

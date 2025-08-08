@@ -63,7 +63,7 @@ async def test_media_player_actions(
         "volume_set",
         {
             "entity_id": entity_id,
-            "volume_level": 0.5,  # 80% volume
+            "volume_level": 0.5,  # 50% volume
         },
         blocking=True,
     )
@@ -87,4 +87,4 @@ async def test_media_player_updates(
     state = hass.states.get(entity_id)
     assert state
     # confirm initial state is idle (as stored in the fixture)
-    assert state.state == "off"
+    assert state.state == "on"
