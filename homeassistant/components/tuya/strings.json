@@ -145,6 +145,9 @@
       "heat_preservation_time": {
         "name": "Heat preservation time"
       },
+      "indexed_irrigation_duration": {
+        "name": "Irrigation duration {index}"
+      },
       "feed": {
         "name": "Feed"
       },
@@ -892,6 +895,11 @@
       },
       "siren": {
         "name": "Siren"
+      }
+    },
+    "valve": {
+      "indexed_switch": {
+        "name": "Switch {index}"
       }
     }
   },

@@ -352,6 +352,12 @@ DEVICE_MOCKS = {
         Platform.SWITCH,
         Platform.VACUUM,
     ],
+    "sfkzq_ed7frwissyqrejic": [
+        # https://github.com/home-assistant/core/pull/149236
+        Platform.VALVE,
+        Platform.NUMBER,
+        Platform.SENSOR,
+    ],
     "sfkzq_o6dagifntoafakst": [
         # https://github.com/home-assistant/core/issues/148116
         Platform.SWITCH,

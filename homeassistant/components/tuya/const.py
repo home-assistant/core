@@ -66,6 +66,7 @@ PLATFORMS = [
     Platform.SIREN,
     Platform.SWITCH,
     Platform.VACUUM,
+    Platform.VALVE,
 ]
 
 
@@ -166,6 +167,14 @@ class DPCode(StrEnum):
     CONTROL_BACK = "control_back"
     CONTROL_BACK_MODE = "control_back_mode"
     COUNTDOWN = "countdown"  # Countdown
+    COUNTDOWN_1 = "countdown_1"
+    COUNTDOWN_2 = "countdown_2"
+    COUNTDOWN_3 = "countdown_3"
+    COUNTDOWN_4 = "countdown_4"
+    COUNTDOWN_5 = "countdown_5"
+    COUNTDOWN_6 = "countdown_6"
+    COUNTDOWN_7 = "countdown_7"
+    COUNTDOWN_8 = "countdown_8"
     COUNTDOWN_LEFT = "countdown_left"
     COUNTDOWN_SET = "countdown_set"  # Countdown setting
     CRY_DETECTION_SWITCH = "cry_detection_switch"
