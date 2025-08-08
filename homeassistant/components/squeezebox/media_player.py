@@ -325,7 +325,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     @property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        if self._player.volume or self._player.volume == 0:
+        if self._player.volume is not None:
             return int(float(self._player.volume)) / 100.0
 
         return None
