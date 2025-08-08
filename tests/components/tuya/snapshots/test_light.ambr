@@ -34,7 +34,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'backlight',
-    'unique_id': 'tuya.bf1fa053e0ba4e002c6we8switch_backlight',
+    'unique_id': 'tuya.2w46jyhngklcswitch_backlight',
     'unit_of_measurement': None,
   })
 # ---
@@ -96,7 +96,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bfd9f45c6b882c9f46dxfcswitch_led',
+    'unique_id': 'tuya.x4nogasbi8ggpb3lcdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -158,7 +158,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.eb10549aadfc74b7c8q2tiswitch_led',
+    'unique_id': 'tuya.klgxmpwvdhw7tzs8jdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -224,7 +224,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bf71858c3d27943679dsx9switch_led',
+    'unique_id': 'tuya.w8oht6v8aauqa0y8jdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -295,7 +295,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.40611462e09806c73134switch_led',
+    'unique_id': 'tuya.z7cu5t8bl9tt9fabjdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -359,7 +359,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bf671413db4cee1f9bqdcxswitch_led',
+    'unique_id': 'tuya.6o148laaosbf0g4djdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -424,7 +424,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bf8885f3d18a73e395bfacswitch_led',
+    'unique_id': 'tuya.z8woiryqydmzonjdjdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -507,7 +507,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bfb99bba00c9c90ba8gzglswitch_led',
+    'unique_id': 'tuya.sj55nxhjftilowkejdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -572,7 +572,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bf0914a82b06ecf151xsf5switch_led',
+    'unique_id': 'tuya.ajkdo1bm2rcmpuufjdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -644,7 +644,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.00450321483fda81c529switch_led',
+    'unique_id': 'tuya.vnj3sa6mqahro6phjdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -727,7 +727,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.63362034840d8eb9029fswitch_led',
+    'unique_id': 'tuya.7axah58vfydd8cphjdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -795,7 +795,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'indexed_light',
-    'unique_id': 'tuya.63362034840d8eb9029fswitch_1',
+    'unique_id': 'tuya.7axah58vfydd8cphjdswitch_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -857,7 +857,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bf0fc1d7d4caa71a59us7cswitch_led',
+    'unique_id': 'tuya.7jxnjpiltmj2zyaijdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -923,7 +923,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bf599f5cffe1a5985depykswitch_led',
+    'unique_id': 'tuya.aoyweq8xbx7qfndijdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -1005,7 +1005,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.84178216d8f15be52dc4switch_led',
+    'unique_id': 'tuya.86kdcut3hiqqddlijdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -1087,7 +1087,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bfe49d7b6cd80536efdldiswitch_led',
+    'unique_id': 'tuya.buzituffc13pgb1jjdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -1159,7 +1159,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.07608286600194e94248switch_led',
+    'unique_id': 'tuya.trffx1ktlyu3tnmljdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -1227,7 +1227,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.REDACTEDswitch_led',
+    'unique_id': 'tuya.r4yrlr705ei31ikmjdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -1294,7 +1294,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bf77c04cbd6a52a7be16llswitch_led',
+    'unique_id': 'tuya.ijne16zv8vpqmubnjdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -1359,7 +1359,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.40350105dc4f229a464eswitch_led',
+    'unique_id': 'tuya.6gsqieoh1yzjvxlnjdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -1431,7 +1431,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bf8d8af3ddfe75b0195r0hswitch_led',
+    'unique_id': 'tuya.gjnpc0eojdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -1504,7 +1504,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bf46b2b81ca41ce0c1xpswswitch_led',
+    'unique_id': 'tuya.97k3pwirjdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -1586,7 +1586,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bf252b8ee16b2e78bdoxlpswitch_led',
+    'unique_id': 'tuya.ngcubvaqoraolsmtjdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -1650,7 +1650,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bf8edbd51a52c01a4bfgqfswitch_led',
+    'unique_id': 'tuya.rdq0bn4dzuwx2qfujdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -1715,7 +1715,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bfd56f4718874ee8830xdwswitch_led',
+    'unique_id': 'tuya.bak2crzmabancwqvjdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -1780,7 +1780,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bfc1ef4da4accc0731oggwswitch_led',
+    'unique_id': 'tuya.kkande5hk6sfdkoxjdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -1861,7 +1861,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.03010850c44f33966362switch_led',
+    'unique_id': 'tuya.nxdcy0uidplnhkazjdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -1926,7 +1926,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.500425642462ab50909bswitch_led',
+    'unique_id': 'tuya.87yarxyp23ap1vazjdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -1995,7 +1995,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bf74164049de868395pbciswitch_led',
+    'unique_id': 'tuya.yky6kunazmaitupzjdswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -2061,7 +2061,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.XXXlight',
+    'unique_id': 'tuya.ijzjlqwmv1blwe0gsflight',
     'unit_of_measurement': None,
   })
 # ---
@@ -2143,7 +2143,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.eb3e988f33c233290cfs3lswitch_led',
+    'unique_id': 'tuya.nt3mpibadxfqkegldygswitch_led',
     'unit_of_measurement': None,
   })
 # ---
@@ -2211,7 +2211,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'backlight',
-    'unique_id': 'tuya.mock_device_idlight',
+    'unique_id': 'tuya.lflvu8cazha8af9jsklight',
     'unit_of_measurement': None,
   })
 # ---
@@ -2268,7 +2268,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bf7b8e59f8cd49f425mmfmbasic_indicator',
+    'unique_id': 'tuya.mgcpxpmovasazerdpsbasic_indicator',
     'unit_of_measurement': None,
   })
 # ---
@@ -2325,7 +2325,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bf9d5b7ea61ea4c9a6rom9basic_indicator',
+    'unique_id': 'tuya.uBLyTOvlhoRWXKjrpsbasic_indicator',
     'unit_of_measurement': None,
   })
 # ---
@@ -2382,7 +2382,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bfdb773e4ae317e3915h2iswitch_led',
+    'unique_id': 'tuya.couukaypjdnytswitch_led',
     'unit_of_measurement': None,
   })
 # ---
