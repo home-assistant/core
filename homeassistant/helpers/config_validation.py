@@ -1305,7 +1305,7 @@ PLATFORM_SCHEMA_BASE = PLATFORM_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA)
 
 
 TARGET_FIELDS: VolDictType = {
-    vol.Optional(ATTR_ENTITY_ID): vol.All(ensure_list, [vol.All(strict_entity_id)]),
+    vol.Optional(ATTR_ENTITY_ID): vol.All(ensure_list, [strict_entity_id]),
     vol.Optional(ATTR_DEVICE_ID): vol.All(ensure_list, [str]),
     vol.Optional(ATTR_AREA_ID): vol.All(ensure_list, [str]),
     vol.Optional(ATTR_FLOOR_ID): vol.All(ensure_list, [str]),
