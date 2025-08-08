@@ -89,6 +89,11 @@ DEVICE_MOCKS = {
         Platform.NUMBER,
         Platform.SENSOR,
     ],
+    "cwysj_akln8rb04cav403q": [
+        # https://github.com/home-assistant/core/pull/146599
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
     "cwysj_z3rpyvznfcch99aa": [
         # https://github.com/home-assistant/core/pull/146599
         Platform.SENSOR,
