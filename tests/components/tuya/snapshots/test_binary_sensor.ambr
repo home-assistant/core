@@ -30,7 +30,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.eb14fd1dd93ca2ea34vpinco2_state',
+    'unique_id': 'tuya.iks13mcaiyie3rryjb2occo2_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -79,7 +79,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'defrost',
-    'unique_id': 'tuya.mock_device_iddefrost',
+    'unique_id': 'tuya.ifzgvpgoodrfw2akscdefrost',
     'unit_of_measurement': None,
   })
 # ---
@@ -128,7 +128,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tankfull',
-    'unique_id': 'tuya.mock_device_idtankfull',
+    'unique_id': 'tuya.ifzgvpgoodrfw2aksctankfull',
     'unit_of_measurement': None,
   })
 # ---
@@ -177,7 +177,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'defrost',
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqdefrost',
+    'unique_id': 'tuya.2myxayqtud9aqbizscdefrost',
     'unit_of_measurement': None,
   })
 # ---
@@ -226,7 +226,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'tankfull',
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqtankfull',
+    'unique_id': 'tuya.2myxayqtud9aqbizsctankfull',
     'unit_of_measurement': None,
   })
 # ---
@@ -275,7 +275,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wet',
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgqwet',
+    'unique_id': 'tuya.2myxayqtud9aqbizscwet',
     'unit_of_measurement': None,
   })
 # ---
@@ -324,7 +324,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bf78687ad321a3aeb8a73mpresence_state',
+    'unique_id': 'tuya.kxwleaa2sphpresence_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -373,7 +373,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bf5cccf9027080e2dbb9w3switch',
+    'unique_id': 'tuya.bFFsO8HimyAJGIj7scmswitch',
     'unit_of_measurement': None,
   })
 # ---
@@ -422,7 +422,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.73486068483fda10d633pir',
+    'unique_id': 'tuya.hkm4px9ohzozxma3rippir',
     'unit_of_measurement': None,
   })
 # ---
@@ -471,7 +471,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.73486068483fda10d633temper_alarm',
+    'unique_id': 'tuya.hkm4px9ohzozxma3riptemper_alarm',
     'unit_of_measurement': None,
   })
 # ---
@@ -520,7 +520,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bf445324326cbde7c5rg7bpir',
+    'unique_id': 'tuya.s3zzjdcfrippir',
     'unit_of_measurement': None,
   })
 # ---
@@ -569,7 +569,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bf445324326cbde7c5rg7btemper_alarm',
+    'unique_id': 'tuya.s3zzjdcfriptemper_alarm',
     'unit_of_measurement': None,
   })
 # ---
@@ -618,7 +618,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.20401777500291cfe3a2pir',
+    'unique_id': 'tuya.zoytcemodrn39zqwrippir',
     'unit_of_measurement': None,
   })
 # ---
@@ -667,7 +667,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.ebb9d0eb5014f98cfboxbzgas_sensor_status',
+    'unique_id': 'tuya.cwwk68dyfsh2eqi4jbqrgas_sensor_status',
     'unit_of_measurement': None,
   })
 # ---
@@ -679,6 +679,55 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gas_sensor_gas',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sj_tgvtvdoc][binary_sensor.tournesol_moisture-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.tournesol_moisture',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
+    'original_icon': None,
+    'original_name': 'Moisture',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.codvtvgtjswatersensor_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sj_tgvtvdoc][binary_sensor.tournesol_moisture-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'moisture',
+      'friendly_name': 'Tournesol Moisture',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.tournesol_moisture',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -716,7 +765,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.bf79ca977d67322eb2o68mmaster_state',
+    'unique_id': 'tuya.orotles4ucq8rxwn2gwmaster_state',
     'unit_of_measurement': None,
   })
 # ---
@@ -765,7 +814,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.8670375210521cf1349csmoke_sensor_status',
+    'unique_id': 'tuya.jfydgffzmhjed9fgjbwysmoke_sensor_status',
     'unit_of_measurement': None,
   })
 # ---

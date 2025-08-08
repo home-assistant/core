@@ -33,7 +33,7 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 49>,
     'translation_key': None,
-    'unique_id': 'tuya.mock_device_id',
+    'unique_id': 'tuya.ifzgvpgoodrfw2aksc',
     'unit_of_measurement': None,
   })
 # ---
@@ -85,7 +85,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.28403630e8db84b7a963',
+    'unique_id': 'tuya.hz4pau766eavmxhqsc',
     'unit_of_measurement': None,
   })
 # ---
@@ -135,7 +135,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.mock_device_id',
+    'unique_id': 'tuya.ilms5pwjzzsxuxmvsc',
     'unit_of_measurement': None,
   })
 # ---
@@ -185,7 +185,7 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 48>,
     'translation_key': None,
-    'unique_id': 'tuya.bf3fce6af592f12df3gbgq',
+    'unique_id': 'tuya.2myxayqtud9aqbizsc',
     'unit_of_measurement': None,
   })
 # ---
@@ -240,7 +240,7 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 61>,
     'translation_key': None,
-    'unique_id': 'tuya.XXX',
+    'unique_id': 'tuya.ijzjlqwmv1blwe0gsf',
     'unit_of_measurement': None,
   })
 # ---
@@ -299,7 +299,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.10706550a4e57c88b93a',
+    'unique_id': 'tuya.c1tfgunpf6optybisf',
     'unit_of_measurement': None,
   })
 # ---
@@ -351,7 +351,7 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 49>,
     'translation_key': None,
-    'unique_id': 'tuya.152027113c6105cce49c',
+    'unique_id': 'tuya.zfHZQ7tZUBxAWjACjk',
     'unit_of_measurement': None,
   })
 # ---
@@ -409,7 +409,7 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 56>,
     'translation_key': None,
-    'unique_id': 'tuya.CENSORED',
+    'unique_id': 'tuya.ppgdpsq1xaxlyzryjk',
     'unit_of_measurement': None,
   })
 # ---
@@ -468,7 +468,7 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 59>,
     'translation_key': None,
-    'unique_id': 'tuya.mock_device_id',
+    'unique_id': 'tuya.lflvu8cazha8af9jsk',
     'unit_of_measurement': None,
   })
 # ---

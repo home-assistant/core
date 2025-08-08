@@ -121,12 +121,20 @@
   "selector": {
     "reasoning_effort": {
       "options": {
+        "minimal": "Minimal",
         "low": "[%key:common::state::low%]",
         "medium": "[%key:common::state::medium%]",
         "high": "[%key:common::state::high%]"
       }
     },
     "search_context_size": {
+      "options": {
+        "low": "[%key:common::state::low%]",
+        "medium": "[%key:common::state::medium%]",
+        "high": "[%key:common::state::high%]"
+      }
+    },
+    "verbosity": {
       "options": {
         "low": "[%key:common::state::low%]",
         "medium": "[%key:common::state::medium%]",

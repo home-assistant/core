@@ -35,7 +35,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_duration',
-    'unique_id': 'tuya.eb14fd1dd93ca2ea34vpinalarm_time',
+    'unique_id': 'tuya.iks13mcaiyie3rryjb2ocalarm_time',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
@@ -94,7 +94,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'feed',
-    'unique_id': 'tuya.bfd0273e59494eb34esvrxmanual_feed',
+    'unique_id': 'tuya.iomszlsve0yyzkfwqswwcmanual_feed',
     'unit_of_measurement': '',
   })
 # ---
@@ -152,7 +152,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'far_detection',
-    'unique_id': 'tuya.bf78687ad321a3aeb8a73mfar_detection',
+    'unique_id': 'tuya.kxwleaa2sphfar_detection',
     'unit_of_measurement': 'cm',
   })
 # ---
@@ -211,7 +211,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'near_detection',
-    'unique_id': 'tuya.bf78687ad321a3aeb8a73mnear_detection',
+    'unique_id': 'tuya.kxwleaa2sphnear_detection',
     'unit_of_measurement': 'cm',
   })
 # ---
@@ -270,7 +270,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sensitivity',
-    'unique_id': 'tuya.bf78687ad321a3aeb8a73msensitivity',
+    'unique_id': 'tuya.kxwleaa2sphsensitivity',
     'unit_of_measurement': 'x',
   })
 # ---
@@ -328,7 +328,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_delay',
-    'unique_id': 'tuya.123123aba12312312dazubalarm_delay_time',
+    'unique_id': 'tuya.2pxfek1jjrtctiyglamalarm_delay_time',
     'unit_of_measurement': 's',
   })
 # ---
@@ -387,7 +387,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'arm_delay',
-    'unique_id': 'tuya.123123aba12312312dazubdelay_set',
+    'unique_id': 'tuya.2pxfek1jjrtctiyglamdelay_set',
     'unit_of_measurement': 's',
   })
 # ---
@@ -446,7 +446,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'siren_duration',
-    'unique_id': 'tuya.123123aba12312312dazubalarm_time',
+    'unique_id': 'tuya.2pxfek1jjrtctiyglamalarm_time',
     'unit_of_measurement': 'min',
   })
 # ---
@@ -505,7 +505,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cook_temperature',
-    'unique_id': 'tuya.bff434eca843ffc9afmthvcook_temperature',
+    'unique_id': 'tuya.hyda5jsihokacvaqjzmcook_temperature',
     'unit_of_measurement': '℃',
   })
 # ---
@@ -563,7 +563,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cook_time',
-    'unique_id': 'tuya.bff434eca843ffc9afmthvcook_time',
+    'unique_id': 'tuya.hyda5jsihokacvaqjzmcook_time',
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
@@ -621,7 +621,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
-    'unique_id': 'tuya.bfa951ca98fcf64fddqlmtvolume_set',
+    'unique_id': 'tuya.zrrraytdoanz33rldsvolume_set',
     'unit_of_measurement': '%',
   })
 # ---
@@ -679,7 +679,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'time',
-    'unique_id': 'tuya.bf0984adfeffe10d5a3ofdalarm_time',
+    'unique_id': 'tuya.kjr0pqg7eunn4vlujbgsalarm_time',
     'unit_of_measurement': '',
   })
 # ---
@@ -737,7 +737,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'volume',
-    'unique_id': 'tuya.bf3f8b448bbc123e29oghfbasic_device_volume',
+    'unique_id': 'tuya.fjdyw5ld2f5f5ddspsbasic_device_volume',
     'unit_of_measurement': '',
   })
 # ---
@@ -757,6 +757,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[wk_6kijc7nd][number.kabinet_temperature_correction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 9.0,
+      'min': -9.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.kabinet_temperature_correction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature correction',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temp_correction',
+    'unique_id': 'tuya.dn7cjik6kwtemp_correction',
+    'unit_of_measurement': '℃',
+  })
+# ---
+# name: test_platform_setup_and_discovery[wk_6kijc7nd][number.kabinet_temperature_correction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Кабінет Temperature correction',
+      'max': 9.0,
+      'min': -9.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': '℃',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.kabinet_temperature_correction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-2.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[wk_fi6dne5tu4t1nm6j][number.wifi_smart_gas_boiler_thermostat_temperature_correction-entry]
@@ -795,7 +853,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'temp_correction',
-    'unique_id': 'tuya.bfb45cb8a9452fba66lexgtemp_correction',
+    'unique_id': 'tuya.j6mn1t4ut5end6ifkwtemp_correction',
     'unit_of_measurement': '℃',
   })
 # ---
@@ -815,6 +873,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-1.5',
+  })
+# ---
+# name: test_platform_setup_and_discovery[wk_gogb05wrtredz3bs][number.smart_thermostats_temperature_correction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 9.0,
+      'min': -9.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.smart_thermostats_temperature_correction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Temperature correction',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temp_correction',
+    'unique_id': 'tuya.sb3zdertrw50bgogkwtemp_correction',
+    'unit_of_measurement': '摄氏度',
+  })
+# ---
+# name: test_platform_setup_and_discovery[wk_gogb05wrtredz3bs][number.smart_thermostats_temperature_correction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'smart thermostats Temperature correction',
+      'max': 9.0,
+      'min': -9.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': '摄氏度',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.smart_thermostats_temperature_correction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-2.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[ywcgq_h8lvyoahr6s6aybf][number.rainwater_tank_level_alarm_maximum-entry]
@@ -853,7 +969,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_maximum',
-    'unique_id': 'tuya.bf3d16d38b17d7034ddxd4max_set',
+    'unique_id': 'tuya.fbya6s6rhaoyvl8hqgcwymax_set',
     'unit_of_measurement': '%',
   })
 # ---
@@ -911,7 +1027,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_minimum',
-    'unique_id': 'tuya.bf3d16d38b17d7034ddxd4mini_set',
+    'unique_id': 'tuya.fbya6s6rhaoyvl8hqgcwymini_set',
     'unit_of_measurement': '%',
   })
 # ---
@@ -969,7 +1085,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'installation_height',
-    'unique_id': 'tuya.bf3d16d38b17d7034ddxd4installation_height',
+    'unique_id': 'tuya.fbya6s6rhaoyvl8hqgcwyinstallation_height',
     'unit_of_measurement': 'm',
   })
 # ---
@@ -1028,7 +1144,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'maximum_liquid_depth',
-    'unique_id': 'tuya.bf3d16d38b17d7034ddxd4liquid_depth_max',
+    'unique_id': 'tuya.fbya6s6rhaoyvl8hqgcwyliquid_depth_max',
     'unit_of_measurement': 'm',
   })
 # ---
@@ -1087,7 +1203,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_maximum',
-    'unique_id': 'tuya.mocked_device_idmax_set',
+    'unique_id': 'tuya.snbu4b3vekhywztwqgcwymax_set',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1145,7 +1261,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alarm_minimum',
-    'unique_id': 'tuya.mocked_device_idmini_set',
+    'unique_id': 'tuya.snbu4b3vekhywztwqgcwymini_set',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1203,7 +1319,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'installation_height',
-    'unique_id': 'tuya.mocked_device_idinstallation_height',
+    'unique_id': 'tuya.snbu4b3vekhywztwqgcwyinstallation_height',
     'unit_of_measurement': 'm',
   })
 # ---
@@ -1262,7 +1378,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'maximum_liquid_depth',
-    'unique_id': 'tuya.mocked_device_idliquid_depth_max',
+    'unique_id': 'tuya.snbu4b3vekhywztwqgcwyliquid_depth_max',
     'unit_of_measurement': 'm',
   })
 # ---
