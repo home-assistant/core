@@ -75,6 +75,11 @@ async def async_get_travel_times(
             real_time=realtime,
             alternatives=3,
         )
+
+        if len(routes) < 1:
+            _LOGGER.warning("No routes found")
+            return routes
+
         _LOGGER.debug("Got routes: %s", routes)
 
         incl_routes: list[CalcRoutesResponse] = []
@@ -114,6 +119,10 @@ async def async_get_travel_times(
             route for route in incl_routes if not should_exclude_route(route)
         ]
 
+        if len(filtered_routes) < 1:
+            _LOGGER.warning("No routes matched your filters")
+            return filtered_routes
+
         if units == IMPERIAL_UNITS:
             filtered_routes = [
                 CalcRoutesResponse(
@@ -128,8 +137,6 @@ async def async_get_travel_times(
                 if route.distance is not None
             ]
 
-        if len(filtered_routes) < 1:
-            raise UpdateFailed("No routes found")
     except WRCError as exp:
         raise UpdateFailed(f"Error on retrieving data: {exp}") from exp
 
@@ -145,7 +152,7 @@ class WazeTravelTimeData:
     destination: str
     duration: float | None
     distance: float | None
-    route: str
+    route: str | None
 
 
 class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
@@ -210,15 +217,25 @@ class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
                 incl_filter,
                 excl_filter,
             )
-            route = routes[0]
+            if len(routes) < 1:
+                travel_data = WazeTravelTimeData(
+                    origin=origin_coordinates,
+                    destination=destination_coordinates,
+                    duration=None,
+                    distance=None,
+                    route=None,
+                )
 
-            travel_data = WazeTravelTimeData(
-                origin=origin_coordinates,
-                destination=destination_coordinates,
-                duration=route.duration,
-                distance=route.distance,
-                route=route.name,
-            )
+            else:
+                route = routes[0]
+
+                travel_data = WazeTravelTimeData(
+                    origin=origin_coordinates,
+                    destination=destination_coordinates,
+                    duration=route.duration,
+                    distance=route.distance,
+                    route=route.name,
+                )
 
             await asyncio.sleep(SECONDS_BETWEEN_API_CALLS)
 
