@@ -532,6 +532,15 @@
       "wind_direct": {
         "name": "Wind direction"
       },
+      "precipitation": {
+        "name": "Total precipitation"
+      },
+      "precipitation_intensity": {
+        "name": "Precipitation intensity"
+      },
+      "uv_index": {
+        "name": "UV index"
+      },
       "pm25": {
         "name": "[%key:component::sensor::entity_component::pm25::name%]"
       },

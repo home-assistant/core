@@ -24,6 +24,7 @@ from homeassistant.const import (
     UnitOfElectricPotential,
     UnitOfPower,
     UnitOfTime,
+    UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -932,7 +933,26 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="wind_direct",
             device_class=SensorDeviceClass.WIND_DIRECTION,
             state_class=SensorStateClass.MEASUREMENT,
-            state_conversion=lambda state: WIND_DIRECTIONS[str(state)],
+            state_conversion=lambda state: WIND_DIRECTIONS.get(str(state), None),
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.RAIN_24H,
+            translation_key="precipitation",
+            device_class=SensorDeviceClass.PRECIPITATION,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.RAIN_RATE,
+            translation_key="precipitation_intensity",
+            device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
+            native_unit_of_measurement=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.UV_INDEX,
+            translation_key="uv_index",
+            # native_unit_of_measurement=UV_INDEX,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         *BATTERY_SENSORS,
     ),
