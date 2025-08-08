@@ -168,6 +168,40 @@ async def test_broken_template_query(
     assert not state
 
 
+async def test_broken_template_query_2(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the SQL sensor with a query template."""
+    hass.states.async_set("sensor.input1", "5")
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    config = {
+        "db_url": "sqlite://",
+        "query": "SELECT {{ states.sensor.input1.state | int / 1000}} as value",
+        "column": "value",
+        "name": "count_tables",
+    }
+    await init_integration(hass, config)
+
+    state = hass.states.get("sensor.count_tables")
+    assert state.state == "0.005"
+
+    hass.states.async_set("sensor.input1", "on")
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get("sensor.count_tables")
+    assert state.state == "0.005"
+    assert (
+        "Error rendering query SELECT {{ states.sensor.input1.state"
+        " | int / 1000}} as value LIMIT 1;: Invalid template" in caplog.text
+    )
+
+
 async def test_query_limit(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Test the SQL sensor with a query containing 'LIMIT' in lowercase."""
     options = {
