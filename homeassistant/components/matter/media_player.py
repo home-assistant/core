@@ -39,15 +39,45 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
     entity_description: MediaPlayerEntityDescription
     _platform_translation_key = "mediaplayer"
 
-    async def async_stop(self, **kwargs: Any) -> None:
-        """Stop the media player."""
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn on the media player."""
+        await self.send_device_command(
+            clusters.OnOff.Commands.On(),
+        )
 
-    async def async_start(self) -> None:
-        """Start the media player."""
+    async def async_turn_off(self) -> None:
+        """Turn off the media player."""
+        await self.send_device_command(
+            clusters.OnOff.Commands.Off(),
+        )
 
-    async def async_pause(self) -> None:
-        """Pause the media player."""
-        # await self.send_device_command(clusters.RvcOperationalState.Commands.Pause())
+    async def async_set_volume_level(self, volume: float) -> None:
+        """Set volume level."""
+        if volume == 0:
+            # If volume level is 0, turn off the volume
+            await self.send_device_command(
+                clusters.OnOff.Commands.Off(),
+            )
+            return
+        # Convert HA volume level (0-1) to Matter level (1-254)
+        # Matter uses 1-254 for volume levels, where 0 is off
+        matter_volume_level = int(volume * 254)
+        await self.send_device_command(
+            clusters.LevelControl.Commands.MoveToLevel(level=matter_volume_level)
+        )
+
+    async def async_mute_volume(self, mute: bool) -> None:
+        """Mute or unmute the media player."""
+        # OnOff attribute == True state means volume is on, so HA should show mute switch as off
+        if mute:
+            await self.send_device_command(
+                clusters.OnOff.Commands.Off(),
+            )
+        # OnOff attribute == False means volume is off (muted), so HA should show mute switch as on
+        else:
+            await self.send_device_command(
+                clusters.OnOff.Commands.On(),
+            )
 
     @callback
     def _update_from_device(self) -> None:
@@ -63,10 +93,11 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
     def _calculate_features(self) -> None:
         """Calculate features for HA MediaPlayer platform."""
         supported_features = (
-            MediaPlayerEntityFeature.TURN_ON
-            | MediaPlayerEntityFeature.TURN_OFF
-            | MediaPlayerEntityFeature.VOLUME_SET
+            MediaPlayerEntityFeature.VOLUME_SET
             | MediaPlayerEntityFeature.VOLUME_MUTE
+            | MediaPlayerEntityFeature.VOLUME_STEP
+            # | MediaPlayerEntityFeature.TURN_ON    # Uncomment if you want to support turning on
+            # | MediaPlayerEntityFeature.TURN_OFF   # Uncomment if you want to support turning off
         )
         self._attr_supported_features = supported_features
 

@@ -41,9 +41,10 @@ async def test_media_player_actions(
     # test mute_volume action (from idle state)
     await hass.services.async_call(
         "media_player",
-        "mute_volume",
+        "volume_mute",
         {
             "entity_id": entity_id,
+            "is_volume_muted": True,
         },
         blocking=True,
     )
@@ -53,6 +54,24 @@ async def test_media_player_actions(
         node_id=matter_node.node_id,
         endpoint_id=1,
         command=clusters.OnOff.Commands.Off(),
+    )
+    matter_client.send_device_command.reset_mock()
+
+    # test volume_set action
+    await hass.services.async_call(
+        "media_player",
+        "volume_set",
+        {
+            "entity_id": entity_id,
+            "volume_level": 0.5,  # 80% volume
+        },
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.LevelControl.Commands.MoveToLevel(level=127),  # 50%
     )
     matter_client.send_device_command.reset_mock()
 
