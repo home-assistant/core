@@ -437,10 +437,7 @@ class NetatmoDataHandler:
                 )
 
                 for module in room.modules.values():
-                    if (
-                        module.device_category is NetatmoDeviceCategory.climate
-                        or module.device_category is NetatmoDeviceCategory.opening
-                    ):
+                    if module.device_category is NetatmoDeviceCategory.climate:
                         async_dispatcher_send(
                             self.hass,
                             NETATMO_CREATE_BATTERY,
