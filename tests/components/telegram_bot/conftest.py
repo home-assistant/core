@@ -230,11 +230,11 @@ def mock_broadcast_config_entry() -> MockConfigEntry:
 def mock_webhooks_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
-        unique_id="mock api key",
+        unique_id="1234567890:ABC",
         domain=DOMAIN,
         data={
             CONF_PLATFORM: PLATFORM_WEBHOOKS,
-            CONF_API_KEY: "mock api key",
+            CONF_API_KEY: "1234567890:ABC",
             CONF_URL: "https://test",
             CONF_TRUSTED_NETWORKS: ["127.0.0.1"],
         },
@@ -265,7 +265,7 @@ def mock_webhooks_config_entry() -> MockConfigEntry:
 def mock_polling_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry for polling platform."""
     return MockConfigEntry(
-        unique_id="mock api key",
+        unique_id="1234567890:ABC",
         domain=DOMAIN,
         data={
             CONF_PLATFORM: PLATFORM_POLLING,
