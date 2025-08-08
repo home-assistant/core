@@ -93,6 +93,10 @@ MIN_MIGRATION_SDK_VERSION = AwesomeVersion("6.61")
 
 NETWORK_TYPE_NEW = "new"
 NETWORK_TYPE_EXISTING = "existing"
+ZWAVE_JS_UI_MIGRATION_INSTRUCTIONS = (
+    "https://www.home-assistant.io/integrations/zwave_js/"
+    "#how-to-migrate-from-one-adapter-to-a-new-adapter-using-z-wave-js-ui"
+)
 
 
 def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
@@ -446,7 +450,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 None,
             )
             if not self._reconfigure_config_entry:
-                return self.async_abort(reason="addon_required")
+                return self.async_abort(
+                    reason="addon_required",
+                    description_placeholders={
+                        "zwave_js_ui_migration": ZWAVE_JS_UI_MIGRATION_INSTRUCTIONS,
+                    },
+                )
 
         vid = discovery_info.vid
         pid = discovery_info.pid
@@ -890,7 +899,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
         if not self._usb_discovery and not config_entry.data.get(CONF_USE_ADDON):
-            return self.async_abort(reason="addon_required")
+            return self.async_abort(
+                reason="addon_required",
+                description_placeholders={
+                    "zwave_js_ui_migration": ZWAVE_JS_UI_MIGRATION_INSTRUCTIONS,
+                },
+            )
 
         try:
             driver = self._get_driver()
