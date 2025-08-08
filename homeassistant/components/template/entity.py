@@ -20,6 +20,7 @@ class AbstractTemplateEntity(Entity):
 
     _entity_id_format: str
     _optimistic_entity: bool = False
+    _extra_optimistic_options: tuple[str, ...] | None = None
     _template: Template | None = None
 
     def __init__(
@@ -35,9 +36,14 @@ class AbstractTemplateEntity(Entity):
         if self._optimistic_entity:
             self._template = config.get(CONF_STATE)
 
-            self._attr_assumed_state = self._template is None or config.get(
-                CONF_OPTIMISTIC, False
-            )
+            optimistic = self._template is None
+            if self._extra_optimistic_options:
+                optimistic = optimistic and all(
+                    config.get(option) is None
+                    for option in self._extra_optimistic_options
+                )
+
+            self._attr_assumed_state = optimistic or config.get(CONF_OPTIMISTIC, False)
 
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(

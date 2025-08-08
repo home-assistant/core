@@ -62,7 +62,7 @@ async def test_platform_setup_no_discovery(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cl_am43_corded_motor_zigbee_cover"],
+    ["cl_zah67ekd"],
 )
 async def test_select_option(
     hass: HomeAssistant,
@@ -92,7 +92,7 @@ async def test_select_option(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cl_am43_corded_motor_zigbee_cover"],
+    ["cl_zah67ekd"],
 )
 async def test_select_invalid_option(
     hass: HomeAssistant,
