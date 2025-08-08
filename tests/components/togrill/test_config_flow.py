@@ -36,16 +36,16 @@ async def test_user_selection(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"address": "00000000-0000-0000-0000-000000000001"},
+        user_input={"address": TOGRILL_SERVICE_INFO.address},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "address": "00000000-0000-0000-0000-000000000001",
+        "address": TOGRILL_SERVICE_INFO.address,
         "model": "Pro-05",
         "probe_count": 0,
     }
     assert result["title"] == "Pro-05"
-    assert result["result"].unique_id == "00000000-0000-0000-0000-000000000001"
+    assert result["result"].unique_id == TOGRILL_SERVICE_INFO.address
 
 
 async def test_failed_connect(
@@ -68,7 +68,7 @@ async def test_failed_connect(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"address": "00000000-0000-0000-0000-000000000001"},
+        user_input={"address": TOGRILL_SERVICE_INFO.address},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "failed_to_read_config"
@@ -93,7 +93,7 @@ async def test_failed_read(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={"address": "00000000-0000-0000-0000-000000000001"},
+        user_input={"address": TOGRILL_SERVICE_INFO.address},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "failed_to_read_config"
@@ -134,9 +134,9 @@ async def test_bluetooth(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        "address": "00000000-0000-0000-0000-000000000001",
+        "address": TOGRILL_SERVICE_INFO.address,
         "model": "Pro-05",
         "probe_count": 0,
     }
     assert result["title"] == "Pro-05"
-    assert result["result"].unique_id == "00000000-0000-0000-0000-000000000001"
+    assert result["result"].unique_id == TOGRILL_SERVICE_INFO.address
