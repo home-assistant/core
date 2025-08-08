@@ -139,19 +139,25 @@ def mock_device_code() -> str:
 
 
 @pytest.fixture
-async def mock_device(hass: HomeAssistant, mock_device_code: str) -> CustomerDevice:
-    """Load a single Tuya CustomerDevice fixture."""
-    return await _create_device(hass, mock_device_code)
-
-
-@pytest.fixture
 async def mock_devices(hass: HomeAssistant) -> list[CustomerDevice]:
-    """Load all Tuya CustomerDevice fixtures."""
+    """Load all Tuya CustomerDevice fixtures.
+
+    Use this to generate global snapshots for each platform.
+    """
     return [await _create_device(hass, key) for key in DEVICE_MOCKS]
 
 
+@pytest.fixture
+async def mock_device(hass: HomeAssistant, mock_device_code: str) -> CustomerDevice:
+    """Load a single Tuya CustomerDevice fixture.
+
+    Use this for testing behavior on a specific device.
+    """
+    return await _create_device(hass, mock_device_code)
+
+
 async def _create_device(hass: HomeAssistant, mock_device_code: str) -> CustomerDevice:
-    """Create Tuya CustomerDevice from fixture file."""
+    """Mock a Tuya CustomerDevice."""
     details = await async_load_json_object_fixture(
         hass, f"{mock_device_code}.json", DOMAIN
     )
