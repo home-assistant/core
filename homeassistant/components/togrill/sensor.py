@@ -86,7 +86,7 @@ async def async_setup_entry(
     entry: ToGrillConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Gardena Bluetooth sensor based on a config entry."""
+    """Set up sensor based on a config entry."""
 
     coordinator = entry.runtime_data
 
