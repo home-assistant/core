@@ -27,7 +27,6 @@ from homeassistant import config as hass_config
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.modbus.const import (
     ATTR_ADDRESS,
-    ATTR_DEVICE_ID,
     ATTR_HUB,
     ATTR_SLAVE,
     ATTR_UNIT,
@@ -868,7 +867,7 @@ async def test_pb_service_write(
     assert func_name[do_write[FUNC]].called
     assert func_name[do_write[FUNC]].call_args.args == (data[ATTR_ADDRESS],)
     assert func_name[do_write[FUNC]].call_args.kwargs == {
-        ATTR_DEVICE_ID: 17,
+        ATTR_SLAVE: 17,
         value_arg_name[do_write[FUNC]]: data[do_write[DATA]],
     }
 
@@ -1327,7 +1326,7 @@ async def test_check_default_slave(
     """Test default slave."""
     assert mock_modbus.read_holding_registers.mock_calls
     first_call = mock_modbus.read_holding_registers.mock_calls[0]
-    assert first_call.kwargs[ATTR_DEVICE_ID] == expected_slave_value
+    assert first_call.kwargs[ATTR_SLAVE] == expected_slave_value
 
 
 @pytest.mark.parametrize(
@@ -1408,71 +1407,9 @@ async def test_pb_service_write_no_slave(
     assert func_name[do_write[FUNC]].called
     assert func_name[do_write[FUNC]].call_args.args == (data[ATTR_ADDRESS],)
     assert func_name[do_write[FUNC]].call_args.kwargs == {
-        ATTR_DEVICE_ID: 1,
+        ATTR_SLAVE: 1,
         value_arg_name[do_write[FUNC]]: data[do_write[DATA]],
     }
 
     if do_return[DATA]:
         assert any(message.startswith("Pymodbus:") for message in caplog.messages)
-
-
-@pytest.mark.parametrize(
-    "do_config",
-    [
-        {
-            CONF_NAME: TEST_MODBUS_NAME,
-            CONF_TYPE: SERIAL,
-            CONF_BAUDRATE: 9600,
-            CONF_BYTESIZE: 8,
-            CONF_METHOD: "rtu",
-            CONF_PORT: TEST_PORT_SERIAL,
-            CONF_PARITY: "E",
-            CONF_STOPBITS: 1,
-            CONF_SENSORS: [
-                {
-                    CONF_NAME: "dummy_noslave",
-                    CONF_ADDRESS: 8888,
-                }
-            ],
-        },
-    ],
-)
-@pytest.mark.parametrize(
-    "do_write",
-    [
-        {
-            DATA: ATTR_VALUE,
-            VALUE: 15,
-            SERVICE: SERVICE_WRITE_REGISTER,
-            FUNC: CALL_TYPE_WRITE_REGISTER,
-        },
-        {
-            DATA: ATTR_STATE,
-            VALUE: False,
-            SERVICE: SERVICE_WRITE_COIL,
-            FUNC: CALL_TYPE_WRITE_COIL,
-        },
-    ],
-)
-async def test_pb_service_return_None(
-    hass: HomeAssistant,
-    do_write,
-    caplog: pytest.LogCaptureFixture,
-    mock_modbus_with_pymodbus,
-) -> None:
-    """Run test when pymodbus returns None."""
-    func_name = {
-        CALL_TYPE_WRITE_COIL: mock_modbus_with_pymodbus.write_coil,
-        CALL_TYPE_WRITE_REGISTER: mock_modbus_with_pymodbus.write_register,
-    }
-    data = {
-        ATTR_HUB: TEST_MODBUS_NAME,
-        ATTR_ADDRESS: 16,
-        do_write[DATA]: do_write[VALUE],
-    }
-    mock_modbus_with_pymodbus.reset_mock()
-    caplog.clear()
-    caplog.set_level(logging.DEBUG)
-    func_name[do_write[FUNC]].return_value = None
-    await hass.services.async_call(DOMAIN, do_write[SERVICE], data, blocking=True)
-    assert any("None" in message for message in caplog.messages)

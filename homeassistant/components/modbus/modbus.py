@@ -39,7 +39,6 @@ from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_ADDRESS,
-    ATTR_DEVICE_ID,
     ATTR_HUB,
     ATTR_SLAVE,
     ATTR_UNIT,
@@ -378,13 +377,11 @@ class ModbusHub:
                 _LOGGER.info(message)
 
     async def low_level_pb_call(
-        self, device_id: int | None, address: int, value: int | list[int], use_call: str
+        self, slave: int | None, address: int, value: int | list[int], use_call: str
     ) -> ModbusPDU | None:
         """Call sync. pymodbus."""
         kwargs: dict[str, Any] = (
-            {ATTR_DEVICE_ID: device_id}
-            if device_id is not None
-            else {ATTR_DEVICE_ID: 1}
+            {ATTR_SLAVE: slave} if slave is not None else {ATTR_SLAVE: 1}
         )
         entry = self._pb_request[use_call]
 
@@ -396,21 +393,21 @@ class ModbusHub:
         try:
             result: ModbusPDU = await entry.func(address, **kwargs)
         except ModbusException as exception_error:
-            error = (
-                f"Error: device: {device_id} address: {address} -> {exception_error!s}"
-            )
+            error = f"Error: device: {slave} address: {address} -> {exception_error!s}"
             self._log_error(error)
             return None
         if not result:
-            error = f"Error: device: {device_id} address: {address} -> pymodbus returned None"
+            error = (
+                f"Error: device: {slave} address: {address} -> pymodbus returned None"
+            )
             self._log_error(error)
             return None
         if not hasattr(result, entry.attr):
-            error = f"Error: device: {device_id} address: {address} -> {result!s}"
+            error = f"Error: device: {slave} address: {address} -> {result!s}"
             self._log_error(error)
             return None
         if result.isError():
-            error = f"Error: device: {device_id} address: {address} -> pymodbus returned isError True"
+            error = f"Error: device: {slave} address: {address} -> pymodbus returned isError True"
             self._log_error(error)
             return None
         self._in_error = False
