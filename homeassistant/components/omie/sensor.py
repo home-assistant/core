@@ -1,4 +1,5 @@
 """Sensor for the OMIE - Spain and Portugal electricity prices integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -17,7 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CURRENCY_EURO, STATE_UNKNOWN, UnitOfEnergy
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
@@ -49,10 +50,12 @@ class OMIEPriceEntityDescription(SensorEntityDescription):
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up OMIE from its config entry."""
-    coordinators: OMIESources = hass.data[DOMAIN][entry.entry_id]
+    coordinators: OMIESources = entry.runtime_data
 
     device_info = DeviceInfo(
         configuration_url="https://www.omie.es/en/market-results",
@@ -135,7 +138,7 @@ async def async_setup_entry(
             first = cast(dict[datetime, float | None], all_hours_cet)
             rest = [_hours_of_day(all_hours_cet, hass_tz, day) for day in dates]
 
-            return [first] + rest
+            return [first, *rest]
 
     sensors = [
         OMIEPriceEntity("spot_price_pt"),

@@ -21,8 +21,8 @@ from .const import CET, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-_SCHEDULE_MAX_DELAY = timedelta(seconds=3)
-"""The maximum delay after the scheduled time that we will fetch from OMIE to avoid thundering herd."""
+_SCHEDULE_MAX_DELAY = timedelta(seconds=10)
+"""To avoid thundering herd, we will fetch from OMIE up to this much time after the OMIE data becomes available."""
 
 DateFactory = Callable[[], date]
 """Used by the coordinator to work out the market date to fetch."""
