@@ -261,7 +261,7 @@ async def async_setup_sensor(
 
     # MSSQL uses TOP and not LIMIT
     mod_query_template = query_template
-    if not ("LIMIT" in upper_query or upper_query.startswith("SELECT TOP")):
+    if "LIMIT" not in upper_query and not upper_query.startswith("SELECT TOP"):
         if "mssql" in db_url:
             mod_query_template = ValueTemplate(
                 f"SELECT TOP 1{query_template.template[6:]}", hass

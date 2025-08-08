@@ -16,6 +16,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     ENTRY_CONFIG,
+    ENTRY_CONFIG_BLANK_QUERY,
     ENTRY_CONFIG_INVALID_COLUMN_NAME,
     ENTRY_CONFIG_INVALID_COLUMN_NAME_OPT,
     ENTRY_CONFIG_INVALID_QUERY,
@@ -49,19 +50,27 @@ async def test_form(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        ENTRY_CONFIG_BLANK_QUERY,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"query": "query_invalid"}
+
     with patch(
         "homeassistant.components.sql.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             ENTRY_CONFIG,
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Get Value"
-    assert result2["options"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Get Value"
+    assert result["options"] == {
         "name": "Get Value",
         "query": "SELECT 5 as value",
         "column": "value",
