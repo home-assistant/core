@@ -2955,6 +2955,9 @@ tmb==0.0.4
 # homeassistant.components.todoist
 todoist-api-python==2.1.7
 
+# homeassistant.components.togrill
+togrill-bluetooth==0.4.0
+
 # homeassistant.components.tolo
 tololib==1.2.2
 
