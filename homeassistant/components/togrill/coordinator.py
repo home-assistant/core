@@ -88,19 +88,20 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[int, Packet]]):
         client = await Client.connect(device, self._notify_callback)
         try:
             packet_a0 = await client.read(PacketA0Notify)
-            config_entry = self.config_entry
-
-            device_registry = dr.async_get(self.hass)
-            device_registry.async_get_or_create(
-                config_entry_id=config_entry.entry_id,
-                connections={(CONNECTION_BLUETOOTH, self.address)},
-                name=config_entry.data[CONF_MODEL],
-                model=config_entry.data[CONF_MODEL],
-                sw_version=get_version_string(packet_a0),
-            )
-        except Exception:
+        except BleakError as exc:
             await client.disconnect()
-            raise
+            raise DeviceFailed(f"Device failed {exc}") from exc
+
+        config_entry = self.config_entry
+
+        device_registry = dr.async_get(self.hass)
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            connections={(CONNECTION_BLUETOOTH, self.address)},
+            name=config_entry.data[CONF_MODEL],
+            model=config_entry.data[CONF_MODEL],
+            sw_version=get_version_string(packet_a0),
+        )
 
         return client
 
@@ -127,8 +128,8 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[int, Packet]]):
 
     async def _async_update_data(self) -> dict[int, Packet]:
         """Poll the device."""
+        client = await self._get_connected_client()
         try:
-            client = await self._get_connected_client()
             await client.request(PacketA0Notify)
             await client.request(PacketA1Notify)
         except BleakError as exc:
