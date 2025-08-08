@@ -77,8 +77,7 @@ class LunatoneLight(LightEntity):
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        is_on: bool = self._device.is_on  # To satisfy mypy [no-any-return]
-        return is_on
+        return bool(self._device.is_on)
 
     @property
     def device_info(self) -> DeviceInfo:
