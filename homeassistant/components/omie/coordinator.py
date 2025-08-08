@@ -11,7 +11,7 @@ from aiohttp import ClientSession
 import pyomie.main as pyomie
 from pyomie.model import OMIEResults, SpotData
 
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HassJob, HassJobType, HomeAssistant, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, _DataT
@@ -60,6 +60,11 @@ class OMIEDailyCoordinator(DataUpdateCoordinator[OMIEResults[_DataT] | None]):
         delay_micros = random.randint(0, _SCHEDULE_MAX_DELAY.seconds * 10**6)
         self._schedule_second = delay_micros // 10**6
         self._schedule_microsecond = delay_micros % 10**6
+        self.__job = HassJob(
+            self._handle_refresh_interval,
+            f"OMIEDailyCoordinator {name}",
+            job_type=HassJobType.Coroutinefunction,
+        )
 
     async def _async_update_data(self) -> OMIEResults | None:
         if self._wait_for_none_before():
@@ -91,9 +96,9 @@ class OMIEDailyCoordinator(DataUpdateCoordinator[OMIEResults[_DataT] | None]):
         if self.config_entry and self.config_entry.pref_disable_polling:
             return
 
-        if self._unsub_refresh:
-            self._unsub_refresh()
-            self._unsub_refresh = None
+        # We do not cancel the debouncer here. If the refresh interval is shorter
+        # than the debouncer cooldown, this would cause the debounce to never be called
+        self._async_unsub_refresh()
 
         cet_hour, cet_minute = self._none_before
         now_cet = utcnow().astimezone(CET)
@@ -124,7 +129,7 @@ class OMIEDailyCoordinator(DataUpdateCoordinator[OMIEResults[_DataT] | None]):
             next_hour,
         )
         self._unsub_refresh = event.async_track_point_in_utc_time(
-            self.hass, self._job, next_refresh
+            self.hass, self.__job, next_refresh
         )
 
     def _wait_for_none_before(self) -> bool:
