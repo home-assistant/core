@@ -6729,6 +6729,65 @@ async def test_update_subentry_reload_and_abort(
         assert result[k] == v
 
 
+async def test_update_subentry_reload_with_listener(hass: HomeAssistant) -> None:
+    """Test updating an entry and reloading fails with update listener."""
+    subentry_id = "blabla"
+    entry = MockConfigEntry(
+        domain="comp",
+        unique_id="entry_unique_id",
+        title="entry_title",
+        data={},
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={"vendor": "data"},
+                subentry_id=subentry_id,
+                subentry_type="test",
+                unique_id="1234",
+                title="Test",
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+    entry.add_update_listener(AsyncMock())
+
+    setup_entry = AsyncMock(return_value=True)
+
+    comp = MockModule(
+        "comp",
+        async_setup_entry=setup_entry,
+        async_unload_entry=AsyncMock(return_value=True),
+    )
+    mock_integration(hass, comp)
+    mock_platform(hass, "comp.config_flow", None)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    class TestFlow(config_entries.ConfigFlow):
+        class SubentryFlowHandler(config_entries.ConfigSubentryFlow):
+            async def async_step_reconfigure(self, user_input=None):
+                return self.async_update_reload_and_abort(
+                    self._get_entry(),
+                    self._get_reconfigure_subentry(),
+                    data={},
+                    reload_even_if_entry_is_unchanged=True,
+                )
+
+        @classmethod
+        @callback
+        def async_get_supported_subentry_types(
+            cls, config_entry: config_entries.ConfigEntry
+        ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
+
+    with (
+        mock_config_flow("comp", TestFlow),
+        pytest.raises(
+            ValueError, match="Cannot update and reload entry with update listeners"
+        ),
+    ):
+        await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+
+
 async def test_reconfigure_subentry_create_subentry(hass: HomeAssistant) -> None:
     """Test it's not allowed to create a subentry from a subentry reconfigure flow."""
     subentry_id = "blabla"
