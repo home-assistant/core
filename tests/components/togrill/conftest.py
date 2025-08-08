@@ -1,4 +1,4 @@
-"""Common fixtures for the Gardena Bluetooth tests."""
+"""Common fixtures for the ToGrill tests."""
 
 from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, Mock, patch

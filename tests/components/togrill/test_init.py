@@ -1,4 +1,4 @@
-"""Test binary sensors for acaia integration."""
+"""Test for initialization of ToGrill integration."""
 
 from unittest.mock import Mock
 

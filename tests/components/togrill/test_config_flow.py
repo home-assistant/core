@@ -54,7 +54,7 @@ async def test_failed_connect(
     mock_client_class: Mock,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test we can select a device."""
+    """Test failure to connect result."""
 
     mock_client_class.connect.side_effect = BleakError("Failed to connect")
 
@@ -79,7 +79,7 @@ async def test_failed_read(
     mock_client: Mock,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test we can select a device."""
+    """Test failure to read from device."""
 
     inject_bluetooth_service_info(hass, TOGRILL_SERVICE_INFO)
 
