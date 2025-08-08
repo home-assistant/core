@@ -19,6 +19,12 @@ def base_url() -> str:
 
 
 @pytest.fixture
+def version() -> str:
+    """Version fixture."""
+    return "v1.14.1/1.4.3"
+
+
+@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
@@ -59,7 +65,9 @@ def mock_lunatone_devices(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]
 
 
 @pytest.fixture
-def mock_lunatone_info(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]:
+def mock_lunatone_info(
+    mock_lunatone_auth: AsyncMock, version: str
+) -> Generator[AsyncMock]:
     """Mock a Lunatone info object."""
     with (
         patch(
@@ -74,7 +82,7 @@ def mock_lunatone_info(mock_lunatone_auth: AsyncMock) -> Generator[AsyncMock]:
         info = mock_info.return_value
         info._auth = mock_lunatone_auth
         info.name = "Test"
-        info.version = "v1.14.1/1.4.3"
+        info.version = version
         info.serial_number = 12345
         yield info
 
@@ -93,10 +101,13 @@ def mock_config_entry(base_url: str) -> MockConfigEntry:
 @pytest.fixture
 async def setup_integration(
     hass: HomeAssistant,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_info: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> MockConfigEntry:
     """Set up the Lunatone integration for testing."""
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    with patch("asyncio.sleep"):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     return mock_config_entry

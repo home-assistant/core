@@ -14,8 +14,6 @@ from tests.common import MockConfigEntry
 
 async def test_load_unload_config_entry(
     hass: HomeAssistant,
-    mock_lunatone_devices: AsyncMock,
-    mock_lunatone_info: AsyncMock,
     setup_integration: MockConfigEntry,
 ) -> None:
     """Test the Lunatone configuration entry loading/unloading."""
@@ -99,10 +97,8 @@ async def test_config_entry_not_ready_no_devices_data(
 
 
 async def test_device_info(
-    hass: HomeAssistant,
     base_url: str,
-    mock_lunatone_devices: AsyncMock,
-    mock_lunatone_info: AsyncMock,
+    version: str,
     setup_integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
@@ -114,7 +110,7 @@ async def test_device_info(
     )
     assert device_entry is not None
     assert device_entry.manufacturer == "Lunatone"
-    assert device_entry.sw_version == mock_lunatone_info.version
+    assert device_entry.sw_version == version
     assert device_entry.configuration_url == base_url
 
 
