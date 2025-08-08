@@ -65,6 +65,7 @@ def create_message_item(
             content_index=0,
             delta=delta,
             item_id=id,
+            logprobs=[],
             output_index=output_index,
             sequence_number=0,
             type="response.output_text.delta",
@@ -77,6 +78,7 @@ def create_message_item(
             ResponseTextDoneEvent(
                 content_index=0,
                 item_id=id,
+                logprobs=[],
                 output_index=output_index,
                 text="".join(text),
                 sequence_number=0,

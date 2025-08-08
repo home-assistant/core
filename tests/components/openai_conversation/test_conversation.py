@@ -289,6 +289,7 @@ async def test_function_call(
     )
 
     assert mock_create_stream.call_args.kwargs["input"][2] == {
+        "content": None,
         "id": "rs_A",
         "summary": [],
         "type": "reasoning",
