@@ -54,4 +54,5 @@ def check_and_render_sql_query(hass: HomeAssistant, query: Template | str) -> st
     if query_type != "SELECT":
         _LOGGER.debug("The SQL query %s is of type %s", rendered_query, query_type)
         raise ValueError("SQL query must be of type SELECT")
+
     return str(rendered_queries[0])

@@ -160,12 +160,12 @@ class SQLConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             db_url = user_input.get(CONF_DB_URL)
-            query = user_input[CONF_QUERY]
+            user_query = user_input[CONF_QUERY]
             column = user_input[CONF_COLUMN_NAME]
             db_url_for_validation = None
 
             try:
-                query = validate_sql_select(query)
+                query = validate_sql_select(user_query)
                 db_url_for_validation = resolve_db_url(self.hass, db_url)
                 await self.hass.async_add_executor_job(
                     validate_query, db_url_for_validation, query, column
@@ -184,7 +184,7 @@ class SQLConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["query"] = "query_invalid"
 
             options = {
-                CONF_QUERY: query,
+                CONF_QUERY: user_query,
                 CONF_COLUMN_NAME: column,
                 CONF_NAME: user_input[CONF_NAME],
             }
@@ -226,12 +226,12 @@ class SQLOptionsFlowHandler(OptionsFlowWithReload):
 
         if user_input is not None:
             db_url = user_input.get(CONF_DB_URL)
-            query = user_input[CONF_QUERY]
+            user_query = user_input[CONF_QUERY]
             column = user_input[CONF_COLUMN_NAME]
             name = self.config_entry.options.get(CONF_NAME, self.config_entry.title)
 
             try:
-                query = validate_sql_select(query)
+                query = validate_sql_select(user_query)
                 db_url_for_validation = resolve_db_url(self.hass, db_url)
                 await self.hass.async_add_executor_job(
                     validate_query, db_url_for_validation, query, column
@@ -258,7 +258,7 @@ class SQLOptionsFlowHandler(OptionsFlowWithReload):
                 )
 
                 options = {
-                    CONF_QUERY: query,
+                    CONF_QUERY: user_query,
                     CONF_COLUMN_NAME: column,
                     CONF_NAME: name,
                 }
