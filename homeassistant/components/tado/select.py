@@ -8,7 +8,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TadoConfigEntry
-from .entity import TadoDataUpdateCoordinator, TadoZoneEntity
+from .coordinator import TadoZoneControlUpdateCoordinator
+from .entity import TadoZoneControlEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,8 +24,11 @@ async def async_setup_entry(
     """Set up the Tado select platform."""
 
     tado = entry.runtime_data.coordinator
+    zone_control_coordinator = entry.runtime_data.zone_control_coordinator
     entities: list[SelectEntity] = [
-        TadoHeatingCircuitSelectEntity(tado, zone["name"], zone["id"])
+        TadoHeatingCircuitSelectEntity(
+            zone_control_coordinator, zone["name"], zone["id"]
+        )
         for zone in tado.zones
         if zone["type"] == "HEATING"
     ]
@@ -32,7 +36,7 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class TadoHeatingCircuitSelectEntity(TadoZoneEntity, SelectEntity):
+class TadoHeatingCircuitSelectEntity(TadoZoneControlEntity, SelectEntity):
     """Representation of a Tado heating circuit select entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
@@ -42,7 +46,7 @@ class TadoHeatingCircuitSelectEntity(TadoZoneEntity, SelectEntity):
 
     def __init__(
         self,
-        coordinator: TadoDataUpdateCoordinator,
+        coordinator: TadoZoneControlUpdateCoordinator,
         zone_name: str,
         zone_id: int,
     ) -> None:
