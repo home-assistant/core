@@ -274,6 +274,73 @@ async def test_google_search_tool_is_sent(
 
 
 @pytest.mark.usefixtures("mock_init_component")
+@pytest.mark.usefixtures("mock_ulid_tools")
+async def test_url_context_tool_is_sent(
+    hass: HomeAssistant,
+    mock_config_entry_with_url_context: MockConfigEntry,
+    mock_chat_log: MockChatLog,  # noqa: F811
+    mock_send_message_stream: AsyncMock,
+) -> None:
+    """Test if the Google Search tool is sent to the model."""
+    agent_id = "conversation.google_ai_conversation"
+    context = Context()
+
+    messages = [
+        # Messages from the model which contain the google search answer (the usage of the Google Search tool is server side)
+        [
+            GenerateContentResponse(
+                candidates=[
+                    {
+                        "content": {
+                            "parts": [
+                                {
+                                    "text": "The last winner ",
+                                }
+                            ],
+                            "role": "model",
+                        },
+                    }
+                ],
+            ),
+            GenerateContentResponse(
+                candidates=[
+                    {
+                        "content": {
+                            "parts": [
+                                {"text": "of the 2024 FIFA World Cup was Argentina."}
+                            ],
+                            "role": "model",
+                        },
+                        "finish_reason": "STOP",
+                    }
+                ],
+            ),
+        ],
+    ]
+
+    mock_send_message_stream.return_value = messages
+
+    with patch(
+        "google.genai.chats.AsyncChats.create", return_value=AsyncMock()
+    ) as mock_create:
+        mock_create.return_value.send_message_stream = mock_send_message_stream
+        result = await conversation.async_converse(
+            hass,
+            "Who won the 2024 FIFA World Cup?",
+            mock_chat_log.conversation_id,
+            context,
+            agent_id=agent_id,
+            device_id="test_device",
+        )
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert (
+        result.response.as_dict()["speech"]["plain"]["speech"]
+        == "The last winner of the 2024 FIFA World Cup was Argentina."
+    )
+    assert mock_create.mock_calls[0][2]["config"].tools[-1].url_context is not None
+
+
+@pytest.mark.usefixtures("mock_init_component")
 async def test_blocked_response(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
