@@ -24,9 +24,6 @@
   },
   "entity": {
     "sensor": {
-      "battery": {
-        "name": "Battery"
-      },
       "temperature": {
         "name": "Probe {probe_number}"
       }
