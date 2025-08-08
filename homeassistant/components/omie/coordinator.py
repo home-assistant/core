@@ -2,19 +2,21 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
-from datetime import date, timedelta
+from collections.abc import Mapping
+import datetime as dt
+from datetime import date, datetime, time, timedelta
 import logging
 import random
+from zoneinfo import ZoneInfo
 
-from aiohttp import ClientSession
 import pyomie.main as pyomie
 from pyomie.model import OMIEResults, SpotData
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HassJob, HassJobType, HomeAssistant, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, _DataT
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import utcnow
 
 from .const import CET, DOMAIN
@@ -24,75 +26,52 @@ _LOGGER = logging.getLogger(__name__)
 _SCHEDULE_MAX_DELAY = timedelta(seconds=10)
 """To avoid thundering herd, we will fetch from OMIE up to this much time after the OMIE data becomes available."""
 
-DateFactory = Callable[[], date]
-"""Used by the coordinator to work out the market date to fetch."""
 
-UpdateMethod = Callable[[], Awaitable[OMIEResults[_DataT] | None]]
-"""Method that updates this coordinator's data."""
+class OMIECoordinator(DataUpdateCoordinator[Mapping[date, OMIEResults[SpotData]]]):
+    """Coordinator that manages OMIE data for yesterday, today, and tomorrow."""
 
-
-class OMIEDailyCoordinator(DataUpdateCoordinator[OMIEResults[_DataT] | None]):
-    """Coordinator that fetches new data once per day at the specified time, optionally refreshing it throughout the day."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        name: str,
-        market_updater: Callable[[ClientSession, DateFactory], UpdateMethod[_DataT]],
-        market_date: Callable[[], date],
-        none_before: str | None = None,
-        update_interval: timedelta | None = None,
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize OMIE coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=f"{DOMAIN}.{name}",
-            update_interval=update_interval,
-            update_method=market_updater(async_get_clientsession(hass), market_date),
-        )
-        self._market_date = market_date
-        self._none_before = (
-            list(map(int, none_before.split(":")))
-            if none_before is not None
-            else [0, 0]
-        )
+        super().__init__(hass, _LOGGER, name=f"{DOMAIN}", config_entry=config_entry)
+        self.data: Mapping[date, OMIEResults[SpotData]] = {}
+        self._client_session = async_get_clientsession(hass)
+
+        # Random delay to avoid thundering herd
         delay_micros = random.randint(0, _SCHEDULE_MAX_DELAY.seconds * 10**6)
         self._schedule_second = delay_micros // 10**6
         self._schedule_microsecond = delay_micros % 10**6
         self.__job = HassJob(
             self._handle_refresh_interval,
-            f"OMIEDailyCoordinator {name}",
+            "OMIECoordinator",
             job_type=HassJobType.Coroutinefunction,
         )
 
-    async def _async_update_data(self) -> OMIEResults | None:
-        if self._wait_for_none_before():
-            # no results can possibly be available at this time of day
-            _LOGGER.debug(
-                "%s: _async_update_data returning None before %s CET",
-                self.name,
-                self._none_before,
-            )
-            return None
+    async def _async_update_data(self) -> Mapping[date, OMIEResults[SpotData]]:
+        """Update OMIE data, fetching data as needed and available."""
+        tzinfo = ZoneInfo(self.hass.config.time_zone)
+        now = datetime.now(tz=tzinfo)
+        relevant_dates = _get_market_dates(tzinfo, now)
+        published_dates = {date for date in relevant_dates if _is_published(date, now)}
 
-        if self.data is not None and self._is_fresh(self.data):
-            # current data is still fresh, don't update:
-            _LOGGER.debug(
-                "%s: _async_update_data returning cached (market_date=%s, updated_at=%s, update_interval=%s)",
-                self.name,
-                self.data.market_date,
-                self.data.updated_at,
-                self.update_interval,
-            )
-            return self.data
+        # seed new data with previously-fetched days. these are immutable once fetched.
+        data = {
+            date: results
+            for date, results in self.data.items()
+            if date in relevant_dates
+        }
 
-        _LOGGER.debug("%s: _async_update_data refreshing data", self.name)
-        return await super()._async_update_data()
+        # off to OMIE for anything that's still missing
+        for d in {pd for pd in published_dates if pd not in data}:
+            _LOGGER.debug("Fetching data for %s", d)
+            if results := await pyomie.spot_price(self._client_session, d):
+                data.update({d: results})
+
+        _LOGGER.debug("_async_update_data: %s", data)
+        return data
 
     @callback
     def _schedule_refresh(self) -> None:
-        """Schedule a refresh."""
+        """Schedule the next refresh at the top of the next hour."""
         if self.config_entry and self.config_entry.pref_disable_polling:
             return
 
@@ -100,64 +79,40 @@ class OMIEDailyCoordinator(DataUpdateCoordinator[OMIEResults[_DataT] | None]):
         # than the debouncer cooldown, this would cause the debounce to never be called
         self._async_unsub_refresh()
 
-        cet_hour, cet_minute = self._none_before
+        # Schedule for the next hour boundary
         now_cet = utcnow().astimezone(CET)
-        none_before = now_cet.replace(
-            hour=cet_hour,
-            minute=cet_minute,
-            second=self._schedule_second,
-            microsecond=self._schedule_microsecond,
-        )
         next_hour = now_cet.replace(
             minute=0,
             second=self._schedule_second,
             microsecond=self._schedule_microsecond,
         ) + timedelta(hours=1)
 
-        # next hour or the none_before time, whichever is soonest
-        next_refresh = (
-            none_before
-            if cet_hour == now_cet.hour and none_before > now_cet
-            else next_hour
-        ).astimezone()
+        next_refresh = next_hour.astimezone()
 
         _LOGGER.debug(
-            "%s: _schedule_refresh scheduling an update at %s (none_before=%s, next_hour=%s)",
-            self.name,
+            "Scheduling next refresh at %s (CET: %s)",
             next_refresh,
-            none_before,
             next_hour,
         )
+
         self._unsub_refresh = event.async_track_point_in_utc_time(
             self.hass, self.__job, next_refresh
         )
 
-    def _wait_for_none_before(self) -> bool:
-        """Whether the coordinator should wait for `none_before`."""
-        cet_now = utcnow().astimezone(tz=CET)
-        cet_hour, cet_minute = self._none_before
-        none_before = cet_now.replace(
-            hour=cet_hour,
-            minute=cet_minute,
-            second=self._schedule_second,
-            microsecond=self._schedule_microsecond,
-        )
 
-        return cet_now < none_before and none_before.date() == cet_now.date()
-
-    def _is_fresh(self, data: OMIEResults) -> bool:
-        return data.market_date == self._market_date() and (
-            self.update_interval is None
-            or utcnow() < (data.updated_at + self.update_interval)
-        )
+def _get_market_dates(local_tz: ZoneInfo, local_time: datetime) -> set[date]:
+    """Returns the intraday market date(s) whose data we need to fetch."""
+    min_max = [time.min, time.max]
+    return {
+        datetime.combine(local_time, t, tzinfo=local_tz).astimezone(CET).date()
+        for t in min_max
+    }
 
 
-def spot_price(
-    client_session: ClientSession, get_market_date: DateFactory
-) -> UpdateMethod[SpotData]:
-    """Create an UpdateMethod for the spot price."""
+def _is_published(market_date: dt.date, fetch_time: dt.datetime) -> bool:
+    """Returns whether OMIE data for a given date is expected to have been published at any point in time."""
+    publish_date = market_date - timedelta(days=1)
+    publish_hour = dt.time(hour=13, minute=30)
+    publish_time = dt.datetime.combine(publish_date, publish_hour, tzinfo=CET)
 
-    async def fetch() -> OMIEResults[SpotData] | None:
-        return await pyomie.spot_price(client_session, get_market_date())
-
-    return fetch
+    return fetch_time >= publish_time

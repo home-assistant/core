@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
 import logging
-from typing import TypeVar, cast
 from zoneinfo import ZoneInfo
 
 from homeassistant.components.sensor import (
@@ -14,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CURRENCY_EURO, STATE_UNKNOWN, UnitOfEnergy
+from homeassistant.const import CURRENCY_EURO, UnitOfEnergy
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -22,10 +20,8 @@ from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
 from .const import CET, DOMAIN
-from .model import OMIESources
-from .util import _pick_series_cet, enumerate_hours_of_day
-
-_DataT = TypeVar("_DataT")
+from .coordinator import OMIECoordinator
+from .util import _pick_series_cet
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,7 +50,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up OMIE from its config entry."""
-    coordinators: OMIESources = entry.runtime_data
+    coordinator: OMIECoordinator = entry.runtime_data
 
     device_info = DeviceInfo(
         configuration_url="https://www.omie.es/en/market-results",
@@ -83,48 +79,26 @@ async def async_setup_entry(
             @callback
             def update() -> None:
                 """Update this sensor's state from the coordinator results."""
-
-                # times are formatted in the HA configured time zone
-                hass_now = utcnow().astimezone(hass_tzinfo())
-
-                # day boundaries are also relative to the HA configured time zone.
-                today: date = hass_now.date()
-                tomorrow: date = today + timedelta(days=1)
-                _, today_hours, tomorrow_hours = self._omie_hourly_data(today, tomorrow)
-
-                # to work out the start of the current hour we truncate from minutes downwards
-                # rather than create a new datetime to ensure correctness across DST boundaries
-                hour_start = hass_now.replace(minute=0, second=0, microsecond=0)
-
-                self._attr_available = hour_start in today_hours
-                self._attr_native_value = today_hours.get(hour_start, STATE_UNKNOWN)
-
+                value = self._get_current_hour_value()
+                self._attr_available = value is not None
+                self._attr_native_value = value
                 self.async_schedule_update_ha_state()
 
-            self.async_on_remove(coordinators.today.async_add_listener(update))
-            self.async_on_remove(coordinators.tomorrow.async_add_listener(update))
-            self.async_on_remove(coordinators.yesterday.async_add_listener(update))
+            self.async_on_remove(coordinator.async_add_listener(update))
 
-        def _omie_hourly_data(self, *dates: date) -> list[dict[datetime, float | None]]:
-            """Return a non-empty list containing all known OMIE hourly data in the first element and optionally more elements, one per date.
+        def _get_current_hour_value(self) -> float | None:
+            """Get current hour's price value from coordinator data."""
+            # to work out the start of the current hour we truncate from minutes downwards
+            # rather than create a new datetime to ensure correctness across DST boundaries
+            hass_now = utcnow().astimezone(hass_tzinfo())
+            hour_start = hass_now.replace(minute=0, second=0, microsecond=0)
+            hour_start_cet = hour_start.astimezone(CET)
 
-            @param dates: a list of `datetime.date`
-            @return: a non-empty list
-            """
-            pyomie_series_key = self.entity_description.key
-            all_hours_cet: dict[datetime, float] = (
-                {}
-                | _pick_series_cet(coordinators.today.data, pyomie_series_key)
-                | _pick_series_cet(coordinators.tomorrow.data, pyomie_series_key)
-                | _pick_series_cet(coordinators.yesterday.data, pyomie_series_key)
-            )
+            series_name = self.entity_description.key
+            day_hours_raw = coordinator.data.get(hour_start_cet.date())
+            day_hours_cet = _pick_series_cet(day_hours_raw, series_name)
 
-            hass_tz = hass_tzinfo()
-
-            first = cast(dict[datetime, float | None], all_hours_cet)
-            rest = [_hours_of_day(all_hours_cet, hass_tz, day) for day in dates]
-
-            return [first, *rest]
+            return day_hours_cet.get(hour_start_cet)
 
     sensors = [
         OMIEPriceEntity("spot_price_pt"),
@@ -132,14 +106,4 @@ async def async_setup_entry(
     ]
 
     async_add_entities(sensors, update_before_add=True)
-    for c in (coordinators.today, coordinators.tomorrow, coordinators.yesterday):
-        await c.async_config_entry_first_refresh()
-
-
-def _hours_of_day(
-    hours: dict[datetime, _DataT], time_zone: ZoneInfo, day: date
-) -> dict[datetime, _DataT | None]:
-    return {
-        hour: hours.get(hour.astimezone(CET))
-        for hour in enumerate_hours_of_day(time_zone, day)
-    }
+    await coordinator.async_config_entry_first_refresh()
