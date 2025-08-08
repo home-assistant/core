@@ -45,6 +45,21 @@ def mock_automower_client(enable_bluetooth: None) -> Generator[AsyncMock]:
         client.mower_activity.return_value = "charging"
         client.probe_gatts.return_value = ("Husqvarna", "Automower", "305")
 
+        async def command_side_effect(cmd):
+            if cmd == "GetAllStatistics":
+                return {
+                    "totalRunningTime": 3600,
+                    "totalCuttingTime": 7200,
+                    "totalChargingTime": 1800,
+                    "totalSearchingTime": 10800,
+                    "numberOfCollisions": 42,
+                    "numberOfChargingCycles": 101,
+                    "cuttingBladeUsageTime": 14400,
+                }
+            return None
+
+        client.command.side_effect = command_side_effect
+
         yield client
 
 

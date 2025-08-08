@@ -17,5 +17,32 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "entity": {
+    "sensor": {
+      "total_charging_time": {
+        "name": "[%key:component::husqvarna_automower::entity::sensor::total_charging_time::name%]"
+      },
+      "total_cutting_time": {
+        "name": "[%key:component::husqvarna_automower::entity::sensor::total_cutting_time::name%]"
+      },
+      "total_running_time": {
+        "name": "[%key:component::husqvarna_automower::entity::sensor::total_running_time::name%]"
+      },
+      "total_searching_time": {
+        "name": "[%key:component::husqvarna_automower::entity::sensor::total_searching_time::name%]"
+      },
+      "number_of_charging_cycles": {
+        "name": "[%key:component::husqvarna_automower::entity::sensor::number_of_charging_cycles::name%]",
+        "unit_of_measurement": "cycles"
+      },
+      "number_of_collisions": {
+        "name": "[%key:component::husqvarna_automower::entity::sensor::number_of_collisions::name%]",
+        "unit_of_measurement": "collisions"
+      },
+      "cutting_blade_usage_time": {
+        "name": "[%key:component::husqvarna_automower::entity::sensor::cutting_blade_usage_time::name%]"
+      }
+    }
   }
 }
