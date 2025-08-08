@@ -941,7 +941,7 @@ async def test_duration_characteristic_properties(
     )
     await hass.async_block_till_done()
 
-    acc2 = ValveSwitch(
+    acc = ValveSwitch(
         hass,
         hk_driver,
         "Sprinkler",
@@ -953,18 +953,18 @@ async def test_duration_characteristic_properties(
             "linked_valve_end_time": linked_end_time_entity,
         },
     )
-    acc2.run()
+    acc.run()
     await hass.async_block_till_done()
 
-    set_duration_props2 = acc2.char_set_duration.properties
-    assert set_duration_props2["minValue"] == 0
-    assert set_duration_props2["maxValue"] == 3600
-    assert set_duration_props2["minStep"] == 1
+    set_duration_props = acc.char_set_duration.properties
+    assert set_duration_props["minValue"] == 0
+    assert set_duration_props["maxValue"] == 3600
+    assert set_duration_props["minStep"] == 1
 
-    remaining_duration_props2 = acc2.char_remaining_duration.properties
-    assert remaining_duration_props2["minValue"] == 0
-    assert remaining_duration_props2["maxValue"] == 60 * 60 * 48
-    assert remaining_duration_props2["minStep"] == 1
+    remaining_duration_props = acc.char_remaining_duration.properties
+    assert remaining_duration_props["minValue"] == 0
+    assert remaining_duration_props["maxValue"] == 60 * 60 * 48
+    assert remaining_duration_props["minStep"] == 1
 
     # Case 4: linked input_number missing attribute value, should use defaults
     hass.states.async_set(
@@ -977,7 +977,7 @@ async def test_duration_characteristic_properties(
     )
     await hass.async_block_till_done()
 
-    acc3 = ValveSwitch(
+    acc = ValveSwitch(
         hass,
         hk_driver,
         "Sprinkler",
@@ -989,24 +989,24 @@ async def test_duration_characteristic_properties(
             "linked_valve_end_time": linked_end_time_entity,
         },
     )
-    acc3.run()
+    acc.run()
     await hass.async_block_till_done()
 
-    set_duration_props2 = acc3.char_set_duration.properties
-    assert set_duration_props2["minValue"] == 900
-    assert set_duration_props2["maxValue"] == 3600
-    assert set_duration_props2["minStep"] == 1
+    set_duration_props = acc.char_set_duration.properties
+    assert set_duration_props["minValue"] == 900
+    assert set_duration_props["maxValue"] == 3600
+    assert set_duration_props["minStep"] == 1
 
-    remaining_duration_props2 = acc3.char_remaining_duration.properties
-    assert remaining_duration_props2["minValue"] == 0
-    assert remaining_duration_props2["maxValue"] == 60 * 60 * 48
-    assert remaining_duration_props2["minStep"] == 1
+    remaining_duration_props = acc.char_remaining_duration.properties
+    assert remaining_duration_props["minValue"] == 0
+    assert remaining_duration_props["maxValue"] == 60 * 60 * 48
+    assert remaining_duration_props["minStep"] == 1
 
     # Case 3: linked input_number missing state, should use defaults
     hass.states.async_remove(linked_duration_entity)
     await hass.async_block_till_done()
 
-    acc4 = ValveSwitch(
+    acc = ValveSwitch(
         hass,
         hk_driver,
         "Sprinkler",
@@ -1018,18 +1018,18 @@ async def test_duration_characteristic_properties(
             "linked_valve_end_time": linked_end_time_entity,
         },
     )
-    acc4.run()
+    acc.run()
     await hass.async_block_till_done()
 
-    set_duration_props4 = acc4.char_set_duration.properties
-    assert set_duration_props4["minValue"] == 0
-    assert set_duration_props4["maxValue"] == 3600
-    assert set_duration_props4["minStep"] == 1
+    set_duration_props = acc.char_set_duration.properties
+    assert set_duration_props["minValue"] == 0
+    assert set_duration_props["maxValue"] == 3600
+    assert set_duration_props["minStep"] == 1
 
-    remaining_duration_props4 = acc4.char_remaining_duration.properties
-    assert remaining_duration_props4["minValue"] == 0
-    assert remaining_duration_props4["maxValue"] == 60 * 60 * 48
-    assert remaining_duration_props4["minStep"] == 1
+    remaining_duration_props = acc.char_remaining_duration.properties
+    assert remaining_duration_props["minValue"] == 0
+    assert remaining_duration_props["maxValue"] == 60 * 60 * 48
+    assert remaining_duration_props["minStep"] == 1
 
     # Case 5: Attribute is not valid
     assert acc._get_linked_duration_property("invalid_property", 1000) == 1000
