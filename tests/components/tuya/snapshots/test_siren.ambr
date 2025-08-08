@@ -30,7 +30,7 @@
     'suggested_object_id': None,
     'supported_features': <SirenEntityFeature: 3>,
     'translation_key': None,
-    'unique_id': 'tuya.eb14fd1dd93ca2ea34vpinalarm_switch',
+    'unique_id': 'tuya.iks13mcaiyie3rryjb2ocalarm_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -79,7 +79,7 @@
     'suggested_object_id': None,
     'supported_features': <SirenEntityFeature: 3>,
     'translation_key': None,
-    'unique_id': 'tuya.bf0984adfeffe10d5a3ofdalarm_switch',
+    'unique_id': 'tuya.kjr0pqg7eunn4vlujbgsalarm_switch',
     'unit_of_measurement': None,
   })
 # ---
@@ -91,6 +91,55 @@
     }),
     'context': <ANY>,
     'entity_id': 'siren.siren_veranda',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sp_sdd5f5f2dl5wydjf][siren.c9-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'siren',
+    'entity_category': None,
+    'entity_id': 'siren.c9',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <SirenEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': 'tuya.fjdyw5ld2f5f5ddspssiren_switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sp_sdd5f5f2dl5wydjf][siren.c9-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'C9',
+      'supported_features': <SirenEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'siren.c9',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

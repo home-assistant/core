@@ -389,12 +389,27 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "connectable": True,
         "domain": "inkbird",
+        "local_name": "Ink@IAM-T2",
+    },
+    {
+        "connectable": True,
+        "domain": "inkbird",
         "manufacturer_data_start": [
             65,
             67,
             45,
         ],
         "manufacturer_id": 12628,
+    },
+    {
+        "connectable": False,
+        "domain": "inkbird",
+        "manufacturer_data_start": [
+            0,
+            98,
+            0,
+        ],
+        "manufacturer_id": 12884,
     },
     {
         "connectable": True,
