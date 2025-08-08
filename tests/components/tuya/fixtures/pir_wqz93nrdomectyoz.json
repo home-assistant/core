@@ -1,0 +1,37 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "PIR outside stairs",
+  "category": "pir",
+  "product_id": "wqz93nrdomectyoz",
+  "product_name": "Smart PIR sensor",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2023-01-26T09:56:39+00:00",
+  "create_time": "2023-01-26T09:56:39+00:00",
+  "update_time": "2023-01-26T09:56:39+00:00",
+  "function": {},
+  "status_range": {
+    "pir": {
+      "type": "Enum",
+      "value": {
+        "range": ["pir"]
+      }
+    },
+    "battery_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["low", "middle", "high"]
+      }
+    }
+  },
+  "status": {
+    "pir": "pir",
+    "battery_state": "middle"
+  },
+  "set_up": true,
+  "support_local": true
+}

@@ -22,7 +22,7 @@ async def test_hmip_load_all_supported_devices(
         test_devices=None, test_groups=None
     )
 
-    assert len(mock_hap.hmip_device_by_entity_id) == 331
+    assert len(mock_hap.hmip_device_by_entity_id) == 340
 
 
 async def test_hmip_remove_device(
@@ -195,9 +195,14 @@ async def test_hap_reconnected(
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_UNAVAILABLE
 
-    mock_hap._accesspoint_connected = False
-    await async_manipulate_test_data(hass, mock_hap.home, "connected", True)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.AsyncHome.websocket_is_connected",
+        return_value=True,
+    ):
+        await async_manipulate_test_data(hass, mock_hap.home, "connected", True)
+        await mock_hap.ws_connected_handler()
+        await hass.async_block_till_done()
+
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
 

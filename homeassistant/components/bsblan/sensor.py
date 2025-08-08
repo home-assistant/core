@@ -20,6 +20,8 @@ from . import BSBLanConfigEntry, BSBLanData
 from .coordinator import BSBLanCoordinatorData
 from .entity import BSBLanEntity
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class BSBLanSensorEntityDescription(SensorEntityDescription):
