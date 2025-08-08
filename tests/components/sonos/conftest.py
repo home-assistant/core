@@ -882,3 +882,23 @@ def ungroup_speakers(coordinator: MockSoCo, group_member: MockSoCo) -> None:
     )
     coordinator.zoneGroupTopology.subscribe.return_value._callback(event)
     group_member.zoneGroupTopology.subscribe.return_value._callback(event)
+
+
+def create_rendering_control_event(
+    soco: MockSoCo,
+) -> SonosMockEvent:
+    """Create a Sonos Event for speaker rendering control."""
+    variables = {
+        "dialog_level": 1,
+        "speech_enhance_enable": 1,
+        "surround_level": 6,
+        "music_surround_level": 4,
+        "audio_delay": 0,
+        "audio_delay_left_rear": 0,
+        "audio_delay_right_rear": 0,
+        "night_mode": 0,
+        "surround_enabled": 1,
+        "surround_mode": 1,
+        "height_channel_level": 1,
+    }
+    return SonosMockEvent(soco, soco.renderingControl, variables)
