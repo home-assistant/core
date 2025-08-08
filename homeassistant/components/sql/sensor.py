@@ -261,15 +261,12 @@ async def async_setup_sensor(
 
     # MSSQL uses TOP and not LIMIT
     mod_query_template = query_template
-    if "LIMIT" not in upper_query and not upper_query.startswith("SELECT TOP"):
+    if not ("LIMIT" in upper_query or "SELECT TOP" in upper_query):
         if "mssql" in db_url:
-            mod_query_template = ValueTemplate(
-                f"SELECT TOP 1{query_template.template[6:]}", hass
-            )
+            _query = query_template.template.replace("SELECT", "SELECT TOP 1")
         else:
-            mod_query_template = ValueTemplate(
-                f"{query_template.template.replace(';', '')} LIMIT 1;", hass
-            )
+            _query = query_template.template.replace(";", "") + " LIMIT 1;"
+        mod_query_template = ValueTemplate(_query, hass)
 
     async_add_entities(
         [
@@ -386,7 +383,7 @@ class SQLSensor(ManualTriggerSensorEntity):
             rendered_query = check_and_render_sql_query(self.hass, self._query)
             _lambda_stmt = _generate_lambda_stmt(rendered_query)
             result: Result = sess.execute(_lambda_stmt)
-        except TemplateError as err:
+        except ValueError as err:
             _LOGGER.error(
                 "Error rendering query %s: %s",
                 redact_credentials(self._query.template),
