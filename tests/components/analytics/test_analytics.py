@@ -1,8 +1,9 @@
 """The tests for the analytics ."""
 
 from collections.abc import Generator
+from http import HTTPStatus
 from typing import Any
-from unittest.mock import AsyncMock, Mock, PropertyMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 from awesomeversion import AwesomeVersion
@@ -10,7 +11,10 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.matchers import path_type
 
-from homeassistant.components.analytics.analytics import Analytics
+from homeassistant.components.analytics.analytics import (
+    Analytics,
+    async_devices_payload,
+)
 from homeassistant.components.analytics.const import (
     ANALYTICS_ENDPOINT_URL,
     ANALYTICS_ENDPOINT_URL_DEV,
@@ -22,11 +26,13 @@ from homeassistant.components.analytics.const import (
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 MOCK_UUID = "abcdefg"
 MOCK_VERSION = "1970.1.0"
@@ -37,8 +43,9 @@ MOCK_VERSION_NIGHTLY = "1970.1.0.dev19700101"
 @pytest.fixture(autouse=True)
 def uuid_mock() -> Generator[None]:
     """Mock the UUID."""
-    with patch("uuid.UUID.hex", new_callable=PropertyMock) as hex_mock:
-        hex_mock.return_value = MOCK_UUID
+    with patch(
+        "homeassistant.components.analytics.analytics.gen_uuid", return_value=MOCK_UUID
+    ):
         yield
 
 
@@ -966,3 +973,102 @@ async def test_submitting_legacy_integrations(
     assert submitted_data["integrations"] == ["legacy_binary_sensor"]
     assert submitted_data == logged_data
     assert snapshot == submitted_data
+
+
+async def test_devices_payload(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test devices payload."""
+    assert await async_setup_component(hass, "analytics", {})
+    assert await async_devices_payload(hass) == {
+        "version": "home-assistant:1",
+        "no_model_id": [],
+        "devices": [],
+    }
+
+    mock_config_entry = MockConfigEntry(domain="hue")
+    mock_config_entry.add_to_hass(hass)
+
+    # Normal entry
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "1")},
+        sw_version="test-sw-version",
+        hw_version="test-hw-version",
+        name="test-name",
+        manufacturer="test-manufacturer",
+        model="test-model",
+        model_id="test-model-id",
+        suggested_area="Game Room",
+        configuration_url="http://example.com/config",
+    )
+
+    # Ignored because service type
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "2")},
+        manufacturer="test-manufacturer",
+        model_id="test-model-id",
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
+
+    # Ignored because no model id
+    no_model_id_config_entry = MockConfigEntry(domain="no_model_id")
+    no_model_id_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=no_model_id_config_entry.entry_id,
+        identifiers={("device", "4")},
+        manufacturer="test-manufacturer",
+    )
+
+    # Ignored because no manufacturer
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "5")},
+        model_id="test-model-id",
+    )
+
+    # Entry with via device
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "6")},
+        manufacturer="test-manufacturer6",
+        model_id="test-model-id6",
+        via_device=("device", "1"),
+    )
+
+    assert await async_devices_payload(hass) == {
+        "version": "home-assistant:1",
+        "no_model_id": [],
+        "devices": [
+            {
+                "manufacturer": "test-manufacturer",
+                "model_id": "test-model-id",
+                "model": "test-model",
+                "sw_version": "test-sw-version",
+                "hw_version": "test-hw-version",
+                "integration": "hue",
+                "is_custom_integration": False,
+                "has_configuration_url": True,
+                "via_device": None,
+            },
+            {
+                "manufacturer": "test-manufacturer6",
+                "model_id": "test-model-id6",
+                "model": None,
+                "sw_version": None,
+                "hw_version": None,
+                "integration": "hue",
+                "is_custom_integration": False,
+                "has_configuration_url": False,
+                "via_device": 0,
+            },
+        ],
+    }
+
+    client = await hass_client()
+    response = await client.get("/api/analytics/devices")
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == await async_devices_payload(hass)

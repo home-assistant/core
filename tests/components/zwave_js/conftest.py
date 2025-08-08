@@ -538,6 +538,24 @@ def zcombo_smoke_co_alarm_state_fixture() -> NodeDataType:
     )
 
 
+@pytest.fixture(name="nabu_casa_zwa2_state")
+def nabu_casa_zwa2_state_fixture() -> NodeDataType:
+    """Load node with fixture data for Nabu Casa ZWA-2."""
+    return cast(
+        NodeDataType,
+        load_json_object_fixture("nabu_casa_zwa2_state.json", DOMAIN),
+    )
+
+
+@pytest.fixture(name="nabu_casa_zwa2_legacy_state")
+def nabu_casa_zwa2_legacy_state_fixture() -> NodeDataType:
+    """Load node with fixture data for Nabu Casa ZWA-2 (legacy firmware)."""
+    return cast(
+        NodeDataType,
+        load_json_object_fixture("nabu_casa_zwa2_legacy_state.json", DOMAIN),
+    )
+
+
 # model fixtures
 
 
@@ -547,12 +565,6 @@ def mock_listen_block_fixture() -> asyncio.Event:
     return asyncio.Event()
 
 
-@pytest.fixture(name="listen_result")
-def listen_result_fixture() -> asyncio.Future[None]:
-    """Mock a listen result."""
-    return asyncio.Future()
-
-
 @pytest.fixture(name="client")
 def mock_client_fixture(
     controller_state: dict[str, Any],
@@ -560,7 +572,6 @@ def mock_client_fixture(
     version_state: dict[str, Any],
     log_config_state: dict[str, Any],
     listen_block: asyncio.Event,
-    listen_result: asyncio.Future[None],
 ):
     """Mock a client."""
     with patch(
@@ -569,15 +580,16 @@ def mock_client_fixture(
         client = client_class.return_value
 
         async def connect():
+            listen_block.clear()
             await asyncio.sleep(0)
             client.connected = True
 
         async def listen(driver_ready: asyncio.Event) -> None:
             driver_ready.set()
             await listen_block.wait()
-            await listen_result
 
         async def disconnect():
+            listen_block.set()
             client.connected = False
 
         client.connect = AsyncMock(side_effect=connect)
@@ -1356,5 +1368,25 @@ def zcombo_smoke_co_alarm_fixture(
 ) -> Node:
     """Load node for ZCombo-G Smoke/CO Alarm."""
     node = Node(client, zcombo_smoke_co_alarm_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="nabu_casa_zwa2")
+def nabu_casa_zwa2_fixture(
+    client: MagicMock, nabu_casa_zwa2_state: NodeDataType
+) -> Node:
+    """Load node for Nabu Casa ZWA-2."""
+    node = Node(client, nabu_casa_zwa2_state)
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="nabu_casa_zwa2_legacy")
+def nabu_casa_zwa2_legacy_fixture(
+    client: MagicMock, nabu_casa_zwa2_legacy_state: NodeDataType
+) -> Node:
+    """Load node for Nabu Casa ZWA-2 (legacy firmware)."""
+    node = Node(client, nabu_casa_zwa2_legacy_state)
     client.driver.controller.nodes[node.node_id] = node
     return node

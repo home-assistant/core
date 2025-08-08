@@ -146,8 +146,9 @@ def _prepare_config_flow_result_json(
         return prepare_result_json(result)
 
     data = result.copy()
-    entry: config_entries.ConfigEntry = data["result"]
-    data["result"] = entry.as_json_fragment
+    entry: config_entries.ConfigEntry = data["result"]  # type: ignore[typeddict-item]
+    # We overwrite the ConfigEntry object with its json representation.
+    data["result"] = entry.as_json_fragment  # type: ignore[typeddict-unknown-key]
     data.pop("data")
     data.pop("context")
     return data
