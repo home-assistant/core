@@ -653,6 +653,7 @@ FLOWS = {
         "tilt_pi",
         "time_date",
         "todoist",
+        "togrill",
         "tolo",
         "tomorrowio",
         "toon",
