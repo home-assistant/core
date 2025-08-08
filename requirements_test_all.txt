@@ -1170,9 +1170,6 @@ librouteros==3.2.0
 # homeassistant.components.soundtouch
 libsoundtouch==0.8
 
-# homeassistant.components.linear_garage_door
-linear-garage-door==0.2.9
-
 # homeassistant.components.livisi
 livisi==0.0.25
 
@@ -1372,7 +1369,7 @@ open-meteo==0.3.2
 
 # homeassistant.components.open_router
 # homeassistant.components.openai_conversation
-openai==1.93.3
+openai==1.99.3
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
@@ -2647,7 +2644,7 @@ zeroconf==0.147.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.67
+zha==0.0.68
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.67.1
