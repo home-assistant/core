@@ -4,7 +4,6 @@ from unittest.mock import Mock
 
 from bleak.exc import BleakError
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
 from homeassistant.components.togrill.const import DOMAIN
@@ -20,7 +19,6 @@ pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 async def test_user_selection(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test we can select a device."""
 
@@ -52,7 +50,6 @@ async def test_failed_connect(
     hass: HomeAssistant,
     mock_client: Mock,
     mock_client_class: Mock,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test failure to connect result."""
 
@@ -77,7 +74,6 @@ async def test_failed_connect(
 async def test_failed_read(
     hass: HomeAssistant,
     mock_client: Mock,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test failure to read from device."""
 
@@ -101,7 +97,6 @@ async def test_failed_read(
 
 async def test_no_devices(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test missing device."""
 
@@ -116,7 +111,6 @@ async def test_no_devices(
 
 async def test_bluetooth(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test bluetooth device discovery."""
 
