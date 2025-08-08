@@ -1,4 +1,4 @@
-"""DataUpdateCoordinator for the YouTube integration."""
+"""DataUpdateCoordinator for the Hinen integration."""
 
 from __future__ import annotations
 

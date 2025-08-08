@@ -29,7 +29,7 @@ PLATFORMS = [Platform.NUMBER, Platform.SELECT, Platform.SENSOR, Platform.SWITCH]
 async def async_setup_entry(
     hass: HomeAssistant, entry: HinenIntegrationConfigEntry
 ) -> bool:
-    """Set up the Hello Auth component."""
+    """Set up the Hinen Auth component."""
     credential: ClientCredential = ClientCredential(CLIENT_ID, "")
 
     hinen_auth_impl: AbstractOAuth2Implementation = (

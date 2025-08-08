@@ -1,4 +1,4 @@
-"""Entity representing a YouTube account."""
+"""Entity representing a Hinen."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""application_credentials platform for YouTube."""
+"""application_credentials platform for Hinen."""
 
 from homeassistant.components.application_credentials import (
     AuthorizationServer,

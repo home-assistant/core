@@ -15,11 +15,11 @@ __all__ = [
 
 
 class HinenAPIError(Exception):
-    """Base YouTube API exception."""
+    """Base Hinen API exception."""
 
 
 class HinenAuthorizationError(HinenAPIError):
-    """Exception in the YouTube Authorization."""
+    """Exception in the Hinen Authorization."""
 
 
 class InvalidRefreshTokenError(HinenAPIError):
@@ -35,7 +35,7 @@ class UnauthorizedError(HinenAuthorizationError):
 
 
 class HinenBackendError(HinenAPIError):
-    """When the YouTube API itself is down."""
+    """When the Hinen API itself is down."""
 
 
 class PartMissingError(HinenAPIError):
@@ -47,7 +47,7 @@ class MissingAppSecretError(HinenAPIError):
 
 
 class DeprecatedError(HinenAPIError):
-    """If something has been marked as deprecated by the YouTube API."""
+    """If something has been marked as deprecated by the Hinen API."""
 
 
 class HinenResourceNotFoundError(HinenAPIError):

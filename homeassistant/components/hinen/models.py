@@ -29,20 +29,6 @@ class HinenDeviceInfo(BaseModel):
         """Return id."""
         return self.id
 
-    # @property
-    # def content_details(self) -> YouTubeChannelContentDetails:
-    #     """Return content details."""
-    #     if self.nullable_content_details is None:
-    #         raise PartMissingError
-    #     return self.nullable_content_details
-
-    # @property
-    # def statistics(self) -> YouTubeChannelStatistics:
-    #     """Return statistics."""
-    #     if self.nullable_statistics is None:
-    #         raise PartMissingError
-    #     return self.nullable_statistics
-
 
 class HinenDeviceProperty(BaseModel):
     """hinen device property."""
