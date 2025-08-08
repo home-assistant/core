@@ -30,7 +30,7 @@
     'suggested_object_id': None,
     'supported_features': <CameraEntityFeature: 2>,
     'translation_key': None,
-    'unique_id': 'tuya.bf7b8e59f8cd49f425mmfm',
+    'unique_id': 'tuya.mgcpxpmovasazerdps',
     'unit_of_measurement': None,
   })
 # ---
@@ -84,7 +84,7 @@
     'suggested_object_id': None,
     'supported_features': <CameraEntityFeature: 2>,
     'translation_key': None,
-    'unique_id': 'tuya.bf9d5b7ea61ea4c9a6rom9',
+    'unique_id': 'tuya.uBLyTOvlhoRWXKjrps',
     'unit_of_measurement': None,
   })
 # ---
@@ -137,7 +137,7 @@
     'suggested_object_id': None,
     'supported_features': <CameraEntityFeature: 2>,
     'translation_key': None,
-    'unique_id': 'tuya.bf3f8b448bbc123e29oghf',
+    'unique_id': 'tuya.fjdyw5ld2f5f5ddsps',
     'unit_of_measurement': None,
   })
 # ---
