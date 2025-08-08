@@ -18,6 +18,7 @@ from pyatmo.modules.device_types import (
 )
 
 from homeassistant.components import cloud
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
@@ -33,6 +34,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
     NETATMO_CREATE_BATTERY,
+    NETATMO_CREATE_BINARY_SENSOR,
     NETATMO_CREATE_BUTTON,
     NETATMO_CREATE_CAMERA,
     NETATMO_CREATE_CAMERA_LIGHT,
@@ -60,6 +62,8 @@ HOME = "home"
 WEATHER = "weather"
 AIR_CARE = "air_care"
 PUBLIC = NetatmoDeviceType.public
+OPENING = "opening"
+BINARY_SENSOR = BINARY_SENSOR_DOMAIN
 EVENT = "event"
 
 PUBLISHERS = {
@@ -68,6 +72,7 @@ PUBLISHERS = {
     WEATHER: "async_update_weather_stations",
     AIR_CARE: "async_update_air_care",
     PUBLIC: "async_update_public_weather",
+    OPENING: "async_update_status",
     EVENT: "async_update_events",
 }
 
@@ -82,19 +87,40 @@ DEFAULT_INTERVALS = {
     WEATHER: 600,
     AIR_CARE: 300,
     PUBLIC: 600,
+    OPENING: 60,
     EVENT: 600,
 }
 SCAN_INTERVAL = 60
 
 
-@dataclass
 class NetatmoDevice:
-    """Netatmo device class."""
+    """Netatmo device."""
 
-    data_handler: NetatmoDataHandler
-    device: pyatmo.modules.Module
-    parent_id: str
-    signal_name: str
+    def __init__(
+        self,
+        data_handler: NetatmoDataHandler,
+        device: pyatmo.Home | pyatmo.Module,
+        parent_id: str,
+        signal_name: str,
+    ) -> None:
+        """Initialize the Netatmo device."""
+        self.data_handler = data_handler
+        self.device = device
+        self.module = device  # This line is the key fix
+        self.parent_id = parent_id
+        self.signal_name = signal_name
+
+    @property
+    def station_id(self) -> str:
+        """Return the Netatmo station id."""
+        return self.device.entity_id
+
+    @property
+    def home_id(self) -> str:
+        """Return the Netatmo home id."""
+        if isinstance(self.device, pyatmo.Home):
+            return self.device.entity_id
+        return self.device.home.entity_id
 
 
 @dataclass
@@ -316,6 +342,7 @@ class NetatmoDataHandler:
 
             await self.subscribe(HOME, signal_home, None, home_id=home.entity_id)
             await self.subscribe(EVENT, signal_home, None, home_id=home.entity_id)
+            await self.subscribe(OPENING, signal_home, None, home_id=home.entity_id)
 
             self.setup_climate_schedule_select(home, signal_home)
             self.setup_rooms(home, signal_home)
@@ -349,6 +376,10 @@ class NetatmoDataHandler:
             NetatmoDeviceCategory.camera: [
                 NETATMO_CREATE_CAMERA,
                 NETATMO_CREATE_CAMERA_LIGHT,
+            ],
+            NetatmoDeviceCategory.opening: [
+                NETATMO_CREATE_BINARY_SENSOR,
+                NETATMO_CREATE_SENSOR,
             ],
             NetatmoDeviceCategory.dimmer: [NETATMO_CREATE_LIGHT],
             NetatmoDeviceCategory.shutter: [
