@@ -5,6 +5,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from homeassistant.components import conversation
+from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent.timers import (
     MultipleTimersMatchedError,
     TimerEventType,
@@ -32,6 +34,8 @@ from tests.common import MockConfigEntry
 @pytest.fixture
 async def init_components(hass: HomeAssistant) -> None:
     """Initialize required components for tests."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "conversation", {})
     assert await async_setup_component(hass, "intent", {})
 
 
@@ -1424,6 +1428,10 @@ async def test_start_timer_with_conversation_command(
     timer_name = "test timer"
     test_command = "turn on the lights"
     agent_id = "test_agent"
+
+    # Set up a light entity for the conversation command to be valid
+    hass.states.async_set("light.lights", "off")
+    async_expose_entity(hass, conversation.DOMAIN, "light.lights", True)
 
     mock_handle_timer = MagicMock()
     async_register_timer_handler(hass, device_id, mock_handle_timer)
