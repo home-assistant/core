@@ -838,8 +838,8 @@ class StartTimerIntentHandler(intent.IntentHandler):
             agent_state = intent_obj.hass.states.get(conversation_agent.entity_id)
             if (
                 agent_state
-                and agent_state.attributes.get("supported_features", 0)
-                & ConversationEntityFeature.CONTROL
+                and ConversationEntityFeature.CONTROL
+                in agent_state.attributes.get("supported_features", [])
             ):
                 return True  # Skip validation
 
