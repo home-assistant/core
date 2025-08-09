@@ -862,8 +862,6 @@ build.json @home-assistant/supervisor
 /tests/components/lifx/ @Djelibeybi
 /homeassistant/components/light/ @home-assistant/core
 /tests/components/light/ @home-assistant/core
-/homeassistant/components/linear_garage_door/ @IceBotYT
-/tests/components/linear_garage_door/ @IceBotYT
 /homeassistant/components/linkplay/ @Velleman
 /tests/components/linkplay/ @Velleman
 /homeassistant/components/linux_battery/ @fabaff
@@ -1599,6 +1597,8 @@ build.json @home-assistant/supervisor
 /tests/components/todo/ @home-assistant/core
 /homeassistant/components/todoist/ @boralyl
 /tests/components/todoist/ @boralyl
+/homeassistant/components/togrill/ @elupus
+/tests/components/togrill/ @elupus
 /homeassistant/components/tolo/ @MatthiasLohr
 /tests/components/tolo/ @MatthiasLohr
 /homeassistant/components/tomorrowio/ @raman325 @lymanepp

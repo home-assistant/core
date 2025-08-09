@@ -52,7 +52,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '38',
+    'state': '90.0',
   })
 # ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_battery_capacity-entry]
@@ -229,7 +229,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'disconnected',
+    'state': 'connected',
   })
 # ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_charging_limit-entry]
@@ -285,7 +285,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '32',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_charging_power_status-entry]
@@ -295,6 +295,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'fault',
+        'power_available_but_not_activated',
         'providing_power',
         'no_power_available',
       ]),
@@ -334,6 +336,8 @@
       'device_class': 'enum',
       'friendly_name': 'Volvo EX30 Charging power status',
       'options': list([
+        'fault',
+        'power_available_but_not_activated',
         'providing_power',
         'no_power_available',
       ]),
@@ -343,7 +347,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'no_power_available',
+    'state': 'fault',
   })
 # ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_charging_status-entry]
@@ -409,7 +413,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'idle',
+    'state': 'done',
   })
 # ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_charging_type-entry]
@@ -469,7 +473,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'none',
+    'state': 'ac',
   })
 # ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_distance_to_empty_battery-entry]
@@ -525,7 +529,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '90',
+    'state': '250',
   })
 # ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_distance_to_service-entry]
@@ -637,7 +641,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '2',
   })
 # ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_odometer-entry]
@@ -996,6 +1000,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
@@ -1728,6 +1735,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
@@ -2220,6 +2230,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
+        'fault',
+        'power_available_but_not_activated',
         'providing_power',
         'no_power_available',
       ]),
@@ -2259,6 +2271,8 @@
       'device_class': 'enum',
       'friendly_name': 'Volvo XC40 Charging power status',
       'options': list([
+        'fault',
+        'power_available_but_not_activated',
         'providing_power',
         'no_power_available',
       ]),
@@ -2450,7 +2464,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '220',
+    'state': '250',
   })
 # ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_distance_to_service-entry]
@@ -2921,6 +2935,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,
@@ -4564,6 +4581,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
     }),
     'original_device_class': None,
     'original_icon': None,

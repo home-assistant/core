@@ -39,6 +39,22 @@ async def test_sensor(
 
 
 @pytest.mark.parametrize(
+    "full_model",
+    ["xc40_electric_2024"],
+)
+async def test_distance_to_empty_battery(
+    hass: HomeAssistant,
+    setup_integration: Callable[[], Awaitable[bool]],
+) -> None:
+    """Test using `distanceToEmptyBattery` instead of `electricRange`."""
+
+    with patch("homeassistant.components.volvo.PLATFORMS", [Platform.SENSOR]):
+        assert await setup_integration()
+
+    assert hass.states.get("sensor.volvo_xc40_distance_to_empty_battery").state == "250"
+
+
+@pytest.mark.parametrize(
     ("full_model", "short_model"),
     [("ex30_2024", "ex30"), ("xc60_phev_2020", "xc60")],
 )

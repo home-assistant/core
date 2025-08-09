@@ -1,12 +1,13 @@
 # serializer version: 1
-# name: test_data[light.test_garage_1_light-entry]
+# name: test_all_entities[LPH31][select.garden_light_brightness-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
+      'options': list([
+        'low',
+        'high',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -14,9 +15,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'light',
-    'entity_category': None,
-    'entity_id': 'light.test_garage_1_light',
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.garden_light_brightness',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -28,43 +29,42 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Light',
-    'platform': 'linear_garage_door',
+    'original_name': 'Light brightness',
+    'platform': 'letpot',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'light',
-    'unique_id': 'test1-Light',
+    'translation_key': 'light_brightness',
+    'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH31ABCD_light_brightness_low_high',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_data[light.test_garage_1_light-state]
+# name: test_all_entities[LPH31][select.garden_light_brightness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 255,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
-      'friendly_name': 'Test Garage 1 Light',
-      'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
+      'friendly_name': 'Garden Light brightness',
+      'options': list([
+        'low',
+        'high',
       ]),
-      'supported_features': <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.test_garage_1_light',
+    'entity_id': 'select.garden_light_brightness',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'low',
   })
 # ---
-# name: test_data[light.test_garage_2_light-entry]
+# name: test_all_entities[LPH31][select.garden_light_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
+      'options': list([
+        'flower',
+        'vegetable',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -72,9 +72,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'light',
-    'entity_category': None,
-    'entity_id': 'light.test_garage_2_light',
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.garden_light_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -86,43 +86,42 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Light',
-    'platform': 'linear_garage_door',
+    'original_name': 'Light mode',
+    'platform': 'letpot',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'light',
-    'unique_id': 'test2-Light',
+    'translation_key': 'light_mode',
+    'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH31ABCD_light_mode',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_data[light.test_garage_2_light-state]
+# name: test_all_entities[LPH31][select.garden_light_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
-      'friendly_name': 'Test Garage 2 Light',
-      'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
+      'friendly_name': 'Garden Light mode',
+      'options': list([
+        'flower',
+        'vegetable',
       ]),
-      'supported_features': <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.test_garage_2_light',
+    'entity_id': 'select.garden_light_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'vegetable',
   })
 # ---
-# name: test_data[light.test_garage_3_light-entry]
+# name: test_all_entities[LPH62][select.garden_light_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
+      'options': list([
+        'flower',
+        'vegetable',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -130,9 +129,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'light',
-    'entity_category': None,
-    'entity_id': 'light.test_garage_3_light',
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.garden_light_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -144,43 +143,42 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Light',
-    'platform': 'linear_garage_door',
+    'original_name': 'Light mode',
+    'platform': 'letpot',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'light',
-    'unique_id': 'test3-Light',
+    'translation_key': 'light_mode',
+    'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH62ABCD_light_mode',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_data[light.test_garage_3_light-state]
+# name: test_all_entities[LPH62][select.garden_light_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
-      'friendly_name': 'Test Garage 3 Light',
-      'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
+      'friendly_name': 'Garden Light mode',
+      'options': list([
+        'flower',
+        'vegetable',
       ]),
-      'supported_features': <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.test_garage_3_light',
+    'entity_id': 'select.garden_light_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'vegetable',
   })
 # ---
-# name: test_data[light.test_garage_4_light-entry]
+# name: test_all_entities[LPH62][select.garden_temperature_unit_on_display-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
+      'options': list([
+        'fahrenheit',
+        'celsius',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -188,9 +186,9 @@
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'light',
-    'entity_category': None,
-    'entity_id': 'light.test_garage_4_light',
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.garden_temperature_unit_on_display',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -202,32 +200,30 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Light',
-    'platform': 'linear_garage_door',
+    'original_name': 'Temperature unit on display',
+    'platform': 'letpot',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'light',
-    'unique_id': 'test4-Light',
+    'translation_key': 'display_temperature_unit',
+    'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH62ABCD_display_temperature_unit',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_data[light.test_garage_4_light-state]
+# name: test_all_entities[LPH62][select.garden_temperature_unit_on_display-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 255,
-      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
-      'friendly_name': 'Test Garage 4 Light',
-      'supported_color_modes': list([
-        <ColorMode.BRIGHTNESS: 'brightness'>,
+      'friendly_name': 'Garden Temperature unit on display',
+      'options': list([
+        'fahrenheit',
+        'celsius',
       ]),
-      'supported_features': <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.test_garage_4_light',
+    'entity_id': 'select.garden_temperature_unit_on_display',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'celsius',
   })
 # ---
