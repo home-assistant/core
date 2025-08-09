@@ -492,8 +492,8 @@ class ONVIFDevice:
         distance,
         speed,
         move_mode,
-        continuous_duration,
         preset,
+        continuous_duration=None,
         pan=None,
         tilt=None,
         zoom=None,
@@ -542,12 +542,13 @@ class ONVIFDevice:
                 req.Velocity = velocity
 
                 await ptz_service.ContinuousMove(req)
-                await asyncio.sleep(continuous_duration)
-                req = ptz_service.create_type("Stop")
-                req.ProfileToken = profile.token
-                await ptz_service.Stop(
-                    {"ProfileToken": req.ProfileToken, "PanTilt": True, "Zoom": False}
-                )
+                if continuous_duration is not None:
+                    await asyncio.sleep(continuous_duration)
+                    req = ptz_service.create_type("Stop")
+                    req.ProfileToken = profile.token
+                    await ptz_service.Stop(
+                        {"ProfileToken": req.ProfileToken, "PanTilt": True, "Zoom": False}
+                    )
             elif move_mode == RELATIVE_MOVE:
                 # Guard against unsupported operation
                 if not profile.ptz or not profile.ptz.relative:
