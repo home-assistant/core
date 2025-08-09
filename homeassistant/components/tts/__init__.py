@@ -977,8 +977,7 @@ class SpeechManager:
             raise HomeAssistantError("TTS engine name is not set.")
 
         if isinstance(engine_instance, Provider) or (
-            isinstance(engine_instance, TextToSpeechEntity)
-            and (not engine_instance.async_supports_streaming_input())
+            not engine_instance.async_supports_streaming_input()
         ):
             # Non-streaming
             if isinstance(message_or_stream, str):
