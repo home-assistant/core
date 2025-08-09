@@ -4,6 +4,7 @@ DOMAIN = "reolink"
 
 CONF_USE_HTTPS = "use_https"
 CONF_BC_PORT = "baichuan_port"
+CONF_BC_ONLY = "baichuan_only"
 CONF_SUPPORTS_PRIVACY_MODE = "privacy_mode_supported"
 
 # Conserve battery by not waking the battery cameras each minute during normal update

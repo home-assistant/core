@@ -14,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import AmazonConfigEntry
 from .entity import AmazonEntity
+from .utils import alexa_api_call
 
 PARALLEL_UPDATES = 1
 
@@ -60,6 +61,7 @@ class AmazonSwitchEntity(AmazonEntity, SwitchEntity):
 
     entity_description: AmazonSwitchEntityDescription
 
+    @alexa_api_call
     async def _switch_set_state(self, state: bool) -> None:
         """Set desired switch state."""
         method = getattr(self.coordinator.api, self.entity_description.method)

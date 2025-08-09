@@ -3,8 +3,6 @@
 from loqedAPI import loqed
 
 from homeassistant.components.lock import LockState
-from homeassistant.components.loqed import LoqedDataCoordinator
-from homeassistant.components.loqed.const import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_LOCK,
@@ -33,7 +31,7 @@ async def test_lock_responds_to_bolt_state_updates(
     hass: HomeAssistant, integration: MockConfigEntry, lock: loqed.Lock
 ) -> None:
     """Tests the lock responding to updates."""
-    coordinator: LoqedDataCoordinator = hass.data[DOMAIN][integration.entry_id]
+    coordinator = integration.runtime_data
     lock.bolt_state = "night_lock"
     coordinator.async_update_listeners()
 

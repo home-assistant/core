@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from collections import namedtuple
 from collections.abc import Callable
-import logging
 from typing import Any
 
 from pymodbus.client import (
@@ -38,6 +37,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
+    _LOGGER,
     ATTR_ADDRESS,
     ATTR_HUB,
     ATTR_SLAVE,
@@ -70,7 +70,6 @@ from .const import (
 )
 from .validators import check_config
 
-_LOGGER = logging.getLogger(__name__)
 DATA_MODBUS_HUBS: HassKey[dict[str, ModbusHub]] = HassKey(DOMAIN)
 
 
@@ -172,7 +171,7 @@ async def async_modbus_setup(
 
     async def async_write_register(service: ServiceCall) -> None:
         """Write Modbus registers."""
-        slave = 0
+        slave = 1
         if ATTR_UNIT in service.data:
             slave = int(float(service.data[ATTR_UNIT]))
 
@@ -195,7 +194,7 @@ async def async_modbus_setup(
 
     async def async_write_coil(service: ServiceCall) -> None:
         """Write Modbus coil."""
-        slave = 0
+        slave = 1
         if ATTR_UNIT in service.data:
             slave = int(float(service.data[ATTR_UNIT]))
         if ATTR_SLAVE in service.data:

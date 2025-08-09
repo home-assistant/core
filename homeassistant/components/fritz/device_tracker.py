@@ -10,15 +10,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import (
-    FRITZ_DATA_KEY,
-    AvmWrapper,
-    FritzConfigEntry,
-    FritzData,
-    FritzDevice,
-    device_filter_out_from_trackers,
-)
+from .coordinator import FRITZ_DATA_KEY, AvmWrapper, FritzConfigEntry, FritzData
 from .entity import FritzDeviceBase
+from .helpers import device_filter_out_from_trackers
+from .models import FritzDevice
 
 _LOGGER = logging.getLogger(__name__)
 

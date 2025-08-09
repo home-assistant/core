@@ -55,6 +55,7 @@ from .const import (
     MAX_SEGMENTS,
     OUTPUT_FORMATS,
     OUTPUT_IDLE_TIMEOUT,
+    OUTPUT_STARTUP_TIMEOUT,
     RECORDER_PROVIDER,
     RTSP_TRANSPORTS,
     SEGMENT_DURATION_ADJUSTER,
@@ -363,11 +364,14 @@ class Stream:
         # without concern about self._outputs being modified from another thread.
         return MappingProxyType(self._outputs.copy())
 
-    def add_provider(
-        self, fmt: str, timeout: int = OUTPUT_IDLE_TIMEOUT
-    ) -> StreamOutput:
+    def add_provider(self, fmt: str, timeout: int | None = None) -> StreamOutput:
         """Add provider output stream."""
         if not (provider := self._outputs.get(fmt)):
+            startup_timeout = OUTPUT_STARTUP_TIMEOUT
+            if timeout is None:
+                timeout = OUTPUT_IDLE_TIMEOUT
+            else:
+                startup_timeout = timeout
 
             async def idle_callback() -> None:
                 if (
@@ -379,7 +383,7 @@ class Stream:
 
             provider = PROVIDERS[fmt](
                 self.hass,
-                IdleTimer(self.hass, timeout, idle_callback),
+                IdleTimer(self.hass, timeout, idle_callback, startup_timeout),
                 self._stream_settings,
                 self.dynamic_stream_settings,
             )
