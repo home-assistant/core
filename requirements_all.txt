@@ -1599,6 +1599,7 @@ open-garage==0.2.0
 # homeassistant.components.open_meteo
 open-meteo==0.3.2
 
+# homeassistant.components.lmstudio
 # homeassistant.components.open_router
 # homeassistant.components.openai_conversation
 openai==1.99.3
