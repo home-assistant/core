@@ -627,7 +627,9 @@
     'entry_data': dict({
       'host': '**REDACTED**',
       'password': '**REDACTED**',
+      'ssl': True,
       'username': 'ubnt',
+      'verify_ssl': False,
     }),
   })
 # ---
