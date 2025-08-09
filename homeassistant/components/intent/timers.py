@@ -817,6 +817,47 @@ class StartTimerIntentHandler(intent.IntentHandler):
         vol.Optional("conversation_command"): cv.string,
     }
 
+    async def _validate_conversation_command(
+        self, intent_obj: intent.Intent, conversation_command: str
+    ) -> bool:
+        """Validate that a conversation command can be executed."""
+        from homeassistant.components.conversation import (  # noqa: PLC0415
+            ConversationEntity,
+            ConversationEntityFeature,
+            ConversationInput,
+            async_get_agent,
+            async_handle_intents,
+        )
+
+        # Skip validation for LLM agents with control
+        conversation_agent = async_get_agent(
+            intent_obj.hass, intent_obj.conversation_agent_id
+        )
+
+        if isinstance(conversation_agent, ConversationEntity):
+            agent_state = intent_obj.hass.states.get(conversation_agent.entity_id)
+            if (
+                agent_state
+                and agent_state.attributes.get("supported_features", 0)
+                & ConversationEntityFeature.CONTROL
+            ):
+                return True  # Skip validation
+
+        test_input = ConversationInput(
+            text=conversation_command,
+            language=intent_obj.language,
+            device_id=intent_obj.device_id,
+            conversation_id=None,
+            context=intent_obj.context,
+            agent_id=str(intent_obj.conversation_agent_id),
+        )
+
+        recognize_result = await async_handle_intents(intent_obj.hass, test_input)
+        if recognize_result is None:
+            return False
+
+        return True
+
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the intent."""
         hass = intent_obj.hass
@@ -837,30 +878,13 @@ class StartTimerIntentHandler(intent.IntentHandler):
             raise TimersNotSupportedError(intent_obj.device_id)
 
         # Validate conversation command if provided
-        if conversation_command:
-            from homeassistant.components.conversation import (  # noqa: PLC0415
-                ConversationInput,
-                async_handle_intents,
+        if conversation_command and not await self._validate_conversation_command(
+            intent_obj, conversation_command
+        ):
+            raise intent.IntentHandleError(
+                f"Invalid conversation command: {conversation_command}",
+                "invalid_conversation_command",
             )
-
-            test_input = ConversationInput(
-                text=conversation_command,
-                language=intent_obj.language,
-                device_id=intent_obj.device_id,
-                conversation_id=None,
-                context=intent_obj.context,
-                agent_id=str(intent_obj.conversation_agent_id),
-            )
-
-            recognize_result = await async_handle_intents(
-                hass,
-                test_input,
-            )
-            if recognize_result is None:
-                raise intent.IntentHandleError(
-                    f"Invalid conversation command: {conversation_command}",
-                    "invalid_conversation_command",
-                )
 
         name: str | None = None
         if "name" in slots:
