@@ -1,6 +1,7 @@
 """Constants used in modbus integration."""
 
 from enum import Enum
+import logging
 
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -177,3 +178,5 @@ LIGHT_MAX_BRIGHTNESS = 255
 LIGHT_MODBUS_SCALE_MIN = 0
 LIGHT_MODBUS_SCALE_MAX = 100
 LIGHT_MODBUS_INVALID_VALUE = 0xFFFF
+
+_LOGGER = logging.getLogger(__package__)

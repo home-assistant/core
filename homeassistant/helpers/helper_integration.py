@@ -19,13 +19,15 @@ def async_handle_source_entity_changes(
     set_source_entity_id_or_uuid: Callable[[str], None],
     source_device_id: str | None,
     source_entity_id_or_uuid: str,
-    source_entity_removed: Callable[[], Coroutine[Any, Any, None]],
+    source_entity_removed: Callable[[], Coroutine[Any, Any, None]] | None = None,
 ) -> CALLBACK_TYPE:
     """Handle changes to a helper entity's source entity.
 
     The following changes are handled:
-    - Entity removal: If the source entity is removed, the helper config entry
-      is removed, and the helper entity is cleaned up.
+    - Entity removal: If the source entity is removed:
+      - If source_entity_removed is provided, it is called to handle the removal.
+      - If source_entity_removed is not provided, The helper entity is updated to
+      not link to any device.
     - Entity ID changed: If the source entity's entity ID changes and the source
       entity is identified by an entity ID, the set_source_entity_id_or_uuid is
       called. If the source entity is identified by a UUID, the helper config entry
@@ -52,7 +54,18 @@ def async_handle_source_entity_changes(
 
         data = event.data
         if data["action"] == "remove":
-            await source_entity_removed()
+            if source_entity_removed:
+                await source_entity_removed()
+            else:
+                for (
+                    helper_entity_entry
+                ) in entity_registry.entities.get_entries_for_config_entry_id(
+                    helper_config_entry_id
+                ):
+                    # Update the helper entity to link to the new device (or no device)
+                    entity_registry.async_update_entity(
+                        helper_entity_entry.entity_id, device_id=None
+                    )
 
         if data["action"] != "update":
             return
