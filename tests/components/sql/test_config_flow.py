@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
 from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant import config_entries
@@ -12,7 +13,7 @@ from homeassistant.components.recorder import Recorder
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.sql.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
 from . import (
     ENTRY_CONFIG,
@@ -125,13 +126,14 @@ async def test_form_with_broken_query_template(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        ENTRY_CONFIG_WITH_BROKEN_QUERY_TEMPLATE,
-    )
+    with pytest.raises(InvalidData):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            ENTRY_CONFIG_WITH_BROKEN_QUERY_TEMPLATE,
+        )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"query": "query_invalid"}
+    assert result["errors"] == {}
 
     with patch(
         "homeassistant.components.sql.async_setup_entry",
@@ -577,15 +579,13 @@ async def test_options_flow_fails_invalid_query(
         "query": "multiple_queries",
     }
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input=ENTRY_CONFIG_WITH_BROKEN_QUERY_TEMPLATE_OPT,
-    )
+    with pytest.raises(InvalidData):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input=ENTRY_CONFIG_WITH_BROKEN_QUERY_TEMPLATE_OPT,
+        )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {
-        "query": "query_invalid",
-    }
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
