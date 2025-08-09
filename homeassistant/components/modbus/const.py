@@ -96,6 +96,7 @@ CONF_VIRTUAL_COUNT = "virtual_count"
 CONF_WRITE_TYPE = "write_type"
 CONF_ZERO_SUPPRESS = "zero_suppress"
 
+DEVICE_ID = "device_id"
 RTUOVERTCP = "rtuovertcp"
 SERIAL = "serial"
 TCP = "tcp"
@@ -106,7 +107,7 @@ UDP = "udp"
 ATTR_ADDRESS = CONF_ADDRESS
 ATTR_HUB = "hub"
 ATTR_UNIT = "unit"
-ATTR_SLAVE = "device_id"
+ATTR_SLAVE = "slave"
 ATTR_VALUE = "value"
 
 
