@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_SSL
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -20,9 +20,12 @@ class AirOSEntity(CoordinatorEntity[AirOSDataUpdateCoordinator]):
         super().__init__(coordinator)
 
         airos_data = self.coordinator.data
+        url_schema = (
+            "https" if coordinator.config_entry.data.get(CONF_SSL, False) else "http"
+        )
 
         configuration_url: str | None = (
-            f"https://{coordinator.config_entry.data[CONF_HOST]}"
+            f"{url_schema}://{coordinator.config_entry.data[CONF_HOST]}"
         )
 
         self._attr_device_info = DeviceInfo(
