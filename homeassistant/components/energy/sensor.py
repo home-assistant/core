@@ -45,6 +45,7 @@ VALID_ENERGY_UNITS: set[str] = set(UnitOfEnergy)
 
 VALID_ENERGY_UNITS_GAS = {
     UnitOfVolume.CENTUM_CUBIC_FEET,
+    UnitOfVolume.MILLE_CUBIC_FEET,
     UnitOfVolume.CUBIC_FEET,
     UnitOfVolume.CUBIC_METERS,
     UnitOfVolume.LITERS,
@@ -52,6 +53,7 @@ VALID_ENERGY_UNITS_GAS = {
 }
 VALID_VOLUME_UNITS_WATER: set[str] = {
     UnitOfVolume.CENTUM_CUBIC_FEET,
+    UnitOfVolume.MILLE_CUBIC_FEET,
     UnitOfVolume.CUBIC_FEET,
     UnitOfVolume.CUBIC_METERS,
     UnitOfVolume.GALLONS,

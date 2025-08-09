@@ -280,6 +280,7 @@ METRIC_SYSTEM = UnitSystem(
         ("distance", UnitOfLength.YARDS): UnitOfLength.METERS,
         # Convert non-metric volumes of gas meters
         ("gas", UnitOfVolume.CENTUM_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
+        ("gas", UnitOfVolume.MILLE_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("gas", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         # Convert non-metric precipitation
         ("precipitation", UnitOfLength.INCHES): UnitOfLength.MILLIMETERS,
@@ -309,11 +310,13 @@ METRIC_SYSTEM = UnitSystem(
         ): UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
         # Convert non-metric volumes
         ("volume", UnitOfVolume.CENTUM_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
+        ("volume", UnitOfVolume.MILLE_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("volume", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("volume", UnitOfVolume.FLUID_OUNCES): UnitOfVolume.MILLILITERS,
         ("volume", UnitOfVolume.GALLONS): UnitOfVolume.LITERS,
         # Convert non-metric volumes of water meters
         ("water", UnitOfVolume.CENTUM_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
+        ("water", UnitOfVolume.MILLE_CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("water", UnitOfVolume.CUBIC_FEET): UnitOfVolume.CUBIC_METERS,
         ("water", UnitOfVolume.GALLONS): UnitOfVolume.LITERS,
         # Convert wind speeds except knots to km/h
