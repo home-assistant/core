@@ -67,7 +67,7 @@ class SFTPConnection(SSHClient):
         """Open SFTP Connection."""
         await self.async_ssh_connect()
         if self._conn is None:
-            raise RuntimeError("SHH Connection is failed")
+            raise RuntimeError("SSH connection failed")
 
         try:
             self.client = await self._conn.start_sftp_client()
