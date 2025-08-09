@@ -177,6 +177,7 @@ class DeconzHub:
         # Host device
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
+            identifiers={(DOMAIN, self.api.config.mac)},
             connections={(CONNECTION_NETWORK_MAC, self.api.config.mac)},
         )
 
@@ -193,7 +194,7 @@ class DeconzHub:
             model=self.api.config.model_id,
             name=self.api.config.name,
             sw_version=self.api.config.software_version,
-            via_device=(CONNECTION_NETWORK_MAC, self.api.config.mac),
+            via_device=(DOMAIN, self.api.config.mac),
         )
 
     @staticmethod
