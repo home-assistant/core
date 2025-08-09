@@ -73,10 +73,6 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
 
         return await self.process_api_data()
 
-    async def async_refresh(self) -> None:
-        """Refresh data and log errors."""
-        await self._async_refresh(log_failures=True, raise_on_entry_error=True)
-
     async def process_api_data(self) -> ProcessedCoordinatorData:
         """From the API data, create the object that will be used in the entities."""
         tz = await dt_util.async_get_time_zone("Europe/Brussels")

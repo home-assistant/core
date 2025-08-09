@@ -52,7 +52,7 @@ async def test_user_flow_home(
         user_input={CONF_LOCATION: {ATTR_LATITUDE: 50.123, ATTR_LONGITUDE: 4.456}},
     )
     assert result.get("type") == FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "Home"
+    assert result.get("title") == "Brussels"
 
 
 async def test_config_flow_location_out_benelux(
