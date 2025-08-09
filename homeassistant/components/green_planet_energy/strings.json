@@ -5,10 +5,6 @@
         "description": "Setup for the Green Planet Energy electricity price integration"
       }
     },
-    "error": {
-      "cannot_connect": "Failed to connect to Green Planet Energy API",
-      "unknown": "Unknown error occurred"
-    },
     "abort": {
       "already_configured": "Service is already configured"
     }
