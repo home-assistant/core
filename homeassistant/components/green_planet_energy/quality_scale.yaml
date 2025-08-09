@@ -1,0 +1,64 @@
+rules:
+  # Bronze level (mandatory) - All rules MUST be implemented
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not register custom actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver level - Enhanced functionality
+  entity-unavailable:
+    status: todo
+    comment: Integration needs to implement proper availability handling in coordinator.
+  parallel-updates:
+    status: todo
+    comment: Integration needs to set PARALLEL_UPDATES constant in sensor.py.
+  reauthentication-flow:
+    status: exempt
+    comment: Integration does not require authentication.
+  reconfiguration-flow:
+    status: exempt
+    comment: No reconfigurable parameters.
+  entity-category:
+    status: todo
+    comment: Integration could benefit from categorizing diagnostic entities.
+
+  # Gold level - Advanced features
+  devices:
+    status: todo
+    comment: Integration does not create device entries, only entities.
+  diagnostics:
+    status: todo
+    comment: Integration needs diagnostics.py implementation.
+  entity-translations: done
+  exception-translations:
+    status: exempt
+    comment: Integration uses simple service errors that don't require translation.
+  icon-translations:
+    status: exempt
+    comment: Integration uses static icons that don't change based on state.
+
+  # Platinum level - Highest quality standards
+  async-dependency:
+    status: exempt
+    comment: The greenplanet-energy-api library uses aiohttp and is fully async.
+  strict-typing:
+    status: todo
+    comment: Integration needs to be added to .strict-typing and implement typed ConfigEntry.

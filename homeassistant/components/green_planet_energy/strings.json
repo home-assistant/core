@@ -1,0 +1,103 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Setup for the Green Planet Energy electricity price integration"
+      }
+    },
+    "abort": {
+      "already_configured": "Service is already configured"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "price_00": {
+        "name": "Price 00:00"
+      },
+      "price_01": {
+        "name": "Price 01:00"
+      },
+      "price_02": {
+        "name": "Price 02:00"
+      },
+      "price_03": {
+        "name": "Price 03:00"
+      },
+      "price_04": {
+        "name": "Price 04:00"
+      },
+      "price_05": {
+        "name": "Price 05:00"
+      },
+      "price_06": {
+        "name": "Price 06:00"
+      },
+      "price_07": {
+        "name": "Price 07:00"
+      },
+      "price_08": {
+        "name": "Price 08:00"
+      },
+      "price_09": {
+        "name": "Price 09:00"
+      },
+      "price_10": {
+        "name": "Price 10:00"
+      },
+      "price_11": {
+        "name": "Price 11:00"
+      },
+      "price_12": {
+        "name": "Price 12:00"
+      },
+      "price_13": {
+        "name": "Price 13:00"
+      },
+      "price_14": {
+        "name": "Price 14:00"
+      },
+      "price_15": {
+        "name": "Price 15:00"
+      },
+      "price_16": {
+        "name": "Price 16:00"
+      },
+      "price_17": {
+        "name": "Price 17:00"
+      },
+      "price_18": {
+        "name": "Price 18:00"
+      },
+      "price_19": {
+        "name": "Price 19:00"
+      },
+      "price_20": {
+        "name": "Price 20:00"
+      },
+      "price_21": {
+        "name": "Price 21:00"
+      },
+      "price_22": {
+        "name": "Price 22:00"
+      },
+      "price_23": {
+        "name": "Price 23:00"
+      },
+      "highest_price_today": {
+        "name": "Highest price today"
+      },
+      "lowest_price_day": {
+        "name": "Lowest price day (06:00-18:00)"
+      },
+      "lowest_price_night": {
+        "name": "Lowest price night (18:00-06:00)"
+      },
+      "current_price": {
+        "name": "Current price"
+      },
+      "price_chart_24h": {
+        "name": "24h price chart data"
+      }
+    }
+  }
+}

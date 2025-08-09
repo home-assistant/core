@@ -2522,6 +2522,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "green_planet_energy": {
+      "name": "Green Planet Energy",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "greeneye_monitor": {
       "name": "GreenEye Monitor (GEM)",
       "integration_type": "hub",
