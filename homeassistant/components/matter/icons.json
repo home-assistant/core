@@ -134,6 +134,13 @@
           "off": "mdi:lock-off"
         }
       },
+      "dead_front": {
+        "default": "mdi:lock-open-variant",
+        "state": {
+          "on": "mdi:lock",
+          "off": "mdi:lock-open-variant"
+        }
+      },
       "evse_charging_switch": {
         "default": "mdi:ev-station"
       }
