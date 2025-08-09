@@ -44,14 +44,13 @@ class TelegramBotNotifyEntity(NotifyEntity):
         chat_id = subentry.data[CONF_CHAT_ID]
 
         self._attr_unique_id = f"{bot_id}_{chat_id}"
-        self.entity_id = f"notify.telegram_{bot_id}_{chat_id}"
         self.name = subentry.title
 
         self._attr_device_info = DeviceInfo(
             name=config_entry.title,
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="Telegram",
-            model=f"{config_entry.data[CONF_PLATFORM].capitalize()} Bot",
+            model=config_entry.data[CONF_PLATFORM].capitalize(),
             sw_version=telegram.__version__,
             identifiers={(DOMAIN, f"{bot_id}")},
         )
