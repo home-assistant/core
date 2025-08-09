@@ -26,7 +26,9 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 
 from .const import (
     CONF_DATA_TYPE,
+    CONF_FAN_MODE_READ_VALUES,
     CONF_FAN_MODE_VALUES,
+    CONF_FAN_MODE_WRITE_VALUES,
     CONF_SLAVE_COUNT,
     CONF_SWAP,
     CONF_SWAP_BYTE,
@@ -227,10 +229,28 @@ def nan_validator(value: Any) -> int:
 
 
 def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
-    """Control modbus climate fan mode values for duplicates."""
+    """Validate nested fan mode values for duplicates in read/write sections."""
+    all_modes = config.get(CONF_FAN_MODE_VALUES, {})
+    read_values = all_modes.get(CONF_FAN_MODE_READ_VALUES)
+    write_values = all_modes.get(CONF_FAN_MODE_WRITE_VALUES)
+
+    if read_values is None and write_values is None:
+        read_values = write_values = all_modes
+
+    if isinstance(read_values, dict):
+        _validate_fan_mode_dict(read_values, "read")
+
+    if isinstance(write_values, dict) and write_values is not read_values:
+        _validate_fan_mode_dict(write_values, "write")
+
+    return config
+
+
+def _validate_fan_mode_dict(mode_dict: dict[str, int], label: str) -> None:
+    """Validate and clean duplicate fan mode values."""
     fan_modes: set[int] = set()
     errors = []
-    for key, value in config[CONF_FAN_MODE_VALUES].items():
+    for key, value in mode_dict.items():
         if value in fan_modes:
             warn = f"Modbus fan mode {key} has a duplicate value {value}, not loaded, values must be unique!"
             _LOGGER.warning(warn)
@@ -239,8 +259,7 @@ def duplicate_fan_mode_validator(config: dict[str, Any]) -> dict:
             fan_modes.add(value)
 
     for key in reversed(errors):
-        del config[CONF_FAN_MODE_VALUES][key]
-    return config
+        del mode_dict[key]
 
 
 def duplicate_swing_mode_validator(config: dict[str, Any]) -> dict:
