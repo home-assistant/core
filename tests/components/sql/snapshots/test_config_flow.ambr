@@ -1,0 +1,80 @@
+# serializer version: 1
+# name: test_config_flow_preview[incorrect_column]
+  dict({
+    'attributes': dict({
+      'device_class': 'data_size',
+      'friendly_name': 'Get Value',
+      'state_class': 'total',
+      'unit_of_measurement': 'MiB',
+    }),
+    'state': 'unknown',
+  })
+# ---
+# name: test_config_flow_preview[missing_column]
+  dict({
+    'attributes': dict({
+      'friendly_name': 'Get Value',
+    }),
+    'state': 'unknown',
+  })
+# ---
+# name: test_config_flow_preview[success]
+  dict({
+    'attributes': dict({
+      'device_class': 'data_size',
+      'friendly_name': 'Get Value',
+      'state_class': 'total',
+      'unit_of_measurement': 'MiB',
+      'value': 5,
+    }),
+    'state': '5',
+  })
+# ---
+# name: test_config_flow_preview[with_value_template]
+  dict({
+    'attributes': dict({
+      'device_class': 'data_size',
+      'friendly_name': 'Get Value',
+      'state_class': 'total',
+      'unit_of_measurement': 'MiB',
+      'value': 5,
+    }),
+    'state': '5',
+  })
+# ---
+# name: test_config_flow_preview[with_value_template_invalid]
+  dict({
+    'attributes': dict({
+      'device_class': 'data_size',
+      'friendly_name': 'Get Value',
+      'state_class': 'total',
+      'unit_of_measurement': 'MiB',
+      'value': 5,
+    }),
+    'state': '5',
+  })
+# ---
+# name: test_config_flow_preview_no_database
+  dict({
+    'attributes': dict({
+      'device_class': 'data_size',
+      'friendly_name': 'Get Value',
+      'state_class': 'total',
+      'unit_of_measurement': 'MiB',
+      'value': 5,
+    }),
+    'state': '5',
+  })
+# ---
+# name: test_options_flow_preview
+  dict({
+    'attributes': dict({
+      'device_class': 'data_size',
+      'friendly_name': 'Get Value',
+      'state_class': 'total',
+      'unit_of_measurement': 'MiB',
+      'value': 6,
+    }),
+    'state': '6',
+  })
+# ---

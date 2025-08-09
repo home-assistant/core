@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 from datetime import date
 import decimal
 import logging
@@ -10,7 +11,7 @@ from typing import Any
 import sqlalchemy
 from sqlalchemy import lambda_stmt
 from sqlalchemy.engine import Result
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import NoSuchColumnError, SQLAlchemyError
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.util import LRUCache
@@ -32,7 +33,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     MATCH_ALL,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -175,18 +176,11 @@ def _async_get_or_init_domain_data(hass: HomeAssistant) -> SQLData:
     return sql_data
 
 
-async def async_setup_sensor(
+async def get_db_connection(
     hass: HomeAssistant,
-    trigger_entity_config: ConfigType,
-    query_str: str,
-    column_name: str,
-    value_template: ValueTemplate | None,
-    unique_id: str | None,
     db_url: str,
-    yaml: bool,
-    async_add_entities: AddEntitiesCallback | AddConfigEntryEntitiesCallback,
-) -> None:
-    """Set up the SQL sensor."""
+) -> tuple[scoped_session, bool, bool] | None:
+    """Get a database connection."""
     try:
         instance = get_instance(hass)
     except KeyError:  # No recorder loaded
@@ -213,7 +207,33 @@ async def async_setup_sensor(
     ):
         sql_data.session_makers_by_db_url[db_url] = sessmaker
     else:
+        return None
+    return sessmaker, use_database_executor, uses_recorder_db
+
+
+async def async_setup_sensor(
+    hass: HomeAssistant,
+    trigger_entity_config: ConfigType,
+    query_str: str,
+    column_name: str,
+    value_template: ValueTemplate | None,
+    unique_id: str | None,
+    db_url: str,
+    yaml: bool,
+    async_add_entities: AddEntitiesCallback | AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the SQL sensor."""
+
+    if (
+        db_connection := await get_db_connection(
+            hass,
+            db_url,
+        )
+    ) is None:
         return
+    sessmaker = db_connection[0]
+    use_database_executor = db_connection[1]
+    uses_recorder_db = db_connection[2]
 
     upper_query = query_str.upper()
     if uses_recorder_db:
@@ -339,6 +359,7 @@ class SQLSensor(ManualTriggerSensorEntity):
                 manufacturer="SQL",
                 name=self._rendered.get(CONF_NAME),
             )
+        self._preview_callback: Callable[[str, Mapping[str, Any]], None] | None = None
 
     @property
     def name(self) -> str | None:
@@ -357,12 +378,32 @@ class SQLSensor(ManualTriggerSensorEntity):
         """Return extra attributes."""
         return dict(self._attr_extra_state_attributes)
 
+    async def async_start_preview(
+        self,
+        preview_callback: Callable[[str, Mapping[str, Any]], None],
+    ) -> CALLBACK_TYPE:
+        """Render a preview."""
+        # abort early if there is needed data missing
+        if not self._query or not self._column_name:
+            self._attr_available = False
+            calculated_state = self._async_calculate_state()
+            preview_callback(calculated_state.state, calculated_state.attributes)
+            return self._call_on_remove_callbacks
+
+        self._preview_callback = preview_callback
+
+        await self.async_update()
+        return self._call_on_remove_callbacks
+
     async def async_update(self) -> None:
         """Retrieve sensor data from the query using the right executor."""
         if self._use_database_executor:
             await get_instance(self.hass).async_add_executor_job(self._update)
         else:
             await self.hass.async_add_executor_job(self._update)
+        if self._preview_callback:
+            calculated_state = self._async_calculate_state()
+            self._preview_callback(calculated_state.state, calculated_state.attributes)
 
     def _update(self) -> None:
         """Retrieve sensor data from the query."""
@@ -384,7 +425,19 @@ class SQLSensor(ManualTriggerSensorEntity):
 
         for res in result.mappings():
             _LOGGER.debug("Query %s result in %s", self._query, res.items())
-            data = res[self._column_name]
+            try:
+                data = res[self._column_name]
+            except NoSuchColumnError as err:
+                _LOGGER.error(
+                    "Column %s not found in query result for query %s: %s",
+                    self._column_name,
+                    self._query,
+                    redact_credentials(str(err)),
+                )
+                sess.rollback()
+                sess.close()
+                return
+
             for key, value in res.items():
                 if isinstance(value, decimal.Decimal):
                     value = float(value)
@@ -398,6 +451,8 @@ class SQLSensor(ManualTriggerSensorEntity):
         if data is not None and isinstance(data, (bytes, bytearray)):
             data = f"0x{data.hex()}"
 
+        print(data, self._template)
+
         if data is not None and self._template is not None:
             variables = self._template_variables_with_value(data)
             if self._render_availability_template(variables):
@@ -406,6 +461,7 @@ class SQLSensor(ManualTriggerSensorEntity):
                 )
                 self._set_native_value_with_possible_timestamp(_value)
                 self._process_manual_data(variables)
+                print(self._attr_native_value)
         else:
             self._attr_native_value = data
 

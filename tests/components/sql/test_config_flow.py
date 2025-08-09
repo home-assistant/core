@@ -5,12 +5,24 @@ from __future__ import annotations
 from pathlib import Path
 from unittest.mock import patch
 
+import pytest
 from sqlalchemy.exc import SQLAlchemyError
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import config_entries
-from homeassistant.components.recorder import Recorder
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.components.sql.const import DOMAIN
+from homeassistant.components.recorder import CONF_DB_URL, Recorder
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
+from homeassistant.components.sql.const import CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
+from homeassistant.const import (
+    CONF_DEVICE_CLASS,
+    CONF_NAME,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_VALUE_TEMPLATE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -35,6 +47,7 @@ from . import (
 )
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
 async def test_form(recorder_mock: Recorder, hass: HomeAssistant) -> None:
@@ -794,4 +807,250 @@ async def test_device_state_class(recorder_mock: Recorder, hass: HomeAssistant) 
         "query": "SELECT 5 as value",
         "column": "value",
         "unit_of_measurement": "MiB",
+    }
+
+
+@pytest.mark.parametrize(
+    "user_input",
+    [
+        (
+            {
+                CONF_NAME: "Get Value",
+                CONF_QUERY: "SELECT 5 as value",
+                CONF_COLUMN_NAME: "value",
+                CONF_UNIT_OF_MEASUREMENT: "MiB",
+                CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
+                CONF_STATE_CLASS: SensorStateClass.TOTAL,
+            }
+        ),
+        (
+            {
+                CONF_NAME: "Get Value",
+                CONF_QUERY: "SELECT 5 as value",
+                CONF_COLUMN_NAME: "state",
+                CONF_UNIT_OF_MEASUREMENT: "MiB",
+                CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
+                CONF_STATE_CLASS: SensorStateClass.TOTAL,
+            }
+        ),
+        (
+            {
+                CONF_NAME: "Get Value",
+                CONF_QUERY: "SELECT 5 as value",
+            }
+        ),
+        (
+            {
+                CONF_NAME: "Get Value",
+                CONF_QUERY: "SELECT 5 as value",
+                CONF_COLUMN_NAME: "value",
+                CONF_VALUE_TEMPLATE: "{{ value }}",
+                CONF_UNIT_OF_MEASUREMENT: "MiB",
+                CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
+                CONF_STATE_CLASS: SensorStateClass.TOTAL,
+            }
+        ),
+        (
+            {
+                CONF_NAME: "Get Value",
+                CONF_QUERY: "SELECT 5 as value",
+                CONF_COLUMN_NAME: "value",
+                CONF_VALUE_TEMPLATE: "{{ value",
+                CONF_UNIT_OF_MEASUREMENT: "MiB",
+                CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
+                CONF_STATE_CLASS: SensorStateClass.TOTAL,
+            }
+        ),
+    ],
+    ids=(
+        "success",
+        "incorrect_column",
+        "missing_column",
+        "with_value_template",
+        "with_value_template_invalid",
+    ),
+)
+async def test_config_flow_preview(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    user_input: str,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the config flow preview."""
+    client = await hass_ws_client(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+    assert result["preview"] == "sql"
+
+    await client.send_json_auto_id(
+        {
+            "type": "sql/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "config_flow",
+            "user_input": user_input,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    msg = await client.receive_json()
+    assert msg["event"] == snapshot
+    assert len(hass.states.async_all()) == 0
+
+
+async def test_config_flow_preview_no_database(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the config flow preview with no database."""
+    client = await hass_ws_client(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+    assert result["preview"] == "sql"
+
+    await client.send_json_auto_id(
+        {
+            "type": "sql/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "config_flow",
+            "user_input": {
+                CONF_DB_URL: "sqlite://homeassistant.local",
+                CONF_NAME: "Get Value",
+                CONF_QUERY: "SELECT 5 as value",
+                CONF_COLUMN_NAME: "value",
+                CONF_UNIT_OF_MEASUREMENT: "MiB",
+                CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
+                CONF_STATE_CLASS: SensorStateClass.TOTAL,
+            },
+        }
+    )
+    # msg = await client.receive_json()
+    # assert msg["success"]
+    # assert msg["result"] is None
+
+    # msg = await client.receive_json()
+    # assert msg["event"] == snapshot
+    # assert len(hass.states.async_all()) == 0
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert False
+
+
+async def test_options_flow_preview(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the options flow preview."""
+    client = await hass_ws_client(hass)
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_NAME: "Get Value",
+            CONF_QUERY: "SELECT 5 as value",
+            CONF_COLUMN_NAME: "value",
+            CONF_UNIT_OF_MEASUREMENT: "MiB",
+            CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
+            CONF_STATE_CLASS: SensorStateClass.TOTAL,
+        },
+        title="Get Value",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["preview"] == "sql"
+
+    await client.send_json_auto_id(
+        {
+            "type": "sql/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "options_flow",
+            "user_input": {
+                CONF_QUERY: "SELECT 6 as value",
+                CONF_COLUMN_NAME: "value",
+                CONF_UNIT_OF_MEASUREMENT: "MiB",
+                CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
+                CONF_STATE_CLASS: SensorStateClass.TOTAL,
+            },
+        }
+    )
+
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert msg["result"] is None
+
+    msg = await client.receive_json()
+    assert msg["event"] == snapshot
+    assert len(hass.states.async_all()) == 1
+
+
+async def test_options_flow_sensor_preview_config_entry_removed(
+    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test the option flow preview where the config entry is removed."""
+    client = await hass_ws_client(hass)
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={},
+        domain=DOMAIN,
+        options={
+            CONF_NAME: "Get Value",
+            CONF_QUERY: "SELECT 5 as value",
+            CONF_COLUMN_NAME: "value",
+            CONF_UNIT_OF_MEASUREMENT: "MiB",
+            CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
+            CONF_STATE_CLASS: SensorStateClass.TOTAL,
+        },
+        title="Get Value",
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] == FlowResultType.FORM
+    assert result["preview"] == "sql"
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+
+    await client.send_json_auto_id(
+        {
+            "type": "sql/start_preview",
+            "flow_id": result["flow_id"],
+            "flow_type": "options_flow",
+            "user_input": {
+                CONF_QUERY: "SELECT 6 as value",
+                CONF_COLUMN_NAME: "value",
+                CONF_UNIT_OF_MEASUREMENT: "MiB",
+                CONF_DEVICE_CLASS: SensorDeviceClass.DATA_SIZE,
+                CONF_STATE_CLASS: SensorStateClass.TOTAL,
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"] == {
+        "code": "home_assistant_error",
+        "message": "Config entry not found",
     }
