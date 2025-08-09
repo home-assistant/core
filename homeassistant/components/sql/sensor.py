@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 import logging
 from typing import Any
 
@@ -21,7 +22,7 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     MATCH_ALL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import PlatformNotReady, TemplateError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
@@ -235,6 +236,7 @@ class SQLSensor(ManualTriggerSensorEntity):
                 manufacturer="SQL",
                 name=self._rendered.get(CONF_NAME),
             )
+        self._preview_callback: Callable[[str, Mapping[str, Any]], None] | None = None
 
     @property
     def name(self) -> str | None:
@@ -253,12 +255,32 @@ class SQLSensor(ManualTriggerSensorEntity):
         """Return extra attributes."""
         return dict(self._attr_extra_state_attributes)
 
+    async def async_start_preview(
+        self,
+        preview_callback: Callable[[str, Mapping[str, Any]], None],
+    ) -> CALLBACK_TYPE:
+        """Render a preview."""
+        # abort early if there is needed data missing
+        if not self._query or not self._column_name:
+            self._attr_available = False
+            calculated_state = self._async_calculate_state()
+            preview_callback(calculated_state.state, calculated_state.attributes)
+            return self._call_on_remove_callbacks
+
+        self._preview_callback = preview_callback
+
+        await self.async_update()
+        return self._call_on_remove_callbacks
+
     async def async_update(self) -> None:
         """Retrieve sensor data from the query using the right executor."""
         if self._use_database_executor:
             await get_instance(self.hass).async_add_executor_job(self._update)
         else:
             await self.hass.async_add_executor_job(self._update)
+        if self._preview_callback:
+            calculated_state = self._async_calculate_state()
+            self._preview_callback(calculated_state.state, calculated_state.attributes)
 
     def _update(self) -> None:
         """Retrieve sensor data from the query."""
@@ -297,6 +319,8 @@ class SQLSensor(ManualTriggerSensorEntity):
         if data is not None and isinstance(data, (bytes, bytearray)):
             data = f"0x{data.hex()}"
 
+        print(data, self._template)
+
         if data is not None and self._template is not None:
             variables = self._template_variables_with_value(data)
             if self._render_availability_template(variables):
@@ -305,6 +329,7 @@ class SQLSensor(ManualTriggerSensorEntity):
                 )
                 self._set_native_value_with_possible_timestamp(_value)
                 self._process_manual_data(variables)
+                print(self._attr_native_value)
         else:
             self._attr_native_value = data
 

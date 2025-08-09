@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -11,9 +12,11 @@ from sqlalchemy.exc import MultipleResultsFound, NoSuchColumnError, SQLAlchemyEr
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
 import voluptuous as vol
 
+from homeassistant.components import websocket_api
 from homeassistant.components.recorder import CONF_DB_URL, get_instance
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -29,12 +32,16 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import async_get_hass, callback
+from homeassistant.core import HomeAssistant, async_get_hass, callback
 from homeassistant.data_entry_flow import section
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import selector
+from homeassistant.helpers.entity_platform import PlatformData
+from homeassistant.helpers.template import Template
+from homeassistant.helpers.trigger_template_entity import ValueTemplate
 
 from .const import CONF_ADVANCED_OPTIONS, CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
+from .sensor import TRIGGER_ENTITY_OPTIONS, SQLSensor, get_db_connection
 from .util import (
     EmptyQueryError,
     InvalidSqlQuery,
@@ -169,6 +176,11 @@ class SQLConfigFlow(ConfigFlow, domain=DOMAIN):
     data: dict[str, Any]
 
     @staticmethod
+    async def async_setup_preview(hass: HomeAssistant) -> None:
+        """Set up preview WS API."""
+        websocket_api.async_register_command(hass, ws_start_preview)
+
+    @staticmethod
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
@@ -258,6 +270,7 @@ class SQLConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(OPTIONS_SCHEMA, user_input),
             errors=errors,
             description_placeholders=description_placeholders,
+            preview="sql",
         )
 
 
@@ -321,4 +334,103 @@ class SQLOptionsFlowHandler(OptionsFlowWithReload):
             ),
             errors=errors,
             description_placeholders=description_placeholders,
+            preview="sql",
         )
+
+    @staticmethod
+    async def async_setup_preview(hass: HomeAssistant) -> None:
+        """Set up preview WS API."""
+        websocket_api.async_register_command(hass, ws_start_preview)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "sql/start_preview",
+        vol.Required("flow_id"): str,
+        vol.Required("flow_type"): vol.Any("config_flow", "options_flow"),
+        vol.Required("user_input"): dict,
+    }
+)
+@websocket_api.async_response
+async def ws_start_preview(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Generate a preview."""
+
+    if msg["flow_type"] == "config_flow":
+        flow_status = hass.config_entries.flow.async_get(msg["flow_id"])
+        flow_sets = hass.config_entries.flow._handler_progress_index.get(  # noqa: SLF001
+            flow_status["handler"]
+        )
+        assert flow_sets
+        config_entry = hass.config_entries.async_get_entry(flow_status["handler"])
+        name = msg["user_input"][CONF_NAME]
+
+    else:
+        flow_status = hass.config_entries.options.async_get(msg["flow_id"])
+        config_entry = hass.config_entries.async_get_entry(flow_status["handler"])
+        if not config_entry:
+            raise HomeAssistantError("Config entry not found")
+        name = config_entry.options[CONF_NAME]
+
+    @callback
+    def async_preview_updated(state: str, attributes: Mapping[str, Any]) -> None:
+        """Forward config entry state events to websocket."""
+        connection.send_message(
+            websocket_api.event_message(
+                msg["id"], {"attributes": attributes, "state": state}
+            )
+        )
+
+    db_url = resolve_db_url(hass, msg["user_input"].get(CONF_DB_URL))
+
+    if (
+        db_connection := await get_db_connection(
+            hass,
+            db_url,
+        )
+    ) is None:
+        return  # Missing test
+    sessmaker = db_connection[0]
+    use_database_executor = db_connection[1]
+
+    name_template = Template(name, hass)
+    trigger_entity_config = {CONF_NAME: name_template}
+    for key in TRIGGER_ENTITY_OPTIONS:
+        if key not in msg["user_input"]:
+            continue
+        trigger_entity_config[key] = msg["user_input"][key]
+
+    query_str: str = msg["user_input"].get(CONF_QUERY)
+    template: str | None = msg["user_input"].get(CONF_VALUE_TEMPLATE)
+    column_name: str = msg["user_input"].get(CONF_COLUMN_NAME)
+
+    value_template: ValueTemplate | None = None
+    if template is not None:
+        try:
+            value_template = ValueTemplate(template, hass)
+            value_template.ensure_valid()
+        except TemplateError:
+            value_template = None
+
+    preview_entity = SQLSensor(
+        trigger_entity_config=trigger_entity_config,
+        sessmaker=sessmaker,
+        query=query_str,
+        column=column_name,
+        value_template=value_template,
+        yaml=False,
+        use_database_executor=use_database_executor,
+    )
+    preview_entity.hass = hass
+
+    # Create PlatformData, needed for name translations
+    platform_data = PlatformData(hass=hass, domain=SENSOR_DOMAIN, platform_name=DOMAIN)
+    await platform_data.async_load_translations()
+
+    connection.send_result(msg["id"])
+    connection.subscriptions[msg["id"]] = await preview_entity.async_start_preview(
+        async_preview_updated
+    )
