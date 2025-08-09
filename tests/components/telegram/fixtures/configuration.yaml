@@ -2,3 +2,4 @@ notify:
   - name: telegram_reloaded
     platform: telegram
     chat_id: 2
+    config_entry_id: ABCDE
