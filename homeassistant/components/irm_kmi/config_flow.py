@@ -20,7 +20,6 @@ from .const import (
     CONF_LANGUAGE_OVERRIDE,
     CONF_LANGUAGE_OVERRIDE_OPTIONS,
     DOMAIN,
-    HOME_LOCATION_NAME,
     OUT_OF_BENELUX,
     USER_AGENT,
 )
@@ -76,8 +75,6 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 name: str = api_data.get("cityName", "")
-                if user_input[CONF_LOCATION] == home_location:
-                    name = HOME_LOCATION_NAME
 
                 return self.async_create_entry(title=name, data=user_input)
 
