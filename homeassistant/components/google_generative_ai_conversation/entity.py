@@ -27,6 +27,7 @@ from google.genai.types import (
     PartUnionDict,
     SafetySetting,
     Schema,
+    ThinkingConfig,
     Tool,
     ToolListUnion,
 )
@@ -209,13 +210,10 @@ def _convert_content(
     ),
 ) -> Content:
     """Convert HA content to Google content."""
-    if content.role != "assistant" or not content.tool_calls:
-        role = "model" if content.role == "assistant" else content.role
+    if content.role != "assistant":
         return Content(
-            role=role,
-            parts=[
-                Part.from_text(text=content.content if content.content else ""),
-            ],
+            role=content.role,
+            parts=[Part.from_text(text=content.content if content.content else "")],
         )
 
     # Handle the Assistant content with tool calls.
@@ -224,6 +222,18 @@ def _convert_content(
 
     if content.content:
         parts.append(Part.from_text(text=content.content))
+
+    if content.thinking_content:
+        parts.append(Part.from_text(text=content.thinking_content))
+        parts[-1].thought = True
+
+    if (
+        content.native
+        and isinstance(content.native, dict)
+        and content.native.get("domain") == DOMAIN
+    ):
+        if "thought_signature" in content.native:
+            parts[-1].thought_signature = content.native["thought_signature"]
 
     if content.tool_calls:
         parts.extend(
@@ -246,11 +256,6 @@ async def _transform_stream(
     try:
         async for response in result:
             LOGGER.debug("Received response chunk: %s", response)
-            chunk: conversation.AssistantContentDeltaDict = {}
-
-            if new_message:
-                chunk["role"] = "assistant"
-                new_message = False
 
             # According to the API docs, this would mean no candidate is returned, so we can safely throw an error here.
             if response.prompt_feedback or not response.candidates:
@@ -284,23 +289,38 @@ async def _transform_stream(
                 else []
             )
 
-            content = "".join([part.text for part in response_parts if part.text])
-            tool_calls = []
             for part in response_parts:
-                if not part.function_call:
-                    continue
-                tool_call = part.function_call
-                tool_name = tool_call.name if tool_call.name else ""
-                tool_args = _escape_decode(tool_call.args)
-                tool_calls.append(
-                    llm.ToolInput(tool_name=tool_name, tool_args=tool_args)
-                )
+                chunk: conversation.AssistantContentDeltaDict = {}
 
-            if tool_calls:
-                chunk["tool_calls"] = tool_calls
+                # As per the documentation:
+                # * Always send the thought_signature back to the model inside its original Part.
+                # * Don't merge a Part containing a signature with one that does not. This breaks the positional context of the thought.
+                # * Don't combine two Parts that both contain signatures, as the signature strings cannot be merged.
+                if new_message or part.thought_signature:
+                    chunk["role"] = "assistant"
+                    new_message = False
 
-            chunk["content"] = content
-            yield chunk
+                if part.text:
+                    if part.thought:
+                        chunk["thinking_content"] = part.text
+                    else:
+                        chunk["content"] = part.text
+
+                if part.function_call:
+                    tool_call = part.function_call
+                    tool_name = tool_call.name if tool_call.name else ""
+                    tool_args = _escape_decode(tool_call.args)
+                    chunk["tool_calls"] = [
+                        llm.ToolInput(tool_name=tool_name, tool_args=tool_args)
+                    ]
+
+                if part.thought_signature:
+                    chunk["native"] = {
+                        "domain": DOMAIN,
+                        "thought_signature": part.thought_signature,
+                    }
+                    new_message = True
+                yield chunk
     except (
         APIError,
         ValueError,
@@ -521,6 +541,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                     ),
                 ),
             ],
+            thinking_config=ThinkingConfig(include_thoughts=True),
         )
 
 
