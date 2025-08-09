@@ -29,14 +29,15 @@ from openai.types.responses import (
     ResponseOutputItemAddedEvent,
     ResponseOutputItemDoneEvent,
     ResponseOutputMessage,
-    ResponseOutputMessageParam,
     ResponseReasoningItem,
     ResponseReasoningItemParam,
+    ResponseReasoningSummaryTextDeltaEvent,
     ResponseStreamEvent,
     ResponseTextDeltaEvent,
     ToolParam,
     WebSearchToolParam,
 )
+from openai.types.responses.response_create_params import ResponseCreateParamsStreaming
 from openai.types.responses.response_input_param import FunctionCallOutput
 from openai.types.responses.tool_param import (
     CodeInterpreter,
@@ -164,23 +165,42 @@ def _convert_content_to_param(
             EasyInputMessageParam(type="message", role=role, content=content.content)
         )
 
-    if isinstance(content, conversation.AssistantContent) and content.tool_calls:
-        messages.extend(
-            ResponseFunctionToolCallParam(
-                type="function_call",
-                name=tool_call.tool_name,
-                arguments=json.dumps(tool_call.tool_args),
-                call_id=tool_call.id,
+    if isinstance(content, conversation.AssistantContent):
+        if content.tool_calls:
+            messages.extend(
+                ResponseFunctionToolCallParam(
+                    type="function_call",
+                    name=tool_call.tool_name,
+                    arguments=json.dumps(tool_call.tool_args),
+                    call_id=tool_call.id,
+                )
+                for tool_call in content.tool_calls
             )
-            for tool_call in content.tool_calls
-        )
+
+        if isinstance(content.native, dict):
+            if content.native["type"] == "reasoning":
+                messages.append(
+                    ResponseReasoningItemParam(
+                        type="reasoning",
+                        id=content.native["id"],
+                        summary=[
+                            {"type": "summary_text", "text": content.thinking_content}
+                        ]
+                        if content.thinking_content
+                        else [],
+                        encrypted_content=content.native["encrypted_content"],
+                    )
+                )
+
+            if content.native["type"] == "function_call":
+                messages.append(cast(ResponseFunctionToolCallParam, content.native))
+
     return messages
 
 
 async def _transform_stream(
     chat_log: conversation.ChatLog,
     result: AsyncStream[ResponseStreamEvent],
-    messages: ResponseInputParam,
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     """Transform an OpenAI delta stream into HA format."""
     async for event in result:
@@ -197,16 +217,19 @@ async def _transform_stream(
                 yield {"role": "assistant"}
                 current_tool_call = event.item
         elif isinstance(event, ResponseOutputItemDoneEvent):
-            item = event.item.model_dump()
-            item.pop("status", None)
             if isinstance(event.item, ResponseReasoningItem):
-                messages.append(cast(ResponseReasoningItemParam, item))
-            elif isinstance(event.item, ResponseOutputMessage):
-                messages.append(cast(ResponseOutputMessageParam, item))
-            elif isinstance(event.item, ResponseFunctionToolCall):
-                messages.append(cast(ResponseFunctionToolCallParam, item))
+                yield {
+                    "native": ResponseReasoningItemParam(
+                        type="reasoning",
+                        id=event.item.id,
+                        summary=[],
+                        encrypted_content=event.item.encrypted_content,
+                    )
+                }
         elif isinstance(event, ResponseTextDeltaEvent):
             yield {"content": event.delta}
+        elif isinstance(event, ResponseReasoningSummaryTextDeltaEvent):
+            yield {"thinking_content": event.delta}
         elif isinstance(event, ResponseFunctionCallArgumentsDeltaEvent):
             current_tool_call.arguments += event.delta
         elif isinstance(event, ResponseFunctionCallArgumentsDoneEvent):
@@ -335,7 +358,7 @@ class OpenAIBaseLLMEntity(Entity):
                 )
             )
 
-        model_args = {
+        model_args: ResponseCreateParamsStreaming = {
             "model": options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
             "input": [],
             "max_output_tokens": options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
@@ -352,7 +375,8 @@ class OpenAIBaseLLMEntity(Entity):
             model_args["reasoning"] = {
                 "effort": options.get(
                     CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
-                )
+                ),
+                "summary": "auto",
             }
             model_args["include"] = ["reasoning.encrypted_content"]
 
@@ -405,10 +429,9 @@ class OpenAIBaseLLMEntity(Entity):
                 result = await client.responses.create(**model_args)
 
                 async for content in chat_log.async_add_delta_content_stream(
-                    self.entity_id, _transform_stream(chat_log, result, messages)
+                    self.entity_id, _transform_stream(chat_log, result)
                 ):
-                    if not isinstance(content, conversation.AssistantContent):
-                        messages.extend(_convert_content_to_param(content))
+                    messages.extend(_convert_content_to_param(content))
             except openai.RateLimitError as err:
                 LOGGER.error("Rate limited by OpenAI: %s", err)
                 raise HomeAssistantError("Rate limited or insufficient funds") from err
