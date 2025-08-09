@@ -46,6 +46,7 @@ from .const import (
     CONF_TEMPERATURE,
     CONF_TOP_K,
     CONF_TOP_P,
+    CONF_URL_CONTEXT,
     CONF_USE_GOOGLE_SEARCH_TOOL,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
@@ -66,6 +67,7 @@ from .const import (
     RECOMMENDED_TOP_P,
     RECOMMENDED_TTS_MODEL,
     RECOMMENDED_TTS_OPTIONS,
+    RECOMMENDED_URL_CONTEXT,
     RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
     TIMEOUT_MILLIS,
 )
@@ -489,4 +491,14 @@ async def google_generative_ai_config_option_schema(
             }
         )
 
+    if subentry_type == "ai_task_data":
+        schema.update(
+            {
+                vol.Optional(
+                    CONF_URL_CONTEXT,
+                    description={"suggested_value": options.get(CONF_URL_CONTEXT)},
+                    default=RECOMMENDED_URL_CONTEXT,
+                ): bool,
+            }
+        )
     return schema

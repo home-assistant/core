@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from homeassistant.components.google_generative_ai_conversation.const import (
+    CONF_URL_CONTEXT,
     CONF_USE_GOOGLE_SEARCH_TOOL,
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
@@ -95,6 +96,24 @@ async def mock_config_entry_with_google_search(
             data={
                 CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
                 CONF_USE_GOOGLE_SEARCH_TOOL: True,
+            },
+        )
+        await hass.async_block_till_done()
+    return mock_config_entry
+
+
+@pytest.fixture
+async def mock_config_entry_with_url_context(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> MockConfigEntry:
+    """Mock a config entry with assist."""
+    with patch("google.genai.models.AsyncModels.get"):
+        hass.config_entries.async_update_subentry(
+            mock_config_entry,
+            next(iter(mock_config_entry.subentries.values())),
+            data={
+                CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
+                CONF_URL_CONTEXT: True,
             },
         )
         await hass.async_block_till_done()
