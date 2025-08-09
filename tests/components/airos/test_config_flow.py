@@ -4,9 +4,9 @@ from typing import Any
 from unittest.mock import AsyncMock
 
 from airos.exceptions import (
-    ConnectionAuthenticationError,
-    DeviceConnectionError,
-    KeyDataMissingError,
+    AirOSConnectionAuthenticationError,
+    AirOSDeviceConnectionError,
+    AirOSKeyDataMissingError,
 )
 import pytest
 
@@ -78,9 +78,9 @@ async def test_form_duplicate_entry(
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (ConnectionAuthenticationError, "invalid_auth"),
-        (DeviceConnectionError, "cannot_connect"),
-        (KeyDataMissingError, "key_data_missing"),
+        (AirOSConnectionAuthenticationError, "invalid_auth"),
+        (AirOSDeviceConnectionError, "cannot_connect"),
+        (AirOSKeyDataMissingError, "key_data_missing"),
         (Exception, "unknown"),
     ],
 )

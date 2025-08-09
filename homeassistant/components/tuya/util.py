@@ -9,6 +9,29 @@ from homeassistant.exceptions import ServiceValidationError
 from .const import DOMAIN, DPCode
 
 
+def get_dpcode(
+    device: CustomerDevice, dpcodes: str | DPCode | tuple[DPCode, ...] | None
+) -> DPCode | None:
+    """Get the first matching DPCode from the device or return None."""
+    if dpcodes is None:
+        return None
+
+    if isinstance(dpcodes, DPCode):
+        dpcodes = (dpcodes,)
+    elif isinstance(dpcodes, str):
+        dpcodes = (DPCode(dpcodes),)
+
+    for dpcode in dpcodes:
+        if (
+            dpcode in device.function
+            or dpcode in device.status
+            or dpcode in device.status_range
+        ):
+            return dpcode
+
+    return None
+
+
 def remap_value(
     value: float,
     from_min: float = 0,

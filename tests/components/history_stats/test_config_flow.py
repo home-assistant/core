@@ -400,10 +400,10 @@ async def test_options_flow_preview(
             msg = await client.receive_json()
             assert msg["event"]["state"] == exp_count
 
-    hass.states.async_set(monitored_entity, "on")
+        hass.states.async_set(monitored_entity, "on")
 
-    msg = await client.receive_json()
-    assert msg["event"]["state"] == "3"
+        msg = await client.receive_json()
+        assert msg["event"]["state"] == "3"
 
 
 async def test_options_flow_preview_errors(

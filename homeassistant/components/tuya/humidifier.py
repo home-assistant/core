@@ -21,7 +21,7 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
 from .entity import TuyaEntity
 from .models import IntegerTypeData
-from .util import ActionDPCodeNotFoundError
+from .util import ActionDPCodeNotFoundError, get_dpcode
 
 
 @dataclass(frozen=True)
@@ -105,8 +105,8 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
         self._attr_unique_id = f"{super().unique_id}{description.key}"
 
         # Determine main switch DPCode
-        self._switch_dpcode = self.find_dpcode(
-            description.dpcode or DPCode(description.key), prefer_function=True
+        self._switch_dpcode = get_dpcode(
+            self.device, description.dpcode or DPCode(description.key)
         )
 
         # Determine humidity parameters

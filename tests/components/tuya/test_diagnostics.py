@@ -22,7 +22,7 @@ from tests.components.diagnostics import (
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.mark.parametrize("mock_device_code", ["rqbj_gas_sensor"])
+@pytest.mark.parametrize("mock_device_code", ["rqbj_4iqe2hsfyd86kwwc"])
 async def test_entry_diagnostics(
     hass: HomeAssistant,
     mock_manager: ManagerCompat,
@@ -43,7 +43,7 @@ async def test_entry_diagnostics(
     )
 
 
-@pytest.mark.parametrize("mock_device_code", ["rqbj_gas_sensor"])
+@pytest.mark.parametrize("mock_device_code", ["rqbj_4iqe2hsfyd86kwwc"])
 async def test_device_diagnostics(
     hass: HomeAssistant,
     mock_manager: ManagerCompat,

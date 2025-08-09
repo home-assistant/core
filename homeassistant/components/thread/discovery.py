@@ -24,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 KNOWN_BRANDS: dict[str | None, str] = {
     "Amazon": "amazon",
+    "Apple": "apple",
     "Apple Inc.": "apple",
     "Aqara": "aqara_gateway",
     "eero": "eero",
