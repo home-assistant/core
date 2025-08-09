@@ -1,4 +1,4 @@
-"""Support for events which integrates with other components."""
+"""Support for updates which integrates with other components."""
 
 from __future__ import annotations
 

@@ -366,7 +366,7 @@
           "select": "Template a select",
           "sensor": "Template a sensor",
           "switch": "Template a switch",
-          "update": "Template a update",
+          "update": "Template an update",
           "vacuum": "Template a vacuum"
         },
         "title": "Template helper"

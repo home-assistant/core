@@ -1,4 +1,4 @@
-"""The tests for the Template event platform."""
+"""The tests for the Template update platform."""
 
 from typing import Any
 
@@ -128,7 +128,7 @@ async def setup_single_attribute_update(
     attribute: str,
     attribute_template: str,
 ) -> None:
-    """Do setup of event integration testing a single attribute."""
+    """Do setup of update platform testing a single attribute."""
     await async_setup_config(
         hass,
         1,
@@ -920,7 +920,7 @@ async def test_trigger_entity_restore_state(
 async def test_unique_id(
     hass: HomeAssistant, count: int, updates: list[dict], style: ConfigurationStyle
 ) -> None:
-    """Test unique_id option only creates one event per id."""
+    """Test unique_id option only creates one update entity per id."""
     config = {"update": updates}
     if style == ConfigurationStyle.TRIGGER:
         config = {**config, **TEST_STATE_TRIGGER}
@@ -941,7 +941,7 @@ async def test_unique_id(
 async def test_nested_unique_id(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test unique_id option creates one event per nested id."""
+    """Test unique_id option creates one update entity per nested id."""
 
     with assert_setup_component(1, template.DOMAIN):
         assert await async_setup_component(
