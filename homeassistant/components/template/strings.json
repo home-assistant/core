@@ -410,18 +410,18 @@
           "release_summary": "[%key:component::update::entity_component::_::state_attributes::release_summary::name%]",
           "release_url": "[%key:component::update::entity_component::_::state_attributes::release_url::name%]",
           "title": "[%key:component::update::entity_component::_::state_attributes::title::name%]",
-          "update_percent": "Update percent"
+          "update_percent": "Update percentage"
         },
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",
           "installed_version": "Defines a template to get the installed version.",
           "latest_version": "Defines a template to get the latest version.",
-          "install": "Defines actions to run when the update is installed.  Receives varables `version` and `backup`",
-          "in_progress": "Defines a template to get the in progress status.",
+          "install": "Defines actions to run when the update is installed.  Receives variables `version` and `backup`",
+          "in_progress": "Defines a template to get the in-progress state.",
           "release_summary": "Defines a template to get the release summary.",
-          "release_url": "Defines a template to get the release url.",
+          "release_url": "Defines a template to get the release URL.",
           "title": "Defines a template to get the update title.",
-          "update_percent": "Defines a template to get the update completion percent."
+          "update_percent": "Defines a template to get the update completion percentage."
         },
         "sections": {
           "advanced_options": {
