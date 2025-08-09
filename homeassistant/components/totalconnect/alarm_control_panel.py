@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 from total_connect_client import ArmingHelper
-from total_connect_client.exceptions import BadResultCodeError, UsercodeInvalid
+from total_connect_client.exceptions import (
+    BadResultCodeError,
+    FailedToBypassZone,
+    UsercodeInvalid,
+)
 from total_connect_client.location import TotalConnectLocation
 
 from homeassistant.components.alarm_control_panel import (
@@ -23,6 +27,7 @@ from .entity import TotalConnectLocationEntity
 
 SERVICE_ALARM_ARM_AWAY_INSTANT = "arm_away_instant"
 SERVICE_ALARM_ARM_HOME_INSTANT = "arm_home_instant"
+SERVICE_ALARM_BYPASS_ALL = "bypass_all"
 
 
 async def async_setup_entry(
@@ -53,6 +58,12 @@ async def async_setup_entry(
         SERVICE_ALARM_ARM_HOME_INSTANT,
         None,
         "async_alarm_arm_home_instant",
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_ALARM_BYPASS_ALL,
+        {},
+        "async_alarm_bypass_all",
     )
 
 
@@ -266,3 +277,26 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             raise ServiceValidationError(
                 translation_domain=DOMAIN, translation_key="invalid_pin"
             )
+
+    async def async_alarm_bypass_all(self, code: str | None = None) -> None:
+        """Send bypass all zones command."""
+        try:
+            await self.hass.async_add_executor_job(self._bypass_zones)
+        except UsercodeInvalid as error:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                "TotalConnect usercode is invalid. Did not bypass zones"
+            ) from error
+        except FailedToBypassZone as error:
+            raise HomeAssistantError(
+                f"TotalConnect failed to bypass zones for {self.name}."
+            ) from error
+        except BadResultCodeError as error:
+            raise HomeAssistantError(
+                f"TotalConnect failed to bypass zones for {self.name}."
+            ) from error
+        await self.coordinator.async_request_refresh()
+
+    def _bypass_zones(self):
+        """Arm home instant synchronous."""
+        self._location.zone_bypass_all()
