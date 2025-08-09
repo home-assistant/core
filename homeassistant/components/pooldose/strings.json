@@ -1,0 +1,149 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up SEKO PoolDose device",
+        "description": "The device password must be set to default (0000).",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "IP address or hostname of your device"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "api_not_set": "API version not found in device response",
+      "api_not_supported": "Unsupported API version {api_version_is} (shall: {api_version_should})",
+      "params_fetch_failed": "Unable to fetch core parameters from device",
+      "no_device_info": "Unable to retrieve device information. The device may not be properly initialized or may be an unsupported model.",
+      "no_serial_number": "No serial number found on the device. The device may not be properly configured or may be an unsupported model.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "orp": {
+        "name": "ORP"
+      },
+      "ph_type_dosing": {
+        "name": "pH dosing type",
+        "state": {
+          "alcalyne": "pH+",
+          "acid": "pH-"
+        }
+      },
+      "peristaltic_ph_dosing": {
+        "name": "ph peristaltic dosing",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "proportional": "Proportional",
+          "on_off": "On/Off",
+          "timed": "Timed"
+        }
+      },
+      "ofa_ph_value": {
+        "name": "pH over feed alert time"
+      },
+      "orp_type_dosing": {
+        "name": "ORP dosing type",
+        "state": {
+          "low": "[%key:common::state::low%]",
+          "high": "[%key:common::state::high%]"
+        }
+      },
+      "peristaltic_orp_dosing": {
+        "name": "ORP peristaltic dosing",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "proportional": "Proportional",
+          "on_off": "On/Off",
+          "timed": "Timed"
+        }
+      },
+      "ofa_orp_value": {
+        "name": "ORP over feed alert time"
+      },
+      "ph_calibration_type": {
+        "name": "pH calibration type",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "reference": "Reference",
+          "1_point": "1 point",
+          "2_points": "2 points"
+        }
+      },
+      "ph_calibration_offset": {
+        "name": "pH calibration offset"
+      },
+      "ph_calibration_slope": {
+        "name": "pH calibration slope"
+      },
+      "orp_calibration_type": {
+        "name": "ORP calibration type",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "reference": "Reference",
+          "1_point": "1 point"
+        }
+      },
+      "orp_calibration_offset": {
+        "name": "ORP calibration offset"
+      },
+      "orp_calibration_slope": {
+        "name": "ORP calibration slope"
+      }
+    },
+    "number": {
+      "ph_target": {
+        "name": "pH target"
+      },
+      "orp_target": {
+        "name": "ORP target"
+      }
+    },
+    "switch": {
+      "stop_pool_dosing": {
+        "name": "Pause dosing"
+      },
+      "circulation_detection": {
+        "name": "Circulation monitoring"
+      },
+      "frequency_input": {
+        "name": "Frequency input"
+      }
+    },
+    "binary_sensor": {
+      "circulation_state": {
+        "name": "Circulation"
+      },
+      "ph_level_ok": {
+        "name": "pH level OK"
+      },
+      "orp_level_ok": {
+        "name": "ORP level OK"
+      },
+      "flow_rate_ok": {
+        "name": "Flow rate OK"
+      },
+      "alarm_relay": {
+        "name": "Alarm relay"
+      },
+      "relay_aux1_ph": {
+        "name": "pH measure relay"
+      },
+      "relay_aux2_orpcl": {
+        "name": "ORP/CL measure relay"
+      }
+    },
+    "select": {
+      "water_meter_unit": {
+        "name": "Water meter unit"
+      }
+    }
+  }
+}
