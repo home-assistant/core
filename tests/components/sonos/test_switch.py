@@ -6,7 +6,6 @@ from unittest.mock import patch
 
 import pytest
 
-
 from homeassistant.components.sonos import DOMAIN
 from homeassistant.components.sonos.const import (
     DATA_SONOS_DISCOVERY_MANAGER,
@@ -37,7 +36,13 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .conftest import MockSoCo, SoCoMockFactory, SonosMockEvent, SonosMockService, create_rendering_control_event
+from .conftest import (
+    MockSoCo,
+    SoCoMockFactory,
+    SonosMockEvent,
+    SonosMockService,
+    create_rendering_control_event,
+)
 
 from tests.common import async_fire_time_changed
 
