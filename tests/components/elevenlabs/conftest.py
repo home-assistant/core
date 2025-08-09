@@ -1,6 +1,7 @@
 """Common fixtures for the ElevenLabs text-to-speech tests."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from elevenlabs.core import ApiError
@@ -8,7 +9,12 @@ from elevenlabs.types import GetVoicesResponse
 from httpx import ConnectError
 import pytest
 
-from homeassistant.components.elevenlabs.const import CONF_MODEL, CONF_VOICE
+from homeassistant.components.elevenlabs.const import (
+    CONF_MODEL,
+    CONF_STT_AUTO_LANGUAGE,
+    CONF_STT_MODEL,
+    CONF_VOICE,
+)
 from homeassistant.const import CONF_API_KEY
 
 from .const import MOCK_MODELS, MOCK_VOICES
@@ -144,11 +150,29 @@ def mock_entry() -> MockConfigEntry:
         data={
             CONF_API_KEY: "api_key",
         },
-        options={CONF_MODEL: "model1", CONF_VOICE: "voice1"},
+        options={
+            CONF_MODEL: "model1",
+            CONF_VOICE: "voice1",
+            CONF_STT_MODEL: "stt_model1",
+            CONF_STT_AUTO_LANGUAGE: False,
+        },
     )
     entry.models = {
         "model1": "model1",
     }
 
     entry.voices = {"voice1": "voice1"}
+    entry.stt_models = {"stt_model1": "stt_model1"}
     return entry
+
+
+@pytest.fixture(name="config_data")
+def config_data_fixture() -> dict[str, Any]:
+    """Return config data."""
+    return {}
+
+
+@pytest.fixture(name="config_options")
+def config_options_fixture() -> dict[str, Any]:
+    """Return config options."""
+    return {}
