@@ -27,7 +27,7 @@
     },
     "number": {
       "humidity": {
-        "name": "Humidity"
+        "name": "[%key:component::sensor::entity_component::humidity::name%]"
       }
     }
   }
