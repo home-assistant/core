@@ -15,10 +15,16 @@ from airos.exceptions import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DEFAULT_SSL, DEFAULT_VERIFY_SSL, DOMAIN
 from .coordinator import AirOS8
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,6 +34,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_USERNAME, default="ubnt"): str,
         vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_SSL, default=DEFAULT_SSL): bool,
+        vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
     }
 )
 
@@ -35,7 +43,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ubiquiti airOS."""
 
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(
         self,
@@ -46,13 +54,16 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # By default airOS 8 comes with self-signed SSL certificates,
             # with no option in the web UI to change or upload a custom certificate.
-            session = async_get_clientsession(self.hass, verify_ssl=False)
+            session = async_get_clientsession(
+                self.hass, verify_ssl=user_input[CONF_VERIFY_SSL]
+            )
 
             airos_device = AirOS8(
                 host=user_input[CONF_HOST],
                 username=user_input[CONF_USERNAME],
                 password=user_input[CONF_PASSWORD],
                 session=session,
+                use_ssl=user_input[CONF_SSL],
             )
             try:
                 await airos_device.login()
