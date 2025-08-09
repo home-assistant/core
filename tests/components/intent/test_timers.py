@@ -1483,7 +1483,6 @@ async def test_start_timer_with_invalid_conversation_command(
     mock_handle_timer = MagicMock()
     async_register_timer_handler(hass, device_id, mock_handle_timer)
 
-    # Test with invalid conversation command (no entities exposed)
     with pytest.raises(intent.IntentHandleError) as exc_info:
         await intent.async_handle(
             hass,
