@@ -15,7 +15,7 @@ from greenplanet_energy_api import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
@@ -42,19 +42,9 @@ class GreenPlanetEnergyUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             return await self.api.get_electricity_prices()
         except GreenPlanetEnergyConnectionError as err:
-            _LOGGER.warning(
-                "Connection error fetching data from Green Planet Energy API: %s", err
-            )
-            # Return empty data instead of raising an error
-            # This prevents the integration from failing completely
-            return {}
+            raise UpdateFailed(f"Connection error: {err}") from err
         except GreenPlanetEnergyAPIError as err:
-            _LOGGER.error(
-                "API error fetching data from Green Planet Energy API: %s", err
-            )
-            # Return empty data instead of raising an error
-            # This prevents the integration from failing completely
-            return {}
+            raise UpdateFailed(f"API error: {err}") from err
 
     async def async_shutdown(self) -> None:
         """Shutdown coordinator."""
