@@ -1,6 +1,7 @@
 """Tests for the PlayStation Network notify platform."""
 
 from collections.abc import AsyncGenerator
+import logging
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import freeze_time
@@ -134,3 +135,28 @@ async def test_send_message_exceptions(
         )
 
     mock_psnawpapi.group.return_value.send_message.assert_called_once_with("henlo fren")
+
+
+async def test_notify_skip_fobidden(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_psnawpapi: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test we skip creation of notifiers if forbidden by parental controls."""
+
+    mock_psnawpapi.me.return_value.get_groups.side_effect = PSNAWPForbiddenError(
+        """{"error": {"message": "Not permitted by parental control"}}"""
+    )
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("notify.testuser_group_publicuniversalfriend")
+    assert state is None
+
+    with caplog.at_level(logging.DEBUG):
+        assert "Not permitted by parental control" in caplog.text

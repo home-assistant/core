@@ -5,6 +5,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
+import json
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -163,13 +164,25 @@ class PlaystationNetworkGroupsUpdateCoordinator(
 
     async def update_data(self) -> dict[str, GroupDetails]:
         """Update groups data."""
-        return await self.hass.async_add_executor_job(
-            lambda: {
-                group_info.group_id: group_info.get_group_information()
-                for group_info in self.psn.client.get_groups()
-                if not group_info.group_id.startswith("~")
-            }
-        )
+        try:
+            return await self.hass.async_add_executor_job(
+                lambda: {
+                    group_info.group_id: group_info.get_group_information()
+                    for group_info in self.psn.client.get_groups()
+                    if not group_info.group_id.startswith("~")
+                }
+            )
+        except PSNAWPForbiddenError as e:
+            error = json.loads(e.args[0])
+            _LOGGER.warning(
+                "Failed to retrieve DM and group chats for %s from PlayStation Network: %s",
+                self.config_entry.title,
+                error["error"]["message"],
+            )
+            await self.async_shutdown()
+            return {}
+        except PSNAWPError:
+            raise
 
 
 class PlaystationNetworkFriendDataCoordinator(
