@@ -19,7 +19,9 @@
     dict({
       'agent_id': 'conversation.claude_conversation',
       'content': 'Certainly, calling it now!',
+      'native': None,
       'role': 'assistant',
+      'thinking_content': None,
       'tool_calls': list([
         dict({
           'id': 'toolu_0123456789AbCdEfGhIjKlM',
@@ -40,7 +42,9 @@
     dict({
       'agent_id': 'conversation.claude_conversation',
       'content': 'I have successfully called the function',
+      'native': None,
       'role': 'assistant',
+      'thinking_content': None,
       'tool_calls': None,
     }),
   ])
