@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from kiosker import KioskerAPI
 
@@ -34,7 +35,7 @@ class KioskerDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=poll_interval),
         )
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         try:
             status = await self.hass.async_add_executor_job(self.api.status)
@@ -42,6 +43,11 @@ class KioskerDataUpdateCoordinator(DataUpdateCoordinator):
             screensaver = await self.hass.async_add_executor_job(
                 self.api.screensaver_get_state
             )
+        except (OSError, TimeoutError) as exception:
+            _LOGGER.warning(
+                "Connection failed for Kiosker: %s", exception, exc_info=True
+            )
+            raise UpdateFailed(exception) from exception
         except Exception as exception:
             # Check if this is an authentication error (401)
             if self._is_auth_error(exception):

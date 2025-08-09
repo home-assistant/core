@@ -36,7 +36,7 @@ def mock_config_entry() -> MockConfigEntry:
             "ssl_verify": False,
             "poll_interval": 30,
         },
-        unique_id="A98BE1CE",
+        unique_id="A98BE1CE-5FE7-4A8D-B2C3-123456789ABC",
     )
 
 
@@ -49,7 +49,7 @@ def mock_kiosker_api():
 
     # Mock status data
     mock_status = MagicMock()
-    mock_status.device_id = "A98BE1CE"
+    mock_status.device_id = "A98BE1CE-5FE7-4A8D-B2C3-123456789ABC"
     mock_status.model = "iPad Pro"
     mock_status.os_version = "18.0"
     mock_status.app_name = "Kiosker"

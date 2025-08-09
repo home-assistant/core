@@ -36,52 +36,32 @@ class KioskerEntity(CoordinatorEntity[KioskerDataUpdateCoordinator]):
             serial_number=device_id,
         )
 
-    def _get_device_id(self) -> str:
-        """Get device ID from coordinator data."""
+    def _get_status_attribute(self, attribute: str, default: str = "Unknown") -> str:
+        """Get attribute from coordinator status data."""
         if (
             self.coordinator.data
             and "status" in self.coordinator.data
-            and hasattr(self.coordinator.data["status"], "device_id")
+            and hasattr(self.coordinator.data["status"], attribute)
         ):
-            return self.coordinator.data["status"].device_id
-        return "unknown"
+            return getattr(self.coordinator.data["status"], attribute)
+        return default
+
+    def _get_device_id(self) -> str:
+        """Get device ID from coordinator data."""
+        return self._get_status_attribute("device_id", "unknown")
 
     def _get_app_name(self) -> str:
         """Get app name from coordinator data."""
-        if (
-            self.coordinator.data
-            and "status" in self.coordinator.data
-            and hasattr(self.coordinator.data["status"], "app_name")
-        ):
-            return self.coordinator.data["status"].app_name
-        return "Unknown"
+        return self._get_status_attribute("app_name")
 
     def _get_model(self) -> str:
         """Get model from coordinator data."""
-        if (
-            self.coordinator.data
-            and "status" in self.coordinator.data
-            and hasattr(self.coordinator.data["status"], "model")
-        ):
-            return self.coordinator.data["status"].model
-        return "Unknown"
+        return self._get_status_attribute("model")
 
     def _get_sw_version(self) -> str:
         """Get software version from coordinator data."""
-        if (
-            self.coordinator.data
-            and "status" in self.coordinator.data
-            and hasattr(self.coordinator.data["status"], "app_version")
-        ):
-            return self.coordinator.data["status"].app_version
-        return "Unknown"
+        return self._get_status_attribute("app_version")
 
     def _get_hw_version(self) -> str:
-        """Get software version from coordinator data."""
-        if (
-            self.coordinator.data
-            and "status" in self.coordinator.data
-            and hasattr(self.coordinator.data["status"], "os_version")
-        ):
-            return self.coordinator.data["status"].os_version
-        return "Unknown"
+        """Get hardware version from coordinator data."""
+        return self._get_status_attribute("os_version")

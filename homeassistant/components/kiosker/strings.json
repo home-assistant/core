@@ -26,8 +26,20 @@
       },
       "zeroconf_confirm": {
         "title": "Discovered Kiosker App",
-        "description": "You are about to pair `{name}` at `{host}:{port}` with Home Assistant.\n\n**Would you like to proceed?**",
-        "submit": "Pair"
+        "description": "You are about to pair `{name}` at `{host}:{port}` with Home Assistant.\n\nPlease provide the API token to complete setup.",
+        "submit": "Pair",
+        "data": {
+          "api_token": "API Token",
+          "poll_interval": "Poll Interval (seconds)",
+          "ssl": "Use SSL",
+          "ssl_verify": "Verify certificate"
+        },
+        "data_description": {
+          "api_token": "The API token for the Kiosker App. This can be generated in the app API settings.",
+          "poll_interval": "The interval in seconds to poll the Kiosker App for updates.",
+          "ssl": "Connect to the Kiosker App using HTTPS. The Kiosker API has to be configured for SSL.",
+          "ssl_verify": "Verify SSL certificate. Enable for valid certificates only."
+        }
       },
       "discovery_confirm": {
         "title": "Pair Kiosker App",

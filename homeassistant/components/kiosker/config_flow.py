@@ -57,13 +57,18 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     try:
         # Test connection by getting status
         status = await hass.async_add_executor_job(api.status)
-    except Exception as exc:
+    except (OSError, TimeoutError) as exc:
         _LOGGER.error("Failed to connect to Kiosker: %s", exc)
+        raise CannotConnect from exc
+    except Exception as exc:
+        _LOGGER.error("Unexpected error connecting to Kiosker: %s", exc)
         raise CannotConnect from exc
 
     # Return info that you want to store in the config entry
     device_id = status.device_id if hasattr(status, "device_id") else data[CONF_HOST]
-    return {"title": f"Kiosker {device_id}"}
+    # Use first 8 characters of device_id for consistency with entity naming
+    display_id = device_id[:8] if len(device_id) > 8 else device_id
+    return {"title": f"Kiosker {display_id}"}
 
 
 class ConfigFlow(HAConfigFlow, domain=DOMAIN):
@@ -91,8 +96,11 @@ class ConfigFlow(HAConfigFlow, domain=DOMAIN):
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
+            except (ValueError, TypeError) as exc:
+                _LOGGER.error("Invalid configuration data: %s", exc)
+                errors["base"] = "invalid_host"
             except Exception:
-                _LOGGER.exception("Unexpected exception")
+                _LOGGER.exception("Unexpected exception during validation")
                 errors["base"] = "unknown"
             else:
                 # Get device info to determine unique ID
@@ -110,7 +118,11 @@ class ConfigFlow(HAConfigFlow, domain=DOMAIN):
                         if hasattr(status, "device_id")
                         else f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
                     )
+                except (OSError, TimeoutError, AttributeError) as exc:
+                    _LOGGER.debug("Could not get device ID from status: %s", exc)
+                    device_id = f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
                 except Exception:  # noqa: BLE001
+                    _LOGGER.debug("Unexpected error getting device ID from status")
                     device_id = f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}"
 
                 # Use device ID as unique identifier
@@ -176,23 +188,10 @@ class ConfigFlow(HAConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle zeroconf confirmation."""
-        if user_input is not None:
-            # User confirmed, proceed to get API token
-            return await self.async_step_discovery_confirm()
-
-        # Show confirmation form with the stored title placeholders
-        return self.async_show_form(
-            step_id="zeroconf_confirm",
-            description_placeholders=self.context["title_placeholders"],
-        )
-
-    async def async_step_discovery_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Confirm discovery."""
         errors: dict[str, str] = {}
-        if user_input is not None:
-            # Use stored discovery info
+
+        if user_input is not None and CONF_API_TOKEN in user_input:
+            # Use stored discovery info and user-provided token
             host = self._discovered_host
             port = self._discovered_port
 
@@ -211,7 +210,10 @@ class ConfigFlow(HAConfigFlow, domain=DOMAIN):
             try:
                 info = await validate_input(self.hass, config_data)
             except CannotConnect:
-                errors["base"] = "cannot_connect"
+                errors[CONF_API_TOKEN] = "cannot_connect"
+            except (ValueError, TypeError) as exc:
+                _LOGGER.error("Invalid discovery data: %s", exc)
+                errors[CONF_API_TOKEN] = "invalid_auth"
             except Exception:
                 _LOGGER.exception("Unexpected exception during discovery validation")
                 errors["base"] = "unknown"
@@ -229,7 +231,7 @@ class ConfigFlow(HAConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="discovery_confirm",
+            step_id="zeroconf_confirm",
             data_schema=discovery_schema,
             description_placeholders=self.context["title_placeholders"],
             errors=errors,
@@ -264,6 +266,13 @@ class ConfigFlow(HAConfigFlow, domain=DOMAIN):
         try:
             await validate_input(self.hass, new_data)
         except CannotConnect:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
+                errors={"base": "invalid_auth"},
+            )
+        except (ValueError, TypeError) as exc:
+            _LOGGER.error("Invalid reauth data: %s", exc)
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=vol.Schema({vol.Required(CONF_API_TOKEN): str}),
