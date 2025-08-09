@@ -33,6 +33,11 @@ MOCK_CONFIG = {
         CONF_VERIFY_SSL: False,
     },
 }
+MOCK_CONFIG_REAUTH = {
+    CONF_HOST: "1.1.1.1",
+    CONF_USERNAME: "ubnt",
+    CONF_PASSWORD: "wrong-password",
+}
 
 
 async def test_form_creates_entry(
@@ -89,7 +94,6 @@ async def test_form_duplicate_entry(
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
-        (AirOSConnectionAuthenticationError, "invalid_auth"),
         (AirOSDeviceConnectionError, "cannot_connect"),
         (AirOSKeyDataMissingError, "key_data_missing"),
         (Exception, "unknown"),
@@ -128,3 +132,37 @@ async def test_form_exception_handling(
     assert result["title"] == "NanoStation 5AC ap name"
     assert result["data"] == MOCK_CONFIG
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reauth_success(
+    hass: HomeAssistant,
+    mock_airos_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reauthentication from start (failure) to finish (success)."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_airos_client.login.side_effect = AirOSConnectionAuthenticationError
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+
+    flow = flows[0]
+    assert flow["step_id"] == "reauth"
+
+    mock_airos_client.login.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        flow["flow_id"],
+        user_input={
+            CONF_PASSWORD: "new_correct_password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    updated_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert updated_entry.data[CONF_PASSWORD] == "new_correct_password"
