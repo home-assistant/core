@@ -839,8 +839,8 @@ class StartTimerIntentHandler(intent.IntentHandler):
         # Validate conversation command if provided
         if conversation_command:
             from homeassistant.components.conversation import (  # noqa: PLC0415
-                DATA_DEFAULT_ENTITY,
                 ConversationInput,
+                async_handle_intents,
             )
 
             test_input = ConversationInput(
@@ -849,13 +849,12 @@ class StartTimerIntentHandler(intent.IntentHandler):
                 device_id=intent_obj.device_id,
                 conversation_id=None,
                 context=intent_obj.context,
-                agent_id=intent_obj.conversation_agent_id
-                or "conversation.home_assistant",
+                agent_id=str(intent_obj.conversation_agent_id),
             )
 
-            default_agent = hass.data[DATA_DEFAULT_ENTITY]
-            recognize_result = await default_agent.async_recognize_intent(
-                test_input, strict_intents_only=True
+            recognize_result = await async_handle_intents(
+                hass,
+                test_input,
             )
             if recognize_result is None:
                 raise intent.IntentHandleError(
