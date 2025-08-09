@@ -338,7 +338,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "elv",
     "elvia",
     "emby",
-    "emoncms",
     "emoncms_history",
     "emonitor",
     "emulated_hue",
