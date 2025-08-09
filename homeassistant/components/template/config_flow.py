@@ -19,6 +19,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
+from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_DEVICE_ID,
@@ -104,6 +105,17 @@ from .select import CONF_OPTIONS, CONF_SELECT_OPTION, async_create_preview_selec
 from .sensor import async_create_preview_sensor
 from .switch import async_create_preview_switch
 from .template_entity import TemplateEntity
+from .update import (
+    CONF_IN_PROGRESS,
+    CONF_INSTALL,
+    CONF_INSTALLED_VERSION,
+    CONF_LATEST_VERSION,
+    CONF_RELEASE_SUMMARY,
+    CONF_RELEASE_URL,
+    CONF_TITLE,
+    CONF_UPDATE_PERCENTAGE,
+    async_create_preview_update,
+)
 from .vacuum import (
     CONF_FAN_SPEED,
     CONF_FAN_SPEED_LIST,
@@ -315,6 +327,29 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(CONF_TURN_OFF): selector.ActionSelector(),
         }
 
+    if domain == Platform.UPDATE:
+        schema |= {
+            vol.Optional(CONF_INSTALLED_VERSION): selector.TemplateSelector(),
+            vol.Optional(CONF_LATEST_VERSION): selector.TemplateSelector(),
+            vol.Optional(CONF_INSTALL): selector.ActionSelector(),
+            vol.Optional(CONF_IN_PROGRESS): selector.TemplateSelector(),
+            vol.Optional(CONF_RELEASE_SUMMARY): selector.TemplateSelector(),
+            vol.Optional(CONF_RELEASE_URL): selector.TemplateSelector(),
+            vol.Optional(CONF_TITLE): selector.TemplateSelector(),
+            vol.Optional(CONF_UPDATE_PERCENTAGE): selector.TemplateSelector(),
+        }
+        if flow_type == "config":
+            schema |= {
+                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[cls.value for cls in UpdateDeviceClass],
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                        translation_key="update_device_class",
+                        sort=True,
+                    ),
+                ),
+            }
+
     if domain == Platform.VACUUM:
         schema |= _SCHEMA_STATE | {
             vol.Required(SERVICE_START): selector.ActionSelector(),
@@ -449,6 +484,7 @@ TEMPLATE_TYPES = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.UPDATE,
     Platform.VACUUM,
 ]
 
@@ -512,6 +548,11 @@ CONFIG_FLOW = {
         config_schema(Platform.SWITCH),
         preview="template",
         validate_user_input=validate_user_input(Platform.SWITCH),
+    ),
+    Platform.UPDATE: SchemaFlowFormStep(
+        config_schema(Platform.UPDATE),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.UPDATE),
     ),
     Platform.VACUUM: SchemaFlowFormStep(
         config_schema(Platform.VACUUM),
@@ -582,6 +623,11 @@ OPTIONS_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.SWITCH),
     ),
+    Platform.UPDATE: SchemaFlowFormStep(
+        options_schema(Platform.UPDATE),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.UPDATE),
+    ),
     Platform.VACUUM: SchemaFlowFormStep(
         options_schema(Platform.VACUUM),
         preview="template",
@@ -603,6 +649,7 @@ CREATE_PREVIEW_ENTITY: dict[
     Platform.SELECT: async_create_preview_select,
     Platform.SENSOR: async_create_preview_sensor,
     Platform.SWITCH: async_create_preview_switch,
+    Platform.UPDATE: async_create_preview_update,
     Platform.VACUUM: async_create_preview_vacuum,
 }
 

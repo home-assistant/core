@@ -25,6 +25,7 @@ from homeassistant.components.number import DOMAIN as DOMAIN_NUMBER
 from homeassistant.components.select import DOMAIN as DOMAIN_SELECT
 from homeassistant.components.sensor import DOMAIN as DOMAIN_SENSOR
 from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH
+from homeassistant.components.update import DOMAIN as DOMAIN_UPDATE
 from homeassistant.components.vacuum import DOMAIN as DOMAIN_VACUUM
 from homeassistant.components.weather import DOMAIN as DOMAIN_WEATHER
 from homeassistant.config import async_log_schema_error, config_without_domain
@@ -61,6 +62,7 @@ from . import (
     select as select_platform,
     sensor as sensor_platform,
     switch as switch_platform,
+    update as update_platform,
     vacuum as vacuum_platform,
     weather as weather_platform,
 )
@@ -147,6 +149,9 @@ CONFIG_SECTION_SCHEMA = vol.All(
             ),
             vol.Optional(DOMAIN_SWITCH): vol.All(
                 cv.ensure_list, [switch_platform.SWITCH_YAML_SCHEMA]
+            ),
+            vol.Optional(DOMAIN_UPDATE): vol.All(
+                cv.ensure_list, [update_platform.UPDATE_YAML_SCHEMA]
             ),
             vol.Optional(DOMAIN_VACUUM): vol.All(
                 cv.ensure_list, [vacuum_platform.VACUUM_YAML_SCHEMA]
