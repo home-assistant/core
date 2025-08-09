@@ -4372,7 +4372,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-2-ElectricalPowerMeasurementActiveCurrent-144-5',
+    'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-2-ElectricalPowerMeasurementRMSCurrent-144-12',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -4613,7 +4613,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-2-ElectricalPowerMeasurementVoltage-144-4',
+    'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-2-ElectricalPowerMeasurementRMSVoltage-144-11',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -5173,7 +5173,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-ElectricalPowerMeasurementActiveCurrent-144-5',
+    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-ElectricalPowerMeasurementRMSCurrent-144-12',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -5472,7 +5472,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-ElectricalPowerMeasurementVoltage-144-4',
+    'unique_id': '00000000000004D2-000000000000001D-MatterNodeDevice-2-ElectricalPowerMeasurementRMSVoltage-144-11',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
