@@ -108,6 +108,9 @@
     "get_programs": {
       "service": "mdi:stack-overflow"
     },
+    "get_rooms": {
+      "service": "mdi:map"
+    },
     "set_program": {
       "service": "mdi:arrow-right-circle-outline"
     },

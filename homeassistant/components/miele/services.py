@@ -53,6 +53,13 @@ SERVICE_GET_PROGRAMS_SCHEMA = vol.Schema(
     },
 )
 
+SERVICE_GET_ROOMS = "get_rooms"
+SERVICE_GET_ROOMS_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): str,
+    },
+)
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -147,6 +154,39 @@ async def set_program_oven(call: ServiceCall) -> None:
         ) from ex
 
 
+async def get_rooms(call: ServiceCall) -> ServiceResponse:
+    """Get available rooms from vacuum appliance."""
+
+    config_entry = await _extract_config_entry(call)
+    api = config_entry.runtime_data.api
+    serial_number = await _get_serial_number(call)
+
+    try:
+        rooms = await api.get_rooms(serial_number)
+    except aiohttp.ClientResponseError as ex:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="get_rooms_error",
+            translation_placeholders={
+                "status": str(ex.status),
+                "message": ex.message,
+            },
+        ) from ex
+
+    return {
+        "rooms": [
+            {
+                "map_id": map_item["mapId"],
+                "rooms": [
+                    {"room_id": room["roomId"], "name": room["name"].strip()}
+                    for room in map_item["rooms"]
+                ],
+            }
+            for map_item in rooms
+        ],
+    }
+
+
 async def get_programs(call: ServiceCall) -> ServiceResponse:
     """Get available programs from appliance."""
 
@@ -234,5 +274,13 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_GET_PROGRAMS,
         get_programs,
         SERVICE_GET_PROGRAMS_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_ROOMS,
+        get_rooms,
+        SERVICE_GET_ROOMS_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )

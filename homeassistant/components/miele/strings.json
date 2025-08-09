@@ -1065,6 +1065,9 @@
     "invalid_target": {
       "message": "Invalid device targeted."
     },
+    "get_rooms_error": {
+      "message": "'Get rooms' action failed: {status} / {message}"
+    },
     "get_programs_error": {
       "message": "'Get programs' action failed: {status} / {message}"
     },
@@ -1082,6 +1085,16 @@
     "get_programs": {
       "name": "Get programs",
       "description": "Returns a list of available programs.",
+      "fields": {
+        "device_id": {
+          "description": "[%key:component::miele::services::set_program::fields::device_id::description%]",
+          "name": "[%key:component::miele::services::set_program::fields::device_id::name%]"
+        }
+      }
+    },
+    "get_rooms": {
+      "name": "Get rooms",
+      "description": "Returns a list of available maps and rooms for robot vacuum cleaners.",
       "fields": {
         "device_id": {
           "description": "[%key:component::miele::services::set_program::fields::device_id::description%]",
