@@ -5,9 +5,10 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from uiprotect import NotAuthorized, NvrError, ProtectApiClient
+from uiprotect import NvrError, ProtectApiClient
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
 from uiprotect.data import NVR, Bootstrap, CloudAccount, Light
+from uiprotect.exceptions import BadRequest, NotAuthorized
 
 from homeassistant.components.unifiprotect.const import (
     AUTH_RETRIES,
@@ -401,6 +402,28 @@ async def test_setup_handles_api_key_creation_failure(
     ufp.api.is_api_key_set.return_value = False
     ufp.api.create_api_key = AsyncMock(
         side_effect=NotAuthorized("Failed to create API key")
+    )
+
+    # Should fail with auth error due to API key creation failure
+    await hass.config_entries.async_setup(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert ufp.entry.state is ConfigEntryState.SETUP_ERROR
+
+    # Verify API key creation was attempted but set_api_key was not called
+    ufp.api.create_api_key.assert_called_once_with(name="Home Assistant (test home)")
+    ufp.api.set_api_key.assert_not_called()
+
+
+@pytest.mark.parametrize("mock_user_can_write_nvr", [True], indirect=True)
+async def test_setup_handles_api_key_creation_bad_request(
+    hass: HomeAssistant, ufp: MockUFPFixture, mock_user_can_write_nvr: Mock
+) -> None:
+    """Test handling of API key creation BadRequest error."""
+    # Setup: API key is not set, user has write permissions, but creation fails with BadRequest
+    ufp.api.is_api_key_set.return_value = False
+    ufp.api.create_api_key = AsyncMock(
+        side_effect=BadRequest("Invalid API key creation request")
     )
 
     # Should fail with auth error due to API key creation failure

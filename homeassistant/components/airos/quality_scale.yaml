@@ -54,9 +54,7 @@ rules:
   dynamic-devices: todo
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default:
-    status: todo
-    comment: prepared binary_sensors will provide this
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
   icon-translations:

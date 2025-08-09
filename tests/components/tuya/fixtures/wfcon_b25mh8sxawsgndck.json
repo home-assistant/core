@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "bf63312cdd4722555bmsuv",
   "name": "ZigBee Gateway",
   "category": "wfcon",
   "product_id": "b25mh8sxawsgndck",

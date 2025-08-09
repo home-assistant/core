@@ -489,6 +489,11 @@ DEVICE_MOCKS = {
         Platform.NUMBER,
         Platform.SENSOR,
     ],
+    "zndb_4ggkyflayu1h1ho9": [
+        # https://github.com/home-assistant/core/pull/149317
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
     "zndb_ze8faryrxr0glqnn": [
         # https://github.com/home-assistant/core/issues/138372
         Platform.SENSOR,
@@ -527,13 +532,14 @@ async def initialize_entry(
     hass: HomeAssistant,
     mock_manager: ManagerCompat,
     mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
+    mock_devices: CustomerDevice | list[CustomerDevice],
 ) -> None:
     """Initialize the Tuya component with a mock manager and config entry."""
+    if not isinstance(mock_devices, list):
+        mock_devices = [mock_devices]
+    mock_manager.device_map = {device.id: device for device in mock_devices}
+
     # Setup
-    mock_manager.device_map = {
-        mock_device.id: mock_device,
-    }
     mock_config_entry.add_to_hass(hass)
 
     # Initialize the component

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][vacuum.v20-entry]
+# name: test_platform_setup_and_discovery[vacuum.v20-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -36,11 +36,11 @@
     'suggested_object_id': None,
     'supported_features': <VacuumEntityFeature: 13116>,
     'translation_key': None,
-    'unique_id': 'tuya.bfa951ca98fcf64fddqlmt',
+    'unique_id': 'tuya.zrrraytdoanz33rlds',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sd_lr33znaodtyarrrz][vacuum.v20-state]
+# name: test_platform_setup_and_discovery[vacuum.v20-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'fan_speed': 'strong',
