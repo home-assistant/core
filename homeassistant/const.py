@@ -942,6 +942,7 @@ class UnitOfSpeed(StrEnum):
     KNOTS = "kn"
     MILES_PER_HOUR = "mph"
     MILLIMETERS_PER_SECOND = "mm/s"
+    METERS_PER_MINUTE = "m/min"
 
 
 # Signal_strength units
