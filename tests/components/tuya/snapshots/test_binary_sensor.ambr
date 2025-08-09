@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[co2bj_yrr3eiyiacm31ski][binary_sensor.aqi_safety-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.aqi_safety-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -34,7 +34,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[co2bj_yrr3eiyiacm31ski][binary_sensor.aqi_safety-state]
+# name: test_platform_setup_and_discovery[binary_sensor.aqi_safety-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'safety',
@@ -48,7 +48,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[cs_ka2wfrdoogpvgzfi][binary_sensor.dehumidifer_defrost-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifer_defrost-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -83,7 +83,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cs_ka2wfrdoogpvgzfi][binary_sensor.dehumidifer_defrost-state]
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifer_defrost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -97,7 +97,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[cs_ka2wfrdoogpvgzfi][binary_sensor.dehumidifer_tank_full-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifer_tank_full-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -132,7 +132,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cs_ka2wfrdoogpvgzfi][binary_sensor.dehumidifer_tank_full-state]
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifer_tank_full-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -146,7 +146,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[cs_zibqa9dutqyaxym2][binary_sensor.dehumidifier_defrost-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_defrost-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -181,7 +181,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cs_zibqa9dutqyaxym2][binary_sensor.dehumidifier_defrost-state]
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_defrost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -195,7 +195,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[cs_zibqa9dutqyaxym2][binary_sensor.dehumidifier_tank_full-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_tank_full-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -230,7 +230,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cs_zibqa9dutqyaxym2][binary_sensor.dehumidifier_tank_full-state]
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_tank_full-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -244,7 +244,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[cs_zibqa9dutqyaxym2][binary_sensor.dehumidifier_wet-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_wet-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -279,7 +279,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cs_zibqa9dutqyaxym2][binary_sensor.dehumidifier_wet-state]
+# name: test_platform_setup_and_discovery[binary_sensor.dehumidifier_wet-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
@@ -293,56 +293,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[hps_2aaelwxk][binary_sensor.human_presence_office_occupancy-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.human_presence_office_occupancy',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
-    'original_icon': None,
-    'original_name': 'Occupancy',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'tuya.kxwleaa2sphpresence_state',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[hps_2aaelwxk][binary_sensor.human_presence_office_occupancy-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'occupancy',
-      'friendly_name': 'Human presence Office Occupancy',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.human_presence_office_occupancy',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_platform_setup_and_discovery[mcs_7jIGJAymiH8OsFFb][binary_sensor.door_garage_door-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.door_garage_door-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -377,7 +328,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[mcs_7jIGJAymiH8OsFFb][binary_sensor.door_garage_door-state]
+# name: test_platform_setup_and_discovery[binary_sensor.door_garage_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'door',
@@ -391,252 +342,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[pir_3amxzozho9xp4mkh][binary_sensor.rat_trap_hedge_motion-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.rat_trap_hedge_motion',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
-    'original_icon': None,
-    'original_name': 'Motion',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'tuya.hkm4px9ohzozxma3rippir',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[pir_3amxzozho9xp4mkh][binary_sensor.rat_trap_hedge_motion-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'rat trap hedge Motion',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.rat_trap_hedge_motion',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_platform_setup_and_discovery[pir_3amxzozho9xp4mkh][binary_sensor.rat_trap_hedge_tamper-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.rat_trap_hedge_tamper',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
-    'original_icon': None,
-    'original_name': 'Tamper',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'tuya.hkm4px9ohzozxma3riptemper_alarm',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[pir_3amxzozho9xp4mkh][binary_sensor.rat_trap_hedge_tamper-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'tamper',
-      'friendly_name': 'rat trap hedge Tamper',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.rat_trap_hedge_tamper',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_platform_setup_and_discovery[pir_fcdjzz3s][binary_sensor.motion_sensor_lidl_zigbee_motion-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.motion_sensor_lidl_zigbee_motion',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
-    'original_icon': None,
-    'original_name': 'Motion',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'tuya.s3zzjdcfrippir',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[pir_fcdjzz3s][binary_sensor.motion_sensor_lidl_zigbee_motion-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'Motion sensor lidl zigbee Motion',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.motion_sensor_lidl_zigbee_motion',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_platform_setup_and_discovery[pir_fcdjzz3s][binary_sensor.motion_sensor_lidl_zigbee_tamper-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.motion_sensor_lidl_zigbee_tamper',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
-    'original_icon': None,
-    'original_name': 'Tamper',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'tuya.s3zzjdcfriptemper_alarm',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[pir_fcdjzz3s][binary_sensor.motion_sensor_lidl_zigbee_tamper-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'tamper',
-      'friendly_name': 'Motion sensor lidl zigbee Tamper',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.motion_sensor_lidl_zigbee_tamper',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
-  })
-# ---
-# name: test_platform_setup_and_discovery[pir_wqz93nrdomectyoz][binary_sensor.pir_outside_stairs_motion-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.pir_outside_stairs_motion',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
-    'original_icon': None,
-    'original_name': 'Motion',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'tuya.zoytcemodrn39zqwrippir',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[pir_wqz93nrdomectyoz][binary_sensor.pir_outside_stairs_motion-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'PIR outside stairs Motion',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.pir_outside_stairs_motion',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'on',
-  })
-# ---
-# name: test_platform_setup_and_discovery[rqbj_4iqe2hsfyd86kwwc][binary_sensor.gas_sensor_gas-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.gas_sensor_gas-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -671,7 +377,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[rqbj_4iqe2hsfyd86kwwc][binary_sensor.gas_sensor_gas-state]
+# name: test_platform_setup_and_discovery[binary_sensor.gas_sensor_gas-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'gas',
@@ -685,7 +391,7 @@
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[sj_tgvtvdoc][binary_sensor.tournesol_moisture-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.human_presence_office_occupancy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -698,7 +404,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.tournesol_moisture',
+    'entity_id': 'binary_sensor.human_presence_office_occupancy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -708,33 +414,82 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
+    'original_device_class': <BinarySensorDeviceClass.OCCUPANCY: 'occupancy'>,
     'original_icon': None,
-    'original_name': 'Moisture',
+    'original_name': 'Occupancy',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.codvtvgtjswatersensor_state',
+    'unique_id': 'tuya.kxwleaa2sphpresence_state',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sj_tgvtvdoc][binary_sensor.tournesol_moisture-state]
+# name: test_platform_setup_and_discovery[binary_sensor.human_presence_office_occupancy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'moisture',
-      'friendly_name': 'Tournesol Moisture',
+      'device_class': 'occupancy',
+      'friendly_name': 'Human presence Office Occupancy',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.tournesol_moisture',
+    'entity_id': 'binary_sensor.human_presence_office_occupancy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[wg2_nwxr8qcu4seltoro][binary_sensor.x5_zigbee_gateway_problem-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.motion_sensor_lidl_zigbee_motion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.motion_sensor_lidl_zigbee_motion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': 'Motion',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.s3zzjdcfrippir',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.motion_sensor_lidl_zigbee_motion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'motion',
+      'friendly_name': 'Motion sensor lidl zigbee Motion',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.motion_sensor_lidl_zigbee_motion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.motion_sensor_lidl_zigbee_tamper-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -747,7 +502,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.x5_zigbee_gateway_problem',
+    'entity_id': 'binary_sensor.motion_sensor_lidl_zigbee_tamper',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -757,33 +512,180 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
     'original_icon': None,
-    'original_name': 'Problem',
+    'original_name': 'Tamper',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'tuya.orotles4ucq8rxwn2gwmaster_state',
+    'unique_id': 'tuya.s3zzjdcfriptemper_alarm',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[wg2_nwxr8qcu4seltoro][binary_sensor.x5_zigbee_gateway_problem-state]
+# name: test_platform_setup_and_discovery[binary_sensor.motion_sensor_lidl_zigbee_tamper-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'X5 Zigbee Gateway Problem',
+      'device_class': 'tamper',
+      'friendly_name': 'Motion sensor lidl zigbee Tamper',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.x5_zigbee_gateway_problem',
+    'entity_id': 'binary_sensor.motion_sensor_lidl_zigbee_tamper',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.pir_outside_stairs_motion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.pir_outside_stairs_motion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': 'Motion',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.zoytcemodrn39zqwrippir',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.pir_outside_stairs_motion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'motion',
+      'friendly_name': 'PIR outside stairs Motion',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.pir_outside_stairs_motion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.rat_trap_hedge_motion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.rat_trap_hedge_motion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': 'Motion',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.hkm4px9ohzozxma3rippir',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.rat_trap_hedge_motion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'motion',
+      'friendly_name': 'rat trap hedge Motion',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.rat_trap_hedge_motion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.rat_trap_hedge_tamper-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.rat_trap_hedge_tamper',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.TAMPER: 'tamper'>,
+    'original_icon': None,
+    'original_name': 'Tamper',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.hkm4px9ohzozxma3riptemper_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.rat_trap_hedge_tamper-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'tamper',
+      'friendly_name': 'rat trap hedge Tamper',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.rat_trap_hedge_tamper',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[ywbj_gf9dejhmzffgdyfj][binary_sensor.smoke_detector_upstairs_smoke-entry]
+# name: test_platform_setup_and_discovery[binary_sensor.smoke_detector_upstairs_smoke-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -818,7 +720,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[ywbj_gf9dejhmzffgdyfj][binary_sensor.smoke_detector_upstairs_smoke-state]
+# name: test_platform_setup_and_discovery[binary_sensor.smoke_detector_upstairs_smoke-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'smoke',
@@ -826,6 +728,104 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.smoke_detector_upstairs_smoke',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.tournesol_moisture-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.tournesol_moisture',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
+    'original_icon': None,
+    'original_name': 'Moisture',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.codvtvgtjswatersensor_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.tournesol_moisture-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'moisture',
+      'friendly_name': 'Tournesol Moisture',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.tournesol_moisture',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.x5_zigbee_gateway_problem-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.x5_zigbee_gateway_problem',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Problem',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.orotles4ucq8rxwn2gwmaster_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[binary_sensor.x5_zigbee_gateway_problem-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'problem',
+      'friendly_name': 'X5 Zigbee Gateway Problem',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.x5_zigbee_gateway_problem',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

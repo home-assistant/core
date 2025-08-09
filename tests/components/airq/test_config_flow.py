@@ -1,7 +1,7 @@
 """Test the air-Q config flow."""
 
 import logging
-from unittest.mock import patch
+from unittest.mock import AsyncMock
 
 from aioairq import InvalidAuth
 from aiohttp.client_exceptions import ClientConnectionError
@@ -29,7 +29,11 @@ DEFAULT_OPTIONS = {
 }
 
 
-async def test_form(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+async def test_form(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_airq: AsyncMock,
+) -> None:
     """Test we get the form."""
     caplog.set_level(logging.DEBUG)
     result = await hass.config_entries.flow.async_init(
@@ -38,53 +42,49 @@ async def test_form(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> No
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
-    with (
-        patch("aioairq.AirQ.validate"),
-        patch("aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            TEST_USER_DATA,
-        )
-        await hass.async_block_till_done()
-        assert f"Creating an entry for {TEST_DEVICE_INFO['name']}" in caplog.text
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        TEST_USER_DATA,
+    )
+    await hass.async_block_till_done()
+    assert f"Creating an entry for {TEST_DEVICE_INFO['name']}" in caplog.text
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_DEVICE_INFO["name"]
     assert result2["data"] == TEST_USER_DATA
 
 
-async def test_form_invalid_auth(hass: HomeAssistant) -> None:
+async def test_form_invalid_auth(hass: HomeAssistant, mock_airq: AsyncMock) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("aioairq.AirQ.validate", side_effect=InvalidAuth):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_USER_DATA | {CONF_PASSWORD: "wrong_password"}
-        )
+    mock_airq.validate.side_effect = InvalidAuth
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], TEST_USER_DATA | {CONF_PASSWORD: "wrong_password"}
+    )
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+async def test_form_cannot_connect(hass: HomeAssistant, mock_airq: AsyncMock) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("aioairq.AirQ.validate", side_effect=ClientConnectionError):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_USER_DATA
-        )
+    mock_airq.validate.side_effect = ClientConnectionError
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], TEST_USER_DATA
+    )
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-async def test_duplicate_error(hass: HomeAssistant) -> None:
+async def test_duplicate_error(hass: HomeAssistant, mock_airq: AsyncMock) -> None:
     """Test that errors are shown when duplicates are added."""
     MockConfigEntry(
         data=TEST_USER_DATA,
@@ -96,13 +96,9 @@ async def test_duplicate_error(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with (
-        patch("aioairq.AirQ.validate"),
-        patch("aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO),
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], TEST_USER_DATA
-        )
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], TEST_USER_DATA
+    )
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
