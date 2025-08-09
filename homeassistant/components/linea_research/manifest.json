@@ -1,0 +1,10 @@
+{
+  "domain": "linea_research",
+  "name": "Linea Research",
+  "codeowners": ["@yourusername"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/linea_research",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "requirements": []
+}

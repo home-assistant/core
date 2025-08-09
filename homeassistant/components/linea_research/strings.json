@@ -1,0 +1,51 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Linea Research amplifier",
+        "description": "Set up your Linea Research amplifier to integrate with Home Assistant.",
+        "data": {
+          "host": "Host",
+          "port": "Port"
+        },
+        "data_description": {
+          "host": "IP address or hostname of your Linea Research amplifier",
+          "port": "TIPI protocol port (default: 10001)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the amplifier. Please check the IP address and port.",
+      "unknown": "Unexpected error occurred."
+    },
+    "abort": {
+      "already_configured": "This amplifier is already configured."
+    }
+  },
+  "entity": {
+    "switch": {
+      "power": {
+        "name": "Power"
+      }
+    },
+    "binary_sensor": {
+      "sleep_state": {
+        "name": "Sleep state"
+      },
+      "mute_a": {
+        "name": "Channel A mute"
+      },
+      "mute_b": {
+        "name": "Channel B mute"
+      }
+    },
+    "sensor": {
+      "gain_a": {
+        "name": "Channel A gain"
+      },
+      "gain_b": {
+        "name": "Channel B gain"
+      }
+    }
+  }
+}
