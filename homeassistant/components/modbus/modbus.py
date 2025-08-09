@@ -57,6 +57,7 @@ from .const import (
     CONF_PARITY,
     CONF_STOPBITS,
     DEFAULT_HUB,
+    DEVICE_ID,
     MODBUS_DOMAIN as DOMAIN,
     PLATFORMS,
     RTUOVERTCP,
@@ -380,7 +381,7 @@ class ModbusHub:
     ) -> ModbusPDU | None:
         """Call sync. pymodbus."""
         kwargs: dict[str, Any] = (
-            {ATTR_SLAVE: slave} if slave is not None else {ATTR_SLAVE: 1}
+            {DEVICE_ID: slave} if slave is not None else {DEVICE_ID: 1}
         )
         entry = self._pb_request[use_call]
 
