@@ -1,0 +1,130 @@
+"""Support for Droplet."""
+
+from __future__ import annotations
+
+from collections.abc import Callable
+from dataclasses import dataclass
+import logging
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.const import EntityCategory, UnitOfVolume, UnitOfVolumeFlowRate
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
+
+from .const import (
+    KEY_CURRENT_FLOW_RATE,
+    KEY_SERVER_CONNECTIVITY,
+    KEY_SIGNAL_QUALITY,
+    KEY_VOLUME,
+)
+from .coordinator import DropletConfigEntry, DropletDataCoordinator
+
+_LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(kw_only=True, frozen=True)
+class DropletSensorEntityDescription(SensorEntityDescription):
+    """Describes Droplet sensor entity."""
+
+    value_fn: Callable[[DropletDataCoordinator], float | str]
+    has_entity_name = True
+
+
+SENSORS: list[DropletSensorEntityDescription] = [
+    DropletSensorEntityDescription(
+        key=KEY_CURRENT_FLOW_RATE,
+        translation_key=KEY_CURRENT_FLOW_RATE,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        suggested_unit_of_measurement=UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.get_flow_rate(),
+    ),
+    DropletSensorEntityDescription(
+        key=KEY_VOLUME,
+        translation_key=KEY_VOLUME,
+        device_class=SensorDeviceClass.WATER,
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        suggested_unit_of_measurement=UnitOfVolume.GALLONS,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda device: device.get_volume_delta(),
+    ),
+    DropletSensorEntityDescription(
+        key=KEY_SERVER_CONNECTIVITY,
+        translation_key=KEY_SERVER_CONNECTIVITY,
+        device_class=SensorDeviceClass.ENUM,
+        options=["Connected", "Connecting", "Disconnected", "Unknown"],
+        value_fn=lambda device: device.get_server_status(),
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DropletSensorEntityDescription(
+        key=KEY_SIGNAL_QUALITY,
+        translation_key=KEY_SIGNAL_QUALITY,
+        device_class=SensorDeviceClass.ENUM,
+        options=["No Signal", "Weak Signal", "Strong Signal", "Unknown"],
+        value_fn=lambda device: device.get_signal_quality(),
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+]
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: DropletConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Droplet sensors from config entry."""
+    _LOGGER.info(
+        "Set up sensor for device %s with entry_id is %s",
+        config_entry.unique_id,
+        config_entry.entry_id,
+    )
+
+    coordinator = config_entry.runtime_data
+    for sensor in SENSORS:
+        async_add_entities([DropletSensor(coordinator, sensor)])
+
+
+class DropletSensor(CoordinatorEntity[DropletDataCoordinator], SensorEntity):
+    """Representation of a Droplet."""
+
+    entity_description: DropletSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: DropletDataCoordinator,
+        entity_description: DropletSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self.entity_description = entity_description
+
+        unique_id = coordinator.config_entry.unique_id
+        self._attr_unique_id = f"{entity_description.key}_{unique_id}"
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Get Droplet's metadata."""
+        return self.coordinator.dev_info
+
+    @property
+    def available(self) -> bool:
+        """Get Droplet's availability."""
+        return self.coordinator.get_availability()
+
+    @property
+    def native_value(self) -> float | str | None:
+        """Return the value reported by the sensor."""
+        if self.entity_description.key == KEY_VOLUME:
+            self._attr_last_reset = dt_util.now()
+        return self.entity_description.value_fn(self.coordinator)

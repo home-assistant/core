@@ -169,6 +169,7 @@ homeassistant.components.dnsip.*
 homeassistant.components.doorbird.*
 homeassistant.components.dormakaba_dkey.*
 homeassistant.components.downloader.*
+homeassistant.components.droplet.*
 homeassistant.components.dsmr.*
 homeassistant.components.duckdns.*
 homeassistant.components.dunehd.*

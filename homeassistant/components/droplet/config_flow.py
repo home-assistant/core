@@ -1,0 +1,124 @@
+"""Config flow for Droplet integration."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from pydroplet.droplet import DropletConnection, DropletDiscovery
+import voluptuous as vol
+
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import (
+    CONF_CODE,
+    CONF_DEVICE_ID,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+)
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+
+from .const import DEVICE_NAME, DOMAIN
+
+
+class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle Droplet config flow."""
+
+    _droplet_discovery: DropletDiscovery
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery."""
+        self._droplet_discovery = DropletDiscovery(
+            discovery_info.host,
+            discovery_info.port,
+            discovery_info.name,
+        )
+        if not self._droplet_discovery.is_valid():
+            return self.async_abort(reason="invalid_discovery_info")
+
+        # In this case, device ID was part of the zeroconf discovery info
+        await self.async_set_unique_id(await self._droplet_discovery.get_device_id())
+
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self._droplet_discovery.host}
+        )
+
+        return await self.async_step_confirm()
+
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm the setup."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            # Test if we can connect before returning
+            session = async_get_clientsession(self.hass)
+            if await self._droplet_discovery.try_connect(
+                session, user_input[CONF_CODE]
+            ):
+                device_id: str = await self._droplet_discovery.get_device_id()
+                device_data = {
+                    CONF_HOST: self._droplet_discovery.host,
+                    CONF_PORT: self._droplet_discovery.port,
+                    CONF_DEVICE_ID: device_id,
+                    CONF_NAME: DEVICE_NAME,
+                    CONF_CODE: user_input[CONF_CODE],
+                }
+
+                return self.async_create_entry(
+                    title=device_id,
+                    data=device_data,
+                )
+            errors["base"] = "failed_connect"
+        return self.async_show_form(
+            step_id="confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_CODE): str,
+                }
+            ),
+            description_placeholders={
+                "device_name": await self._droplet_discovery.get_device_id(),
+            },
+            errors=errors,
+        )
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by the user."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            self._droplet_discovery = DropletDiscovery(
+                user_input[CONF_HOST], DropletConnection.DEFAULT_PORT, ""
+            )
+            session = async_get_clientsession(self.hass)
+            if await self._droplet_discovery.try_connect(
+                session, user_input[CONF_CODE]
+            ) and (device_id := await self._droplet_discovery.get_device_id()):
+                device_data = {
+                    CONF_HOST: self._droplet_discovery.host,
+                    CONF_PORT: self._droplet_discovery.port,
+                    CONF_DEVICE_ID: device_id,
+                    CONF_NAME: DEVICE_NAME,
+                    CONF_CODE: user_input[CONF_CODE],
+                }
+                await self.async_set_unique_id(device_id)
+                self._abort_if_unique_id_configured(
+                    description_placeholders={CONF_DEVICE_ID: device_id}
+                )
+
+                return self.async_create_entry(
+                    title=device_id,
+                    data=device_data,
+                )
+            errors["base"] = "failed_connect"
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_HOST): str, vol.Required(CONF_CODE): str}
+            ),
+            errors=errors,
+        )
