@@ -1503,6 +1503,53 @@ async def test_start_timer_with_invalid_conversation_command(
     mock_handle_timer.assert_not_called()
 
 
+async def test_start_timer_with_conversation_command_llm_skip(
+    hass: HomeAssistant, init_components
+) -> None:
+    """Test starting a timer with a conversation command skips validation for LLM agents with control."""
+    device_id = "test_device"
+    timer_name = "test timer"
+    invalid_command = "invalid command that does not exist"
+    agent_id = "conversation.test_llm_agent"
+
+    # Create a mock agent state with CONTROL feature (using proper bitmask)
+    hass.states.async_set(
+        agent_id,
+        "idle",
+        {"supported_features": conversation.ConversationEntityFeature.CONTROL},
+    )
+
+    mock_handle_timer = MagicMock()
+    async_register_timer_handler(hass, device_id, mock_handle_timer)
+
+    mock_agent = MagicMock(spec=conversation.ConversationEntity)
+    mock_agent.entity_id = agent_id
+
+    # Mock the conversation agent to be a ConversationEntity
+    with patch(
+        "homeassistant.components.conversation.async_get_agent", return_value=mock_agent
+    ):
+        # This should NOT raise an error because validation is skipped for LLM agents with control
+        result = await intent.async_handle(
+            hass,
+            "test",
+            intent.INTENT_START_TIMER,
+            {
+                "name": {"value": timer_name},
+                "seconds": {"value": 5},
+                "conversation_command": {"value": invalid_command},
+            },
+            device_id=device_id,
+            conversation_agent_id=agent_id,
+        )
+
+        assert result.response_type == intent.IntentResponseType.ACTION_DONE
+
+        # Verify timer was created successfully despite invalid command
+        timer_manager = hass.data["intent.timer"]
+        assert len(timer_manager.timers) == 1
+
+
 async def test_pause_unpause_timer_disambiguate(
     hass: HomeAssistant, init_components
 ) -> None:
