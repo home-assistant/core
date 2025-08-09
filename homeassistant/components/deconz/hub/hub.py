@@ -175,6 +175,8 @@ class DeconzHub:
         device_registry = dr.async_get(self.hass)
 
         # Host device
+        if not self.api.config.mac:
+            return  # Safeguard: no MAC, skip to avoid invalid via_device
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             connections={(CONNECTION_NETWORK_MAC, self.api.config.mac)},
