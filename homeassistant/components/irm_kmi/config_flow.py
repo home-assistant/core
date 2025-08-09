@@ -24,7 +24,7 @@ from .const import (
     USER_AGENT,
 )
 from .types import IrmKmiConfigEntry
-from .utils import get_config_value
+from .utils import get_config_value_options
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,7 +102,7 @@ class IrmKmiOptionFlow(OptionsFlow):
                 {
                     vol.Optional(
                         CONF_LANGUAGE_OVERRIDE,
-                        default=get_config_value(
+                        default=get_config_value_options(
                             self.config_entry, CONF_LANGUAGE_OVERRIDE, "none"
                         ),
                     ): SelectSelector(

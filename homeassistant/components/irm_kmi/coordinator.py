@@ -16,7 +16,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import utcnow
 
 from .data import ProcessedCoordinatorData
-from .utils import get_config_value, preferred_language
+from .utils import get_config_value_data, preferred_language
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
             update_interval=timedelta(minutes=7),
         )
         self._api = api_client
-        self._location = get_config_value(entry, CONF_LOCATION)
+        self._location = get_config_value_data(entry, CONF_LOCATION)
 
     async def _async_update_data(self) -> ProcessedCoordinatorData:
         """Fetch data from API endpoint.
