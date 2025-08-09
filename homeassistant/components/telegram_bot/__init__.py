@@ -70,6 +70,7 @@ from .const import (
     ATTR_URL,
     ATTR_USERNAME,
     ATTR_VERIFY_SSL,
+    CONF_ALLOW_ANY_REPLY,
     CONF_ALLOWED_CHAT_IDS,
     CONF_BOT_COUNT,
     CONF_CONFIG_ENTRY_ID,
@@ -485,6 +486,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
 async def update_listener(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> None:
     """Handle options update."""
     entry.runtime_data.parse_mode = entry.options[ATTR_PARSER]
+    entry.runtime_data.allow_any_reply = entry.options.get(CONF_ALLOW_ANY_REPLY, False)
 
 
 async def async_unload_entry(

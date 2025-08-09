@@ -13,6 +13,7 @@ SUBENTRY_TYPE_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 CONF_BOT_COUNT = "bot_count"
 CONF_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 CONF_CONFIG_ENTRY_ID = "config_entry_id"
+CONF_ALLOW_ANY_REPLY = "allow_any_reply"
 
 CONF_PROXY_URL = "proxy_url"
 CONF_TRUSTED_NETWORKS = "trusted_networks"
