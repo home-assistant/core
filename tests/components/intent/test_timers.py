@@ -1471,6 +1471,39 @@ async def test_start_timer_with_conversation_command(
         assert mock_converse.call_args.args[1] == test_command
 
 
+async def test_start_timer_with_invalid_conversation_command(
+    hass: HomeAssistant, init_components
+) -> None:
+    """Test starting a timer with an invalid conversation command fails validation."""
+    device_id = "test_device"
+    timer_name = "test timer"
+    invalid_command = "invalid command that does not exist"
+    agent_id = "test_agent"
+
+    mock_handle_timer = MagicMock()
+    async_register_timer_handler(hass, device_id, mock_handle_timer)
+
+    # Test with invalid conversation command (no entities exposed)
+    with pytest.raises(intent.IntentHandleError) as exc_info:
+        await intent.async_handle(
+            hass,
+            "test",
+            intent.INTENT_START_TIMER,
+            {
+                "name": {"value": timer_name},
+                "seconds": {"value": 5},
+                "conversation_command": {"value": invalid_command},
+            },
+            device_id=device_id,
+            conversation_agent_id=agent_id,
+        )
+
+    assert exc_info.value.response_key == "invalid_conversation_command"
+
+    # Verify no timer was created
+    mock_handle_timer.assert_not_called()
+
+
 async def test_pause_unpause_timer_disambiguate(
     hass: HomeAssistant, init_components
 ) -> None:
