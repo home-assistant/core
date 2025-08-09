@@ -14,6 +14,7 @@
           "host": "IP address or hostname of the airOS device",
           "username": "Administrator username for the airOS device, normally 'ubnt'",
           "password": "Password configured through the UISP app or web interface",
+          "ssl": "Use SSL for the connection",
           "verify_ssl": "Should SSL certificates be verified? This should be off for self-signed certificates"
         }
       }
