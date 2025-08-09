@@ -60,12 +60,12 @@ async def test_form(hass: HomeAssistant) -> None:
         ) as mock_api_class,
     ):
         mock_status = Mock()
-        mock_status.device_id = "test-device-123"
+        mock_status.device_id = "A98BE1CE-5FE7-4A8D-B2C3-123456789ABC"
         mock_api = Mock()
         mock_api.status.return_value = mock_status
         mock_api_class.return_value = mock_api
 
-        mock_validate.return_value = {"title": "Kiosker test-device-123"}
+        mock_validate.return_value = {"title": "Kiosker A98BE1CE"}
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -81,7 +81,7 @@ async def test_form(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Kiosker test-device-123"
+    assert result2["title"] == "Kiosker A98BE1CE"
     assert result2["data"] == {
         CONF_HOST: "192.168.1.100",
         CONF_PORT: 8081,
@@ -180,18 +180,21 @@ async def test_zeroconf_no_uuid(hass: HomeAssistant) -> None:
 
 
 async def test_zeroconf_confirm(hass: HomeAssistant) -> None:
-    """Test zeroconf confirmation step."""
+    """Test zeroconf confirmation step shows form for API token."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=DISCOVERY_INFO,
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result_confirm = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["step_id"] == "discovery_confirm"
+    assert result_confirm["type"] is FlowResultType.FORM
+    assert result_confirm["step_id"] == "zeroconf_confirm"
+    # Check that the form includes API token field
+    schema_keys = list(result_confirm["data_schema"].schema.keys())
+    assert any(key.schema == "api_token" for key in schema_keys)
 
 
 async def test_zeroconf_discovery_confirm(hass: HomeAssistant) -> None:
@@ -202,7 +205,7 @@ async def test_zeroconf_discovery_confirm(hass: HomeAssistant) -> None:
         data=DISCOVERY_INFO,
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
+    _result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
 
@@ -217,7 +220,7 @@ async def test_zeroconf_discovery_confirm(hass: HomeAssistant) -> None:
         mock_validate.return_value = {"title": "Kiosker Device"}
 
         result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
+            result["flow_id"],
             {
                 "api_token": "test-token",
                 "ssl": False,
@@ -248,7 +251,7 @@ async def test_zeroconf_discovery_confirm_cannot_connect(hass: HomeAssistant) ->
         data=DISCOVERY_INFO,
     )
 
-    result2 = await hass.config_entries.flow.async_configure(
+    _result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
 
@@ -257,7 +260,7 @@ async def test_zeroconf_discovery_confirm_cannot_connect(hass: HomeAssistant) ->
         side_effect=CannotConnect,
     ):
         result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
+            result["flow_id"],
             {
                 "api_token": "test-token",
                 "ssl": False,
@@ -267,7 +270,7 @@ async def test_zeroconf_discovery_confirm_cannot_connect(hass: HomeAssistant) ->
         )
 
     assert result3["type"] is FlowResultType.FORM
-    assert result3["errors"] == {"base": "cannot_connect"}
+    assert result3["errors"] == {"api_token": "cannot_connect"}
 
 
 async def test_abort_if_already_configured(hass: HomeAssistant) -> None:
@@ -275,7 +278,7 @@ async def test_abort_if_already_configured(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "192.168.1.100", CONF_PORT: 8081, "api_token": "test_token"},
-        unique_id="test-device-123",
+        unique_id="A98BE1CE-5FE7-4A8D-B2C3-123456789ABC",
     )
     entry.add_to_hass(hass)
 
@@ -292,12 +295,12 @@ async def test_abort_if_already_configured(hass: HomeAssistant) -> None:
         ) as mock_api_class,
     ):
         mock_status = Mock()
-        mock_status.device_id = "test-device-123"
+        mock_status.device_id = "A98BE1CE-5FE7-4A8D-B2C3-123456789ABC"
         mock_api = Mock()
         mock_api.status.return_value = mock_status
         mock_api_class.return_value = mock_api
 
-        mock_validate.return_value = {"title": "Kiosker test-device-123"}
+        mock_validate.return_value = {"title": "Kiosker A98BE1CE"}
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

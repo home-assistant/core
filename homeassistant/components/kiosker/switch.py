@@ -28,7 +28,7 @@ async def async_setup_entry(
 class KioskerScreensaverSwitch(KioskerEntity, SwitchEntity):
     """Screensaver disable switch for Kiosker."""
 
-    _has_entity_name = True
+    _attr_has_entity_name = True
     _attr_translation_key = "disable_screensaver"
 
     def __init__(self, coordinator: KioskerDataUpdateCoordinator) -> None:
