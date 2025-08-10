@@ -336,7 +336,7 @@ async def _transform_stream(
             if new_message:
                 if part_details:
                     yield {"native": ContentDetails(part_details=part_details)}
-                    part_details.clear()
+                    part_details = []
                 yield {"role": "assistant"}
                 new_message = False
                 content_index = 0
