@@ -314,8 +314,8 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TAMPER_BINARY_SENSOR,
     ),
-    # Zigbee gateway
-    # Undocumented
+    # Gateway control
+    # https://developer.tuya.com/en/docs/iot/wg?id=Kbcdadk79ejok
     "wg2": (
         TuyaBinarySensorEntityDescription(
             key=DPCode.MASTER_STATE,
