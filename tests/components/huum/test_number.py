@@ -7,10 +7,10 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
     ATTR_VALUE,
-    DOMAIN as NUMBER_HUMIDITY,
+    DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -29,7 +29,7 @@ async def test_number_entity(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the initial parameters."""
-    await setup_with_selected_platforms(hass, mock_config_entry, [NUMBER_HUMIDITY])
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.NUMBER])
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
@@ -43,7 +43,7 @@ async def test_set_humidity(
 
     mock_huum.status = SaunaStatus.ONLINE_HEATING
     await hass.services.async_call(
-        NUMBER_HUMIDITY,
+        NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
@@ -65,7 +65,7 @@ async def test_dont_set_humidity_when_sauna_not_heating(
 
     mock_huum.status = SaunaStatus.ONLINE_NOT_HEATING
     await hass.services.async_call(
-        NUMBER_HUMIDITY,
+        NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
