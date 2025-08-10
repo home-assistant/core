@@ -32,6 +32,8 @@ _LOGGER = logging.getLogger(__name__)
 WIRELESS_MODE_OPTIONS = [mode.value.replace("-", "_").lower() for mode in WirelessMode]
 NETROLE_OPTIONS = [mode.value for mode in NetRole]
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class AirOSSensorEntityDescription(SensorEntityDescription):
