@@ -25,7 +25,6 @@
   "battery_data": {
     "charge_power": 1074,
     "discharge_power": 0,
-    "level": 79,
-    "status": 0
+    "level": 79
   }
 }
