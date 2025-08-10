@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaus.com",
-  "terminal_id": "1732306182276g6jQLp",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "eb14fd1dd93ca2ea34vpin",
   "name": "AQI",
   "category": "co2bj",
   "product_id": "yrr3eiyiacm31ski",

@@ -469,6 +469,9 @@ ATTR_NAME: Final = "name"
 # Contains one string or a list of strings, each being an entity id
 ATTR_ENTITY_ID: Final = "entity_id"
 
+# Contains one string, the config entry ID
+ATTR_CONFIG_ENTRY_ID: Final = "config_entry_id"
+
 # Contains one string or a list of strings, each being an area id
 ATTR_AREA_ID: Final = "area_id"
 
