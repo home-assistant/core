@@ -82,7 +82,7 @@ async def async_setup_entry(
             """Initialize the sensor."""
             self.entity_description = OMIEPriceEntityDescription(key)
             self._attr_device_info = device_info
-            self._attr_unique_id = slugify(key)
+            self._attr_unique_id = slugify(f"omie_{key}")
             self._attr_should_poll = False
             self._attr_attribution = _ATTRIBUTION
 
