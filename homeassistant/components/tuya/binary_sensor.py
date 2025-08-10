@@ -324,6 +324,15 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
             on_value="alarm",
         ),
     ),
+    # Thermostat
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
+    "wk": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.VALVE_STATE,
+            translation_key="valve",
+            on_value="open",
+        ),
+    ),
     # Thermostatic Radiator Valve
     # Not documented
     "wkf": (
