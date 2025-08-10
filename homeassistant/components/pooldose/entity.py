@@ -43,7 +43,6 @@ class PooldoseEntity(CoordinatorEntity[PooldoseCoordinator]):
     """Base class for all PoolDose entities."""
 
     _attr_has_entity_name = True
-    entity_description: EntityDescription
 
     def __init__(
         self,
