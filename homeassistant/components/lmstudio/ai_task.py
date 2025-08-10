@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.components import ai_task, conversation
+from homeassistant.components.conversation import AssistantContent
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback

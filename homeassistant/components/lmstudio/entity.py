@@ -17,10 +17,10 @@ from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from . import LMStudioConfigEntry
-from .const import CONF_MODEL
+from .const import CONF_BASE_URL, CONF_MODEL, CONF_STREAM, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,6 +81,13 @@ class LMStudioBaseLLMEntity(Entity):
         self.subentry = subentry
         self._attr_unique_id = f"{entry.entry_id}-{subentry.subentry_id}"
         self._attr_name = subentry.title
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            name=f"LM Studio ({entry.data[CONF_BASE_URL]})",
+            manufacturer="LM Studio",
+            model="Local LLM Server",
+            configuration_url=entry.data[CONF_BASE_URL],
+        )
 
     @property
     def available(self) -> bool:

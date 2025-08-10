@@ -23,6 +23,7 @@ CONF_MAX_TOKENS = "max_tokens"
 CONF_TEMPERATURE = "temperature"
 CONF_TOP_P = "top_p"
 CONF_PROMPT = "prompt"
+CONF_STREAM = "stream"
 
 # Recommended options for subentries
 RECOMMENDED_CONVERSATION_OPTIONS = {

@@ -872,6 +872,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/livisi/ @StefanIacobLivisi @planbnet
 /tests/components/livisi/ @StefanIacobLivisi @planbnet
 /homeassistant/components/lmstudio/ @apo-mak
+/tests/components/lmstudio/ @apo-mak
 /homeassistant/components/local_calendar/ @allenporter
 /tests/components/local_calendar/ @allenporter
 /homeassistant/components/local_ip/ @issacg

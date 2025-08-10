@@ -7,6 +7,32 @@
         "data": {
           "base_url": "Base URL",
           "api_key": "API Key"
+        },
+        "data_description": {
+          "base_url": "The base URL of your LM Studio server (e.g., http://localhost:1234/v1)",
+          "api_key": "API key for authentication (optional for local servers)"
+        }
+      },
+      "init": {
+        "title": "Configure {subentry_type}",
+        "description": "Configure your LM Studio {subentry_type}",
+        "data": {
+          "name": "Name",
+          "model": "Model",
+          "prompt": "Prompt",
+          "llm_hass_api": "Use Home Assistant API",
+          "max_tokens": "Maximum tokens",
+          "temperature": "Temperature",
+          "top_p": "Top P"
+        },
+        "data_description": {
+          "name": "A name for this configuration",
+          "model": "The model to use for this configuration",
+          "prompt": "Custom system prompt (optional)",
+          "llm_hass_api": "Allow the model to control Home Assistant",
+          "max_tokens": "Maximum number of tokens in the response",
+          "temperature": "Controls randomness (0.0 = deterministic, 1.0 = creative)",
+          "top_p": "Controls diversity via nucleus sampling"
         }
       }
     },
