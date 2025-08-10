@@ -128,6 +128,8 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         translation_key="orp_calibration_type",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=["off", "reference", "1_point"],
         # has no unit
     ),
     PooldoseSensorEntityDescription(
