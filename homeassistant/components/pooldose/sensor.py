@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, UnitOfElectricPotential, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -43,12 +43,14 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         key="orp",
         translation_key="orp",
         device_class=SensorDeviceClass.VOLTAGE,
-        native_unit_of_measurement="mV",
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
     ),
     PooldoseSensorEntityDescription(
         key="ph_type_dosing",
         translation_key="ph_type_dosing",
         entity_category=EntityCategory.DIAGNOSTIC,
+        device_class=SensorDeviceClass.ENUM,
+        options=["alcalyne", "acid"],
         # has no unit
     ),
     PooldoseSensorEntityDescription(
@@ -56,6 +58,8 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         translation_key="peristaltic_ph_dosing",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=["proportional", "on_off", "timed"],
         # has no unit
     ),
     PooldoseSensorEntityDescription(
@@ -64,13 +68,15 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.DURATION,
         entity_registry_enabled_default=False,
-        native_unit_of_measurement="min",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
     ),
     PooldoseSensorEntityDescription(
         key="orp_type_dosing",
         translation_key="orp_type_dosing",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "high"],
         # has no unit
     ),
     PooldoseSensorEntityDescription(
@@ -78,6 +84,8 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         translation_key="peristaltic_orp_dosing",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=["off", "proportional", "on_off", "timed"],
         # has no unit
     ),
     PooldoseSensorEntityDescription(
@@ -86,13 +94,15 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        native_unit_of_measurement="min",
+        native_unit_of_measurement=UnitOfTime.MINUTES,
     ),
     PooldoseSensorEntityDescription(
         key="ph_calibration_type",
         translation_key="ph_calibration_type",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=["off", "reference", "1_point", "2_points"],
         # has no unit
     ),
     PooldoseSensorEntityDescription(
@@ -102,7 +112,7 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
-        native_unit_of_measurement="mV",
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
     ),
     PooldoseSensorEntityDescription(
         key="ph_calibration_slope",
@@ -111,7 +121,7 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
-        native_unit_of_measurement="mV",
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
     ),
     PooldoseSensorEntityDescription(
         key="orp_calibration_type",
@@ -127,7 +137,7 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
-        native_unit_of_measurement="mV",
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
     ),
     PooldoseSensorEntityDescription(
         key="orp_calibration_slope",
@@ -136,7 +146,7 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.VOLTAGE,
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
-        native_unit_of_measurement="mV",
+        native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
     ),
 )
 
@@ -147,32 +157,29 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up PoolDose sensor entities from a config entry."""
+    # Assert for type checker that unique_id is not None
+    if TYPE_CHECKING:
+        assert config_entry.unique_id is not None
+
     coordinator = config_entry.runtime_data.coordinator
     client = config_entry.runtime_data.client
     serial_number = config_entry.unique_id
     device_properties = config_entry.runtime_data.device_properties
 
-    # Ensure serial_number is not None
-    if not serial_number:
-        raise ValueError("Config entry must have a unique_id set")
-
     available = client.available_sensors()
-    entities: list[SensorEntity] = []
 
-    for description in SENSOR_DESCRIPTIONS:
-        if description.key not in available:
-            continue
-
-        entities.append(
+    async_add_entities(
+        [
             PooldoseSensor(
                 coordinator,
                 description,
                 serial_number,
                 device_properties,
             )
-        )
-
-    async_add_entities(entities)
+            for description in SENSOR_DESCRIPTIONS
+            if description.key in available
+        ]
+    )
 
 
 class PooldoseSensor(PooldoseEntity, SensorEntity):
