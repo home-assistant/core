@@ -158,7 +158,7 @@ class LMStudioBaseLLMEntity(Entity):
         request_params = {
             "model": model,
             "messages": messages,
-            "stream": False,  # We'll handle streaming through async_add_delta_content_stream
+            "stream": options.get("stream", False),  # Allow streaming if requested
         }
 
         # Add optional parameters
