@@ -2054,55 +2054,7 @@
     'state': '0.42',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.house_water_level_none-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.house_water_level_none',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'liquid_state',
-    'unique_id': 'tuya.snbu4b3vekhywztwqgcwyliquid_state',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.house_water_level_none-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'House Water Level None',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.house_water_level_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'upper_alarm',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.house_water_level_none_2-entry]
+# name: test_platform_setup_and_discovery[sensor.house_water_level_liquid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -2117,7 +2069,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.house_water_level_none_2',
+    'entity_id': 'sensor.house_water_level_liquid_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2129,7 +2081,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Liquid level',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2139,19 +2091,67 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.house_water_level_none_2-state]
+# name: test_platform_setup_and_discovery[sensor.house_water_level_liquid_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'House Water Level None',
+      'friendly_name': 'House Water Level Liquid level',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.house_water_level_none_2',
+    'entity_id': 'sensor.house_water_level_liquid_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.house_water_level_liquid_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.house_water_level_liquid_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Liquid state',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'liquid_state',
+    'unique_id': 'tuya.snbu4b3vekhywztwqgcwyliquid_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.house_water_level_liquid_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'House Water Level Liquid state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.house_water_level_liquid_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'upper_alarm',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.hvac_meter_current-entry]
@@ -3956,55 +3956,7 @@
     'state': '0.455',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.rainwater_tank_level_none-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.rainwater_tank_level_none',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'liquid_state',
-    'unique_id': 'tuya.fbya6s6rhaoyvl8hqgcwyliquid_state',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.rainwater_tank_level_none-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Rainwater Tank Level None',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.rainwater_tank_level_none',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'normal',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.rainwater_tank_level_none_2-entry]
+# name: test_platform_setup_and_discovery[sensor.rainwater_tank_level_liquid_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -4019,7 +3971,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.rainwater_tank_level_none_2',
+    'entity_id': 'sensor.rainwater_tank_level_liquid_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4031,7 +3983,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Liquid level',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -4041,19 +3993,67 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.rainwater_tank_level_none_2-state]
+# name: test_platform_setup_and_discovery[sensor.rainwater_tank_level_liquid_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Rainwater Tank Level None',
+      'friendly_name': 'Rainwater Tank Level Liquid level',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rainwater_tank_level_none_2',
+    'entity_id': 'sensor.rainwater_tank_level_liquid_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '36.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.rainwater_tank_level_liquid_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainwater_tank_level_liquid_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Liquid state',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'liquid_state',
+    'unique_id': 'tuya.fbya6s6rhaoyvl8hqgcwyliquid_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.rainwater_tank_level_liquid_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Rainwater Tank Level Liquid state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainwater_tank_level_liquid_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.rat_trap_hedge_battery_state-entry]
