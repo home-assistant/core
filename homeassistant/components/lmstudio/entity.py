@@ -93,7 +93,7 @@ class LMStudioBaseLLMEntity(Entity):
         options = {**self.entry.data, **self.subentry.data}
 
         model = options.get(CONF_MODEL, "")
-        if not model:
+        if model is None or model == "":
             # If no model specified, use the first available model
             try:
                 models_response = await client.with_options(timeout=10.0).models.list()
