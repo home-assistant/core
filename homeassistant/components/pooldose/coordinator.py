@@ -42,7 +42,7 @@ class PooldoseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Connect to the client
         client_status = await self.client.connect()
         if client_status != RequestStatus.SUCCESS:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 f"Failed to connect to PoolDose client: {client_status}"
             )
 
