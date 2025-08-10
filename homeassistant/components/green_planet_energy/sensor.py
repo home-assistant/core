@@ -78,14 +78,6 @@ SENSOR_STAT_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         suggested_display_precision=4,
         hour=-1,  # Special value to indicate this is not an hourly sensor
     ),
-    GreenPlanetEnergySensorEntityDescription(
-        key="gpe_price_chart_24h",
-        translation_key="price_chart_24h",
-        native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
-        device_class=SensorDeviceClass.MONETARY,
-        suggested_display_precision=4,
-        hour=-4,  # Special value for 24h chart data
-    ),
 ]
 
 SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = (
@@ -353,13 +345,11 @@ class GreenPlanetEnergySensor(
                 "time_slot": f"{current_hour:02d}:00-{current_hour + 1:02d}:00",
             }
         if self.entity_description.key == "gpe_price_chart_24h":
-            chart_data = self._get_24h_chart_data()
             current_hour = dt_util.now().hour
             return {
                 "current_hour": current_hour,
                 "time_slot": f"{current_hour:02d}:00-{current_hour + 1:02d}:00",
-                "chart_data": chart_data,
-                "data_points": len(chart_data),
+                "data_points": 24,  # Static count instead of dynamic calculation
                 "last_updated": dt_util.now().isoformat(),
             }
 

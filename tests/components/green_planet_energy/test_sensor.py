@@ -119,16 +119,10 @@ async def test_special_sensors(
     assert chart_state is not None
     # Chart sensor shows current price as value
     assert chart_state.state is not None
-    # Check that chart_data attribute exists and has 24 data points
-    assert "chart_data" in chart_state.attributes
-    chart_data = chart_state.attributes["chart_data"]
-    assert len(chart_data) == 24  # 24 hours from current time
+    # Check that essential attributes exist but no large chart_data
+    assert "chart_data" not in chart_state.attributes  # Should not store large data
     assert chart_state.attributes["data_points"] == 24
-    # Check structure of first data point
-    first_point = chart_data[0]
-    assert "hour" in first_point
-    assert "price" in first_point
-    assert "datetime" in first_point
-    assert "time_slot" in first_point
-    assert "day" in first_point
+    assert "current_hour" in chart_state.attributes
+    assert "time_slot" in chart_state.attributes
+
     assert "current_hour" in current_state.attributes

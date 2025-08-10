@@ -16,22 +16,17 @@ async def test_chart_sensor_tomorrow_data(
     chart_sensor = hass.states.get("sensor.gpe_price_chart_24h")
     assert chart_sensor is not None
 
-    # Check that chart_data is populated
-    chart_data = chart_sensor.attributes.get("chart_data", [])
-    assert len(chart_data) == 24  # Should have 24 hours of data
+    # Check that chart_data is NOT in attributes (database optimization)
+    assert "chart_data" not in chart_sensor.attributes
 
-    # Verify we have both today and tomorrow data
-    today_count = sum(1 for item in chart_data if item.get("day") == "today")
-    tomorrow_count = sum(1 for item in chart_data if item.get("day") == "tomorrow")
+    # But essential metadata should be present
+    assert chart_sensor.attributes.get("data_points") == 24
+    assert "current_hour" in chart_sensor.attributes
+    assert "time_slot" in chart_sensor.attributes
+    assert "last_updated" in chart_sensor.attributes
 
-    # Should have data from both days (depends on current hour)
-    assert today_count + tomorrow_count == 24
-    assert tomorrow_count > 0  # Should have some tomorrow data
-
-    # Verify prices are set (not None)
-    prices = [item.get("price") for item in chart_data]
-    valid_prices = [p for p in prices if p is not None]
-    assert len(valid_prices) > 0  # Should have at least some valid prices
+    # The sensor value should be the current price
+    assert chart_sensor.state is not None
 
 
 @pytest.mark.usefixtures("init_integration")
