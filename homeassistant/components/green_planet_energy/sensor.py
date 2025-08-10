@@ -129,7 +129,8 @@ class GreenPlanetEnergySensor(
 
         # Set appropriate name based on sensor type
         if description.hour >= 0:
-            self._attr_name = f"Price {description.hour:02d}:00"
+            # For hourly sensors, use translation_key instead of hardcoded name
+            self._attr_name = None
         else:
             # For special sensors, the name will be set via translation_key
             self._attr_name = None
