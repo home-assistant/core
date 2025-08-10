@@ -25,6 +25,8 @@ from miio.integrations.airpurifier.zhimi.airpurifier import (
 from miio.integrations.airpurifier.zhimi.airpurifier_miot import (
     OperationMode as AirpurifierMiotOperationMode,
 )
+from miio.integrations.fan.dmaker.fan import FanStatusP5
+from miio.integrations.fan.dmaker.fan_miot import FanStatusMiot
 from miio.integrations.fan.zhimi.zhimi_miot import (
     OperationModeFanZA5 as FanZA5OperationMode,
 )
@@ -329,6 +331,12 @@ class XiaomiGenericDevice(
     def percentage(self) -> int | None:
         """Return the percentage based speed of the fan."""
         return None
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if device is on."""
+        # Base FanEntity uses percentage to determine if the device is on.
+        return self._attr_is_on
 
     async def async_turn_on(
         self,
@@ -1077,12 +1085,14 @@ class XiaomiFan(XiaomiGenericFan):
 class XiaomiFanP5(XiaomiGenericFan):
     """Representation of a Xiaomi Fan P5."""
 
+    coordinator: DataUpdateCoordinator[FanStatusP5]
+
     def __init__(
         self,
         device: MiioDevice,
         entry: XiaomiMiioConfigEntry,
         unique_id: str | None,
-        coordinator: DataUpdateCoordinator[Any],
+        coordinator: DataUpdateCoordinator[FanStatusP5],
     ) -> None:
         """Initialize the fan."""
         super().__init__(device, entry, unique_id, coordinator)
@@ -1140,13 +1150,15 @@ class XiaomiFanP5(XiaomiGenericFan):
 class XiaomiFanMiot(XiaomiGenericFan):
     """Representation of a Xiaomi Fan Miot."""
 
+    coordinator: DataUpdateCoordinator[FanStatusMiot]
+
     @property
-    def operation_mode_class(self):
+    def operation_mode_class(self) -> type[FanOperationMode]:
         """Hold operation mode class."""
         return FanOperationMode
 
     @callback
-    def _handle_coordinator_update(self):
+    def _handle_coordinator_update(self) -> None:
         """Fetch state from the device."""
         self._attr_is_on = self.coordinator.data.is_on
         self._attr_preset_mode = self.coordinator.data.mode.name

@@ -255,45 +255,51 @@ async def test_async_add_hass_job_schedule_partial_callback() -> None:
     partial = functools.partial(ha.callback(job))
 
     ha.HomeAssistant._async_add_hass_job(hass, ha.HassJob(partial))
-    assert len(hass.loop.call_soon.mock_calls) == 1
-    assert len(hass.loop.create_task.mock_calls) == 0
-    assert len(hass.add_job.mock_calls) == 0
+    assert hass.loop.call_soon.call_count == 1
+    assert hass.loop.create_task.call_count == 0
+    assert hass.add_job.call_count == 0
 
 
 async def test_async_add_hass_job_schedule_corofunction_eager_start() -> None:
     """Test that we schedule coroutines and add jobs to the job pool."""
-    hass = MagicMock(loop=MagicMock(wraps=asyncio.get_running_loop()))
+    hass = MagicMock(loop=(loop := asyncio.get_running_loop()))
 
     async def job():
         pass
 
-    with patch(
-        "homeassistant.core.create_eager_task", wraps=create_eager_task
-    ) as mock_create_eager_task:
+    with (
+        patch(
+            "homeassistant.core.create_eager_task", wraps=create_eager_task
+        ) as mock_create_eager_task,
+        patch.object(loop, "call_soon") as mock_loop_call_soon,
+    ):
         hass_job = ha.HassJob(job)
         task = ha.HomeAssistant._async_add_hass_job(hass, hass_job)
-        assert len(hass.loop.call_soon.mock_calls) == 0
-        assert len(hass.add_job.mock_calls) == 0
+        assert mock_loop_call_soon.call_count == 0
+        assert hass.add_job.call_count == 0
         assert mock_create_eager_task.mock_calls
         await task
 
 
 async def test_async_add_hass_job_schedule_partial_corofunction_eager_start() -> None:
     """Test that we schedule coroutines and add jobs to the job pool."""
-    hass = MagicMock(loop=MagicMock(wraps=asyncio.get_running_loop()))
+    hass = MagicMock(loop=(loop := asyncio.get_running_loop()))
 
     async def job():
         pass
 
     partial = functools.partial(job)
 
-    with patch(
-        "homeassistant.core.create_eager_task", wraps=create_eager_task
-    ) as mock_create_eager_task:
+    with (
+        patch(
+            "homeassistant.core.create_eager_task", wraps=create_eager_task
+        ) as mock_create_eager_task,
+        patch.object(loop, "call_soon") as mock_loop_call_soon,
+    ):
         hass_job = ha.HassJob(partial)
         task = ha.HomeAssistant._async_add_hass_job(hass, hass_job)
-        assert len(hass.loop.call_soon.mock_calls) == 0
-        assert len(hass.add_job.mock_calls) == 0
+        assert mock_loop_call_soon.call_count == 0
+        assert hass.add_job.call_count == 0
         assert mock_create_eager_task.mock_calls
         await task
 
@@ -306,35 +312,42 @@ async def test_async_add_job_add_hass_threaded_job_to_pool() -> None:
         pass
 
     ha.HomeAssistant._async_add_hass_job(hass, ha.HassJob(job))
-    assert len(hass.loop.call_soon.mock_calls) == 0
-    assert len(hass.loop.create_task.mock_calls) == 0
-    assert len(hass.loop.run_in_executor.mock_calls) == 2
+    assert hass.loop.call_soon.call_count == 0
+    assert hass.loop.create_task.call_count == 0
+    assert hass.loop.run_in_executor.call_count == 1
 
 
 async def test_async_create_task_schedule_coroutine() -> None:
     """Test that we schedule coroutines and add jobs to the job pool."""
-    hass = MagicMock(loop=MagicMock(wraps=asyncio.get_running_loop()))
+    hass = MagicMock(loop=(loop := asyncio.get_running_loop()))
 
     async def job():
         pass
 
-    ha.HomeAssistant.async_create_task_internal(hass, job(), eager_start=False)
-    assert len(hass.loop.call_soon.mock_calls) == 0
-    assert len(hass.loop.create_task.mock_calls) == 1
-    assert len(hass.add_job.mock_calls) == 0
+    with (
+        patch.object(loop, "call_soon") as mock_loop_call_soon,
+        patch.object(loop, "create_task") as mock_loop_create_task,
+    ):
+        coro = job()
+        ha.HomeAssistant.async_create_task_internal(hass, coro, eager_start=False)
+        assert mock_loop_call_soon.call_count == 0
+        assert mock_loop_create_task.call_count == 1
+        assert hass.add_job.call_count == 0
+        await coro
 
 
 async def test_async_create_task_eager_start_schedule_coroutine() -> None:
     """Test that we schedule coroutines and add jobs to the job pool."""
-    hass = MagicMock(loop=MagicMock(wraps=asyncio.get_running_loop()))
+    hass = MagicMock(loop=(loop := asyncio.get_running_loop()))
 
     async def job():
         pass
 
-    ha.HomeAssistant.async_create_task_internal(hass, job(), eager_start=True)
-    # Should create the task directly since 3.12 supports eager_start
-    assert len(hass.loop.create_task.mock_calls) == 0
-    assert len(hass.add_job.mock_calls) == 0
+    with patch.object(loop, "create_task") as mock_loop_create_task:
+        ha.HomeAssistant.async_create_task_internal(hass, job(), eager_start=True)
+        # Should create the task directly since 3.12 supports eager_start
+        assert mock_loop_create_task.call_count == 0
+        assert hass.add_job.call_count == 0
 
 
 async def test_async_create_task_schedule_coroutine_with_name() -> None:
@@ -344,13 +357,15 @@ async def test_async_create_task_schedule_coroutine_with_name() -> None:
     async def job():
         pass
 
+    coro = job()
     task = ha.HomeAssistant.async_create_task_internal(
-        hass, job(), "named task", eager_start=False
+        hass, coro, "named task", eager_start=False
     )
-    assert len(hass.loop.call_soon.mock_calls) == 0
-    assert len(hass.loop.create_task.mock_calls) == 1
-    assert len(hass.add_job.mock_calls) == 0
+    assert hass.loop.call_soon.call_count == 0
+    assert hass.loop.create_task.call_count == 1
+    assert hass.add_job.call_count == 0
     assert "named task" in str(task)
+    await coro
 
 
 async def test_async_run_eager_hass_job_calls_callback() -> None:
@@ -1832,7 +1847,7 @@ async def test_services_call_return_response_requires_blocking(
             return_response=True,
         )
     assert str(exc.value) == (
-        "A non blocking action call with argument blocking=False "
+        "A non-blocking action call with argument blocking=False "
         "can't be used together with argument return_response=True"
     )
 

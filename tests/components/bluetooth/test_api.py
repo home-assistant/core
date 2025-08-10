@@ -82,7 +82,6 @@ async def test_async_scanner_devices_by_address_connectable(
         "44:44:33:11:23:45",
         "wohand",
         {},
-        rssi=-100,
     )
     switchbot_device_adv = generate_advertisement_data(
         local_name="wohand",
@@ -116,7 +115,6 @@ async def test_async_scanner_devices_by_address_non_connectable(
         "44:44:33:11:23:45",
         "wohand",
         {},
-        rssi=-100,
     )
     switchbot_device_adv = generate_advertisement_data(
         local_name="wohand",

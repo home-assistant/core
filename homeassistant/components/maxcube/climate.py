@@ -133,8 +133,6 @@ class MaxCubeClimate(ClimateEntity):
             self._set_target(MAX_DEVICE_MODE_MANUAL, temp)
         elif hvac_mode == HVACMode.AUTO:
             self._set_target(MAX_DEVICE_MODE_AUTOMATIC, None)
-        else:
-            raise ValueError(f"unsupported HVAC mode {hvac_mode}")
 
     def _set_target(self, mode: int | None, temp: float | None) -> None:
         """Set the mode and/or temperature of the thermostat.

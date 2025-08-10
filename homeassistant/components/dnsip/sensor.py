@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 from ipaddress import IPv4Address, IPv6Address
 import logging
+from typing import Literal
 
 import aiodns
 from aiodns.error import DNSError
@@ -34,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=120)
 
 
-def sort_ips(ips: list, querytype: str) -> list:
+def sort_ips(ips: list, querytype: Literal["A", "AAAA"]) -> list:
     """Join IPs into a single string."""
 
     if querytype == "AAAA":
@@ -89,7 +90,7 @@ class WanIpSensor(SensorEntity):
         self.hostname = hostname
         self.resolver = aiodns.DNSResolver(tcp_port=port, udp_port=port)
         self.resolver.nameservers = [resolver]
-        self.querytype = "AAAA" if ipv6 else "A"
+        self.querytype: Literal["A", "AAAA"] = "AAAA" if ipv6 else "A"
         self._retries = DEFAULT_RETRIES
         self._attr_extra_state_attributes = {
             "resolver": resolver,
@@ -106,7 +107,7 @@ class WanIpSensor(SensorEntity):
     async def async_update(self) -> None:
         """Get the current DNS IP address for hostname."""
         try:
-            response = await self.resolver.query(self.hostname, self.querytype)  # type: ignore[call-overload]
+            response = await self.resolver.query(self.hostname, self.querytype)
         except DNSError as err:
             _LOGGER.warning("Exception while resolving host: %s", err)
             response = None

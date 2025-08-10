@@ -21,14 +21,9 @@ from .const import DOMAIN
 
 ENERGY_USAGE_DEVICE_CLASSES = (sensor.SensorDeviceClass.ENERGY,)
 ENERGY_USAGE_UNITS: dict[str, tuple[UnitOfEnergy, ...]] = {
-    sensor.SensorDeviceClass.ENERGY: (
-        UnitOfEnergy.GIGA_JOULE,
-        UnitOfEnergy.KILO_WATT_HOUR,
-        UnitOfEnergy.MEGA_JOULE,
-        UnitOfEnergy.MEGA_WATT_HOUR,
-        UnitOfEnergy.WATT_HOUR,
-    )
+    sensor.SensorDeviceClass.ENERGY: tuple(UnitOfEnergy)
 }
+
 ENERGY_PRICE_UNITS = tuple(
     f"/{unit}" for units in ENERGY_USAGE_UNITS.values() for unit in units
 )
@@ -39,13 +34,9 @@ GAS_USAGE_DEVICE_CLASSES = (
     sensor.SensorDeviceClass.GAS,
 )
 GAS_USAGE_UNITS: dict[str, tuple[UnitOfEnergy | UnitOfVolume, ...]] = {
-    sensor.SensorDeviceClass.ENERGY: (
-        UnitOfEnergy.GIGA_JOULE,
-        UnitOfEnergy.KILO_WATT_HOUR,
-        UnitOfEnergy.MEGA_JOULE,
-        UnitOfEnergy.MEGA_WATT_HOUR,
-        UnitOfEnergy.WATT_HOUR,
-    ),
+    sensor.SensorDeviceClass.ENERGY: ENERGY_USAGE_UNITS[
+        sensor.SensorDeviceClass.ENERGY
+    ],
     sensor.SensorDeviceClass.GAS: (
         UnitOfVolume.CENTUM_CUBIC_FEET,
         UnitOfVolume.CUBIC_FEET,
