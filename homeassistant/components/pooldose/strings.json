@@ -38,7 +38,7 @@
         }
       },
       "peristaltic_ph_dosing": {
-        "name": "ph peristaltic dosing",
+        "name": "pH peristaltic dosing",
         "state": {
           "off": "[%key:common::state::off%]",
           "proportional": "Proportional",
