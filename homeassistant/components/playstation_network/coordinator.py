@@ -174,8 +174,9 @@ class PlaystationNetworkGroupsUpdateCoordinator(
             )
         except PSNAWPForbiddenError as e:
             error = json.loads(e.args[0])
-            _LOGGER.warning(
-                "Failed to retrieve DM and group chats for %s from PlayStation Network: %s",
+            _LOGGER.info(
+                "Unable to retrieve group chats for %s from PlayStation Network "
+                "due to permissions: %s. This does not affect other integration features",
                 self.config_entry.title,
                 error["error"]["message"],
             )
