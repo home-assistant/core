@@ -47,7 +47,7 @@
         }
       },
       "ofa_ph_value": {
-        "name": "pH over feed alert time"
+        "name": "pH overfeed alert time"
       },
       "orp_type_dosing": {
         "name": "ORP dosing type",
