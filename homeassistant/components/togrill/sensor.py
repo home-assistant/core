@@ -122,6 +122,8 @@ class ToGrillSensor(ToGrillEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Get current value."""
-        if packet := self.coordinator.data.get(self.entity_description.packet_type):
+        if packet := self.coordinator.data.get(
+            (self.entity_description.packet_type, None)
+        ):
             return self.entity_description.packet_extract(packet)
         return None

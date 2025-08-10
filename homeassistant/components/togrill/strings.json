@@ -22,10 +22,29 @@
       "failed_to_read_config": "Failed to read config from device"
     }
   },
+  "exceptions": {
+    "disconnected": {
+      "message": "The device is disconnected"
+    },
+    "communication_failed": {
+      "message": "Communication failed with the device"
+    },
+    "rejected": {
+      "message": "Data was rejected by device"
+    }
+  },
   "entity": {
     "sensor": {
       "temperature": {
         "name": "Probe {probe_number}"
+      }
+    },
+    "number": {
+      "temperature_target": {
+        "name": "Target {probe_number}"
+      },
+      "alarm_interval": {
+        "name": "Alarm interval"
       }
     }
   }
