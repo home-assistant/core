@@ -229,7 +229,7 @@ async def test_reconfigure_flow_works(hass: HomeAssistant) -> None:
 
 
 async def test_reconfigure_flow_cannot_connect(hass: HomeAssistant) -> None:
-    """Test reconfiguration with connection error."""
+    """Test reconfiguration with connection error and recovery."""
     mock_entry = MockConfigEntry(
         version=1,
         domain=DOMAIN,
@@ -256,6 +256,26 @@ async def test_reconfigure_flow_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
+
+    # Test recovery by fixing the connection issue.
+    with (
+        patch(
+            "homeassistant.components.apcupsd.coordinator.aioapcaccess.request_status",
+            return_value=MOCK_STATUS,
+        ),
+        _patch_setup(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=new_conf_data
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    # Check that the entry was updated with the new configuration.
+    assert mock_entry.data[CONF_HOST] == new_conf_data[CONF_HOST]
+    assert mock_entry.data[CONF_PORT] == new_conf_data[CONF_PORT]
 
 
 @pytest.mark.parametrize(
