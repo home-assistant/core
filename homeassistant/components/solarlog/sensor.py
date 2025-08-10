@@ -261,9 +261,7 @@ BATTERY_SENSOR_TYPES: tuple[SolarLogBatterySensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda battery_data: None
-        if battery_data is None
-        else battery_data.charge_power,
+        value_fn=lambda battery_data: battery_data.charge_power,
     ),
     SolarLogBatterySensorEntityDescription(
         key="discharging_power",
@@ -271,9 +269,7 @@ BATTERY_SENSOR_TYPES: tuple[SolarLogBatterySensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda battery_data: None
-        if battery_data is None
-        else battery_data.discharge_power,
+        value_fn=lambda battery_data: battery_data.discharge_power,
     ),
     SolarLogBatterySensorEntityDescription(
         key="charge_level",
@@ -281,9 +277,7 @@ BATTERY_SENSOR_TYPES: tuple[SolarLogBatterySensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda battery_data: None
-        if battery_data is None
-        else battery_data.level,
+        value_fn=lambda battery_data: battery_data.level,
     ),
 )
 
