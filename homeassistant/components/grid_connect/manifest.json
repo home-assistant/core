@@ -1,13 +1,13 @@
 {
   "domain": "grid_connect",
-  "name": "Grid connect",
-  "codeowners": ["@dangerdangerau"],
-  "config_flow": true,
-  "dependencies": ["homeassistant"],
+  "name": "Grid Connect",
+  "version": "0.1.0",
   "documentation": "https://www.home-assistant.io/integrations/grid_connect",
+  "issue_tracker": "https://github.com/Dangerdangerau/Grid-Connect/issues",
+  "codeowners": ["@Dangerdangerau"],
   "iot_class": "local_polling",
-  "quality_scale": "bronze",
   "requirements": [],
+  "config_flow": true,
   "ssdp": [
     {
       "manufacturer": "Grid Connect",
