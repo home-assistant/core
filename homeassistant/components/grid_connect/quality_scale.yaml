@@ -15,7 +15,7 @@ rules:
   entity-unique-id: todo
   has-entity-name: todo
   runtime-data: todo
-  test-before-configure: dtodo
+  test-before-configure: todo
   test-before-setup: todo
   unique-config-entry: todo
 
