@@ -1836,7 +1836,7 @@ pyobihai==1.4.2
 pyoctoprintapi==0.1.14
 
 # homeassistant.components.omie
-pyomie==0.1.1
+pyomie==0.1.2
 
 # homeassistant.components.openuv
 pyopenuv==2023.02.0
