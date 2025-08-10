@@ -213,14 +213,9 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
-        # Use static unit if defined
-        if self.entity_description.native_unit_of_measurement:
-            return self.entity_description.native_unit_of_measurement
-
-        # For temperature, get unit from API data
         if self.entity_description.key == "temperature" and self.coordinator.data:
             sensor_data = self.coordinator.data.get("temperature")
             if isinstance(sensor_data, (list, tuple)) and len(sensor_data) > 1:
                 return sensor_data[1]  # °C or °F
 
-        return None
+        return super().native_unit_of_measurement
