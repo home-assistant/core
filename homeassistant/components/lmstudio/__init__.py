@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LMStudioConfigEntry) -> 
 
     try:
         # Test the connection by listing models
-        await hass.async_add_executor_job(client.with_options(timeout=10.0).models.list)
+        await client.with_options(timeout=10.0).models.list()
     except openai.AuthenticationError as err:
         _LOGGER.error("Authentication failed: %s", err)
         return False
