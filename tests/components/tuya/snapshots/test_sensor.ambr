@@ -1,4 +1,178 @@
 # serializer version: 1
+# name: test_platform_setup_and_discovery[sensor.3dprinter_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.3dprinter_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.pykascx9yfqrxtbgzccur_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.3dprinter_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': '3DPrinter Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.3dprinter_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.3dprinter_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.3dprinter_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.pykascx9yfqrxtbgzccur_power',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.3dprinter_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': '3DPrinter Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.3dprinter_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.3dprinter_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.3dprinter_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': 'tuya.pykascx9yfqrxtbgzccur_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.3dprinter_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': '3DPrinter Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.3dprinter_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '231.9',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sensor.aqi_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -266,6 +440,852 @@
     'state': '0.018',
   })
 # ---
+# name: test_platform_setup_and_discovery[sensor.aubess_cooker_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aubess_cooker_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.cju47ovcbeuapei2zccur_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.aubess_cooker_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Aubess Cooker Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aubess_cooker_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.aubess_cooker_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aubess_cooker_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.cju47ovcbeuapei2zccur_power',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.aubess_cooker_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Aubess Cooker Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aubess_cooker_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.aubess_cooker_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aubess_cooker_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': 'tuya.cju47ovcbeuapei2zccur_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.aubess_cooker_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Aubess Cooker Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aubess_cooker_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.aubess_washing_machine_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aubess_washing_machine_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.zjh9xhtm3gibs9kizccur_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.aubess_washing_machine_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Aubess Washing Machine Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aubess_washing_machine_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.aubess_washing_machine_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aubess_washing_machine_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.zjh9xhtm3gibs9kizccur_power',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.aubess_washing_machine_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Aubess Washing Machine Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aubess_washing_machine_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.aubess_washing_machine_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aubess_washing_machine_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': 'tuya.zjh9xhtm3gibs9kizccur_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.aubess_washing_machine_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Aubess Washing Machine Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aubess_washing_machine_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '229.9',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.balkonbewasserung_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.balkonbewasserung_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery',
+    'unique_id': 'tuya.73ov8i8iedtylkzrqzkfsbattery_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.balkonbewasserung_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'balkonbewässerung Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.balkonbewasserung_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.basement_temperature_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.basement_temperature_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery',
+    'unique_id': 'tuya.jlduh7vigcdswbattery_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.basement_temperature_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Basement temperature Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.basement_temperature_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.basement_temperature_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.basement_temperature_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'humidity',
+    'unique_id': 'tuya.jlduh7vigcdswva_humidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.basement_temperature_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Basement temperature Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.basement_temperature_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.basement_temperature_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.basement_temperature_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature',
+    'unique_id': 'tuya.jlduh7vigcdswva_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.basement_temperature_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Basement temperature Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.basement_temperature_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.bassin_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bassin_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery',
+    'unique_id': 'tuya.iaagy4qigcdswbattery_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.bassin_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Bassin Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bassin_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.bassin_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bassin_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.kvnsoqyfltmf0bknzccur_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.bassin_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Bassin Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bassin_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.783',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.bassin_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bassin_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.kvnsoqyfltmf0bknzccur_power',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.bassin_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Bassin Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bassin_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '41.1',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.bassin_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bassin_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature',
+    'unique_id': 'tuya.iaagy4qigcdswva_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.bassin_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Bassin Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bassin_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '21.7',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.bassin_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bassin_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': 'tuya.kvnsoqyfltmf0bknzccur_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.bassin_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Bassin Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bassin_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '245.4',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sensor.bathroom_smart_switch_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -313,6 +1333,112 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.bathroom_smart_switch_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.boite_aux_lettres_arriere_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.boite_aux_lettres_arriere_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery',
+    'unique_id': 'tuya.7obpyhy8scmbattery_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.boite_aux_lettres_arriere_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Boîte aux lettres - arrière Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.boite_aux_lettres_arriere_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '62.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.bouton_tempo_exterieur_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.bouton_tempo_exterieur_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery',
+    'unique_id': 'tuya.g5uso5ajgkxwbattery_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.bouton_tempo_exterieur_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Bouton tempo extérieur Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bouton_tempo_exterieur_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1185,6 +2311,180 @@
     'state': '2.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[sensor.consommation_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.consommation_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.49m7h9lh3t8pq6ftzccur_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.consommation_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Consommation Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.consommation_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2.585',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.consommation_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.consommation_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.49m7h9lh3t8pq6ftzccur_power',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.consommation_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Consommation Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.consommation_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '425.8',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.consommation_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.consommation_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': 'tuya.49m7h9lh3t8pq6ftzccur_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.consommation_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Consommation Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.consommation_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '241.6',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sensor.dehumidifer_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1518,6 +2818,755 @@
     'state': '222.4',
   })
 # ---
+# name: test_platform_setup_and_discovery[sensor.eau_chaude_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.eau_chaude_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.a3qtb7pulkcc6jdjqldcur_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.eau_chaude_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Eau Chaude Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eau_chaude_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.067',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.eau_chaude_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.eau_chaude_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.a3qtb7pulkcc6jdjqldcur_power',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.eau_chaude_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Eau Chaude Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eau_chaude_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2441.7',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.eau_chaude_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.eau_chaude_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': 'tuya.a3qtb7pulkcc6jdjqldcur_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.eau_chaude_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Eau Chaude Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.eau_chaude_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '241.9',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.elivco_kitchen_socket_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.elivco_kitchen_socket_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.cq4hzlrnqn4qi0mqzccur_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.elivco_kitchen_socket_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Elivco Kitchen Socket Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.elivco_kitchen_socket_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.elivco_kitchen_socket_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.elivco_kitchen_socket_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.cq4hzlrnqn4qi0mqzccur_power',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.elivco_kitchen_socket_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Elivco Kitchen Socket Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.elivco_kitchen_socket_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.elivco_kitchen_socket_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.elivco_kitchen_socket_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': 'tuya.cq4hzlrnqn4qi0mqzccur_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.elivco_kitchen_socket_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Elivco Kitchen Socket Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.elivco_kitchen_socket_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '233.4',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.elivco_tv_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.elivco_tv_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.pz2xuth8hczv6zrwzccur_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.elivco_tv_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Elivco TV Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.elivco_tv_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.091',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.elivco_tv_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.elivco_tv_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.pz2xuth8hczv6zrwzccur_power',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.elivco_tv_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Elivco TV Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.elivco_tv_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.elivco_tv_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.elivco_tv_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': 'tuya.pz2xuth8hczv6zrwzccur_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.elivco_tv_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Elivco TV Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.elivco_tv_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '237.7',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.fenetre_cuisine_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.fenetre_cuisine_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery',
+    'unique_id': 'tuya.yuanswy6scmbattery_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.fenetre_cuisine_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Fenêtre cuisine Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.fenetre_cuisine_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '93.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.framboisier_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.framboisier_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.51tdkcsamisw9ukycpcur_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.framboisier_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Framboisier Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.framboisier_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.framboisier_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.framboisier_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.51tdkcsamisw9ukycpcur_power',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.framboisier_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Framboisier Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.framboisier_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.framboisier_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.framboisier_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': 'tuya.51tdkcsamisw9ukycpcur_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.framboisier_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Framboisier Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.framboisier_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '247.1',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sensor.frysen_battery_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1731,6 +3780,407 @@
     'state': '22.2',
   })
 # ---
+# name: test_platform_setup_and_discovery[sensor.garage_contact_sensor_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.garage_contact_sensor_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery',
+    'unique_id': 'tuya.3uqk1csjqplf3uxqscmbattery_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.garage_contact_sensor_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Garage Contact Sensor Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garage_contact_sensor_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '11.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.garage_socket_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.garage_socket_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.3d4yosotwk27nqxvzccur_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.garage_socket_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Garage Socket Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garage_socket_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.garage_socket_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.garage_socket_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.3d4yosotwk27nqxvzccur_power',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.garage_socket_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Garage Socket Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garage_socket_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.garage_socket_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.garage_socket_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': 'tuya.3d4yosotwk27nqxvzccur_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.garage_socket_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Garage Socket Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garage_socket_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '235.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.garaz_cerpadlo_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.garaz_cerpadlo_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.wc6mumew8inrivi9zccur_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.garaz_cerpadlo_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Garáž čerpadlo Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garaz_cerpadlo_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.garaz_cerpadlo_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.garaz_cerpadlo_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.wc6mumew8inrivi9zccur_power',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.garaz_cerpadlo_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Garáž čerpadlo Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garaz_cerpadlo_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.garaz_cerpadlo_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.garaz_cerpadlo_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': 'tuya.wc6mumew8inrivi9zccur_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.garaz_cerpadlo_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Garáž čerpadlo Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garaz_cerpadlo_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '240.7',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sensor.gas_sensor_gas-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1781,6 +4231,219 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.greenhouse_battery_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.greenhouse_battery_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery state',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_state',
+    'unique_id': 'tuya.ggwxkj8bwn5y63flgcdswbattery_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.greenhouse_battery_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Greenhouse Battery state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.greenhouse_battery_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'middle',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.greenhouse_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.greenhouse_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'humidity',
+    'unique_id': 'tuya.ggwxkj8bwn5y63flgcdswva_humidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.greenhouse_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Greenhouse Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.greenhouse_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '53.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.greenhouse_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.greenhouse_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature',
+    'unique_id': 'tuya.ggwxkj8bwn5y63flgcdswva_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.greenhouse_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Greenhouse Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.greenhouse_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '32.2',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.hot_water_heat_pump_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hot_water_heat_pump_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature',
+    'unique_id': 'tuya.ol8xwtcj42eg18bdbrnztemp_current',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.hot_water_heat_pump_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Hot Water Heat Pump Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hot_water_heat_pump_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '42.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.house_water_level_distance-entry]
@@ -1937,6 +4600,329 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'upper_alarm',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.humy_bain_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.humy_bain_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery',
+    'unique_id': 'tuya.ZgXzZULP6dDp4Atvgcdswva_battery',
+    'unit_of_measurement': '',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.humy_bain_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Humy bain Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.humy_bain_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.humy_bain_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.humy_bain_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'humidity',
+    'unique_id': 'tuya.ZgXzZULP6dDp4Atvgcdswva_humidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.humy_bain_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Humy bain Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.humy_bain_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '63.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.humy_bain_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.humy_bain_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature',
+    'unique_id': 'tuya.ZgXzZULP6dDp4Atvgcdswva_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.humy_bain_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Humy bain Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.humy_bain_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.humy_toilettes_rdc_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.humy_toilettes_rdc_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery',
+    'unique_id': 'tuya.69dth3rxgcdswbattery_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.humy_toilettes_rdc_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Humy toilettes RDC Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.humy_toilettes_rdc_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.humy_toilettes_rdc_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.humy_toilettes_rdc_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'humidity',
+    'unique_id': 'tuya.69dth3rxgcdswva_humidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.humy_toilettes_rdc_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Humy toilettes RDC Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.humy_toilettes_rdc_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '61.8',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.humy_toilettes_rdc_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.humy_toilettes_rdc_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature',
+    'unique_id': 'tuya.69dth3rxgcdswva_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.humy_toilettes_rdc_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Humy toilettes RDC Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.humy_toilettes_rdc_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.6',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.hvac_meter_current-entry]
@@ -2113,6 +5099,337 @@
     'state': '121.7',
   })
 # ---
+# name: test_platform_setup_and_discovery[sensor.ifs_std002_battery_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.ifs_std002_battery_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery state',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_state',
+    'unique_id': 'tuya.9wlo8cpzprhiclrkgcdswbattery_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.ifs_std002_battery_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'IFS-STD002 Battery state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ifs_std002_battery_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'high',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.ifs_std002_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ifs_std002_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'humidity',
+    'unique_id': 'tuya.9wlo8cpzprhiclrkgcdswva_humidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.ifs_std002_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'IFS-STD002 Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ifs_std002_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '61.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.ifs_std002_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ifs_std002_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature',
+    'unique_id': 'tuya.9wlo8cpzprhiclrkgcdswva_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.ifs_std002_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'IFS-STD002 Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ifs_std002_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '28.9',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.ineox_sp2_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ineox_sp2_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.vx2owjsg86g2ys93zccur_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.ineox_sp2_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Ineox SP2 Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ineox_sp2_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.228',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.ineox_sp2_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ineox_sp2_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.vx2owjsg86g2ys93zccur_power',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.ineox_sp2_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Ineox SP2 Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ineox_sp2_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6.1',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.ineox_sp2_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ineox_sp2_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': 'tuya.vx2owjsg86g2ys93zccur_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.ineox_sp2_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Ineox SP2 Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ineox_sp2_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '232.1',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sensor.kalado_air_purifier_air_quality-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2208,6 +5525,528 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '42.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.keller_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.keller_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.g7af6lrt4miugbstcpcur_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.keller_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Keller Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.keller_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.keller_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.keller_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.g7af6lrt4miugbstcpcur_power',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.keller_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Keller Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.keller_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.keller_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.keller_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': 'tuya.g7af6lrt4miugbstcpcur_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.keller_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Keller Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.keller_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.lave_linge_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.lave_linge_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.g0edqq0wzccur_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.lave_linge_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Lave linge Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lave_linge_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.lave_linge_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.lave_linge_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.g0edqq0wzccur_power',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.lave_linge_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Lave linge Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lave_linge_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.lave_linge_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.lave_linge_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': 'tuya.g0edqq0wzccur_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.lave_linge_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Lave linge Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.lave_linge_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '244.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.licht_drucker_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.licht_drucker_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.uvh6oeqrfliovfiwzccur_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.licht_drucker_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Licht drucker Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.licht_drucker_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.licht_drucker_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.licht_drucker_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.uvh6oeqrfliovfiwzccur_power',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.licht_drucker_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Licht drucker Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.licht_drucker_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.licht_drucker_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.licht_drucker_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': 'tuya.uvh6oeqrfliovfiwzccur_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.licht_drucker_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Licht drucker Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.licht_drucker_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.lounge_dark_blind_last_operation_duration-entry]
@@ -3252,6 +7091,740 @@
     'state': '18.5',
   })
 # ---
+# name: test_platform_setup_and_discovery[sensor.office_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.office_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.2x473nefusdo7af6zccur_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.office_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Office Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.office_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.253',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.office_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.office_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.2x473nefusdo7af6zccur_power',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.office_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Office Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.office_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '38.9',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.office_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.office_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': 'tuya.2x473nefusdo7af6zccur_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.office_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Office Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.office_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '239.6',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_a_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.p1_energia_elettrica_phase_a_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Phase A current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_a_current',
+    'unique_id': 'tuya.bcyciyhhu1g2gk9rqldphase_aelectriccurrent',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_a_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'P1 Energia Elettrica Phase A current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.p1_energia_elettrica_phase_a_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '15.4',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_a_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.p1_energia_elettrica_phase_a_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Phase A power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_a_power',
+    'unique_id': 'tuya.bcyciyhhu1g2gk9rqldphase_apower',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_a_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'P1 Energia Elettrica Phase A power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.p1_energia_elettrica_phase_a_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.314',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_a_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.p1_energia_elettrica_phase_a_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Phase A voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_a_voltage',
+    'unique_id': 'tuya.bcyciyhhu1g2gk9rqldphase_avoltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_a_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'P1 Energia Elettrica Phase A voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.p1_energia_elettrica_phase_a_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '215.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_b_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.p1_energia_elettrica_phase_b_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Phase B current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_b_current',
+    'unique_id': 'tuya.bcyciyhhu1g2gk9rqldphase_belectriccurrent',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_b_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'P1 Energia Elettrica Phase B current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.p1_energia_elettrica_phase_b_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_b_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.p1_energia_elettrica_phase_b_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Phase B power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_b_power',
+    'unique_id': 'tuya.bcyciyhhu1g2gk9rqldphase_bpower',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_b_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'P1 Energia Elettrica Phase B power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.p1_energia_elettrica_phase_b_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_b_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.p1_energia_elettrica_phase_b_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Phase B voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_b_voltage',
+    'unique_id': 'tuya.bcyciyhhu1g2gk9rqldphase_bvoltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_b_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'P1 Energia Elettrica Phase B voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.p1_energia_elettrica_phase_b_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_c_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.p1_energia_elettrica_phase_c_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Phase C current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_c_current',
+    'unique_id': 'tuya.bcyciyhhu1g2gk9rqldphase_celectriccurrent',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_c_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'P1 Energia Elettrica Phase C current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.p1_energia_elettrica_phase_c_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_c_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.p1_energia_elettrica_phase_c_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Phase C power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_c_power',
+    'unique_id': 'tuya.bcyciyhhu1g2gk9rqldphase_cpower',
+    'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_c_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'P1 Energia Elettrica Phase C power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.p1_energia_elettrica_phase_c_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_c_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.p1_energia_elettrica_phase_c_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Phase C voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'phase_c_voltage',
+    'unique_id': 'tuya.bcyciyhhu1g2gk9rqldphase_cvoltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_phase_c_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'P1 Energia Elettrica Phase C voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.p1_energia_elettrica_phase_c_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_total_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.p1_energia_elettrica_total_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Total energy',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_energy',
+    'unique_id': 'tuya.bcyciyhhu1g2gk9rqldtotal_forward_energy',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.p1_energia_elettrica_total_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'P1 Energia Elettrica Total energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.p1_energia_elettrica_total_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '22799.6',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sensor.patates_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3460,6 +8033,115 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '22.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.pid_relay_2_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.pid_relay_2_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'humidity',
+    'unique_id': 'tuya.zyutbek7wdm1b4cgzckwhumidity_value',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.pid_relay_2_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'pid_relay_2 Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pid_relay_2_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '38.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.pid_relay_2_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.pid_relay_2_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature',
+    'unique_id': 'tuya.zyutbek7wdm1b4cgzckwtemp_current',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.pid_relay_2_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'pid_relay_2 Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.pid_relay_2_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '17.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.pir_outside_stairs_battery_state-entry]
@@ -3782,6 +8464,174 @@
     'state': '0.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[sensor.production_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.production_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_power',
+    'unique_id': 'tuya.3phkffywh5nnlj5vbdnztotal_powerpower',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.production_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Production Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.production_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2314.6',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.production_total_energy-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.production_total_energy',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Total energy',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_energy',
+    'unique_id': 'tuya.3phkffywh5nnlj5vbdnzforward_energy_total',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.production_total_energy-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Production Total energy',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.production_total_energy',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1520.21',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.production_total_production-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.production_total_production',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
+    'original_icon': None,
+    'original_name': 'Total production',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_production',
+    'unique_id': 'tuya.3phkffywh5nnlj5vbdnzreverse_energy_total',
+    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.production_total_production-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'energy',
+      'friendly_name': 'Production Total production',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.production_total_production',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sensor.rainwater_tank_level_distance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3938,6 +8788,180 @@
     'state': 'normal',
   })
 # ---
+# name: test_platform_setup_and_discovery[sensor.raspy4_home_assistant_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.raspy4_home_assistant_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.zaszonjgzccur_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.raspy4_home_assistant_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Raspy4 - Home Assistant Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.raspy4_home_assistant_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.033',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.raspy4_home_assistant_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.raspy4_home_assistant_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.zaszonjgzccur_power',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.raspy4_home_assistant_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Raspy4 - Home Assistant Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.raspy4_home_assistant_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.raspy4_home_assistant_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.raspy4_home_assistant_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': 'tuya.zaszonjgzccur_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.raspy4_home_assistant_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Raspy4 - Home Assistant Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.raspy4_home_assistant_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '244.0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sensor.rat_trap_hedge_battery_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3984,6 +9008,276 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'low',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.rauchmelder_alexsandro_battery_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.rauchmelder_alexsandro_battery_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery state',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_state',
+    'unique_id': 'tuya.o71einxvuuktuljcjbwybattery_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.rauchmelder_alexsandro_battery_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Rauchmelder Alexsandro  Battery state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rauchmelder_alexsandro_battery_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'high',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.rauchmelder_drucker_battery_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.rauchmelder_drucker_battery_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery state',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_state',
+    'unique_id': 'tuya.t5zosev6h6wmwyrajbwybattery_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.rauchmelder_drucker_battery_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Rauchmelder Drucker Battery state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rauchmelder_drucker_battery_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'high',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.sapphire_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sapphire_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.hfqeljop3aihnm73zccur_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.sapphire_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Sapphire  Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sapphire_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.135',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.sapphire_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sapphire_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.hfqeljop3aihnm73zccur_power',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.sapphire_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Sapphire  Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sapphire_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '313.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.sapphire_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sapphire_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': 'tuya.hfqeljop3aihnm73zccur_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.sapphire_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Sapphire  Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sapphire_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2357.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.smart_odor_eliminator_pro_battery-entry]
@@ -4085,6 +9379,59 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.smogo_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.smogo_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery',
+    'unique_id': 'tuya.swhtzki3qrz5ydchjbocbattery_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.smogo_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Smogo Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smogo_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '97.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.smoke_detector_upstairs_battery-entry]
@@ -4362,6 +9709,180 @@
     'state': 'unavailable',
   })
 # ---
+# name: test_platform_setup_and_discovery[sensor.socket4_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.socket4_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.4q5c2am8n1bwb6bszccur_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.socket4_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Socket4 Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.socket4_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.socket4_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.socket4_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.4q5c2am8n1bwb6bszccur_power',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.socket4_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Socket4 Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.socket4_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.socket4_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.socket4_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': 'tuya.4q5c2am8n1bwb6bszccur_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.socket4_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Socket4 Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.socket4_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sensor.solar_zijpad_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4614,6 +10135,54 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.steel_cage_door_battery_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.steel_cage_door_battery_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery state',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_state',
+    'unique_id': 'tuya.gvxxy4jitzltz5xhscmbattery_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.steel_cage_door_battery_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Steel cage door Battery state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.steel_cage_door_battery_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'high',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.tournesol_battery-entry]
@@ -5189,6 +10758,111 @@
     'state': '1.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[sensor.valve_controller_2_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.valve_controller_2_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery',
+    'unique_id': 'tuya.kx8dncf1qzkfsbattery_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.valve_controller_2_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Valve Controller 2 Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.valve_controller_2_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.valve_controller_2_total_watering_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.valve_controller_2_total_watering_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Total watering time',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_watering_time',
+    'unique_id': 'tuya.kx8dncf1qzkfstime_use',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.valve_controller_2_total_watering_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Valve Controller 2 Total watering time',
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.valve_controller_2_total_watering_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sensor.water_fountain_filter_duration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -5293,6 +10967,180 @@
     'state': '7.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[sensor.weihnachtsmann_current-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.weihnachtsmann_current',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+    'original_icon': None,
+    'original_name': 'Current',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'current',
+    'unique_id': 'tuya.rwp6kdezm97s2nktzccur_current',
+    'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.weihnachtsmann_current-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'current',
+      'friendly_name': 'Weihnachtsmann  Current',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.weihnachtsmann_current',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.weihnachtsmann_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.weihnachtsmann_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Power',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'power',
+    'unique_id': 'tuya.rwp6kdezm97s2nktzccur_power',
+    'unit_of_measurement': 'W',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.weihnachtsmann_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Weihnachtsmann  Power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'W',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.weihnachtsmann_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.weihnachtsmann_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.weihnachtsmann_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Voltage',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voltage',
+    'unique_id': 'tuya.rwp6kdezm97s2nktzccur_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.weihnachtsmann_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Weihnachtsmann  Voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.weihnachtsmann_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sensor.wifi_smart_gas_boiler_thermostat_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -5344,6 +11192,269 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.wifi_smoke_alarm_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wifi_smoke_alarm_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery',
+    'unique_id': 'tuya.tvgoe1s3fabebcskjbwybattery_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.wifi_smoke_alarm_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'WIFI Smoke alarm Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wifi_smoke_alarm_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '90.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.wifi_temperature_humidity_sensor_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wifi_temperature_humidity_sensor_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery',
+    'unique_id': 'tuya.urm7i0rtdlabqiqygcdswbattery_percentage',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.wifi_temperature_humidity_sensor_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'WiFi Temperature & Humidity Sensor Battery',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wifi_temperature_humidity_sensor_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '100.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.wifi_temperature_humidity_sensor_battery_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.wifi_temperature_humidity_sensor_battery_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Battery state',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_state',
+    'unique_id': 'tuya.urm7i0rtdlabqiqygcdswbattery_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.wifi_temperature_humidity_sensor_battery_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'WiFi Temperature & Humidity Sensor Battery state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wifi_temperature_humidity_sensor_battery_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'high',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.wifi_temperature_humidity_sensor_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wifi_temperature_humidity_sensor_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'humidity',
+    'unique_id': 'tuya.urm7i0rtdlabqiqygcdswva_humidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.wifi_temperature_humidity_sensor_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'WiFi Temperature & Humidity Sensor Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wifi_temperature_humidity_sensor_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '12.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.wifi_temperature_humidity_sensor_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.wifi_temperature_humidity_sensor_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 1,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'temperature',
+    'unique_id': 'tuya.urm7i0rtdlabqiqygcdswva_temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.wifi_temperature_humidity_sensor_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'WiFi Temperature & Humidity Sensor Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.wifi_temperature_humidity_sensor_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '25.1',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.xoca_dac212xc_v2_s1_phase_a_current-entry]
