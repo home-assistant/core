@@ -741,6 +741,62 @@
     'state': '0.0',
   })
 # ---
+# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_precipitation_intensity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_precipitation_intensity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
+    'original_icon': None,
+    'original_name': 'Precipitation intensity',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'precipitation_intensity',
+    'unique_id': 'tuya.6tbtkuv3tal1aesfjxqrain_rate',
+    'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_precipitation_intensity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'precipitation_intensity',
+      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Precipitation intensity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_precipitation_intensity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
 # name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1019,6 +1075,165 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '24.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_total_precipitation-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_total_precipitation',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
+    'original_icon': None,
+    'original_name': 'Total precipitation',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'precipitation',
+    'unique_id': 'tuya.6tbtkuv3tal1aesfjxqrain_24h',
+    'unit_of_measurement': 'mm',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_total_precipitation-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'precipitation',
+      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Total precipitation',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'mm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_total_precipitation',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_uv_index-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_uv_index',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'UV index',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'uv_index',
+    'unique_id': 'tuya.6tbtkuv3tal1aesfjxquv_index',
+    'unit_of_measurement': '',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_uv_index-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit UV index',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_uv_index',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wind direction',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wind_direct',
+    'unique_id': 'tuya.6tbtkuv3tal1aesfjxqwind_direct',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Wind direction',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_speed-entry]
@@ -1839,7 +2054,55 @@
     'state': '0.42',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.house_water_level_liquid_level-entry]
+# name: test_platform_setup_and_discovery[sensor.house_water_level_none-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.house_water_level_none',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'liquid_state',
+    'unique_id': 'tuya.snbu4b3vekhywztwqgcwyliquid_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.house_water_level_none-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'House Water Level None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.house_water_level_none',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'upper_alarm',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.house_water_level_none_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1854,7 +2117,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.house_water_level_liquid_level',
+    'entity_id': 'sensor.house_water_level_none_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1866,7 +2129,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Liquid level',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1876,67 +2139,19 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.house_water_level_liquid_level-state]
+# name: test_platform_setup_and_discovery[sensor.house_water_level_none_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'House Water Level Liquid level',
+      'friendly_name': 'House Water Level None',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.house_water_level_liquid_level',
+    'entity_id': 'sensor.house_water_level_none_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.house_water_level_liquid_state-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.house_water_level_liquid_state',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Liquid state',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'liquid_state',
-    'unique_id': 'tuya.snbu4b3vekhywztwqgcwyliquid_state',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.house_water_level_liquid_state-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'House Water Level Liquid state',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.house_water_level_liquid_state',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'upper_alarm',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.hvac_meter_current-entry]
@@ -2993,1301 +3208,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[qxj_temp_humidity_external_probe][sensor.frysen_battery_state-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.frysen_battery_state',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Battery state',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'battery_state',
-    'unique_id': 'tuya.bff00f6abe0563b284t77pbattery_state',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_temp_humidity_external_probe][sensor.frysen_battery_state-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Frysen Battery state',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.frysen_battery_state',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'high',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_temp_humidity_external_probe][sensor.frysen_humidity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.frysen_humidity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
-    'original_icon': None,
-    'original_name': 'Humidity',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'humidity',
-    'unique_id': 'tuya.bff00f6abe0563b284t77phumidity_value',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_temp_humidity_external_probe][sensor.frysen_humidity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'Frysen Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.frysen_humidity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '38.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_temp_humidity_external_probe][sensor.frysen_probe_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.frysen_probe_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Probe temperature',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'temperature_external',
-    'unique_id': 'tuya.bff00f6abe0563b284t77ptemp_current_external',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_temp_humidity_external_probe][sensor.frysen_probe_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Frysen Probe temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.frysen_probe_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '-13.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_temp_humidity_external_probe][sensor.frysen_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.frysen_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'temperature',
-    'unique_id': 'tuya.bff00f6abe0563b284t77ptemp_current',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_temp_humidity_external_probe][sensor.frysen_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Frysen Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.frysen_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '22.2',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_air_pressure-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_air_pressure',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRESSURE: 'pressure'>,
-    'original_icon': None,
-    'original_name': 'Air pressure',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'air_pressure',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurzatmospheric_pressture',
-    'unit_of_measurement': 'hPa',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_air_pressure-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'pressure',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Air pressure',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'hPa',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_air_pressure',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1004.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_battery_state-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_battery_state',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Battery state',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'battery_state',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurzbattery_state',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_battery_state-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Battery state',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_battery_state',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'high',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_humidity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_humidity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
-    'original_icon': None,
-    'original_name': 'Humidity',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'humidity',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurzhumidity_value',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_humidity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_humidity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '52.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_illuminance-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_illuminance',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
-    'original_icon': None,
-    'original_name': 'Illuminance',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'illuminance',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurzbright_value',
-    'unit_of_measurement': 'lx',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_illuminance-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'illuminance',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Illuminance',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'lx',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_illuminance',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
-    'original_icon': None,
-    'original_name': 'Outdoor humidity',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'humidity_outdoor',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurzhumidity_outdoor',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Outdoor humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_1-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_1',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
-    'original_icon': None,
-    'original_name': 'Outdoor humidity channel 1',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_humidity_outdoor',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurzhumidity_outdoor_1',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_1-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Outdoor humidity channel 1',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_1',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '99.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
-    'original_icon': None,
-    'original_name': 'Outdoor humidity channel 2',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_humidity_outdoor',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurzhumidity_outdoor_2',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Outdoor humidity channel 2',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
-    'original_icon': None,
-    'original_name': 'Outdoor humidity channel 3',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_humidity_outdoor',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurzhumidity_outdoor_3',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'humidity',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Outdoor humidity channel 3',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_outdoor_humidity_channel_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_precipitation_intensity-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_precipitation_intensity',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRECIPITATION_INTENSITY: 'precipitation_intensity'>,
-    'original_icon': None,
-    'original_name': 'Precipitation intensity',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'precipitation_intensity',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurzrain_rate',
-    'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_precipitation_intensity-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'precipitation_intensity',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Precipitation intensity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_precipitation_intensity',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Probe temperature',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'temperature_external',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurztemp_current_external',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Probe temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '-40.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_1-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_1',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Probe temperature channel 1',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_temperature_external',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurztemp_current_external_1',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_1-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Probe temperature channel 1',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_1',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '19.3',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_2',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Probe temperature channel 2',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_temperature_external',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurztemp_current_external_2',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_2-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Probe temperature channel 2',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_2',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '25.2',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Probe temperature channel 3',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'indexed_temperature_external',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurztemp_current_external_3',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Probe temperature channel 3',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_probe_temperature_channel_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '-40.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 1,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Temperature',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'temperature',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurztemp_current',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '24.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_total_precipitation-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_total_precipitation',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 0,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
-    'original_icon': None,
-    'original_name': 'Total precipitation',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'precipitation',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurzrain_24h',
-    'unit_of_measurement': 'mm',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_total_precipitation-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'precipitation',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Total precipitation',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'mm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_total_precipitation',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_uv_index-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_uv_index',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'UV index',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'uv_index',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurzuv_index',
-    'unit_of_measurement': '',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_uv_index-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit UV index',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_uv_index',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_direction-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_direction',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Wind direction',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'wind_direct',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurzwind_direct',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_direction-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Wind direction',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_direction',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_speed-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_speed',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.WIND_SPEED: 'wind_speed'>,
-    'original_icon': None,
-    'original_name': 'Wind speed',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'wind_speed',
-    'unique_id': 'tuya.bf84c743a84eb2c8abeurzwindspeed_avg',
-    'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-  })
-# ---
-# name: test_platform_setup_and_discovery[qxj_weather_station][sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_speed-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'wind_speed',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Wind speed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_wind_speed',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[rqbj_gas_sensor][sensor.gas_sensor_gas-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.gas_sensor_gas',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Gas',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'gas',
-    'unique_id': 'tuya.ebb9d0eb5014f98cfboxbzgas_sensor_value',
-    'unit_of_measurement': 'ppm',
-  })
-# ---
-# name: test_platform_setup_and_discovery[rqbj_gas_sensor][sensor.gas_sensor_gas-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Gas sensor Gas',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.gas_sensor_gas',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[wk_wifi_smart_gas_boiler_thermostat][sensor.wifi_smart_gas_boiler_thermostat_battery-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.wifi_smart_gas_boiler_thermostat_battery',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
-    'original_icon': None,
-    'original_name': 'Battery',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'battery',
-    'unique_id': 'tuya.bfb45cb8a9452fba66lexgbattery_percentage',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_platform_setup_and_discovery[wk_wifi_smart_gas_boiler_thermostat][sensor.wifi_smart_gas_boiler_thermostat_battery-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'WiFi Smart Gas Boiler Thermostat  Battery',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.wifi_smart_gas_boiler_thermostat_battery',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '100.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[wsdcg_temperature_humidity][sensor.np_downstairs_north_battery-entry]
+# name: test_platform_setup_and_discovery[sensor.np_downstairs_north_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5035,7 +3956,55 @@
     'state': '0.455',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.rainwater_tank_level_liquid_level-entry]
+# name: test_platform_setup_and_discovery[sensor.rainwater_tank_level_none-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.rainwater_tank_level_none',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'liquid_state',
+    'unique_id': 'tuya.fbya6s6rhaoyvl8hqgcwyliquid_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.rainwater_tank_level_none-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Rainwater Tank Level None',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.rainwater_tank_level_none',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
+  })
+# ---
+# name: test_platform_setup_and_discovery[sensor.rainwater_tank_level_none_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -5050,7 +4019,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.rainwater_tank_level_liquid_level',
+    'entity_id': 'sensor.rainwater_tank_level_none_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -5062,7 +4031,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Liquid level',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -5072,67 +4041,19 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.rainwater_tank_level_liquid_level-state]
+# name: test_platform_setup_and_discovery[sensor.rainwater_tank_level_none_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Rainwater Tank Level Liquid level',
+      'friendly_name': 'Rainwater Tank Level None',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.rainwater_tank_level_liquid_level',
+    'entity_id': 'sensor.rainwater_tank_level_none_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '36.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.rainwater_tank_level_liquid_state-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.rainwater_tank_level_liquid_state',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Liquid state',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'liquid_state',
-    'unique_id': 'tuya.fbya6s6rhaoyvl8hqgcwyliquid_state',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[sensor.rainwater_tank_level_liquid_state-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Rainwater Tank Level Liquid state',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.rainwater_tank_level_liquid_state',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'normal',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.rat_trap_hedge_battery_state-entry]
