@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator, Callable, Iterable
 import json
-from typing import Any, cast
+from typing import Any
 
 import anthropic
 from anthropic import AsyncStream
@@ -128,28 +128,28 @@ def _convert_content(
                     )
                 )
 
-            if isinstance(content.native, dict):
-                if content.native.get("type") == "thinking":
-                    messages[-1]["content"].append(  # type: ignore[union-attr]
-                        ThinkingBlockParam(
-                            type="thinking",
-                            thinking=content.thinking_content or "",
-                            signature=content.native.get("signature", ""),
-                        )
+            if isinstance(content.native, ThinkingBlock):
+                messages[-1]["content"].append(  # type: ignore[union-attr]
+                    ThinkingBlockParam(
+                        type="thinking",
+                        thinking=content.thinking_content or "",
+                        signature=content.native.signature,
                     )
-                elif content.native.get("type") == "redacted_thinking":
-                    redacted_thinking_block = cast(
-                        RedactedThinkingBlockParam, content.native
+                )
+            elif isinstance(content.native, RedactedThinkingBlock):
+                redacted_thinking_block = RedactedThinkingBlockParam(
+                    type="redacted_thinking",
+                    data=content.native.data,
+                )
+                if isinstance(messages[-1]["content"], str):
+                    messages[-1]["content"] = [
+                        TextBlockParam(type="text", text=messages[-1]["content"]),
+                        redacted_thinking_block,
+                    ]
+                else:
+                    messages[-1]["content"].append(  # type: ignore[attr-defined]
+                        redacted_thinking_block
                     )
-                    if isinstance(messages[-1]["content"], str):
-                        messages[-1]["content"] = [
-                            TextBlockParam(type="text", text=messages[-1]["content"]),
-                            redacted_thinking_block,
-                        ]
-                    else:
-                        messages[-1]["content"].append(  # type: ignore[attr-defined]
-                            redacted_thinking_block
-                        )
             if content.content:
                 messages[-1]["content"].append(  # type: ignore[union-attr]
                     TextBlockParam(type="text", text=content.content)
@@ -253,11 +253,7 @@ async def _transform_stream(
                     yield {"role": "assistant"}
                     has_native = False
                     has_content = False
-                yield {
-                    "native": RedactedThinkingBlockParam(
-                        type="redacted_thinking", data=response.content_block.data
-                    )
-                }
+                yield {"native": response.content_block}
                 has_native = True
         elif isinstance(response, RawContentBlockDeltaEvent):
             if isinstance(response.delta, InputJSONDelta):
@@ -268,7 +264,7 @@ async def _transform_stream(
                 yield {"thinking_content": response.delta.thinking}
             elif isinstance(response.delta, SignatureDelta):
                 yield {
-                    "native": ThinkingBlockParam(
+                    "native": ThinkingBlock(
                         type="thinking",
                         thinking="",
                         signature=response.delta.signature,
