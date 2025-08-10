@@ -14,6 +14,3 @@ API_METHOD = "getVerbrauchspreisUndWindsignal"
 AGGREGATS_ZEITRAUM = ""
 AGGREGATS_TYP = ""
 SOURCE = "Portal"
-
-# Sensor keys for each hour (0-23)
-SENSOR_HOURS = list(range(24))
