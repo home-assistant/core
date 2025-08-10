@@ -373,8 +373,9 @@ class SolarLogBatterySensor(SolarLogCoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state for this sensor."""
-
-        return self.entity_description.value_fn(self.coordinator.data.battery_data)
+        if (battery_data := self.coordinator.data.battery_data) is None:
+            return None
+        return self.entity_description.value_fn(battery_data)
 
 
 class SolarLogInverterSensor(SolarLogInverterEntity, SensorEntity):
