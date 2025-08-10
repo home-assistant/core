@@ -97,53 +97,6 @@
       "orp_calibration_slope": {
         "name": "ORP calibration slope"
       }
-    },
-    "number": {
-      "ph_target": {
-        "name": "pH target"
-      },
-      "orp_target": {
-        "name": "ORP target"
-      }
-    },
-    "switch": {
-      "stop_pool_dosing": {
-        "name": "Pause dosing"
-      },
-      "circulation_detection": {
-        "name": "Circulation monitoring"
-      },
-      "frequency_input": {
-        "name": "Frequency input"
-      }
-    },
-    "binary_sensor": {
-      "circulation_state": {
-        "name": "Circulation"
-      },
-      "ph_level_ok": {
-        "name": "pH level OK"
-      },
-      "orp_level_ok": {
-        "name": "ORP level OK"
-      },
-      "flow_rate_ok": {
-        "name": "Flow rate OK"
-      },
-      "alarm_relay": {
-        "name": "Alarm relay"
-      },
-      "relay_aux1_ph": {
-        "name": "pH measure relay"
-      },
-      "relay_aux2_orpcl": {
-        "name": "ORP/CL measure relay"
-      }
-    },
-    "select": {
-      "water_meter_unit": {
-        "name": "Water meter unit"
-      }
     }
   }
 }
