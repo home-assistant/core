@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 import codecs
 from collections.abc import AsyncGenerator, AsyncIterator, Callable
-from dataclasses import replace
+from dataclasses import dataclass, replace
 import mimetypes
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 from google.genai import Client
 from google.genai.errors import APIError, ClientError
@@ -202,6 +203,30 @@ def _create_google_tool_response_content(
     )
 
 
+@dataclass(slots=True)
+class PartDetails:
+    """Additional data for a content part."""
+
+    part_type: Literal["text", "thought", "function_call"]
+    """The part type for which this data is relevant for."""
+
+    index: int
+    """Start position or number of the tool."""
+
+    length: int = 0
+    """Length of the relevant data."""
+
+    thought_signature: str | None = None
+    """Base64 encoded thought signature, if available."""
+
+
+@dataclass(slots=True)
+class ContentDetails:
+    """Native data for AssistantContent."""
+
+    part_details: list[PartDetails]
+
+
 def _convert_content(
     content: (
         conversation.UserContent
@@ -219,32 +244,82 @@ def _convert_content(
     # Handle the Assistant content with tool calls.
     assert type(content) is conversation.AssistantContent
     parts: list[Part] = []
+    part_details: list[PartDetails] = (
+        content.native.part_details
+        if isinstance(content.native, ContentDetails)
+        else []
+    )
+    details: PartDetails | None = None
 
     if content.content:
-        parts.append(Part.from_text(text=content.content))
+        index = 0
+        for details in part_details:
+            if details.part_type == "text":
+                if index < details.index:
+                    parts.append(
+                        Part.from_text(text=content.content[index : details.index])
+                    )
+                    index = details.index
+                parts.append(
+                    Part.from_text(
+                        text=content.content[index : index + details.length],
+                    )
+                )
+                if details.thought_signature:
+                    parts[-1].thought_signature = base64.b64decode(
+                        details.thought_signature
+                    )
+                index += details.length
+        if index < len(content.content):
+            parts.append(Part.from_text(text=content.content[index:]))
 
     if content.thinking_content:
-        parts.append(Part.from_text(text=content.thinking_content))
-        parts[-1].thought = True
-
-    if (
-        content.native
-        and isinstance(content.native, dict)
-        and content.native.get("domain") == DOMAIN
-    ):
-        if "thought_signature" in content.native:
-            parts[-1].thought_signature = content.native["thought_signature"]
+        index = 0
+        for details in part_details:
+            if details.part_type == "thought":
+                if index < details.index:
+                    parts.append(
+                        Part.from_text(
+                            text=content.thinking_content[index : details.index]
+                        )
+                    )
+                    parts[-1].thought = True
+                    index = details.index
+                parts.append(
+                    Part.from_text(
+                        text=content.thinking_content[index : index + details.length],
+                    )
+                )
+                parts[-1].thought = True
+                if details.thought_signature:
+                    parts[-1].thought_signature = base64.b64decode(
+                        details.thought_signature
+                    )
+                index += details.length
+        if index < len(content.thinking_content):
+            parts.append(Part.from_text(text=content.thinking_content[index:]))
+            parts[-1].thought = True
 
     if content.tool_calls:
-        parts.extend(
-            [
+        for index, tool_call in enumerate(content.tool_calls):
+            parts.append(
                 Part.from_function_call(
                     name=tool_call.tool_name,
                     args=_escape_decode(tool_call.tool_args),
                 )
-                for tool_call in content.tool_calls
-            ]
-        )
+            )
+            if details := next(
+                (
+                    d
+                    for d in part_details
+                    if d.part_type == "function_call" and d.index == index
+                ),
+                None,
+            ):
+                if details.thought_signature:
+                    parts[-1].thought_signature = base64.b64decode(
+                        details.thought_signature
+                    )
 
     return Content(role="model", parts=parts)
 
@@ -253,9 +328,20 @@ async def _transform_stream(
     result: AsyncIterator[GenerateContentResponse],
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     new_message = True
+    content_details: ContentDetails | None = None
     try:
         async for response in result:
             LOGGER.debug("Received response chunk: %s", response)
+
+            if new_message:
+                if content_details is not None:
+                    yield {"native": content_details}
+                    content_details = None
+                yield {"role": "assistant"}
+                new_message = False
+                content_index = 0
+                thinking_content_index = 0
+                tool_call_index = 0
 
             # According to the API docs, this would mean no candidate is returned, so we can safely throw an error here.
             if response.prompt_feedback or not response.candidates:
@@ -292,19 +378,39 @@ async def _transform_stream(
             for part in response_parts:
                 chunk: conversation.AssistantContentDeltaDict = {}
 
-                # As per the documentation:
-                # * Always send the thought_signature back to the model inside its original Part.
-                # * Don't merge a Part containing a signature with one that does not. This breaks the positional context of the thought.
-                # * Don't combine two Parts that both contain signatures, as the signature strings cannot be merged.
-                if new_message or part.thought_signature:
-                    chunk["role"] = "assistant"
-                    new_message = False
-
                 if part.text:
                     if part.thought:
                         chunk["thinking_content"] = part.text
+                        if part.thought_signature:
+                            if content_details is None:
+                                content_details = ContentDetails(part_details=[])
+                            content_details.part_details.append(
+                                PartDetails(
+                                    part_type="thought",
+                                    index=thinking_content_index,
+                                    length=len(part.text),
+                                    thought_signature=base64.b64encode(
+                                        part.thought_signature
+                                    ).decode("utf-8"),
+                                )
+                            )
+                        thinking_content_index += len(part.text)
                     else:
                         chunk["content"] = part.text
+                        if part.thought_signature:
+                            if content_details is None:
+                                content_details = ContentDetails(part_details=[])
+                            content_details.part_details.append(
+                                PartDetails(
+                                    part_type="text",
+                                    index=content_index,
+                                    length=len(part.text),
+                                    thought_signature=base64.b64encode(
+                                        part.thought_signature
+                                    ).decode("utf-8"),
+                                )
+                            )
+                        content_index += len(part.text)
 
                 if part.function_call:
                     tool_call = part.function_call
@@ -313,14 +419,24 @@ async def _transform_stream(
                     chunk["tool_calls"] = [
                         llm.ToolInput(tool_name=tool_name, tool_args=tool_args)
                     ]
+                    if part.thought_signature:
+                        if content_details is None:
+                            content_details = ContentDetails(part_details=[])
+                        content_details.part_details.append(
+                            PartDetails(
+                                part_type="function_call",
+                                index=tool_call_index,
+                                thought_signature=base64.b64encode(
+                                    part.thought_signature
+                                ).decode("utf-8"),
+                            )
+                        )
 
-                if part.thought_signature:
-                    chunk["native"] = {
-                        "domain": DOMAIN,
-                        "thought_signature": part.thought_signature,
-                    }
-                    new_message = True
                 yield chunk
+
+        if content_details is not None:
+            yield {"native": content_details}
+
     except (
         APIError,
         ValueError,
