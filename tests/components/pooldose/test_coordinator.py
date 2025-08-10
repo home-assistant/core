@@ -1,6 +1,5 @@
 """Test the Pooldose coordinator."""
 
-import datetime
 from unittest.mock import AsyncMock
 
 from pooldose.request_status import RequestStatus
@@ -104,7 +103,6 @@ async def test_coordinator_setup_success(
     coordinator = PooldoseCoordinator(
         hass,
         mock_client,
-        datetime.timedelta(seconds=30),
         mock_config_entry,
     )
 
@@ -140,7 +138,6 @@ async def test_coordinator_setup_connection_failure(
     coordinator = PooldoseCoordinator(
         hass,
         mock_client,
-        datetime.timedelta(seconds=30),
         mock_config_entry,
     )
 
@@ -169,7 +166,6 @@ async def test_coordinator_successful_data_fetch(
     coordinator = PooldoseCoordinator(
         hass,
         mock_client,
-        datetime.timedelta(seconds=30),
         mock_config_entry,
     )
 
@@ -201,7 +197,6 @@ async def test_coordinator_handles_connection_error(
     coordinator = PooldoseCoordinator(
         hass,
         mock_client,
-        datetime.timedelta(seconds=30),
         mock_config_entry,
     )
 
@@ -226,7 +221,6 @@ async def test_coordinator_handles_timeout_error(
     coordinator = PooldoseCoordinator(
         hass,
         mock_client,
-        datetime.timedelta(seconds=30),
         mock_config_entry,
     )
 
@@ -251,7 +245,6 @@ async def test_coordinator_handles_os_error(
     coordinator = PooldoseCoordinator(
         hass,
         mock_client,
-        datetime.timedelta(seconds=30),
         mock_config_entry,
     )
 
@@ -279,7 +272,6 @@ async def test_coordinator_handles_api_error_status(
     coordinator = PooldoseCoordinator(
         hass,
         mock_client,
-        datetime.timedelta(seconds=30),
         mock_config_entry,
     )
 
@@ -304,7 +296,6 @@ async def test_coordinator_handles_none_data(
     coordinator = PooldoseCoordinator(
         hass,
         mock_client,
-        datetime.timedelta(seconds=30),
         mock_config_entry,
     )
 
@@ -329,7 +320,6 @@ async def test_coordinator_handles_generic_exception(
     coordinator = PooldoseCoordinator(
         hass,
         mock_client,
-        datetime.timedelta(seconds=30),
         mock_config_entry,
     )
 
@@ -354,7 +344,6 @@ async def test_coordinator_availability_state_changes(
     coordinator = PooldoseCoordinator(
         hass,
         mock_client,
-        datetime.timedelta(seconds=30),
         mock_config_entry,
     )
 
@@ -395,7 +384,6 @@ async def test_coordinator_data_structure_validation(
     coordinator = PooldoseCoordinator(
         hass,
         mock_client,
-        datetime.timedelta(seconds=30),
         mock_config_entry,
     )
 
@@ -426,7 +414,6 @@ async def test_coordinator_multiple_refresh_cycles(
     coordinator = PooldoseCoordinator(
         hass,
         mock_client,
-        datetime.timedelta(seconds=30),
         mock_config_entry,
     )
 
@@ -457,7 +444,6 @@ async def test_coordinator_internal_update_method(
     coordinator = PooldoseCoordinator(
         hass,
         mock_client,
-        datetime.timedelta(seconds=30),
         mock_config_entry,
     )
 
