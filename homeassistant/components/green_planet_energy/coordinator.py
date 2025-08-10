@@ -45,8 +45,3 @@ class GreenPlanetEnergyUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(f"Connection error: {err}") from err
         except GreenPlanetEnergyAPIError as err:
             raise UpdateFailed(f"API error: {err}") from err
-
-    async def async_shutdown(self) -> None:
-        """Shutdown coordinator."""
-        await super().async_shutdown()
-        await self.api.close()
