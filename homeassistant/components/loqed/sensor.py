@@ -1,4 +1,5 @@
 """Creates LOQED sensors."""
+
 from typing import Final
 
 from homeassistant.components.sensor import (
@@ -7,17 +8,15 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import LoqedDataCoordinator, StatusMessage
+from .coordinator import LoqedConfigEntry, LoqedDataCoordinator, StatusMessage
 from .entity import LoqedEntity
 
 SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
@@ -41,10 +40,12 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: LoqedConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Loqed lock platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(LoqedSensor(coordinator, sensor) for sensor in SENSORS)
 

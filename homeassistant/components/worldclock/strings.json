@@ -1,0 +1,35 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "time_zone": "Timezone",
+          "time_format": "Time format"
+        },
+        "data_description": {
+          "time_zone": "Select timezone from list",
+          "time_format": "Select a pre-defined format from the list or define your own format."
+        }
+      }
+    }
+  },
+  "options": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "time_format": "[%key:component::worldclock::config::step::user::data::time_format%]"
+        },
+        "data_description": {
+          "time_format": "[%key:component::worldclock::config::step::user::data_description::time_format%]"
+        }
+      }
+    }
+  }
+}

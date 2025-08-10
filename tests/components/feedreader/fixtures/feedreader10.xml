@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed
+	xmlns="http://www.w3.org/2005/Atom">
+	<title><![CDATA[ATOM RSS en espa&ntilde;ol]]></title>
+	<link href="http://example.org/"/>
+	<updated>2024-11-18T14:00:00Z</updated>
+	<author>
+		<name><![CDATA[Juan P&eacute;rez]]></name>
+	</author>
+	<id>urn:uuid:60a76c80-d399-11d9-b93C-0003939e0af6</id>
+	<entry>
+		<title><![CDATA[T&iacute;tulo]]></title>
+		<link href="http://example.org/2003/12/13/atom03"/>
+		<id>urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a</id>
+		<updated>2024-11-18T14:00:00Z</updated>
+		<summary><![CDATA[Resumen en espa&ntilde;ol]]></summary>
+		<content><![CDATA[Contenido en espa&ntilde;ol]]></content>
+	</entry>
+</feed>

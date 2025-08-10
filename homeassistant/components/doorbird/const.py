@@ -1,11 +1,9 @@
 """The DoorBird integration constants."""
+
 from homeassistant.const import Platform
 
 DOMAIN = "doorbird"
-PLATFORMS = [Platform.BUTTON, Platform.CAMERA]
-DOOR_STATION = "door_station"
-DOOR_STATION_INFO = "door_station_info"
-DOOR_STATION_EVENT_ENTITY_IDS = "door_station_event_entity_ids"
+PLATFORMS = [Platform.BUTTON, Platform.CAMERA, Platform.EVENT]
 
 CONF_EVENTS = "events"
 MANUFACTURER = "Bird Home Automation Group"
@@ -21,3 +19,16 @@ DOORBIRD_INFO_KEY_WIFI_MAC_ADDR = "WIFI_MAC_ADDR"
 UNDO_UPDATE_LISTENER = "undo_update_listener"
 
 API_URL = f"/api/{DOMAIN}"
+
+
+DEFAULT_DOORBELL_EVENT = "doorbell"
+DEFAULT_MOTION_EVENT = "motion"
+
+DEFAULT_EVENT_TYPES = (
+    (DEFAULT_DOORBELL_EVENT, "doorbell"),
+    (DEFAULT_MOTION_EVENT, "motion"),
+)
+
+HTTP_EVENT_TYPE = "http"
+MIN_WEEKDAY = 104400
+MAX_WEEKDAY = 104399

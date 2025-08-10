@@ -1,4 +1,5 @@
 """Common helpers for refoss test cases."""
+
 import asyncio
 import logging
 from unittest.mock import AsyncMock, Mock
@@ -21,6 +22,7 @@ class FakeDiscovery:
         self.mock_devices = {"abc": build_device_mock()}
         self.last_mock_infos = {}
         self._listeners = []
+        self.sock = None
 
     def add_listener(self, listener: Listener) -> None:
         """Add an event listener."""
@@ -61,7 +63,7 @@ class FakeDiscovery:
 
 def build_device_mock(name="r10", ip="1.1.1.1", mac="aabbcc112233"):
     """Build mock device object."""
-    mock = Mock(
+    return Mock(
         uuid="abc",
         dev_name=name,
         device_type="r10",
@@ -73,7 +75,6 @@ def build_device_mock(name="r10", ip="1.1.1.1", mac="aabbcc112233"):
         sub_type="eu",
         channels=[0],
     )
-    return mock
 
 
 def build_base_device_mock(name="r10", ip="1.1.1.1", mac="aabbcc112233"):

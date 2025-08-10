@@ -1,0 +1,25 @@
+{
+  "services": {
+    "select_next": {
+      "service": "mdi:skip-next"
+    },
+    "select_option": {
+      "service": "mdi:check"
+    },
+    "select_previous": {
+      "service": "mdi:skip-previous"
+    },
+    "select_first": {
+      "service": "mdi:skip-backward"
+    },
+    "select_last": {
+      "service": "mdi:skip-forward"
+    },
+    "set_options": {
+      "service": "mdi:cog"
+    },
+    "reload": {
+      "service": "mdi:reload"
+    }
+  }
+}

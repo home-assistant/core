@@ -1,4 +1,5 @@
 """Platform allowing several fans to be grouped into one fan."""
+
 from __future__ import annotations
 
 from functools import reduce
@@ -13,8 +14,8 @@ from homeassistant.components.fan import (
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
     ATTR_PERCENTAGE_STEP,
-    DOMAIN,
-    PLATFORM_SCHEMA,
+    DOMAIN as FAN_DOMAIN,
+    PLATFORM_SCHEMA as FAN_PLATFORM_SCHEMA,
     SERVICE_OSCILLATE,
     SERVICE_SET_DIRECTION,
     SERVICE_SET_PERCENTAGE,
@@ -36,16 +37,21 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import GroupEntity
+from .entity import GroupEntity
 from .util import attribute_equal, most_frequent_attribute, reduce_attribute
 
 SUPPORTED_FLAGS = {
     FanEntityFeature.SET_SPEED,
     FanEntityFeature.DIRECTION,
     FanEntityFeature.OSCILLATE,
+    FanEntityFeature.TURN_OFF,
+    FanEntityFeature.TURN_ON,
 }
 
 DEFAULT_NAME = "Fan Group"
@@ -53,9 +59,9 @@ DEFAULT_NAME = "Fan Group"
 # No limit on parallel updates to enable a group calling another group
 PARALLEL_UPDATES = 0
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = FAN_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ENTITIES): cv.entities_domain(DOMAIN),
+        vol.Required(CONF_ENTITIES): cv.entities_domain(FAN_DOMAIN),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
     }
@@ -79,7 +85,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Fan Group config entry."""
     registry = er.async_get(hass)
@@ -91,7 +97,9 @@ async def async_setup_entry(
 
 
 @callback
-def async_create_preview_fan(name: str, validated_config: dict[str, Any]) -> FanGroup:
+def async_create_preview_fan(
+    hass: HomeAssistant, name: str, validated_config: dict[str, Any]
+) -> FanGroup:
     """Create a preview sensor."""
     return FanGroup(
         None,
@@ -197,18 +205,22 @@ class FanGroup(GroupEntity, FanEntity):
         if percentage is not None:
             await self.async_set_percentage(percentage)
             return
-        await self._async_call_all_entities(SERVICE_TURN_ON)
+        await self._async_call_supported_entities(
+            SERVICE_TURN_ON, FanEntityFeature.TURN_ON, {}
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fans off."""
-        await self._async_call_all_entities(SERVICE_TURN_OFF)
+        await self._async_call_supported_entities(
+            SERVICE_TURN_OFF, FanEntityFeature.TURN_OFF, {}
+        )
 
     async def _async_call_supported_entities(
         self, service: str, support_flag: int, data: dict[str, Any]
     ) -> None:
         """Call a service with all entities."""
         await self.hass.services.async_call(
-            DOMAIN,
+            FAN_DOMAIN,
             service,
             {**data, ATTR_ENTITY_ID: self._fans[support_flag]},
             blocking=True,
@@ -218,7 +230,7 @@ class FanGroup(GroupEntity, FanEntity):
     async def _async_call_all_entities(self, service: str) -> None:
         """Call a service with all entities."""
         await self.hass.services.async_call(
-            DOMAIN,
+            FAN_DOMAIN,
             service,
             {ATTR_ENTITY_ID: self._entity_ids},
             blocking=True,

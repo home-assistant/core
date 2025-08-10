@@ -1,6 +1,5 @@
 """Test constants."""
 
-
 from tests.common import load_json_array_fixture, load_json_object_fixture
 
 MOCK_HOST = "myrouter.freeboxos.fr"
@@ -26,7 +25,11 @@ DATA_WIFI_GET_GLOBAL_CONFIG = load_json_object_fixture(
 )
 
 # device_tracker
+DATA_LAN_GET_INTERFACES = load_json_array_fixture("freebox/lan_get_interfaces.json")
 DATA_LAN_GET_HOSTS_LIST = load_json_array_fixture("freebox/lan_get_hosts_list.json")
+DATA_LAN_GET_HOSTS_LIST_GUEST = load_json_array_fixture(
+    "freebox/lan_get_hosts_list_guest.json"
+)
 DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE = load_json_object_fixture(
     "freebox/lan_get_hosts_list_bridge.json"
 )

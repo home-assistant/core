@@ -8,7 +8,6 @@
     }),
     'config_entry_data': dict({
       'address': '**REDACTED**',
-      'name': '**REDACTED**',
       'type': 'Bedrock Edition',
     }),
     'config_entry_options': dict({
@@ -36,7 +35,6 @@
     }),
     'config_entry_data': dict({
       'address': '**REDACTED**',
-      'name': '**REDACTED**',
       'type': 'Java Edition',
     }),
     'config_entry_options': dict({

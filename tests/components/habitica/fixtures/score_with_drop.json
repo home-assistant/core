@@ -1,0 +1,69 @@
+{
+  "success": true,
+  "data": {
+    "delta": 0.9999999781878414,
+    "_tmp": {
+      "quest": {
+        "progressDelta": 1.049999977097233
+      },
+      "drop": {
+        "value": 3,
+        "key": "Dragon",
+        "type": "Egg",
+        "dialog": "You've found a Dragon Egg!"
+      }
+    },
+    "buffs": {
+      "str": 0,
+      "int": 0,
+      "per": 0,
+      "con": 0,
+      "stealth": 0,
+      "streaks": false,
+      "seafoam": false,
+      "shinySeed": false,
+      "snowball": false,
+      "spookySparkles": false
+    },
+    "training": {
+      "int": 0,
+      "per": 0,
+      "str": 0,
+      "con": 0
+    },
+    "hp": 25.100000000000016,
+    "mp": 24,
+    "exp": 196,
+    "gp": 30.453660284128997,
+    "lvl": 20,
+    "class": "warrior",
+    "points": 2,
+    "str": 0,
+    "con": 0,
+    "int": 0,
+    "per": 0
+  },
+  "notifications": [
+    {
+      "type": "ITEM_RECEIVED",
+      "data": {
+        "icon": "notif_orca_mount",
+        "title": "Orcas for Summer Splash!",
+        "text": "To celebrate Summer Splash, we've given you an Orca Mount!",
+        "destination": "stable"
+      },
+      "seen": true,
+      "id": "b7a85df1-06ed-4ab1-b56d-43418fc6a5e5"
+    },
+    {
+      "type": "UNALLOCATED_STATS_POINTS",
+      "data": {
+        "points": 2
+      },
+      "seen": true,
+      "id": "bc3f8a69-231f-4eb1-ba48-a00b6c0e0f37"
+    }
+  ],
+  "userV": 623,
+  "appVersion": "5.28.6"
+}

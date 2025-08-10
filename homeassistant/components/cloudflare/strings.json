@@ -4,19 +4,19 @@
     "step": {
       "user": {
         "title": "Connect to Cloudflare",
-        "description": "This integration requires an API Token created with Zone:Zone:Read and Zone:DNS:Edit permissions for all zones in your account.",
+        "description": "This integration requires an API token created with Zone:Zone:Read and Zone:DNS:Edit permissions for all zones in your account.",
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]"
         }
       },
       "zone": {
-        "title": "Choose the Zone to Update",
+        "title": "Choose the zone to update",
         "data": {
           "zone": "Zone"
         }
       },
       "records": {
-        "title": "Choose the Records to Update",
+        "title": "Choose the records to update",
         "data": {
           "records": "Records"
         }
@@ -30,18 +30,17 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "services": {
     "update_records": {
       "name": "Update records",
-      "description": "Manually trigger update to Cloudflare records."
+      "description": "Manually triggers an update of Cloudflare records."
     }
   }
 }

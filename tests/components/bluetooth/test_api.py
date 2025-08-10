@@ -1,4 +1,5 @@
 """Tests for the Bluetooth integration API."""
+
 import time
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
@@ -23,7 +24,8 @@ from . import (
 )
 
 
-async def test_scanner_by_source(hass: HomeAssistant, enable_bluetooth: None) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_scanner_by_source(hass: HomeAssistant) -> None:
     """Test we can get a scanner by source."""
 
     hci2_scanner = FakeScanner("hci2", "hci2")
@@ -39,16 +41,16 @@ async def test_monotonic_time() -> None:
     assert MONOTONIC_TIME() == pytest.approx(time.monotonic(), abs=0.1)
 
 
-async def test_async_get_advertisement_callback(
-    hass: HomeAssistant, enable_bluetooth: None
-) -> None:
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_async_get_advertisement_callback(hass: HomeAssistant) -> None:
     """Test getting advertisement callback."""
     callback = bluetooth.async_get_advertisement_callback(hass)
     assert callback is not None
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_async_scanner_devices_by_address_connectable(
-    hass: HomeAssistant, enable_bluetooth: None
+    hass: HomeAssistant,
 ) -> None:
     """Test getting scanner devices by address with connectable devices."""
     manager = _get_manager()
@@ -80,7 +82,6 @@ async def test_async_scanner_devices_by_address_connectable(
         "44:44:33:11:23:45",
         "wohand",
         {},
-        rssi=-100,
     )
     switchbot_device_adv = generate_advertisement_data(
         local_name="wohand",
@@ -104,8 +105,9 @@ async def test_async_scanner_devices_by_address_connectable(
     cancel()
 
 
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_async_scanner_devices_by_address_non_connectable(
-    hass: HomeAssistant, enable_bluetooth: None
+    hass: HomeAssistant,
 ) -> None:
     """Test getting scanner devices by address with non-connectable devices."""
     manager = _get_manager()
@@ -113,7 +115,6 @@ async def test_async_scanner_devices_by_address_non_connectable(
         "44:44:33:11:23:45",
         "wohand",
         {},
-        rssi=-100,
     )
     switchbot_device_adv = generate_advertisement_data(
         local_name="wohand",

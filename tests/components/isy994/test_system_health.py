@@ -1,10 +1,12 @@
 """Test ISY system health."""
+
 import asyncio
 from unittest.mock import Mock
 
 from aiohttp import ClientError
 
 from homeassistant.components.isy994.const import DOMAIN, ISY_URL_POSTFIX
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -27,13 +29,16 @@ async def test_system_health(
 
     hass.config.components.add(DOMAIN)
     assert await async_setup_component(hass, "system_health", {})
+    await hass.async_block_till_done()
 
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         entry_id=MOCK_ENTRY_ID,
         data={CONF_HOST: f"http://{MOCK_HOSTNAME}"},
         unique_id=MOCK_UUID,
-    ).add_to_hass(hass)
+        state=ConfigEntryState.LOADED,
+    )
+    entry.add_to_hass(hass)
 
     isy_data = Mock(
         root=Mock(
@@ -44,7 +49,7 @@ async def test_system_health(
             ),
         )
     )
-    hass.data[DOMAIN] = {MOCK_ENTRY_ID: isy_data}
+    entry.runtime_data = isy_data
 
     info = await get_system_health_info(hass, DOMAIN)
 
@@ -66,13 +71,16 @@ async def test_system_health_failed_connect(
 
     hass.config.components.add(DOMAIN)
     assert await async_setup_component(hass, "system_health", {})
+    await hass.async_block_till_done()
 
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         entry_id=MOCK_ENTRY_ID,
         data={CONF_HOST: f"http://{MOCK_HOSTNAME}"},
         unique_id=MOCK_UUID,
-    ).add_to_hass(hass)
+        state=ConfigEntryState.LOADED,
+    )
+    entry.add_to_hass(hass)
 
     isy_data = Mock(
         root=Mock(
@@ -83,7 +91,7 @@ async def test_system_health_failed_connect(
             ),
         )
     )
-    hass.data[DOMAIN] = {MOCK_ENTRY_ID: isy_data}
+    entry.runtime_data = isy_data
 
     info = await get_system_health_info(hass, DOMAIN)
 

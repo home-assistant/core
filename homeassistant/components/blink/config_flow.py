@@ -1,4 +1,5 @@
 """Config flow to configure Blink."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -9,10 +10,9 @@ from blinkpy.auth import Auth, LoginError, TokenRefreshFailed
 from blinkpy.blinkpy import Blink, BlinkSetupError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_PIN, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -51,7 +51,7 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
         if user_input is not None:
@@ -61,6 +61,8 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 session=async_get_clientsession(self.hass),
             )
             await self.async_set_unique_id(user_input[CONF_USERNAME])
+            if self.source != SOURCE_REAUTH:
+                self._abort_if_unique_id_configured()
 
             try:
                 await validate_input(self.auth)
@@ -69,7 +71,7 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_2fa()
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
@@ -86,7 +88,7 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_2fa(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle 2FA step."""
         errors = {}
         if user_input is not None:
@@ -96,7 +98,7 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             except BlinkSetupError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
@@ -113,12 +115,14 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Perform reauth upon migration of old entries."""
         return await self.async_step_user(dict(entry_data))
 
     @callback
-    def _async_finish_flow(self) -> FlowResult:
+    def _async_finish_flow(self) -> ConfigFlowResult:
         """Finish with setup."""
         assert self.auth
         return self.async_create_entry(title=DOMAIN, data=self.auth.login_attributes)

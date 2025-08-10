@@ -1,4 +1,5 @@
 """Offer Z-Wave JS value updated listening automation trigger."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -13,7 +14,7 @@ from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PLATFORM, M
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.trigger import Trigger, TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from ..config_validation import VALUE_SCHEMA
@@ -31,12 +32,16 @@ from ..const import (
     ATTR_PROPERTY_KEY_NAME,
     ATTR_PROPERTY_NAME,
     DOMAIN,
+    EVENT_VALUE_UPDATED,
 )
 from ..helpers import async_get_nodes_from_targets, get_device_id
 from .trigger_helpers import async_bypass_dynamic_config_validation
 
+# Relative platform type should be <SUBMODULE_NAME>
+RELATIVE_PLATFORM_TYPE = f"{__name__.rsplit('.', maxsplit=1)[-1]}"
+
 # Platform type should be <DOMAIN>.<SUBMODULE_NAME>
-PLATFORM_TYPE = f"{DOMAIN}.{__name__.rsplit('.', maxsplit=1)[-1]}"
+PLATFORM_TYPE = f"{DOMAIN}.{RELATIVE_PLATFORM_TYPE}"
 
 ATTR_FROM = "from"
 ATTR_TO = "to"
@@ -127,14 +132,9 @@ async def async_attach_trigger(
             (prev_value, prev_value_raw, from_value),
             (curr_value, curr_value_raw, to_value),
         ):
-            if (
-                match != MATCH_ALL
-                and value_to_eval != match
-                and not (
-                    isinstance(match, list)
-                    and (value_to_eval in match or raw_value_to_eval in match)
-                )
-                and raw_value_to_eval != match
+            if match not in (MATCH_ALL, value_to_eval, raw_value_to_eval) and not (
+                isinstance(match, list)
+                and (value_to_eval in match or raw_value_to_eval in match)
             ):
                 return
 
@@ -188,20 +188,46 @@ async def async_attach_trigger(
             # We need to store the current value and device for the callback
             unsubs.append(
                 node.on(
-                    "value updated",
+                    EVENT_VALUE_UPDATED,
                     functools.partial(async_on_value_updated, value, device),
                 )
             )
 
-        for driver in drivers:
-            unsubs.append(
-                async_dispatcher_connect(
-                    hass,
-                    f"{DOMAIN}_{driver.controller.home_id}_connected_to_server",
-                    _create_zwave_listeners,
-                )
+        unsubs.extend(
+            async_dispatcher_connect(
+                hass,
+                f"{DOMAIN}_{driver.controller.home_id}_connected_to_server",
+                _create_zwave_listeners,
             )
+            for driver in drivers
+        )
 
     _create_zwave_listeners()
 
     return async_remove
+
+
+class ValueUpdatedTrigger(Trigger):
+    """Z-Wave JS value updated trigger."""
+
+    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+        """Initialize trigger."""
+        self._config = config
+        self._hass = hass
+
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return await async_validate_trigger_config(hass, config)
+
+    async def async_attach(
+        self,
+        action: TriggerActionType,
+        trigger_info: TriggerInfo,
+    ) -> CALLBACK_TYPE:
+        """Attach a trigger."""
+        return await async_attach_trigger(
+            self._hass, self._config, action, trigger_info
+        )

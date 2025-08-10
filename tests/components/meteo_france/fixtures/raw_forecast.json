@@ -1,0 +1,53 @@
+{
+  "updated_on": 1737995400,
+  "position": {
+    "country": "FR - France",
+    "dept": "74",
+    "insee": "74080",
+    "lat": 45.90417,
+    "lon": 6.42306,
+    "name": "La Clusaz",
+    "rain_product_available": 1,
+    "timezone": "Europe/Paris"
+  },
+  "daily_forecast": [
+    {
+      "T": { "max": 10.4, "min": 6.9, "sea": null },
+      "dt": 1737936000,
+      "humidity": { "max": 90, "min": 65 },
+      "precipitation": { "24h": 1.3 },
+      "sun": { "rise": 1737963392, "set": 1737996163 },
+      "uv": 1,
+      "weather12H": { "desc": "Eclaircies", "icon": "p2j" }
+    }
+  ],
+  "forecast": [
+    {
+      "T": { "value": 9.1, "windchill": 5.4 },
+      "clouds": 70,
+      "dt": 1737990000,
+      "humidity": 75,
+      "iso0": 1250,
+      "rain": { "1h": 0 },
+      "rain snow limit": "Non pertinent",
+      "sea_level": 988.7,
+      "snow": { "1h": 0 },
+      "uv": 1,
+      "weather": { "desc": "Eclaircies", "icon": "p2j" },
+      "wind": {
+        "direction": 200,
+        "gust": 18,
+        "icon": "SSO",
+        "speed": 8
+      }
+    }
+  ],
+  "probability_forecast": [
+    {
+      "dt": 1737990000,
+      "freezing": 0,
+      "rain": { "3h": null, "6h": null },
+      "snow": { "3h": null, "6h": null }
+    }
+  ]
+}

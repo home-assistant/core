@@ -1,4 +1,5 @@
 """Integrate with DuckDNS."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine, Sequence
@@ -17,8 +18,8 @@ from homeassistant.core import (
     ServiceCall,
     callback,
 )
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
@@ -141,7 +142,7 @@ def async_track_time_interval_backoff(
             )
 
     interval_listener_job = HassJob(interval_listener, cancel_on_shutdown=True)
-    hass.async_run_job(interval_listener, dt_util.utcnow())
+    hass.async_run_hass_job(interval_listener_job, dt_util.utcnow())
 
     def remove_listener() -> None:
         """Remove interval listener."""

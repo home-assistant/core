@@ -1,4 +1,5 @@
 """Offer Z-Wave JS event listening automation trigger."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -6,26 +7,28 @@ import functools
 
 from pydantic import ValidationError
 import voluptuous as vol
-from zwave_js_server.client import Client
 from zwave_js_server.model.controller import CONTROLLER_EVENT_MODEL_MAP
 from zwave_js_server.model.driver import DRIVER_EVENT_MODEL_MAP, Driver
 from zwave_js_server.model.node import NODE_EVENT_MODEL_MAP
 
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_PLATFORM
+from homeassistant.const import (
+    ATTR_CONFIG_ENTRY_ID,
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    CONF_PLATFORM,
+)
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
+from homeassistant.helpers.trigger import Trigger, TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from ..const import (
-    ATTR_CONFIG_ENTRY_ID,
     ATTR_EVENT,
     ATTR_EVENT_DATA,
     ATTR_EVENT_SOURCE,
     ATTR_NODE_ID,
     ATTR_PARTIAL_DICT_MATCH,
-    DATA_CLIENT,
     DOMAIN,
 )
 from ..helpers import (
@@ -35,8 +38,11 @@ from ..helpers import (
 )
 from .trigger_helpers import async_bypass_dynamic_config_validation
 
+# Relative platform type should be <SUBMODULE_NAME>
+RELATIVE_PLATFORM_TYPE = f"{__name__.rsplit('.', maxsplit=1)[-1]}"
+
 # Platform type should be <DOMAIN>.<SUBMODULE_NAME>
-PLATFORM_TYPE = f"{DOMAIN}.{__name__.rsplit('.', maxsplit=1)[-1]}"
+PLATFORM_TYPE = f"{DOMAIN}.{RELATIVE_PLATFORM_TYPE}"
 
 
 def validate_non_node_event_source(obj: dict) -> dict:
@@ -79,10 +85,8 @@ def validate_event_data(obj: dict) -> dict:
     except ValidationError as exc:
         # Filter out required field errors if keys can be missing, and if there are
         # still errors, raise an exception
-        if errors := [
-            error for error in exc.errors() if error["type"] != "value_error.missing"
-        ]:
-            raise vol.MultipleInvalid(errors) from exc
+        if [error for error in exc.errors() if error["type"] != "missing"]:
+            raise vol.MultipleInvalid from exc
     return obj
 
 
@@ -167,9 +171,9 @@ async def async_attach_trigger(
             if (
                 config[ATTR_PARTIAL_DICT_MATCH]
                 and isinstance(event_data[key], dict)
-                and isinstance(event_data_filter[key], dict)
+                and isinstance(val, dict)
             ):
-                for key2, val2 in event_data_filter[key].items():
+                for key2, val2 in val.items():
                     if key2 not in event_data[key] or event_data[key][key2] != val2:
                         return
                 continue
@@ -196,9 +200,9 @@ async def async_attach_trigger(
         else:
             payload["description"] = primary_desc
 
-        payload[
-            "description"
-        ] = f"{payload['description']} with event data: {event_data}"
+        payload["description"] = (
+            f"{payload['description']} with event data: {event_data}"
+        )
 
         hass.async_run_hass_job(job, {"trigger": payload})
 
@@ -218,7 +222,9 @@ async def async_attach_trigger(
         drivers: set[Driver] = set()
         if not (nodes := async_get_nodes_from_targets(hass, config, dev_reg=dev_reg)):
             entry_id = config[ATTR_CONFIG_ENTRY_ID]
-            client: Client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+            entry = hass.config_entries.async_get_entry(entry_id)
+            assert entry
+            client = entry.runtime_data.client
             driver = client.driver
             assert driver
             drivers.add(driver)
@@ -238,16 +244,41 @@ async def async_attach_trigger(
             unsubs.append(
                 node.on(event_name, functools.partial(async_on_event, device=device))
             )
-
-        for driver in drivers:
-            unsubs.append(
-                async_dispatcher_connect(
-                    hass,
-                    f"{DOMAIN}_{driver.controller.home_id}_connected_to_server",
-                    _create_zwave_listeners,
-                )
+        unsubs.extend(
+            async_dispatcher_connect(
+                hass,
+                f"{DOMAIN}_{driver.controller.home_id}_connected_to_server",
+                _create_zwave_listeners,
             )
+            for driver in drivers
+        )
 
     _create_zwave_listeners()
 
     return async_remove
+
+
+class EventTrigger(Trigger):
+    """Z-Wave JS event trigger."""
+
+    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+        """Initialize trigger."""
+        self._config = config
+        self._hass = hass
+
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return await async_validate_trigger_config(hass, config)
+
+    async def async_attach(
+        self,
+        action: TriggerActionType,
+        trigger_info: TriggerInfo,
+    ) -> CALLBACK_TYPE:
+        """Attach a trigger."""
+        return await async_attach_trigger(
+            self._hass, self._config, action, trigger_info
+        )

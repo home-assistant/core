@@ -1,10 +1,11 @@
 """Support for Tuya Cover."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from tuya_iot import TuyaDevice, TuyaDeviceManager
+from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -14,14 +15,15 @@ from homeassistant.components.cover import (
     CoverEntityDescription,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HomeAssistantTuyaData
-from .base import IntegerTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
+from . import TuyaConfigEntry
+from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
+from .entity import TuyaEntity
+from .models import IntegerTypeData
+from .util import get_dpcode
 
 
 @dataclass(frozen=True)
@@ -38,6 +40,34 @@ class TuyaCoverEntityDescription(CoverEntityDescription):
 
 
 COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
+    # Garage Door Opener
+    # https://developer.tuya.com/en/docs/iot/categoryckmkzq?id=Kaiuz0ipcboee
+    "ckmkzq": (
+        TuyaCoverEntityDescription(
+            key=DPCode.SWITCH_1,
+            translation_key="indexed_door",
+            translation_placeholders={"index": "1"},
+            current_state=DPCode.DOORCONTACT_STATE,
+            current_state_inverse=True,
+            device_class=CoverDeviceClass.GARAGE,
+        ),
+        TuyaCoverEntityDescription(
+            key=DPCode.SWITCH_2,
+            translation_key="indexed_door",
+            translation_placeholders={"index": "2"},
+            current_state=DPCode.DOORCONTACT_STATE_2,
+            current_state_inverse=True,
+            device_class=CoverDeviceClass.GARAGE,
+        ),
+        TuyaCoverEntityDescription(
+            key=DPCode.SWITCH_3,
+            translation_key="indexed_door",
+            translation_placeholders={"index": "3"},
+            current_state=DPCode.DOORCONTACT_STATE_3,
+            current_state_inverse=True,
+            device_class=CoverDeviceClass.GARAGE,
+        ),
+    ),
     # Curtain
     # Note: Multiple curtains isn't documented
     # https://developer.tuya.com/en/docs/iot/categorycl?id=Kaiuz1hnpo7df
@@ -46,20 +76,22 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             key=DPCode.CONTROL,
             translation_key="curtain",
             current_state=DPCode.SITUATION_SET,
-            current_position=(DPCode.PERCENT_CONTROL, DPCode.PERCENT_STATE),
+            current_position=(DPCode.PERCENT_STATE, DPCode.PERCENT_CONTROL),
             set_position=DPCode.PERCENT_CONTROL,
             device_class=CoverDeviceClass.CURTAIN,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_2,
-            translation_key="curtain_2",
+            translation_key="indexed_curtain",
+            translation_placeholders={"index": "2"},
             current_position=DPCode.PERCENT_STATE_2,
             set_position=DPCode.PERCENT_CONTROL_2,
             device_class=CoverDeviceClass.CURTAIN,
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_3,
-            translation_key="curtain_3",
+            translation_key="indexed_curtain",
+            translation_placeholders={"index": "3"},
             current_position=DPCode.PERCENT_STATE_3,
             set_position=DPCode.PERCENT_CONTROL_3,
             device_class=CoverDeviceClass.CURTAIN,
@@ -84,31 +116,6 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
             device_class=CoverDeviceClass.BLIND,
         ),
     ),
-    # Garage Door Opener
-    # https://developer.tuya.com/en/docs/iot/categoryckmkzq?id=Kaiuz0ipcboee
-    "ckmkzq": (
-        TuyaCoverEntityDescription(
-            key=DPCode.SWITCH_1,
-            translation_key="door",
-            current_state=DPCode.DOORCONTACT_STATE,
-            current_state_inverse=True,
-            device_class=CoverDeviceClass.GARAGE,
-        ),
-        TuyaCoverEntityDescription(
-            key=DPCode.SWITCH_2,
-            translation_key="door_2",
-            current_state=DPCode.DOORCONTACT_STATE_2,
-            current_state_inverse=True,
-            device_class=CoverDeviceClass.GARAGE,
-        ),
-        TuyaCoverEntityDescription(
-            key=DPCode.SWITCH_3,
-            translation_key="door_3",
-            current_state=DPCode.DOORCONTACT_STATE_3,
-            current_state_inverse=True,
-            device_class=CoverDeviceClass.GARAGE,
-        ),
-    ),
     # Curtain Switch
     # https://developer.tuya.com/en/docs/iot/category-clkg?id=Kaiuz0gitil39
     "clkg": (
@@ -121,7 +128,8 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
         ),
         TuyaCoverEntityDescription(
             key=DPCode.CONTROL_2,
-            translation_key="curtain_2",
+            translation_key="indexed_curtain",
+            translation_placeholders={"index": "2"},
             current_position=DPCode.PERCENT_CONTROL_2,
             set_position=DPCode.PERCENT_CONTROL_2,
             device_class=CoverDeviceClass.CURTAIN,
@@ -142,32 +150,32 @@ COVERS: dict[str, tuple[TuyaCoverEntityDescription, ...]] = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TuyaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya cover dynamically through Tuya discovery."""
-    hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
+    hass_data = entry.runtime_data
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered tuya cover."""
         entities: list[TuyaCoverEntity] = []
         for device_id in device_ids:
-            device = hass_data.device_manager.device_map[device_id]
+            device = hass_data.manager.device_map[device_id]
             if descriptions := COVERS.get(device.category):
-                for description in descriptions:
+                entities.extend(
+                    TuyaCoverEntity(device, hass_data.manager, description)
+                    for description in descriptions
                     if (
                         description.key in device.function
                         or description.key in device.status_range
-                    ):
-                        entities.append(
-                            TuyaCoverEntity(
-                                device, hass_data.device_manager, description
-                            )
-                        )
+                    )
+                )
 
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.device_manager.device_map])
+    async_discover_device([*hass_data.manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
@@ -184,8 +192,8 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     def __init__(
         self,
-        device: TuyaDevice,
-        device_manager: TuyaDeviceManager,
+        device: CustomerDevice,
+        device_manager: Manager,
         description: TuyaCoverEntityDescription,
     ) -> None:
         """Init Tuya Cover."""
@@ -195,7 +203,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self._attr_supported_features = CoverEntityFeature(0)
 
         # Check if this cover is based on a switch or has controls
-        if self.find_dpcode(description.key, prefer_function=True):
+        if get_dpcode(self.device, description.key):
             if device.function[description.key].type == "Boolean":
                 self._attr_supported_features |= (
                     CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
@@ -332,10 +340,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        if self._set_position is None:
-            raise RuntimeError(
-                "Cannot set position, device doesn't provide methods to set it"
-            )
+        if TYPE_CHECKING:
+            # guarded by CoverEntityFeature.SET_POSITION
+            assert self._set_position is not None
 
         self._send_command(
             [
@@ -363,10 +370,9 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     def set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        if self._tilt is None:
-            raise RuntimeError(
-                "Cannot set tilt, device doesn't provide methods to set it"
-            )
+        if TYPE_CHECKING:
+            # guarded by CoverEntityFeature.SET_TILT_POSITION
+            assert self._tilt is not None
 
         self._send_command(
             [

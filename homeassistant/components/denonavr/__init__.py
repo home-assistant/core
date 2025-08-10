@@ -1,4 +1,5 @@
 """The denonavr component."""
+
 import logging
 
 from denonavr import DenonAVR
@@ -11,7 +12,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .config_flow import (
+from .const import (
     CONF_SHOW_ALL_SOURCES,
     CONF_UPDATE_AUDYSSEY,
     CONF_USE_TELNET,
@@ -23,21 +24,18 @@ from .config_flow import (
     DEFAULT_USE_TELNET,
     DEFAULT_ZONE2,
     DEFAULT_ZONE3,
-    DOMAIN,
 )
 from .receiver import ConnectDenonAVR
 
-CONF_RECEIVER = "receiver"
-UNDO_UPDATE_LISTENER = "undo_update_listener"
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 _LOGGER = logging.getLogger(__name__)
 
+type DenonavrConfigEntry = ConfigEntry[DenonAVR]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: DenonavrConfigEntry) -> bool:
     """Set up the denonavr components from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     # Connect to receiver
     connect_denonavr = ConnectDenonAVR(
         entry.data[CONF_HOST],
@@ -55,12 +53,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from ex
     receiver = connect_denonavr.receiver
 
-    undo_listener = entry.add_update_listener(update_listener)
-
-    hass.data[DOMAIN][entry.entry_id] = {
-        CONF_RECEIVER: receiver,
-        UNDO_UPDATE_LISTENER: undo_listener,
-    }
+    entry.runtime_data = receiver
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     use_telnet = entry.options.get(CONF_USE_TELNET, DEFAULT_USE_TELNET)
@@ -78,17 +71,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: DenonavrConfigEntry
+) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     )
 
     if config_entry.options.get(CONF_USE_TELNET, DEFAULT_USE_TELNET):
-        receiver: DenonAVR = hass.data[DOMAIN][config_entry.entry_id][CONF_RECEIVER]
+        receiver = config_entry.runtime_data
         await receiver.async_telnet_disconnect()
-
-    hass.data[DOMAIN][config_entry.entry_id][UNDO_UPDATE_LISTENER]()
 
     # Remove zone2 and zone3 entities if needed
     entity_registry = er.async_get(hass)
@@ -104,12 +97,4 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
             entity_registry.async_remove(entry.entity_id)
             _LOGGER.debug("Removing zone3 from DenonAvr")
 
-    if unload_ok:
-        hass.data[DOMAIN].pop(config_entry.entry_id)
-
     return unload_ok
-
-
-async def update_listener(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(config_entry.entry_id)

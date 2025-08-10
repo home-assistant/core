@@ -1,4 +1,5 @@
 """Integration to integrate Keymitt BLE devices with Home Assistant."""
+
 from __future__ import annotations
 
 import logging
@@ -10,14 +11,15 @@ from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothDataUpdateCoordinator,
 )
-from homeassistant.const import Platform
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
 if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
-PLATFORMS: list[str] = [Platform.SWITCH]
+
+type MicroBotConfigEntry = ConfigEntry[MicroBotDataUpdateCoordinator]
 
 
 class MicroBotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
@@ -30,7 +32,7 @@ class MicroBotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         ble_device: BLEDevice,
     ) -> None:
         """Initialize."""
-        self.api: MicroBotApiClient = client
+        self.api = client
         self.data: dict[str, Any] = {}
         self.ble_device = ble_device
         super().__init__(

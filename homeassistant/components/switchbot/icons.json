@@ -1,0 +1,94 @@
+{
+  "entity": {
+    "sensor": {
+      "water_level": {
+        "default": "mdi:water-percent",
+        "state": {
+          "empty": "mdi:water-off",
+          "low": "mdi:water-outline",
+          "medium": "mdi:water",
+          "high": "mdi:water-check"
+        }
+      }
+    },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "normal": "mdi:fan",
+              "natural": "mdi:leaf",
+              "sleep": "mdi:power-sleep",
+              "baby": "mdi:baby-face-outline"
+            }
+          }
+        }
+      },
+      "air_purifier": {
+        "default": "mdi:air-purifier",
+        "state": {
+          "off": "mdi:air-purifier-off"
+        },
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "level_1": "mdi:fan-speed-1",
+              "level_2": "mdi:fan-speed-2",
+              "level_3": "mdi:fan-speed-3",
+              "auto": "mdi:auto-mode",
+              "pet": "mdi:paw",
+              "sleep": "mdi:power-sleep"
+            }
+          }
+        }
+      }
+    },
+    "humidifier": {
+      "evaporative_humidifier": {
+        "state_attributes": {
+          "mode": {
+            "state": {
+              "high": "mdi:water-plus",
+              "medium": "mdi:water",
+              "low": "mdi:water-outline",
+              "quiet": "mdi:volume-off",
+              "target_humidity": "mdi:target",
+              "sleep": "mdi:weather-night",
+              "auto": "mdi:autorenew",
+              "drying_filter": "mdi:water-remove"
+            }
+          }
+        }
+      }
+    },
+    "light": {
+      "light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "christmas": "mdi:string-lights",
+              "halloween": "mdi:halloween",
+              "sunset": "mdi:weather-sunset",
+              "vitality": "mdi:parachute",
+              "flashing": "mdi:flash",
+              "strobe": "mdi:led-strip-variant",
+              "fade": "mdi:water-opacity",
+              "smooth": "mdi:led-strip-variant",
+              "forest": "mdi:forest",
+              "ocean": "mdi:waves",
+              "autumn": "mdi:leaf-maple",
+              "cool": "mdi:emoticon-cool-outline",
+              "flow": "mdi:pulse",
+              "relax": "mdi:coffee",
+              "modern": "mdi:school-outline",
+              "rose": "mdi:flower",
+              "colorful": "mdi:looks",
+              "flickering": "mdi:led-strip-variant",
+              "breathing": "mdi:heart-pulse"
+            }
+          }
+        }
+      }
+    }
+  }
+}

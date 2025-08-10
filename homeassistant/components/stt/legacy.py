@@ -1,4 +1,5 @@
 """Handle legacy speech-to-text platforms."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -10,7 +11,11 @@ from homeassistant.config import config_per_platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.setup import async_prepare_setup_platform
+from homeassistant.setup import (
+    SetupPhases,
+    async_prepare_setup_platform,
+    async_start_setup,
+)
 
 from .const import (
     DATA_PROVIDERS,
@@ -29,7 +34,8 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 def async_default_provider(hass: HomeAssistant) -> str | None:
     """Return the domain of the default provider."""
-    return next(iter(hass.data[DATA_PROVIDERS]), None)
+    providers = hass.data[DATA_PROVIDERS]
+    return next(iter(providers), None)
 
 
 @callback
@@ -37,7 +43,7 @@ def async_get_provider(
     hass: HomeAssistant, domain: str | None = None
 ) -> Provider | None:
     """Return provider."""
-    providers: dict[str, Provider] = hass.data[DATA_PROVIDERS]
+    providers = hass.data[DATA_PROVIDERS]
     if domain:
         return providers.get(domain)
 
@@ -67,13 +73,21 @@ def async_setup_legacy(
             return
 
         try:
-            provider = await platform.async_get_engine(hass, p_config, discovery_info)
+            with async_start_setup(
+                hass,
+                integration=p_type,
+                group=str(id(p_config)),
+                phase=SetupPhases.PLATFORM_SETUP,
+            ):
+                provider = await platform.async_get_engine(
+                    hass, p_config, discovery_info
+                )
 
-            provider.name = p_type
-            provider.hass = hass
+                provider.name = p_type
+                provider.hass = hass
 
-            providers[provider.name] = provider
-        except Exception:  # pylint: disable=broad-except
+                providers[provider.name] = provider
+        except Exception:
             _LOGGER.exception("Error setting up platform: %s", p_type)
             return
 

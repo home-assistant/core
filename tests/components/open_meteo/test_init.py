@@ -1,4 +1,5 @@
 """Tests for the Open-Meteo integration."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from open_meteo import OpenMeteoConnectionError
@@ -32,7 +33,7 @@ async def test_load_unload_config_entry(
 
 
 @patch(
-    "homeassistant.components.open_meteo.OpenMeteo.forecast",
+    "homeassistant.components.open_meteo.coordinator.OpenMeteo.forecast",
     side_effect=OpenMeteoConnectionError,
 )
 async def test_config_entry_not_ready(

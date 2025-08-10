@@ -3,5 +3,6 @@
   "name": "UK Transport",
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/uk_transport",
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "quality_scale": "legacy"
 }

@@ -19,7 +19,6 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
@@ -44,10 +43,10 @@
         "name": "Disk free"
       },
       "post_processing_jobs": {
-        "name": "Post processing jobs"
+        "name": "Post-processing jobs"
       },
       "post_processing_paused": {
-        "name": "Post processing paused"
+        "name": "Post-processing paused"
       },
       "queue_size": {
         "name": "Queue size"
@@ -63,6 +62,11 @@
       "download": {
         "name": "Download"
       }
+    }
+  },
+  "exceptions": {
+    "invalid_config_entry": {
+      "message": "Config entry not found or not loaded!"
     }
   },
   "services": {

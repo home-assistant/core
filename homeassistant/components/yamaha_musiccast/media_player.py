@@ -1,4 +1,5 @@
 """Implementation of the musiccast media player."""
+
 from __future__ import annotations
 
 import contextlib
@@ -23,10 +24,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import uuid
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import uuid as uuid_util
 
-from . import MusicCastDataUpdateCoordinator, MusicCastDeviceEntity
 from .const import (
     ATTR_MAIN_SYNC,
     ATTR_MC_LINK,
@@ -37,6 +37,8 @@ from .const import (
     MEDIA_CLASS_MAPPING,
     NULL_GROUP,
 )
+from .coordinator import MusicCastDataUpdateCoordinator
+from .entity import MusicCastDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +55,7 @@ MUSIC_PLAYER_BASE_SUPPORT = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MusicCast sensor based on a config entry."""
     coordinator: MusicCastDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -384,7 +386,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
                 else:
                     children.append(item)
 
-        overview = BrowseMedia(
+        return BrowseMedia(
             title=media_content_provider.title,
             media_class=MEDIA_CLASS_MAPPING.get(media_content_provider.content_type),
             media_content_id=media_content_provider.content_id,
@@ -393,8 +395,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             can_expand=media_content_provider.can_browse,
             children=children,
         )
-
-        return overview
 
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
@@ -675,7 +675,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             return [self]
         entities = self.get_all_mc_entities()
         clients = [entity for entity in entities if entity.is_part_of_group(self)]
-        return [self] + clients
+        return [self, *clients]
 
     @property
     def musiccast_zone_entity(self) -> MusicCastMediaPlayer:
@@ -735,7 +735,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         group = (
             self.coordinator.data.group_id
             if self.is_server
-            else uuid.random_uuid_hex().upper()
+            else uuid_util.random_uuid_hex().upper()
         )
 
         ip_addresses = set()
@@ -900,13 +900,13 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             return
 
         _LOGGER.debug("%s updates his group members", self.entity_id)
-        client_ips_for_removal = []
-        for expected_client_ip in self.coordinator.data.group_client_list:
-            if expected_client_ip not in [
-                entity.ip_address for entity in self.musiccast_group
-            ]:
-                # The client is no longer part of the group. Prepare removal.
-                client_ips_for_removal.append(expected_client_ip)
+        client_ips_for_removal = [
+            expected_client_ip
+            for expected_client_ip in self.coordinator.data.group_client_list
+            # The client is no longer part of the group. Prepare removal.
+            if expected_client_ip
+            not in [entity.ip_address for entity in self.musiccast_group]
+        ]
 
         if client_ips_for_removal:
             _LOGGER.debug(
@@ -926,4 +926,4 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
     @callback
     def async_schedule_check_client_list(self):
         """Schedule async_check_client_list."""
-        self.hass.create_task(self.async_check_client_list())
+        self.hass.async_create_task(self.async_check_client_list(), eager_start=True)

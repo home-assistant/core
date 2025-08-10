@@ -1,11 +1,12 @@
 """Tests for the Jellyfin media_player platform."""
+
 from unittest.mock import MagicMock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.jellyfin.const import DOMAIN
-from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.components.media_player import BrowseError
 from homeassistant.components.media_source import (
     DOMAIN as MEDIA_SOURCE_DOMAIN,
     URI_SCHEME,
@@ -40,16 +41,24 @@ async def test_resolve(
     mock_api.get_item.side_effect = None
     mock_api.get_item.return_value = load_json_fixture("track.json")
 
-    play_media = await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/TRACK-UUID")
+    play_media = await async_resolve_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/TRACK-UUID", "media_player.jellyfin_device"
+    )
 
     assert play_media.mime_type == "audio/flac"
     assert play_media.url == snapshot
+
+    mock_api.audio_url.assert_called_with("TRACK-UUID")
+    assert mock_api.audio_url.call_count == 1
+    mock_api.audio_url.reset_mock()
 
     # Test resolving a movie
     mock_api.get_item.side_effect = None
     mock_api.get_item.return_value = load_json_fixture("movie.json")
 
-    play_media = await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/MOVIE-UUID")
+    play_media = await async_resolve_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/MOVIE-UUID", "media_player.jellyfin_device"
+    )
 
     assert play_media.mime_type == "video/mp4"
     assert play_media.url == snapshot
@@ -59,7 +68,47 @@ async def test_resolve(
     mock_api.get_item.return_value = load_json_fixture("unsupported-item.json")
 
     with pytest.raises(BrowseError):
-        await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}/UNSUPPORTED-ITEM-UUID")
+        await async_resolve_media(
+            hass,
+            f"{URI_SCHEME}{DOMAIN}/UNSUPPORTED-ITEM-UUID",
+            "media_player.jellyfin_device",
+        )
+
+
+@pytest.mark.parametrize(
+    "audio_codec",
+    [("aac"), ("wma"), ("vorbis"), ("mp3")],
+)
+async def test_audio_codec_resolve(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    init_integration: MockConfigEntry,
+    mock_jellyfin: MagicMock,
+    mock_api: MagicMock,
+    snapshot: SnapshotAssertion,
+    audio_codec: str,
+) -> None:
+    """Test resolving Jellyfin media items with audio codec."""
+
+    # Test resolving a track
+    mock_api.get_item.side_effect = None
+    mock_api.get_item.return_value = load_json_fixture("track.json")
+
+    result = await hass.config_entries.options.async_init(init_integration.entry_id)
+    await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={"audio_codec": audio_codec}
+    )
+    assert init_integration.options["audio_codec"] == audio_codec
+
+    play_media = await async_resolve_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/TRACK-UUID", "media_player.jellyfin_device"
+    )
+
+    assert play_media.mime_type == "audio/flac"
+    assert play_media.url == snapshot
+
+    mock_api.audio_url.assert_called_with("TRACK-UUID", audio_codec=audio_codec)
+    assert mock_api.audio_url.call_count == 1
 
 
 async def test_root(

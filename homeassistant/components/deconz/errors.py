@@ -1,4 +1,5 @@
 """Errors for the deCONZ component."""
+
 from homeassistant.exceptions import HomeAssistantError
 
 

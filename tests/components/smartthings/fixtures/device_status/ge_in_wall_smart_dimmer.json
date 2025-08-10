@@ -1,0 +1,23 @@
+{
+  "components": {
+    "main": {
+      "switchLevel": {
+        "levelRange": {
+          "value": null
+        },
+        "level": {
+          "value": 39,
+          "unit": "%",
+          "timestamp": "2025-02-07T02:39:25.819Z"
+        }
+      },
+      "refresh": {},
+      "switch": {
+        "switch": {
+          "value": "off",
+          "timestamp": "2025-02-08T23:21:22.908Z"
+        }
+      }
+    }
+  }
+}

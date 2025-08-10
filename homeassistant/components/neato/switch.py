@@ -1,4 +1,5 @@
 """Support for Neato Connected Vacuums switches."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -12,7 +13,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import NEATO_LOGIN, NEATO_ROBOTS, SCAN_INTERVAL_MINUTES
 from .entity import NeatoEntity
@@ -28,15 +29,17 @@ SWITCH_TYPES = {SWITCH_TYPE_SCHEDULE: ["Schedule"]}
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Neato switch with config entry."""
-    dev = []
     neato: NeatoHub = hass.data[NEATO_LOGIN]
-
-    for robot in hass.data[NEATO_ROBOTS]:
-        for type_name in SWITCH_TYPES:
-            dev.append(NeatoConnectedSwitch(neato, robot, type_name))
+    dev = [
+        NeatoConnectedSwitch(neato, robot, type_name)
+        for robot in hass.data[NEATO_ROBOTS]
+        for type_name in SWITCH_TYPES
+    ]
 
     if not dev:
         return

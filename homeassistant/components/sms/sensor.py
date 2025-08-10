@@ -1,4 +1,5 @@
 """Support for SMS dongle sensor."""
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -9,7 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, GATEWAY, NETWORK_COORDINATOR, SIGNAL_COORDINATOR, SMS_GATEWAY
@@ -25,7 +26,6 @@ SIGNAL_SENSORS = (
     ),
     SensorEntityDescription(
         key="SignalPercent",
-        icon="mdi:signal-cellular-3",
         translation_key="signal_percent",
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=True,
@@ -62,7 +62,6 @@ NETWORK_SENSORS = (
     SensorEntityDescription(
         key="CID",
         translation_key="cid",
-        icon="mdi:radio-tower",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -78,7 +77,7 @@ NETWORK_SENSORS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all device sensors."""
     sms_data = hass.data[DOMAIN][SMS_GATEWAY]
@@ -86,15 +85,14 @@ async def async_setup_entry(
     network_coordinator = sms_data[NETWORK_COORDINATOR]
     gateway = sms_data[GATEWAY]
     unique_id = str(await gateway.get_imei_async())
-    entities = []
-    for description in SIGNAL_SENSORS:
-        entities.append(
-            DeviceSensor(signal_coordinator, description, unique_id, gateway)
-        )
-    for description in NETWORK_SENSORS:
-        entities.append(
-            DeviceSensor(network_coordinator, description, unique_id, gateway)
-        )
+    entities = [
+        DeviceSensor(signal_coordinator, description, unique_id, gateway)
+        for description in SIGNAL_SENSORS
+    ]
+    entities.extend(
+        DeviceSensor(network_coordinator, description, unique_id, gateway)
+        for description in NETWORK_SENSORS
+    )
     async_add_entities(entities, True)
 
 

@@ -1,0 +1,33 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:video",
+      "state": {
+        "off": "mdi:video-off"
+      }
+    }
+  },
+  "services": {
+    "disable_motion_detection": {
+      "service": "mdi:motion-sensor-off"
+    },
+    "enable_motion_detection": {
+      "service": "mdi:motion-sensor"
+    },
+    "play_stream": {
+      "service": "mdi:play"
+    },
+    "record": {
+      "service": "mdi:record-rec"
+    },
+    "snapshot": {
+      "service": "mdi:camera"
+    },
+    "turn_off": {
+      "service": "mdi:video-off"
+    },
+    "turn_on": {
+      "service": "mdi:video"
+    }
+  }
+}

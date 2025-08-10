@@ -1,4 +1,5 @@
-"""Support for iBeacon device sensors."""
+"""Support for Private BLE Device sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -21,25 +22,18 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import BasePrivateDeviceEntity
 
 
-@dataclass(frozen=True)
-class PrivateDeviceSensorEntityDescriptionRequired:
-    """Required domain specific fields for sensor entity."""
+@dataclass(frozen=True, kw_only=True)
+class PrivateDeviceSensorEntityDescription(SensorEntityDescription):
+    """Describes sensor entity."""
 
     value_fn: Callable[
         [HomeAssistant, bluetooth.BluetoothServiceInfoBleak], str | int | float | None
     ]
-
-
-@dataclass(frozen=True)
-class PrivateDeviceSensorEntityDescription(
-    SensorEntityDescription, PrivateDeviceSensorEntityDescriptionRequired
-):
-    """Describes sensor entity."""
 
 
 SENSOR_DESCRIPTIONS = (
@@ -65,7 +59,6 @@ SENSOR_DESCRIPTIONS = (
     PrivateDeviceSensorEntityDescription(
         key="estimated_distance",
         translation_key="estimated_distance",
-        icon="mdi:signal-distance-variant",
         native_unit_of_measurement=UnitOfLength.METERS,
         value_fn=lambda _, service_info: service_info.advertisement
         and service_info.advertisement.tx_power
@@ -79,7 +72,6 @@ SENSOR_DESCRIPTIONS = (
     PrivateDeviceSensorEntityDescription(
         key="estimated_broadcast_interval",
         translation_key="estimated_broadcast_interval",
-        icon="mdi:timer-sync-outline",
         native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -100,7 +92,9 @@ SENSOR_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors for Private BLE component."""
     async_add_entities(

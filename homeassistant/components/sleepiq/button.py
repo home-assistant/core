@@ -1,4 +1,5 @@
 """Support for SleepIQ buttons."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -10,25 +11,18 @@ from asyncsleepiq import SleepIQBed
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SleepIQData
 from .entity import SleepIQEntity
 
 
-@dataclass(frozen=True)
-class SleepIQButtonEntityDescriptionMixin:
-    """Describes a SleepIQ Button entity."""
+@dataclass(frozen=True, kw_only=True)
+class SleepIQButtonEntityDescription(ButtonEntityDescription):
+    """Class to describe a Button entity."""
 
     press_action: Callable[[SleepIQBed], Any]
-
-
-@dataclass(frozen=True)
-class SleepIQButtonEntityDescription(
-    ButtonEntityDescription, SleepIQButtonEntityDescriptionMixin
-):
-    """Class to describe a Button entity."""
 
 
 ENTITY_DESCRIPTIONS = [
@@ -50,7 +44,7 @@ ENTITY_DESCRIPTIONS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sleep number buttons."""
     data: SleepIQData = hass.data[DOMAIN][entry.entry_id]

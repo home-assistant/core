@@ -1,0 +1,30 @@
+# serializer version: 1
+# name: test_attributes_set
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'player-name1111',
+      'is_volume_muted': False,
+      'master': False,
+      'media_album_name': 'album',
+      'media_artist': 'artist',
+      'media_content_type': <MediaType.MUSIC: 'music'>,
+      'media_duration': 123,
+      'media_title': 'song',
+      'shuffle': False,
+      'source_list': list([
+        'input1',
+        'input2',
+        'preset1',
+        'preset2',
+      ]),
+      'supported_features': <MediaPlayerEntityFeature: 196157>,
+      'volume_level': 0.1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'media_player.player_name1111',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'playing',
+  })
+# ---

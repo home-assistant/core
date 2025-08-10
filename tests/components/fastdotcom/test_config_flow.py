@@ -1,9 +1,9 @@
 """Test for the Fast.com config flow."""
+
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.fastdotcom.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -18,7 +18,7 @@ async def test_user_form(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with patch(
@@ -30,7 +30,7 @@ async def test_user_form(hass: HomeAssistant) -> None:
             user_input={},
         )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Fast.com"
     assert result["data"] == {}
     assert result["options"] == {}
@@ -51,21 +51,5 @@ async def test_single_instance_allowed(
         DOMAIN, context={"source": source}
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
-
-
-async def test_import_flow_success(hass: HomeAssistant) -> None:
-    """Test import flow."""
-    with patch("homeassistant.components.fastdotcom.coordinator.fast_com"):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={},
-        )
-        await hass.async_block_till_done()
-
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == "Fast.com"
-        assert result["data"] == {}
-        assert result["options"] == {}

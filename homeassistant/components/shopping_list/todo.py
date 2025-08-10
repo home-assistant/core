@@ -11,7 +11,7 @@ from homeassistant.components.todo import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NoMatchingShoppingListItem, ShoppingData
 from .const import DOMAIN
@@ -20,7 +20,7 @@ from .const import DOMAIN
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the shopping_list todo platform."""
     shopping_data = hass.data[DOMAIN]
@@ -32,7 +32,6 @@ class ShoppingTodoListEntity(TodoListEntity):
     """A To-do List representation of the Shopping List."""
 
     _attr_has_entity_name = True
-    _attr_icon = "mdi:cart"
     _attr_translation_key = "shopping_list"
     _attr_should_poll = False
     _attr_supported_features = (

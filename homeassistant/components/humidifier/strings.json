@@ -18,6 +18,13 @@
       "toggle": "[%key:common::device_automation::action_type::toggle%]",
       "turn_on": "[%key:common::device_automation::action_type::turn_on%]",
       "turn_off": "[%key:common::device_automation::action_type::turn_off%]"
+    },
+    "extra_fields": {
+      "above": "[%key:common::device_automation::extra_fields::above%]",
+      "below": "[%key:common::device_automation::extra_fields::below%]",
+      "for": "[%key:common::device_automation::extra_fields::for%]",
+      "mode": "Mode",
+      "humidity": "Humidity"
     }
   },
   "entity_component": {
@@ -55,15 +62,15 @@
         "mode": {
           "name": "Mode",
           "state": {
-            "normal": "Normal",
-            "eco": "Eco",
-            "away": "Away",
+            "normal": "[%key:common::state::normal%]",
+            "home": "[%key:common::state::home%]",
+            "away": "[%key:common::state::not_home%]",
+            "auto": "[%key:common::state::auto%]",
+            "baby": "Baby",
             "boost": "Boost",
             "comfort": "Comfort",
-            "home": "[%key:common::state::home%]",
-            "sleep": "Sleep",
-            "auto": "Auto",
-            "baby": "Baby"
+            "eco": "Eco",
+            "sleep": "Sleep"
           }
         }
       }
@@ -82,7 +89,7 @@
       "fields": {
         "mode": {
           "name": "Mode",
-          "description": "Operation mode. For example, _normal_, _eco_, or _away_. For a list of possible values, refer to the integration documentation."
+          "description": "Operation mode. For example, \"normal\", \"eco\", or \"away\". For a list of possible values, refer to the integration documentation."
         }
       }
     },
@@ -107,6 +114,11 @@
     "toggle": {
       "name": "[%key:common::action::toggle%]",
       "description": "Toggles the humidifier on/off."
+    }
+  },
+  "exceptions": {
+    "humidity_out_of_range": {
+      "message": "Provided humidity {humidity} is not valid. Accepted range is {min_humidity} to {max_humidity}."
     }
   }
 }

@@ -1,4 +1,5 @@
 """Support for VOC."""
+
 from __future__ import annotations
 
 from contextlib import suppress
@@ -13,16 +14,17 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import VolvoEntity, VolvoUpdateCoordinator
 from .const import DOMAIN, VOLVO_DISCOVERY_NEW
+from .coordinator import VolvoUpdateCoordinator
+from .entity import VolvoEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Configure binary_sensors from a config entry created in the integrations UI."""
     coordinator: VolvoUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
@@ -31,21 +33,17 @@ async def async_setup_entry(
     @callback
     def async_discover_device(instruments: list[Instrument]) -> None:
         """Discover and add a discovered Volvo On Call binary sensor."""
-        entities: list[VolvoSensor] = []
-
-        for instrument in instruments:
-            if instrument.component == "binary_sensor":
-                entities.append(
-                    VolvoSensor(
-                        coordinator,
-                        instrument.vehicle.vin,
-                        instrument.component,
-                        instrument.attr,
-                        instrument.slug_attr,
-                    )
-                )
-
-        async_add_entities(entities)
+        async_add_entities(
+            VolvoSensor(
+                coordinator,
+                instrument.vehicle.vin,
+                instrument.component,
+                instrument.attr,
+                instrument.slug_attr,
+            )
+            for instrument in instruments
+            if instrument.component == "binary_sensor"
+        )
 
     async_discover_device([*volvo_data.instruments])
 

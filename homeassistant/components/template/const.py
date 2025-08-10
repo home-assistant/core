@@ -1,11 +1,33 @@
 """Constants for the Template Platform Components."""
 
-from homeassistant.const import Platform
+import voluptuous as vol
 
-CONF_ACTION = "action"
-CONF_AVAILABILITY_TEMPLATE = "availability_template"
+from homeassistant.const import CONF_ICON, CONF_NAME, CONF_UNIQUE_ID, Platform
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
+
+CONF_ADVANCED_OPTIONS = "advanced_options"
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
-CONF_TRIGGER = "trigger"
+CONF_ATTRIBUTES = "attributes"
+CONF_AVAILABILITY = "availability"
+CONF_AVAILABILITY_TEMPLATE = "availability_template"
+CONF_MAX = "max"
+CONF_MIN = "min"
+CONF_OBJECT_ID = "object_id"
+CONF_PICTURE = "picture"
+CONF_PRESS = "press"
+CONF_STEP = "step"
+CONF_TURN_OFF = "turn_off"
+CONF_TURN_ON = "turn_on"
+
+TEMPLATE_ENTITY_BASE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ICON): cv.template,
+        vol.Optional(CONF_NAME): cv.template,
+        vol.Optional(CONF_PICTURE): cv.template,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
+    }
+)
 
 DOMAIN = "template"
 
@@ -28,8 +50,9 @@ PLATFORMS = [
     Platform.WEATHER,
 ]
 
-CONF_AVAILABILITY = "availability"
-CONF_ATTRIBUTES = "attributes"
-CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
-CONF_PICTURE = "picture"
-CONF_OBJECT_ID = "object_id"
+
+class TemplateConfig(dict):
+    """Dummy class to allow adding attributes."""
+
+    raw_config: ConfigType | None = None
+    raw_blueprint_inputs: ConfigType | None = None

@@ -2,19 +2,19 @@
   "config": {
     "step": {
       "import_confirm": {
-        "title": "Import Konnected Device",
-        "description": "A Konnected Alarm Panel with ID {id} has been discovered in configuration.yaml. This flow will allow you to import it into a config entry."
+        "title": "Import Konnected device",
+        "description": "A Konnected alarm panel with ID {id} has been discovered in configuration.yaml. This flow will allow you to import it into a config entry."
       },
       "user": {
-        "description": "Please enter the host information for your Konnected Panel.",
+        "description": "Please enter the host information for your Konnected panel.",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]",
           "port": "[%key:common::config_flow::data::port%]"
         }
       },
       "confirm": {
-        "title": "Konnected Device Ready",
-        "description": "Model: {model}\nID: {id}\nHost: {host}\nPort: {port}\n\nYou can configure the IO and panel behavior in the Konnected Alarm Panel settings."
+        "title": "Konnected device ready",
+        "description": "Model: {model}\nID: {id}\nHost: {host}\nPort: {port}\n\nYou can configure the IO and panel behavior in the Konnected alarm panel settings."
       }
     },
     "error": {
@@ -45,8 +45,8 @@
         }
       },
       "options_io_ext": {
-        "title": "Configure Extended I/O",
-        "description": "Select the configuration of the remaining I/O below.  You'll be able to configure detailed options in the next steps.",
+        "title": "Configure extended I/O",
+        "description": "Select the configuration of the remaining I/O below. You'll be able to configure detailed options in the next steps.",
         "data": {
           "8": "Zone 8",
           "9": "Zone 9",
@@ -59,25 +59,25 @@
         }
       },
       "options_binary": {
-        "title": "Configure Binary Sensor",
+        "title": "Configure binary sensor",
         "description": "{zone} options",
         "data": {
-          "type": "Binary Sensor Type",
+          "type": "Binary sensor type",
           "name": "[%key:common::config_flow::data::name%]",
           "inverse": "Invert the open/close state"
         }
       },
       "options_digital": {
-        "title": "Configure Digital Sensor",
+        "title": "Configure digital sensor",
         "description": "[%key:component::konnected::options::step::options_binary::description%]",
         "data": {
-          "type": "Sensor Type",
+          "type": "Sensor type",
           "name": "[%key:common::config_flow::data::name%]",
-          "poll_interval": "Poll Interval (minutes)"
+          "poll_interval": "Poll interval (minutes)"
         }
       },
       "options_switch": {
-        "title": "Configure Switchable Output",
+        "title": "Configure switchable output",
         "description": "{zone} options: state {state}",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
@@ -89,18 +89,18 @@
         }
       },
       "options_misc": {
-        "title": "Configure Misc",
+        "title": "Configure misc",
         "description": "Please select the desired behavior for your panel",
         "data": {
           "discovery": "Respond to discovery requests on your network",
           "blink": "Blink panel LED on when sending state change",
-          "override_api_host": "Override default Home Assistant API host panel URL",
-          "api_host": "Override API host URL"
+          "override_api_host": "Override default Home Assistant API host URL",
+          "api_host": "Custom API host URL"
         }
       }
     },
     "error": {
-      "bad_host": "Invalid Override API host URL"
+      "bad_host": "Invalid custom API host URL"
     },
     "abort": {
       "not_konn_panel": "[%key:component::konnected::config::abort::not_konn_panel%]"

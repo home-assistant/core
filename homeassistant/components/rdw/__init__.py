@@ -1,4 +1,5 @@
 """Support for RDW."""
+
 from __future__ import annotations
 
 from vehicle import RDW, Vehicle
@@ -22,6 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator: DataUpdateCoordinator[Vehicle] = DataUpdateCoordinator(
         hass,
         LOGGER,
+        config_entry=entry,
         name=f"{DOMAIN}_APK",
         update_interval=SCAN_INTERVAL,
         update_method=rdw.vehicle,

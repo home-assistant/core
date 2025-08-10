@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/pushover",
   "iot_class": "cloud_push",
   "loggers": ["pushover_complete"],
-  "requirements": ["pushover_complete==1.1.1"]
+  "requirements": ["pushover_complete==1.2.0"]
 }

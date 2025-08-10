@@ -1,4 +1,5 @@
 """Tests for the Open Thread Border Router integration."""
+
 BASE_URL = "http://core-silabs-multiprotocol:8081"
 CONFIG_ENTRY_DATA_MULTIPAN = {"url": "http://core-silabs-multiprotocol:8081"}
 CONFIG_ENTRY_DATA_THREAD = {"url": "/dev/ttyAMA1"}
@@ -27,8 +28,12 @@ DATASET_INSECURE_PASSPHRASE = bytes.fromhex(
     "0212340410445F2B5CA6F2A93A55CE570A70EFEECB0C0402A0F7F8"
 )
 
-TEST_BORDER_AGENT_ID = bytes.fromhex("230C6A1AC57F6F4BE262ACF32E5EF52C")
+TEST_BORDER_AGENT_EXTENDED_ADDRESS = bytes.fromhex("AEEB2F594B570BBF")
 
+TEST_BORDER_AGENT_ID = bytes.fromhex("230C6A1AC57F6F4BE262ACF32E5EF52C")
+TEST_BORDER_AGENT_ID_2 = bytes.fromhex("230C6A1AC57F6F4BE262ACF32E5EF52D")
+
+COPROCESSOR_VERSION = "OPENTHREAD/thread-reference-20200818-1740-g33cc75ed3; NRF52840; Jun 2 2022 14:25:49"
 
 ROUTER_DISCOVERY_HASS = {
     "type_": "_meshcop._udp.local.",
@@ -57,3 +62,7 @@ ROUTER_DISCOVERY_HASS = {
     },
     "interface_index": None,
 }
+
+TEST_COPROCESSOR_VERSION = (
+    "SL-OPENTHREAD/2.4.4.0_GitHub-7074a43e4; EFR32; Oct 21 2024 14:40:57"
+)

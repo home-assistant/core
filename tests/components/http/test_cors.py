@@ -1,4 +1,5 @@
 """Test cors for the HTTP component."""
+
 from http import HTTPStatus
 from pathlib import Path
 from unittest.mock import patch
@@ -12,11 +13,13 @@ from aiohttp.hdrs import (
     AUTHORIZATION,
     ORIGIN,
 )
+from aiohttp.test_utils import TestClient
 import pytest
 
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.components.http.cors import setup_cors
-from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.http import KEY_ALLOW_CONFIGURED_CORS, HomeAssistantView
 from homeassistant.setup import async_setup_component
 
 from . import HTTP_HEADER_HA_AUTH
@@ -52,12 +55,12 @@ async def mock_handler(request):
 
 
 @pytest.fixture
-def client(event_loop, aiohttp_client):
+async def client(aiohttp_client: ClientSessionGenerator) -> TestClient:
     """Fixture to set up a web.Application."""
     app = web.Application()
     setup_cors(app, [TRUSTED_ORIGIN])
-    app["allow_configured_cors"](app.router.add_get("/", mock_handler))
-    return event_loop.run_until_complete(aiohttp_client(app))
+    app[KEY_ALLOW_CONFIGURED_CORS](app.router.add_get("/", mock_handler))
+    return await aiohttp_client(app)
 
 
 async def test_cors_requests(client) -> None:
@@ -113,7 +116,7 @@ async def test_cors_middleware_with_cors_allowed_view(hass: HomeAssistant) -> No
         requires_auth = False
         cors_allowed = True
 
-        def __init__(self, url, name):
+        def __init__(self, url, name) -> None:
             """Initialize test view."""
             self.url = url
             self.name = name
@@ -155,7 +158,9 @@ async def test_cors_on_static_files(
     assert await async_setup_component(
         hass, "frontend", {"http": {"cors_allowed_origins": ["http://www.example.com"]}}
     )
-    hass.http.register_static_path("/something", str(Path(__file__).parent))
+    await hass.http.async_register_static_paths(
+        [StaticPathConfig("/something", str(Path(__file__).parent))]
+    )
 
     client = await hass_client()
     resp = await client.options(

@@ -1,6 +1,7 @@
 """Test the IKEA Idasen Desk cover."""
+
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from bleak.exc import BleakError
 import pytest
@@ -9,14 +10,13 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
+    CoverState,
 )
 from homeassistant.const import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER,
-    STATE_CLOSED,
-    STATE_OPEN,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -35,9 +35,10 @@ async def test_cover_available(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 60
 
+    mock_desk_api.connect = AsyncMock()
     mock_desk_api.is_connected = False
     mock_desk_api.trigger_update_callback(None)
 
@@ -49,11 +50,11 @@ async def test_cover_available(
 @pytest.mark.parametrize(
     ("service", "service_data", "expected_state", "expected_position"),
     [
-        (SERVICE_SET_COVER_POSITION, {ATTR_POSITION: 100}, STATE_OPEN, 100),
-        (SERVICE_SET_COVER_POSITION, {ATTR_POSITION: 0}, STATE_CLOSED, 0),
-        (SERVICE_OPEN_COVER, {}, STATE_OPEN, 100),
-        (SERVICE_CLOSE_COVER, {}, STATE_CLOSED, 0),
-        (SERVICE_STOP_COVER, {}, STATE_OPEN, 60),
+        (SERVICE_SET_COVER_POSITION, {ATTR_POSITION: 100}, CoverState.OPEN, 100),
+        (SERVICE_SET_COVER_POSITION, {ATTR_POSITION: 0}, CoverState.CLOSED, 0),
+        (SERVICE_OPEN_COVER, {}, CoverState.OPEN, 100),
+        (SERVICE_CLOSE_COVER, {}, CoverState.CLOSED, 0),
+        (SERVICE_STOP_COVER, {}, CoverState.OPEN, 60),
     ],
 )
 async def test_cover_services(
@@ -69,7 +70,7 @@ async def test_cover_services(
     await init_integration(hass)
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 60
     await hass.services.async_call(
         COVER_DOMAIN,

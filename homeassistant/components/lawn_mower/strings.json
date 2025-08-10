@@ -4,10 +4,11 @@
     "_": {
       "name": "[%key:component::lawn_mower::title%]",
       "state": {
-        "error": "Error",
+        "error": "[%key:common::state::error%]",
         "paused": "[%key:common::state::paused%]",
         "mowing": "Mowing",
-        "docked": "Docked"
+        "docked": "Docked",
+        "returning": "Returning"
       }
     }
   },

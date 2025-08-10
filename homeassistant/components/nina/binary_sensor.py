@@ -1,4 +1,5 @@
 """NINA sensor platform."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -10,7 +11,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -24,40 +25,38 @@ from .const import (
     ATTR_SENT,
     ATTR_SEVERITY,
     ATTR_START,
+    ATTR_WEB,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
     DOMAIN,
 )
-from .coordinator import NINADataUpdateCoordinator
+from .coordinator import NinaConfigEntry, NINADataUpdateCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: NinaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entries."""
 
-    coordinator: NINADataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     regions: dict[str, str] = config_entry.data[CONF_REGIONS]
     message_slots: int = config_entry.data[CONF_MESSAGE_SLOTS]
 
-    entities: list[NINAMessage] = []
-
-    for ent in coordinator.data:
-        for i in range(0, message_slots):
-            entities.append(
-                NINAMessage(coordinator, ent, regions[ent], i + 1, config_entry)
-            )
-
-    async_add_entities(entities)
+    async_add_entities(
+        NINAMessage(coordinator, ent, regions[ent], i + 1, config_entry)
+        for ent in coordinator.data
+        for i in range(message_slots)
+    )
 
 
 class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEntity):
     """Representation of an NINA warning."""
 
     _attr_device_class = BinarySensorDeviceClass.SAFETY
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -106,6 +105,7 @@ class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEnti
             ATTR_SEVERITY: data.severity,
             ATTR_RECOMMENDED_ACTIONS: data.recommended_actions,
             ATTR_AFFECTED_AREAS: data.affected_areas,
+            ATTR_WEB: data.web,
             ATTR_ID: data.id,
             ATTR_SENT: data.sent,
             ATTR_START: data.start,

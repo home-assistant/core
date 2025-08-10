@@ -3,17 +3,10 @@
 from streamlabswater.streamlabswater import StreamlabsClient
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
-from homeassistant.core import (
-    DOMAIN as HOMEASSISTANT_DOMAIN,
-    HomeAssistant,
-    ServiceCall,
-)
-from homeassistant.data_entry_flow import FlowResultType
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
 from .coordinator import StreamlabsCoordinator
@@ -26,17 +19,6 @@ AWAY_MODE_HOME = "home"
 CONF_LOCATION_ID = "location_id"
 
 ISSUE_PLACEHOLDER = {"url": "/config/integrations/dashboard/add?domain=streamlabswater"}
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_API_KEY): cv.string,
-                vol.Optional(CONF_LOCATION_ID): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 SET_AWAY_MODE_SCHEMA = vol.Schema(
     {
@@ -48,56 +30,12 @@ SET_AWAY_MODE_SCHEMA = vol.Schema(
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the streamlabs water integration."""
-
-    if DOMAIN not in config:
-        return True
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={CONF_API_KEY: config[DOMAIN][CONF_API_KEY]},
-    )
-    if (
-        result["type"] == FlowResultType.CREATE_ENTRY
-        or result["reason"] == "already_configured"
-    ):
-        async_create_issue(
-            hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2024.7.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "StreamLabs",
-            },
-        )
-    else:
-        async_create_issue(
-            hass,
-            DOMAIN,
-            f"deprecated_yaml_import_issue_${result['reason']}",
-            breaks_in_ha_version="2024.7.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key=f"deprecated_yaml_import_issue_${result['reason']}",
-            translation_placeholders=ISSUE_PLACEHOLDER,
-        )
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up StreamLabs from a config entry."""
 
     api_key = entry.data[CONF_API_KEY]
     client = StreamlabsClient(api_key)
-    coordinator = StreamlabsCoordinator(hass, client)
+    coordinator = StreamlabsCoordinator(hass, entry, client)
 
     await coordinator.async_config_entry_first_refresh()
 

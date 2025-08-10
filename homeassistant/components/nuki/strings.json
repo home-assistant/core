@@ -48,8 +48,8 @@
         "state_attributes": {
           "battery_critical": {
             "state": {
-              "on": "[%key:component::binary_sensor::entity_component::battery::state::on%]",
-              "off": "[%key:component::binary_sensor::entity_component::battery::state::off%]"
+              "on": "[%key:common::state::low%]",
+              "off": "[%key:common::state::normal%]"
             }
           }
         }
@@ -58,12 +58,12 @@
   },
   "services": {
     "lock_n_go": {
-      "name": "Lock 'n' go",
-      "description": "Nuki Lock 'n' Go.",
+      "name": "Lock 'n' Go",
+      "description": "Unlocks the door, waits a few seconds then re-locks. The wait period can be customized through the app.",
       "fields": {
         "unlatch": {
           "name": "Unlatch",
-          "description": "Whether to unlatch the lock."
+          "description": "Whether to also unlatch the door when unlocking it."
         }
       }
     },

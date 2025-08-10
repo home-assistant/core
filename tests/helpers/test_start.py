@@ -1,4 +1,5 @@
 """Test starting HA helpers."""
+
 import pytest
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
@@ -13,7 +14,7 @@ async def test_at_start_when_running_awaitable(hass: HomeAssistant) -> None:
 
     calls = []
 
-    async def cb_at_start(hass):
+    async def cb_at_start(hass: HomeAssistant) -> None:
         """Home Assistant is started."""
         calls.append(1)
 
@@ -39,7 +40,7 @@ async def test_at_start_when_running_callback(
     calls = []
 
     @callback
-    def cb_at_start(hass):
+    def cb_at_start(hass: HomeAssistant) -> None:
         """Home Assistant is started."""
         calls.append(1)
 
@@ -64,7 +65,7 @@ async def test_at_start_when_starting_awaitable(hass: HomeAssistant) -> None:
 
     calls = []
 
-    async def cb_at_start(hass):
+    async def cb_at_start(hass: HomeAssistant) -> None:
         """Home Assistant is started."""
         calls.append(1)
 
@@ -87,7 +88,7 @@ async def test_at_start_when_starting_callback(
     calls = []
 
     @callback
-    def cb_at_start(hass):
+    def cb_at_start(hass: HomeAssistant) -> None:
         """Home Assistant is started."""
         calls.append(1)
 
@@ -115,7 +116,7 @@ async def test_cancelling_at_start_when_running(
 
     calls = []
 
-    async def cb_at_start(hass):
+    async def cb_at_start(hass: HomeAssistant) -> None:
         """Home Assistant is started."""
         calls.append(1)
 
@@ -136,7 +137,7 @@ async def test_cancelling_at_start_when_starting(hass: HomeAssistant) -> None:
     calls = []
 
     @callback
-    def cb_at_start(hass):
+    def cb_at_start(hass: HomeAssistant) -> None:
         """Home Assistant is started."""
         calls.append(1)
 
@@ -155,7 +156,7 @@ async def test_at_started_when_running_awaitable(hass: HomeAssistant) -> None:
 
     calls = []
 
-    async def cb_at_start(hass):
+    async def cb_at_start(hass: HomeAssistant) -> None:
         """Home Assistant is started."""
         calls.append(1)
 
@@ -180,7 +181,7 @@ async def test_at_started_when_running_callback(
     calls = []
 
     @callback
-    def cb_at_start(hass):
+    def cb_at_start(hass: HomeAssistant) -> None:
         """Home Assistant is started."""
         calls.append(1)
 
@@ -204,7 +205,7 @@ async def test_at_started_when_starting_awaitable(hass: HomeAssistant) -> None:
 
     calls = []
 
-    async def cb_at_start(hass):
+    async def cb_at_start(hass: HomeAssistant) -> None:
         """Home Assistant is started."""
         calls.append(1)
 
@@ -230,7 +231,7 @@ async def test_at_started_when_starting_callback(
     calls = []
 
     @callback
-    def cb_at_start(hass):
+    def cb_at_start(hass: HomeAssistant) -> None:
         """Home Assistant is started."""
         calls.append(1)
 
@@ -262,7 +263,7 @@ async def test_cancelling_at_started_when_running(
 
     calls = []
 
-    async def cb_at_start(hass):
+    async def cb_at_start(hass: HomeAssistant) -> None:
         """Home Assistant is started."""
         calls.append(1)
 
@@ -283,7 +284,7 @@ async def test_cancelling_at_started_when_starting(hass: HomeAssistant) -> None:
     calls = []
 
     @callback
-    def cb_at_start(hass):
+    def cb_at_start(hass: HomeAssistant) -> None:
         """Home Assistant is started."""
         calls.append(1)
 

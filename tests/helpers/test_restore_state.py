@@ -1,11 +1,10 @@
 """The tests for the Restore component."""
+
 from collections.abc import Coroutine
 from datetime import datetime, timedelta
 import logging
 from typing import Any
 from unittest.mock import Mock, patch
-
-import pytest
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, HomeAssistant, State
@@ -57,9 +56,12 @@ async def test_caching_data(hass: HomeAssistant) -> None:
     # Emulate a fresh load
     hass.data.pop(DATA_RESTORE_STATE)
 
-    with patch(
-        "homeassistant.helpers.restore_state.Store.async_load",
-        side_effect=HomeAssistantError,
+    with (
+        patch(
+            "homeassistant.helpers.restore_state.Store.async_load",
+            side_effect=HomeAssistantError,
+        ),
+        patch("homeassistant.helpers.restore_state.Store.async_save"),
     ):
         # Failure to load should not be treated as fatal
         await async_load(hass)
@@ -67,7 +69,13 @@ async def test_caching_data(hass: HomeAssistant) -> None:
     data = async_get(hass)
     assert data.last_states == {}
 
-    await async_load(hass)
+    # Mock that only b1 is present this run
+    with patch(
+        "homeassistant.helpers.restore_state.Store.async_save"
+    ) as mock_write_data:
+        await async_load(hass)
+        await hass.async_block_till_done()
+
     data = async_get(hass)
 
     entity = RestoreEntity()
@@ -75,31 +83,13 @@ async def test_caching_data(hass: HomeAssistant) -> None:
     entity.entity_id = "input_boolean.b1"
 
     # Mock that only b1 is present this run
-    with patch(
-        "homeassistant.helpers.restore_state.Store.async_save"
-    ) as mock_write_data:
-        state = await entity.async_get_last_state()
-        await hass.async_block_till_done()
+    state = await entity.async_get_last_state()
 
     assert state is not None
     assert state.entity_id == "input_boolean.b1"
     assert state.state == "on"
 
     assert mock_write_data.called
-
-
-async def test_async_get_instance_backwards_compatibility(hass: HomeAssistant) -> None:
-    """Test async_get_instance backwards compatibility."""
-    await async_load(hass)
-    data = async_get(hass)
-    # When called from core it should raise
-    with pytest.raises(RuntimeError):
-        await RestoreStateData.async_get_instance(hass)
-
-    # When called from a component it should not raise
-    # but it should report
-    with patch("homeassistant.helpers.restore_state.report"):
-        assert data is await RestoreStateData.async_get_instance(hass)
 
 
 async def test_periodic_write(hass: HomeAssistant) -> None:
@@ -109,17 +99,17 @@ async def test_periodic_write(hass: HomeAssistant) -> None:
     await data.store.async_save([])
 
     # Emulate a fresh load
-    hass.data.pop(DATA_RESTORE_STATE)
-    await async_load(hass)
-    data = async_get(hass)
-
-    entity = RestoreEntity()
-    entity.hass = hass
-    entity.entity_id = "input_boolean.b1"
-
     with patch(
         "homeassistant.helpers.restore_state.Store.async_save"
     ) as mock_write_data:
+        hass.data.pop(DATA_RESTORE_STATE)
+        await async_load(hass)
+        data = async_get(hass)
+
+        entity = RestoreEntity()
+        entity.hass = hass
+        entity.entity_id = "input_boolean.b1"
+
         await entity.async_get_last_state()
         await hass.async_block_till_done()
 
@@ -157,17 +147,17 @@ async def test_save_persistent_states(hass: HomeAssistant) -> None:
     await data.store.async_save([])
 
     # Emulate a fresh load
-    hass.data.pop(DATA_RESTORE_STATE)
-    await async_load(hass)
-    data = async_get(hass)
-
-    entity = RestoreEntity()
-    entity.hass = hass
-    entity.entity_id = "input_boolean.b1"
-
     with patch(
         "homeassistant.helpers.restore_state.Store.async_save"
     ) as mock_write_data:
+        hass.data.pop(DATA_RESTORE_STATE)
+        await async_load(hass)
+        data = async_get(hass)
+
+        entity = RestoreEntity()
+        entity.hass = hass
+        entity.entity_id = "input_boolean.b1"
+
         await entity.async_get_last_state()
         await hass.async_block_till_done()
 
@@ -478,12 +468,12 @@ async def test_restore_entity_end_to_end(
     class MockRestoreEntity(RestoreEntity):
         """Mock restore entity."""
 
-        def __init__(self):
+        def __init__(self) -> None:
             """Initialize the mock entity."""
             self._state: str | None = None
 
         @property
-        def state(self):
+        def state(self) -> str | None:
             """Return the state."""
             return self._state
 

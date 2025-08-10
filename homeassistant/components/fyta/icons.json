@@ -1,0 +1,56 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "notification_light": {
+        "default": "mdi:lightbulb-alert-outline"
+      },
+      "notification_nutrition": {
+        "default": "mdi:beaker-alert-outline"
+      },
+      "notification_temperature": {
+        "default": "mdi:thermometer-alert"
+      },
+      "notification_water": {
+        "default": "mdi:watering-can-outline"
+      },
+      "productive_plant": {
+        "default": "mdi:fruit-grapes"
+      },
+      "repotted": {
+        "default": "mdi:shovel"
+      }
+    },
+    "sensor": {
+      "status": {
+        "default": "mdi:flower"
+      },
+      "temperature_status": {
+        "default": "mdi:thermometer-lines"
+      },
+      "light_status": {
+        "default": "mdi:sun-clock-outline"
+      },
+      "moisture_status": {
+        "default": "mdi:water-percent-alert"
+      },
+      "nutrients_status": {
+        "default": "mdi:emoticon-poop"
+      },
+      "salinity_status": {
+        "default": "mdi:sprout-outline"
+      },
+      "light": {
+        "default": "mdi:weather-sunny"
+      },
+      "salinity": {
+        "default": "mdi:sprout-outline"
+      },
+      "last_fertilised": {
+        "default": "mdi:calendar-check"
+      },
+      "next_fertilisation": {
+        "default": "mdi:calendar-end"
+      }
+    }
+  }
+}

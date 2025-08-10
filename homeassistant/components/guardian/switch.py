@@ -1,4 +1,5 @@
 """Switches for the Elexa Guardian integration."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Mapping
@@ -8,13 +9,13 @@ from typing import Any
 from aioguardian import Client
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import GuardianData, ValveControllerEntity, ValveControllerEntityDescription
-from .const import API_VALVE_STATUS, API_WIFI_STATUS, DOMAIN
+from . import GuardianConfigEntry, GuardianData
+from .const import API_VALVE_STATUS, API_WIFI_STATUS
+from .entity import ValveControllerEntity, ValveControllerEntityDescription
 from .util import convert_exceptions_to_homeassistant_error
 from .valve import GuardianValveState
 
@@ -80,7 +81,6 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
     ValveControllerSwitchDescription(
         key=SWITCH_KIND_ONBOARD_AP,
         translation_key="onboard_access_point",
-        icon="mdi:wifi",
         entity_category=EntityCategory.CONFIG,
         extra_state_attributes_fn=lambda data: {
             ATTR_CONNECTED_CLIENTS: data.get("ap_clients"),
@@ -94,7 +94,6 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
     ValveControllerSwitchDescription(
         key=SWITCH_KIND_VALVE,
         translation_key="valve_controller",
-        icon="mdi:water",
         api_category=API_VALVE_STATUS,
         extra_state_attributes_fn=lambda data: {
             ATTR_AVG_CURRENT: data["average_current"],
@@ -110,10 +109,12 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: GuardianConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Guardian switches based on a config entry."""
-    data: GuardianData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     async_add_entities(
         ValveControllerSwitch(entry, data, description)
@@ -128,7 +129,7 @@ class ValveControllerSwitch(ValveControllerEntity, SwitchEntity):
 
     def __init__(
         self,
-        entry: ConfigEntry,
+        entry: GuardianConfigEntry,
         data: GuardianData,
         description: ValveControllerSwitchDescription,
     ) -> None:

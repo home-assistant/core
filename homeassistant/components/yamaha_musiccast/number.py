@@ -1,4 +1,5 @@
 """Number entities for musiccast."""
+
 from __future__ import annotations
 
 from aiomusiccast.capabilities import NumberSetter
@@ -6,29 +7,33 @@ from aiomusiccast.capabilities import NumberSetter
 from homeassistant.components.number import NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, MusicCastCapabilityEntity, MusicCastDataUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import MusicCastDataUpdateCoordinator
+from .entity import MusicCastCapabilityEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MusicCast number entities based on a config entry."""
     coordinator: MusicCastDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    number_entities = []
+    number_entities = [
+        NumberCapability(coordinator, capability)
+        for capability in coordinator.data.capabilities
+        if isinstance(capability, NumberSetter)
+    ]
 
-    for capability in coordinator.data.capabilities:
-        if isinstance(capability, NumberSetter):
-            number_entities.append(NumberCapability(coordinator, capability))
-
-    for zone, data in coordinator.data.zones.items():
-        for capability in data.capabilities:
-            if isinstance(capability, NumberSetter):
-                number_entities.append(NumberCapability(coordinator, capability, zone))
+    number_entities.extend(
+        NumberCapability(coordinator, capability, zone)
+        for zone, data in coordinator.data.zones.items()
+        for capability in data.capabilities
+        if isinstance(capability, NumberSetter)
+    )
 
     async_add_entities(number_entities)
 

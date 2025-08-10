@@ -1,9 +1,10 @@
 """Vera tests."""
+
 from unittest.mock import MagicMock
 
 import pyvera as pv
 
-from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
+from homeassistant.components.lock import LockState
 from homeassistant.core import HomeAssistant
 
 from .common import ComponentFactory, new_simple_controller_config
@@ -28,7 +29,7 @@ async def test_lock(
     )
     update_callback = component_data.controller_data[0].update_callback
 
-    assert hass.states.get(entity_id).state == STATE_UNLOCKED
+    assert hass.states.get(entity_id).state == LockState.UNLOCKED
 
     await hass.services.async_call(
         "lock",
@@ -40,7 +41,7 @@ async def test_lock(
     vera_device.is_locked.return_value = True
     update_callback(vera_device)
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_LOCKED
+    assert hass.states.get(entity_id).state == LockState.LOCKED
 
     await hass.services.async_call(
         "lock",
@@ -52,4 +53,4 @@ async def test_lock(
     vera_device.is_locked.return_value = False
     update_callback(vera_device)
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == STATE_UNLOCKED
+    assert hass.states.get(entity_id).state == LockState.UNLOCKED

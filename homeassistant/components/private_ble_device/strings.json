@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "[%key:component::bluetooth::config::flow_title%]",
+    "flow_title": "{name}",
     "step": {
       "user": {
         "description": "What is the IRK (Identity Resolving Key) of the BLE device you want to track?",
@@ -14,7 +14,7 @@
       "irk_not_valid": "The key does not look like a valid IRK."
     },
     "abort": {
-      "bluetooth_not_available": "At least one Bluetooth adapter or remote bluetooth proxy must be configured to track Private BLE Devices."
+      "bluetooth_not_available": "At least one Bluetooth adapter or remote Bluetooth proxy must be configured to track Private BLE Devices."
     }
   },
   "entity": {

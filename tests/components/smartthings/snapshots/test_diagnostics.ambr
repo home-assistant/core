@@ -1,0 +1,1532 @@
+# serializer version: 1
+# name: test_config_entry_diagnostics[da_ac_rac_000001]
+  dict({
+    'devices': list([
+      dict({
+        '_links': dict({
+        }),
+        'items': list([
+          dict({
+            'allowed': list([
+            ]),
+            'components': list([
+              dict({
+                'capabilities': list([
+                  dict({
+                    'id': 'ocf',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'switch',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'airConditionerMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'airConditionerFanMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'fanOscillationMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'airQualitySensor',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'temperatureMeasurement',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'thermostatCoolingSetpoint',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'relativeHumidityMeasurement',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'dustSensor',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'veryFineDustSensor',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'audioVolume',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'remoteControlStatus',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'powerConsumptionReport',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'demandResponseLoadControl',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'refresh',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'execute',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.spiMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.thermostatSetpointControl',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.airConditionerOptionalMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.airConditionerTropicalNightMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.autoCleaningMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.deviceReportStateConfiguration',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.energyType',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.dustFilter',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.airConditionerOdorController',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.deodorFilter',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.disabledComponents',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.disabledCapabilities',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'samsungce.deviceIdentification',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'samsungce.dongleSoftwareInstallation',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'samsungce.softwareUpdate',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'samsungce.selfCheck',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'samsungce.driverVersion',
+                    'version': 1,
+                  }),
+                ]),
+                'categories': list([
+                  dict({
+                    'categoryType': 'manufacturer',
+                    'name': 'AirConditioner',
+                  }),
+                ]),
+                'id': 'main',
+                'label': 'main',
+              }),
+              dict({
+                'capabilities': list([
+                  dict({
+                    'id': 'switch',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'airConditionerMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'airConditionerFanMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'fanOscillationMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'temperatureMeasurement',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'thermostatCoolingSetpoint',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'relativeHumidityMeasurement',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'airQualitySensor',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'dustSensor',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'veryFineDustSensor',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'odorSensor',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'remoteControlStatus',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'audioVolume',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.thermostatSetpointControl',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.autoCleaningMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.airConditionerTropicalNightMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.disabledCapabilities',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'ocf',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'powerConsumptionReport',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'demandResponseLoadControl',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.spiMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.airConditionerOptionalMode',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.deviceReportStateConfiguration',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.energyType',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.dustFilter',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.airConditionerOdorController',
+                    'version': 1,
+                  }),
+                  dict({
+                    'id': 'custom.deodorFilter',
+                    'version': 1,
+                  }),
+                ]),
+                'categories': list([
+                  dict({
+                    'categoryType': 'manufacturer',
+                    'name': 'Other',
+                  }),
+                ]),
+                'id': '1',
+                'label': '1',
+              }),
+            ]),
+            'createTime': '2021-04-06T16:43:34.753Z',
+            'deviceId': '96a5ef74-5832-a84b-f1f7-ca799957065d',
+            'deviceManufacturerCode': 'Samsung Electronics',
+            'deviceTypeName': 'Samsung OCF Air Conditioner',
+            'executionContext': 'CLOUD',
+            'label': 'AC Office Granit',
+            'locationId': '58d3fd7c-c512-4da3-b500-ef269382756c',
+            'manufacturerName': 'Samsung Electronics',
+            'name': '[room a/c] Samsung',
+            'ocf': dict({
+              'additionalAuthCodeRequired': False,
+              'lastSignupTime': '2025-01-08T02:32:04.631093137Z',
+              'manufacturerName': 'Samsung Electronics',
+              'ocfDeviceType': 'x.com.st.d.sensor.light',
+              'transferCandidate': False,
+              'vendorId': 'VD-Sensor.Light-2023',
+            }),
+            'ownerId': 'f9a28d7c-1ed5-d9e9-a81c-18971ec081db',
+            'presentationId': 'DA-AC-RAC-000001',
+            'profile': dict({
+              'id': '60fbc713-8da5-315d-b31a-6d6dcde4be7b',
+            }),
+            'restrictionTier': 0,
+            'roomId': '7715151d-0314-457a-a82c-5ce48900e065',
+            'type': 'OCF',
+          }),
+        ]),
+      }),
+    ]),
+  })
+# ---
+# name: test_device_diagnostics[da_ac_rac_000001]
+  dict({
+    'events': list([
+    ]),
+    'info': dict({
+      'allowed': list([
+      ]),
+      'components': list([
+        dict({
+          'capabilities': list([
+            dict({
+              'id': 'ocf',
+              'version': 1,
+            }),
+            dict({
+              'id': 'switch',
+              'version': 1,
+            }),
+            dict({
+              'id': 'airConditionerMode',
+              'version': 1,
+            }),
+            dict({
+              'id': 'airConditionerFanMode',
+              'version': 1,
+            }),
+            dict({
+              'id': 'fanOscillationMode',
+              'version': 1,
+            }),
+            dict({
+              'id': 'airQualitySensor',
+              'version': 1,
+            }),
+            dict({
+              'id': 'temperatureMeasurement',
+              'version': 1,
+            }),
+            dict({
+              'id': 'thermostatCoolingSetpoint',
+              'version': 1,
+            }),
+            dict({
+              'id': 'relativeHumidityMeasurement',
+              'version': 1,
+            }),
+            dict({
+              'id': 'dustSensor',
+              'version': 1,
+            }),
+            dict({
+              'id': 'veryFineDustSensor',
+              'version': 1,
+            }),
+            dict({
+              'id': 'audioVolume',
+              'version': 1,
+            }),
+            dict({
+              'id': 'remoteControlStatus',
+              'version': 1,
+            }),
+            dict({
+              'id': 'powerConsumptionReport',
+              'version': 1,
+            }),
+            dict({
+              'id': 'demandResponseLoadControl',
+              'version': 1,
+            }),
+            dict({
+              'id': 'refresh',
+              'version': 1,
+            }),
+            dict({
+              'id': 'execute',
+              'version': 1,
+            }),
+            dict({
+              'id': 'custom.spiMode',
+              'version': 1,
+            }),
+            dict({
+              'id': 'custom.thermostatSetpointControl',
+              'version': 1,
+            }),
+            dict({
+              'id': 'custom.airConditionerOptionalMode',
+              'version': 1,
+            }),
+            dict({
+              'id': 'custom.airConditionerTropicalNightMode',
+              'version': 1,
+            }),
+            dict({
+              'id': 'custom.autoCleaningMode',
+              'version': 1,
+            }),
+            dict({
+              'id': 'custom.deviceReportStateConfiguration',
+              'version': 1,
+            }),
+            dict({
+              'id': 'custom.energyType',
+              'version': 1,
+            }),
+            dict({
+              'id': 'custom.dustFilter',
+              'version': 1,
+            }),
+            dict({
+              'id': 'custom.airConditionerOdorController',
+              'version': 1,
+            }),
+            dict({
+              'id': 'custom.deodorFilter',
+              'version': 1,
+            }),
+            dict({
+              'id': 'custom.disabledComponents',
+              'version': 1,
+            }),
+            dict({
+              'id': 'custom.disabledCapabilities',
+              'version': 1,
+            }),
+            dict({
+              'id': 'samsungce.deviceIdentification',
+              'version': 1,
+            }),
+            dict({
+              'id': 'samsungce.dongleSoftwareInstallation',
+              'version': 1,
+            }),
+            dict({
+              'id': 'samsungce.softwareUpdate',
+              'version': 1,
+            }),
+            dict({
+              'id': 'samsungce.selfCheck',
+              'version': 1,
+            }),
+            dict({
+              'id': 'samsungce.driverVersion',
+              'version': 1,
+            }),
+          ]),
+          'categories': list([
+            dict({
+              'categoryType': 'manufacturer',
+              'name': 'AirConditioner',
+            }),
+          ]),
+          'id': 'main',
+          'label': 'main',
+        }),
+        dict({
+          'capabilities': list([
+            dict({
+              'id': 'switch',
+              'version': 1,
+            }),
+            dict({
+              'id': 'airConditionerMode',
+              'version': 1,
+            }),
+            dict({
+              'id': 'airConditionerFanMode',
+              'version': 1,
+            }),
+            dict({
+              'id': 'fanOscillationMode',
+              'version': 1,
+            }),
+            dict({
+              'id': 'temperatureMeasurement',
+              'version': 1,
+            }),
+            dict({
+              'id': 'thermostatCoolingSetpoint',
+              'version': 1,
+            }),
+            dict({
+              'id': 'relativeHumidityMeasurement',
+              'version': 1,
+            }),
+            dict({
+              'id': 'airQualitySensor',
+              'version': 1,
+            }),
+            dict({
+              'id': 'dustSensor',
+              'version': 1,
+            }),
+            dict({
+              'id': 'veryFineDustSensor',
+              'version': 1,
+            }),
+            dict({
+              'id': 'odorSensor',
+              'version': 1,
+            }),
+            dict({
+              'id': 'remoteControlStatus',
+              'version': 1,
+            }),
+            dict({
+              'id': 'audioVolume',
+              'version': 1,
+            }),
+            dict({
+              'id': 'custom.thermostatSetpointControl',
+              'version': 1,
+            }),
+            dict({
+              'id': 'custom.autoCleaningMode',
+              'version': 1,
+            }),
+            dict({
+              'id': 'custom.airConditionerTropicalNightMode',
+              'version': 1,
+            }),
+            dict({
+              'id': 'custom.disabledCapabilities',
+              'version': 1,
+            }),
+            dict({
+              'id': 'ocf',
+              'version': 1,
+            }),
+            dict({
+              'id': 'powerConsumptionReport',
+              'version': 1,
+            }),
+            dict({
+              'id': 'demandResponseLoadControl',
+              'version': 1,
+            }),
+            dict({
+              'id': 'custom.spiMode',
+              'version': 1,
+            }),
+            dict({
+              'id': 'custom.airConditionerOptionalMode',
+              'version': 1,
+            }),
+            dict({
+              'id': 'custom.deviceReportStateConfiguration',
+              'version': 1,
+            }),
+            dict({
+              'id': 'custom.energyType',
+              'version': 1,
+            }),
+            dict({
+              'id': 'custom.dustFilter',
+              'version': 1,
+            }),
+            dict({
+              'id': 'custom.airConditionerOdorController',
+              'version': 1,
+            }),
+            dict({
+              'id': 'custom.deodorFilter',
+              'version': 1,
+            }),
+          ]),
+          'categories': list([
+            dict({
+              'categoryType': 'manufacturer',
+              'name': 'Other',
+            }),
+          ]),
+          'id': '1',
+          'label': '1',
+        }),
+      ]),
+      'createTime': '2021-04-06T16:43:34.753Z',
+      'deviceId': '96a5ef74-5832-a84b-f1f7-ca799957065d',
+      'deviceManufacturerCode': 'Samsung Electronics',
+      'deviceTypeName': 'Samsung OCF Air Conditioner',
+      'executionContext': 'CLOUD',
+      'label': 'AC Office Granit',
+      'locationId': '58d3fd7c-c512-4da3-b500-ef269382756c',
+      'manufacturerName': 'Samsung Electronics',
+      'name': '[room a/c] Samsung',
+      'ocf': dict({
+        'additionalAuthCodeRequired': False,
+        'lastSignupTime': '2025-01-08T02:32:04.631093137Z',
+        'manufacturerName': 'Samsung Electronics',
+        'ocfDeviceType': 'x.com.st.d.sensor.light',
+        'transferCandidate': False,
+        'vendorId': 'VD-Sensor.Light-2023',
+      }),
+      'ownerId': 'f9a28d7c-1ed5-d9e9-a81c-18971ec081db',
+      'presentationId': 'DA-AC-RAC-000001',
+      'profile': dict({
+        'id': '60fbc713-8da5-315d-b31a-6d6dcde4be7b',
+      }),
+      'restrictionTier': 0,
+      'roomId': '7715151d-0314-457a-a82c-5ce48900e065',
+      'type': 'OCF',
+    }),
+    'status': dict({
+      'components': dict({
+        '1': dict({
+          'airConditionerFanMode': dict({
+            'availableAcFanModes': dict({
+              'value': None,
+            }),
+            'fanMode': dict({
+              'timestamp': '2021-04-06T16:44:10.381Z',
+              'value': None,
+            }),
+            'supportedAcFanModes': dict({
+              'timestamp': '2024-09-10T10:26:28.605Z',
+              'value': list([
+                'auto',
+                'low',
+                'medium',
+                'high',
+                'turbo',
+              ]),
+            }),
+          }),
+          'airConditionerMode': dict({
+            'airConditionerMode': dict({
+              'timestamp': '2021-04-08T03:50:50.930Z',
+              'value': None,
+            }),
+            'availableAcModes': dict({
+              'value': None,
+            }),
+            'supportedAcModes': dict({
+              'timestamp': '2021-04-08T03:50:50.930Z',
+              'value': None,
+            }),
+          }),
+          'airQualitySensor': dict({
+            'airQuality': dict({
+              'timestamp': '2021-04-06T16:57:57.602Z',
+              'unit': 'CAQI',
+              'value': None,
+            }),
+          }),
+          'audioVolume': dict({
+            'volume': dict({
+              'timestamp': '2021-04-06T16:43:53.541Z',
+              'unit': '%',
+              'value': None,
+            }),
+          }),
+          'custom.airConditionerOdorController': dict({
+            'airConditionerOdorControllerProgress': dict({
+              'timestamp': '2021-04-08T04:11:38.269Z',
+              'value': None,
+            }),
+            'airConditionerOdorControllerState': dict({
+              'timestamp': '2021-04-08T04:11:38.269Z',
+              'value': None,
+            }),
+          }),
+          'custom.airConditionerOptionalMode': dict({
+            'acOptionalMode': dict({
+              'timestamp': '2021-04-06T16:57:57.659Z',
+              'value': None,
+            }),
+            'supportedAcOptionalMode': dict({
+              'timestamp': '2021-04-06T16:57:57.659Z',
+              'value': None,
+            }),
+          }),
+          'custom.airConditionerTropicalNightMode': dict({
+            'acTropicalNightModeLevel': dict({
+              'timestamp': '2021-04-06T16:44:10.498Z',
+              'value': None,
+            }),
+          }),
+          'custom.autoCleaningMode': dict({
+            'autoCleaningMode': dict({
+              'timestamp': '2021-04-06T16:43:53.344Z',
+              'value': None,
+            }),
+            'operatingState': dict({
+              'value': None,
+            }),
+            'progress': dict({
+              'value': None,
+            }),
+            'supportedAutoCleaningModes': dict({
+              'value': None,
+            }),
+            'supportedOperatingStates': dict({
+              'value': None,
+            }),
+            'timedCleanDuration': dict({
+              'value': None,
+            }),
+            'timedCleanDurationRange': dict({
+              'value': None,
+            }),
+          }),
+          'custom.deodorFilter': dict({
+            'deodorFilterCapacity': dict({
+              'timestamp': '2021-04-06T16:43:39.118Z',
+              'value': None,
+            }),
+            'deodorFilterLastResetDate': dict({
+              'timestamp': '2021-04-06T16:43:39.118Z',
+              'value': None,
+            }),
+            'deodorFilterResetType': dict({
+              'timestamp': '2021-04-06T16:43:39.118Z',
+              'value': None,
+            }),
+            'deodorFilterStatus': dict({
+              'timestamp': '2021-04-06T16:43:39.118Z',
+              'value': None,
+            }),
+            'deodorFilterUsage': dict({
+              'timestamp': '2021-04-06T16:43:39.118Z',
+              'value': None,
+            }),
+            'deodorFilterUsageStep': dict({
+              'timestamp': '2021-04-06T16:43:39.118Z',
+              'value': None,
+            }),
+          }),
+          'custom.deviceReportStateConfiguration': dict({
+            'reportStatePeriod': dict({
+              'timestamp': '2021-04-06T16:44:09.800Z',
+              'value': None,
+            }),
+            'reportStateRealtime': dict({
+              'timestamp': '2021-04-06T16:44:09.800Z',
+              'value': None,
+            }),
+            'reportStateRealtimePeriod': dict({
+              'timestamp': '2021-04-06T16:44:09.800Z',
+              'value': None,
+            }),
+          }),
+          'custom.disabledCapabilities': dict({
+            'disabledCapabilities': dict({
+              'timestamp': '2024-09-10T10:26:28.605Z',
+              'value': list([
+                'remoteControlStatus',
+                'airQualitySensor',
+                'dustSensor',
+                'odorSensor',
+                'veryFineDustSensor',
+                'custom.dustFilter',
+                'custom.deodorFilter',
+                'custom.deviceReportStateConfiguration',
+                'audioVolume',
+                'custom.autoCleaningMode',
+                'custom.airConditionerTropicalNightMode',
+                'custom.airConditionerOdorController',
+                'demandResponseLoadControl',
+                'relativeHumidityMeasurement',
+              ]),
+            }),
+          }),
+          'custom.dustFilter': dict({
+            'dustFilterCapacity': dict({
+              'timestamp': '2021-04-06T16:43:39.145Z',
+              'value': None,
+            }),
+            'dustFilterLastResetDate': dict({
+              'timestamp': '2021-04-06T16:43:39.145Z',
+              'value': None,
+            }),
+            'dustFilterResetType': dict({
+              'timestamp': '2021-04-06T16:43:39.145Z',
+              'value': None,
+            }),
+            'dustFilterStatus': dict({
+              'timestamp': '2021-04-06T16:43:39.145Z',
+              'value': None,
+            }),
+            'dustFilterUsage': dict({
+              'timestamp': '2021-04-06T16:43:39.145Z',
+              'value': None,
+            }),
+            'dustFilterUsageStep': dict({
+              'timestamp': '2021-04-06T16:43:39.145Z',
+              'value': None,
+            }),
+          }),
+          'custom.energyType': dict({
+            'drMaxDuration': dict({
+              'value': None,
+            }),
+            'energySavingInfo': dict({
+              'value': None,
+            }),
+            'energySavingLevel': dict({
+              'value': None,
+            }),
+            'energySavingOperation': dict({
+              'value': None,
+            }),
+            'energySavingOperationSupport': dict({
+              'value': None,
+            }),
+            'energySavingSupport': dict({
+              'value': None,
+            }),
+            'energyType': dict({
+              'timestamp': '2021-04-06T16:43:38.843Z',
+              'value': None,
+            }),
+            'notificationTemplateID': dict({
+              'value': None,
+            }),
+            'supportedEnergySavingLevels': dict({
+              'value': None,
+            }),
+          }),
+          'custom.spiMode': dict({
+            'spiMode': dict({
+              'timestamp': '2021-04-06T16:57:57.686Z',
+              'value': None,
+            }),
+          }),
+          'custom.thermostatSetpointControl': dict({
+            'maximumSetpoint': dict({
+              'timestamp': '2021-04-08T04:04:19.901Z',
+              'value': None,
+            }),
+            'minimumSetpoint': dict({
+              'timestamp': '2021-04-08T04:04:19.901Z',
+              'value': None,
+            }),
+          }),
+          'demandResponseLoadControl': dict({
+            'drlcStatus': dict({
+              'timestamp': '2021-04-06T16:43:54.748Z',
+              'value': None,
+            }),
+          }),
+          'dustSensor': dict({
+            'dustLevel': dict({
+              'timestamp': '2021-04-06T16:44:10.122Z',
+              'unit': 'μg/m^3',
+              'value': None,
+            }),
+            'fineDustLevel': dict({
+              'timestamp': '2021-04-06T16:44:10.122Z',
+              'unit': 'μg/m^3',
+              'value': None,
+            }),
+          }),
+          'fanOscillationMode': dict({
+            'availableFanOscillationModes': dict({
+              'value': None,
+            }),
+            'fanOscillationMode': dict({
+              'timestamp': '2025-02-08T00:44:53.247Z',
+              'value': 'fixed',
+            }),
+            'supportedFanOscillationModes': dict({
+              'timestamp': '2021-04-06T16:44:10.325Z',
+              'value': None,
+            }),
+          }),
+          'ocf': dict({
+            'di': dict({
+              'timestamp': '2021-04-06T16:44:10.472Z',
+              'value': None,
+            }),
+            'dmv': dict({
+              'timestamp': '2021-04-06T16:44:10.472Z',
+              'value': None,
+            }),
+            'icv': dict({
+              'timestamp': '2021-04-06T16:44:10.472Z',
+              'value': None,
+            }),
+            'mndt': dict({
+              'timestamp': '2021-04-06T16:44:10.472Z',
+              'value': None,
+            }),
+            'mnfv': dict({
+              'timestamp': '2021-04-06T16:44:10.472Z',
+              'value': None,
+            }),
+            'mnhw': dict({
+              'timestamp': '2021-04-06T16:44:10.472Z',
+              'value': None,
+            }),
+            'mnml': dict({
+              'timestamp': '2021-04-06T16:44:10.472Z',
+              'value': None,
+            }),
+            'mnmn': dict({
+              'timestamp': '2021-04-06T16:44:10.472Z',
+              'value': None,
+            }),
+            'mnmo': dict({
+              'timestamp': '2021-04-06T16:44:10.472Z',
+              'value': None,
+            }),
+            'mnos': dict({
+              'timestamp': '2021-04-06T16:44:10.472Z',
+              'value': None,
+            }),
+            'mnpv': dict({
+              'timestamp': '2021-04-06T16:44:10.472Z',
+              'value': None,
+            }),
+            'mnsl': dict({
+              'timestamp': '2021-04-06T16:44:10.472Z',
+              'value': None,
+            }),
+            'n': dict({
+              'timestamp': '2021-04-06T16:44:10.472Z',
+              'value': None,
+            }),
+            'pi': dict({
+              'timestamp': '2021-04-06T16:44:10.472Z',
+              'value': None,
+            }),
+            'st': dict({
+              'timestamp': '2021-04-06T16:44:10.472Z',
+              'value': None,
+            }),
+            'vid': dict({
+              'timestamp': '2021-04-06T16:44:10.472Z',
+              'value': None,
+            }),
+          }),
+          'odorSensor': dict({
+            'odorLevel': dict({
+              'timestamp': '2021-04-06T16:43:38.992Z',
+              'value': None,
+            }),
+          }),
+          'powerConsumptionReport': dict({
+            'powerConsumption': dict({
+              'timestamp': '2021-04-06T16:43:53.364Z',
+              'value': None,
+            }),
+          }),
+          'relativeHumidityMeasurement': dict({
+            'humidity': dict({
+              'timestamp': '2021-04-06T16:43:35.291Z',
+              'unit': '%',
+              'value': 0,
+            }),
+          }),
+          'remoteControlStatus': dict({
+            'remoteControlEnabled': dict({
+              'timestamp': '2021-04-06T16:43:39.097Z',
+              'value': None,
+            }),
+          }),
+          'switch': dict({
+            'switch': dict({
+              'timestamp': '2021-04-06T16:44:10.518Z',
+              'value': None,
+            }),
+          }),
+          'temperatureMeasurement': dict({
+            'temperature': dict({
+              'timestamp': '2021-04-06T16:44:10.373Z',
+              'value': None,
+            }),
+            'temperatureRange': dict({
+              'value': None,
+            }),
+          }),
+          'thermostatCoolingSetpoint': dict({
+            'coolingSetpoint': dict({
+              'timestamp': '2021-04-06T16:43:59.136Z',
+              'value': None,
+            }),
+            'coolingSetpointRange': dict({
+              'value': None,
+            }),
+          }),
+          'veryFineDustSensor': dict({
+            'veryFineDustLevel': dict({
+              'timestamp': '2021-04-06T16:43:38.529Z',
+              'unit': 'μg/m^3',
+              'value': None,
+            }),
+          }),
+        }),
+        'main': dict({
+          'airConditionerFanMode': dict({
+            'availableAcFanModes': dict({
+              'value': None,
+            }),
+            'fanMode': dict({
+              'timestamp': '2025-02-09T09:14:39.249Z',
+              'value': 'low',
+            }),
+            'supportedAcFanModes': dict({
+              'timestamp': '2025-02-09T09:14:39.249Z',
+              'value': list([
+                'auto',
+                'low',
+                'medium',
+                'high',
+                'turbo',
+              ]),
+            }),
+          }),
+          'airConditionerMode': dict({
+            'airConditionerMode': dict({
+              'timestamp': '2025-02-09T09:14:39.642Z',
+              'value': 'heat',
+            }),
+            'availableAcModes': dict({
+              'value': None,
+            }),
+            'supportedAcModes': dict({
+              'timestamp': '2024-09-10T10:26:28.781Z',
+              'value': list([
+                'cool',
+                'dry',
+                'wind',
+                'auto',
+                'heat',
+              ]),
+            }),
+          }),
+          'airQualitySensor': dict({
+            'airQuality': dict({
+              'timestamp': '2021-04-06T16:43:37.208Z',
+              'unit': 'CAQI',
+              'value': None,
+            }),
+          }),
+          'audioVolume': dict({
+            'volume': dict({
+              'timestamp': '2025-02-09T09:14:39.642Z',
+              'unit': '%',
+              'value': 100,
+            }),
+          }),
+          'custom.airConditionerOdorController': dict({
+            'airConditionerOdorControllerProgress': dict({
+              'timestamp': '2021-04-06T16:43:37.555Z',
+              'value': None,
+            }),
+            'airConditionerOdorControllerState': dict({
+              'timestamp': '2021-04-06T16:43:37.555Z',
+              'value': None,
+            }),
+          }),
+          'custom.airConditionerOptionalMode': dict({
+            'acOptionalMode': dict({
+              'timestamp': '2025-02-09T09:14:39.642Z',
+              'value': 'windFree',
+            }),
+            'supportedAcOptionalMode': dict({
+              'timestamp': '2024-09-10T10:26:28.781Z',
+              'value': list([
+                'off',
+                'windFree',
+              ]),
+            }),
+          }),
+          'custom.airConditionerTropicalNightMode': dict({
+            'acTropicalNightModeLevel': dict({
+              'timestamp': '2025-02-09T09:14:39.642Z',
+              'value': 0,
+            }),
+          }),
+          'custom.autoCleaningMode': dict({
+            'autoCleaningMode': dict({
+              'timestamp': '2025-02-09T09:14:39.642Z',
+              'value': 'off',
+            }),
+            'operatingState': dict({
+              'value': None,
+            }),
+            'progress': dict({
+              'value': None,
+            }),
+            'supportedAutoCleaningModes': dict({
+              'value': None,
+            }),
+            'supportedOperatingStates': dict({
+              'value': None,
+            }),
+            'timedCleanDuration': dict({
+              'value': None,
+            }),
+            'timedCleanDurationRange': dict({
+              'value': None,
+            }),
+          }),
+          'custom.deodorFilter': dict({
+            'deodorFilterCapacity': dict({
+              'timestamp': '2021-04-06T16:43:35.502Z',
+              'value': None,
+            }),
+            'deodorFilterLastResetDate': dict({
+              'timestamp': '2021-04-06T16:43:35.502Z',
+              'value': None,
+            }),
+            'deodorFilterResetType': dict({
+              'timestamp': '2021-04-06T16:43:35.502Z',
+              'value': None,
+            }),
+            'deodorFilterStatus': dict({
+              'timestamp': '2021-04-06T16:43:35.502Z',
+              'value': None,
+            }),
+            'deodorFilterUsage': dict({
+              'timestamp': '2021-04-06T16:43:35.502Z',
+              'value': None,
+            }),
+            'deodorFilterUsageStep': dict({
+              'timestamp': '2021-04-06T16:43:35.502Z',
+              'value': None,
+            }),
+          }),
+          'custom.deviceReportStateConfiguration': dict({
+            'reportStatePeriod': dict({
+              'timestamp': '2021-04-06T16:43:35.643Z',
+              'value': None,
+            }),
+            'reportStateRealtime': dict({
+              'timestamp': '2021-04-06T16:43:35.643Z',
+              'value': None,
+            }),
+            'reportStateRealtimePeriod': dict({
+              'timestamp': '2021-04-06T16:43:35.643Z',
+              'value': None,
+            }),
+          }),
+          'custom.disabledCapabilities': dict({
+            'disabledCapabilities': dict({
+              'timestamp': '2025-02-09T09:14:39.642Z',
+              'value': list([
+                'remoteControlStatus',
+                'airQualitySensor',
+                'dustSensor',
+                'veryFineDustSensor',
+                'custom.dustFilter',
+                'custom.deodorFilter',
+                'custom.deviceReportStateConfiguration',
+                'samsungce.dongleSoftwareInstallation',
+                'demandResponseLoadControl',
+                'custom.airConditionerOdorController',
+              ]),
+            }),
+          }),
+          'custom.disabledComponents': dict({
+            'disabledComponents': dict({
+              'timestamp': '2025-02-09T09:14:39.642Z',
+              'value': list([
+                '1',
+              ]),
+            }),
+          }),
+          'custom.dustFilter': dict({
+            'dustFilterCapacity': dict({
+              'timestamp': '2021-04-06T16:43:35.527Z',
+              'value': None,
+            }),
+            'dustFilterLastResetDate': dict({
+              'timestamp': '2021-04-06T16:43:35.527Z',
+              'value': None,
+            }),
+            'dustFilterResetType': dict({
+              'timestamp': '2021-04-06T16:43:35.527Z',
+              'value': None,
+            }),
+            'dustFilterStatus': dict({
+              'timestamp': '2021-04-06T16:43:35.527Z',
+              'value': None,
+            }),
+            'dustFilterUsage': dict({
+              'timestamp': '2021-04-06T16:43:35.527Z',
+              'value': None,
+            }),
+            'dustFilterUsageStep': dict({
+              'timestamp': '2021-04-06T16:43:35.527Z',
+              'value': None,
+            }),
+          }),
+          'custom.energyType': dict({
+            'drMaxDuration': dict({
+              'value': None,
+            }),
+            'energySavingInfo': dict({
+              'value': None,
+            }),
+            'energySavingLevel': dict({
+              'value': None,
+            }),
+            'energySavingOperation': dict({
+              'value': None,
+            }),
+            'energySavingOperationSupport': dict({
+              'value': None,
+            }),
+            'energySavingSupport': dict({
+              'timestamp': '2021-12-29T07:29:17.526Z',
+              'value': False,
+            }),
+            'energyType': dict({
+              'timestamp': '2024-09-10T10:26:28.781Z',
+              'value': '1.0',
+            }),
+            'notificationTemplateID': dict({
+              'value': None,
+            }),
+            'supportedEnergySavingLevels': dict({
+              'value': None,
+            }),
+          }),
+          'custom.spiMode': dict({
+            'spiMode': dict({
+              'timestamp': '2025-02-09T09:14:39.642Z',
+              'value': 'off',
+            }),
+          }),
+          'custom.thermostatSetpointControl': dict({
+            'maximumSetpoint': dict({
+              'timestamp': '2024-09-10T10:26:28.781Z',
+              'unit': 'C',
+              'value': 30,
+            }),
+            'minimumSetpoint': dict({
+              'timestamp': '2025-01-08T06:30:58.307Z',
+              'unit': 'C',
+              'value': 16,
+            }),
+          }),
+          'demandResponseLoadControl': dict({
+            'drlcStatus': dict({
+              'timestamp': '2024-09-10T10:26:28.781Z',
+              'value': dict({
+                'drlcLevel': -1,
+                'drlcType': 1,
+                'duration': 0,
+                'override': False,
+                'start': '1970-01-01T00:00:00Z',
+              }),
+            }),
+          }),
+          'dustSensor': dict({
+            'dustLevel': dict({
+              'timestamp': '2021-04-06T16:43:35.665Z',
+              'unit': 'μg/m^3',
+              'value': None,
+            }),
+            'fineDustLevel': dict({
+              'timestamp': '2021-04-06T16:43:35.665Z',
+              'unit': 'μg/m^3',
+              'value': None,
+            }),
+          }),
+          'execute': dict({
+            'data': dict({
+              'data': dict({
+                'href': '/temperature/desired/0',
+              }),
+              'timestamp': '2023-07-19T03:07:43.270Z',
+              'value': dict({
+                'payload': dict({
+                  'if': list([
+                    'oic.if.baseline',
+                    'oic.if.a',
+                  ]),
+                  'range': list([
+                    16.0,
+                    30.0,
+                  ]),
+                  'rt': list([
+                    'oic.r.temperature',
+                  ]),
+                  'temperature': 22.0,
+                  'units': 'C',
+                }),
+              }),
+            }),
+          }),
+          'fanOscillationMode': dict({
+            'availableFanOscillationModes': dict({
+              'value': None,
+            }),
+            'fanOscillationMode': dict({
+              'timestamp': '2025-02-09T09:14:39.249Z',
+              'value': 'fixed',
+            }),
+            'supportedFanOscillationModes': dict({
+              'timestamp': '2021-04-06T16:43:35.782Z',
+              'value': None,
+            }),
+          }),
+          'ocf': dict({
+            'di': dict({
+              'timestamp': '2024-09-10T10:26:28.552Z',
+              'value': '96a5ef74-5832-a84b-f1f7-ca799957065d',
+            }),
+            'dmv': dict({
+              'timestamp': '2024-09-10T10:26:28.552Z',
+              'value': 'res.1.1.0,sh.1.1.0',
+            }),
+            'icv': dict({
+              'timestamp': '2024-09-10T10:26:28.552Z',
+              'value': 'core.1.1.0',
+            }),
+            'mndt': dict({
+              'timestamp': '2021-04-06T16:43:35.912Z',
+              'value': None,
+            }),
+            'mnfv': dict({
+              'timestamp': '2024-09-10T10:26:28.552Z',
+              'value': '0.1.0',
+            }),
+            'mnhw': dict({
+              'timestamp': '2024-09-10T10:26:28.552Z',
+              'value': '1.0',
+            }),
+            'mnml': dict({
+              'timestamp': '2024-09-10T10:26:28.552Z',
+              'value': 'http://www.samsung.com',
+            }),
+            'mnmn': dict({
+              'timestamp': '2024-09-10T10:26:28.552Z',
+              'value': 'Samsung Electronics',
+            }),
+            'mnmo': dict({
+              'timestamp': '2024-09-10T10:26:28.781Z',
+              'value': 'ARTIK051_KRAC_18K|10193441|60010132001111110200000000000000',
+            }),
+            'mnos': dict({
+              'timestamp': '2024-09-10T10:26:28.552Z',
+              'value': 'TizenRT2.0',
+            }),
+            'mnpv': dict({
+              'timestamp': '2024-09-10T10:26:28.552Z',
+              'value': '0G3MPDCKA00010E',
+            }),
+            'mnsl': dict({
+              'timestamp': '2021-04-06T16:43:35.803Z',
+              'value': None,
+            }),
+            'n': dict({
+              'timestamp': '2024-09-10T10:26:28.552Z',
+              'value': '[room a/c] Samsung',
+            }),
+            'pi': dict({
+              'timestamp': '2024-09-10T10:26:28.552Z',
+              'value': '96a5ef74-5832-a84b-f1f7-ca799957065d',
+            }),
+            'st': dict({
+              'timestamp': '2021-04-06T16:43:35.933Z',
+              'value': None,
+            }),
+            'vid': dict({
+              'timestamp': '2024-09-10T10:26:28.552Z',
+              'value': 'DA-AC-RAC-000001',
+            }),
+          }),
+          'powerConsumptionReport': dict({
+            'powerConsumption': dict({
+              'timestamp': '2025-02-09T16:15:33.639Z',
+              'value': dict({
+                'deltaEnergy': 400,
+                'end': '2025-02-09T16:15:33Z',
+                'energy': 2247300,
+                'energySaved': 0,
+                'persistedEnergy': 2247300,
+                'power': 0,
+                'powerEnergy': 0.0,
+                'start': '2025-02-09T15:45:29Z',
+              }),
+            }),
+          }),
+          'refresh': dict({
+          }),
+          'relativeHumidityMeasurement': dict({
+            'humidity': dict({
+              'timestamp': '2024-12-30T13:10:23.759Z',
+              'unit': '%',
+              'value': 60,
+            }),
+          }),
+          'remoteControlStatus': dict({
+            'remoteControlEnabled': dict({
+              'timestamp': '2021-04-06T16:43:35.379Z',
+              'value': None,
+            }),
+          }),
+          'samsungce.deviceIdentification': dict({
+            'binaryId': dict({
+              'timestamp': '2025-02-08T00:44:53.855Z',
+              'value': 'ARTIK051_KRAC_18K',
+            }),
+            'description': dict({
+              'value': None,
+            }),
+            'micomAssayCode': dict({
+              'value': None,
+            }),
+            'modelClassificationCode': dict({
+              'value': None,
+            }),
+            'modelName': dict({
+              'value': None,
+            }),
+            'releaseYear': dict({
+              'value': None,
+            }),
+            'serialNumber': dict({
+              'value': None,
+            }),
+            'serialNumberExtra': dict({
+              'value': None,
+            }),
+          }),
+          'samsungce.dongleSoftwareInstallation': dict({
+            'status': dict({
+              'timestamp': '2021-12-29T01:36:51.289Z',
+              'value': 'completed',
+            }),
+          }),
+          'samsungce.driverVersion': dict({
+            'versionNumber': dict({
+              'timestamp': '2024-09-04T06:35:09.557Z',
+              'value': 24070101,
+            }),
+          }),
+          'samsungce.selfCheck': dict({
+            'errors': dict({
+              'timestamp': '2025-02-08T00:44:53.349Z',
+              'value': list([
+              ]),
+            }),
+            'progress': dict({
+              'value': None,
+            }),
+            'result': dict({
+              'value': None,
+            }),
+            'status': dict({
+              'timestamp': '2025-02-08T00:44:53.549Z',
+              'value': 'ready',
+            }),
+            'supportedActions': dict({
+              'timestamp': '2024-09-04T06:35:09.557Z',
+              'value': list([
+                'start',
+              ]),
+            }),
+          }),
+          'samsungce.softwareUpdate': dict({
+            'availableModules': dict({
+              'timestamp': '2025-02-08T00:44:53.855Z',
+              'value': list([
+              ]),
+            }),
+            'lastUpdatedDate': dict({
+              'value': None,
+            }),
+            'newVersionAvailable': dict({
+              'timestamp': '2025-02-08T00:44:53.855Z',
+              'value': False,
+            }),
+            'operatingState': dict({
+              'value': None,
+            }),
+            'otnDUID': dict({
+              'timestamp': '2025-02-08T00:44:53.855Z',
+              'value': '43CEZFTFFL7Z2',
+            }),
+            'progress': dict({
+              'value': None,
+            }),
+            'targetModule': dict({
+              'value': None,
+            }),
+          }),
+          'switch': dict({
+            'switch': dict({
+              'timestamp': '2025-02-09T16:37:54.072Z',
+              'value': 'off',
+            }),
+          }),
+          'temperatureMeasurement': dict({
+            'temperature': dict({
+              'timestamp': '2025-02-09T16:33:29.164Z',
+              'unit': 'C',
+              'value': 25,
+            }),
+            'temperatureRange': dict({
+              'value': None,
+            }),
+          }),
+          'thermostatCoolingSetpoint': dict({
+            'coolingSetpoint': dict({
+              'timestamp': '2025-02-09T09:15:11.608Z',
+              'unit': 'C',
+              'value': 25,
+            }),
+            'coolingSetpointRange': dict({
+              'value': None,
+            }),
+          }),
+          'veryFineDustSensor': dict({
+            'veryFineDustLevel': dict({
+              'timestamp': '2021-04-06T16:43:35.363Z',
+              'unit': 'μg/m^3',
+              'value': None,
+            }),
+          }),
+        }),
+      }),
+    }),
+  })
+# ---

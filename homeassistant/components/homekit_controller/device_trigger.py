@@ -1,4 +1,5 @@
 """Provides device automations for homekit devices."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Generator
@@ -87,7 +88,7 @@ class TriggerSource:
             for event_handler in self._callbacks.get(trigger_key, []):
                 event_handler(ev)
 
-    def async_get_triggers(self) -> Generator[tuple[str, str], None, None]:
+    def async_get_triggers(self) -> Generator[tuple[str, str]]:
         """List device triggers for HomeKit devices."""
         yield from self._triggers
 
@@ -159,7 +160,7 @@ def enumerate_stateless_switch_group(service: Service) -> list[dict[str, Any]]:
         )
     )
 
-    results = []
+    results: list[dict[str, Any]] = []
     for idx, switch in enumerate(switches):
         char = switch[CharacteristicsTypes.INPUT_EVENT]
 
@@ -167,15 +168,15 @@ def enumerate_stateless_switch_group(service: Service) -> list[dict[str, Any]]:
         # manufacturer might not - clamp options to what they say.
         all_values = clamp_enum_to_char(InputEventValues, char)
 
-        for event_type in all_values:
-            results.append(
-                {
-                    "characteristic": char.iid,
-                    "value": event_type,
-                    "type": f"button{idx + 1}",
-                    "subtype": HK_TO_HA_INPUT_EVENT_VALUES[event_type],
-                }
-            )
+        results.extend(
+            {
+                "characteristic": char.iid,
+                "value": event_type,
+                "type": f"button{idx + 1}",
+                "subtype": HK_TO_HA_INPUT_EVENT_VALUES[event_type],
+            }
+            for event_type in all_values
+        )
     return results
 
 
@@ -187,17 +188,15 @@ def enumerate_doorbell(service: Service) -> list[dict[str, Any]]:
     # manufacturer might not - clamp options to what they say.
     all_values = clamp_enum_to_char(InputEventValues, input_event)
 
-    results = []
-    for event_type in all_values:
-        results.append(
-            {
-                "characteristic": input_event.iid,
-                "value": event_type,
-                "type": "doorbell",
-                "subtype": HK_TO_HA_INPUT_EVENT_VALUES[event_type],
-            }
-        )
-    return results
+    return [
+        {
+            "characteristic": input_event.iid,
+            "value": event_type,
+            "type": "doorbell",
+            "subtype": HK_TO_HA_INPUT_EVENT_VALUES[event_type],
+        }
+        for event_type in all_values
+    ]
 
 
 TRIGGER_FINDERS = {

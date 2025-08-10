@@ -1,9 +1,10 @@
 """Tests for the diagnostics data provided by the easyEnergy integration."""
+
 from unittest.mock import MagicMock
 
 from easyenergy import EasyEnergyNoDataError
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.const import ATTR_ENTITY_ID

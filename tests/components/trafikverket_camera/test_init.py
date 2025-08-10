@@ -1,17 +1,16 @@
 """Test for Trafikverket Ferry component Init."""
+
 from __future__ import annotations
 
 from datetime import datetime
 from unittest.mock import patch
 
 import pytest
-from pytrafikverket.exceptions import UnknownError
-from pytrafikverket.trafikverket_camera import CameraInfo
+from pytrafikverket import CameraInfoModel, UnknownError
 
-from homeassistant import config_entries
 from homeassistant.components.trafikverket_camera import async_migrate_entry
 from homeassistant.components.trafikverket_camera.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -23,7 +22,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 async def test_setup_entry(
     hass: HomeAssistant,
-    get_camera: CameraInfo,
+    get_camera: CameraInfoModel,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test setup entry."""
@@ -49,13 +48,13 @@ async def test_setup_entry(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert len(mock_tvt_camera.mock_calls) == 1
 
 
 async def test_unload_entry(
     hass: HomeAssistant,
-    get_camera: CameraInfo,
+    get_camera: CameraInfoModel,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test unload an entry."""
@@ -81,15 +80,15 @@ async def test_unload_entry(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_migrate_entry(
     hass: HomeAssistant,
-    get_camera: CameraInfo,
+    get_camera: CameraInfoModel,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test migrate entry to version 2."""
@@ -114,7 +113,7 @@ async def test_migrate_entry(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.version == 3
     assert entry.unique_id == "trafikverket_camera-1234"
     assert entry.data == ENTRY_CONFIG
@@ -136,7 +135,7 @@ async def test_migrate_entry(
 )
 async def test_migrate_entry_fails_with_error(
     hass: HomeAssistant,
-    get_camera: CameraInfo,
+    get_camera: CameraInfoModel,
     aioclient_mock: AiohttpClientMocker,
     version: int,
     unique_id: str,
@@ -164,7 +163,7 @@ async def test_migrate_entry_fails_with_error(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
     assert entry.version == version
     assert entry.unique_id == unique_id
     assert len(mock_tvt_camera.mock_calls) == 1
@@ -205,7 +204,7 @@ async def test_migrate_entry_fails_no_id(
     )
     entry.add_to_hass(hass)
 
-    _camera = CameraInfo(
+    _camera = CameraInfoModel(
         camera_name="Test_camera",
         camera_id=None,
         active=True,
@@ -228,7 +227,7 @@ async def test_migrate_entry_fails_no_id(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
     assert entry.version == version
     assert entry.unique_id == unique_id
     assert len(mock_tvt_camera.mock_calls) == 1
@@ -236,7 +235,7 @@ async def test_migrate_entry_fails_no_id(
 
 async def test_no_migration_needed(
     hass: HomeAssistant,
-    get_camera: CameraInfo,
+    get_camera: CameraInfoModel,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test migrate entry fails, camera returns no id."""

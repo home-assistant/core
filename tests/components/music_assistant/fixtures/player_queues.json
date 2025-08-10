@@ -1,0 +1,328 @@
+{
+  "player_queues": [
+    {
+      "queue_id": "00:00:00:00:00:01",
+      "active": false,
+      "display_name": "Test Player 1",
+      "available": true,
+      "items": 0,
+      "shuffle_enabled": false,
+      "repeat_mode": "off",
+      "dont_stop_the_music_enabled": false,
+      "current_index": null,
+      "index_in_buffer": null,
+      "elapsed_time": 0,
+      "elapsed_time_last_updated": 1730118302.163217,
+      "state": "idle",
+      "current_item": null,
+      "next_item": null,
+      "radio_source": [],
+      "flow_mode": false,
+      "resume_pos": 0
+    },
+    {
+      "queue_id": "00:00:00:00:00:02",
+      "active": false,
+      "display_name": "My Super Test Player 2",
+      "available": true,
+      "items": 0,
+      "shuffle_enabled": false,
+      "repeat_mode": "off",
+      "dont_stop_the_music_enabled": false,
+      "current_index": null,
+      "index_in_buffer": null,
+      "elapsed_time": 0,
+      "elapsed_time_last_updated": 0,
+      "state": "idle",
+      "current_item": null,
+      "next_item": null,
+      "radio_source": [],
+      "flow_mode": false,
+      "resume_pos": 0
+    },
+    {
+      "queue_id": "test_group_player_1",
+      "active": true,
+      "display_name": "Test Group Player 1",
+      "available": true,
+      "items": 1094,
+      "shuffle_enabled": true,
+      "repeat_mode": "all",
+      "dont_stop_the_music_enabled": true,
+      "current_index": 26,
+      "index_in_buffer": 26,
+      "elapsed_time": 232.08810877799988,
+      "elapsed_time_last_updated": 1730313109.5659513,
+      "state": "playing",
+      "current_item": {
+        "queue_id": "test_group_player_1",
+        "queue_item_id": "5d95dc5be77e4f7eb4939f62cfef527b",
+        "name": "Guns N' Roses - November Rain",
+        "duration": 536,
+        "sort_index": 2109,
+        "streamdetails": {
+          "provider": "spotify",
+          "item_id": "3YRCqOhFifThpSRFJ1VWFM",
+          "audio_format": {
+            "content_type": "ogg",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "ogg",
+            "bit_rate": 0
+          },
+          "media_type": "track",
+          "stream_type": "custom",
+          "stream_title": null,
+          "duration": 536,
+          "size": null,
+          "can_seek": true,
+          "loudness": -12.47,
+          "loudness_album": null,
+          "prefer_album_loudness": false,
+          "volume_normalization_mode": "fallback_dynamic",
+          "target_loudness": -17,
+          "strip_silence_begin": false,
+          "strip_silence_end": true,
+          "stream_error": null
+        },
+        "media_item": {
+          "item_id": "3YRCqOhFifThpSRFJ1VWFM",
+          "provider": "spotify",
+          "name": "November Rain",
+          "version": "",
+          "sort_name": "november rain",
+          "uri": "spotify://track/3YRCqOhFifThpSRFJ1VWFM",
+          "external_ids": [["isrc", "USGF19141510"]],
+          "media_type": "track",
+          "provider_mappings": [
+            {
+              "item_id": "3YRCqOhFifThpSRFJ1VWFM",
+              "provider_domain": "spotify",
+              "provider_instance": "spotify",
+              "available": true,
+              "audio_format": {
+                "content_type": "ogg",
+                "sample_rate": 44100,
+                "bit_depth": 16,
+                "channels": 2,
+                "output_format_str": "ogg",
+                "bit_rate": 320
+              },
+              "url": "https://open.spotify.com/track/3YRCqOhFifThpSRFJ1VWFM",
+              "details": null
+            }
+          ],
+          "metadata": {
+            "description": null,
+            "review": null,
+            "explicit": false,
+            "images": [
+              {
+                "type": "thumb",
+                "path": "https://i.scdn.co/image/ab67616d0000b273e44963b8bb127552ac761873",
+                "provider": "spotify",
+                "remotely_accessible": true
+              }
+            ],
+            "genres": null,
+            "mood": null,
+            "style": null,
+            "copyright": null,
+            "lyrics": null,
+            "label": null,
+            "links": null,
+            "chapters": null,
+            "performers": null,
+            "preview": "https://p.scdn.co/mp3-preview/98deb9c370bbaa350be058b3470fbe3bc1e28d9d?cid=2eb96f9b37494be1824999d58028a305",
+            "popularity": 77,
+            "last_refresh": null
+          },
+          "favorite": false,
+          "position": 1372,
+          "duration": 536,
+          "artists": [
+            {
+              "item_id": "3qm84nBOXUEQ2vnTfUTTFC",
+              "provider": "spotify",
+              "name": "Guns N' Roses",
+              "version": "",
+              "sort_name": "guns n' roses",
+              "uri": "spotify://artist/3qm84nBOXUEQ2vnTfUTTFC",
+              "external_ids": [],
+              "media_type": "artist",
+              "available": true,
+              "image": null
+            }
+          ],
+          "album": {
+            "item_id": "0CxPbTRARqKUYighiEY9Sz",
+            "provider": "spotify",
+            "name": "Use Your Illusion I",
+            "version": "",
+            "sort_name": "use your illusion i",
+            "uri": "spotify://album/0CxPbTRARqKUYighiEY9Sz",
+            "external_ids": [],
+            "media_type": "album",
+            "available": true,
+            "image": {
+              "type": "thumb",
+              "path": "https://i.scdn.co/image/ab67616d0000b273e44963b8bb127552ac761873",
+              "provider": "spotify",
+              "remotely_accessible": true
+            }
+          },
+          "disc_number": 1,
+          "track_number": 10
+        },
+        "image": {
+          "type": "thumb",
+          "path": "https://i.scdn.co/image/ab67616d0000b273e44963b8bb127552ac761873",
+          "provider": "spotify",
+          "remotely_accessible": true
+        },
+        "index": 0
+      },
+      "next_item": {
+        "queue_id": "test_group_player_1",
+        "queue_item_id": "990ae8f29cdf4fb588d679b115621f55",
+        "name": "The Stranglers - Golden Brown",
+        "duration": 207,
+        "sort_index": 1138,
+        "streamdetails": {
+          "provider": "qobuz",
+          "item_id": "1004735",
+          "audio_format": {
+            "content_type": "flac",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "flac",
+            "bit_rate": 0
+          },
+          "media_type": "track",
+          "stream_type": "http",
+          "stream_title": null,
+          "duration": 207,
+          "size": null,
+          "can_seek": true,
+          "loudness": -14.23,
+          "loudness_album": null,
+          "prefer_album_loudness": true,
+          "volume_normalization_mode": "fallback_dynamic",
+          "target_loudness": -17,
+          "strip_silence_begin": true,
+          "strip_silence_end": true,
+          "stream_error": null
+        },
+        "media_item": {
+          "item_id": "1004735",
+          "provider": "qobuz",
+          "name": "Golden Brown",
+          "version": "",
+          "sort_name": "golden brown",
+          "uri": "qobuz://track/1004735",
+          "external_ids": [["isrc", "GBAYE8100053"]],
+          "media_type": "track",
+          "provider_mappings": [
+            {
+              "item_id": "1004735",
+              "provider_domain": "qobuz",
+              "provider_instance": "qobuz",
+              "available": true,
+              "audio_format": {
+                "content_type": "flac",
+                "sample_rate": 44100,
+                "bit_depth": 16,
+                "channels": 2,
+                "output_format_str": "flac",
+                "bit_rate": 0
+              },
+              "url": "https://open.qobuz.com/track/1004735",
+              "details": null
+            }
+          ],
+          "metadata": {
+            "description": null,
+            "review": null,
+            "explicit": null,
+            "images": [
+              {
+                "type": "thumb",
+                "path": "https://static.qobuz.com/images/covers/59/88/0724353468859_600.jpg",
+                "provider": "qobuz",
+                "remotely_accessible": true
+              }
+            ],
+            "genres": null,
+            "mood": null,
+            "style": null,
+            "copyright": "© 2001 Parlophone Records Ltd, a Warner Music Group Company ℗ 1981 Parlophone Records Ltd, a Warner Music Group Company",
+            "lyrics": null,
+            "label": null,
+            "links": null,
+            "chapters": null,
+            "performers": [
+              "Dave Greenfield, Composer, Producer, Keyboards, Vocals",
+              "Jean",
+              "Hugh Cornwell, Composer, Producer, Guitar, Vocals",
+              "Jean Jacques Burnel, Producer, Bass Guitar, Vocals",
+              "Jet Black, Composer, Producer, Drums, Percussion",
+              "Jacques Burnell, Composer",
+              "The Stranglers, MainArtist"
+            ],
+            "preview": null,
+            "popularity": null,
+            "last_refresh": null
+          },
+          "favorite": false,
+          "position": 183,
+          "duration": 207,
+          "artists": [
+            {
+              "item_id": "26779",
+              "provider": "qobuz",
+              "name": "The Stranglers",
+              "version": "",
+              "sort_name": "stranglers, the",
+              "uri": "qobuz://artist/26779",
+              "external_ids": [],
+              "media_type": "artist",
+              "available": true,
+              "image": null
+            }
+          ],
+          "album": {
+            "item_id": "0724353468859",
+            "provider": "qobuz",
+            "name": "La Folie",
+            "version": "",
+            "sort_name": "folie, la",
+            "uri": "qobuz://album/0724353468859",
+            "external_ids": [["barcode", "0724353468859"]],
+            "media_type": "album",
+            "available": true,
+            "image": {
+              "type": "thumb",
+              "path": "https://static.qobuz.com/images/covers/59/88/0724353468859_600.jpg",
+              "provider": "qobuz",
+              "remotely_accessible": true
+            }
+          },
+          "disc_number": 1,
+          "track_number": 9
+        },
+        "image": {
+          "type": "thumb",
+          "path": "https://static.qobuz.com/images/covers/59/88/0724353468859_600.jpg",
+          "provider": "qobuz",
+          "remotely_accessible": true
+        },
+        "index": 0
+      },
+      "radio_source": [],
+      "flow_mode": false,
+      "resume_pos": 0
+    }
+  ]
+}

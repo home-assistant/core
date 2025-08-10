@@ -1,4 +1,5 @@
 """Support for tracking the moon phases."""
+
 from __future__ import annotations
 
 from astral import moon
@@ -7,8 +8,8 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -21,22 +22,11 @@ STATE_WANING_GIBBOUS = "waning_gibbous"
 STATE_WAXING_CRESCENT = "waxing_crescent"
 STATE_WAXING_GIBBOUS = "waxing_gibbous"
 
-MOON_ICONS = {
-    STATE_FIRST_QUARTER: "mdi:moon-first-quarter",
-    STATE_FULL_MOON: "mdi:moon-full",
-    STATE_LAST_QUARTER: "mdi:moon-last-quarter",
-    STATE_NEW_MOON: "mdi:moon-new",
-    STATE_WANING_CRESCENT: "mdi:moon-waning-crescent",
-    STATE_WANING_GIBBOUS: "mdi:moon-waning-gibbous",
-    STATE_WAXING_CRESCENT: "mdi:moon-waxing-crescent",
-    STATE_WAXING_GIBBOUS: "mdi:moon-waxing-gibbous",
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the platform from config_entry."""
     async_add_entities([MoonSensorEntity(entry)], True)
@@ -89,5 +79,3 @@ class MoonSensorEntity(SensorEntity):
             self._attr_native_value = STATE_LAST_QUARTER
         else:
             self._attr_native_value = STATE_WANING_CRESCENT
-
-        self._attr_icon = MOON_ICONS.get(self._attr_native_value)

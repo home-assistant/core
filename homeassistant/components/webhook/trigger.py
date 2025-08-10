@@ -1,4 +1,5 @@
 """Offer webhook triggered automation rules."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -10,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_PLATFORM, CONF_WEBHOOK_ID
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 

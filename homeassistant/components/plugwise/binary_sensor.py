@@ -1,4 +1,5 @@
 """Plugwise Binary Sensor component for Home Assistant."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,19 +9,21 @@ from typing import Any
 from plugwise.constants import BinarySensorType
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import PlugwiseDataUpdateCoordinator
+from .coordinator import PlugwiseConfigEntry, PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
 SEVERITIES = ["other", "info", "warning", "error"]
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True)
@@ -28,64 +31,52 @@ class PlugwiseBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes a Plugwise binary sensor entity."""
 
     key: BinarySensorType
-    icon_off: str | None = None
 
 
 BINARY_SENSORS: tuple[PlugwiseBinarySensorEntityDescription, ...] = (
     PlugwiseBinarySensorEntityDescription(
+        key="low_battery",
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PlugwiseBinarySensorEntityDescription(
         key="compressor_state",
         translation_key="compressor_state",
-        icon="mdi:hvac",
-        icon_off="mdi:hvac-off",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PlugwiseBinarySensorEntityDescription(
         key="cooling_enabled",
         translation_key="cooling_enabled",
-        icon="mdi:snowflake-thermometer",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PlugwiseBinarySensorEntityDescription(
         key="dhw_state",
         translation_key="dhw_state",
-        icon="mdi:water-pump",
-        icon_off="mdi:water-pump-off",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PlugwiseBinarySensorEntityDescription(
         key="flame_state",
         translation_key="flame_state",
-        name="Flame state",
-        icon="mdi:fire",
-        icon_off="mdi:fire-off",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PlugwiseBinarySensorEntityDescription(
         key="heating_state",
         translation_key="heating_state",
-        icon="mdi:radiator",
-        icon_off="mdi:radiator-off",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PlugwiseBinarySensorEntityDescription(
         key="cooling_state",
         translation_key="cooling_state",
-        icon="mdi:snowflake",
-        icon_off="mdi:snowflake-off",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PlugwiseBinarySensorEntityDescription(
-        key="slave_boiler_state",
-        translation_key="slave_boiler_state",
-        icon="mdi:fire",
-        icon_off="mdi:circle-off-outline",
+        key="secondary_boiler_state",
+        translation_key="secondary_boiler_state",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PlugwiseBinarySensorEntityDescription(
         key="plugwise_notification",
         translation_key="plugwise_notification",
-        icon="mdi:mailbox-up-outline",
-        icon_off="mdi:mailbox-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
@@ -93,30 +84,28 @@ BINARY_SENSORS: tuple[PlugwiseBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: PlugwiseConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Smile binary_sensors from a config entry."""
-    coordinator: PlugwiseDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = entry.runtime_data
 
-    entities: list[PlugwiseBinarySensorEntity] = []
-    for device_id, device in coordinator.data.devices.items():
-        if not (binary_sensors := device.get("binary_sensors")):
-            continue
-        for description in BINARY_SENSORS:
-            if description.key not in binary_sensors:
-                continue
+    @callback
+    def _add_entities() -> None:
+        """Add Entities."""
+        if not coordinator.new_devices:
+            return
 
-            entities.append(
-                PlugwiseBinarySensorEntity(
-                    coordinator,
-                    device_id,
-                    description,
-                )
-            )
-    async_add_entities(entities)
+        async_add_entities(
+            PlugwiseBinarySensorEntity(coordinator, device_id, description)
+            for device_id in coordinator.new_devices
+            if (binary_sensors := coordinator.data[device_id].get("binary_sensors"))
+            for description in BINARY_SENSORS
+            if description.key in binary_sensors
+        )
+
+    _add_entities()
+    entry.async_on_unload(coordinator.async_add_listener(_add_entities))
 
 
 class PlugwiseBinarySensorEntity(PlugwiseEntity, BinarySensorEntity):
@@ -141,20 +130,14 @@ class PlugwiseBinarySensorEntity(PlugwiseEntity, BinarySensorEntity):
         return self.device["binary_sensors"][self.entity_description.key]
 
     @property
-    def icon(self) -> str | None:
-        """Return the icon to use in the frontend, if any."""
-        if (icon_off := self.entity_description.icon_off) and self.is_on is False:
-            return icon_off
-        return self.entity_description.icon
-
-    @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
         if self.entity_description.key != "plugwise_notification":
             return None
 
         attrs: dict[str, list[str]] = {f"{severity}_msg": [] for severity in SEVERITIES}
-        if notify := self.coordinator.data.gateway["notifications"]:
+        gateway_id = self.coordinator.api.gateway_id
+        if notify := self.coordinator.data[gateway_id]["notifications"]:
             for details in notify.values():
                 for msg_type, msg in details.items():
                     msg_type = msg_type.lower()

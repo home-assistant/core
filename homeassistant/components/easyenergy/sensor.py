@@ -1,4 +1,5 @@
 """Support for easyEnergy sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -12,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CURRENCY_EURO,
     PERCENTAGE,
@@ -22,26 +22,23 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, SERVICE_TYPE_DEVICE_NAMES
-from .coordinator import EasyEnergyData, EasyEnergyDataUpdateCoordinator
+from .coordinator import (
+    EasyEnergyConfigEntry,
+    EasyEnergyData,
+    EasyEnergyDataUpdateCoordinator,
+)
 
 
-@dataclass(frozen=True)
-class EasyEnergySensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class EasyEnergySensorEntityDescription(SensorEntityDescription):
+    """Describes easyEnergy sensor entity."""
 
     value_fn: Callable[[EasyEnergyData], float | datetime | None]
     service_type: str
-
-
-@dataclass(frozen=True)
-class EasyEnergySensorEntityDescription(
-    SensorEntityDescription, EasyEnergySensorEntityDescriptionMixin
-):
-    """Describes easyEnergy sensor entity."""
 
 
 SENSORS: tuple[EasyEnergySensorEntityDescription, ...] = (
@@ -117,7 +114,6 @@ SENSORS: tuple[EasyEnergySensorEntityDescription, ...] = (
         translation_key="percentage_of_max",
         service_type="today_energy_usage",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:percent",
         value_fn=lambda data: data.energy_today.pct_of_max_usage,
     ),
     EasyEnergySensorEntityDescription(
@@ -177,7 +173,6 @@ SENSORS: tuple[EasyEnergySensorEntityDescription, ...] = (
         translation_key="percentage_of_max",
         service_type="today_energy_return",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:percent",
         value_fn=lambda data: data.energy_today.pct_of_max_return,
     ),
     EasyEnergySensorEntityDescription(
@@ -185,7 +180,6 @@ SENSORS: tuple[EasyEnergySensorEntityDescription, ...] = (
         translation_key="hours_priced_equal_or_lower",
         service_type="today_energy_usage",
         native_unit_of_measurement=UnitOfTime.HOURS,
-        icon="mdi:clock",
         value_fn=lambda data: data.energy_today.hours_priced_equal_or_lower_usage,
     ),
     EasyEnergySensorEntityDescription(
@@ -193,7 +187,6 @@ SENSORS: tuple[EasyEnergySensorEntityDescription, ...] = (
         translation_key="hours_priced_equal_or_higher",
         service_type="today_energy_return",
         native_unit_of_measurement=UnitOfTime.HOURS,
-        icon="mdi:clock",
         value_fn=lambda data: data.energy_today.hours_priced_equal_or_higher_return,
     ),
 )
@@ -208,6 +201,7 @@ def get_gas_price(data: EasyEnergyData, hours: int) -> float | None:
 
     Returns:
         The gas market price value.
+
     """
     if data.gas_today is None:
         return None
@@ -217,10 +211,12 @@ def get_gas_price(data: EasyEnergyData, hours: int) -> float | None:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: EasyEnergyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up easyEnergy sensors based on a config entry."""
-    coordinator: EasyEnergyDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         EasyEnergySensorEntity(coordinator=coordinator, description=description)
         for description in SENSORS

@@ -1,13 +1,15 @@
 """Test the SQL config flow."""
+
 from __future__ import annotations
 
+from pathlib import Path
 from unittest.mock import patch
 
 from sqlalchemy.exc import SQLAlchemyError
 
 from homeassistant import config_entries
 from homeassistant.components.recorder import Recorder
-from homeassistant.components.sensor.const import SensorDeviceClass, SensorStateClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.sql.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -41,7 +43,7 @@ async def test_form(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -54,7 +56,7 @@ async def test_form(recorder_mock: Recorder, hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Get Value"
     assert result2["options"] == {
         "name": "Get Value",
@@ -75,7 +77,7 @@ async def test_form_with_value_template(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -88,7 +90,7 @@ async def test_form_with_value_template(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Get Value"
     assert result2["options"] == {
         "name": "Get Value",
@@ -106,7 +108,7 @@ async def test_flow_fails_db_url(recorder_mock: Recorder, hass: HomeAssistant) -
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result4["type"] == FlowResultType.FORM
+    assert result4["type"] is FlowResultType.FORM
     assert result4["step_id"] == config_entries.SOURCE_USER
 
     with patch(
@@ -129,7 +131,7 @@ async def test_flow_fails_invalid_query(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result4["type"] == FlowResultType.FORM
+    assert result4["type"] is FlowResultType.FORM
     assert result4["step_id"] == config_entries.SOURCE_USER
 
     result5 = await hass.config_entries.flow.async_configure(
@@ -137,7 +139,7 @@ async def test_flow_fails_invalid_query(
         user_input=ENTRY_CONFIG_INVALID_QUERY,
     )
 
-    assert result5["type"] == FlowResultType.FORM
+    assert result5["type"] is FlowResultType.FORM
     assert result5["errors"] == {
         "query": "query_invalid",
     }
@@ -147,7 +149,7 @@ async def test_flow_fails_invalid_query(
         user_input=ENTRY_CONFIG_INVALID_QUERY_2,
     )
 
-    assert result6["type"] == FlowResultType.FORM
+    assert result6["type"] is FlowResultType.FORM
     assert result6["errors"] == {
         "query": "query_invalid",
     }
@@ -157,7 +159,7 @@ async def test_flow_fails_invalid_query(
         user_input=ENTRY_CONFIG_INVALID_QUERY_3,
     )
 
-    assert result6["type"] == FlowResultType.FORM
+    assert result6["type"] is FlowResultType.FORM
     assert result6["errors"] == {
         "query": "query_invalid",
     }
@@ -167,7 +169,7 @@ async def test_flow_fails_invalid_query(
         user_input=ENTRY_CONFIG_QUERY_NO_READ_ONLY,
     )
 
-    assert result5["type"] == FlowResultType.FORM
+    assert result5["type"] is FlowResultType.FORM
     assert result5["errors"] == {
         "query": "query_no_read_only",
     }
@@ -177,7 +179,7 @@ async def test_flow_fails_invalid_query(
         user_input=ENTRY_CONFIG_QUERY_NO_READ_ONLY_CTE,
     )
 
-    assert result6["type"] == FlowResultType.FORM
+    assert result6["type"] is FlowResultType.FORM
     assert result6["errors"] == {
         "query": "query_no_read_only",
     }
@@ -187,7 +189,7 @@ async def test_flow_fails_invalid_query(
         user_input=ENTRY_CONFIG_MULTIPLE_QUERIES,
     )
 
-    assert result6["type"] == FlowResultType.FORM
+    assert result6["type"] is FlowResultType.FORM
     assert result6["errors"] == {
         "query": "multiple_queries",
     }
@@ -197,7 +199,7 @@ async def test_flow_fails_invalid_query(
         user_input=ENTRY_CONFIG_NO_RESULTS,
     )
 
-    assert result5["type"] == FlowResultType.FORM
+    assert result5["type"] is FlowResultType.FORM
     assert result5["errors"] == {
         "query": "query_invalid",
     }
@@ -207,7 +209,7 @@ async def test_flow_fails_invalid_query(
         user_input=ENTRY_CONFIG,
     )
 
-    assert result5["type"] == FlowResultType.CREATE_ENTRY
+    assert result5["type"] is FlowResultType.CREATE_ENTRY
     assert result5["title"] == "Get Value"
     assert result5["options"] == {
         "name": "Get Value",
@@ -227,7 +229,7 @@ async def test_flow_fails_invalid_column_name(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    assert result4["type"] == FlowResultType.FORM
+    assert result4["type"] is FlowResultType.FORM
     assert result4["step_id"] == "user"
 
     result5 = await hass.config_entries.flow.async_configure(
@@ -235,7 +237,7 @@ async def test_flow_fails_invalid_column_name(
         user_input=ENTRY_CONFIG_INVALID_COLUMN_NAME,
     )
 
-    assert result5["type"] == FlowResultType.FORM
+    assert result5["type"] is FlowResultType.FORM
     assert result5["errors"] == {
         "column": "column_invalid",
     }
@@ -245,7 +247,7 @@ async def test_flow_fails_invalid_column_name(
         user_input=ENTRY_CONFIG,
     )
 
-    assert result5["type"] == FlowResultType.CREATE_ENTRY
+    assert result5["type"] is FlowResultType.CREATE_ENTRY
     assert result5["title"] == "Get Value"
     assert result5["options"] == {
         "name": "Get Value",
@@ -283,7 +285,7 @@ async def test_options_flow(recorder_mock: Recorder, hass: HomeAssistant) -> Non
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result = await hass.config_entries.options.async_configure(
@@ -299,7 +301,7 @@ async def test_options_flow(recorder_mock: Recorder, hass: HomeAssistant) -> Non
         },
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "name": "Get Value",
         "query": "SELECT 5 as size",
@@ -333,7 +335,7 @@ async def test_options_flow_name_previously_removed(
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     with patch(
@@ -352,7 +354,7 @@ async def test_options_flow_name_previously_removed(
         await hass.async_block_till_done()
 
     assert len(mock_setup_entry.mock_calls) == 1
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "name": "Get Value Title",
         "query": "SELECT 5 as size",
@@ -435,7 +437,7 @@ async def test_options_flow_fails_invalid_query(
         user_input=ENTRY_CONFIG_INVALID_QUERY_OPT,
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {
         "query": "query_invalid",
     }
@@ -445,7 +447,7 @@ async def test_options_flow_fails_invalid_query(
         user_input=ENTRY_CONFIG_INVALID_QUERY_2_OPT,
     )
 
-    assert result3["type"] == FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {
         "query": "query_invalid",
     }
@@ -455,7 +457,7 @@ async def test_options_flow_fails_invalid_query(
         user_input=ENTRY_CONFIG_INVALID_QUERY_3_OPT,
     )
 
-    assert result3["type"] == FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {
         "query": "query_invalid",
     }
@@ -465,7 +467,7 @@ async def test_options_flow_fails_invalid_query(
         user_input=ENTRY_CONFIG_QUERY_NO_READ_ONLY_OPT,
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {
         "query": "query_no_read_only",
     }
@@ -475,7 +477,7 @@ async def test_options_flow_fails_invalid_query(
         user_input=ENTRY_CONFIG_QUERY_NO_READ_ONLY_CTE_OPT,
     )
 
-    assert result3["type"] == FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {
         "query": "query_no_read_only",
     }
@@ -485,7 +487,7 @@ async def test_options_flow_fails_invalid_query(
         user_input=ENTRY_CONFIG_MULTIPLE_QUERIES_OPT,
     )
 
-    assert result3["type"] == FlowResultType.FORM
+    assert result3["type"] is FlowResultType.FORM
     assert result3["errors"] == {
         "query": "multiple_queries",
     }
@@ -500,7 +502,7 @@ async def test_options_flow_fails_invalid_query(
         },
     )
 
-    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["data"] == {
         "name": "Get Value",
         "query": "SELECT 5 as size",
@@ -539,7 +541,7 @@ async def test_options_flow_fails_invalid_column_name(
         user_input=ENTRY_CONFIG_INVALID_COLUMN_NAME_OPT,
     )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {
         "column": "column_invalid",
     }
@@ -553,7 +555,7 @@ async def test_options_flow_fails_invalid_column_name(
         },
     )
 
-    assert result4["type"] == FlowResultType.CREATE_ENTRY
+    assert result4["type"] is FlowResultType.CREATE_ENTRY
     assert result4["data"] == {
         "name": "Get Value",
         "query": "SELECT 5 as value",
@@ -588,14 +590,14 @@ async def test_options_flow_db_url_empty(
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    with patch(
-        "homeassistant.components.sql.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
+    with (
+        patch(
+            "homeassistant.components.sql.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -607,7 +609,7 @@ async def test_options_flow_db_url_empty(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "name": "Get Value",
         "query": "SELECT 5 as size",
@@ -617,25 +619,29 @@ async def test_options_flow_db_url_empty(
 
 
 async def test_full_flow_not_recorder_db(
-    recorder_mock: Recorder, hass: HomeAssistant
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    tmp_path: Path,
 ) -> None:
     """Test full config flow with not using recorder db."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
+    db_path = tmp_path / "db.db"
+    db_path_str = f"sqlite:///{db_path}"
 
-    with patch(
-        "homeassistant.components.sql.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
+    with (
+        patch(
+            "homeassistant.components.sql.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                "db_url": "sqlite://path/to/db.db",
+                "db_url": db_path_str,
                 "name": "Get Value",
                 "query": "SELECT 5 as value",
                 "column": "value",
@@ -643,11 +649,11 @@ async def test_full_flow_not_recorder_db(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Get Value"
     assert result2["options"] == {
         "name": "Get Value",
-        "db_url": "sqlite://path/to/db.db",
+        "db_url": db_path_str,
         "query": "SELECT 5 as value",
         "column": "value",
     }
@@ -656,30 +662,30 @@ async def test_full_flow_not_recorder_db(
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    with patch(
-        "homeassistant.components.sql.async_setup_entry",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
+    with (
+        patch(
+            "homeassistant.components.sql.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
                 "query": "SELECT 5 as value",
-                "db_url": "sqlite://path/to/db.db",
+                "db_url": db_path_str,
                 "column": "value",
                 "unit_of_measurement": "MiB",
             },
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "name": "Get Value",
-        "db_url": "sqlite://path/to/db.db",
+        "db_url": db_path_str,
         "query": "SELECT 5 as value",
         "column": "value",
         "unit_of_measurement": "MiB",
@@ -687,24 +693,22 @@ async def test_full_flow_not_recorder_db(
 
     # Need to test same again to mitigate issue with db_url removal
     result = await hass.config_entries.options.async_init(entry.entry_id)
-    with patch(
-        "homeassistant.components.sql.config_flow.sqlalchemy.create_engine",
-    ):
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={
-                "query": "SELECT 5 as value",
-                "db_url": "sqlite://path/to/db.db",
-                "column": "value",
-                "unit_of_measurement": "MB",
-            },
-        )
-        await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            "query": "SELECT 5 as value",
+            "db_url": db_path_str,
+            "column": "value",
+            "unit_of_measurement": "MB",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "name": "Get Value",
-        "db_url": "sqlite://path/to/db.db",
+        "db_url": db_path_str,
         "query": "SELECT 5 as value",
         "column": "value",
         "unit_of_measurement": "MB",
@@ -712,7 +716,7 @@ async def test_full_flow_not_recorder_db(
 
     assert entry.options == {
         "name": "Get Value",
-        "db_url": "sqlite://path/to/db.db",
+        "db_url": db_path_str,
         "query": "SELECT 5 as value",
         "column": "value",
         "unit_of_measurement": "MB",
@@ -735,7 +739,7 @@ async def test_device_state_class(recorder_mock: Recorder, hass: HomeAssistant) 
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     with patch(
@@ -754,7 +758,7 @@ async def test_device_state_class(recorder_mock: Recorder, hass: HomeAssistant) 
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["data"] == {
         "name": "Get Value",
         "query": "SELECT 5 as value",
@@ -765,7 +769,7 @@ async def test_device_state_class(recorder_mock: Recorder, hass: HomeAssistant) 
     }
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
     with patch(
@@ -782,7 +786,7 @@ async def test_device_state_class(recorder_mock: Recorder, hass: HomeAssistant) 
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert "device_class" not in result3["data"]
     assert "state_class" not in result3["data"]
     assert result3["data"] == {

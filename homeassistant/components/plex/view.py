@@ -1,4 +1,5 @@
 """Implement a view to provide proxied Plex thumbnails to the media browser."""
+
 from __future__ import annotations
 
 from http import HTTPStatus
@@ -8,7 +9,7 @@ from aiohttp import web
 from aiohttp.hdrs import CACHE_CONTROL
 from aiohttp.typedefs import LooseHeaders
 
-from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
+from homeassistant.components.http import KEY_AUTHENTICATED, KEY_HASS, HomeAssistantView
 from homeassistant.components.media_player import async_fetch_image
 
 from .const import SERVERS
@@ -33,7 +34,7 @@ class PlexImageView(HomeAssistantView):
         if not request[KEY_AUTHENTICATED]:
             return web.Response(status=HTTPStatus.UNAUTHORIZED)
 
-        hass = request.app["hass"]
+        hass = request.app[KEY_HASS]
         if (server := get_plex_data(hass)[SERVERS].get(server_id)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 

@@ -1,4 +1,5 @@
 """Support for Flo Water Monitor sensors."""
+
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
@@ -6,33 +7,27 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN as FLO_DOMAIN
-from .device import FloDeviceDataUpdateCoordinator
+from .coordinator import FloConfigEntry
 from .entity import FloEntity
-
-WATER_ICON = "mdi:water"
-GAUGE_ICON = "mdi:gauge"
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: FloConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Flo sensors from config entry."""
-    devices: list[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][
-        config_entry.entry_id
-    ]["devices"]
+    devices = config_entry.runtime_data.devices
     entities = []
     for device in devices:
         if device.device_type == "puck_oem":
@@ -59,7 +54,6 @@ async def async_setup_entry(
 class FloDailyUsageSensor(FloEntity, SensorEntity):
     """Monitors the daily water usage."""
 
-    _attr_icon = WATER_ICON
     _attr_native_unit_of_measurement = UnitOfVolume.GALLONS
     _attr_state_class: SensorStateClass = SensorStateClass.TOTAL_INCREASING
     _attr_device_class = SensorDeviceClass.WATER
@@ -97,9 +91,9 @@ class FloSystemModeSensor(FloEntity, SensorEntity):
 class FloCurrentFlowRateSensor(FloEntity, SensorEntity):
     """Monitors the current water flow rate."""
 
-    _attr_icon = GAUGE_ICON
-    _attr_native_unit_of_measurement = "gpm"
+    _attr_native_unit_of_measurement = UnitOfVolumeFlowRate.GALLONS_PER_MINUTE
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_device_class = SensorDeviceClass.VOLUME_FLOW_RATE
     _attr_translation_key = "current_flow_rate"
 
     def __init__(self, device):

@@ -1,4 +1,5 @@
 """Balboa entities."""
+
 from __future__ import annotations
 
 from pybalboa import EVENT_UPDATE, SpaClient
@@ -19,7 +20,7 @@ class BalboaEntity(Entity):
         """Initialize the control."""
         mac = client.mac_address
         model = client.model
-        self._attr_unique_id = f'{model}-{key}-{mac.replace(":","")[-6:]}'
+        self._attr_unique_id = f"{model}-{key}-{mac.replace(':', '')[-6:]}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, mac)},
             name=model,

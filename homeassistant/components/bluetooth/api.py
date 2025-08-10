@@ -2,6 +2,7 @@
 
 These APIs are the only documented way to interact with the bluetooth integration.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -14,10 +15,12 @@ from habluetooth import (
     BluetoothScannerDevice,
     BluetoothScanningMode,
     HaBleakScannerWrapper,
+    get_manager,
 )
 from home_assistant_bluetooth import BluetoothServiceInfoBleak
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback as hass_callback
+from homeassistant.helpers.singleton import singleton
 
 from .const import DATA_MANAGER
 from .manager import HomeAssistantBluetoothManager
@@ -28,9 +31,10 @@ if TYPE_CHECKING:
     from bleak.backends.device import BLEDevice
 
 
+@singleton(DATA_MANAGER)
 def _get_manager(hass: HomeAssistant) -> HomeAssistantBluetoothManager:
     """Get the bluetooth manager."""
-    return cast(HomeAssistantBluetoothManager, hass.data[DATA_MANAGER])
+    return cast(HomeAssistantBluetoothManager, get_manager())
 
 
 @hass_callback
@@ -67,8 +71,6 @@ def async_discovered_service_info(
     hass: HomeAssistant, connectable: bool = True
 ) -> Iterable[BluetoothServiceInfoBleak]:
     """Return the discovered devices list."""
-    if DATA_MANAGER not in hass.data:
-        return []
     return _get_manager(hass).async_discovered_service_info(connectable)
 
 
@@ -77,8 +79,6 @@ def async_last_service_info(
     hass: HomeAssistant, address: str, connectable: bool = True
 ) -> BluetoothServiceInfoBleak | None:
     """Return the last service info for an address."""
-    if DATA_MANAGER not in hass.data:
-        return None
     return _get_manager(hass).async_last_service_info(address, connectable)
 
 
@@ -87,8 +87,6 @@ def async_ble_device_from_address(
     hass: HomeAssistant, address: str, connectable: bool = True
 ) -> BLEDevice | None:
     """Return BLEDevice for an address if its present."""
-    if DATA_MANAGER not in hass.data:
-        return None
     return _get_manager(hass).async_ble_device_from_address(address, connectable)
 
 
@@ -105,8 +103,6 @@ def async_address_present(
     hass: HomeAssistant, address: str, connectable: bool = True
 ) -> bool:
     """Check if an address is present in the bluetooth device list."""
-    if DATA_MANAGER not in hass.data:
-        return False
     return _get_manager(hass).async_address_present(address, connectable)
 
 
@@ -182,9 +178,26 @@ def async_register_scanner(
     hass: HomeAssistant,
     scanner: BaseHaScanner,
     connection_slots: int | None = None,
+    source_domain: str | None = None,
+    source_model: str | None = None,
+    source_config_entry_id: str | None = None,
+    source_device_id: str | None = None,
 ) -> CALLBACK_TYPE:
     """Register a BleakScanner."""
-    return _get_manager(hass).async_register_scanner(scanner, connection_slots)
+    return _get_manager(hass).async_register_hass_scanner(
+        scanner,
+        connection_slots,
+        source_domain,
+        source_model,
+        source_config_entry_id,
+        source_device_id,
+    )
+
+
+@hass_callback
+def async_remove_scanner(hass: HomeAssistant, source: str) -> None:
+    """Permanently remove a BleakScanner by source address."""
+    return _get_manager(hass).async_remove_scanner(source)
 
 
 @hass_callback

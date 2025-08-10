@@ -1,4 +1,5 @@
 """Support for Neato botvac connected vacuum cleaners."""
+
 import logging
 
 import aiohttp

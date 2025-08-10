@@ -1,42 +1,35 @@
 """Support for FFmpeg."""
+
 from __future__ import annotations
 
 import asyncio
 import re
-from typing import Generic, TypeVar
 
 from haffmpeg.core import HAFFmpeg
 from haffmpeg.tools import IMAGE_JPEG, FFVersion, ImageFrame
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONTENT_TYPE_MULTIPART,
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import (
-    SignalType,
-    async_dispatcher_connect,
-    async_dispatcher_send,
-)
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.util.system_info import is_official_image
 
-_HAFFmpegT = TypeVar("_HAFFmpegT", bound=HAFFmpeg)
-
-DOMAIN = "ffmpeg"
-
-SERVICE_START = "start"
-SERVICE_STOP = "stop"
-SERVICE_RESTART = "restart"
-
-SIGNAL_FFMPEG_START = SignalType[list[str] | None]("ffmpeg.start")
-SIGNAL_FFMPEG_STOP = SignalType[list[str] | None]("ffmpeg.stop")
-SIGNAL_FFMPEG_RESTART = SignalType[list[str] | None]("ffmpeg.restart")
+from .const import (
+    DOMAIN,
+    SIGNAL_FFMPEG_RESTART,
+    SIGNAL_FFMPEG_START,
+    SIGNAL_FFMPEG_STOP,
+)
+from .services import async_setup_services
 
 DATA_FFMPEG = "ffmpeg"
 
@@ -48,6 +41,12 @@ CONF_OUTPUT = "output"
 
 DEFAULT_BINARY = "ffmpeg"
 
+# Currently we only care if the version is < 3
+# because we use a different content-type
+# It is only important to update this version if the
+# content-type changes again in the future
+OFFICIAL_IMAGE_VERSION = "6.0"
+
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
@@ -56,8 +55,6 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-SERVICE_FFMPEG_SCHEMA = vol.Schema({vol.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -68,29 +65,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await manager.async_get_version()
 
-    # Register service
-    async def async_service_handle(service: ServiceCall) -> None:
-        """Handle service ffmpeg process."""
-        entity_ids: list[str] | None = service.data.get(ATTR_ENTITY_ID)
-
-        if service.service == SERVICE_START:
-            async_dispatcher_send(hass, SIGNAL_FFMPEG_START, entity_ids)
-        elif service.service == SERVICE_STOP:
-            async_dispatcher_send(hass, SIGNAL_FFMPEG_STOP, entity_ids)
-        else:
-            async_dispatcher_send(hass, SIGNAL_FFMPEG_RESTART, entity_ids)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_START, async_service_handle, schema=SERVICE_FFMPEG_SCHEMA
-    )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_STOP, async_service_handle, schema=SERVICE_FFMPEG_SCHEMA
-    )
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_RESTART, async_service_handle, schema=SERVICE_FFMPEG_SCHEMA
-    )
+    async_setup_services(hass)
 
     hass.data[DATA_FFMPEG] = manager
     return True
@@ -124,10 +99,9 @@ async def async_get_image(
         else:
             extra_cmd += " " + size_cmd
 
-    image = await asyncio.shield(
+    return await asyncio.shield(
         ffmpeg.get_image(input_source, output_format=output_format, extra_cmd=extra_cmd)
     )
-    return image
 
 
 class FFmpegManager:
@@ -141,26 +115,28 @@ class FFmpegManager:
         self._version: str | None = None
         self._major_version: int | None = None
 
-    @property
+    @cached_property
     def binary(self) -> str:
         """Return ffmpeg binary from config."""
         return self._bin
 
     async def async_get_version(self) -> tuple[str | None, int | None]:
         """Return ffmpeg version."""
-
-        ffversion = FFVersion(self._bin)
-        self._version = await ffversion.get_version()
-
-        self._major_version = None
-        if self._version is not None:
-            result = re.search(r"(\d+)\.", self._version)
-            if result is not None:
-                self._major_version = int(result.group(1))
+        if self._version is None:
+            if is_official_image():
+                self._version = OFFICIAL_IMAGE_VERSION
+                self._major_version = int(self._version.split(".")[0])
+            elif (
+                (version := await FFVersion(self._bin).get_version())
+                and (result := re.search(r"(\d+)\.", version))
+                and (major_version := int(result.group(1)))
+            ):
+                self._version = version
+                self._major_version = major_version
 
         return self._version, self._major_version
 
-    @property
+    @cached_property
     def ffmpeg_stream_content_type(self) -> str:
         """Return HTTP content type for ffmpeg stream."""
         if self._major_version is not None and self._major_version > 3:
@@ -169,7 +145,7 @@ class FFmpegManager:
         return CONTENT_TYPE_MULTIPART.format("ffserver")
 
 
-class FFmpegBase(Entity, Generic[_HAFFmpegT]):
+class FFmpegBase[_HAFFmpegT: HAFFmpeg](Entity):  # pylint: disable=hass-enforce-class-module
     """Interface object for FFmpeg."""
 
     _attr_should_poll = False
@@ -213,7 +189,7 @@ class FFmpegBase(Entity, Generic[_HAFFmpegT]):
 
         This method is a coroutine.
         """
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def _async_stop_ffmpeg(self, entity_ids: list[str] | None) -> None:
         """Stop a FFmpeg process.

@@ -10,33 +10,19 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import LockData, SchlageDataUpdateCoordinator
+from .coordinator import LockData, SchlageConfigEntry, SchlageDataUpdateCoordinator
 from .entity import SchlageEntity
 
 
-@dataclass(frozen=True)
-class SchlageBinarySensorEntityDescriptionMixin:
-    """Mixin for required keys."""
-
-    # NOTE: This has to be a mixin because these are required keys.
-    # BinarySensorEntityDescription has attributes with default values,
-    # which means we can't inherit from it because you haven't have
-    # non-default arguments follow default arguments in an initializer.
+@dataclass(frozen=True, kw_only=True)
+class SchlageBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Entity description for a Schlage binary_sensor."""
 
     value_fn: Callable[[LockData], bool]
-
-
-@dataclass(frozen=True)
-class SchlageBinarySensorEntityDescription(
-    BinarySensorEntityDescription, SchlageBinarySensorEntityDescriptionMixin
-):
-    """Entity description for a Schlage binary_sensor."""
 
 
 _DESCRIPTIONS: tuple[SchlageBinarySensorEntityDescription] = (
@@ -52,22 +38,25 @@ _DESCRIPTIONS: tuple[SchlageBinarySensorEntityDescription] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: SchlageConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up binary_sensors based on a config entry."""
-    coordinator: SchlageDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    entities = []
-    for device_id in coordinator.data.locks:
-        for description in _DESCRIPTIONS:
-            entities.append(
-                SchlageBinarySensor(
-                    coordinator=coordinator,
-                    description=description,
-                    device_id=device_id,
-                )
+    coordinator = config_entry.runtime_data
+
+    def _add_new_locks(locks: dict[str, LockData]) -> None:
+        async_add_entities(
+            SchlageBinarySensor(
+                coordinator=coordinator,
+                description=description,
+                device_id=device_id,
             )
-    async_add_entities(entities)
+            for device_id in locks
+            for description in _DESCRIPTIONS
+        )
+
+    _add_new_locks(coordinator.data.locks)
+    coordinator.new_locks_callbacks.append(_add_new_locks)
 
 
 class SchlageBinarySensor(SchlageEntity, BinarySensorEntity):

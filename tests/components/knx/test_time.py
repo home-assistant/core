@@ -1,7 +1,12 @@
 """Test KNX time."""
+
 from homeassistant.components.knx.const import CONF_RESPOND_TO_READ, KNX_ADDRESS
 from homeassistant.components.knx.schema import TimeSchema
-from homeassistant.components.time import ATTR_TIME, DOMAIN, SERVICE_SET_VALUE
+from homeassistant.components.time import (
+    ATTR_TIME,
+    DOMAIN as TIME_DOMAIN,
+    SERVICE_SET_VALUE,
+)
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, State
 
@@ -23,7 +28,7 @@ async def test_time(hass: HomeAssistant, knx: KNXTestKit) -> None:
     )
     # set value
     await hass.services.async_call(
-        DOMAIN,
+        TIME_DOMAIN,
         SERVICE_SET_VALUE,
         {"entity_id": "time.test", ATTR_TIME: "01:02:03"},
         blocking=True,

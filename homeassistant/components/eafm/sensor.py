@@ -1,89 +1,59 @@
 """Support for gauges from flood monitoring API."""
-import asyncio
-from datetime import timedelta
-import logging
 
-from aioeafm import get_station
+from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfLength
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import EafmConfigEntry, EafmCoordinator
 
 UNIT_MAPPING = {
     "http://qudt.org/1.1/vocab/unit#Meter": UnitOfLength.METERS,
 }
 
 
-def get_measures(station_data):
-    """Force measure key to always be a list."""
-    if "measures" not in station_data:
-        return []
-    if isinstance(station_data["measures"], dict):
-        return [station_data["measures"]]
-    return station_data["measures"]
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: EafmConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up UK Flood Monitoring Sensors."""
-    station_key = config_entry.data["station"]
-    session = async_get_clientsession(hass=hass)
+    coordinator = config_entry.runtime_data
+    created_entities: set[str] = set()
 
-    measurements = set()
-
-    async def async_update_data():
-        # DataUpdateCoordinator will handle aiohttp ClientErrors and timeouts
-        async with asyncio.timeout(30):
-            data = await get_station(session, station_key)
-
-        measures = get_measures(data)
-        entities = []
-
+    @callback
+    def _async_create_new_entities():
+        """Create new entities."""
+        if not coordinator.last_update_success:
+            return
+        measures: dict[str, dict[str, Any]] = coordinator.data["measures"]
+        entities: list[Measurement] = []
         # Look to see if payload contains new measures
-        for measure in measures:
-            if measure["@id"] in measurements:
+        for key, data in measures.items():
+            if key in created_entities:
                 continue
 
-            if "latestReading" not in measure:
+            if "latestReading" not in data:
                 # Don't create a sensor entity for a gauge that isn't available
                 continue
 
-            entities.append(Measurement(hass.data[DOMAIN][station_key], measure["@id"]))
-            measurements.add(measure["@id"])
+            entities.append(Measurement(coordinator, key))
+            created_entities.add(key)
 
         async_add_entities(entities)
 
-        # Turn data.measures into a dict rather than a list so easier for entities to
-        # find themselves.
-        data["measures"] = {measure["@id"]: measure for measure in measures}
+    _async_create_new_entities()
 
-        return data
-
-    hass.data[DOMAIN][station_key] = coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name="sensor",
-        update_method=async_update_data,
-        update_interval=timedelta(seconds=15 * 60),
+    # Subscribe to the coordinator to create new entities
+    # when the coordinator updates
+    config_entry.async_on_unload(
+        coordinator.async_add_listener(_async_create_new_entities)
     )
-
-    # Fetch initial data so we have data when entities subscribe
-    await coordinator.async_refresh()
 
 
 class Measurement(CoordinatorEntity, SensorEntity):
@@ -97,7 +67,7 @@ class Measurement(CoordinatorEntity, SensorEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, coordinator, key):
+    def __init__(self, coordinator: EafmCoordinator, key: str) -> None:
         """Initialise the gauge with a data instance and station."""
         super().__init__(coordinator)
         self.key = key

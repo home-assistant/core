@@ -1,4 +1,5 @@
 """Test the NamecheapDNS component."""
+
 from datetime import timedelta
 
 import pytest
@@ -17,7 +18,9 @@ PASSWORD = "abcdefgh"
 
 
 @pytest.fixture
-def setup_namecheapdns(hass, aioclient_mock):
+async def setup_namecheapdns(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
     """Fixture that sets up NamecheapDNS."""
     aioclient_mock.get(
         namecheapdns.UPDATE_URL,
@@ -25,12 +28,10 @@ def setup_namecheapdns(hass, aioclient_mock):
         text="<interface-response><ErrCount>0</ErrCount></interface-response>",
     )
 
-    hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            namecheapdns.DOMAIN,
-            {"namecheapdns": {"host": HOST, "domain": DOMAIN, "password": PASSWORD}},
-        )
+    await async_setup_component(
+        hass,
+        namecheapdns.DOMAIN,
+        {"namecheapdns": {"host": HOST, "domain": DOMAIN, "password": PASSWORD}},
     )
 
 

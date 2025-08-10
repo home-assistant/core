@@ -6,6 +6,12 @@
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
+      },
+      "reauth_confirm": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
       }
     },
     "error": {
@@ -14,24 +20,32 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "The user identifier does not match the previous identifier"
     }
   },
   "entity": {
     "binary_sensor": {
-      "water_flow": {
-        "name": "Water flow"
-      },
-      "alarm": {
-        "name": "Alarm"
+      "water_flow_to_probes": {
+        "name": "Water flow to probes"
       }
     },
     "sensor": {
       "air_temperature": {
         "name": "Air temperature"
       },
+      "electrolyzer": {
+        "name": "Electrolyzer"
+      },
       "free_chlorine": {
         "name": "Free chlorine"
+      },
+      "redox": {
+        "name": "Redox potential"
+      },
+      "salinity": {
+        "name": "Salinity"
       },
       "water_temperature": {
         "name": "Water temperature"

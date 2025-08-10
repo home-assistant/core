@@ -1,4 +1,5 @@
 """Constants for the Tesla Powerwall integration."""
+
 from typing import Final
 
 DOMAIN = "powerwall"
@@ -17,3 +18,6 @@ ATTR_IS_ACTIVE = "is_active"
 
 MODEL = "PowerWall 2"
 MANUFACTURER = "Tesla"
+
+CONFIG_ENTRY_COOKIE = "cookie"
+AUTH_COOKIE_KEY = "AuthCookie"

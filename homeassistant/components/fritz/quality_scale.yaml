@@ -1,0 +1,87 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name:
+    status: todo
+    comment: partially done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage:
+    status: todo
+    comment: we are close to the goal of 95%
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info: todo
+  discovery: done
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations:
+    status: exempt
+    comment: no known limitations, yet
+  docs-supported-devices:
+    status: todo
+    comment: add the known supported devices
+  docs-supported-functions:
+    status: todo
+    comment: need to be overhauled
+  docs-troubleshooting: done
+  docs-use-cases:
+    status: todo
+    comment: need to be overhauled
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: no known use cases for repair issues or flows, yet
+  stale-devices:
+    status: todo
+    comment: automate the current cleanup process and deprecate the corresponding button
+
+  # Platinum
+  async-dependency:
+    status: todo
+    comment: |
+      the fritzconnection lib is not async
+      changing this might need a bit more efforts to be spent
+  inject-websession:
+    status: todo
+    comment: |
+      the fritzconnection lib is not async and relies on requests
+      changing this might need a bit more efforts to be spent
+  strict-typing:
+    status: todo
+    comment: |
+      Requirements 'fritzconnection==1.14.0' and 'xmltodict==0.13.0' appear untyped

@@ -1,4 +1,5 @@
 """MicroBot class."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -18,7 +19,7 @@ class MicroBotEntity(PassiveBluetoothCoordinatorEntity[MicroBotDataUpdateCoordin
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator, config_entry):
+    def __init__(self, coordinator: MicroBotDataUpdateCoordinator) -> None:
         """Initialise the entity."""
         super().__init__(coordinator)
         self._address = self.coordinator.ble_device.address

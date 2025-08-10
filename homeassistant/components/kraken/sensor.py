@@ -1,4 +1,5 @@
 """The kraken integration."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -15,7 +16,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -32,16 +33,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class KrakenRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class KrakenSensorEntityDescription(SensorEntityDescription):
+    """Describes Kraken sensor entity."""
 
     value_fn: Callable[[DataUpdateCoordinator[KrakenResponse], str], float | int]
-
-
-@dataclass(frozen=True)
-class KrakenSensorEntityDescription(SensorEntityDescription, KrakenRequiredKeysMixin):
-    """Describes Kraken sensor entity."""
 
 
 SENSOR_TYPES: tuple[KrakenSensorEntityDescription, ...] = (
@@ -143,7 +139,7 @@ SENSOR_TYPES: tuple[KrakenSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add kraken entities from a config_entry."""
 

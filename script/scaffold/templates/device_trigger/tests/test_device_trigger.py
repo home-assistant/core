@@ -1,5 +1,5 @@
 """The tests for NEW_NAME device triggers."""
-import pytest
+
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
@@ -10,17 +10,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from tests.common import (
-    MockConfigEntry,
-    async_get_device_automations,
-    async_mock_service,
-)
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
+from tests.common import MockConfigEntry, async_get_device_automations
 
 
 async def test_get_triggers(
@@ -61,7 +51,7 @@ async def test_get_triggers(
 
 
 async def test_if_fires_on_state_change(
-    hass: HomeAssistant, calls: list[ServiceCall]
+    hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
     hass.states.async_set("NEW_DOMAIN.entity", STATE_OFF)
@@ -118,15 +108,17 @@ async def test_if_fires_on_state_change(
     # Fake that the entity is turning on.
     hass.states.async_set("NEW_DOMAIN.entity", STATE_ON)
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data[
-        "some"
-    ] == "turn_on - device - {} - off - on - None - 0".format("NEW_DOMAIN.entity")
+    assert len(service_calls) == 1
+    assert (
+        service_calls[0].data["some"]
+        == "turn_on - device - NEW_DOMAIN.entity - off - on - None - 0"
+    )
 
     # Fake that the entity is turning off.
     hass.states.async_set("NEW_DOMAIN.entity", STATE_OFF)
     await hass.async_block_till_done()
-    assert len(calls) == 2
-    assert calls[1].data[
-        "some"
-    ] == "turn_off - device - {} - on - off - None - 0".format("NEW_DOMAIN.entity")
+    assert len(service_calls) == 2
+    assert (
+        service_calls[1].data["some"]
+        == "turn_off - device - NEW_DOMAIN.entity - on - off - None - 0"
+    )

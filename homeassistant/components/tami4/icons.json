@@ -1,0 +1,35 @@
+{
+  "entity": {
+    "button": {
+      "boil_water": {
+        "default": "mdi:kettle-steam"
+      },
+      "prepare_drink": {
+        "default": "mdi:beer"
+      }
+    },
+    "sensor": {
+      "uv_last_replacement": {
+        "default": "mdi:calendar"
+      },
+      "uv_upcoming_replacement": {
+        "default": "mdi:calendar"
+      },
+      "uv_status": {
+        "default": "mdi:clipboard-check-multiple"
+      },
+      "filter_last_replacement": {
+        "default": "mdi:calendar"
+      },
+      "filter_upcoming_replacement": {
+        "default": "mdi:calendar"
+      },
+      "filter_status": {
+        "default": "mdi:clipboard-check-multiple"
+      },
+      "filter_litters_passed": {
+        "default": "mdi:water"
+      }
+    }
+  }
+}

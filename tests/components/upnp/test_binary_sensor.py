@@ -2,11 +2,11 @@
 
 from datetime import datetime, timedelta
 
-from async_upnp_client.profiles.igd import IgdDevice, IgdState, StatusInfo
+from async_upnp_client.profiles.igd import IgdDevice, IgdState
 
 from homeassistant.components.upnp.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -27,16 +27,15 @@ async def test_upnp_binary_sensors(
         bytes_sent=0,
         packets_received=0,
         packets_sent=0,
-        status_info=StatusInfo(
-            "Disconnected",
-            "",
-            40,
-        ),
+        connection_status="Disconnected",
+        last_connection_error="",
+        uptime=40,
         external_ip_address="8.9.10.11",
         kibibytes_per_sec_received=None,
         kibibytes_per_sec_sent=None,
         packets_per_sec_received=None,
         packets_per_sec_sent=None,
+        port_mapping_number_of_entries=0,
     )
 
     async_fire_time_changed(

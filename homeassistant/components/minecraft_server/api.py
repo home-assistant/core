@@ -1,13 +1,12 @@
 """API for the Minecraft Server integration."""
 
-
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
 
 from dns.resolver import LifetimeTimeout
 from mcstatus import BedrockServer, JavaServer
-from mcstatus.status_response import BedrockStatusResponse, JavaStatusResponse
+from mcstatus.responses import BedrockStatusResponse, JavaStatusResponse
 
 from homeassistant.core import HomeAssistant
 
@@ -141,8 +140,7 @@ class MinecraftServer:
         players_list: list[str] = []
 
         if players := status_response.players.sample:
-            for player in players:
-                players_list.append(player.name)
+            players_list.extend(player.name for player in players)
             players_list.sort()
 
         return MinecraftServerData(

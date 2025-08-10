@@ -1,8 +1,21 @@
 # serializer version: 1
+# name: test_audio_codec_resolve[aac]
+  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000,AudioCodec=aac'
+# ---
+# name: test_audio_codec_resolve[mp3]
+  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000,AudioCodec=mp3'
+# ---
+# name: test_audio_codec_resolve[vorbis]
+  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000,AudioCodec=vorbis'
+# ---
+# name: test_audio_codec_resolve[wma]
+  'http://localhost/Audio/TRACK-UUID/universal?UserId=test-username,DeviceId=TEST-UUID,MaxStreamingBitrate=140000000,AudioCodec=wma'
+# ---
 # name: test_movie_library
   dict({
     'can_expand': False,
     'can_play': True,
+    'can_search': False,
     'children': None,
     'children_media_class': None,
     'domain': 'jellyfin',
@@ -19,6 +32,7 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': None,
     'children_media_class': None,
     'domain': 'jellyfin',
@@ -35,6 +49,7 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': None,
     'children_media_class': None,
     'domain': 'jellyfin',
@@ -51,6 +66,7 @@
   dict({
     'can_expand': False,
     'can_play': True,
+    'can_search': False,
     'children': None,
     'children_media_class': None,
     'domain': 'jellyfin',
@@ -73,6 +89,7 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': None,
     'children_media_class': None,
     'domain': 'jellyfin',
@@ -89,6 +106,7 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': None,
     'children_media_class': None,
     'domain': 'jellyfin',
@@ -105,6 +123,7 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': None,
     'children_media_class': None,
     'domain': 'jellyfin',
@@ -121,6 +140,7 @@
   dict({
     'can_expand': False,
     'can_play': True,
+    'can_search': False,
     'children': None,
     'children_media_class': None,
     'domain': 'jellyfin',

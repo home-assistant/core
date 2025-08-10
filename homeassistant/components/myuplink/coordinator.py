@@ -1,12 +1,13 @@
 """Coordinator for myUplink."""
+
 import asyncio.timeouts
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 
-from myuplink.api import MyUplinkAPI
-from myuplink.models import Device, DevicePoint, System
+from myuplink import Device, DevicePoint, MyUplinkAPI, System
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -23,14 +24,22 @@ class CoordinatorData:
     time: datetime
 
 
+type MyUplinkConfigEntry = ConfigEntry[MyUplinkDataCoordinator]
+
+
 class MyUplinkDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
     """Coordinator for myUplink data."""
 
-    def __init__(self, hass: HomeAssistant, api: MyUplinkAPI) -> None:
+    config_entry: MyUplinkConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: MyUplinkConfigEntry, api: MyUplinkAPI
+    ) -> None:
         """Initialize myUplink coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="myuplink",
             update_interval=timedelta(seconds=60),
         )

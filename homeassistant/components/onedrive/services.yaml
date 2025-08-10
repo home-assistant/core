@@ -1,0 +1,15 @@
+upload:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: onedrive
+    filename:
+      required: false
+      selector:
+        object:
+    destination_folder:
+      required: true
+      selector:
+        text:

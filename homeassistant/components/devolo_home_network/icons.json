@@ -1,0 +1,44 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "connected_to_router": {
+        "default": "mdi:router-network"
+      }
+    },
+    "button": {
+      "pairing": {
+        "default": "mdi:plus-network-outline"
+      },
+      "start_wps": {
+        "default": "mdi:wifi-plus"
+      }
+    },
+    "device_tracker": {
+      "device_tracker": {
+        "default": "mdi:lan-disconnect",
+        "state": {
+          "home": "mdi:lan-connect"
+        }
+      }
+    },
+    "sensor": {
+      "connected_plc_devices": {
+        "default": "mdi:lan"
+      },
+      "connected_wifi_clients": {
+        "default": "mdi:wifi"
+      },
+      "neighboring_wifi_networks": {
+        "default": "mdi:wifi-marker"
+      }
+    },
+    "switch": {
+      "switch_guest_wifi": {
+        "default": "mdi:wifi"
+      },
+      "switch_leds": {
+        "default": "mdi:led-off"
+      }
+    }
+  }
+}

@@ -1,4 +1,5 @@
 """Elmax cover platform."""
+
 from __future__ import annotations
 
 import logging
@@ -8,13 +9,11 @@ from elmax_api.model.command import CoverCommand
 from elmax_api.model.cover_status import CoverStatus
 
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ElmaxCoordinator
-from .common import ElmaxEntity
-from .const import DOMAIN
+from .coordinator import ElmaxConfigEntry
+from .entity import ElmaxEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,11 +26,11 @@ _COMMAND_BY_MOTION_STATUS = {  # Maps the stop command to use for every cover mo
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ElmaxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Elmax cover platform."""
-    coordinator: ElmaxCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     # Add the cover feature only if supported by the current panel.
     if coordinator.data is None or not coordinator.data.cover_feature:
         return
@@ -49,7 +48,6 @@ async def async_setup_entry(
             if cover.endpoint_id in known_devices:
                 continue
             entity = ElmaxCover(
-                panel=coordinator.panel_entry,
                 elmax_device=cover,
                 panel_version=panel_status.release,
                 coordinator=coordinator,
@@ -121,13 +119,13 @@ class ElmaxCover(ElmaxEntity, CoverEntity):
         else:
             _LOGGER.debug("Ignoring stop request as the cover is IDLE")
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.coordinator.http_client.execute_command(
             endpoint_id=self._device.endpoint_id, command=CoverCommand.UP
         )
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.coordinator.http_client.execute_command(
             endpoint_id=self._device.endpoint_id, command=CoverCommand.DOWN

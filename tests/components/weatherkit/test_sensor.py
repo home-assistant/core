@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 
-from . import init_integration
+from . import init_integration, mock_weather_response
 
 
 @pytest.mark.parametrize(
@@ -20,7 +20,8 @@ async def test_sensor_values(
     hass: HomeAssistant, entity_name: str, expected_value: Any
 ) -> None:
     """Test that various sensor values match what we expect."""
-    await init_integration(hass)
+    with mock_weather_response():
+        await init_integration(hass)
 
     state = hass.states.get(entity_name)
     assert state

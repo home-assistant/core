@@ -1,4 +1,5 @@
 """Support for retrieving status info from Google Wifi/OnHub routers."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -9,7 +10,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
     SensorEntityDescription,
 )
@@ -20,7 +21,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle, dt as dt_util
@@ -42,19 +43,12 @@ ENDPOINT = "/api/v1/status"
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
 
 
-@dataclass(frozen=True)
-class GoogleWifiRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class GoogleWifiSensorEntityDescription(SensorEntityDescription):
+    """Describes GoogleWifi sensor entity."""
 
     primary_key: str
     sensor_key: str
-
-
-@dataclass(frozen=True)
-class GoogleWifiSensorEntityDescription(
-    SensorEntityDescription, GoogleWifiRequiredKeysMixin
-):
-    """Describes GoogleWifi sensor entity."""
 
 
 SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
@@ -99,7 +93,7 @@ SENSOR_TYPES: tuple[GoogleWifiSensorEntityDescription, ...] = (
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_KEYS): vol.All(

@@ -3,12 +3,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
-      'friendly_name': 'Minecraft Server Status',
-      'icon': 'mdi:lan',
+      'friendly_name': 'mc.dummyserver.com:25566 Status',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.minecraft_server_status',
+    'entity_id': 'binary_sensor.mc_dummyserver_com_25566_status',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -17,12 +17,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
-      'friendly_name': 'Minecraft Server Status',
-      'icon': 'mdi:lan',
+      'friendly_name': 'mc.dummyserver.com:25566 Status',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.minecraft_server_status',
+    'entity_id': 'binary_sensor.mc_dummyserver_com_25566_status',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -31,12 +31,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
-      'friendly_name': 'Minecraft Server Status',
-      'icon': 'mdi:lan',
+      'friendly_name': 'mc.dummyserver.com:25566 Status',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.minecraft_server_status',
+    'entity_id': 'binary_sensor.mc_dummyserver_com_25566_status',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
@@ -45,12 +45,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'connectivity',
-      'friendly_name': 'Minecraft Server Status',
-      'icon': 'mdi:lan',
+      'friendly_name': 'mc.dummyserver.com:25566 Status',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.minecraft_server_status',
+    'entity_id': 'binary_sensor.mc_dummyserver_com_25566_status',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })

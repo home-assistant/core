@@ -1,7 +1,10 @@
 """Tests for the Sonos Alarm switch platform."""
+
 from copy import copy
 from datetime import timedelta
 from unittest.mock import patch
+
+import pytest
 
 from homeassistant.components.sonos.const import DATA_SONOS_DISCOVERY_MANAGER
 from homeassistant.components.sonos.switch import (
@@ -12,13 +15,21 @@ from homeassistant.components.sonos.switch import (
     ATTR_RECURRENCE,
     ATTR_VOLUME,
 )
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import ATTR_TIME, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_TIME,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from .conftest import SonosMockEvent
+from .conftest import MockSoCo, SonosMockEvent
 
 from tests.common import async_fire_time_changed
 
@@ -116,11 +127,12 @@ async def test_switch_attributes(
             hass,
             dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
         )
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert m.called
 
     # Trigger subscription callback for speaker discovery
     await fire_zgs_event()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     status_light_state = hass.states.get(status_light.entity_id)
     assert status_light_state.state == STATE_ON
@@ -128,6 +140,33 @@ async def test_switch_attributes(
     touch_controls = entity_registry.entities["switch.zone_a_touch_controls"]
     touch_controls_state = hass.states.get(touch_controls.entity_id)
     assert touch_controls_state.state == STATE_ON
+
+
+@pytest.mark.parametrize(
+    ("service", "expected_result"),
+    [
+        (SERVICE_TURN_OFF, "0"),
+        (SERVICE_TURN_ON, "1"),
+    ],
+)
+async def test_switch_alarm_turn_on(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco: MockSoCo,
+    service: str,
+    expected_result: str,
+) -> None:
+    """Test enabling and disabling of alarm."""
+    await async_setup_sonos()
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, service, {ATTR_ENTITY_ID: "switch.sonos_alarm_14"}, blocking=True
+    )
+
+    assert soco.alarmClock.UpdateAlarm.call_count == 1
+    call_args = soco.alarmClock.UpdateAlarm.call_args[0]
+    assert call_args[0][0] == ("ID", "14")
+    assert call_args[0][4] == ("Enabled", expected_result)
 
 
 async def test_alarm_create_delete(
@@ -156,7 +195,7 @@ async def test_alarm_create_delete(
     alarm_event.variables["alarm_list_version"] = two_alarms["CurrentAlarmListVersion"]
 
     sub_callback(event=alarm_event)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "switch.sonos_alarm_14" in entity_registry.entities
     assert "switch.sonos_alarm_15" in entity_registry.entities
@@ -168,7 +207,7 @@ async def test_alarm_create_delete(
     alarm_clock.ListAlarms.return_value = one_alarm
 
     sub_callback(event=alarm_event)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "switch.sonos_alarm_14" in entity_registry.entities
     assert "switch.sonos_alarm_15" not in entity_registry.entities

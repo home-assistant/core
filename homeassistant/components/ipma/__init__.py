@@ -1,5 +1,7 @@
 """Component for the Portuguese weather service - IPMA."""
+
 import asyncio
+from dataclasses import dataclass
 import logging
 
 from pyipma import IPMAException
@@ -13,7 +15,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .config_flow import IpmaFlowHandler  # noqa: F401
-from .const import DATA_API, DATA_LOCATION, DOMAIN
 
 DEFAULT_NAME = "ipma"
 
@@ -21,8 +22,18 @@ PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
 _LOGGER = logging.getLogger(__name__)
 
+type IpmaConfigEntry = ConfigEntry[IpmaRuntimeData]
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+
+@dataclass
+class IpmaRuntimeData:
+    """IPMA runtime data."""
+
+    api: IPMA_API
+    location: Location
+
+
+async def async_setup_entry(hass: HomeAssistant, config_entry: IpmaConfigEntry) -> bool:
     """Set up IPMA station as config entry."""
 
     latitude = config_entry.data[CONF_LATITUDE]
@@ -33,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     try:
         async with asyncio.timeout(30):
             location = await Location.get(api, float(latitude), float(longitude))
-    except (IPMAException, asyncio.TimeoutError) as err:
+    except (IPMAException, TimeoutError) as err:
         raise ConfigEntryNotReady(
             f"Could not get location for ({latitude},{longitude})"
         ) from err
@@ -47,20 +58,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         location.global_id_local,
     )
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][config_entry.entry_id] = {DATA_API: api, DATA_LOCATION: location}
+    config_entry.runtime_data = IpmaRuntimeData(api=api, location=location)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IpmaConfigEntry) -> bool:
     """Unload a config entry."""
-
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    if not hass.data[DOMAIN]:
-        hass.data.pop(DOMAIN)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

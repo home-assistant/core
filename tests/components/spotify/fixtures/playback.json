@@ -1,0 +1,106 @@
+{
+  "device": {
+    "id": "a19f7a03a25aff3e43f457a328a8ba67a8c44789",
+    "is_active": true,
+    "is_private_session": false,
+    "is_restricted": false,
+    "name": "Master Bathroom Speaker",
+    "type": "Speaker",
+    "volume_percent": 25
+  },
+  "shuffle_state": false,
+  "repeat_state": "off",
+  "timestamp": 1689639030791,
+  "context": {
+    "external_urls": {
+      "spotify": "https://open.spotify.com/playlist/2r35vbe6hHl6yDSMfjKgmm"
+    },
+    "href": "https://api.spotify.com/v1/playlists/2r35vbe6hHl6yDSMfjKgmm",
+    "type": "playlist",
+    "uri": "spotify:user:rushofficial:playlist:2r35vbe6hHl6yDSMfjKgmm"
+  },
+  "progress_ms": 249367,
+  "item": {
+    "album": {
+      "album_type": "album",
+      "artists": [
+        {
+          "external_urls": {
+            "spotify": "https://open.spotify.com/artist/2Hkut4rAAyrQxRdof7FVJq"
+          },
+          "href": "https://api.spotify.com/v1/artists/2Hkut4rAAyrQxRdof7FVJq",
+          "id": "2Hkut4rAAyrQxRdof7FVJq",
+          "name": "Rush",
+          "type": "artist",
+          "uri": "spotify:artist:2Hkut4rAAyrQxRdof7FVJq"
+        }
+      ],
+      "external_urls": {
+        "spotify": "https://open.spotify.com/album/3nUNxSh2szhmN7iifAKv5i"
+      },
+      "href": "https://api.spotify.com/v1/albums/3nUNxSh2szhmN7iifAKv5i",
+      "id": "3nUNxSh2szhmN7iifAKv5i",
+      "images": [
+        {
+          "height": 640,
+          "url": "https://i.scdn.co/image/ab67616d0000b27306c0d7ebcabad0c39b566983",
+          "width": 640
+        },
+        {
+          "height": 300,
+          "url": "https://i.scdn.co/image/ab67616d00001e0206c0d7ebcabad0c39b566983",
+          "width": 300
+        },
+        {
+          "height": 64,
+          "url": "https://i.scdn.co/image/ab67616d0000485106c0d7ebcabad0c39b566983",
+          "width": 64
+        }
+      ],
+      "name": "Permanent Waves",
+      "release_date": "1980-01-01",
+      "release_date_precision": "day",
+      "total_tracks": 6,
+      "type": "album",
+      "uri": "spotify:album:3nUNxSh2szhmN7iifAKv5i"
+    },
+    "artists": [
+      {
+        "external_urls": {
+          "spotify": "https://open.spotify.com/artist/2Hkut4rAAyrQxRdof7FVJq"
+        },
+        "href": "https://api.spotify.com/v1/artists/2Hkut4rAAyrQxRdof7FVJq",
+        "id": "2Hkut4rAAyrQxRdof7FVJq",
+        "name": "Rush",
+        "type": "artist",
+        "uri": "spotify:artist:2Hkut4rAAyrQxRdof7FVJq"
+      }
+    ],
+    "disc_number": 1,
+    "duration_ms": 296466,
+    "explicit": false,
+    "external_ids": {
+      "isrc": "USMR18070028"
+    },
+    "external_urls": {
+      "spotify": "https://open.spotify.com/track/4e9hUiLsN4mx61ARosFi7p"
+    },
+    "href": "https://api.spotify.com/v1/tracks/4e9hUiLsN4mx61ARosFi7p",
+    "id": "4e9hUiLsN4mx61ARosFi7p",
+    "is_local": false,
+    "name": "The Spirit Of Radio",
+    "popularity": 68,
+    "preview_url": "https://p.scdn.co/mp3-preview/75cc52f458b2416f33f15c499783c51119ba9a93?cid=20bbc62823a3412ba5267ea5398e52d0",
+    "track_number": 1,
+    "type": "track",
+    "uri": "spotify:track:4e9hUiLsN4mx61ARosFi7p"
+  },
+  "currently_playing_type": "track",
+  "actions": {
+    "disallows": {
+      "skipping_prev": true,
+      "toggling_repeat_track": true
+    }
+  },
+  "is_playing": true
+}

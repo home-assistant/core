@@ -1,0 +1,91 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      Integration does not define custom actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not use any actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities don't subscribe to events explicitly
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup:
+    status: done
+    comment: |
+      Done implicitly with `await coordinator.async_config_entry_first_refresh()`.
+  unique-config-entry: done
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      Integration does not use options flow.
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: done
+    comment: |
+      Done implicitly with coordinator.
+  integration-owner: done
+  log-when-unavailable:
+    status: done
+    comment: |
+      Done implicitly with coordinator.
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      Integration doesn't require any form of authentication.
+  test-coverage: done
+  # Gold
+  entity-translations: done
+  entity-device-class: done
+  devices: done
+  entity-category: todo
+  entity-disabled-by-default: todo
+  discovery: todo
+  stale-devices:
+    status: exempt
+    comment: |
+      Device type integration.
+  diagnostics: todo
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: todo
+  dynamic-devices:
+    status: exempt
+    comment: |
+      Device type integration.
+  discovery-update-info: todo
+  repair-issues:
+    status: exempt
+    comment: |
+      This is not applicable for this integration.
+  docs-use-cases: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-data-update: done
+  docs-known-limitations: todo
+  docs-troubleshooting: todo
+  docs-examples: todo
+
+  # Platinum
+  async-dependency: todo
+  inject-websession: todo
+  strict-typing: done

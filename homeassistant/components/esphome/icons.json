@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "assist_in_progress": {
+        "default": "mdi:timer-sand"
+      }
+    },
+    "select": {
+      "pipeline": {
+        "default": "mdi:filter-outline"
+      },
+      "vad_sensitivity": {
+        "default": "mdi:volume-high"
+      },
+      "wake_word": {
+        "default": "mdi:microphone"
+      }
+    }
+  }
+}

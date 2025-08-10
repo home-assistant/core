@@ -1,4 +1,5 @@
 """DataUpdateCoordinator for the YouTube integration."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -21,6 +22,7 @@ from .const import (
     ATTR_SUBSCRIBER_COUNT,
     ATTR_THUMBNAIL,
     ATTR_TITLE,
+    ATTR_TOTAL_VIEWS,
     ATTR_VIDEO_ID,
     CONF_CHANNELS,
     DOMAIN,
@@ -33,12 +35,15 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, auth: AsyncConfigEntryAuth) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, auth: AsyncConfigEntryAuth
+    ) -> None:
         """Initialize the YouTube data coordinator."""
         self._auth = auth
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(minutes=15),
         )
@@ -67,6 +72,7 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     ATTR_ICON: channel.snippet.thumbnails.get_highest_quality().url,
                     ATTR_LATEST_VIDEO: latest_video,
                     ATTR_SUBSCRIBER_COUNT: channel.statistics.subscriber_count,
+                    ATTR_TOTAL_VIEWS: channel.statistics.view_count,
                 }
         except UnauthorizedError as err:
             raise ConfigEntryAuthFailed from err

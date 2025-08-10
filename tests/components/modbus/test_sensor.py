@@ -1,8 +1,10 @@
 """The tests for the Modbus sensor component."""
+
 import struct
 
 import pytest
 
+from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.modbus.const import (
     CALL_TYPE_REGISTER_HOLDING,
     CALL_TYPE_REGISTER_INPUT,
@@ -30,11 +32,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_ADDRESS,
     CONF_COUNT,
     CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_OFFSET,
+    CONF_PLATFORM,
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_SLAVE,
@@ -43,7 +47,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -120,15 +124,6 @@ SLAVE_UNIQUE_ID = "ground_floor_sensor"
                     CONF_NAME: TEST_ENTITY_NAME,
                     CONF_ADDRESS: 51,
                     CONF_DATA_TYPE: DataType.INT16,
-                }
-            ]
-        },
-        {
-            CONF_SENSORS: [
-                {
-                    CONF_NAME: TEST_ENTITY_NAME,
-                    CONF_ADDRESS: 51,
-                    CONF_DATA_TYPE: DataType.INT16,
                     CONF_SWAP: CONF_SWAP_BYTE,
                 }
             ]
@@ -170,6 +165,28 @@ SLAVE_UNIQUE_ID = "ground_floor_sensor"
                     CONF_ADDRESS: 51,
                     CONF_DATA_TYPE: DataType.INT32,
                     CONF_VIRTUAL_COUNT: 5,
+                }
+            ]
+        },
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_DATA_TYPE: DataType.INT16,
+                    CONF_MIN_VALUE: 1,
+                    CONF_MAX_VALUE: 3,
+                }
+            ]
+        },
+        {
+            CONF_SENSORS: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_ADDRESS: 51,
+                    CONF_DATA_TYPE: DataType.INT16,
+                    CONF_MIN_VALUE: -3,
+                    CONF_MAX_VALUE: -1,
                 }
             ]
         },
@@ -411,7 +428,7 @@ async def test_config_wrong_struct_sensor(
             },
             [0x89AB],
             False,
-            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
         ),
         (
             {
@@ -433,7 +450,7 @@ async def test_config_wrong_struct_sensor(
             },
             [0x89AB, 0xCDEF, 0x0123, 0x4567],
             False,
-            "9920249030613615975",
+            "9920249030613616640",
         ),
         (
             {
@@ -444,7 +461,7 @@ async def test_config_wrong_struct_sensor(
             },
             [0x0123, 0x4567, 0x89AB, 0xCDEF],
             False,
-            "163971058432973793",
+            "163971058432973792",
         ),
         (
             {
@@ -614,7 +631,7 @@ async def test_config_wrong_struct_sensor(
             },
             [0x8000, 0x0000],
             False,
-            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
         ),
         (
             {
@@ -674,7 +691,17 @@ async def test_config_wrong_struct_sensor(
             },
             [0x00AB, 0xCDEF],
             False,
-            "112593.75",
+            "112594",
+        ),
+        (
+            {
+                CONF_DATA_TYPE: DataType.INT16,
+                CONF_SCALE: -1,
+                CONF_OFFSET: 0,
+            },
+            [0x000A],
+            False,
+            "-10",
         ),
     ],
 )
@@ -715,7 +742,7 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
                 int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
             ],
             False,
-            ["34899771392", "0"],
+            ["34899771392.0", STATE_UNKNOWN],
         ),
         (
             {
@@ -730,7 +757,7 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
                 int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
             ],
             False,
-            ["34899771392", "0"],
+            ["34899771392.0", STATE_UNKNOWN],
         ),
         (
             {
@@ -775,7 +802,11 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             },
             [0x0102, 0x0304, 0x0403, 0x0201, 0x0403],
             False,
-            [STATE_UNAVAILABLE, STATE_UNKNOWN, STATE_UNKNOWN],
+            [
+                STATE_UNKNOWN,
+                STATE_UNKNOWN,
+                STATE_UNKNOWN,
+            ],
         ),
         (
             {
@@ -830,7 +861,7 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             },
             [0x0102, 0x0304, 0x0403, 0x0201],
             True,
-            [STATE_UNAVAILABLE, STATE_UNKNOWN],
+            [STATE_UNAVAILABLE, STATE_UNAVAILABLE],
         ),
         (
             {
@@ -839,7 +870,7 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             },
             [0x0102, 0x0304, 0x0403, 0x0201],
             True,
-            [STATE_UNAVAILABLE, STATE_UNKNOWN],
+            [STATE_UNAVAILABLE, STATE_UNAVAILABLE],
         ),
         (
             {
@@ -848,7 +879,7 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             },
             [],
             False,
-            [STATE_UNAVAILABLE, STATE_UNKNOWN],
+            [STATE_UNKNOWN, STATE_UNKNOWN],
         ),
         (
             {
@@ -857,7 +888,35 @@ async def test_all_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None:
             },
             [],
             False,
-            [STATE_UNAVAILABLE, STATE_UNKNOWN],
+            [STATE_UNKNOWN, STATE_UNKNOWN],
+        ),
+        (
+            {
+                CONF_VIRTUAL_COUNT: 4,
+                CONF_UNIQUE_ID: SLAVE_UNIQUE_ID,
+                CONF_DATA_TYPE: DataType.INT32,
+                CONF_NAN_VALUE: "0x800000",
+            },
+            [
+                0x0,
+                0x35,
+                0x0,
+                0x38,
+                0x80,
+                0x0,
+                0x80,
+                0x0,
+                0xFFFF,
+                0xFFF6,
+            ],
+            False,
+            [
+                "53",
+                "56",
+                STATE_UNKNOWN,
+                STATE_UNKNOWN,
+                "-10",
+            ],
         ),
     ],
 )
@@ -865,7 +924,7 @@ async def test_virtual_sensor(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_do_cycle, expected
 ) -> None:
     """Run test for sensor."""
-    for i in range(0, len(expected)):
+    for i, expected_value in enumerate(expected):
         entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
         unique_id = f"{SLAVE_UNIQUE_ID}"
         if i:
@@ -873,7 +932,7 @@ async def test_virtual_sensor(
             unique_id = f"{unique_id}_{i}"
         entry = entity_registry.async_get(entity_id)
         state = hass.states.get(entity_id).state
-        assert state == expected[i]
+        assert state == expected_value
         assert entry.unique_id == unique_id
 
 
@@ -925,7 +984,7 @@ async def test_virtual_sensor(
             },
             [0x0102, 0x0304, 0x0506, 0x0708],
             False,
-            [str(0x0708050603040102)],
+            [str(0x0708050603040100)],
         ),
         (
             {
@@ -958,7 +1017,7 @@ async def test_virtual_sensor(
             },
             [0x0102, 0x0304, 0x0506, 0x0708, 0x0901, 0x0902, 0x0903, 0x0904],
             False,
-            [str(0x0708050603040102), str(0x0904090309020901)],
+            [str(0x0708050603040100), str(0x0904090309020900)],
         ),
         (
             {
@@ -1023,10 +1082,10 @@ async def test_virtual_sensor(
             ],
             False,
             [
-                str(0x0604060306020601),
-                str(0x0704070307020701),
-                str(0x0804080308020801),
-                str(0x0904090309020901),
+                str(0x0604060306020600),
+                str(0x0704070307020700),
+                str(0x0804080308020800),
+                str(0x0904090309020900),
             ],
         ),
     ],
@@ -1035,12 +1094,12 @@ async def test_virtual_swap_sensor(
     hass: HomeAssistant, mock_do_cycle, expected
 ) -> None:
     """Run test for sensor."""
-    for i in range(0, len(expected)):
+    for i, expected_value in enumerate(expected):
         entity_id = f"{SENSOR_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
         if i:
             entity_id = f"{entity_id}_{i}"
         state = hass.states.get(entity_id).state
-        assert state == expected[i]
+        assert state == expected_value
 
 
 @pytest.mark.parametrize(
@@ -1076,7 +1135,7 @@ async def test_virtual_swap_sensor(
 )
 async def test_wrong_unpack(hass: HomeAssistant, mock_do_cycle) -> None:
     """Run test for sensor."""
-    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_ID).state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
@@ -1104,14 +1163,14 @@ async def test_wrong_unpack(hass: HomeAssistant, mock_do_cycle) -> None:
                 int.from_bytes(struct.pack(">f", float("nan"))[0:2]),
                 int.from_bytes(struct.pack(">f", float("nan"))[2:4]),
             ],
-            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
         ),
         (
             {
                 CONF_DATA_TYPE: DataType.FLOAT32,
             },
             [0x6E61, 0x6E00],
-            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
         ),
         (
             {
@@ -1120,7 +1179,7 @@ async def test_wrong_unpack(hass: HomeAssistant, mock_do_cycle) -> None:
                 CONF_STRUCTURE: "4s",
             },
             [0x6E61, 0x6E00],
-            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
         ),
         (
             {
@@ -1190,7 +1249,7 @@ async def test_unpack_ok(hass: HomeAssistant, mock_do_cycle, expected) -> None:
                 0x0000,
                 0x000A,
             ],
-            "0,10",
+            "0,10.00",
         ),
         (
             {
@@ -1299,7 +1358,7 @@ async def test_wrap_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> None
 
 
 @pytest.fixture(name="mock_restore")
-async def mock_restore(hass):
+async def mock_restore(hass: HomeAssistant) -> None:
     """Mock restore cache."""
     mock_restore_cache_with_extra_data(
         hass,
@@ -1355,16 +1414,22 @@ async def test_restore_state_sensor(
         },
     ],
 )
-async def test_service_sensor_update(hass: HomeAssistant, mock_modbus, mock_ha) -> None:
+async def test_service_sensor_update(hass: HomeAssistant, mock_modbus_ha) -> None:
     """Run test for service homeassistant.update_entity."""
-    mock_modbus.read_input_registers.return_value = ReadResult([27])
+    mock_modbus_ha.read_input_registers.return_value = ReadResult([27])
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     assert hass.states.get(ENTITY_ID).state == "27"
-    mock_modbus.read_input_registers.return_value = ReadResult([32])
+    mock_modbus_ha.read_input_registers.return_value = ReadResult([32])
     await hass.services.async_call(
-        "homeassistant", "update_entity", {"entity_id": ENTITY_ID}, blocking=True
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
     )
     assert hass.states.get(ENTITY_ID).state == "32"
 
@@ -1377,7 +1442,7 @@ async def test_no_discovery_info_sensor(
     assert await async_setup_component(
         hass,
         SENSOR_DOMAIN,
-        {SENSOR_DOMAIN: {"platform": MODBUS_DOMAIN}},
+        {SENSOR_DOMAIN: {CONF_PLATFORM: MODBUS_DOMAIN}},
     )
     await hass.async_block_till_done()
     assert SENSOR_DOMAIN in hass.config.components

@@ -1,0 +1,71 @@
+{
+  "id": 1,
+  "name": "Test Slats",
+  "profile": 2002,
+  "image": "default",
+  "favorite": 0,
+  "order": 1,
+  "protocol": 23,
+  "routing": 0,
+  "state": 1,
+  "state_changed": 1676901608,
+  "added": 1672148537,
+  "history": 1,
+  "cube_type": 14,
+  "note": "",
+  "services": 70,
+  "phonetic_name": "",
+  "owner": 2,
+  "security": 0,
+  "attributes": [
+    {
+      "id": 1,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": -45,
+      "maximum": 90,
+      "current_value": 1.0,
+      "target_value": 1.0,
+      "last_value": -21.0,
+      "unit": "°",
+      "step_value": 1.0,
+      "editable": 1,
+      "type": 113,
+      "state": 1,
+      "last_changed": 1678284920,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["step"]
+      }
+    },
+    {
+      "id": 2,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 2,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 1.0,
+      "unit": "n/a",
+      "step_value": 1.0,
+      "editable": 1,
+      "type": 337,
+      "state": 1,
+      "last_changed": 1678284911,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "can_observe": [300],
+        "observes": [72]
+      }
+    }
+  ]
+}

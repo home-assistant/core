@@ -3,11 +3,11 @@
   "name": "DoorBird",
   "codeowners": ["@oblogic7", "@bdraco", "@flacjacket"],
   "config_flow": true,
-  "dependencies": ["http"],
+  "dependencies": ["http", "repairs"],
   "documentation": "https://www.home-assistant.io/integrations/doorbird",
   "iot_class": "local_push",
   "loggers": ["doorbirdpy"],
-  "requirements": ["DoorBirdPy==2.1.0"],
+  "requirements": ["DoorBirdPy==3.0.8"],
   "zeroconf": [
     {
       "type": "_axis-video._tcp.local.",

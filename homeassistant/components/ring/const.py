@@ -1,7 +1,9 @@
 """The Ring constants."""
+
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Final
 
 from homeassistant.const import Platform
 
@@ -15,25 +17,20 @@ DEFAULT_ENTITY_NAMESPACE = "ring"
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CAMERA,
+    Platform.EVENT,
     Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
 ]
 
 
-DEVICES_SCAN_INTERVAL = timedelta(minutes=1)
-NOTIFICATIONS_SCAN_INTERVAL = timedelta(seconds=5)
-HISTORY_SCAN_INTERVAL = timedelta(minutes=1)
-HEALTH_SCAN_INTERVAL = timedelta(minutes=1)
-
-RING_API = "api"
-RING_DEVICES = "devices"
-
-RING_DEVICES_COORDINATOR = "device_data"
-RING_NOTIFICATIONS_COORDINATOR = "dings_data"
-RING_HISTORY_COORDINATOR = "history_data"
-RING_HEALTH_COORDINATOR = "health_data"
+SCAN_INTERVAL = timedelta(minutes=1)
 
 CONF_2FA = "2fa"
+CONF_LISTEN_CREDENTIALS = "listen_token"
+
+CONF_CONFIG_ENTRY_MINOR_VERSION: Final = 3

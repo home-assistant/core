@@ -1,4 +1,5 @@
 """The MELCloud Climate integration."""
+
 from __future__ import annotations
 
 import asyncio
@@ -22,13 +23,15 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.WATER_HEATER]
 
+type MelCloudConfigEntry = ConfigEntry[dict[str, list[MelCloudDevice]]]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Establish connection with MELClooud."""
+
+async def async_setup_entry(hass: HomeAssistant, entry: MelCloudConfigEntry) -> bool:
+    """Establish connection with MELCloud."""
     conf = entry.data
     try:
         mel_devices = await mel_devices_setup(hass, conf[CONF_TOKEN])
@@ -36,23 +39,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if isinstance(ex, ClientResponseError) and ex.code == 401:
             raise ConfigEntryAuthFailed from ex
         raise ConfigEntryNotReady from ex
-    except (asyncio.TimeoutError, ClientConnectionError) as ex:
+    except (TimeoutError, ClientConnectionError) as ex:
         raise ConfigEntryNotReady from ex
 
-    hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: mel_devices})
+    entry.runtime_data = mel_devices
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-    hass.data[DOMAIN].pop(config_entry.entry_id)
-    if not hass.data[DOMAIN]:
-        hass.data.pop(DOMAIN)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
 class MelCloudDevice:
@@ -123,11 +120,6 @@ class MelCloudDevice:
             via_device=(DOMAIN, f"{dev.mac}-{dev.serial}"),
         )
 
-    @property
-    def daily_energy_consumed(self) -> float | None:
-        """Return energy consumed during the current day in kWh."""
-        return self.device.daily_energy_consumed
-
 
 async def mel_devices_setup(
     hass: HomeAssistant, token: str
@@ -138,8 +130,8 @@ async def mel_devices_setup(
         all_devices = await get_devices(
             token,
             session,
-            conf_update_interval=timedelta(minutes=5),
-            device_set_debounce=timedelta(seconds=1),
+            conf_update_interval=timedelta(minutes=30),
+            device_set_debounce=timedelta(seconds=2),
         )
     wrapped_devices: dict[str, list[MelCloudDevice]] = {}
     for device_type, devices in all_devices.items():

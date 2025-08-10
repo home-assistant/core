@@ -1,4 +1,5 @@
 """Support for Plum Lightpad lights."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -15,8 +16,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.color as color_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import color as color_util
 
 from .const import DOMAIN
 
@@ -24,7 +25,7 @@ from .const import DOMAIN
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Plum Lightpad dimmer lights and glow rings."""
 
@@ -130,8 +131,8 @@ class GlowRing(LightEntity):
 
     _attr_color_mode = ColorMode.HS
     _attr_should_poll = False
+    _attr_translation_key = "glow_ring"
     _attr_supported_color_modes = {ColorMode.HS}
-    _attr_icon = "mdi:crop-portrait"
 
     def __init__(self, lightpad):
         """Initialize the light."""

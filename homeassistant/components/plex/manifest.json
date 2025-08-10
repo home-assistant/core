@@ -8,7 +8,7 @@
   "iot_class": "local_push",
   "loggers": ["plexapi", "plexwebsocket"],
   "requirements": [
-    "PlexAPI==4.15.7",
+    "PlexAPI==4.15.16",
     "plexauth==0.0.6",
     "plexwebsocket==0.0.14"
   ],

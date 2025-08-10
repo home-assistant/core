@@ -8,5 +8,5 @@
   "documentation": "https://www.home-assistant.io/integrations/plaato",
   "iot_class": "cloud_push",
   "loggers": ["pyplaato"],
-  "requirements": ["pyplaato==0.0.18"]
+  "requirements": ["pyplaato==0.0.19"]
 }

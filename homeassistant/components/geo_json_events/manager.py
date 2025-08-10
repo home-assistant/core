@@ -1,4 +1,5 @@
 """Entity manager for generic GeoJSON events."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -23,6 +24,8 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+type GeoJsonConfigEntry = ConfigEntry[GeoJsonFeedEntityManager]
 
 
 class GeoJsonFeedEntityManager:

@@ -1,0 +1,49 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "low_nutrients": {
+        "default": "mdi:beaker-alert",
+        "state": {
+          "off": "mdi:beaker"
+        }
+      },
+      "low_water": {
+        "default": "mdi:water-percent-alert",
+        "state": {
+          "off": "mdi:water-percent"
+        }
+      },
+      "pump": {
+        "default": "mdi:pump",
+        "state": {
+          "off": "mdi:pump-off"
+        }
+      }
+    },
+    "sensor": {
+      "water_level": {
+        "default": "mdi:water-percent"
+      }
+    },
+    "switch": {
+      "alarm_sound": {
+        "default": "mdi:bell-ring",
+        "state": {
+          "off": "mdi:bell-off"
+        }
+      },
+      "auto_mode": {
+        "default": "mdi:water-pump",
+        "state": {
+          "off": "mdi:water-pump-off"
+        }
+      },
+      "pump_cycling": {
+        "default": "mdi:pump",
+        "state": {
+          "off": "mdi:pump-off"
+        }
+      }
+    }
+  }
+}

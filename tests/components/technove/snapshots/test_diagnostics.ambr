@@ -1,0 +1,36 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'auto_charge': False,
+    'conflict_in_sharing_config': False,
+    'current': 23.75,
+    'energy_session': 12.34,
+    'energy_total': 1234,
+    'high_tariff_period_active': False,
+    'in_sharing_mode': False,
+    'is_battery_protected': False,
+    'is_session_active': True,
+    'is_static_ip': False,
+    'is_up_to_date': True,
+    'last_charge': '''
+      1701072080,0,17.39
+  
+    ''',
+    'mac_address': '**REDACTED**',
+    'max_charge_percentage': 0.9,
+    'max_current': 24,
+    'max_station_current': 32,
+    'name': 'TechnoVE Station',
+    'network_ssid': 'Connecting...',
+    'normal_period_active': False,
+    'rssi': -82,
+    'status': dict({
+      '__type': "<enum 'Status'>",
+      'repr': "<Status.PLUGGED_CHARGING: 'plugged_charging'>",
+    }),
+    'time': 1701000000,
+    'version': '1.82',
+    'voltage_in': 238,
+    'voltage_out': 238,
+  })
+# ---

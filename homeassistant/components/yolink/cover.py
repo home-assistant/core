@@ -1,4 +1,5 @@
 """YoLink Garage Door."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -13,7 +14,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import YoLinkCoordinator
@@ -23,7 +24,7 @@ from .entity import YoLinkEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up YoLink garage door from a config entry."""
     device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators
@@ -59,11 +60,13 @@ class YoLinkCoverEntity(YoLinkEntity, CoverEntity):
         """Update HA Entity State."""
         if (state_val := state.get("state")) is None:
             return
-        if self.coordinator.paired_device is None:
+        if self.coordinator.paired_device is None or state_val == "error":
             self._attr_is_closed = None
+            self._attr_available = False
             self.async_write_ha_state()
         elif state_val in ["open", "closed"]:
             self._attr_is_closed = state_val == "closed"
+            self._attr_available = True
             self.async_write_ha_state()
 
     async def toggle_garage_state(self) -> None:

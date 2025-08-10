@@ -1,4 +1,5 @@
 """Tests for the WLED sensor platform."""
+
 from datetime import datetime
 from unittest.mock import MagicMock, patch
 
@@ -43,7 +44,7 @@ async def test_sensors(
         == UnitOfElectricCurrent.MILLIAMPERE
     )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.CURRENT
-    assert state.state == "470"
+    assert state.state == "515"
 
     assert (
         entry := entity_registry.async_get("sensor.wled_rgb_light_estimated_current")
@@ -54,16 +55,16 @@ async def test_sensors(
     assert (state := hass.states.get("sensor.wled_rgb_light_uptime"))
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
-    assert state.state == "2019-11-11T09:10:00+00:00"
+    assert state.state == "2019-11-11T08:54:26+00:00"
 
     assert (entry := entity_registry.async_get("sensor.wled_rgb_light_uptime"))
     assert entry.unique_id == "aabbccddeeff_uptime"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
     assert (state := hass.states.get("sensor.wled_rgb_light_free_memory"))
-    assert state.attributes.get(ATTR_ICON) == "mdi:memory"
+    assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfInformation.BYTES
-    assert state.state == "14600"
+    assert state.state == "198384"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
     assert (entry := entity_registry.async_get("sensor.wled_rgb_light_free_memory"))
@@ -71,9 +72,9 @@ async def test_sensors(
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
     assert (state := hass.states.get("sensor.wled_rgb_light_wi_fi_signal"))
-    assert state.attributes.get(ATTR_ICON) == "mdi:wifi"
+    assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
-    assert state.state == "76"
+    assert state.state == "100"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
     assert (entry := entity_registry.async_get("sensor.wled_rgb_light_wi_fi_signal"))
@@ -86,14 +87,14 @@ async def test_sensors(
         state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == SIGNAL_STRENGTH_DECIBELS_MILLIWATT
     )
-    assert state.state == "-62"
+    assert state.state == "-43"
 
     assert (entry := entity_registry.async_get("sensor.wled_rgb_light_wi_fi_rssi"))
     assert entry.unique_id == "aabbccddeeff_wifi_rssi"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
     assert (state := hass.states.get("sensor.wled_rgb_light_wi_fi_channel"))
-    assert state.attributes.get(ATTR_ICON) == "mdi:wifi"
+    assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.state == "11"
 
@@ -102,7 +103,7 @@ async def test_sensors(
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
     assert (state := hass.states.get("sensor.wled_rgb_light_wi_fi_bssid"))
-    assert state.attributes.get(ATTR_ICON) == "mdi:wifi"
+    assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.state == "AA:AA:AA:AA:AA:BB"
 
@@ -111,7 +112,7 @@ async def test_sensors(
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
     assert (state := hass.states.get("sensor.wled_rgb_light_ip"))
-    assert state.attributes.get(ATTR_ICON) == "mdi:ip-network"
+    assert state.attributes.get(ATTR_ICON) is None
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) is None
     assert state.state == "127.0.0.1"
 
@@ -122,14 +123,14 @@ async def test_sensors(
 
 @pytest.mark.parametrize(
     "entity_id",
-    (
+    [
         "sensor.wled_rgb_light_uptime",
         "sensor.wled_rgb_light_free_memory",
         "sensor.wled_rgb_light_wi_fi_signal",
         "sensor.wled_rgb_light_wi_fi_rssi",
         "sensor.wled_rgb_light_wi_fi_channel",
         "sensor.wled_rgb_light_wi_fi_bssid",
-    ),
+    ],
 )
 @pytest.mark.usefixtures("init_integration")
 async def test_disabled_by_default_sensors(

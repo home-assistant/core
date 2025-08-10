@@ -1,4 +1,5 @@
 """Support for Awair sensors."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -28,11 +29,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     API_CO2,
+    API_DEW_POINT,
     API_DUST,
     API_HUMID,
     API_LUX,
@@ -45,21 +47,16 @@ from .const import (
     ATTRIBUTION,
     DOMAIN,
 )
-from .coordinator import AwairDataUpdateCoordinator, AwairResult
+from .coordinator import AwairConfigEntry, AwairDataUpdateCoordinator
 
 DUST_ALIASES = [API_PM25, API_PM10]
 
 
-@dataclass(frozen=True)
-class AwairRequiredKeysMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class AwairSensorEntityDescription(SensorEntityDescription):
+    """Describes Awair sensor entity."""
 
     unique_id_tag: str
-
-
-@dataclass(frozen=True)
-class AwairSensorEntityDescription(SensorEntityDescription, AwairRequiredKeysMixin):
-    """Describes Awair sensor entity."""
 
 
 SENSOR_TYPE_SCORE = AwairSensorEntityDescription(
@@ -114,6 +111,15 @@ SENSOR_TYPES: tuple[AwairSensorEntityDescription, ...] = (
         unique_id_tag="CO2",  # matches legacy format
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    AwairSensorEntityDescription(
+        key=API_DEW_POINT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        translation_key="dew_point",
+        unique_id_tag="dew_point",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
 )
 
 SENSOR_TYPES_DUST: tuple[AwairSensorEntityDescription, ...] = (
@@ -136,15 +142,14 @@ SENSOR_TYPES_DUST: tuple[AwairSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: AwairConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Awair sensor entity based on a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     entities = []
 
-    data: list[AwairResult] = coordinator.data.values()
-    for result in data:
+    for result in coordinator.data.values():
         if result.air_data:
             entities.append(AwairSensor(result.device, coordinator, SENSOR_TYPE_SCORE))
             device_sensors = result.air_data.sensors.keys()
@@ -297,6 +302,7 @@ class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
             identifiers={(DOMAIN, self._device.uuid)},
             manufacturer="Awair",
             model=self._device.model,
+            model_id=self._device.device_type,
             name=(
                 self._device.name
                 or cast(ConfigEntry, self.coordinator.config_entry).title

@@ -1,4 +1,5 @@
 """Fully Kiosk Browser button."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -12,28 +13,20 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import FullyKioskConfigEntry
 from .coordinator import FullyKioskDataUpdateCoordinator
 from .entity import FullyKioskEntity
 
 
-@dataclass(frozen=True)
-class FullyButtonEntityDescriptionMixin:
-    """Mixin to describe a Fully Kiosk Browser button entity."""
+@dataclass(frozen=True, kw_only=True)
+class FullyButtonEntityDescription(ButtonEntityDescription):
+    """Fully Kiosk Browser button description."""
 
     press_action: Callable[[FullyKiosk], Any]
-
-
-@dataclass(frozen=True)
-class FullyButtonEntityDescription(
-    ButtonEntityDescription, FullyButtonEntityDescriptionMixin
-):
-    """Fully Kiosk Browser button description."""
 
 
 BUTTONS: tuple[FullyButtonEntityDescription, ...] = (
@@ -74,13 +67,11 @@ BUTTONS: tuple[FullyButtonEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: FullyKioskConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Fully Kiosk Browser button entities."""
-    coordinator: FullyKioskDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         FullyButtonEntity(coordinator, description) for description in BUTTONS

@@ -1,19 +1,105 @@
 # serializer version: 1
 # name: test_as_dict
   dict({
+    'created_at': '2024-02-14T12:00:00+00:00',
     'data': dict({
     }),
     'disabled_by': None,
+    'discovery_keys': dict({
+    }),
     'domain': 'test',
     'entry_id': 'mock-entry',
     'minor_version': 1,
+    'modified_at': '2024-02-14T12:00:00+00:00',
     'options': dict({
     }),
     'pref_disable_new_entities': False,
     'pref_disable_polling': False,
     'source': 'user',
+    'subentries': list([
+    ]),
     'title': 'Mock Title',
     'unique_id': None,
     'version': 1,
+  })
+# ---
+# name: test_unique_id_collision_issues
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2025.11.0',
+    'created': <ANY>,
+    'data': dict({
+      'issue_type': 'config_entry_unique_id_collision',
+      'unique_id': 'group_1',
+    }),
+    'dismissed_version': None,
+    'domain': 'homeassistant',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': 'test2',
+    'issue_id': 'config_entry_unique_id_collision_test2_group_1',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.ERROR: 'error'>,
+    'translation_key': 'config_entry_unique_id_collision',
+    'translation_placeholders': dict({
+      'configure_url': '/config/integrations/integration/test2',
+      'domain': 'test2',
+      'titles': "'Mock Title', 'Mock Title', 'Mock Title'",
+      'unique_id': 'group_1',
+    }),
+  })
+# ---
+# name: test_unique_id_collision_issues.1
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2025.11.0',
+    'created': <ANY>,
+    'data': dict({
+      'issue_type': 'config_entry_unique_id_collision',
+      'unique_id': 'not_unique',
+    }),
+    'dismissed_version': None,
+    'domain': 'homeassistant',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': 'test3',
+    'issue_id': 'config_entry_unique_id_collision_test3_not_unique',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.ERROR: 'error'>,
+    'translation_key': 'config_entry_unique_id_collision_many',
+    'translation_placeholders': dict({
+      'configure_url': '/config/integrations/integration/test3',
+      'domain': 'test3',
+      'number_of_entries': '6',
+      'title_limit': '5',
+      'titles': "'Mock Title', 'Mock Title', 'Mock Title', 'Mock Title', 'Mock Title'",
+      'unique_id': 'not_unique',
+    }),
+  })
+# ---
+# name: test_unique_id_collision_issues.2
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2025.11.0',
+    'created': <ANY>,
+    'data': dict({
+      'issue_type': 'config_entry_unique_id_collision',
+      'unique_id': 'not_unique',
+    }),
+    'dismissed_version': None,
+    'domain': 'homeassistant',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': 'test3',
+    'issue_id': 'config_entry_unique_id_collision_test3_not_unique',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.ERROR: 'error'>,
+    'translation_key': 'config_entry_unique_id_collision',
+    'translation_placeholders': dict({
+      'configure_url': '/config/integrations/integration/test3',
+      'domain': 'test3',
+      'titles': "'Mock Title', 'Mock Title', 'Mock Title', 'Mock Title', 'Mock Title'",
+      'unique_id': 'not_unique',
+    }),
   })
 # ---

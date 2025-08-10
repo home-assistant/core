@@ -1,4 +1,5 @@
 """Generate an integration."""
+
 from pathlib import Path
 
 from .model import Info
@@ -18,7 +19,7 @@ def generate(template: str, info: Info) -> None:
     print()
 
 
-def _generate(src_dir, target_dir, info: Info) -> None:
+def _generate(src_dir: Path, target_dir: Path, info: Info) -> None:
     """Generate an integration."""
     replaces = {"NEW_DOMAIN": info.domain, "NEW_NAME": info.name}
 

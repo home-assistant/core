@@ -1,4 +1,5 @@
 """The ReCollect Waste integration."""
+
 from __future__ import annotations
 
 from datetime import date, timedelta
@@ -51,6 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         LOGGER,
+        config_entry=entry,
         name=(
             f"Place {entry.data[CONF_PLACE_ID]}, Service {entry.data[CONF_SERVICE_ID]}"
         ),
@@ -92,7 +94,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # 1 -> 2: Update unique ID of existing, single sensor entity to be consistent with
     # common format for platforms going forward:
     if version == 1:
-        version = entry.version = 2
+        version = 2
+        hass.config_entries.async_update_entry(entry, version=version)
 
         @callback
         def migrate_unique_id(entity_entry: er.RegistryEntry) -> dict[str, Any]:
@@ -107,6 +110,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         await er.async_migrate_entries(hass, entry.entry_id, migrate_unique_id)
 
-    LOGGER.info("Migration to version %s successful", version)
+    LOGGER.debug("Migration to version %s successful", version)
 
     return True

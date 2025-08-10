@@ -6,5 +6,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["georss_qld_bushfire_alert_client"],
-  "requirements": ["georss-qld-bushfire-alert-client==0.5"]
+  "quality_scale": "legacy",
+  "requirements": ["georss-qld-bushfire-alert-client==0.8"]
 }

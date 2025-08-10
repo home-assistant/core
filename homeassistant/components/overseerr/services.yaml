@@ -1,0 +1,30 @@
+get_requests:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: overseerr
+    status:
+      selector:
+        select:
+          options:
+            - approved
+            - pending
+            - available
+            - processing
+            - unavailable
+            - failed
+          translation_key: request_status
+    sort_order:
+      selector:
+        select:
+          options:
+            - added
+            - modified
+          translation_key: request_sort_order
+    requested_by:
+      selector:
+        number:
+          min: 0
+          mode: box

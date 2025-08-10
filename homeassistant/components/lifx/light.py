@@ -1,4 +1,5 @@
 """Support for LIFX lights."""
+
 from __future__ import annotations
 
 import asyncio
@@ -9,6 +10,9 @@ import aiolifx_effects as aiolifx_effects_module
 import voluptuous as vol
 
 from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_BRIGHTNESS_STEP,
+    ATTR_BRIGHTNESS_STEP_PCT,
     ATTR_EFFECT,
     ATTR_TRANSITION,
     LIGHT_TURN_ON_SCHEMA,
@@ -16,14 +20,13 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     _LOGGER,
@@ -34,8 +37,9 @@ from .const import (
     DATA_LIFX_MANAGER,
     DOMAIN,
     INFRARED_BRIGHTNESS,
+    LIFX_CEILING_PRODUCT_IDS,
 )
-from .coordinator import FirmwareEffect, LIFXUpdateCoordinator
+from .coordinator import FirmwareEffect, LIFXConfigEntry, LIFXUpdateCoordinator
 from .entity import LIFXEntity
 from .manager import (
     SERVICE_EFFECT_COLORLOOP,
@@ -43,6 +47,7 @@ from .manager import (
     SERVICE_EFFECT_MORPH,
     SERVICE_EFFECT_MOVE,
     SERVICE_EFFECT_PULSE,
+    SERVICE_EFFECT_SKY,
     SERVICE_EFFECT_STOP,
     LIFXManager,
 )
@@ -52,7 +57,7 @@ LIFX_STATE_SETTLE_DELAY = 0.3
 
 SERVICE_LIFX_SET_STATE = "set_state"
 
-LIFX_SET_STATE_SCHEMA = {
+LIFX_SET_STATE_SCHEMA: VolDictType = {
     **LIGHT_TURN_ON_SCHEMA,
     ATTR_INFRARED: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
     ATTR_ZONES: vol.All(cv.ensure_list, [cv.positive_int]),
@@ -62,7 +67,7 @@ LIFX_SET_STATE_SCHEMA = {
 
 SERVICE_LIFX_SET_HEV_CYCLE_STATE = "set_hev_cycle_state"
 
-LIFX_SET_HEV_CYCLE_STATE_SCHEMA = {
+LIFX_SET_HEV_CYCLE_STATE_SCHEMA: VolDictType = {
     ATTR_POWER: vol.Required(cv.boolean),
     ATTR_DURATION: vol.All(vol.Coerce(float), vol.Clamp(min=0, max=86400)),
 }
@@ -75,13 +80,12 @@ HSBK_KELVIN = 3
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: LIFXConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LIFX from a config entry."""
-    domain_data = hass.data[DOMAIN]
-    coordinator: LIFXUpdateCoordinator = domain_data[entry.entry_id]
-    manager: LIFXManager = domain_data[DATA_LIFX_MANAGER]
+    coordinator = entry.runtime_data
+    manager = hass.data[DATA_LIFX_MANAGER]
     device = coordinator.device
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
@@ -95,7 +99,10 @@ async def async_setup_entry(
         "set_hev_cycle_state",
     )
     if lifx_features(device)["matrix"]:
-        entity: LIFXLight = LIFXMatrix(coordinator, manager, entry)
+        if device.product in LIFX_CEILING_PRODUCT_IDS:
+            entity: LIFXLight = LIFXCeiling(coordinator, manager, entry)
+        else:
+            entity = LIFXMatrix(coordinator, manager, entry)
     elif lifx_features(device)["extended_multizone"]:
         entity = LIFXExtendedMultiZone(coordinator, manager, entry)
     elif lifx_features(device)["multizone"]:
@@ -117,7 +124,7 @@ class LIFXLight(LIFXEntity, LightEntity):
         self,
         coordinator: LIFXUpdateCoordinator,
         manager: LIFXManager,
-        entry: ConfigEntry,
+        entry: LIFXConfigEntry,
     ) -> None:
         """Initialize the light."""
         super().__init__(coordinator)
@@ -230,6 +237,20 @@ class LIFXLight(LIFXEntity, LightEntity):
         else:
             fade = 0
 
+        if ATTR_BRIGHTNESS_STEP in kwargs or ATTR_BRIGHTNESS_STEP_PCT in kwargs:
+            brightness = self.brightness if self.is_on and self.brightness else 0
+
+            if ATTR_BRIGHTNESS_STEP in kwargs:
+                brightness += kwargs.pop(ATTR_BRIGHTNESS_STEP)
+
+            else:
+                brightness_pct = round(brightness / 255 * 100)
+                brightness = round(
+                    (brightness_pct + kwargs.pop(ATTR_BRIGHTNESS_STEP_PCT)) / 100 * 255
+                )
+
+            kwargs[ATTR_BRIGHTNESS] = max(0, min(255, brightness))
+
         # These are both False if ATTR_POWER is not set
         power_on = kwargs.get(ATTR_POWER, False)
         power_off = not kwargs.get(ATTR_POWER, True)
@@ -281,7 +302,7 @@ class LIFXLight(LIFXEntity, LightEntity):
         """Send a power change to the bulb."""
         try:
             await self.coordinator.async_set_power(pwr, duration)
-        except asyncio.TimeoutError as ex:
+        except TimeoutError as ex:
             raise HomeAssistantError(f"Timeout setting power for {self.name}") from ex
 
     async def set_color(
@@ -294,7 +315,7 @@ class LIFXLight(LIFXEntity, LightEntity):
         merged_hsbk = merge_hsbk(self.bulb.color, hsbk)
         try:
             await self.coordinator.async_set_color(merged_hsbk, duration)
-        except asyncio.TimeoutError as ex:
+        except TimeoutError as ex:
             raise HomeAssistantError(f"Timeout setting color for {self.name}") from ex
 
     async def get_color(
@@ -303,7 +324,7 @@ class LIFXLight(LIFXEntity, LightEntity):
         """Send a get color message to the bulb."""
         try:
             await self.coordinator.async_get_color()
-        except asyncio.TimeoutError as ex:
+        except TimeoutError as ex:
             raise HomeAssistantError(
                 f"Timeout setting getting color for {self.name}"
             ) from ex
@@ -417,7 +438,7 @@ class LIFXMultiZone(LIFXColor):
                 await super().set_color(hsbk, kwargs, duration)
                 return
 
-            zones = list(range(0, num_zones))
+            zones = list(range(num_zones))
         else:
             zones = [x for x in set(zones) if x < num_zones]
 
@@ -429,7 +450,7 @@ class LIFXMultiZone(LIFXColor):
                 await self.coordinator.async_set_color_zones(
                     zone, zone, zone_hsbk, duration, apply
                 )
-            except asyncio.TimeoutError as ex:
+            except TimeoutError as ex:
                 raise HomeAssistantError(
                     f"Timeout setting color zones for {self.name}"
                 ) from ex
@@ -444,7 +465,7 @@ class LIFXMultiZone(LIFXColor):
         """Send a get color zones message to the device."""
         try:
             await self.coordinator.async_get_color_zones()
-        except asyncio.TimeoutError as ex:
+        except TimeoutError as ex:
             raise HomeAssistantError(
                 f"Timeout getting color zones from {self.name}"
             ) from ex
@@ -477,7 +498,7 @@ class LIFXExtendedMultiZone(LIFXMultiZone):
             await self.coordinator.async_set_extended_color_zones(
                 color_zones, duration=duration
             )
-        except asyncio.TimeoutError as ex:
+        except TimeoutError as ex:
             raise HomeAssistantError(
                 f"Timeout setting color zones on {self.name}"
             ) from ex
@@ -495,5 +516,18 @@ class LIFXMatrix(LIFXColor):
         SERVICE_EFFECT_FLAME,
         SERVICE_EFFECT_PULSE,
         SERVICE_EFFECT_MORPH,
+        SERVICE_EFFECT_STOP,
+    ]
+
+
+class LIFXCeiling(LIFXMatrix):
+    """Representation of a LIFX Ceiling device."""
+
+    _attr_effect_list = [
+        SERVICE_EFFECT_COLORLOOP,
+        SERVICE_EFFECT_FLAME,
+        SERVICE_EFFECT_PULSE,
+        SERVICE_EFFECT_MORPH,
+        SERVICE_EFFECT_SKY,
         SERVICE_EFFECT_STOP,
     ]

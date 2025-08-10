@@ -1,0 +1,48 @@
+send_message:
+  target:
+    entity:
+      domain: todo
+      integration: bring
+  fields:
+    message:
+      example: urgent_message
+      required: true
+      default: "going_shopping"
+      selector:
+        select:
+          translation_key: "notification_type_selector"
+          options:
+            - "going_shopping"
+            - "changed_list"
+            - "shopping_done"
+            - "urgent_message"
+    item:
+      example: Cilantro
+      required: false
+      selector:
+        text:
+send_reaction:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          filter:
+            - integration: bring
+              domain: event
+      example: event.shopping_list
+    reaction:
+      required: true
+      selector:
+        select:
+          options:
+            - label: 👍🏼
+              value: thumbs_up
+            - label: 🧐
+              value: monocle
+            - label: 🤤
+              value: drooling
+            - label: ❤️
+              value: heart
+          mode: dropdown
+      example: thumbs_up

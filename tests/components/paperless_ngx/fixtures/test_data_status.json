@@ -1,0 +1,36 @@
+{
+  "pngx_version": "2.15.3",
+  "server_os": "Linux-6.6.74-haos-raspi-aarch64-with-glibc2.36",
+  "install_type": "docker",
+  "storage": {
+    "total": 62101651456,
+    "available": 25376927744
+  },
+  "database": {
+    "type": "sqlite",
+    "url": "/config/data/db.sqlite3",
+    "status": "OK",
+    "error": null,
+    "migration_status": {
+      "latest_migration": "paperless_mail.0029_mailrule_pdf_layout",
+      "unapplied_migrations": []
+    }
+  },
+  "tasks": {
+    "redis_url": "redis://localhost:6379",
+    "redis_status": "OK",
+    "redis_error": null,
+    "celery_status": "OK",
+    "celery_url": "celery@ca5234a0-paperless-ngx",
+    "celery_error": null,
+    "index_status": "OK",
+    "index_last_modified": "2025-05-25T00:00:27.053090+02:00",
+    "index_error": null,
+    "classifier_status": "OK",
+    "classifier_last_trained": "2025-05-25T15:05:15.824671Z",
+    "classifier_error": null,
+    "sanity_check_status": "OK",
+    "sanity_check_last_run": "2025-05-24T22:30:21.005536Z",
+    "sanity_check_error": null
+  }
+}

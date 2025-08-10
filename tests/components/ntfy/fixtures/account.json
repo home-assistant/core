@@ -1,0 +1,66 @@
+{
+  "username": "username",
+  "role": "user",
+  "sync_topic": "st_xxxxxxxxxxxxx",
+  "language": "en",
+  "notification": {
+    "min_priority": 2,
+    "delete_after": 604800
+  },
+  "subscriptions": [
+    {
+      "base_url": "http://localhost",
+      "topic": "test",
+      "display_name": null
+    }
+  ],
+  "reservations": [
+    {
+      "topic": "test",
+      "everyone": "read-only"
+    }
+  ],
+  "tokens": [
+    {
+      "token": "tk_xxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "last_access": 1743362634,
+      "last_origin": "172.17.0.1",
+      "expires": 1743621234
+    }
+  ],
+  "tier": {
+    "code": "starter",
+    "name": "starter"
+  },
+  "limits": {
+    "basis": "tier",
+    "messages": 5000,
+    "messages_expiry_duration": 43200,
+    "emails": 20,
+    "calls": 0,
+    "reservations": 3,
+    "attachment_total_size": 104857600,
+    "attachment_file_size": 15728640,
+    "attachment_expiry_duration": 21600,
+    "attachment_bandwidth": 1073741824
+  },
+  "stats": {
+    "messages": 10,
+    "messages_remaining": 4990,
+    "emails": 0,
+    "emails_remaining": 20,
+    "calls": 0,
+    "calls_remaining": 0,
+    "reservations": 1,
+    "reservations_remaining": 2,
+    "attachment_total_size": 0,
+    "attachment_total_size_remaining": 104857600
+  },
+  "billing": {
+    "customer": true,
+    "subscription": true,
+    "status": "active",
+    "interval": "year",
+    "paid_until": 1754080667
+  }
+}

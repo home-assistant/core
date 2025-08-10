@@ -1,0 +1,86 @@
+rules:
+  # Bronze
+  config-flow:
+    status: todo
+    comment: Some fields are missing a data_description
+  brands: done
+  dependency-transparency: done
+  common-modules:
+    status: exempt
+    comment: The integration does not have a base entity or coordinator.
+  has-entity-name: done
+  action-setup:
+    status: exempt
+    comment: The integration does not register actions.
+  appropriate-polling:
+    status: exempt
+    comment: The integration does not poll.
+  test-before-configure:
+    status: todo
+    comment: |
+      The integration does a connection test in the configuration flow, however
+      it does not fail if the user has ipv6 misconfigured.
+  entity-event-setup: done
+  unique-config-entry: done
+  entity-unique-id: done
+  docs-installation-instructions: done
+  docs-removal-instructions: todo
+  test-before-setup:
+    status: todo
+    comment: |
+      The integration does tests on setup, however the most common issues
+      observed are related to ipv6 misconfigurations and the error messages
+      are not self explanatory and can be improved.
+  docs-high-level-description: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      The integration has full test coverage however it does not yet assert the specific contents of the
+      unique id of the created entry. Additional tests coverage for combinations of features like
+      `test_dhcp_discovery_with_creds` would also be useful.
+      Tests can be improved so that all end in either CREATE_ENTRY or ABORT.
+  docs-actions: done
+  runtime-data: done
+
+  # Silver
+  log-when-unavailable: todo
+  config-entry-unloading: todo
+  reauthentication-flow:
+    status: todo
+    comment: |
+      Supports reauthentication, however can be improved to ensure the user does not change accounts
+  action-exceptions: todo
+  docs-installation-parameters: todo
+  integration-owner: todo
+  parallel-updates: todo
+  test-coverage: todo
+  docs-configuration-parameters: todo
+  entity-unavailable: todo
+
+  # Gold
+  docs-examples: todo
+  discovery-update-info: todo
+  entity-device-class: todo
+  entity-translations: todo
+  docs-data-update: todo
+  entity-disabled-by-default: todo
+  discovery: todo
+  exception-translations: todo
+  devices: todo
+  docs-supported-devices: todo
+  icon-translations: todo
+  docs-known-limitations: todo
+  stale-devices: todo
+  docs-supported-functions: todo
+  repair-issues: todo
+  reconfiguration-flow: todo
+  entity-category: todo
+  dynamic-devices: todo
+  docs-troubleshooting: todo
+  diagnostics: todo
+  docs-use-cases: todo
+
+  # Platinum
+  async-dependency: todo
+  strict-typing: todo
+  inject-websession: todo

@@ -1,4 +1,5 @@
 """Support for Rituals Perfume Genie numbers."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -10,7 +11,7 @@ from pyrituals import Diffuser
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import RitualsDataUpdateCoordinator
@@ -29,7 +30,6 @@ ENTITY_DESCRIPTIONS = (
     RitualsNumberEntityDescription(
         key="perfume_amount",
         translation_key="perfume_amount",
-        icon="mdi:gauge",
         native_min_value=1,
         native_max_value=3,
         value_fn=lambda diffuser: diffuser.perfume_amount,
@@ -41,7 +41,7 @@ ENTITY_DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the diffuser numbers."""
     coordinators: dict[str, RitualsDataUpdateCoordinator] = hass.data[DOMAIN][

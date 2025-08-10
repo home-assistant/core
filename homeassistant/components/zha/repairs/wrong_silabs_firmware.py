@@ -1,12 +1,14 @@
 """ZHA repairs for common environmental and device problems."""
+
 from __future__ import annotations
 
 import enum
 import logging
 
-from universal_silabs_flasher.const import ApplicationType
-from universal_silabs_flasher.flasher import Flasher
-
+from homeassistant.components.homeassistant_hardware.util import (
+    ApplicationType,
+    probe_silabs_firmware_type,
+)
 from homeassistant.components.homeassistant_sky_connect import (
     hardware as skyconnect_hardware,
 )
@@ -18,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 
-from ..core.const import DOMAIN
+from ..const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,16 +36,6 @@ class HardwareType(enum.StrEnum):
     YELLOW = "yellow"
     OTHER = "other"
 
-
-DISABLE_MULTIPAN_URL = {
-    HardwareType.YELLOW: (
-        "https://yellow.home-assistant.io/guides/disable-multiprotocol/#flash-the-silicon-labs-radio-firmware"
-    ),
-    HardwareType.SKYCONNECT: (
-        "https://skyconnect.home-assistant.io/procedures/disable-multiprotocol/#step-flash-the-silicon-labs-radio-firmware"
-    ),
-    HardwareType.OTHER: None,
-}
 
 ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED = "wrong_silabs_firmware_installed"
 
@@ -73,18 +65,6 @@ def _detect_radio_hardware(hass: HomeAssistant, device: str) -> HardwareType:
     return HardwareType.OTHER
 
 
-async def probe_silabs_firmware_type(device: str) -> ApplicationType | None:
-    """Probe the running firmware on a Silabs device."""
-    flasher = Flasher(device=device)
-
-    try:
-        await flasher.probe_app_type()
-    except Exception:  # pylint: disable=broad-except
-        _LOGGER.debug("Failed to probe application type", exc_info=True)
-
-    return flasher.app_type
-
-
 async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> bool:
     """Create a repair issue if the wrong type of SiLabs firmware is detected."""
     # Only consider actual serial ports
@@ -100,7 +80,7 @@ async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> boo
     if app_type == ApplicationType.EZSP:
         # If connecting fails but we somehow probe EZSP (e.g. stuck in bootloader),
         # reconnect, it should work
-        raise AlreadyRunningEZSP()
+        raise AlreadyRunningEZSP
 
     hardware_type = _detect_radio_hardware(hass, device)
     ir.async_create_issue(
@@ -109,7 +89,6 @@ async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> boo
         issue_id=ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED,
         is_fixable=False,
         is_persistent=True,
-        learn_more_url=DISABLE_MULTIPAN_URL[hardware_type],
         severity=ir.IssueSeverity.ERROR,
         translation_key=(
             ISSUE_WRONG_SILABS_FIRMWARE_INSTALLED

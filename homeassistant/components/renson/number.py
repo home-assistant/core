@@ -1,4 +1,5 @@
 """Platform to control a Renson ventilation unit."""
+
 from __future__ import annotations
 
 import logging
@@ -14,7 +15,7 @@ from homeassistant.components.number import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import RensonCoordinator
@@ -26,7 +27,6 @@ _LOGGER = logging.getLogger(__name__)
 RENSON_NUMBER_DESCRIPTION = NumberEntityDescription(
     key="filter_change",
     translation_key="filter_change",
-    icon="mdi:filter",
     native_step=1,
     native_min_value=0,
     native_max_value=360,
@@ -40,7 +40,7 @@ RENSON_NUMBER_DESCRIPTION = NumberEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renson number platform."""
 

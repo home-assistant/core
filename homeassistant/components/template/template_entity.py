@@ -1,41 +1,46 @@
 """TemplateEntity utility class."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 import contextlib
-import itertools
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any, cast
 
+from propcache.api import under_cached_property
 import voluptuous as vol
 
+from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
 from homeassistant.const import (
+    CONF_DEVICE_ID,
     CONF_ENTITY_PICTURE_TEMPLATE,
-    CONF_FRIENDLY_NAME,
     CONF_ICON,
     CONF_ICON_TEMPLATE,
     CONF_NAME,
+    CONF_OPTIMISTIC,
+    CONF_PATH,
+    CONF_VARIABLES,
     STATE_UNKNOWN,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
-    Context,
+    Event,
+    EventStateChangedData,
     HomeAssistant,
     State,
     callback,
     validate_state,
 )
 from homeassistant.exceptions import TemplateError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
-    EventStateChangedData,
     TrackTemplate,
     TrackTemplateResult,
     TrackTemplateResultInfo,
     async_track_template_result,
 )
-from homeassistant.helpers.script import Script, _VarsType
+from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.template import (
     Template,
@@ -43,10 +48,9 @@ from homeassistant.helpers.template import (
     result_as_boolean,
 )
 from homeassistant.helpers.trigger_template_entity import (
-    TEMPLATE_ENTITY_BASE_SCHEMA,
     make_template_entity_base_schema,
 )
-from homeassistant.helpers.typing import ConfigType, EventType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_ATTRIBUTE_TEMPLATES,
@@ -54,12 +58,9 @@ from .const import (
     CONF_AVAILABILITY,
     CONF_AVAILABILITY_TEMPLATE,
     CONF_PICTURE,
+    TEMPLATE_ENTITY_BASE_SCHEMA,
 )
-
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
+from .entity import AbstractTemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,22 +76,55 @@ TEMPLATE_ENTITY_ICON_SCHEMA = vol.Schema(
     }
 )
 
-TEMPLATE_ENTITY_COMMON_SCHEMA = vol.Schema(
+TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_ATTRIBUTES): vol.Schema({cv.string: cv.template}),
-        vol.Optional(CONF_AVAILABILITY): cv.template,
     }
-).extend(TEMPLATE_ENTITY_BASE_SCHEMA.schema)
+)
+
+TEMPLATE_ENTITY_COMMON_SCHEMA = (
+    vol.Schema(
+        {
+            vol.Optional(CONF_AVAILABILITY): cv.template,
+            vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
+        }
+    )
+    .extend(TEMPLATE_ENTITY_BASE_SCHEMA.schema)
+    .extend(TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA.schema)
+)
+
+TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.template,
+        vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
+    }
+).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA.schema)
 
 
-def make_template_entity_common_schema(default_name: str) -> vol.Schema:
+TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA = {
+    vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
+}
+
+
+def make_template_entity_common_modern_schema(
+    default_name: str,
+) -> vol.Schema:
     """Return a schema with default name."""
     return vol.Schema(
         {
-            vol.Optional(CONF_ATTRIBUTES): vol.Schema({cv.string: cv.template}),
             vol.Optional(CONF_AVAILABILITY): cv.template,
+            vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
         }
     ).extend(make_template_entity_base_schema(default_name).schema)
+
+
+def make_template_entity_common_modern_attributes_schema(
+    default_name: str,
+) -> vol.Schema:
+    """Return a schema with default name."""
+    return make_template_entity_common_modern_schema(default_name).extend(
+        TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA.schema
+    )
 
 
 TEMPLATE_ENTITY_ATTRIBUTES_SCHEMA_LEGACY = vol.Schema(
@@ -113,40 +147,6 @@ TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY = vol.Schema(
         vol.Optional(CONF_ICON_TEMPLATE): cv.template,
     }
 ).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema)
-
-
-LEGACY_FIELDS = {
-    CONF_ICON_TEMPLATE: CONF_ICON,
-    CONF_ENTITY_PICTURE_TEMPLATE: CONF_PICTURE,
-    CONF_AVAILABILITY_TEMPLATE: CONF_AVAILABILITY,
-    CONF_ATTRIBUTE_TEMPLATES: CONF_ATTRIBUTES,
-    CONF_FRIENDLY_NAME: CONF_NAME,
-}
-
-
-def rewrite_common_legacy_to_modern_conf(
-    entity_cfg: dict[str, Any], extra_legacy_fields: dict[str, str] | None = None
-) -> dict[str, Any]:
-    """Rewrite legacy config."""
-    entity_cfg = {**entity_cfg}
-    if extra_legacy_fields is None:
-        extra_legacy_fields = {}
-
-    for from_key, to_key in itertools.chain(
-        LEGACY_FIELDS.items(), extra_legacy_fields.items()
-    ):
-        if from_key not in entity_cfg or to_key in entity_cfg:
-            continue
-
-        val = entity_cfg.pop(from_key)
-        if isinstance(val, str):
-            val = Template(val)
-        entity_cfg[to_key] = val
-
-    if CONF_NAME in entity_cfg and isinstance(entity_cfg[CONF_NAME], str):
-        entity_cfg[CONF_NAME] = Template(entity_cfg[CONF_NAME])
-
-    return entity_cfg
 
 
 class _TemplateAttribute:
@@ -189,9 +189,9 @@ class _TemplateAttribute:
     @callback
     def handle_result(
         self,
-        event: EventType[EventStateChangedData] | None,
+        event: Event[EventStateChangedData] | None,
         template: Template,
-        last_result: str | None | TemplateError,
+        last_result: str | TemplateError | None,
         result: str | TemplateError,
     ) -> None:
         """Handle a template result event callback."""
@@ -244,7 +244,7 @@ class _TemplateAttribute:
         return
 
 
-class TemplateEntity(Entity):
+class TemplateEntity(AbstractTemplateEntity):
     """Entity that uses templates to calculate attributes."""
 
     _attr_available = True
@@ -254,42 +254,36 @@ class TemplateEntity(Entity):
     def __init__(
         self,
         hass: HomeAssistant,
-        *,
-        availability_template: Template | None = None,
-        icon_template: Template | None = None,
-        entity_picture_template: Template | None = None,
-        attribute_templates: dict[str, Template] | None = None,
-        config: ConfigType | None = None,
-        fallback_name: str | None = None,
-        unique_id: str | None = None,
+        config: ConfigType,
+        unique_id: str | None,
     ) -> None:
         """Template Entity."""
+        AbstractTemplateEntity.__init__(self, hass, config)
         self._template_attrs: dict[Template, list[_TemplateAttribute]] = {}
         self._template_result_info: TrackTemplateResultInfo | None = None
         self._attr_extra_state_attributes = {}
         self._self_ref_update_count = 0
         self._attr_unique_id = unique_id
-        self._preview_callback: Callable[
-            [
-                str | None,
-                dict[str, Any] | None,
-                dict[str, bool | set[str]] | None,
-                str | None,
-            ],
-            None,
-        ] | None = None
-        if config is None:
-            self._attribute_templates = attribute_templates
-            self._availability_template = availability_template
-            self._icon_template = icon_template
-            self._entity_picture_template = entity_picture_template
-            self._friendly_name_template = None
-        else:
-            self._attribute_templates = config.get(CONF_ATTRIBUTES)
-            self._availability_template = config.get(CONF_AVAILABILITY)
-            self._icon_template = config.get(CONF_ICON)
-            self._entity_picture_template = config.get(CONF_PICTURE)
-            self._friendly_name_template = config.get(CONF_NAME)
+        self._preview_callback: (
+            Callable[
+                [
+                    str | None,
+                    dict[str, Any] | None,
+                    dict[str, bool | set[str]] | None,
+                    str | None,
+                ],
+                None,
+            ]
+            | None
+        ) = None
+        self._run_variables: ScriptVariables | dict
+        self._attribute_templates = config.get(CONF_ATTRIBUTES)
+        self._availability_template = config.get(CONF_AVAILABILITY)
+        self._icon_template = config.get(CONF_ICON)
+        self._entity_picture_template = config.get(CONF_PICTURE)
+        self._friendly_name_template = config.get(CONF_NAME)
+        self._run_variables = config.get(CONF_VARIABLES, {})
+        self._blueprint_inputs = config.get("raw_blueprint_inputs")
 
         class DummyState(State):
             """None-state for template entities not yet added to the state machine."""
@@ -299,7 +293,7 @@ class TemplateEntity(Entity):
                 super().__init__("unknown.unknown", STATE_UNKNOWN)
                 self.entity_id = None  # type: ignore[assignment]
 
-            @cached_property
+            @under_cached_property
             def name(self) -> str:
                 """Name of this state."""
                 return "<None>"
@@ -307,9 +301,8 @@ class TemplateEntity(Entity):
         variables = {"this": DummyState()}
 
         # Try to render the name as it can influence the entity ID
-        self._attr_name = fallback_name
+        self._attr_name = None
         if self._friendly_name_template:
-            self._friendly_name_template.hass = hass
             with contextlib.suppress(TemplateError):
                 self._attr_name = self._friendly_name_template.async_render(
                     variables=variables, parse_result=False
@@ -318,14 +311,12 @@ class TemplateEntity(Entity):
         # Templates will not render while the entity is unavailable, try to render the
         # icon and picture templates.
         if self._entity_picture_template:
-            self._entity_picture_template.hass = hass
             with contextlib.suppress(TemplateError):
                 self._attr_entity_picture = self._entity_picture_template.async_render(
                     variables=variables, parse_result=False
                 )
 
         if self._icon_template:
-            self._icon_template.hass = hass
             with contextlib.suppress(TemplateError):
                 self._attr_icon = self._icon_template.async_render(
                     variables=variables, parse_result=False
@@ -360,6 +351,25 @@ class TemplateEntity(Entity):
             attribute_key, attribute_template, None, _update_attribute
         )
 
+    @property
+    def referenced_blueprint(self) -> str | None:
+        """Return referenced blueprint or None."""
+        if self._blueprint_inputs is None:
+            return None
+        return cast(str, self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH])
+
+    def _render_script_variables(self) -> dict[str, Any]:
+        """Render configured variables."""
+        if isinstance(self._run_variables, dict):
+            return self._run_variables
+
+        return self._run_variables.async_render(
+            self.hass,
+            {
+                "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+            },
+        )
+
     def add_template_attribute(
         self,
         attribute: str,
@@ -387,8 +397,10 @@ class TemplateEntity(Entity):
             If True, the attribute will be set to None if the template errors.
 
         """
-        assert self.hass is not None, "hass cannot be None"
-        template.hass = self.hass
+        if self.hass is None:
+            raise ValueError("hass cannot be None")
+        if template.hass is None:
+            raise ValueError("template.hass cannot be None")
         template_attribute = _TemplateAttribute(
             self, attribute, template, validator, on_update, none_on_template_error
         )
@@ -398,7 +410,7 @@ class TemplateEntity(Entity):
     @callback
     def _handle_results(
         self,
-        event: EventType[EventStateChangedData] | None,
+        event: Event[EventStateChangedData] | None,
         updates: list[TrackTemplateResult],
     ) -> None:
         """Call back the results to the attributes."""
@@ -437,7 +449,7 @@ class TemplateEntity(Entity):
         try:
             calculated_state = self._async_calculate_state()
             validate_state(calculated_state.state)
-        except Exception as err:  # pylint: disable=broad-exception-caught
+        except Exception as err:  # noqa: BLE001
             self._preview_callback(None, None, None, str(err))
         else:
             assert self._template_result_info
@@ -457,14 +469,16 @@ class TemplateEntity(Entity):
         template_var_tups: list[TrackTemplate] = []
         has_availability_template = False
 
-        variables = {"this": TemplateStateFromEntityId(self.hass, self.entity_id)}
+        variables = {
+            "this": TemplateStateFromEntityId(self.hass, self.entity_id),
+            **self._render_script_variables(),
+        }
 
         for template, attributes in self._template_attrs.items():
             template_var_tup = TrackTemplate(template, variables)
             is_availability_template = False
             for attribute in attributes:
-                # pylint: disable-next=protected-access
-                if attribute._attribute == "_attr_available":
+                if attribute._attribute == "_attr_available":  # noqa: SLF001
                     has_availability_template = True
                     is_availability_template = True
                 attribute.async_setup()
@@ -504,13 +518,15 @@ class TemplateEntity(Entity):
             )
         if self._entity_picture_template is not None:
             self.add_template_attribute(
-                "_attr_entity_picture", self._entity_picture_template
+                "_attr_entity_picture", self._entity_picture_template, cv.string
             )
         if (
             self._friendly_name_template is not None
             and not self._friendly_name_template.is_static
         ):
-            self.add_template_attribute("_attr_name", self._friendly_name_template)
+            self.add_template_attribute(
+                "_attr_name", self._friendly_name_template, cv.string
+            )
 
     @callback
     def async_start_preview(
@@ -534,7 +550,7 @@ class TemplateEntity(Entity):
         self._async_setup_templates()
         try:
             self._async_template_startup(None, log_template_error)
-        except Exception as err:  # pylint: disable=broad-exception-caught
+        except Exception as err:  # noqa: BLE001
             preview_callback(None, None, None, str(err))
         return self._call_on_remove_callbacks
 
@@ -548,21 +564,3 @@ class TemplateEntity(Entity):
         """Call for forced update."""
         assert self._template_result_info
         self._template_result_info.async_refresh()
-
-    async def async_run_script(
-        self,
-        script: Script,
-        *,
-        run_variables: _VarsType | None = None,
-        context: Context | None = None,
-    ) -> None:
-        """Run an action script."""
-        if run_variables is None:
-            run_variables = {}
-        await script.async_run(
-            run_variables={
-                "this": TemplateStateFromEntityId(self.hass, self.entity_id),
-                **run_variables,
-            },
-            context=context,
-        )

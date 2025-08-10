@@ -1,4 +1,5 @@
 """Binary sensors for renson."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -23,25 +24,18 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import RensonCoordinator
 from .entity import RensonEntity
 
 
-@dataclass(frozen=True)
-class RensonBinarySensorEntityDescriptionMixin:
-    """Mixin for required keys."""
+@dataclass(frozen=True, kw_only=True)
+class RensonBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Description of binary sensor."""
 
     field: FieldEnum
-
-
-@dataclass(frozen=True)
-class RensonBinarySensorEntityDescription(
-    BinarySensorEntityDescription, RensonBinarySensorEntityDescriptionMixin
-):
-    """Description of binary sensor."""
 
 
 BINARY_SENSORS: tuple[RensonBinarySensorEntityDescription, ...] = (
@@ -92,7 +86,7 @@ BINARY_SENSORS: tuple[RensonBinarySensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Call the Renson integration to setup."""
 

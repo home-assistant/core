@@ -10,9 +10,9 @@ blueprint:
       selector:
         number:
           mode: "box"
-trigger:
-  platform: event
+triggers:
+  trigger: event
   event_type: !input trigger_event
-action:
+actions:
   service: !input service_to_call
   entity_id: light.kitchen

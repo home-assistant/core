@@ -1,4 +1,5 @@
 """Describe deCONZ logbook events."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -6,9 +7,9 @@ from collections.abc import Callable
 from homeassistant.components.logbook import LOGBOOK_ENTRY_MESSAGE, LOGBOOK_ENTRY_NAME
 from homeassistant.const import ATTR_DEVICE_ID, CONF_EVENT, CONF_ID
 from homeassistant.core import Event, HomeAssistant, callback
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import device_registry as dr
 
-from .const import CONF_GESTURE, DOMAIN as DECONZ_DOMAIN
+from .const import CONF_GESTURE, DOMAIN
 from .deconz_event import CONF_DECONZ_ALARM_EVENT, CONF_DECONZ_EVENT
 from .device_trigger import (
     CONF_BOTH_BUTTONS,
@@ -199,6 +200,6 @@ def async_describe_events(
         }
 
     async_describe_event(
-        DECONZ_DOMAIN, CONF_DECONZ_ALARM_EVENT, async_describe_deconz_alarm_event
+        DOMAIN, CONF_DECONZ_ALARM_EVENT, async_describe_deconz_alarm_event
     )
-    async_describe_event(DECONZ_DOMAIN, CONF_DECONZ_EVENT, async_describe_deconz_event)
+    async_describe_event(DOMAIN, CONF_DECONZ_EVENT, async_describe_deconz_event)

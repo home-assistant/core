@@ -1,4 +1,5 @@
 """Support for restoring entity states on startup."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
@@ -9,17 +10,18 @@ from typing import Any, Self, cast
 from homeassistant.const import ATTR_RESTORED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import json_loads
 
 from . import start
 from .entity import Entity
 from .event import async_track_time_interval
-from .frame import report
 from .json import JSONEncoder
+from .singleton import singleton
 from .storage import Store
 
-DATA_RESTORE_STATE = "restore_state"
+DATA_RESTORE_STATE: HassKey[RestoreStateData] = HassKey("restore_state")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,12 +74,11 @@ class StoredState:
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the stored state to be JSON serialized."""
-        result = {
+        return {
             "state": self.state.json_fragment,
             "extra_data": self.extra_data.as_dict() if self.extra_data else None,
             "last_seen": self.last_seen,
         }
-        return result
 
     @classmethod
     def from_dict(cls, json_dict: dict) -> Self:
@@ -96,15 +97,14 @@ class StoredState:
 
 async def async_load(hass: HomeAssistant) -> None:
     """Load the restore state task."""
-    restore_state = RestoreStateData(hass)
-    await restore_state.async_setup()
-    hass.data[DATA_RESTORE_STATE] = restore_state
+    await async_get(hass).async_setup()
 
 
 @callback
+@singleton(DATA_RESTORE_STATE)
 def async_get(hass: HomeAssistant) -> RestoreStateData:
     """Get the restore state data helper."""
-    return cast(RestoreStateData, hass.data[DATA_RESTORE_STATE])
+    return RestoreStateData(hass)
 
 
 class RestoreStateData:
@@ -114,21 +114,6 @@ class RestoreStateData:
     async def async_save_persistent_states(cls, hass: HomeAssistant) -> None:
         """Dump states now."""
         await async_get(hass).async_dump_states()
-
-    @classmethod
-    async def async_get_instance(cls, hass: HomeAssistant) -> RestoreStateData:
-        """Return the instance of this class."""
-        # Nothing should actually be calling this anymore, but we'll keep it
-        # around for a while to avoid breaking custom components.
-        #
-        # In fact they should not be accessing this at all.
-        report(
-            "restore_state.RestoreStateData.async_get_instance is deprecated, "
-            "and not intended to be called by custom components; Please"
-            "refactor your code to use RestoreEntity instead;"
-            " restore_state.async_get(hass) can be used in the meantime",
-        )
-        return async_get(hass)
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the restore state data class."""
@@ -143,7 +128,8 @@ class RestoreStateData:
         """Set up up the instance of this data helper."""
         await self.async_load()
 
-        async def hass_start(hass: HomeAssistant) -> None:
+        @callback
+        def hass_start(hass: HomeAssistant) -> None:
             """Start the restore state task."""
             self.async_setup_dump()
 
@@ -235,7 +221,9 @@ class RestoreStateData:
         # Dump the initial states now. This helps minimize the risk of having
         # old states loaded by overwriting the last states once Home Assistant
         # has started and the old states have been read.
-        self.hass.async_create_task(_async_dump_states(), "RestoreStateData dump")
+        self.hass.async_create_task_internal(
+            _async_dump_states(), "RestoreStateData dump"
+        )
 
         # Dump states periodically
         cancel_interval = async_track_time_interval(
@@ -277,7 +265,7 @@ class RestoreStateData:
                 state, extra_data, dt_util.utcnow()
             )
 
-        self.entities.pop(entity_id)
+        del self.entities[entity_id]
 
 
 class RestoreEntity(Entity):

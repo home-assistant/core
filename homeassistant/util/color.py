@@ -1,4 +1,5 @@
 """Color util methods."""
+
 from __future__ import annotations
 
 import colorsys
@@ -243,7 +244,7 @@ def color_RGB_to_xy_brightness(
     y = Y / (X + Y + Z)
 
     # Brightness
-    Y = 1 if Y > 1 else Y
+    Y = min(Y, 1)
     brightness = round(Y * 255)
 
     # Check if the given xy value is within the color-reach of the lamp.
@@ -376,7 +377,7 @@ def color_hsv_to_RGB(iH: float, iS: float, iV: float) -> tuple[int, int, int]:
     Val is scaled 0-100
     """
     fRGB = colorsys.hsv_to_rgb(iH / 360, iS / 100, iV / 100)
-    return (int(fRGB[0] * 255), int(fRGB[1] * 255), int(fRGB[2] * 255))
+    return (round(fRGB[0] * 255), round(fRGB[1] * 255), round(fRGB[2] * 255))
 
 
 def color_hs_to_RGB(iH: float, iS: float) -> tuple[int, int, int]:

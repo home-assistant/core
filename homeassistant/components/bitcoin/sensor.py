@@ -1,4 +1,5 @@
 """Bitcoin information service that uses blockchain.com."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -8,13 +9,13 @@ from blockchain import exchangerates, statistics
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.const import CONF_CURRENCY, CONF_DISPLAY_OPTIONS, UnitOfTime
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -126,7 +127,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 OPTION_KEYS = [desc.key for desc in SENSOR_TYPES]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_DISPLAY_OPTIONS, default=[]): vol.All(
             cv.ensure_list, [vol.In(OPTION_KEYS)]

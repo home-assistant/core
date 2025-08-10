@@ -11,6 +11,17 @@ set_zone_moisture_percent:
           min: 0
           max: 100
           unit_of_measurement: "%"
+start_watering:
+  target:
+    entity:
+      integration: rachio
+      domain: switch
+  fields:
+    duration:
+      example: 15
+      required: false
+      selector:
+        object:
 start_multiple_zone_schedule:
   target:
     entity:

@@ -1,17 +1,30 @@
 """Tests for hassfest requirements."""
+
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
-from script.hassfest.model import Integration
-from script.hassfest.requirements import validate_requirements_format
+from script.hassfest.model import Config, Integration
+from script.hassfest.requirements import (
+    PACKAGE_CHECK_PREPARE_UPDATE,
+    PACKAGE_CHECK_VERSION_RANGE,
+    check_dependency_version_range,
+    validate_requirements_format,
+)
 
 
 @pytest.fixture
 def integration():
     """Fixture for hassfest integration model."""
-    integration = Integration(
-        path=Path("homeassistant/components/test"),
+    return Integration(
+        path=Path("homeassistant/components/test").absolute(),
+        _config=Config(
+            root=Path(".").absolute(),
+            specific_integrations=None,
+            action="validate",
+            requirements=True,
+        ),
         _manifest={
             "domain": "test",
             "documentation": "https://example.com",
@@ -20,7 +33,6 @@ def integration():
             "requirements": [],
         },
     )
-    return integration
 
 
 def test_validate_requirements_format_with_space(integration: Integration) -> None:
@@ -80,3 +92,60 @@ def test_validate_requirements_format_successful(integration: Integration) -> No
     ]
     assert validate_requirements_format(integration)
     assert len(integration.errors) == 0
+
+
+def test_validate_requirements_format_github_core(integration: Integration) -> None:
+    """Test requirement that points to github fails with core component."""
+    integration.manifest["requirements"] = [
+        "git+https://github.com/user/project.git@1.2.3",
+    ]
+    assert not validate_requirements_format(integration)
+    assert len(integration.errors) == 1
+
+
+def test_validate_requirements_format_github_custom(integration: Integration) -> None:
+    """Test requirement that points to github succeeds with custom component."""
+    integration.manifest["requirements"] = [
+        "git+https://github.com/user/project.git@1.2.3",
+    ]
+    integration.path = Path("")
+    assert validate_requirements_format(integration)
+    assert len(integration.errors) == 0
+
+
+@pytest.mark.parametrize(
+    ("version", "result"),
+    [
+        (">2", True),
+        (">=2.0", True),
+        (">=2.0,<4", True),
+        ("<4", True),
+        ("<=3.0", True),
+        (">=2.0,<4;python_version<'3.14'", True),
+        ("<3", False),
+        ("==2.*", False),
+        ("~=2.0", False),
+        ("<=2.100", False),
+        (">2,<3", False),
+        (">=2.0,<3", False),
+        (">=2.0,<3;python_version<'3.14'", False),
+    ],
+)
+def test_dependency_version_range_prepare_update(
+    version: str, result: bool, integration: Integration
+) -> None:
+    """Test dependency version range check for prepare update is working correctly."""
+    with (
+        patch.dict(PACKAGE_CHECK_VERSION_RANGE, {"numpy-test": "SemVer"}, clear=True),
+        patch.dict(PACKAGE_CHECK_PREPARE_UPDATE, {"numpy-test": 3}, clear=True),
+    ):
+        assert (
+            check_dependency_version_range(
+                integration,
+                "test",
+                pkg="numpy-test",
+                version=version,
+                package_exceptions=set(),
+            )
+            == result
+        )

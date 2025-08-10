@@ -1,12 +1,15 @@
 """Start Home Assistant."""
+
 from __future__ import annotations
 
 import argparse
+from contextlib import suppress
 import faulthandler
 import os
 import sys
 import threading
 
+from .backup_restore import restore_backup
 from .const import REQUIRED_PYTHON_VER, RESTART_EXIT_CODE, __version__
 
 FAULT_LOG_FILENAME = "home-assistant.log.fault"
@@ -35,8 +38,7 @@ def validate_python() -> None:
 
 def ensure_config_path(config_dir: str) -> None:
     """Validate the configuration directory."""
-    # pylint: disable-next=import-outside-toplevel
-    from . import config as config_util
+    from . import config as config_util  # noqa: PLC0415
 
     lib_dir = os.path.join(config_dir, "deps")
 
@@ -77,8 +79,7 @@ def ensure_config_path(config_dir: str) -> None:
 
 def get_arguments() -> argparse.Namespace:
     """Get parsed passed in arguments."""
-    # pylint: disable-next=import-outside-toplevel
-    from . import config as config_util
+    from . import config as config_util  # noqa: PLC0415
 
     parser = argparse.ArgumentParser(
         description="Home Assistant: Observe, Control, Automate.",
@@ -145,9 +146,7 @@ def get_arguments() -> argparse.Namespace:
         help="Skips validation of operating system",
     )
 
-    arguments = parser.parse_args()
-
-    return arguments
+    return parser.parse_args()
 
 
 def check_threads() -> None:
@@ -176,16 +175,17 @@ def main() -> int:
         validate_os()
 
     if args.script is not None:
-        # pylint: disable-next=import-outside-toplevel
-        from . import scripts
+        from . import scripts  # noqa: PLC0415
 
         return scripts.run(args.script)
 
     config_dir = os.path.abspath(os.path.join(os.getcwd(), args.config))
+    if restore_backup(config_dir):
+        return RESTART_EXIT_CODE
+
     ensure_config_path(config_dir)
 
-    # pylint: disable-next=import-outside-toplevel
-    from . import config, runner
+    from . import config, runner  # noqa: PLC0415
 
     safe_mode = config.safe_mode_enabled(config_dir)
 
@@ -209,8 +209,10 @@ def main() -> int:
         exit_code = runner.run(runtime_conf)
         faulthandler.disable()
 
-    if os.path.getsize(fault_file_name) == 0:
-        os.remove(fault_file_name)
+    # It's possible for the fault file to disappear, so suppress obvious errors
+    with suppress(FileNotFoundError):
+        if os.path.getsize(fault_file_name) == 0:
+            os.remove(fault_file_name)
 
     check_threads()
 

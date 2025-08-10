@@ -2,17 +2,23 @@
   "config": {
     "step": {
       "user": {
-        "description": "Select the area, where you want to search for water measuring stations",
         "data": {
           "location": "[%key:common::config_flow::data::location%]",
-          "radius": "Search radius (in km)"
+          "radius": "Search radius"
+        },
+        "data_description": {
+          "location": "Pick the location where to search for water measuring stations.",
+          "radius": "The radius to search for water measuring stations around the selected location."
         }
       },
       "select_station": {
-        "title": "Select the measuring station to add",
+        "title": "Select the station to add",
         "description": "Found {stations_count} stations in radius",
         "data": {
           "station": "Station"
+        },
+        "data_description": {
+          "station": "Select the water measuring station you want to add to Home Assistant."
         }
       }
     },
@@ -47,6 +53,11 @@
       "water_temperature": {
         "name": "Water temperature"
       }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "Failed to communicate with API: {error}"
     }
   }
 }

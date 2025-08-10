@@ -1,0 +1,101 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "circulation_pump": {
+        "default": "mdi:pump"
+      },
+      "frost_protection": {
+        "default": "mdi:snowflake"
+      },
+      "burner": {
+        "default": "mdi:gas-burner"
+      },
+      "solar_pump": {
+        "default": "mdi:pump"
+      },
+      "domestic_hot_water_circulation_pump": {
+        "default": "mdi:pump"
+      },
+      "domestic_hot_water_pump": {
+        "default": "mdi:pump"
+      },
+      "one_time_charge": {
+        "default": "mdi:shower-head"
+      }
+    },
+    "button": {
+      "activate_onetimecharge": {
+        "default": "mdi:shower-head"
+      }
+    },
+    "number": {
+      "heating_curve_shift": {
+        "default": "mdi:plus-minus-variant"
+      },
+      "heating_curve_slope": {
+        "default": "mdi:slope-uphill"
+      }
+    },
+    "sensor": {
+      "volumetric_flow": {
+        "default": "mdi:gauge"
+      },
+      "ess_state_of_charge": {
+        "default": "mdi:home-battery"
+      },
+      "pcc_transfer_power_exchange": {
+        "default": "mdi:transmission-tower"
+      },
+      "pcc_energy_consumption": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "pcc_energy_feed_in": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "photovoltaic_energy_production_today": {
+        "default": "mdi:solar-power"
+      },
+      "burner_starts": {
+        "default": "mdi:counter"
+      },
+      "burner_hours": {
+        "default": "mdi:counter"
+      },
+      "burner_modulation": {
+        "default": "mdi:percent"
+      },
+      "compressor_starts": {
+        "default": "mdi:counter"
+      },
+      "compressor_hours": {
+        "default": "mdi:counter"
+      },
+      "compressor_hours_loadclass1": {
+        "default": "mdi:counter"
+      },
+      "compressor_hours_loadclass2": {
+        "default": "mdi:counter"
+      },
+      "compressor_hours_loadclass3": {
+        "default": "mdi:counter"
+      },
+      "compressor_hours_loadclass4": {
+        "default": "mdi:counter"
+      },
+      "compressor_hours_loadclass5": {
+        "default": "mdi:counter"
+      },
+      "compressor_phase": {
+        "default": "mdi:information"
+      },
+      "ventilation_level": {
+        "default": "mdi:fan"
+      }
+    }
+  },
+  "services": {
+    "set_vicare_mode": {
+      "service": "mdi:cog"
+    }
+  }
+}

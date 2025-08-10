@@ -1,30 +1,42 @@
 """Auth models."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from ipaddress import IPv4Address, IPv6Address
 import secrets
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import Any, NamedTuple
 import uuid
 
 import attr
 from attr import Attribute
 from attr.setters import validate
+from propcache.api import cached_property
 
 from homeassistant.const import __version__
+from homeassistant.data_entry_flow import FlowContext, FlowResult
 from homeassistant.util import dt as dt_util
 
 from . import permissions as perm_mdl
 from .const import GROUP_ID_ADMIN
 
-if TYPE_CHECKING:
-    from functools import cached_property
-else:
-    from homeassistant.backports.functools import cached_property
-
-
 TOKEN_TYPE_NORMAL = "normal"
 TOKEN_TYPE_SYSTEM = "system"
 TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN = "long_lived_access_token"
+
+
+class AuthFlowContext(FlowContext, total=False):
+    """Typed context dict for auth flow."""
+
+    credential_only: bool
+    ip_address: IPv4Address | IPv6Address
+    redirect_uri: str
+
+
+class AuthFlowResult(FlowResult[AuthFlowContext, tuple[str, str]], total=False):
+    """Typed result dict for auth flow."""
+
+    result: Credentials  # Only present if type is CREATE_ENTRY
 
 
 @attr.s(slots=True)
@@ -87,11 +99,7 @@ class User:
     def invalidate_cache(self) -> None:
         """Invalidate permission and is_admin cache."""
         for attr_to_invalidate in ("permissions", "is_admin"):
-            # try is must more efficient than suppress
-            try:  # noqa: SIM105
-                delattr(self, attr_to_invalidate)
-            except AttributeError:
-                pass
+            self.__dict__.pop(attr_to_invalidate, None)
 
 
 @attr.s(slots=True)
@@ -116,6 +124,8 @@ class RefreshToken:
 
     last_used_at: datetime | None = attr.ib(default=None)
     last_used_ip: str | None = attr.ib(default=None)
+
+    expire_at: float | None = attr.ib(default=None)
 
     credential: Credentials | None = attr.ib(default=None)
 

@@ -1,9 +1,9 @@
 """Support for Z-Wave cover devices."""
+
 from __future__ import annotations
 
 from typing import Any, cast
 
-from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import (
     CURRENT_VALUE_PROPERTY,
     TARGET_STATE_PROPERTY,
@@ -18,6 +18,7 @@ from zwave_js_server.const.command_class.multilevel_switch import (
 from zwave_js_server.const.command_class.window_covering import (
     NO_POSITION_PROPERTY_KEYS,
     NO_POSITION_SUFFIX,
+    WINDOW_COVERING_LEVEL_CHANGE_DOWN_PROPERTY,
     WINDOW_COVERING_LEVEL_CHANGE_UP_PROPERTY,
     SlatStates,
 )
@@ -32,31 +33,26 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    COVER_POSITION_PROPERTY_KEYS,
-    COVER_TILT_PROPERTY_KEYS,
-    DATA_CLIENT,
-    DOMAIN,
-)
+from .const import COVER_POSITION_PROPERTY_KEYS, COVER_TILT_PROPERTY_KEYS, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import CoverTiltDataTemplate
 from .entity import ZWaveBaseEntity
+from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ZwaveJSConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Z-Wave Cover from Config Entry."""
-    client: ZwaveClient = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
+    client = config_entry.runtime_data.client
 
     @callback
     def async_add_cover(info: ZwaveDiscoveryInfo) -> None:
@@ -286,7 +282,7 @@ class ZWaveMultilevelSwitchCover(CoverPositionMixin):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
     ) -> None:
@@ -316,7 +312,7 @@ class ZWaveTiltCover(ZWaveMultilevelSwitchCover, CoverTiltMixin):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
     ) -> None:
@@ -334,12 +330,26 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
     """Representation of a Z-Wave Window Covering cover device."""
 
     def __init__(
-        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
+        self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize."""
         super().__init__(config_entry, driver, info)
         pos_value: ZwaveValue | None = None
         tilt_value: ZwaveValue | None = None
+        self._up_value = cast(
+            ZwaveValue,
+            self.get_zwave_value(
+                WINDOW_COVERING_LEVEL_CHANGE_UP_PROPERTY,
+                value_property_key=info.primary_value.property_key,
+            ),
+        )
+        self._down_value = cast(
+            ZwaveValue,
+            self.get_zwave_value(
+                WINDOW_COVERING_LEVEL_CHANGE_DOWN_PROPERTY,
+                value_property_key=info.primary_value.property_key,
+            ),
+        )
 
         # If primary value is for position, we have to search for a tilt value
         if info.primary_value.property_key in COVER_POSITION_PROPERTY_KEYS:
@@ -378,12 +388,11 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
                     assert self._attr_supported_features
                     self._attr_supported_features ^= set_position_feature
 
-        additional_info: list[str] = []
-        for value in (self._current_position_value, self._current_tilt_value):
-            if value and value.property_key_name:
-                additional_info.append(
-                    value.property_key_name.removesuffix(f" {NO_POSITION_SUFFIX}")
-                )
+        additional_info: list[str] = [
+            value.property_key_name.removesuffix(f" {NO_POSITION_SUFFIX}")
+            for value in (self._current_position_value, self._current_tilt_value)
+            if value and value.property_key_name
+        ]
         self._attr_name = self.generate_name(additional_info=additional_info)
         self._attr_device_class = CoverDeviceClass.WINDOW
 
@@ -402,6 +411,18 @@ class ZWaveWindowCovering(CoverPositionMixin, CoverTiltMixin):
         """Return range of valid tilt positions."""
         return abs(SlatStates.CLOSED_2 - SlatStates.CLOSED_1)
 
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the cover."""
+        await self._async_set_value(self._up_value, True)
+
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close the cover."""
+        await self._async_set_value(self._down_value, True)
+
+    async def async_stop_cover(self, **kwargs: Any) -> None:
+        """Stop the cover."""
+        await self._async_set_value(self._up_value, False)
+
 
 class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
     """Representation of a Z-Wave motorized barrier device."""
@@ -411,7 +432,7 @@ class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: ZwaveJSConfigEntry,
         driver: Driver,
         info: ZwaveDiscoveryInfo,
     ) -> None:

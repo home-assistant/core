@@ -1,19 +1,20 @@
 """Image processing for cameras."""
+
 from __future__ import annotations
 
 import logging
 from typing import TYPE_CHECKING, Literal, cast
+
+from turbojpeg import TurboJPEG
+
+if TYPE_CHECKING:
+    from . import Image
 
 SUPPORTED_SCALING_FACTORS = [(7, 8), (3, 4), (5, 8), (1, 2), (3, 8), (1, 4), (1, 8)]
 
 _LOGGER = logging.getLogger(__name__)
 
 JPEG_QUALITY = 75
-
-if TYPE_CHECKING:
-    from turbojpeg import TurboJPEG
-
-    from . import Image
 
 
 def find_supported_scaling_factor(
@@ -89,15 +90,15 @@ class TurboJPEGSingleton:
     def __init__(self) -> None:
         """Try to create TurboJPEG only once."""
         try:
-            # TurboJPEG checks for libturbojpeg
-            # when its created, but it imports
-            # numpy which may or may not work so
-            # we have to guard the import here.
-            from turbojpeg import TurboJPEG  # pylint: disable=import-outside-toplevel
-
             TurboJPEGSingleton.__instance = TurboJPEG()
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
-                "Error loading libturbojpeg; Cameras may impact HomeKit performance"
+                "Error loading libturbojpeg; Camera snapshot performance will be sub-optimal"
             )
             TurboJPEGSingleton.__instance = False
+
+
+# TurboJPEG loads libraries that do blocking I/O.
+# Initialize TurboJPEGSingleton in the executor to avoid
+# blocking the event loop.
+TurboJPEGSingleton.instance()

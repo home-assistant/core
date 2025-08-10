@@ -1,0 +1,19 @@
+{
+  "type": "0",
+  "ch": "0",
+  "mode": "0",
+  "loop": "0",
+  "eq": "0",
+  "status": "stop",
+  "curpos": "0",
+  "offset_pts": "0",
+  "totlen": "0",
+  "Title": "",
+  "Artist": "",
+  "Album": "",
+  "alarmflag": "0",
+  "plicount": "0",
+  "plicurr": "0",
+  "vol": "80",
+  "mute": "0"
+}

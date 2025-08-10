@@ -1,11 +1,12 @@
 """Local Media Source Implementation."""
+
 from __future__ import annotations
 
 import logging
 import mimetypes
 from pathlib import Path
 import shutil
-from typing import Any
+from typing import Any, cast
 
 from aiohttp import web
 from aiohttp.web_request import FileField
@@ -17,7 +18,7 @@ from homeassistant.components.media_player import BrowseError, MediaClass
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import raise_if_invalid_filename, raise_if_invalid_path
 
-from .const import DOMAIN, MEDIA_CLASS_MAP, MEDIA_MIME_TYPES
+from .const import DOMAIN, MEDIA_CLASS_MAP, MEDIA_MIME_TYPES, MEDIA_SOURCE_DATA
 from .error import Unresolvable
 from .models import BrowseMediaSource, MediaSource, MediaSourceItem, PlayMedia
 
@@ -29,7 +30,7 @@ LOGGER = logging.getLogger(__name__)
 def async_setup(hass: HomeAssistant) -> None:
     """Set up local media source."""
     source = LocalSource(hass)
-    hass.data[DOMAIN][DOMAIN] = source
+    hass.data[MEDIA_SOURCE_DATA][DOMAIN] = source
     hass.http.register_view(LocalMediaView(hass, source))
     hass.http.register_view(UploadMediaView(hass, source))
     websocket_api.async_register_command(hass, websocket_remove_media)
@@ -79,7 +80,7 @@ class LocalSource(MediaSource):
         path = self.async_full_path(source_dir_id, location)
         mime_type, _ = mimetypes.guess_type(str(path))
         assert isinstance(mime_type, str)
-        return PlayMedia(f"/media/{item.identifier}", mime_type)
+        return PlayMedia(f"/media/{item.identifier}", mime_type, path=path)
 
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return media."""
@@ -92,11 +93,9 @@ class LocalSource(MediaSource):
         else:
             source_dir_id, location = None, ""
 
-        result = await self.hass.async_add_executor_job(
+        return await self.hass.async_add_executor_job(
             self._browse_media, source_dir_id, location
         )
-
-        return result
 
     def _browse_media(
         self, source_dir_id: str | None, location: str
@@ -211,29 +210,46 @@ class LocalMediaView(http.HomeAssistantView):
         self.hass = hass
         self.source = source
 
-    async def get(
-        self, request: web.Request, source_dir_id: str, location: str
-    ) -> web.FileResponse:
-        """Start a GET request."""
+    async def _validate_media_path(self, source_dir_id: str, location: str) -> Path:
+        """Validate media path and return it if valid."""
         try:
             raise_if_invalid_path(location)
         except ValueError as err:
-            raise web.HTTPBadRequest() from err
+            raise web.HTTPBadRequest from err
 
         if source_dir_id not in self.hass.config.media_dirs:
-            raise web.HTTPNotFound()
+            raise web.HTTPNotFound
 
         media_path = self.source.async_full_path(source_dir_id, location)
 
         # Check that the file exists
-        if not media_path.is_file():
-            raise web.HTTPNotFound()
+        if not self.hass.async_add_executor_job(media_path.is_file):
+            raise web.HTTPNotFound
 
         # Check that it's a media file
         mime_type, _ = mimetypes.guess_type(str(media_path))
         if not mime_type or mime_type.split("/")[0] not in MEDIA_MIME_TYPES:
-            raise web.HTTPNotFound()
+            raise web.HTTPNotFound
 
+        return media_path
+
+    async def head(
+        self, request: web.Request, source_dir_id: str, location: str
+    ) -> None:
+        """Handle a HEAD request.
+
+        This is sent by some DLNA renderers, like Samsung ones, prior to sending
+        the GET request.
+
+        Check whether the location exists or not.
+        """
+        await self._validate_media_path(source_dir_id, location)
+
+    async def get(
+        self, request: web.Request, source_dir_id: str, location: str
+    ) -> web.FileResponse:
+        """Handle a GET request."""
+        media_path = await self._validate_media_path(source_dir_id, location)
         return web.FileResponse(media_path)
 
 
@@ -258,25 +274,25 @@ class UploadMediaView(http.HomeAssistantView):
     async def post(self, request: web.Request) -> web.Response:
         """Handle upload."""
         # Increase max payload
-        request._client_max_size = MAX_UPLOAD_SIZE  # pylint: disable=protected-access
+        request._client_max_size = MAX_UPLOAD_SIZE  # noqa: SLF001
 
         try:
             data = self.schema(dict(await request.post()))
         except vol.Invalid as err:
             LOGGER.error("Received invalid upload data: %s", err)
-            raise web.HTTPBadRequest() from err
+            raise web.HTTPBadRequest from err
 
         try:
             item = MediaSourceItem.from_uri(self.hass, data["media_content_id"], None)
         except ValueError as err:
             LOGGER.error("Received invalid upload data: %s", err)
-            raise web.HTTPBadRequest() from err
+            raise web.HTTPBadRequest from err
 
         try:
             source_dir_id, location = self.source.async_parse_identifier(item)
         except Unresolvable as err:
             LOGGER.error("Invalid local source ID")
-            raise web.HTTPBadRequest() from err
+            raise web.HTTPBadRequest from err
 
         uploaded_file: FileField = data["file"]
 
@@ -288,7 +304,7 @@ class UploadMediaView(http.HomeAssistantView):
             raise_if_invalid_filename(uploaded_file.filename)
         except ValueError as err:
             LOGGER.error("Invalid filename")
-            raise web.HTTPBadRequest() from err
+            raise web.HTTPBadRequest from err
 
         try:
             await self.hass.async_add_executor_job(
@@ -298,7 +314,7 @@ class UploadMediaView(http.HomeAssistantView):
             )
         except ValueError as err:
             LOGGER.error("Moving upload failed: %s", err)
-            raise web.HTTPBadRequest() from err
+            raise web.HTTPBadRequest from err
 
         return self.json(
             {"media_content_id": f"{data['media_content_id']}/{uploaded_file.filename}"}
@@ -336,7 +352,7 @@ async def websocket_remove_media(
         connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
         return
 
-    source: LocalSource = hass.data[DOMAIN][DOMAIN]
+    source = cast(LocalSource, hass.data[MEDIA_SOURCE_DATA][DOMAIN])
 
     try:
         source_dir_id, location = source.async_parse_identifier(item)

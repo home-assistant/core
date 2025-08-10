@@ -63,15 +63,15 @@
         },
         "away_temp": {
           "name": "Away temperature",
-          "description": "Away temp."
+          "description": "Room temperature in away mode"
         },
         "comfort_temp": {
           "name": "Comfort temperature",
-          "description": "Comfort temp."
+          "description": "Room temperature in comfort mode"
         },
         "sleep_temp": {
           "name": "Sleep temperature",
-          "description": "Sleep temp."
+          "description": "Room temperature in sleep mode"
         }
       }
     }

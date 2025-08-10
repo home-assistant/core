@@ -33,11 +33,12 @@
     ]),
     'entry': dict({
       'data': dict({
-        'mydevolo_url': 'https://test_mydevolo_url.test',
         'password': '**REDACTED**',
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'devolo_home_control',
       'entry_id': '123456',
       'minor_version': 1,
@@ -46,6 +47,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Mock Title',
       'unique_id': '123456',
       'version': 1,

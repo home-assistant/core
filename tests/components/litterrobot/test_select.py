@@ -1,4 +1,5 @@
 """Test the Litter-Robot select entity."""
+
 from unittest.mock import AsyncMock, MagicMock
 
 from pylitterbot import LitterRobot3, LitterRobot4
@@ -7,7 +8,7 @@ import pytest
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
-    DOMAIN as PLATFORM_DOMAIN,
+    DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.const import ATTR_ENTITY_ID, EntityCategory
@@ -25,7 +26,7 @@ async def test_wait_time_select(
     hass: HomeAssistant, mock_account, entity_registry: er.EntityRegistry
 ) -> None:
     """Tests the wait time select entity."""
-    await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
+    await setup_integration(hass, mock_account, SELECT_DOMAIN)
 
     select = hass.states.get(SELECT_ENTITY_ID)
     assert select
@@ -36,24 +37,22 @@ async def test_wait_time_select(
 
     data = {ATTR_ENTITY_ID: SELECT_ENTITY_ID}
 
-    count = 0
-    for wait_time in LitterRobot3.VALID_WAIT_TIMES:
-        count += 1
+    for count, wait_time in enumerate(LitterRobot3.VALID_WAIT_TIMES):
         data[ATTR_OPTION] = wait_time
 
         await hass.services.async_call(
-            PLATFORM_DOMAIN,
+            SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             data,
             blocking=True,
         )
 
-        assert mock_account.robots[0].set_wait_time.call_count == count
+        assert mock_account.robots[0].set_wait_time.call_count == count + 1
 
 
 async def test_invalid_wait_time_select(hass: HomeAssistant, mock_account) -> None:
     """Tests the wait time select entity with invalid value."""
-    await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
+    await setup_integration(hass, mock_account, SELECT_DOMAIN)
 
     select = hass.states.get(SELECT_ENTITY_ID)
     assert select
@@ -62,7 +61,7 @@ async def test_invalid_wait_time_select(hass: HomeAssistant, mock_account) -> No
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            PLATFORM_DOMAIN,
+            SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             data,
             blocking=True,
@@ -76,7 +75,7 @@ async def test_panel_brightness_select(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Tests the wait time select entity."""
-    await setup_integration(hass, mock_account_with_litterrobot_4, PLATFORM_DOMAIN)
+    await setup_integration(hass, mock_account_with_litterrobot_4, SELECT_DOMAIN)
 
     select = hass.states.get(PANEL_BRIGHTNESS_ENTITY_ID)
     assert select
@@ -90,16 +89,15 @@ async def test_panel_brightness_select(
 
     robot: LitterRobot4 = mock_account_with_litterrobot_4.robots[0]
     robot.set_panel_brightness = AsyncMock(return_value=True)
-    count = 0
-    for option in select.attributes[ATTR_OPTIONS]:
-        count += 1
+
+    for count, option in enumerate(select.attributes[ATTR_OPTIONS]):
         data[ATTR_OPTION] = option
 
         await hass.services.async_call(
-            PLATFORM_DOMAIN,
+            SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             data,
             blocking=True,
         )
 
-        assert robot.set_panel_brightness.call_count == count
+        assert robot.set_panel_brightness.call_count == count + 1

@@ -1,0 +1,60 @@
+{
+  "components": {
+    "main": {
+      "powerMeter": {
+        "power": {
+          "value": 368.17,
+          "unit": "W",
+          "timestamp": "2025-03-07T12:52:08.997Z"
+        }
+      },
+      "thermostatOperatingState": {
+        "thermostatOperatingState": {
+          "value": "heating",
+          "timestamp": "2025-03-07T12:49:53.638Z"
+        }
+      },
+      "energyMeter": {
+        "energy": {
+          "value": 2339.5,
+          "unit": "kWh",
+          "timestamp": "2025-03-07T12:26:37.133Z"
+        }
+      },
+      "temperatureMeasurement": {
+        "temperatureRange": {
+          "value": null
+        },
+        "temperature": {
+          "value": 19.0,
+          "unit": "C",
+          "timestamp": "2025-03-07T12:52:39.210Z"
+        }
+      },
+      "thermostatHeatingSetpoint": {
+        "heatingSetpoint": {
+          "value": 19.0,
+          "unit": "C",
+          "timestamp": "2025-03-06T21:38:22.856Z"
+        },
+        "heatingSetpointRange": {
+          "value": null
+        }
+      },
+      "refresh": {},
+      "thermostatMode": {
+        "thermostatMode": {
+          "value": "heat",
+          "data": {
+            "supportedThermostatModes": ["off", "heat"]
+          },
+          "timestamp": "2025-03-06T21:38:23.046Z"
+        },
+        "supportedThermostatModes": {
+          "value": ["off", "heat"],
+          "timestamp": "2023-09-22T15:41:01.268Z"
+        }
+      }
+    }
+  }
+}

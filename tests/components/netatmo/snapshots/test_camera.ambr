@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -16,6 +17,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -24,6 +27,7 @@
     'original_name': None,
     'platform': 'netatmo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CameraEntityFeature: 3>,
     'translation_key': None,
     'unique_id': '12:34:56:10:b9:0e-DeviceType.NOC',
@@ -39,7 +43,6 @@
       'brand': 'Netatmo',
       'entity_picture': '/api/camera_proxy/camera.front?token=1caab5c3b3',
       'friendly_name': 'Front',
-      'frontend_stream_type': <StreamType.HLS: 'hls'>,
       'id': '12:34:56:10:b9:0e',
       'is_local': False,
       'light_state': None,
@@ -53,6 +56,7 @@
     'context': <ANY>,
     'entity_id': 'camera.front',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'streaming',
   })
@@ -64,6 +68,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -74,6 +79,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -82,6 +89,7 @@
     'original_name': None,
     'platform': 'netatmo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CameraEntityFeature: 3>,
     'translation_key': None,
     'unique_id': '12:34:56:00:f1:62-DeviceType.NACamera',
@@ -97,7 +105,6 @@
       'brand': 'Netatmo',
       'entity_picture': '/api/camera_proxy/camera.hall?token=1caab5c3b3',
       'friendly_name': 'Hall',
-      'frontend_stream_type': <StreamType.HLS: 'hls'>,
       'id': '12:34:56:00:f1:62',
       'is_local': True,
       'light_state': None,
@@ -111,6 +118,7 @@
     'context': <ANY>,
     'entity_id': 'camera.hall',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'streaming',
   })
@@ -122,6 +130,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -132,6 +141,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
     }),
@@ -140,6 +151,7 @@
     'original_name': None,
     'platform': 'netatmo',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <CameraEntityFeature: 1>,
     'translation_key': None,
     'unique_id': '12:34:56:10:f1:66-DeviceType.NDB',
@@ -167,6 +179,7 @@
     'context': <ANY>,
     'entity_id': 'camera.netatmo_doorbell',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'idle',
   })

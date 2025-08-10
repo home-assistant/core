@@ -1,8 +1,9 @@
 """Class to hold all switch accessories."""
+
 from __future__ import annotations
 
 import logging
-from typing import Any, NamedTuple
+from typing import Any, Final, NamedTuple
 
 from pyhap.characteristic import Characteristic
 from pyhap.const import (
@@ -14,34 +15,56 @@ from pyhap.const import (
 )
 
 from homeassistant.components import button, input_button
+from homeassistant.components.input_number import (
+    ATTR_VALUE as INPUT_NUMBER_ATTR_VALUE,
+    DOMAIN as INPUT_NUMBER_DOMAIN,
+    SERVICE_SET_VALUE as INPUT_NUMBER_SERVICE_SET_VALUE,
+)
 from homeassistant.components.input_select import ATTR_OPTIONS, SERVICE_SELECT_OPTION
-from homeassistant.components.switch import DOMAIN
+from homeassistant.components.lawn_mower import (
+    DOMAIN as LAWN_MOWER_DOMAIN,
+    SERVICE_DOCK,
+    SERVICE_START_MOWING,
+    LawnMowerActivity,
+)
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_RETURN_TO_BASE,
     SERVICE_START,
-    STATE_CLEANING,
+    VacuumActivity,
     VacuumEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     CONF_TYPE,
+    SERVICE_CLOSE_VALVE,
+    SERVICE_OPEN_VALVE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_CLOSING,
     STATE_ON,
+    STATE_OPEN,
+    STATE_OPENING,
 )
-from homeassistant.core import State, callback, split_entity_id
+from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.helpers.event import async_call_later
+from homeassistant.util import dt as dt_util
 
-from .accessories import TYPES, HomeAccessory
+from .accessories import TYPES, HomeAccessory, HomeDriver
 from .const import (
     CHAR_ACTIVE,
+    CHAR_CONFIGURED_NAME,
     CHAR_IN_USE,
     CHAR_NAME,
     CHAR_ON,
     CHAR_OUTLET_IN_USE,
+    CHAR_REMAINING_DURATION,
+    CHAR_SET_DURATION,
     CHAR_VALVE_TYPE,
+    CONF_LINKED_VALVE_DURATION,
+    CONF_LINKED_VALVE_END_TIME,
     SERV_OUTLET,
     SERV_SWITCH,
     SERV_VALVE,
@@ -53,6 +76,8 @@ from .const import (
 from .util import cleanup_name_for_homekit
 
 _LOGGER = logging.getLogger(__name__)
+
+VALVE_OPEN_STATES: Final = {STATE_OPEN, STATE_OPENING, STATE_CLOSING}
 
 
 class ValveInfo(NamedTuple):
@@ -101,7 +126,7 @@ class Outlet(HomeAccessory):
         _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
-        self.async_call_service(DOMAIN, service, params)
+        self.async_call_service(SWITCH_DOMAIN, service, params)
 
     @callback
     def async_update_state(self, new_state: State) -> None:
@@ -205,25 +230,72 @@ class Vacuum(Switch):
     @callback
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
-        current_state = new_state.state in (STATE_CLEANING, STATE_ON)
+        current_state = new_state.state in (VacuumActivity.CLEANING, STATE_ON)
         _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
         self.char_on.set_value(current_state)
 
 
-@TYPES.register("Valve")
-class Valve(HomeAccessory):
-    """Generate a Valve accessory."""
+@TYPES.register("LawnMower")
+class LawnMower(Switch):
+    """Generate a Switch accessory."""
 
-    def __init__(self, *args: Any) -> None:
-        """Initialize a Valve accessory object."""
-        super().__init__(*args)
+    def set_state(self, value: bool) -> None:
+        """Move switch state to value if call came from HomeKit."""
+        _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
         state = self.hass.states.get(self.entity_id)
         assert state
 
-        valve_type = self.config[CONF_TYPE]
-        self.category = VALVE_TYPE[valve_type].category
+        service = SERVICE_START_MOWING if value else SERVICE_DOCK
+        self.async_call_service(
+            LAWN_MOWER_DOMAIN, service, {ATTR_ENTITY_ID: self.entity_id}
+        )
 
-        serv_valve = self.add_preload_service(SERV_VALVE)
+    @callback
+    def async_update_state(self, new_state: State) -> None:
+        """Update switch state after state changed."""
+        current_state = new_state.state in (LawnMowerActivity.MOWING, STATE_ON)
+        _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
+        self.char_on.set_value(current_state)
+
+
+class ValveBase(HomeAccessory):
+    """Valve base class."""
+
+    def __init__(
+        self,
+        valve_type: str,
+        open_states: set[str],
+        on_service: str,
+        off_service: str,
+        *args: Any,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize a Valve accessory object."""
+        super().__init__(*args, **kwargs)
+        self.domain = split_entity_id(self.entity_id)[0]
+        state = self.hass.states.get(self.entity_id)
+        assert state
+
+        self.category = VALVE_TYPE[valve_type].category
+        self.open_states = open_states
+        self.on_service = on_service
+        self.off_service = off_service
+
+        self.chars = []
+
+        self.linked_duration_entity: str | None = self.config.get(
+            CONF_LINKED_VALVE_DURATION
+        )
+        self.linked_end_time_entity: str | None = self.config.get(
+            CONF_LINKED_VALVE_END_TIME
+        )
+
+        if self.linked_duration_entity:
+            self.chars.append(CHAR_SET_DURATION)
+        if self.linked_end_time_entity:
+            self.chars.append(CHAR_REMAINING_DURATION)
+
+        serv_valve = self.add_preload_service(SERV_VALVE, self.chars)
         self.char_active = serv_valve.configure_char(
             CHAR_ACTIVE, value=False, setter_callback=self.set_state
         )
@@ -231,6 +303,25 @@ class Valve(HomeAccessory):
         self.char_valve_type = serv_valve.configure_char(
             CHAR_VALVE_TYPE, value=VALVE_TYPE[valve_type].valve_type
         )
+
+        if CHAR_SET_DURATION in self.chars:
+            _LOGGER.debug(
+                "%s: Add characteristic %s", self.entity_id, CHAR_SET_DURATION
+            )
+            self.char_set_duration = serv_valve.configure_char(
+                CHAR_SET_DURATION,
+                value=self.get_duration(),
+                setter_callback=self.set_duration,
+            )
+
+        if CHAR_REMAINING_DURATION in self.chars:
+            _LOGGER.debug(
+                "%s: Add characteristic %s", self.entity_id, CHAR_REMAINING_DURATION
+            )
+            self.char_remaining_duration = serv_valve.configure_char(
+                CHAR_REMAINING_DURATION, getter_callback=self.get_remaining_duration
+            )
+
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup
         self.async_update_state(state)
@@ -240,17 +331,125 @@ class Valve(HomeAccessory):
         _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
         self.char_in_use.set_value(value)
         params = {ATTR_ENTITY_ID: self.entity_id}
-        service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
-        self.async_call_service(DOMAIN, service, params)
+        service = self.on_service if value else self.off_service
+        self.async_call_service(self.domain, service, params)
 
     @callback
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
-        current_state = 1 if new_state.state == STATE_ON else 0
+        self._update_duration_chars()
+        current_state = 1 if new_state.state in self.open_states else 0
         _LOGGER.debug("%s: Set active state to %s", self.entity_id, current_state)
         self.char_active.set_value(current_state)
         _LOGGER.debug("%s: Set in_use state to %s", self.entity_id, current_state)
         self.char_in_use.set_value(current_state)
+
+    def _update_duration_chars(self) -> None:
+        """Update valve duration related properties if characteristics are available."""
+        if CHAR_SET_DURATION in self.chars:
+            self.char_set_duration.set_value(self.get_duration())
+        if CHAR_REMAINING_DURATION in self.chars:
+            self.char_remaining_duration.set_value(self.get_remaining_duration())
+
+    def set_duration(self, value: int) -> None:
+        """Set default duration for how long the valve should remain open."""
+        _LOGGER.debug("%s: Set default run time to %s", self.entity_id, value)
+        self.async_call_service(
+            INPUT_NUMBER_DOMAIN,
+            INPUT_NUMBER_SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: self.linked_duration_entity,
+                INPUT_NUMBER_ATTR_VALUE: value,
+            },
+            value,
+        )
+
+    def get_duration(self) -> int:
+        """Get the default duration from Home Assistant."""
+        duration_state = self._get_entity_state(self.linked_duration_entity)
+        if duration_state is None:
+            _LOGGER.debug(
+                "%s: No linked duration entity state available", self.entity_id
+            )
+            return 0
+
+        try:
+            duration = float(duration_state)
+            return max(int(duration), 0)
+        except ValueError:
+            _LOGGER.debug("%s: Cannot parse linked duration entity", self.entity_id)
+            return 0
+
+    def get_remaining_duration(self) -> int:
+        """Calculate the remaining duration based on end time in Home Assistant."""
+        end_time_state = self._get_entity_state(self.linked_end_time_entity)
+        if end_time_state is None:
+            _LOGGER.debug(
+                "%s: No linked end time entity state available", self.entity_id
+            )
+            return self.get_duration()
+
+        end_time = dt_util.parse_datetime(end_time_state)
+        if end_time is None:
+            _LOGGER.debug("%s: Cannot parse linked end time entity", self.entity_id)
+            return self.get_duration()
+
+        remaining_time = (end_time - dt_util.utcnow()).total_seconds()
+        return max(int(remaining_time), 0)
+
+    def _get_entity_state(self, entity_id: str | None) -> str | None:
+        """Fetch the state of a linked entity."""
+        if entity_id is None:
+            return None
+        state = self.hass.states.get(entity_id)
+        if state is None:
+            return None
+        return state.state
+
+
+@TYPES.register("ValveSwitch")
+class ValveSwitch(ValveBase):
+    """Generate a Valve accessory from a HomeAssistant switch."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        driver: HomeDriver,
+        name: str,
+        entity_id: str,
+        aid: int,
+        config: dict[str, Any],
+        *args: Any,
+    ) -> None:
+        """Initialize a Valve accessory object."""
+        super().__init__(
+            config[CONF_TYPE],
+            {STATE_ON},
+            SERVICE_TURN_ON,
+            SERVICE_TURN_OFF,
+            hass,
+            driver,
+            name,
+            entity_id,
+            aid,
+            config,
+            *args,
+        )
+
+
+@TYPES.register("Valve")
+class Valve(ValveBase):
+    """Generate a Valve accessory from a HomeAssistant valve."""
+
+    def __init__(self, *args: Any) -> None:
+        """Initialize a Valve accessory object."""
+        super().__init__(
+            TYPE_VALVE,
+            VALVE_OPEN_STATES,
+            SERVICE_OPEN_VALVE,
+            SERVICE_CLOSE_VALVE,
+            *args,
+        )
 
 
 @TYPES.register("SelectSwitch")
@@ -268,11 +467,13 @@ class SelectSwitch(HomeAccessory):
         options = state.attributes[ATTR_OPTIONS]
         for option in options:
             serv_option = self.add_preload_service(
-                SERV_OUTLET, [CHAR_NAME, CHAR_IN_USE], unique_id=option
+                SERV_OUTLET,
+                [CHAR_NAME, CHAR_CONFIGURED_NAME, CHAR_IN_USE],
+                unique_id=option,
             )
-            serv_option.configure_char(
-                CHAR_NAME, value=cleanup_name_for_homekit(option)
-            )
+            name = cleanup_name_for_homekit(option)
+            serv_option.configure_char(CHAR_NAME, value=name)
+            serv_option.configure_char(CHAR_CONFIGURED_NAME, value=name)
             serv_option.configure_char(CHAR_IN_USE, value=False)
             self.select_chars[option] = serv_option.configure_char(
                 CHAR_ON,

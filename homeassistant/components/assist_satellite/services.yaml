@@ -1,0 +1,115 @@
+announce:
+  target:
+    entity:
+      domain: assist_satellite
+      supported_features:
+        - assist_satellite.AssistSatelliteEntityFeature.ANNOUNCE
+  fields:
+    message:
+      required: false
+      example: "Time to wake up!"
+      default: ""
+      selector:
+        text:
+    media_id:
+      required: false
+      selector:
+        media:
+          accept:
+            - audio/*
+    preannounce:
+      required: false
+      default: true
+      selector:
+        boolean:
+    preannounce_media_id:
+      required: false
+      selector:
+        media:
+          accept:
+            - audio/*
+start_conversation:
+  target:
+    entity:
+      domain: assist_satellite
+      supported_features:
+        - assist_satellite.AssistSatelliteEntityFeature.START_CONVERSATION
+  fields:
+    start_message:
+      required: false
+      example: "You left the lights on in the living room. Turn them off?"
+      default: ""
+      selector:
+        text:
+    start_media_id:
+      required: false
+      selector:
+        media:
+          accept:
+            - audio/*
+    extra_system_prompt:
+      required: false
+      selector:
+        text:
+    preannounce:
+      required: false
+      default: true
+      selector:
+        boolean:
+    preannounce_media_id:
+      required: false
+      selector:
+        media:
+          accept:
+            - audio/*
+ask_question:
+  fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          filter:
+            domain: assist_satellite
+            supported_features:
+              - assist_satellite.AssistSatelliteEntityFeature.START_CONVERSATION
+    question:
+      required: false
+      example: "What kind of music would you like to play?"
+      default: ""
+      selector:
+        text:
+    question_media_id:
+      required: false
+      selector:
+        media:
+          accept:
+            - audio/*
+    preannounce:
+      required: false
+      default: true
+      selector:
+        boolean:
+    preannounce_media_id:
+      required: false
+      selector:
+        media:
+          accept:
+            - audio/*
+    answers:
+      required: false
+      selector:
+        object:
+          label_field: sentences
+          description_field: id
+          multiple: true
+          translation_key: answers
+          fields:
+            id:
+              required: true
+              selector:
+                text:
+            sentences:
+              required: true
+              selector:
+                text:
+                  multiple: true

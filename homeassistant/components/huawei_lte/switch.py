@@ -1,4 +1,5 @@
 """Support for Huawei LTE switches."""
+
 from __future__ import annotations
 
 import logging
@@ -12,14 +13,14 @@ from homeassistant.components.switch import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HuaweiLteBaseEntityWithDevice
 from .const import (
     DOMAIN,
     KEY_DIALUP_MOBILE_DATASWITCH,
     KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH,
 )
+from .entity import HuaweiLteBaseEntityWithDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
     router = hass.data[DOMAIN].routers[config_entry.entry_id]
@@ -107,11 +108,6 @@ class HuaweiLteMobileDataSwitch(HuaweiLteBaseSwitch):
         self._raw_state = str(value)
         self.schedule_update_ha_state()
 
-    @property
-    def icon(self) -> str:
-        """Return switch icon."""
-        return "mdi:signal" if self.is_on else "mdi:signal-off"
-
 
 class HuaweiLteWifiGuestNetworkSwitch(HuaweiLteBaseSwitch):
     """Huawei LTE WiFi guest network switch device."""
@@ -134,11 +130,6 @@ class HuaweiLteWifiGuestNetworkSwitch(HuaweiLteBaseSwitch):
         self.router.client.wlan.wifi_guest_network_switch(state)
         self._raw_state = "1" if state else "0"
         self.schedule_update_ha_state()
-
-    @property
-    def icon(self) -> str:
-        """Return switch icon."""
-        return "mdi:wifi" if self.is_on else "mdi:wifi-off"
 
     @property
     def extra_state_attributes(self) -> dict[str, str | None]:

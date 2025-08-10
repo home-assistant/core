@@ -1,4 +1,5 @@
 """The tests for the DirecTV Media player platform."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta
@@ -172,7 +173,8 @@ async def test_supported_features(
     # Features supported for main DVR
     state = hass.states.get(MAIN_ENTITY_ID)
     assert (
-        MediaPlayerEntityFeature.PAUSE
+        state.attributes.get("supported_features")
+        == MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.PLAY_MEDIA
@@ -180,19 +182,18 @@ async def test_supported_features(
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.PLAY
-        == state.attributes.get("supported_features")
     )
 
     # Feature supported for clients.
     state = hass.states.get(CLIENT_ENTITY_ID)
     assert (
-        MediaPlayerEntityFeature.PAUSE
+        state.attributes.get("supported_features")
+        == MediaPlayerEntityFeature.PAUSE
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.PLAY
-        == state.attributes.get("supported_features")
     )
 
 
@@ -214,7 +215,7 @@ async def test_check_attributes(
     assert state.attributes.get(ATTR_MEDIA_POSITION_UPDATED_AT)
     assert state.attributes.get(ATTR_MEDIA_TITLE) == "Snow Bride"
     assert state.attributes.get(ATTR_MEDIA_SERIES_TITLE) is None
-    assert state.attributes.get(ATTR_MEDIA_CHANNEL) == "{} ({})".format("HALLHD", "312")
+    assert state.attributes.get(ATTR_MEDIA_CHANNEL) == "HALLHD (312)"
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "312"
     assert not state.attributes.get(ATTR_MEDIA_CURRENTLY_RECORDING)
     assert state.attributes.get(ATTR_MEDIA_RATING) == "TV-G"
@@ -233,7 +234,7 @@ async def test_check_attributes(
     assert state.attributes.get(ATTR_MEDIA_POSITION_UPDATED_AT)
     assert state.attributes.get(ATTR_MEDIA_TITLE) == "Tyler's Ultimate"
     assert state.attributes.get(ATTR_MEDIA_SERIES_TITLE) == "Spaghetti and Clam Sauce"
-    assert state.attributes.get(ATTR_MEDIA_CHANNEL) == "{} ({})".format("FOODHD", "231")
+    assert state.attributes.get(ATTR_MEDIA_CHANNEL) == "FOODHD (231)"
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "231"
     assert not state.attributes.get(ATTR_MEDIA_CURRENTLY_RECORDING)
     assert state.attributes.get(ATTR_MEDIA_RATING) == "No Rating"
@@ -254,7 +255,7 @@ async def test_check_attributes(
     assert state.attributes.get(ATTR_MEDIA_ARTIST) == "Gerald Albright"
     assert state.attributes.get(ATTR_MEDIA_ALBUM_NAME) == "Slam Dunk (2014)"
     assert state.attributes.get(ATTR_MEDIA_SERIES_TITLE) is None
-    assert state.attributes.get(ATTR_MEDIA_CHANNEL) == "{} ({})".format("MCSJ", "851")
+    assert state.attributes.get(ATTR_MEDIA_CHANNEL) == "MCSJ (851)"
     assert state.attributes.get(ATTR_INPUT_SOURCE) == "851"
     assert not state.attributes.get(ATTR_MEDIA_CURRENTLY_RECORDING)
     assert state.attributes.get(ATTR_MEDIA_RATING) == "TV-PG"

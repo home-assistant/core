@@ -1,0 +1,39 @@
+{
+  "code": 0,
+  "brightNess": "50",
+  "result": {
+    "light": {
+      "brightness": 50,
+      "colorTempe": 5400
+    },
+    "result": {
+      "brightness": 50,
+      "red": 178.5,
+      "green": 255,
+      "blue": 25.5,
+      "colorMode": "rgb",
+      "humidity": 35,
+      "mist_virtual_level": 6,
+      "mode": "manual",
+      "water_lacks": true,
+      "water_tank_lifted": true,
+      "automatic_stop_reach_target": true,
+      "night_light_brightness": 10,
+      "enabled": true,
+      "filter_life": 99,
+      "level": 1,
+      "display": true,
+      "display_forever": false,
+      "child_lock": false,
+      "night_light": "on",
+      "air_quality": 15,
+      "air_quality_value": 1,
+      "configuration": {
+        "auto_target_humidity": 40,
+        "display": true,
+        "automatic_stop": true
+      }
+    },
+    "code": 0
+  }
+}

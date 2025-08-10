@@ -25,8 +25,8 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.util import slugify
 
 from .const import ATTR_DURATION, ATTR_ROTATION, CONF_ANGLE, CONF_GESTURE, LOGGER
-from .deconz_device import DeconzBase
-from .gateway import DeconzGateway
+from .entity import DeconzBase
+from .hub import DeconzHub
 
 CONF_DECONZ_EVENT = "deconz_event"
 CONF_DECONZ_ALARM_EVENT = "deconz_alarm_event"
@@ -55,57 +55,62 @@ RELATIVE_ROTARY_DECONZ_TO_EVENT = {
 }
 
 
-async def async_setup_events(gateway: DeconzGateway) -> None:
+async def async_setup_events(hub: DeconzHub) -> None:
     """Set up the deCONZ events."""
 
     @callback
     def async_add_sensor(_: EventType, sensor_id: str) -> None:
         """Create DeconzEvent."""
-        new_event: DeconzAlarmEvent | DeconzEvent | DeconzPresenceEvent | DeconzRelativeRotaryEvent
-        sensor = gateway.api.sensors[sensor_id]
+        new_event: (
+            DeconzAlarmEvent
+            | DeconzEvent
+            | DeconzPresenceEvent
+            | DeconzRelativeRotaryEvent
+        )
+        sensor = hub.api.sensors[sensor_id]
 
         if isinstance(sensor, Switch):
-            new_event = DeconzEvent(sensor, gateway)
+            new_event = DeconzEvent(sensor, hub)
 
         elif isinstance(sensor, AncillaryControl):
-            new_event = DeconzAlarmEvent(sensor, gateway)
+            new_event = DeconzAlarmEvent(sensor, hub)
 
         elif isinstance(sensor, Presence):
             if sensor.presence_event is None:
                 return
-            new_event = DeconzPresenceEvent(sensor, gateway)
+            new_event = DeconzPresenceEvent(sensor, hub)
 
         elif isinstance(sensor, RelativeRotary):
-            new_event = DeconzRelativeRotaryEvent(sensor, gateway)
+            new_event = DeconzRelativeRotaryEvent(sensor, hub)
 
-        gateway.hass.async_create_task(new_event.async_update_device_registry())
-        gateway.events.append(new_event)
+        hub.hass.async_create_task(new_event.async_update_device_registry())
+        hub.events.append(new_event)
 
-    gateway.register_platform_add_device_callback(
+    hub.register_platform_add_device_callback(
         async_add_sensor,
-        gateway.api.sensors.switch,
+        hub.api.sensors.switch,
     )
-    gateway.register_platform_add_device_callback(
+    hub.register_platform_add_device_callback(
         async_add_sensor,
-        gateway.api.sensors.ancillary_control,
+        hub.api.sensors.ancillary_control,
     )
-    gateway.register_platform_add_device_callback(
+    hub.register_platform_add_device_callback(
         async_add_sensor,
-        gateway.api.sensors.presence,
+        hub.api.sensors.presence,
     )
-    gateway.register_platform_add_device_callback(
+    hub.register_platform_add_device_callback(
         async_add_sensor,
-        gateway.api.sensors.relative_rotary,
+        hub.api.sensors.relative_rotary,
     )
 
 
 @callback
-def async_unload_events(gateway: DeconzGateway) -> None:
+def async_unload_events(hub: DeconzHub) -> None:
     """Unload all deCONZ events."""
-    for event in gateway.events:
+    for event in hub.events:
         event.async_will_remove_from_hass()
 
-    gateway.events.clear()
+    hub.events.clear()
 
 
 class DeconzEventBase(DeconzBase):
@@ -118,10 +123,10 @@ class DeconzEventBase(DeconzBase):
     def __init__(
         self,
         device: AncillaryControl | Presence | RelativeRotary | Switch,
-        gateway: DeconzGateway,
+        hub: DeconzHub,
     ) -> None:
         """Register callback that will be used for signals."""
-        super().__init__(device, gateway)
+        super().__init__(device, hub)
 
         self._unsubscribe = device.subscribe(self.async_update_callback)
 
@@ -145,10 +150,10 @@ class DeconzEventBase(DeconzBase):
         if not self.device_info:
             return
 
-        device_registry = dr.async_get(self.gateway.hass)
+        device_registry = dr.async_get(self.hub.hass)
 
         entry = device_registry.async_get_or_create(
-            config_entry_id=self.gateway.config_entry.entry_id, **self.device_info
+            config_entry_id=self.hub.config_entry.entry_id, **self.device_info
         )
         self.device_id = entry.id
 
@@ -165,10 +170,7 @@ class DeconzEvent(DeconzEventBase):
     @callback
     def async_update_callback(self) -> None:
         """Fire the event if reason is that state is updated."""
-        if (
-            self.gateway.ignore_state_updates
-            or "state" not in self._device.changed_keys
-        ):
+        if self.hub.ignore_state_updates or "state" not in self._device.changed_keys:
             return
 
         data: dict[str, Any] = {
@@ -189,7 +191,7 @@ class DeconzEvent(DeconzEventBase):
         if self._device.xy is not None:
             data[CONF_XY] = self._device.xy
 
-        self.gateway.hass.bus.async_fire(CONF_DECONZ_EVENT, data)
+        self.hub.hass.bus.async_fire(CONF_DECONZ_EVENT, data)
 
 
 class DeconzAlarmEvent(DeconzEventBase):
@@ -201,7 +203,7 @@ class DeconzAlarmEvent(DeconzEventBase):
     def async_update_callback(self) -> None:
         """Fire the event if reason is new action is updated."""
         if (
-            self.gateway.ignore_state_updates
+            self.hub.ignore_state_updates
             or "action" not in self._device.changed_keys
             or self._device.action not in SUPPORTED_DECONZ_ALARM_EVENTS
         ):
@@ -214,7 +216,7 @@ class DeconzAlarmEvent(DeconzEventBase):
             CONF_EVENT: self._device.action.value,
         }
 
-        self.gateway.hass.bus.async_fire(CONF_DECONZ_ALARM_EVENT, data)
+        self.hub.hass.bus.async_fire(CONF_DECONZ_ALARM_EVENT, data)
 
 
 class DeconzPresenceEvent(DeconzEventBase):
@@ -226,7 +228,7 @@ class DeconzPresenceEvent(DeconzEventBase):
     def async_update_callback(self) -> None:
         """Fire the event if reason is new action is updated."""
         if (
-            self.gateway.ignore_state_updates
+            self.hub.ignore_state_updates
             or "presenceevent" not in self._device.changed_keys
             or self._device.presence_event not in SUPPORTED_DECONZ_PRESENCE_EVENTS
         ):
@@ -239,7 +241,7 @@ class DeconzPresenceEvent(DeconzEventBase):
             CONF_EVENT: self._device.presence_event.value,
         }
 
-        self.gateway.hass.bus.async_fire(CONF_DECONZ_PRESENCE_EVENT, data)
+        self.hub.hass.bus.async_fire(CONF_DECONZ_PRESENCE_EVENT, data)
 
 
 class DeconzRelativeRotaryEvent(DeconzEventBase):
@@ -251,7 +253,7 @@ class DeconzRelativeRotaryEvent(DeconzEventBase):
     def async_update_callback(self) -> None:
         """Fire the event if reason is new action is updated."""
         if (
-            self.gateway.ignore_state_updates
+            self.hub.ignore_state_updates
             or "rotaryevent" not in self._device.changed_keys
         ):
             return
@@ -265,4 +267,4 @@ class DeconzRelativeRotaryEvent(DeconzEventBase):
             ATTR_DURATION: self._device.expected_event_duration,
         }
 
-        self.gateway.hass.bus.async_fire(CONF_DECONZ_RELATIVE_ROTARY_EVENT, data)
+        self.hub.hass.bus.async_fire(CONF_DECONZ_RELATIVE_ROTARY_EVENT, data)

@@ -1,4 +1,5 @@
 """Lock platform for Tessie integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,26 +7,30 @@ from typing import Any
 from tessie_api import lock, open_unlock_charge_port, unlock
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import TessieConfigEntry
 from .const import DOMAIN, TessieChargeCableLockStates
-from .coordinator import TessieStateUpdateCoordinator
 from .entity import TessieEntity
+from .models import TessieVehicleData
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TessieConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tessie sensor platform from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     async_add_entities(
-        klass(vehicle.state_coordinator)
+        klass(vehicle)
         for klass in (TessieLockEntity, TessieCableLockEntity)
-        for vehicle in data
+        for vehicle in data.vehicles
     )
 
 
@@ -34,10 +39,10 @@ class TessieLockEntity(TessieEntity, LockEntity):
 
     def __init__(
         self,
-        coordinator: TessieStateUpdateCoordinator,
+        vehicle: TessieVehicleData,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, "vehicle_state_locked")
+        super().__init__(vehicle, "vehicle_state_locked")
 
     @property
     def is_locked(self) -> bool | None:
@@ -60,10 +65,10 @@ class TessieCableLockEntity(TessieEntity, LockEntity):
 
     def __init__(
         self,
-        coordinator: TessieStateUpdateCoordinator,
+        vehicle: TessieVehicleData,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, "charge_state_charge_port_latch")
+        super().__init__(vehicle, "charge_state_charge_port_latch")
 
     @property
     def is_locked(self) -> bool | None:
@@ -73,7 +78,6 @@ class TessieCableLockEntity(TessieEntity, LockEntity):
     async def async_lock(self, **kwargs: Any) -> None:
         """Charge cable Lock cannot be manually locked."""
         raise ServiceValidationError(
-            "Insert cable to lock",
             translation_domain=DOMAIN,
             translation_key="no_cable",
         )

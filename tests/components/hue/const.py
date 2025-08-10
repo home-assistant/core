@@ -126,13 +126,14 @@ FAKE_ROTARY = {
     "id_v1": "/sensors/1",
     "owner": {"rid": "fake_device_id_1", "rtype": "device"},
     "relative_rotary": {
-        "last_event": {
+        "rotary_report": {
             "action": "start",
             "rotation": {
                 "direction": "clock_wise",
                 "steps": 0,
                 "duration": 0,
             },
+            "updated": "2023-09-27T10:06:41.822Z",
         }
     },
     "type": "relative_rotary",

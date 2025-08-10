@@ -1,14 +1,14 @@
 """The tests for the climate component."""
+
 from __future__ import annotations
 
 from enum import Enum
-from types import ModuleType
-from unittest.mock import MagicMock
+from typing import Any
+from unittest.mock import MagicMock, Mock
 
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import climate
 from homeassistant.components.climate import (
     DOMAIN,
     SET_TEMPERATURE_SCHEMA,
@@ -16,31 +16,36 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.climate.const import (
+    ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
+    ATTR_HUMIDITY,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
     ATTR_PRESET_MODE,
+    ATTR_SWING_HORIZONTAL_MODE,
     ATTR_SWING_MODE,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     SERVICE_SET_FAN_MODE,
+    SERVICE_SET_HUMIDITY,
+    SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
+    SERVICE_SET_SWING_HORIZONTAL_MODE,
     SERVICE_SET_SWING_MODE,
+    SERVICE_SET_TEMPERATURE,
+    SWING_HORIZONTAL_OFF,
+    SWING_HORIZONTAL_ON,
     ClimateEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from tests.common import (
     MockConfigEntry,
     MockEntity,
-    MockModule,
-    MockPlatform,
     async_mock_service,
-    help_test_all,
-    import_and_test_deprecated_constant,
-    import_and_test_deprecated_constant_enum,
-    mock_integration,
-    mock_platform,
+    setup_test_component_platform,
 )
 
 
@@ -85,6 +90,7 @@ class MockClimateEntity(MockEntity, ClimateEntity):
         ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.PRESET_MODE
         | ClimateEntityFeature.SWING_MODE
+        | ClimateEntityFeature.SWING_HORIZONTAL_MODE
     )
     _attr_preset_mode = "home"
     _attr_preset_modes = ["home", "away"]
@@ -92,7 +98,12 @@ class MockClimateEntity(MockEntity, ClimateEntity):
     _attr_fan_modes = ["auto", "off"]
     _attr_swing_mode = "auto"
     _attr_swing_modes = ["auto", "off"]
+    _attr_swing_horizontal_mode = "on"
+    _attr_swing_horizontal_modes = [SWING_HORIZONTAL_ON, SWING_HORIZONTAL_OFF]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_target_temperature = 20
+    _attr_target_temperature_high = 25
+    _attr_target_temperature_low = 15
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -110,12 +121,6 @@ class MockClimateEntity(MockEntity, ClimateEntity):
         """
         return [HVACMode.OFF, HVACMode.HEAT]
 
-    def turn_on(self) -> None:
-        """Turn on."""
-
-    def turn_off(self) -> None:
-        """Turn off."""
-
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         self._attr_preset_mode = preset_mode
@@ -128,10 +133,36 @@ class MockClimateEntity(MockEntity, ClimateEntity):
         """Set swing mode."""
         self._attr_swing_mode = swing_mode
 
+    def set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
+        """Set horizontal swing mode."""
+        self._attr_swing_horizontal_mode = swing_horizontal_mode
+
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target hvac mode."""
+        self._attr_hvac_mode = hvac_mode
+
+    def set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        if ATTR_TEMPERATURE in kwargs:
+            self._attr_target_temperature = kwargs[ATTR_TEMPERATURE]
+        if ATTR_TARGET_TEMP_HIGH in kwargs:
+            self._attr_target_temperature_high = kwargs[ATTR_TARGET_TEMP_HIGH]
+            self._attr_target_temperature_low = kwargs[ATTR_TARGET_TEMP_LOW]
+
+
+class MockClimateEntityTestMethods(MockClimateEntity):
+    """Mock Climate device."""
+
+    def turn_on(self) -> None:
+        """Turn on."""
+
+    def turn_off(self) -> None:
+        """Turn off."""
+
 
 async def test_sync_turn_on(hass: HomeAssistant) -> None:
     """Test if async turn_on calls sync turn_on."""
-    climate = MockClimateEntity()
+    climate = MockClimateEntityTestMethods()
     climate.hass = hass
 
     climate.turn_on = MagicMock()
@@ -142,7 +173,7 @@ async def test_sync_turn_on(hass: HomeAssistant) -> None:
 
 async def test_sync_turn_off(hass: HomeAssistant) -> None:
     """Test if async turn_off calls sync turn_off."""
-    climate = MockClimateEntity()
+    climate = MockClimateEntityTestMethods()
     climate.hass = hass
 
     climate.turn_off = MagicMock()
@@ -151,113 +182,104 @@ async def test_sync_turn_off(hass: HomeAssistant) -> None:
     assert climate.turn_off.called
 
 
-def _create_tuples(enum: Enum, constant_prefix: str) -> list[tuple[Enum, str]]:
-    result = []
-    for enum in enum:
-        result.append((enum, constant_prefix))
-    return result
+def _create_tuples(enum: type[Enum], constant_prefix: str) -> list[tuple[Enum, str]]:
+    return [
+        (enum_field, constant_prefix)
+        for enum_field in enum
+        if enum_field
+        not in [
+            ClimateEntityFeature.TURN_ON,
+            ClimateEntityFeature.TURN_OFF,
+            ClimateEntityFeature.SWING_HORIZONTAL_MODE,
+        ]
+    ]
 
 
-@pytest.mark.parametrize(
-    "module",
-    [climate, climate.const],
-)
-def test_all(module: ModuleType) -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(module)
-
-
-@pytest.mark.parametrize(
-    ("enum", "constant_prefix"),
-    _create_tuples(climate.ClimateEntityFeature, "SUPPORT_")
-    + _create_tuples(climate.HVACMode, "HVAC_MODE_"),
-)
-@pytest.mark.parametrize(
-    "module",
-    [climate, climate.const],
-)
-def test_deprecated_constants(
+async def test_temperature_features_is_valid(
+    hass: HomeAssistant,
+    register_test_integration: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
-    enum: Enum,
-    constant_prefix: str,
-    module: ModuleType,
 ) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, module, enum, constant_prefix, "2025.1"
+    """Test correct features for setting temperature."""
+
+    class MockClimateTempEntity(MockClimateEntity):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+
+    class MockClimateTempRangeEntity(MockClimateEntity):
+        @property
+        def supported_features(self) -> int:
+            """Return supported features."""
+            return ClimateEntityFeature.TARGET_TEMPERATURE
+
+    climate_temp_entity = MockClimateTempEntity(
+        name="test", entity_id="climate.test_temp"
+    )
+    climate_temp_range_entity = MockClimateTempRangeEntity(
+        name="test", entity_id="climate.test_range"
     )
 
+    setup_test_component_platform(
+        hass,
+        DOMAIN,
+        entities=[climate_temp_entity, climate_temp_range_entity],
+        from_config_entry=True,
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
 
-@pytest.mark.parametrize(
-    ("enum", "constant_postfix"),
-    [
-        (climate.HVACAction.OFF, "OFF"),
-        (climate.HVACAction.HEATING, "HEAT"),
-        (climate.HVACAction.COOLING, "COOL"),
-        (climate.HVACAction.DRYING, "DRY"),
-        (climate.HVACAction.IDLE, "IDLE"),
-        (climate.HVACAction.FAN, "FAN"),
-    ],
-)
-def test_deprecated_current_constants(
+    with pytest.raises(
+        ServiceValidationError,
+        match="Set temperature action was used with the target temperature parameter but the entity does not support it",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                "entity_id": "climate.test_temp",
+                "temperature": 20,
+            },
+            blocking=True,
+        )
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Set temperature action was used with the target temperature low/high parameter but the entity does not support it",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                "entity_id": "climate.test_range",
+                "target_temp_low": 20,
+                "target_temp_high": 25,
+            },
+            blocking=True,
+        )
+
+
+async def test_mode_validation(
+    hass: HomeAssistant,
+    register_test_integration: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
-    enum: climate.HVACAction,
-    constant_postfix: str,
 ) -> None:
-    """Test deprecated current constants."""
-    import_and_test_deprecated_constant(
-        caplog,
-        climate.const,
-        "CURRENT_HVAC_" + constant_postfix,
-        f"{enum.__class__.__name__}.{enum.name}",
-        enum,
-        "2025.1",
+    """Test mode validation for hvac_mode, fan, swing and preset."""
+    climate_entity = MockClimateEntity(name="test", entity_id="climate.test")
+
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[climate_entity], from_config_entry=True
     )
-
-
-async def test_preset_mode_validation(
-    hass: HomeAssistant, config_flow_fixture: None
-) -> None:
-    """Test mode validation for fan, swing and preset."""
-
-    async def async_setup_entry_init(
-        hass: HomeAssistant, config_entry: ConfigEntry
-    ) -> bool:
-        """Set up test config entry."""
-        await hass.config_entries.async_forward_entry_setups(config_entry, [DOMAIN])
-        return True
-
-    async def async_setup_entry_climate_platform(
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
-    ) -> None:
-        """Set up test climate platform via config entry."""
-        async_add_entities([MockClimateEntity(name="test", entity_id="climate.test")])
-
-    mock_integration(
-        hass,
-        MockModule(
-            "test",
-            async_setup_entry=async_setup_entry_init,
-        ),
-        built_in=False,
-    )
-    mock_platform(
-        hass,
-        "test.climate",
-        MockPlatform(async_setup_entry=async_setup_entry_climate_platform),
-    )
-
-    config_entry = MockConfigEntry(domain="test")
-    config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("climate.test")
+    assert state.state == "heat"
     assert state.attributes.get(ATTR_PRESET_MODE) == "home"
     assert state.attributes.get(ATTR_FAN_MODE) == "auto"
     assert state.attributes.get(ATTR_SWING_MODE) == "auto"
+    assert state.attributes.get(ATTR_SWING_HORIZONTAL_MODE) == "on"
 
     await hass.services.async_call(
         DOMAIN,
@@ -279,6 +301,15 @@ async def test_preset_mode_validation(
     )
     await hass.services.async_call(
         DOMAIN,
+        SERVICE_SET_SWING_HORIZONTAL_MODE,
+        {
+            "entity_id": "climate.test",
+            "swing_horizontal_mode": "off",
+        },
+        blocking=True,
+    )
+    await hass.services.async_call(
+        DOMAIN,
         SERVICE_SET_FAN_MODE,
         {
             "entity_id": "climate.test",
@@ -290,10 +321,29 @@ async def test_preset_mode_validation(
     assert state.attributes.get(ATTR_PRESET_MODE) == "away"
     assert state.attributes.get(ATTR_FAN_MODE) == "off"
     assert state.attributes.get(ATTR_SWING_MODE) == "off"
+    assert state.attributes.get(ATTR_SWING_HORIZONTAL_MODE) == "off"
 
     with pytest.raises(
         ServiceValidationError,
-        match="The preset_mode invalid is not a valid preset_mode: home, away",
+        match="HVAC mode auto is not valid. Valid HVAC modes are: off, heat",
+    ) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {
+                "entity_id": "climate.test",
+                "hvac_mode": "auto",
+            },
+            blocking=True,
+        )
+    assert (
+        str(exc.value) == "HVAC mode auto is not valid. Valid HVAC modes are: off, heat"
+    )
+    assert exc.value.translation_key == "not_valid_hvac_mode"
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Preset mode invalid is not valid. Valid preset modes are: home, away",
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
@@ -306,13 +356,13 @@ async def test_preset_mode_validation(
         )
     assert (
         str(exc.value)
-        == "The preset_mode invalid is not a valid preset_mode: home, away"
+        == "Preset mode invalid is not valid. Valid preset modes are: home, away"
     )
     assert exc.value.translation_key == "not_valid_preset_mode"
 
     with pytest.raises(
         ServiceValidationError,
-        match="The swing_mode invalid is not a valid swing_mode: auto, off",
+        match="Swing mode invalid is not valid. Valid swing modes are: auto, off",
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
@@ -324,13 +374,33 @@ async def test_preset_mode_validation(
             blocking=True,
         )
     assert (
-        str(exc.value) == "The swing_mode invalid is not a valid swing_mode: auto, off"
+        str(exc.value)
+        == "Swing mode invalid is not valid. Valid swing modes are: auto, off"
     )
     assert exc.value.translation_key == "not_valid_swing_mode"
 
     with pytest.raises(
         ServiceValidationError,
-        match="The fan_mode invalid is not a valid fan_mode: auto, off",
+        match="Horizontal swing mode invalid is not valid. Valid horizontal swing modes are: on, off",
+    ) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_SWING_HORIZONTAL_MODE,
+            {
+                "entity_id": "climate.test",
+                "swing_horizontal_mode": "invalid",
+            },
+            blocking=True,
+        )
+    assert (
+        str(exc.value)
+        == "Horizontal swing mode invalid is not valid. Valid horizontal swing modes are: on, off"
+    )
+    assert exc.value.translation_key == "not_valid_horizontal_swing_mode"
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Fan mode invalid is not valid. Valid fan modes are: auto, off",
     ) as exc:
         await hass.services.async_call(
             DOMAIN,
@@ -341,25 +411,311 @@ async def test_preset_mode_validation(
             },
             blocking=True,
         )
-    assert str(exc.value) == "The fan_mode invalid is not a valid fan_mode: auto, off"
+    assert (
+        str(exc.value)
+        == "Fan mode invalid is not valid. Valid fan modes are: auto, off"
+    )
     assert exc.value.translation_key == "not_valid_fan_mode"
 
 
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
-    """Test deprecated supported features ints."""
+async def test_turn_on_off_toggle(hass: HomeAssistant) -> None:
+    """Test turn_on/turn_off/toggle methods."""
 
-    class MockClimateEntity(ClimateEntity):
+    class MockClimateEntityTest(MockClimateEntity):
+        """Mock Climate device."""
+
+        _attr_hvac_mode = HVACMode.OFF
+
         @property
-        def supported_features(self) -> int:
-            """Return supported features."""
-            return 1
+        def hvac_mode(self) -> HVACMode:
+            """Return hvac mode."""
+            return self._attr_hvac_mode
 
-    entity = MockClimateEntity()
-    assert entity.supported_features_compat is ClimateEntityFeature(1)
-    assert "MockClimateEntity" in caplog.text
-    assert "is using deprecated supported features values" in caplog.text
-    assert "Instead it should use" in caplog.text
-    assert "ClimateEntityFeature.TARGET_TEMPERATURE" in caplog.text
-    caplog.clear()
-    assert entity.supported_features_compat is ClimateEntityFeature(1)
-    assert "is using deprecated supported features values" not in caplog.text
+        async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+            """Set new target hvac mode."""
+            self._attr_hvac_mode = hvac_mode
+
+    climate = MockClimateEntityTest()
+    climate.hass = hass
+
+    await climate.async_turn_on()
+    assert climate.hvac_mode == HVACMode.HEAT
+
+    await climate.async_turn_off()
+    assert climate.hvac_mode == HVACMode.OFF
+
+    await climate.async_toggle()
+    assert climate.hvac_mode == HVACMode.HEAT
+    await climate.async_toggle()
+    assert climate.hvac_mode == HVACMode.OFF
+
+
+async def test_sync_toggle(hass: HomeAssistant) -> None:
+    """Test if async toggle calls sync toggle."""
+
+    class MockClimateEntityTest(MockClimateEntity):
+        """Mock Climate device."""
+
+        _attr_supported_features = (
+            ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+        )
+
+        @property
+        def hvac_mode(self) -> HVACMode:
+            """Return hvac operation ie. heat, cool mode.
+
+            Need to be one of HVACMode.*.
+            """
+            return HVACMode.HEAT
+
+        @property
+        def hvac_modes(self) -> list[HVACMode]:
+            """Return the list of available hvac operation modes.
+
+            Need to be a subset of HVAC_MODES.
+            """
+            return [HVACMode.OFF, HVACMode.HEAT]
+
+        def turn_on(self) -> None:
+            """Turn on."""
+
+        def turn_off(self) -> None:
+            """Turn off."""
+
+        def toggle(self) -> None:
+            """Toggle."""
+
+    climate = MockClimateEntityTest()
+    climate.hass = hass
+
+    climate.toggle = Mock()
+    await climate.async_toggle()
+
+    assert climate.toggle.called
+
+
+async def test_humidity_validation(
+    hass: HomeAssistant,
+    register_test_integration: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test validation for humidity."""
+
+    class MockClimateEntityHumidity(MockClimateEntity):
+        """Mock climate class with mocked aux heater."""
+
+        _attr_supported_features = ClimateEntityFeature.TARGET_HUMIDITY
+        _attr_target_humidity = 50
+        _attr_min_humidity = 50
+        _attr_max_humidity = 60
+
+        def set_humidity(self, humidity: int) -> None:
+            """Set new target humidity."""
+            self._attr_target_humidity = humidity
+
+    test_climate = MockClimateEntityHumidity(
+        name="Test",
+        unique_id="unique_climate_test",
+    )
+
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[test_climate], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.test")
+    assert state.attributes.get(ATTR_HUMIDITY) == 50
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Provided humidity 1 is not valid. Accepted range is 50 to 60",
+    ) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_HUMIDITY,
+            {
+                "entity_id": "climate.test",
+                ATTR_HUMIDITY: "1",
+            },
+            blocking=True,
+        )
+
+    assert exc.value.translation_key == "humidity_out_of_range"
+    assert "Check valid humidity 1 in range 50 - 60" in caplog.text
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Provided humidity 70 is not valid. Accepted range is 50 to 60",
+    ) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_HUMIDITY,
+            {
+                "entity_id": "climate.test",
+                ATTR_HUMIDITY: "70",
+            },
+            blocking=True,
+        )
+
+
+async def test_temperature_validation(
+    hass: HomeAssistant, register_test_integration: MockConfigEntry
+) -> None:
+    """Test validation for temperatures."""
+
+    class MockClimateEntityTemp(MockClimateEntity):
+        """Mock climate class with mocked aux heater."""
+
+        _attr_supported_features = (
+            ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.PRESET_MODE
+            | ClimateEntityFeature.SWING_MODE
+            | ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        )
+        _attr_target_temperature = 15
+        _attr_target_temperature_high = 18
+        _attr_target_temperature_low = 10
+        _attr_target_temperature_step = PRECISION_WHOLE
+
+        def set_temperature(self, **kwargs: Any) -> None:
+            """Set new target temperature."""
+            if ATTR_TEMPERATURE in kwargs:
+                self._attr_target_temperature = kwargs[ATTR_TEMPERATURE]
+            if ATTR_TARGET_TEMP_HIGH in kwargs:
+                self._attr_target_temperature_high = kwargs[ATTR_TARGET_TEMP_HIGH]
+                self._attr_target_temperature_low = kwargs[ATTR_TARGET_TEMP_LOW]
+
+    test_climate = MockClimateEntityTemp(
+        name="Test",
+        unique_id="unique_climate_test",
+    )
+
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[test_climate], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.test")
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) is None
+    assert state.attributes.get(ATTR_MIN_TEMP) == 7
+    assert state.attributes.get(ATTR_MAX_TEMP) == 35
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Provided temperature 40.0 is not valid. Accepted range is 7 to 35",
+    ) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                "entity_id": "climate.test",
+                ATTR_TEMPERATURE: "40",
+            },
+            blocking=True,
+        )
+    assert (
+        str(exc.value)
+        == "Provided temperature 40.0 is not valid. Accepted range is 7 to 35"
+    )
+    assert exc.value.translation_key == "temp_out_of_range"
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Provided temperature 0.0 is not valid. Accepted range is 7 to 35",
+    ) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                "entity_id": "climate.test",
+                ATTR_TARGET_TEMP_HIGH: "25",
+                ATTR_TARGET_TEMP_LOW: "0",
+            },
+            blocking=True,
+        )
+    assert (
+        str(exc.value)
+        == "Provided temperature 0.0 is not valid. Accepted range is 7 to 35"
+    )
+    assert exc.value.translation_key == "temp_out_of_range"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            "entity_id": "climate.test",
+            ATTR_TARGET_TEMP_HIGH: "25",
+            ATTR_TARGET_TEMP_LOW: "10",
+        },
+        blocking=True,
+    )
+
+    state = hass.states.get("climate.test")
+    assert state.attributes.get(ATTR_TARGET_TEMP_LOW) == 10
+    assert state.attributes.get(ATTR_TARGET_TEMP_HIGH) == 25
+
+
+async def test_target_temp_high_higher_than_low(
+    hass: HomeAssistant, register_test_integration: MockConfigEntry
+) -> None:
+    """Test that target high is higher than target low."""
+
+    class MockClimateEntityTemp(MockClimateEntity):
+        """Mock climate class with mocked aux heater."""
+
+        _attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        )
+        _attr_current_temperature = 15
+        _attr_target_temperature = 15
+        _attr_target_temperature_high = 18
+        _attr_target_temperature_low = 10
+        _attr_target_temperature_step = PRECISION_WHOLE
+
+        def set_temperature(self, **kwargs: Any) -> None:
+            """Set new target temperature."""
+            if ATTR_TEMPERATURE in kwargs:
+                self._attr_target_temperature = kwargs[ATTR_TEMPERATURE]
+            if ATTR_TARGET_TEMP_HIGH in kwargs:
+                self._attr_target_temperature_high = kwargs[ATTR_TARGET_TEMP_HIGH]
+                self._attr_target_temperature_low = kwargs[ATTR_TARGET_TEMP_LOW]
+
+    test_climate = MockClimateEntityTemp(
+        name="Test",
+        unique_id="unique_climate_test",
+    )
+
+    setup_test_component_platform(
+        hass, DOMAIN, entities=[test_climate], from_config_entry=True
+    )
+    await hass.config_entries.async_setup(register_test_integration.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("climate.test")
+    assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 15
+    assert state.attributes.get(ATTR_MIN_TEMP) == 7
+    assert state.attributes.get(ATTR_MAX_TEMP) == 35
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Target temperature low can not be higher than Target temperature high",
+    ) as exc:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {
+                "entity_id": "climate.test",
+                ATTR_TARGET_TEMP_HIGH: "15",
+                ATTR_TARGET_TEMP_LOW: "20",
+            },
+            blocking=True,
+        )
+    assert (
+        str(exc.value)
+        == "Target temperature low can not be higher than Target temperature high"
+    )
+    assert exc.value.translation_key == "low_temp_higher_than_high_temp"

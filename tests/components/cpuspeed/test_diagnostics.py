@@ -1,7 +1,8 @@
 """Tests for the diagnostics data provided by the CPU Speed integration."""
+
 from unittest.mock import patch
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 

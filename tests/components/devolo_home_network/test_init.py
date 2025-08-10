@@ -1,4 +1,5 @@
 """Test the devolo Home Network integration setup."""
+
 from unittest.mock import patch
 
 from devolo_plc_api.exceptions.device import DeviceNotFound
@@ -14,7 +15,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.components.update import DOMAIN as UPDATE
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_IP_ADDRESS, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import async_get_platforms
@@ -23,41 +24,14 @@ from . import configure_integration
 from .const import IP
 from .mock import MockDevice
 
-from tests.common import MockConfigEntry
 
-
-async def test_setup_entry(
-    hass: HomeAssistant,
-    mock_device: MockDevice,
-    device_registry: dr.DeviceRegistry,
-    snapshot: SnapshotAssertion,
-) -> None:
+@pytest.mark.usefixtures("mock_device")
+async def test_setup_entry(hass: HomeAssistant) -> None:
     """Test setup entry."""
     entry = configure_integration(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is ConfigEntryState.LOADED
-
-    device_info = device_registry.async_get_device(
-        {(DOMAIN, mock_device.serial_number)}
-    )
-    assert device_info == snapshot
-
-
-@pytest.mark.usefixtures("mock_device")
-async def test_setup_without_password(hass: HomeAssistant) -> None:
-    """Test setup entry without a device password set like used before HA Core 2022.06."""
-    config = {
-        CONF_IP_ADDRESS: IP,
-    }
-    entry = MockConfigEntry(domain=DOMAIN, data=config)
-    entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
-        return_value=True,
-    ), patch("homeassistant.core.EventBus.async_listen_once"):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_setup_device_not_found(hass: HomeAssistant) -> None:
@@ -92,17 +66,37 @@ async def test_hass_stop(hass: HomeAssistant, mock_device: MockDevice) -> None:
 
 
 @pytest.mark.parametrize(
+    "device", ["mock_device", "mock_repeater_device", "mock_ipv6_device"]
+)
+async def test_device(
+    hass: HomeAssistant,
+    device: str,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+    request: pytest.FixtureRequest,
+) -> None:
+    """Test device setup."""
+    mock_device: MockDevice = request.getfixturevalue(device)
+    entry = configure_integration(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    device_info = device_registry.async_get_device(
+        {(DOMAIN, mock_device.serial_number)}
+    )
+    assert device_info == snapshot
+
+
+@pytest.mark.parametrize(
     ("device", "expected_platforms"),
     [
-        [
+        (
             "mock_device",
             (BINARY_SENSOR, BUTTON, DEVICE_TRACKER, IMAGE, SENSOR, SWITCH, UPDATE),
-        ],
-        [
+        ),
+        (
             "mock_repeater_device",
             (BUTTON, DEVICE_TRACKER, IMAGE, SENSOR, SWITCH, UPDATE),
-        ],
-        ["mock_nonwifi_device", (BINARY_SENSOR, BUTTON, SENSOR, SWITCH, UPDATE)],
+        ),
+        ("mock_nonwifi_device", (BINARY_SENSOR, BUTTON, SENSOR, SWITCH, UPDATE)),
     ],
 )
 async def test_platforms(

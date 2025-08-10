@@ -19,6 +19,39 @@
               "auto": "mdi:arrow-oscillating",
               "off": "mdi:arrow-oscillating-off"
             }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "rangefull": "mdi:pan-horizontal",
+              "auto": "mdi:compare-horizontal",
+              "off": "mdi:arrow-oscillating-off"
+            }
+          }
+        }
+      }
+    },
+    "fan": {
+      "demo": {
+        "state_attributes": {
+          "preset_mode": {
+            "default": "mdi:circle-medium",
+            "state": {
+              "auto": "mdi:fan-auto",
+              "sleep": "mdi:bed",
+              "smart": "mdi:brain",
+              "on": "mdi:power"
+            }
+          }
+        }
+      }
+    },
+    "light": {
+      "bed_light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "rainbow": "mdi:looks"
+            }
           }
         }
       }
@@ -57,6 +90,11 @@
       "air_conditioner": {
         "default": "mdi:air-conditioner"
       }
+    }
+  },
+  "services": {
+    "randomize_device_tracker_data": {
+      "service": "mdi:dice-multiple"
     }
   }
 }

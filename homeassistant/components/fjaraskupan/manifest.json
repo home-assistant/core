@@ -14,5 +14,5 @@
   "documentation": "https://www.home-assistant.io/integrations/fjaraskupan",
   "iot_class": "local_polling",
   "loggers": ["bleak", "fjaraskupan"],
-  "requirements": ["fjaraskupan==2.2.0"]
+  "requirements": ["fjaraskupan==2.3.2"]
 }

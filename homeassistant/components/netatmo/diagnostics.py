@@ -1,4 +1,5 @@
 """Diagnostics support for Netatmo."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -48,7 +49,7 @@ async def async_get_config_entry_diagnostics(
         ),
         "data": {
             ACCOUNT: async_redact_data(
-                getattr(data_handler.account, "raw_data"),
+                data_handler.account.raw_data,
                 TO_REDACT,
             )
         },

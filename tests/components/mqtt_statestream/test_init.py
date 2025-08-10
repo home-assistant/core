@@ -1,9 +1,10 @@
 """The tests for the MQTT statestream component."""
+
 from unittest.mock import ANY, call
 
 import pytest
 
-import homeassistant.components.mqtt_statestream as statestream
+from homeassistant.components import mqtt_statestream as statestream
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.setup import async_setup_component
@@ -99,7 +100,7 @@ async def test_setup_and_stop_waits_for_ha(
 # We use xfail with this test because there is an unhandled exception
 # in a background task in this test.
 # The exception is raised by mqtt.async_publish.
-@pytest.mark.xfail()
+@pytest.mark.xfail
 async def test_startup_no_mqtt(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -150,6 +151,7 @@ async def test_state_changed_event_sends_message(
     platform = MockEntityPlatform(hass)
     entity = MockEntity(unique_id="1234")
     await platform.async_add_entities([entity])
+    await hass.async_block_till_done()
 
     mqtt_mock.async_publish.assert_called_with(
         "pub/test_domain/test_platform_1234/state", "unknown", 1, True

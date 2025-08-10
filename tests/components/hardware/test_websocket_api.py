@@ -1,4 +1,5 @@
 """Test the hardware websocket API."""
+
 from collections import namedtuple
 import datetime
 from unittest.mock import patch
@@ -9,7 +10,7 @@ import psutil_home_assistant as ha_psutil
 from homeassistant.components.hardware.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.typing import WebSocketGenerator
 
@@ -49,7 +50,7 @@ async def test_system_status_subscription(
         return mock_psutil
 
     with patch(
-        "homeassistant.components.hardware.websocket_api.ha_psutil.PsutilWrapper",
+        "homeassistant.components.hardware.ha_psutil.PsutilWrapper",
         wraps=create_mock_psutil,
     ):
         assert await async_setup_component(hass, DOMAIN, {})
@@ -60,17 +61,20 @@ async def test_system_status_subscription(
     response = await client.receive_json()
     assert response["success"]
 
-    VirtualMem = namedtuple("VirtualMemory", ["available", "percent", "total"])
+    VirtualMem = namedtuple("VirtualMemory", ["available", "percent", "total"])  # noqa: PYI024
     vmem = VirtualMem(10 * 1024**2, 50, 30 * 1024**2)
 
-    with patch.object(
-        mock_psutil.psutil,
-        "cpu_percent",
-        return_value=123,
-    ), patch.object(
-        mock_psutil.psutil,
-        "virtual_memory",
-        return_value=vmem,
+    with (
+        patch.object(
+            mock_psutil.psutil,
+            "cpu_percent",
+            return_value=123,
+        ),
+        patch.object(
+            mock_psutil.psutil,
+            "virtual_memory",
+            return_value=vmem,
+        ),
     ):
         freezer.tick(TEST_TIME_ADVANCE_INTERVAL)
         await hass.async_block_till_done()
@@ -90,9 +94,10 @@ async def test_system_status_subscription(
     response = await client.receive_json()
     assert response["success"]
 
-    with patch.object(mock_psutil.psutil, "cpu_percent") as cpu_mock, patch.object(
-        mock_psutil.psutil, "virtual_memory"
-    ) as vmem_mock:
+    with (
+        patch.object(mock_psutil.psutil, "cpu_percent") as cpu_mock,
+        patch.object(mock_psutil.psutil, "virtual_memory") as vmem_mock,
+    ):
         freezer.tick(TEST_TIME_ADVANCE_INTERVAL)
         await hass.async_block_till_done()
         cpu_mock.assert_not_called()

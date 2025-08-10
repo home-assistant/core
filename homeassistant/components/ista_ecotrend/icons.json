@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "heating": {
+        "default": "mdi:radiator"
+      },
+      "water": {
+        "default": "mdi:faucet"
+      },
+      "hot_water": {
+        "default": "mdi:faucet"
+      }
+    }
+  }
+}

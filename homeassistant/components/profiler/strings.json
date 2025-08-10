@@ -4,9 +4,6 @@
       "user": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
-    },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
   "services": {
@@ -83,6 +80,20 @@
     "log_event_loop_scheduled": {
       "name": "Log event loop scheduled",
       "description": "Logs what is scheduled in the event loop."
+    },
+    "set_asyncio_debug": {
+      "name": "Set asyncio debug",
+      "description": "Enable or disable asyncio debug.",
+      "fields": {
+        "enabled": {
+          "name": "Enabled",
+          "description": "Whether to enable or disable asyncio debug."
+        }
+      }
+    },
+    "log_current_tasks": {
+      "name": "Log current asyncio tasks",
+      "description": "Logs all the current asyncio tasks."
     }
   }
 }

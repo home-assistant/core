@@ -1,0 +1,153 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "in_bed": {
+        "default": "mdi:bed-outline",
+        "state": {
+          "on": "mdi:bed",
+          "off": "mdi:bed-empty"
+        }
+      }
+    },
+    "sensor": {
+      "bone_mass": {
+        "default": "mdi:bone"
+      },
+      "heart_pulse": {
+        "default": "mdi:heart-pulse"
+      },
+      "height": {
+        "default": "mdi:human-male-height-variant"
+      },
+      "hydration": {
+        "default": "mdi:water"
+      },
+      "muscle_mass_for_segments_left_arm": {
+        "default": "mdi:arm-flex"
+      },
+      "muscle_mass_for_segments_right_arm": {
+        "default": "mdi:arm-flex"
+      },
+      "fat_free_mass_for_segments_left_arm": {
+        "default": "mdi:arm-flex"
+      },
+      "fat_free_mass_for_segments_right_arm": {
+        "default": "mdi:arm-flex"
+      },
+      "fat_mass_for_segments_left_arm": {
+        "default": "mdi:arm-flex"
+      },
+      "fat_mass_for_segments_right_arm": {
+        "default": "mdi:arm-flex"
+      },
+      "deep_sleep": {
+        "default": "mdi:sleep"
+      },
+      "time_to_sleep": {
+        "default": "mdi:sleep"
+      },
+      "time_to_wakeup": {
+        "default": "mdi:sleep-off"
+      },
+      "average_heart_rate": {
+        "default": "mdi:heart-pulse"
+      },
+      "maximum_heart_rate": {
+        "default": "mdi:heart-pulse"
+      },
+      "minimum_heart_rate": {
+        "default": "mdi:heart-pulse"
+      },
+      "light_sleep": {
+        "default": "mdi:sleep"
+      },
+      "rem_sleep": {
+        "default": "mdi:sleep"
+      },
+      "sleep_score": {
+        "default": "mdi:medal"
+      },
+      "wakeup_count": {
+        "default": "mdi:sleep-off"
+      },
+      "wakeup_time": {
+        "default": "mdi:sleep-off"
+      },
+      "activity_steps_today": {
+        "default": "mdi:shoe-print"
+      },
+      "activity_distance_today": {
+        "default": "mdi:map-marker-distance"
+      },
+      "activity_elevation_today": {
+        "default": "mdi:stairs-up"
+      },
+      "step_goal": {
+        "default": "mdi:shoe-print"
+      },
+      "sleep_goal": {
+        "default": "mdi:bed-clock"
+      },
+      "workout_distance": {
+        "default": "mdi:map-marker-distance"
+      },
+      "workout_type": {
+        "state": {
+          "walk": "mdi:walk",
+          "run": "mdi:run",
+          "hiking": "mdi:hiking",
+          "skating": "mdi:skateboarding",
+          "bicycling": "mdi:bike",
+          "swimming": "mdi:swim",
+          "surfing": "mdi:surfing",
+          "kitesurfing": "mdi:kitesurfing",
+          "windsurfing": "mdi:kitesurfing",
+          "tennis": "mdi:tennis",
+          "table_tennis": "mdi:table-tennis",
+          "squash": "mdi:racquetball",
+          "badminton": "mdi:badminton",
+          "lift_weights": "mdi:weight-lifter",
+          "basket_ball": "mdi:basketball",
+          "soccer": "mdi:soccer",
+          "football": "mdi:football",
+          "rugby": "mdi:rugby",
+          "volley_ball": "mdi:volleyball",
+          "waterpolo": "mdi:water-polo",
+          "horse_riding": "mdi:horse-human",
+          "golf": "mdi:golf",
+          "yoga": "mdi:yoga",
+          "dancing": "mdi:human-female-dance",
+          "boxing": "mdi:boxing-glove",
+          "fencing": "mdi:fencing",
+          "martial_arts": "mdi:karate",
+          "skiing": "mdi:ski",
+          "snowboarding": "mdi:snowboard",
+          "rowing": "mdi:rowing",
+          "baseball": "mdi:baseball",
+          "handball": "mdi:handball",
+          "hockey": "mdi:hockey-sticks",
+          "ice_hockey": "mdi:hockey-sticks",
+          "climbing": "mdi:carabiner",
+          "ice_skating": "mdi:skate"
+        }
+      },
+      "workout_elevation": {
+        "default": "mdi:stairs-up"
+      },
+      "workout_pause_duration": {
+        "default": "mdi:timer-pause"
+      },
+      "workout_duration": {
+        "default": "mdi:timer"
+      },
+      "battery": {
+        "default": "mdi:battery-off",
+        "state": {
+          "low": "mdi:battery-20",
+          "medium": "mdi:battery-50",
+          "high": "mdi:battery"
+        }
+      }
+    }
+  }
+}

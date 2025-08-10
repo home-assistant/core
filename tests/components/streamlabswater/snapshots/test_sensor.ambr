@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -16,6 +17,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -27,6 +30,7 @@
     'original_name': 'Daily usage',
     'platform': 'streamlabswater',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'daily_usage',
     'unique_id': '945e7c52-854a-41e1-8524-50c6993277e1-daily_usage',
@@ -43,6 +47,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.water_monitor_daily_usage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '200.44691536',
   })
@@ -54,6 +59,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -64,6 +70,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -75,6 +83,7 @@
     'original_name': 'Monthly usage',
     'platform': 'streamlabswater',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'monthly_usage',
     'unique_id': '945e7c52-854a-41e1-8524-50c6993277e1-monthly_usage',
@@ -91,6 +100,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.water_monitor_monthly_usage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '420.514099294',
   })
@@ -102,6 +112,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -112,6 +123,8 @@
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
+    'labels': set({
+    }),
     'name': None,
     'options': dict({
       'sensor': dict({
@@ -123,6 +136,7 @@
     'original_name': 'Yearly usage',
     'platform': 'streamlabswater',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'yearly_usage',
     'unique_id': '945e7c52-854a-41e1-8524-50c6993277e1-yearly_usage',
@@ -139,6 +153,7 @@
     'context': <ANY>,
     'entity_id': 'sensor.water_monitor_yearly_usage',
     'last_changed': <ANY>,
+    'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '65432.389256934',
   })

@@ -1,0 +1,3436 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 6,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 3,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "ecobee Inc.",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 5,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "ecobee3 lite",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 2,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Thermostat",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 4,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "**REDACTED**",
+            "description": "Serial Number",
+            "maxLen": 64
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 8,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "4.8.70226",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "34AB8811-AC7F-4340-BAC3-FD6A85F9943B",
+            "iid": 11,
+            "perms": ["pr", "hd"],
+            "format": "string",
+            "value": "4.1;3fac0fb4",
+            "maxLen": 64
+          },
+          {
+            "type": "00000220-0000-1000-8000-0026BB765291",
+            "iid": 10,
+            "perms": ["pr", "hd"],
+            "format": "data",
+            "value": "u4qz9YgSXzQ="
+          },
+          {
+            "type": "000000A6-0000-1000-8000-0026BB765291",
+            "iid": 9,
+            "perms": ["pr", "ev"],
+            "format": "uint32",
+            "value": 0,
+            "description": "Accessory Flags"
+          }
+        ]
+      },
+      {
+        "iid": 30,
+        "type": "000000A2-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "iid": 31,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1.1.0",
+            "description": "Version",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 16,
+        "type": "0000004A-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000000F-0000-1000-8000-0026BB765291",
+            "iid": 17,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Current Heating Cooling State",
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1,
+            "valid-values": [0, 1, 2]
+          },
+          {
+            "type": "00000033-0000-1000-8000-0026BB765291",
+            "iid": 18,
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Target Heating Cooling State",
+            "minValue": 0,
+            "maxValue": 3,
+            "minStep": 1,
+            "valid-values": [0, 1, 2, 3]
+          },
+          {
+            "type": "00000011-0000-1000-8000-0026BB765291",
+            "iid": 19,
+            "perms": ["pr", "ev"],
+            "format": "float",
+            "value": 21.2,
+            "description": "Current Temperature",
+            "unit": "celsius",
+            "minValue": 0,
+            "maxValue": 40.0,
+            "minStep": 0.1
+          },
+          {
+            "type": "00000035-0000-1000-8000-0026BB765291",
+            "iid": 20,
+            "perms": ["pr", "pw", "ev"],
+            "format": "float",
+            "value": 22.2,
+            "description": "Target Temperature",
+            "unit": "celsius",
+            "minValue": 7.2,
+            "maxValue": 33.3,
+            "minStep": 0.1
+          },
+          {
+            "type": "00000036-0000-1000-8000-0026BB765291",
+            "iid": 21,
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint8",
+            "value": 1,
+            "description": "Temperature Display Units",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1,
+            "valid-values": [0, 1]
+          },
+          {
+            "type": "0000000D-0000-1000-8000-0026BB765291",
+            "iid": 22,
+            "perms": ["pr", "pw", "ev"],
+            "format": "float",
+            "value": 25.0,
+            "description": "Cooling Threshold Temperature",
+            "unit": "celsius",
+            "minValue": 18.3,
+            "maxValue": 33.3,
+            "minStep": 0.1
+          },
+          {
+            "type": "00000012-0000-1000-8000-0026BB765291",
+            "iid": 23,
+            "perms": ["pr", "pw", "ev"],
+            "format": "float",
+            "value": 22.2,
+            "description": "Heating Threshold Temperature",
+            "unit": "celsius",
+            "minValue": 7.2,
+            "maxValue": 26.1,
+            "minStep": 0.1
+          },
+          {
+            "type": "00000010-0000-1000-8000-0026BB765291",
+            "iid": 24,
+            "perms": ["pr", "ev"],
+            "format": "float",
+            "value": 45.0,
+            "description": "Current Relative Humidity",
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100.0,
+            "minStep": 1.0
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 27,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Thermostat",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "000000BF-0000-1000-8000-0026BB765291",
+            "iid": 75,
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Target Fan State",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "000000AF-0000-1000-8000-0026BB765291",
+            "iid": 76,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 2,
+            "description": "Current Fan State",
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1
+          },
+          {
+            "type": "B7DDB9A3-54BB-4572-91D2-F1F5B0510F8C",
+            "iid": 33,
+            "perms": ["pr"],
+            "format": "uint8",
+            "value": 3,
+            "minValue": 0,
+            "maxValue": 3,
+            "minStep": 1
+          },
+          {
+            "type": "E4489BBC-5227-4569-93E5-B345E3E5508F",
+            "iid": 34,
+            "perms": ["pr", "pw"],
+            "format": "float",
+            "value": 22.2,
+            "unit": "celsius",
+            "minValue": 7.2,
+            "maxValue": 26.1,
+            "minStep": 0.1
+          },
+          {
+            "type": "7D381BAA-20F9-40E5-9BE9-AEB92D4BECEF",
+            "iid": 35,
+            "perms": ["pr", "pw"],
+            "format": "float",
+            "value": 25.0,
+            "unit": "celsius",
+            "minValue": 18.3,
+            "maxValue": 33.3,
+            "minStep": 0.1
+          },
+          {
+            "type": "73AAB542-892A-4439-879A-D2A883724B69",
+            "iid": 36,
+            "perms": ["pr", "pw"],
+            "format": "float",
+            "value": 17.8,
+            "unit": "celsius",
+            "minValue": 7.2,
+            "maxValue": 26.1,
+            "minStep": 0.1
+          },
+          {
+            "type": "5DA985F0-898A-4850-B987-B76C6C78D670",
+            "iid": 37,
+            "perms": ["pr", "pw"],
+            "format": "float",
+            "value": 25.6,
+            "unit": "celsius",
+            "minValue": 18.3,
+            "maxValue": 33.3,
+            "minStep": 0.1
+          },
+          {
+            "type": "05B97374-6DC0-439B-A0FA-CA33F612D425",
+            "iid": 38,
+            "perms": ["pr", "pw"],
+            "format": "float",
+            "value": 20.0,
+            "unit": "celsius",
+            "minValue": 7.2,
+            "maxValue": 26.1,
+            "minStep": 0.1
+          },
+          {
+            "type": "A251F6E7-AC46-4190-9C5D-3D06277BDF9F",
+            "iid": 39,
+            "perms": ["pr", "pw"],
+            "format": "float",
+            "value": 24.4,
+            "unit": "celsius",
+            "minValue": 18.3,
+            "maxValue": 33.3,
+            "minStep": 0.1
+          },
+          {
+            "type": "1B300BC2-CFFC-47FF-89F9-BD6CCF5F2853",
+            "iid": 40,
+            "perms": ["pw"],
+            "format": "uint8",
+            "minValue": 0,
+            "maxValue": 3,
+            "minStep": 1
+          },
+          {
+            "type": "1621F556-1367-443C-AF19-82AF018E99DE",
+            "iid": 41,
+            "perms": ["pr", "pw"],
+            "format": "string",
+            "value": "2025-04-06T23:30:00-05:00R",
+            "maxLen": 64
+          },
+          {
+            "type": "FA128DE6-9D7D-49A4-B6D8-4E4E234DEE38",
+            "iid": 48,
+            "perms": ["pw"],
+            "format": "bool"
+          },
+          {
+            "type": "4A6AE4F6-036C-495D-87CC-B3702B437741",
+            "iid": 49,
+            "perms": ["pr"],
+            "format": "uint8",
+            "value": 1,
+            "minValue": 0,
+            "maxValue": 4,
+            "minStep": 1
+          },
+          {
+            "type": "DB7BF261-7042-4194-8BD1-3AA22830AEDD",
+            "iid": 50,
+            "perms": ["pr"],
+            "format": "uint8",
+            "value": 0,
+            "minValue": 0,
+            "maxValue": 3,
+            "minStep": 1
+          },
+          {
+            "type": "41935E3E-B54D-42E9-B8B9-D33C6319F0AF",
+            "iid": 51,
+            "perms": ["pr"],
+            "format": "bool",
+            "value": false
+          },
+          {
+            "type": "C35DA3C0-E004-40E3-B153-46655CDD9214",
+            "iid": 52,
+            "perms": ["pr", "pw"],
+            "format": "uint8",
+            "value": 100,
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "type": "48F62AEC-4171-4B4A-8F0E-1EEB6708B3FB",
+            "iid": 53,
+            "perms": ["pr"],
+            "format": "uint8",
+            "value": 100,
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "type": "1B1515F2-CC45-409F-991F-C480987F92C3",
+            "iid": 54,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "The Hive is humming along. You have no pending alerts or reminders.",
+            "maxLen": 64
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "aid": 4295608971,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 2,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Master BR",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 3,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "ecobee Inc.",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 4,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "**REDACTED**",
+            "description": "Serial Number",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 5,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "EBRSE4",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 8,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1.0.0",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 6,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          }
+        ]
+      },
+      {
+        "iid": 192,
+        "type": "00000096-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000008F-0000-1000-8000-0026BB765291",
+            "iid": 193,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 2,
+            "description": "Charging State",
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1
+          },
+          {
+            "type": "00000068-0000-1000-8000-0026BB765291",
+            "iid": 194,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 100,
+            "description": "Battery Level",
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 195,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 196,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Master BR",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 208,
+        "type": "0000008A-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000011-0000-1000-8000-0026BB765291",
+            "iid": 209,
+            "perms": ["pr", "ev"],
+            "format": "float",
+            "value": 22.4,
+            "description": "Current Temperature",
+            "unit": "celsius",
+            "minValue": 0,
+            "maxValue": 100.0,
+            "minStep": 0.1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 210,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Master BR Temperature",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 211,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 212,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 57,
+        "type": "00000086-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000071-0000-1000-8000-0026BB765291",
+            "iid": 65,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 1,
+            "description": "Occupancy Detected",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 29,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Master BR Occupancy",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 117,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 116,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "A8F798E0-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 68,
+            "perms": ["pr"],
+            "format": "int",
+            "value": 691,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 56,
+        "type": "00000085-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000022-0000-1000-8000-0026BB765291",
+            "iid": 66,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": false,
+            "description": "Motion Detected"
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 28,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Master BR Motion",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 101,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 100,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "BFE61C70-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 67,
+            "perms": ["pr"],
+            "format": "int",
+            "value": 691,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "aid": 4295608960,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 2,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Basement",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 3,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "ecobee Inc.",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 4,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "**REDACTED**",
+            "description": "Serial Number",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 5,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "EBRSE4",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 8,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1.0.0",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 6,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          }
+        ]
+      },
+      {
+        "iid": 192,
+        "type": "00000096-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000008F-0000-1000-8000-0026BB765291",
+            "iid": 193,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 2,
+            "description": "Charging State",
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1
+          },
+          {
+            "type": "00000068-0000-1000-8000-0026BB765291",
+            "iid": 194,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 100,
+            "description": "Battery Level",
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 195,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 196,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Basement",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 208,
+        "type": "0000008A-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000011-0000-1000-8000-0026BB765291",
+            "iid": 209,
+            "perms": ["pr", "ev"],
+            "format": "float",
+            "value": 20.3,
+            "description": "Current Temperature",
+            "unit": "celsius",
+            "minValue": 0,
+            "maxValue": 100.0,
+            "minStep": 0.1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 210,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Basement Temperature",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 211,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 212,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 57,
+        "type": "00000086-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000071-0000-1000-8000-0026BB765291",
+            "iid": 65,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Occupancy Detected",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 29,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Basement Occupancy",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 117,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 116,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "A8F798E0-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 68,
+            "perms": ["pr"],
+            "format": "int",
+            "value": 9158,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 56,
+        "type": "00000085-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000022-0000-1000-8000-0026BB765291",
+            "iid": 66,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": false,
+            "description": "Motion Detected"
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 28,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Basement Motion",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 101,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 100,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "BFE61C70-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 67,
+            "perms": ["pr"],
+            "format": "int",
+            "value": 9158,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "aid": 4295016858,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 2,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Living Room",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 3,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "ecobee Inc.",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 4,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "**REDACTED**",
+            "description": "Serial Number",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 5,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "EBRSE4",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 8,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1.0.0",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 6,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          }
+        ]
+      },
+      {
+        "iid": 192,
+        "type": "00000096-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000008F-0000-1000-8000-0026BB765291",
+            "iid": 193,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 2,
+            "description": "Charging State",
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1
+          },
+          {
+            "type": "00000068-0000-1000-8000-0026BB765291",
+            "iid": 194,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 100,
+            "description": "Battery Level",
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 195,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 196,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Living Room",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 208,
+        "type": "0000008A-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000011-0000-1000-8000-0026BB765291",
+            "iid": 209,
+            "perms": ["pr", "ev"],
+            "format": "float",
+            "value": 21.0,
+            "description": "Current Temperature",
+            "unit": "celsius",
+            "minValue": 0,
+            "maxValue": 100.0,
+            "minStep": 0.1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 210,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Living Room Temperature",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 211,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 212,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 57,
+        "type": "00000086-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000071-0000-1000-8000-0026BB765291",
+            "iid": 65,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Occupancy Detected",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 29,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Living Room Occupancy",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 117,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 116,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "A8F798E0-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 68,
+            "perms": ["pr"],
+            "format": "int",
+            "value": -1,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 56,
+        "type": "00000085-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000022-0000-1000-8000-0026BB765291",
+            "iid": 66,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": false,
+            "description": "Motion Detected"
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 28,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Living Room Motion",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 101,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 100,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "BFE61C70-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 67,
+            "perms": ["pr"],
+            "format": "int",
+            "value": -1,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "aid": 4295016969,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 2,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Upstairs BR",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 3,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "ecobee Inc.",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 4,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "**REDACTED**",
+            "description": "Serial Number",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 5,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "EBRSE4",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 8,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1.0.0",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 6,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          }
+        ]
+      },
+      {
+        "iid": 192,
+        "type": "00000096-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000008F-0000-1000-8000-0026BB765291",
+            "iid": 193,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 2,
+            "description": "Charging State",
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1
+          },
+          {
+            "type": "00000068-0000-1000-8000-0026BB765291",
+            "iid": 194,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 100,
+            "description": "Battery Level",
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 195,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 196,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Upstairs BR",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 208,
+        "type": "0000008A-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000011-0000-1000-8000-0026BB765291",
+            "iid": 209,
+            "perms": ["pr", "ev"],
+            "format": "float",
+            "value": 21.6,
+            "description": "Current Temperature",
+            "unit": "celsius",
+            "minValue": 0,
+            "maxValue": 100.0,
+            "minStep": 0.1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 210,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Upstairs BR Temperature",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 211,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 212,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 57,
+        "type": "00000086-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000071-0000-1000-8000-0026BB765291",
+            "iid": 65,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Occupancy Detected",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 29,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Upstairs BR Occupancy",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 117,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 116,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "A8F798E0-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 68,
+            "perms": ["pr"],
+            "format": "int",
+            "value": -1,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 56,
+        "type": "00000085-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000022-0000-1000-8000-0026BB765291",
+            "iid": 66,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": false,
+            "description": "Motion Detected"
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 28,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Upstairs BR Motion",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 101,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 100,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "BFE61C70-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 67,
+            "perms": ["pr"],
+            "format": "int",
+            "value": -1,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "aid": 4298584118,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 2,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Master BR Window",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 3,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "ecobee Inc.",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 4,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "**REDACTED**",
+            "description": "Serial Number",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 5,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "EBDWC01",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 8,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1.0.0",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 6,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          }
+        ]
+      },
+      {
+        "iid": 192,
+        "type": "00000096-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000008F-0000-1000-8000-0026BB765291",
+            "iid": 193,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 2,
+            "description": "Charging State",
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1
+          },
+          {
+            "type": "00000068-0000-1000-8000-0026BB765291",
+            "iid": 194,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 100,
+            "description": "Battery Level",
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 195,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 196,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Master BR Window",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 57,
+        "type": "00000086-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000071-0000-1000-8000-0026BB765291",
+            "iid": 65,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Occupancy Detected",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 29,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Master BR Window Occupancy",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 117,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 116,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "A8F798E0-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 68,
+            "perms": ["pr"],
+            "format": "int",
+            "value": 1421,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 56,
+        "type": "00000085-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000022-0000-1000-8000-0026BB765291",
+            "iid": 66,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": false,
+            "description": "Motion Detected"
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 28,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Master BR Window Motion",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 101,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 100,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "BFE61C70-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 67,
+            "perms": ["pr"],
+            "format": "int",
+            "value": 821,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 224,
+        "type": "00000080-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000006A-0000-1000-8000-0026BB765291",
+            "iid": 225,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Contact Sensor State",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 226,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Master BR Window Contact",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "aid": 4298649931,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 2,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Loft window",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 3,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "ecobee Inc.",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 4,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "**REDACTED**",
+            "description": "Serial Number",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 5,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "EBDWC01",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 8,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1.0.0",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 6,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          }
+        ]
+      },
+      {
+        "iid": 192,
+        "type": "00000096-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000008F-0000-1000-8000-0026BB765291",
+            "iid": 193,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 2,
+            "description": "Charging State",
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1
+          },
+          {
+            "type": "00000068-0000-1000-8000-0026BB765291",
+            "iid": 194,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 100,
+            "description": "Battery Level",
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 195,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 196,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Loft window",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 57,
+        "type": "00000086-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000071-0000-1000-8000-0026BB765291",
+            "iid": 65,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Occupancy Detected",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 29,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Loft window Occupancy",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 117,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 116,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "A8F798E0-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 68,
+            "perms": ["pr"],
+            "format": "int",
+            "value": 327,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 56,
+        "type": "00000085-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000022-0000-1000-8000-0026BB765291",
+            "iid": 66,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": false,
+            "description": "Motion Detected"
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 28,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Loft window Motion",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 101,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 100,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "BFE61C70-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 67,
+            "perms": ["pr"],
+            "format": "int",
+            "value": 328,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 224,
+        "type": "00000080-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000006A-0000-1000-8000-0026BB765291",
+            "iid": 225,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Contact Sensor State",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 226,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Loft window Contact",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "aid": 4298527970,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 2,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Front Door",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 3,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "ecobee Inc.",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 4,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "**REDACTED**",
+            "description": "Serial Number",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 5,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "EBDWC01",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 8,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1.0.0",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 6,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          }
+        ]
+      },
+      {
+        "iid": 192,
+        "type": "00000096-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000008F-0000-1000-8000-0026BB765291",
+            "iid": 193,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 2,
+            "description": "Charging State",
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1
+          },
+          {
+            "type": "00000068-0000-1000-8000-0026BB765291",
+            "iid": 194,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 100,
+            "description": "Battery Level",
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 195,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 196,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Front Door",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 57,
+        "type": "00000086-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000071-0000-1000-8000-0026BB765291",
+            "iid": 65,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 1,
+            "description": "Occupancy Detected",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 29,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Front Door Occupancy",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 117,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 116,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "A8F798E0-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 68,
+            "perms": ["pr"],
+            "format": "int",
+            "value": 1473,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 56,
+        "type": "00000085-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000022-0000-1000-8000-0026BB765291",
+            "iid": 66,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Motion Detected"
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 28,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Front Door Motion",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 101,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 100,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "BFE61C70-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 67,
+            "perms": ["pr"],
+            "format": "int",
+            "value": 873,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 224,
+        "type": "00000080-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000006A-0000-1000-8000-0026BB765291",
+            "iid": 225,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Contact Sensor State",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 226,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Front Door Contact",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "aid": 4298527962,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 2,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Garage Door",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 3,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "ecobee Inc.",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 4,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "**REDACTED**",
+            "description": "Serial Number",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 5,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "EBDWC01",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 8,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1.0.0",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 6,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          }
+        ]
+      },
+      {
+        "iid": 192,
+        "type": "00000096-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000008F-0000-1000-8000-0026BB765291",
+            "iid": 193,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 2,
+            "description": "Charging State",
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1
+          },
+          {
+            "type": "00000068-0000-1000-8000-0026BB765291",
+            "iid": 194,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 100,
+            "description": "Battery Level",
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 195,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 196,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Garage Door",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 57,
+        "type": "00000086-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000071-0000-1000-8000-0026BB765291",
+            "iid": 65,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 1,
+            "description": "Occupancy Detected",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 29,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Garage Door Occupancy",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 117,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 116,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "A8F798E0-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 68,
+            "perms": ["pr"],
+            "format": "int",
+            "value": 1189,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 56,
+        "type": "00000085-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000022-0000-1000-8000-0026BB765291",
+            "iid": 66,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": false,
+            "description": "Motion Detected"
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 28,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Garage Door Motion",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 101,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 100,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "BFE61C70-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 67,
+            "perms": ["pr"],
+            "format": "int",
+            "value": 888,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 224,
+        "type": "00000080-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000006A-0000-1000-8000-0026BB765291",
+            "iid": 225,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Contact Sensor State",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 226,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Garage Door Contact",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "aid": 4298360914,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 2,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Basement Window 1",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 3,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "ecobee Inc.",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 4,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "**REDACTED**",
+            "description": "Serial Number",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 5,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "EBDWC01",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 8,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1.0.0",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 6,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          }
+        ]
+      },
+      {
+        "iid": 192,
+        "type": "00000096-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000008F-0000-1000-8000-0026BB765291",
+            "iid": 193,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 2,
+            "description": "Charging State",
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1
+          },
+          {
+            "type": "00000068-0000-1000-8000-0026BB765291",
+            "iid": 194,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 100,
+            "description": "Battery Level",
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 195,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 196,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Basement Window 1",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 57,
+        "type": "00000086-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000071-0000-1000-8000-0026BB765291",
+            "iid": 65,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Occupancy Detected",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 29,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Basement Window 1 Occupancy",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 117,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 116,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "A8F798E0-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 68,
+            "perms": ["pr"],
+            "format": "int",
+            "value": -1,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 56,
+        "type": "00000085-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000022-0000-1000-8000-0026BB765291",
+            "iid": 66,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": false,
+            "description": "Motion Detected"
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 28,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Basement Window 1 Motion",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 101,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 100,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "BFE61C70-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 67,
+            "perms": ["pr"],
+            "format": "int",
+            "value": -1,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 224,
+        "type": "00000080-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000006A-0000-1000-8000-0026BB765291",
+            "iid": 225,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Contact Sensor State",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 226,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Basement Window 1 Contact",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "aid": 4298360921,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 2,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Deck Door",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 3,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "ecobee Inc.",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 4,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "**REDACTED**",
+            "description": "Serial Number",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 5,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "EBDWC01",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 8,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1.0.0",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 6,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          }
+        ]
+      },
+      {
+        "iid": 192,
+        "type": "00000096-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000008F-0000-1000-8000-0026BB765291",
+            "iid": 193,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 2,
+            "description": "Charging State",
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1
+          },
+          {
+            "type": "00000068-0000-1000-8000-0026BB765291",
+            "iid": 194,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 100,
+            "description": "Battery Level",
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 195,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 196,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Deck Door",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 57,
+        "type": "00000086-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000071-0000-1000-8000-0026BB765291",
+            "iid": 65,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Occupancy Detected",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 29,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Deck Door Occupancy",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 117,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 116,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "A8F798E0-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 68,
+            "perms": ["pr"],
+            "format": "int",
+            "value": 944,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 56,
+        "type": "00000085-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000022-0000-1000-8000-0026BB765291",
+            "iid": 66,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": false,
+            "description": "Motion Detected"
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 28,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Deck Door Motion",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 101,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 100,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "BFE61C70-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 67,
+            "perms": ["pr"],
+            "format": "int",
+            "value": 884,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 224,
+        "type": "00000080-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000006A-0000-1000-8000-0026BB765291",
+            "iid": 225,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Contact Sensor State",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 226,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Deck Door Contact",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "aid": 4298360712,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 2,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Living Room Window 1",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 3,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "ecobee Inc.",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 4,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "**REDACTED**",
+            "description": "Serial Number",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 5,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "EBDWC01",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 8,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1.0.0",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 6,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          }
+        ]
+      },
+      {
+        "iid": 192,
+        "type": "00000096-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000008F-0000-1000-8000-0026BB765291",
+            "iid": 193,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 2,
+            "description": "Charging State",
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1
+          },
+          {
+            "type": "00000068-0000-1000-8000-0026BB765291",
+            "iid": 194,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 100,
+            "description": "Battery Level",
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 195,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 196,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Living Room Window 1",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 57,
+        "type": "00000086-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000071-0000-1000-8000-0026BB765291",
+            "iid": 65,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 1,
+            "description": "Occupancy Detected",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 29,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Living Room Window 1 Occupancy",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 117,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 116,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "A8F798E0-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 68,
+            "perms": ["pr"],
+            "format": "int",
+            "value": 1923,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 56,
+        "type": "00000085-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000022-0000-1000-8000-0026BB765291",
+            "iid": 66,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Motion Detected"
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 28,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Living Room Window 1 Motion",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 101,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 100,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "BFE61C70-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 67,
+            "perms": ["pr"],
+            "format": "int",
+            "value": 625,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 224,
+        "type": "00000080-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000006A-0000-1000-8000-0026BB765291",
+            "iid": 225,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Contact Sensor State",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 226,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Living Room Window 1 Contact",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "aid": 4298568508,
+    "services": [
+      {
+        "iid": 1,
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 2,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Upstairs BR Window",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "iid": 3,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "ecobee Inc.",
+            "description": "Manufacturer",
+            "maxLen": 64
+          },
+          {
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 4,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "**REDACTED**",
+            "description": "Serial Number",
+            "maxLen": 64
+          },
+          {
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 5,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "EBDWC01",
+            "description": "Model",
+            "maxLen": 64
+          },
+          {
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "iid": 8,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "1.0.0",
+            "description": "Firmware Revision",
+            "maxLen": 64
+          },
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "iid": 6,
+            "perms": ["pw"],
+            "format": "bool",
+            "description": "Identify"
+          }
+        ]
+      },
+      {
+        "iid": 192,
+        "type": "00000096-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000008F-0000-1000-8000-0026BB765291",
+            "iid": 193,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 2,
+            "description": "Charging State",
+            "minValue": 0,
+            "maxValue": 2,
+            "minStep": 1
+          },
+          {
+            "type": "00000068-0000-1000-8000-0026BB765291",
+            "iid": 194,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 100,
+            "description": "Battery Level",
+            "unit": "percentage",
+            "minValue": 0,
+            "maxValue": 100,
+            "minStep": 1
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 195,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 196,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Upstairs BR Window",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      },
+      {
+        "iid": 57,
+        "type": "00000086-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000071-0000-1000-8000-0026BB765291",
+            "iid": 65,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Occupancy Detected",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 29,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Upstairs BR Window Occupancy",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 117,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 116,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "A8F798E0-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 68,
+            "perms": ["pr"],
+            "format": "int",
+            "value": 9060,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 56,
+        "type": "00000085-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "00000022-0000-1000-8000-0026BB765291",
+            "iid": 66,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": false,
+            "description": "Motion Detected"
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 28,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Upstairs BR Window Motion",
+            "description": "Name",
+            "maxLen": 64
+          },
+          {
+            "type": "00000075-0000-1000-8000-0026BB765291",
+            "iid": 101,
+            "perms": ["pr", "ev"],
+            "format": "bool",
+            "value": true,
+            "description": "Status Active"
+          },
+          {
+            "type": "00000079-0000-1000-8000-0026BB765291",
+            "iid": 100,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Status Low Battery",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "BFE61C70-4A40-11E6-BDF4-0800200C9A66",
+            "iid": 67,
+            "perms": ["pr"],
+            "format": "int",
+            "value": 9060,
+            "unit": "seconds",
+            "minValue": -1,
+            "maxValue": 86400,
+            "minStep": 1
+          }
+        ]
+      },
+      {
+        "iid": 224,
+        "type": "00000080-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "type": "0000006A-0000-1000-8000-0026BB765291",
+            "iid": 225,
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "value": 0,
+            "description": "Contact Sensor State",
+            "minValue": 0,
+            "maxValue": 1,
+            "minStep": 1
+          },
+          {
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 226,
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Upstairs BR Window Contact",
+            "description": "Name",
+            "maxLen": 64
+          }
+        ]
+      }
+    ]
+  }
+]

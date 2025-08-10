@@ -7,16 +7,13 @@ play_on_speaker_hub:
         device:
           filter:
             - integration: yolink
-              manufacturer: YoLink
               model: SpeakerHub
-
     message:
       required: true
       example: hello, yolink
       selector:
         text:
     tone:
-      required: true
       default: "tip"
       selector:
         select:
@@ -27,7 +24,6 @@ play_on_speaker_hub:
             - "tip"
           translation_key: speaker_tone
     volume:
-      required: true
       default: 8
       selector:
         number:
@@ -35,7 +31,6 @@ play_on_speaker_hub:
           max: 15
           step: 1
     repeat:
-      required: true
       default: 0
       selector:
         number:

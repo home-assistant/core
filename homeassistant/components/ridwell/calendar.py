@@ -1,4 +1,5 @@
 """Support for Ridwell calendars."""
+
 from __future__ import annotations
 
 import datetime
@@ -8,7 +9,7 @@ from aioridwell.model import RidwellAccount, RidwellPickupEvent
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import RidwellDataUpdateCoordinator
@@ -35,7 +36,9 @@ def async_get_calendar_event_from_pickup_event(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Ridwell calendars based on a config entry."""
     coordinator: RidwellDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -49,8 +52,8 @@ async def async_setup_entry(
 class RidwellCalendar(RidwellEntity, CalendarEntity):
     """Define a Ridwell calendar."""
 
-    _attr_icon = "mdi:delete-empty"
     _attr_name = None
+    _attr_translation_key = "calendar"
 
     def __init__(
         self, coordinator: RidwellDataUpdateCoordinator, account: RidwellAccount

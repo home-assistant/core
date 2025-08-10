@@ -28,10 +28,21 @@
     "select": {
       "foot_warmer_temp": {
         "state": {
-          "off": "Off",
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High"
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]"
+        }
+      },
+      "core_temps": {
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "heating_low": "Heating low",
+          "heating_medium": "Heating medium",
+          "heating_high": "Heating high",
+          "cooling_low": "Cooling low",
+          "cooling_medium": "Cooling medium",
+          "cooling_high": "Cooling high"
         }
       }
     }

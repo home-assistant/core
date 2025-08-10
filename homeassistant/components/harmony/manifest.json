@@ -1,19 +1,13 @@
 {
   "domain": "harmony",
   "name": "Logitech Harmony Hub",
-  "codeowners": [
-    "@ehendrix23",
-    "@bramkragten",
-    "@bdraco",
-    "@mkeesey",
-    "@Aohzan"
-  ],
+  "codeowners": ["@ehendrix23", "@bdraco", "@mkeesey", "@Aohzan"],
   "config_flow": true,
-  "dependencies": ["remote", "switch"],
+  "dependencies": ["remote"],
   "documentation": "https://www.home-assistant.io/integrations/harmony",
   "iot_class": "local_push",
   "loggers": ["aioharmony", "slixmpp"],
-  "requirements": ["aioharmony==0.2.10"],
+  "requirements": ["aioharmony==0.5.2"],
   "ssdp": [
     {
       "manufacturer": "Logitech",

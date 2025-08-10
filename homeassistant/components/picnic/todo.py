@@ -1,4 +1,5 @@
 """Definition of Picnic shopping cart."""
+
 from __future__ import annotations
 
 import logging
@@ -14,7 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_COORDINATOR, DOMAIN
@@ -27,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Picnic shopping cart todo platform config entry."""
     picnic_coordinator = hass.data[DOMAIN][config_entry.entry_id][CONF_COORDINATOR]
@@ -39,7 +40,6 @@ class PicnicCart(TodoListEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
     """A Picnic Shopping Cart TodoListEntity."""
 
     _attr_has_entity_name = True
-    _attr_icon = "mdi:cart"
     _attr_supported_features = TodoListEntityFeature.CREATE_TODO_ITEM
     _attr_translation_key = "shopping_cart"
 
@@ -66,18 +66,15 @@ class PicnicCart(TodoListEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
 
         _LOGGER.debug(self.coordinator.data["cart_data"]["items"])
 
-        items = []
-        for item in self.coordinator.data["cart_data"]["items"]:
-            for article in item["items"]:
-                items.append(
-                    TodoItem(
-                        summary=f"{article['name']} ({article['unit_quantity']})",
-                        uid=f"{item['id']}-{article['id']}",
-                        status=TodoItemStatus.NEEDS_ACTION,  # We set 'NEEDS_ACTION' so they count as state
-                    )
-                )
-
-        return items
+        return [
+            TodoItem(
+                summary=f"{article['name']} ({article['unit_quantity']})",
+                uid=f"{item['id']}-{article['id']}",
+                status=TodoItemStatus.NEEDS_ACTION,  # We set 'NEEDS_ACTION' so they count as state
+            )
+            for item in self.coordinator.data["cart_data"]["items"]
+            for article in item["items"]
+        ]
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add item to shopping cart."""

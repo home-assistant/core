@@ -1,13 +1,14 @@
 """Tests for the diagnostics data provided by the Overkiz integration."""
+
 from unittest.mock import AsyncMock, patch
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 from tests.components.diagnostics import (
     get_diagnostics_for_config_entry,
     get_diagnostics_for_device,
@@ -22,7 +23,9 @@ async def test_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
-    diagnostic_data = load_json_object_fixture("overkiz/setup_tahoma_switch.json")
+    diagnostic_data = await async_load_json_object_fixture(
+        hass, "setup_tahoma_switch.json", DOMAIN
+    )
 
     with patch.multiple(
         "pyoverkiz.client.OverkizClient",
@@ -43,7 +46,9 @@ async def test_device_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test device diagnostics."""
-    diagnostic_data = load_json_object_fixture("overkiz/setup_tahoma_switch.json")
+    diagnostic_data = await async_load_json_object_fixture(
+        hass, "setup_tahoma_switch.json", DOMAIN
+    )
 
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, "rts://****-****-6867/16756006")}

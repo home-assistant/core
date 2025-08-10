@@ -1,4 +1,5 @@
 """Constants for the Dynalite component."""
+
 import logging
 
 from homeassistant.const import CONF_ROOM, Platform
@@ -15,7 +16,6 @@ ACTIVE_OFF = "off"
 ACTIVE_ON = "on"
 CONF_AREA = "area"
 CONF_AUTO_DISCOVER = "autodiscover"
-CONF_BRIDGES = "bridges"
 CONF_CHANNEL = "channel"
 CONF_CHANNEL_COVER = "channel_cover"
 CONF_CLOSE_PRESET = "close"

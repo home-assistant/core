@@ -1,0 +1,66 @@
+{
+  "components": {
+    "main": {
+      "contactSensor": {
+        "contact": {
+          "value": "closed",
+          "timestamp": "2025-02-09T17:16:42.674Z"
+        }
+      },
+      "temperatureMeasurement": {
+        "temperatureRange": {
+          "value": null
+        },
+        "temperature": {
+          "value": 59.0,
+          "unit": "F",
+          "timestamp": "2025-02-09T17:11:44.249Z"
+        }
+      },
+      "refresh": {},
+      "battery": {
+        "quantity": {
+          "value": null
+        },
+        "battery": {
+          "value": 100,
+          "unit": "%",
+          "timestamp": "2025-02-09T13:23:50.726Z"
+        },
+        "type": {
+          "value": null
+        }
+      },
+      "firmwareUpdate": {
+        "lastUpdateStatusReason": {
+          "value": null
+        },
+        "availableVersion": {
+          "value": "00000104",
+          "timestamp": "2025-02-09T13:59:19.101Z"
+        },
+        "lastUpdateStatus": {
+          "value": null
+        },
+        "supportedCommands": {
+          "value": null
+        },
+        "state": {
+          "value": "normalOperation",
+          "timestamp": "2025-02-09T13:59:19.101Z"
+        },
+        "updateAvailable": {
+          "value": false,
+          "timestamp": "2025-02-09T13:59:19.102Z"
+        },
+        "currentVersion": {
+          "value": "00000103",
+          "timestamp": "2025-02-09T13:59:19.102Z"
+        },
+        "lastUpdateTime": {
+          "value": null
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "sensor": {
+      "size": {
+        "default": "mdi:file"
+      },
+      "size_bytes": {
+        "default": "mdi:file"
+      },
+      "last_updated": {
+        "default": "mdi:file"
+      },
+      "created": {
+        "default": "mdi:file"
+      }
+    }
+  }
+}

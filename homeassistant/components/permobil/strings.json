@@ -15,19 +15,22 @@
       "region": {
         "description": "Select the region of your account.",
         "data": {
-          "code": "Region"
+          "region": "Region"
         }
       }
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "unknown": "Unexpected error, more information in the logs",
       "region_fetch_error": "Error fetching regions",
       "code_request_error": "Error requesting application code",
       "invalid_email": "Invalid email",
-      "invalid_code": "The code you gave is incorrect"
+      "invalid_code": "The code you gave is incorrect",
+      "unsigned_eula": "Please sign the EULA in the {app_name} app"
     }
   },
   "entity": {
@@ -67,6 +70,11 @@
       },
       "record_distance": {
         "name": "Record distance"
+      }
+    },
+    "binary_sensor": {
+      "is_charging": {
+        "name": "Is charging"
       }
     }
   }

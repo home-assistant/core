@@ -1,4 +1,5 @@
 """Test Local Media Source."""
+
 import logging
 from unittest.mock import AsyncMock, Mock, call
 
@@ -73,7 +74,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
-async def setup_media_source(hass) -> None:
+async def setup_media_source(hass: HomeAssistant) -> None:
     """Set up media source."""
     assert await async_setup_component(hass, "media_source", {})
 
@@ -103,6 +104,7 @@ async def test_async_browse_media_success(
         "media_content_id": "media-source://motioneye",
         "can_play": False,
         "can_expand": True,
+        "can_search": False,
         "children_media_class": "directory",
         "thumbnail": None,
         "children": [
@@ -115,6 +117,7 @@ async def test_async_browse_media_success(
                 ),
                 "can_play": False,
                 "can_expand": True,
+                "can_search": False,
                 "thumbnail": None,
                 "children_media_class": "directory",
             }
@@ -131,6 +134,7 @@ async def test_async_browse_media_success(
         "media_content_id": "media-source://motioneye/74565ad414754616000674c87bdc876c",
         "can_play": False,
         "can_expand": True,
+        "can_search": False,
         "children_media_class": "directory",
         "thumbnail": None,
         "children": [
@@ -144,6 +148,7 @@ async def test_async_browse_media_success(
                 ),
                 "can_play": False,
                 "can_expand": True,
+                "can_search": False,
                 "thumbnail": None,
                 "children_media_class": "directory",
             }
@@ -163,6 +168,7 @@ async def test_async_browse_media_success(
         ),
         "can_play": False,
         "can_expand": True,
+        "can_search": False,
         "children_media_class": "directory",
         "thumbnail": None,
         "children": [
@@ -176,6 +182,7 @@ async def test_async_browse_media_success(
                 ),
                 "can_play": False,
                 "can_expand": True,
+                "can_search": False,
                 "thumbnail": None,
                 "children_media_class": "video",
             },
@@ -189,6 +196,7 @@ async def test_async_browse_media_success(
                 ),
                 "can_play": False,
                 "can_expand": True,
+                "can_search": False,
                 "thumbnail": None,
                 "children_media_class": "image",
             },
@@ -211,6 +219,7 @@ async def test_async_browse_media_success(
         ),
         "can_play": False,
         "can_expand": True,
+        "can_search": False,
         "children_media_class": "video",
         "thumbnail": None,
         "children": [
@@ -224,6 +233,7 @@ async def test_async_browse_media_success(
                 ),
                 "can_play": False,
                 "can_expand": True,
+                "can_search": False,
                 "thumbnail": None,
                 "children_media_class": "directory",
             }
@@ -246,6 +256,7 @@ async def test_async_browse_media_success(
         ),
         "can_play": False,
         "can_expand": True,
+        "can_search": False,
         "children_media_class": "video",
         "thumbnail": None,
         "children": [
@@ -260,6 +271,7 @@ async def test_async_browse_media_success(
                 ),
                 "can_play": True,
                 "can_expand": False,
+                "can_search": False,
                 "thumbnail": "http://movie",
                 "children_media_class": None,
             },
@@ -274,6 +286,7 @@ async def test_async_browse_media_success(
                 ),
                 "can_play": True,
                 "can_expand": False,
+                "can_search": False,
                 "thumbnail": "http://movie",
                 "children_media_class": None,
             },
@@ -288,6 +301,7 @@ async def test_async_browse_media_success(
                 ),
                 "can_play": True,
                 "can_expand": False,
+                "can_search": False,
                 "thumbnail": "http://movie",
                 "children_media_class": None,
             },
@@ -326,6 +340,7 @@ async def test_async_browse_media_images_success(
         ),
         "can_play": False,
         "can_expand": True,
+        "can_search": False,
         "children_media_class": "image",
         "thumbnail": None,
         "children": [
@@ -340,6 +355,7 @@ async def test_async_browse_media_images_success(
                 ),
                 "can_play": False,
                 "can_expand": False,
+                "can_search": False,
                 "thumbnail": "http://image",
                 "children_media_class": None,
             }
@@ -486,6 +502,7 @@ async def test_async_resolve_media_failure(
         ),
         "can_play": False,
         "can_expand": True,
+        "can_search": False,
         "children_media_class": "video",
         "thumbnail": None,
         "children": [],

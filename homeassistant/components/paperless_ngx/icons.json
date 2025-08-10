@@ -1,0 +1,81 @@
+{
+  "entity": {
+    "sensor": {
+      "documents_total": {
+        "default": "mdi:file-document-multiple"
+      },
+      "documents_inbox": {
+        "default": "mdi:tray-full"
+      },
+      "characters_count": {
+        "default": "mdi:alphabet-latin"
+      },
+      "tag_count": {
+        "default": "mdi:tag"
+      },
+      "correspondent_count": {
+        "default": "mdi:account-group"
+      },
+      "storage_total": {
+        "default": "mdi:harddisk"
+      },
+      "storage_available": {
+        "default": "mdi:harddisk"
+      },
+      "database_status": {
+        "default": "mdi:check-circle",
+        "state": {
+          "ok": "mdi:check-circle",
+          "warning": "mdi:alert",
+          "error": "mdi:alert-circle",
+          "unknown": "mdi:help-circle"
+        }
+      },
+      "index_status": {
+        "default": "mdi:check-circle",
+        "state": {
+          "ok": "mdi:check-circle",
+          "warning": "mdi:alert",
+          "error": "mdi:alert-circle",
+          "unknown": "mdi:help-circle"
+        }
+      },
+      "classifier_status": {
+        "default": "mdi:check-circle",
+        "state": {
+          "ok": "mdi:check-circle",
+          "warning": "mdi:alert",
+          "error": "mdi:alert-circle",
+          "unknown": "mdi:help-circle"
+        }
+      },
+      "celery_status": {
+        "default": "mdi:check-circle",
+        "state": {
+          "ok": "mdi:check-circle",
+          "warning": "mdi:alert",
+          "error": "mdi:alert-circle",
+          "unknown": "mdi:help-circle"
+        }
+      },
+      "redis_status": {
+        "default": "mdi:check-circle",
+        "state": {
+          "ok": "mdi:check-circle",
+          "warning": "mdi:alert",
+          "error": "mdi:alert-circle",
+          "unknown": "mdi:help-circle"
+        }
+      },
+      "sanity_check_status": {
+        "default": "mdi:check-circle",
+        "state": {
+          "ok": "mdi:check-circle",
+          "warning": "mdi:alert",
+          "error": "mdi:alert-circle",
+          "unknown": "mdi:help-circle"
+        }
+      }
+    }
+  }
+}

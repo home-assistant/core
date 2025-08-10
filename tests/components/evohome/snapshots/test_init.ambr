@@ -1,0 +1,22 @@
+# serializer version: 1
+# name: test_setup[botched]
+  dict_keys(['refresh_system', 'reset_system', 'set_system_mode', 'clear_zone_override', 'set_zone_override'])
+# ---
+# name: test_setup[default]
+  dict_keys(['refresh_system', 'reset_system', 'set_system_mode', 'clear_zone_override', 'set_zone_override'])
+# ---
+# name: test_setup[h032585]
+  dict_keys(['refresh_system', 'set_system_mode', 'clear_zone_override', 'set_zone_override'])
+# ---
+# name: test_setup[h099625]
+  dict_keys(['refresh_system', 'set_system_mode', 'clear_zone_override', 'set_zone_override'])
+# ---
+# name: test_setup[h139906]
+  dict_keys(['refresh_system', 'set_system_mode', 'clear_zone_override', 'set_zone_override'])
+# ---
+# name: test_setup[minimal]
+  dict_keys(['refresh_system', 'reset_system', 'set_system_mode', 'clear_zone_override', 'set_zone_override'])
+# ---
+# name: test_setup[sys_004]
+  dict_keys(['refresh_system', 'set_system_mode', 'clear_zone_override', 'set_zone_override'])
+# ---

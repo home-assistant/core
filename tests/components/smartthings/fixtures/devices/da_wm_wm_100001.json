@@ -1,0 +1,84 @@
+{
+  "items": [
+    {
+      "deviceId": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+      "name": "Washer",
+      "label": "Washer",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+      "ownerId": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+      "deviceTypeName": "Samsung OCF Washer",
+      "components": [
+        {
+          "id": "main",
+          "label": "Washer",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "remoteControlStatus",
+              "version": 1
+            },
+            {
+              "id": "washerOperatingState",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.washerOperatingState",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Washer",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2019-08-10T18:37:20Z",
+      "profile": {
+        "id": "REDACTED"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.washer",
+        "name": "Washer",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "res.1.1.0,sh.1.1.0",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "TP6X_WA54M8750AV|20183944|20000101001111000100000000000000",
+        "vendorId": "DA-WM-WM-100001",
+        "lastSignupTime": "2021-01-16T06:29:39.379382Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

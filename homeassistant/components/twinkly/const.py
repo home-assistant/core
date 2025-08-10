@@ -15,8 +15,5 @@ DEV_LED_PROFILE = "led_profile"
 DEV_PROFILE_RGB = "RGB"
 DEV_PROFILE_RGBW = "RGBW"
 
-DATA_CLIENT = "client"
-DATA_DEVICE_INFO = "device_info"
-
 # Minimum version required to support effects
 MIN_EFFECT_VERSION = "2.7.1"

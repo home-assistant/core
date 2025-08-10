@@ -1,16 +1,19 @@
 """Config flow for Islamic Prayer Times integration."""
+
 from __future__ import annotations
 
 from typing import Any
 
-from prayer_times_calculator import InvalidResponseError, PrayerTimesCalculator
-from requests.exceptions import ConnectionError as ConnError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, CONF_NAME
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     LocationSelector,
     SelectSelector,
@@ -18,7 +21,6 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
     TextSelector,
 )
-import homeassistant.util.dt as dt_util
 
 from .const import (
     CALC_METHODS,
@@ -38,27 +40,7 @@ from .const import (
 )
 
 
-async def async_validate_location(
-    hass: HomeAssistant, lon: float, lat: float
-) -> dict[str, str]:
-    """Check if the selected location is valid."""
-    errors = {}
-    calc = PrayerTimesCalculator(
-        latitude=lat,
-        longitude=lon,
-        calculation_method=DEFAULT_CALC_METHOD,
-        date=str(dt_util.now().date()),
-    )
-    try:
-        await hass.async_add_executor_job(calc.fetch_prayer_times)
-    except InvalidResponseError:
-        errors["base"] = "invalid_location"
-    except ConnError:
-        errors["base"] = "conn_error"
-    return errors
-
-
-class IslamicPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class IslamicPrayerFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle the Islamic Prayer config flow."""
 
     VERSION = 1
@@ -67,16 +49,15 @@ class IslamicPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> IslamicPrayerOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return IslamicPrayerOptionsFlowHandler(config_entry)
+        return IslamicPrayerOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        errors = {}
 
         if user_input is not None:
             lat: float = user_input[CONF_LOCATION][CONF_LATITUDE]
@@ -84,14 +65,13 @@ class IslamicPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(f"{lat}-{lon}")
             self._abort_if_unique_id_configured()
 
-            if not (errors := await async_validate_location(self.hass, lat, lon)):
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME],
-                    data={
-                        CONF_LATITUDE: lat,
-                        CONF_LONGITUDE: lon,
-                    },
-                )
+            return self.async_create_entry(
+                title=user_input[CONF_NAME],
+                data={
+                    CONF_LATITUDE: lat,
+                    CONF_LONGITUDE: lon,
+                },
+            )
 
         home_location = {
             CONF_LATITUDE: self.hass.config.latitude,
@@ -107,20 +87,15 @@ class IslamicPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     ): LocationSelector(),
                 }
             ),
-            errors=errors,
         )
 
 
-class IslamicPrayerOptionsFlowHandler(config_entries.OptionsFlow):
+class IslamicPrayerOptionsFlowHandler(OptionsFlow):
     """Handle Islamic Prayer client options."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)

@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "sensor": {
+      "zone_status": {
+        "default": "mdi:shield-check"
+      }
+    },
+    "climate": {
+      "thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "automatic": "mdi:refresh-auto",
+              "manual": "mdi:alpha-m"
+            }
+          }
+        }
+      }
+    }
+  }
+}

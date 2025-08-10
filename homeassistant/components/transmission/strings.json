@@ -2,12 +2,17 @@
   "config": {
     "step": {
       "user": {
-        "title": "Set up Transmission Client",
+        "title": "Set up Transmission client",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "path": "[%key:common::config_flow::data::path%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "path": "The RPC request target path. E.g. `/transmission/rpc`"
         }
       },
       "reauth_confirm": {
@@ -55,19 +60,24 @@
         }
       },
       "active_torrents": {
-        "name": "Active torrents"
+        "name": "Active torrents",
+        "unit_of_measurement": "torrents"
       },
       "paused_torrents": {
-        "name": "Paused torrents"
+        "name": "Paused torrents",
+        "unit_of_measurement": "[%key:component::transmission::entity::sensor::active_torrents::unit_of_measurement%]"
       },
       "total_torrents": {
-        "name": "Total torrents"
+        "name": "Total torrents",
+        "unit_of_measurement": "[%key:component::transmission::entity::sensor::active_torrents::unit_of_measurement%]"
       },
       "completed_torrents": {
-        "name": "Completed torrents"
+        "name": "Completed torrents",
+        "unit_of_measurement": "[%key:component::transmission::entity::sensor::active_torrents::unit_of_measurement%]"
       },
       "started_torrents": {
-        "name": "Started torrents"
+        "name": "Started torrents",
+        "unit_of_measurement": "[%key:component::transmission::entity::sensor::active_torrents::unit_of_measurement%]"
       }
     },
     "switch": {
@@ -86,11 +96,15 @@
       "fields": {
         "entry_id": {
           "name": "Transmission entry",
-          "description": "Config entry id."
+          "description": "ID of the config entry to use."
         },
         "torrent": {
           "name": "Torrent",
           "description": "URL, magnet link or Base64 encoded file."
+        },
+        "download_path": {
+          "name": "Download path",
+          "description": "Optional path to specify where the torrent should be downloaded. If not specified, the default download directory is used."
         }
       }
     },

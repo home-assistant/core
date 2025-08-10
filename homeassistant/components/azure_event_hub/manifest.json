@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/azure_event_hub",
   "iot_class": "cloud_push",
   "loggers": ["azure"],
-  "requirements": ["azure-eventhub==5.11.1"]
+  "requirements": ["azure-eventhub==5.11.1"],
+  "single_config_entry": true
 }

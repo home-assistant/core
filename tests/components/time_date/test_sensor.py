@@ -5,17 +5,14 @@ from unittest.mock import ANY, Mock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.time_date.const import DOMAIN
-import homeassistant.components.time_date.sensor as time_date
+from homeassistant.components.time_date.const import OPTION_TYPES
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import event, issue_registry as ir
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers import event
+from homeassistant.util import dt as dt_util
+
+from . import load_int
 
 from tests.common import async_fire_time_changed
-
-ALL_DISPLAY_OPTIONS = list(time_date.OPTION_TYPES.keys())
-CONFIG = {"sensor": {"platform": "time_date", "display_options": ALL_DISPLAY_OPTIONS}}
 
 
 @patch("homeassistant.components.time_date.sensor.async_track_point_in_utc_time")
@@ -26,11 +23,6 @@ CONFIG = {"sensor": {"platform": "time_date", "display_options": ALL_DISPLAY_OPT
             "time",
             dt_util.utc_from_timestamp(45.5),
             dt_util.utc_from_timestamp(60),
-        ),
-        (
-            "beat",
-            dt_util.parse_datetime("2020-11-13 00:00:29+01:00"),
-            dt_util.parse_datetime("2020-11-13 00:01:26.4+01:00"),
         ),
         (
             "date_time",
@@ -53,25 +45,22 @@ async def test_intervals(
     tracked_time,
 ) -> None:
     """Test timing intervals of sensors when time zone is UTC."""
-    hass.config.set_time_zone("UTC")
-    config = {"sensor": {"platform": "time_date", "display_options": [display_option]}}
-
+    await hass.config.async_set_time_zone("UTC")
     freezer.move_to(start_time)
 
-    await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
+    await load_int(hass, display_option)
 
     mock_track_interval.assert_called_once_with(hass, ANY, tracked_time)
 
 
 async def test_states(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> None:
     """Test states of sensors."""
-    hass.config.set_time_zone("UTC")
+    await hass.config.async_set_time_zone("UTC")
     now = dt_util.utc_from_timestamp(1495068856)
     freezer.move_to(now)
 
-    await async_setup_component(hass, "sensor", CONFIG)
-    await hass.async_block_till_done()
+    for option in OPTION_TYPES:
+        await load_int(hass, option)
 
     state = hass.states.get("sensor.time")
     assert state.state == "00:54"
@@ -87,9 +76,6 @@ async def test_states(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> No
 
     state = hass.states.get("sensor.date_time_utc")
     assert state.state == "2017-05-18, 00:54"
-
-    state = hass.states.get("sensor.internet_time")
-    assert state.state == "@079"
 
     state = hass.states.get("sensor.date_time_iso")
     assert state.state == "2017-05-18T00:54:00"
@@ -115,9 +101,6 @@ async def test_states(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> No
     state = hass.states.get("sensor.date_time_utc")
     assert state.state == "2020-10-17, 16:42"
 
-    state = hass.states.get("sensor.internet_time")
-    assert state.state == "@738"
-
     state = hass.states.get("sensor.date_time_iso")
     assert state.state == "2020-10-17T16:42:00"
 
@@ -126,12 +109,12 @@ async def test_states_non_default_timezone(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test states of sensors in a timezone other than UTC."""
-    hass.config.set_time_zone("America/New_York")
+    await hass.config.async_set_time_zone("America/New_York")
     now = dt_util.utc_from_timestamp(1495068856)
     freezer.move_to(now)
 
-    await async_setup_component(hass, "sensor", CONFIG)
-    await hass.async_block_till_done()
+    for option in OPTION_TYPES:
+        await load_int(hass, option)
 
     state = hass.states.get("sensor.time")
     assert state.state == "20:54"
@@ -147,9 +130,6 @@ async def test_states_non_default_timezone(
 
     state = hass.states.get("sensor.date_time_utc")
     assert state.state == "2017-05-18, 00:54"
-
-    state = hass.states.get("sensor.internet_time")
-    assert state.state == "@079"
 
     state = hass.states.get("sensor.date_time_iso")
     assert state.state == "2017-05-17T20:54:00"
@@ -175,9 +155,6 @@ async def test_states_non_default_timezone(
     state = hass.states.get("sensor.date_time_utc")
     assert state.state == "2020-10-17, 16:42"
 
-    state = hass.states.get("sensor.internet_time")
-    assert state.state == "@738"
-
     state = hass.states.get("sensor.date_time_iso")
     assert state.state == "2020-10-17T12:42:00"
 
@@ -199,9 +176,6 @@ async def test_states_non_default_timezone(
 
     state = hass.states.get("sensor.date_time_utc")
     assert state.state == "2020-10-17, 16:42"
-
-    state = hass.states.get("sensor.internet_time")
-    assert state.state == "@738"
 
     state = hass.states.get("sensor.date_time_iso")
     assert state.state == "2020-10-17T18:42:00"
@@ -259,12 +233,10 @@ async def test_timezone_intervals(
     tracked_time,
 ) -> None:
     """Test timing intervals of sensors in timezone other than UTC."""
-    hass.config.set_time_zone(time_zone)
+    await hass.config.async_set_time_zone(time_zone)
     freezer.move_to(start_time)
 
-    config = {"sensor": {"platform": "time_date", "display_options": ["date"]}}
-    await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
+    await load_int(hass, "date")
 
     mock_track_interval.assert_called_once()
     next_time = mock_track_interval.mock_calls[0][1][2]
@@ -274,8 +246,8 @@ async def test_timezone_intervals(
 
 async def test_icons(hass: HomeAssistant) -> None:
     """Test attributes of sensors."""
-    await async_setup_component(hass, "sensor", CONFIG)
-    await hass.async_block_till_done()
+    for option in OPTION_TYPES:
+        await load_int(hass, option)
 
     state = hass.states.get("sensor.time")
     assert state.attributes["icon"] == "mdi:clock"
@@ -287,43 +259,5 @@ async def test_icons(hass: HomeAssistant) -> None:
     assert state.attributes["icon"] == "mdi:calendar-clock"
     state = hass.states.get("sensor.date_time_utc")
     assert state.attributes["icon"] == "mdi:calendar-clock"
-    state = hass.states.get("sensor.internet_time")
-    assert state.attributes["icon"] == "mdi:clock"
     state = hass.states.get("sensor.date_time_iso")
     assert state.attributes["icon"] == "mdi:calendar-clock"
-
-
-@pytest.mark.parametrize(
-    (
-        "display_options",
-        "expected_warnings",
-        "expected_issues",
-    ),
-    [
-        (["time", "date"], [], []),
-        (["beat"], ["'beat': is deprecated"], ["deprecated_beat"]),
-        (["time", "beat"], ["'beat': is deprecated"], ["deprecated_beat"]),
-    ],
-)
-async def test_deprecation_warning(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    display_options: list[str],
-    expected_warnings: list[str],
-    expected_issues: list[str],
-) -> None:
-    """Test deprecation warning for swatch beat."""
-    config = {"sensor": {"platform": "time_date", "display_options": display_options}}
-
-    await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-
-    warnings = [record for record in caplog.records if record.levelname == "WARNING"]
-    assert len(warnings) == len(expected_warnings)
-    for expected_warning in expected_warnings:
-        assert any(expected_warning in warning.message for warning in warnings)
-
-    issue_registry = ir.async_get(hass)
-    assert len(issue_registry.issues) == len(expected_issues)
-    for expected_issue in expected_issues:
-        assert (DOMAIN, expected_issue) in issue_registry.issues

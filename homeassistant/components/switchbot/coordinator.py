@@ -1,4 +1,5 @@
 """Provides the switchbot DataUpdateCoordinator."""
+
 from __future__ import annotations
 
 import asyncio
@@ -13,6 +14,7 @@ from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.active_update_coordinator import (
     ActiveBluetoothDataUpdateCoordinator,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CoreState, HomeAssistant, callback
 
 if TYPE_CHECKING:
@@ -22,6 +24,8 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 DEVICE_STARTUP_TIMEOUT = 30
+
+type SwitchbotConfigEntry = ConfigEntry[SwitchbotDataUpdateCoordinator]
 
 
 class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
@@ -87,6 +91,7 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
         """Handle the device going unavailable."""
         super()._async_handle_unavailable(service_info)
         self._was_unavailable = True
+        _LOGGER.info("Device %s is unavailable", self.device_name)
 
     @callback
     def _async_handle_bluetooth_event(
@@ -110,12 +115,13 @@ class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None])
         if not self.device.advertisement_changed(adv) and not self._was_unavailable:
             return
         self._was_unavailable = False
+        _LOGGER.info("Device %s is online", self.device_name)
         self.device.update_from_advertisement(adv)
         super()._async_handle_bluetooth_event(service_info, change)
 
     async def async_wait_ready(self) -> bool:
         """Wait for the device to be ready."""
-        with contextlib.suppress(asyncio.TimeoutError):
+        with contextlib.suppress(TimeoutError):
             async with asyncio.timeout(DEVICE_STARTUP_TIMEOUT):
                 await self._ready_event.wait()
                 return True

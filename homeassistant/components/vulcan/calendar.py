@@ -1,4 +1,5 @@
 """Support for Vulcan Calendar platform."""
+
 from __future__ import annotations
 
 from datetime import date, datetime, timedelta
@@ -19,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN
 from .fetch_data import get_lessons, get_student_info
@@ -30,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the calendar platform for entity."""
     client = hass.data[DOMAIN][config_entry.entry_id]
@@ -110,11 +111,11 @@ class VulcanCalendarEntity(CalendarEntity):
         event_list = []
         for item in events:
             event = CalendarEvent(
-                start=datetime.combine(item["date"], item["time"].from_).astimezone(
-                    ZoneInfo("Europe/Warsaw")
+                start=datetime.combine(
+                    item["date"], item["time"].from_, ZoneInfo("Europe/Warsaw")
                 ),
-                end=datetime.combine(item["date"], item["time"].to).astimezone(
-                    ZoneInfo("Europe/Warsaw")
+                end=datetime.combine(
+                    item["date"], item["time"].to, ZoneInfo("Europe/Warsaw")
                 ),
                 summary=item["lesson"],
                 location=item["room"],
@@ -132,7 +133,7 @@ class VulcanCalendarEntity(CalendarEntity):
             events = await get_lessons(self.client)
 
             if not self.available:
-                _LOGGER.info("Restored connection with API")
+                _LOGGER.warning("Restored connection with API")
                 self._attr_available = True
 
             if events == []:
@@ -164,10 +165,10 @@ class VulcanCalendarEntity(CalendarEntity):
         )
         self._event = CalendarEvent(
             start=datetime.combine(
-                new_event["date"], new_event["time"].from_
-            ).astimezone(ZoneInfo("Europe/Warsaw")),
-            end=datetime.combine(new_event["date"], new_event["time"].to).astimezone(
-                ZoneInfo("Europe/Warsaw")
+                new_event["date"], new_event["time"].from_, ZoneInfo("Europe/Warsaw")
+            ),
+            end=datetime.combine(
+                new_event["date"], new_event["time"].to, ZoneInfo("Europe/Warsaw")
             ),
             summary=new_event["lesson"],
             location=new_event["room"],

@@ -1,4 +1,5 @@
 """Test the NEW_NAME backup platform."""
+
 from homeassistant.components.NEW_DOMAIN.backup import (
     async_post_backup,
     async_pre_backup,

@@ -1,5 +1,5 @@
 """Define tests for the Daikin init."""
-import asyncio
+
 from datetime import timedelta
 from unittest.mock import AsyncMock, PropertyMock, patch
 
@@ -7,10 +7,10 @@ from aiohttp import ClientConnectionError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.daikin import DaikinApi, update_unique_id
+from homeassistant.components.daikin import update_unique_id
 from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -27,8 +27,8 @@ def mock_daikin():
         """Mock the init function in pydaikin."""
         return Appliance
 
-    with patch("homeassistant.components.daikin.Appliance") as Appliance:
-        Appliance.factory.side_effect = mock_daikin_factory
+    with patch("homeassistant.components.daikin.DaikinFactory") as Appliance:
+        Appliance.side_effect = mock_daikin_factory
         type(Appliance).update_status = AsyncMock()
         type(Appliance).device_ip = PropertyMock(return_value=HOST)
         type(Appliance).inside_temperature = PropertyMock(return_value=22)
@@ -183,18 +183,15 @@ async def test_client_update_connection_error(
 
     await hass.config_entries.async_setup(config_entry.entry_id)
 
-    api: DaikinApi = hass.data[DOMAIN][config_entry.entry_id]
-
-    assert api.available is True
+    assert hass.states.get("climate.daikinap00000").state != STATE_UNAVAILABLE
 
     type(mock_daikin).update_status.side_effect = ClientConnectionError
 
-    freezer.tick(timedelta(seconds=90))
+    freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
-
     await hass.async_block_till_done()
 
-    assert api.available is False
+    assert hass.states.get("climate.daikinap00000").state == STATE_UNAVAILABLE
 
     assert mock_daikin.update_status.call_count == 2
 
@@ -208,11 +205,11 @@ async def test_client_connection_error(hass: HomeAssistant, mock_daikin) -> None
     )
     config_entry.add_to_hass(hass)
 
-    mock_daikin.factory.side_effect = ClientConnectionError
+    mock_daikin.side_effect = ClientConnectionError
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_timeout_error(hass: HomeAssistant, mock_daikin) -> None:
@@ -224,8 +221,8 @@ async def test_timeout_error(hass: HomeAssistant, mock_daikin) -> None:
     )
     config_entry.add_to_hass(hass)
 
-    mock_daikin.factory.side_effect = asyncio.TimeoutError
+    mock_daikin.side_effect = TimeoutError
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY

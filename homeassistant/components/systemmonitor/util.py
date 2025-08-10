@@ -1,9 +1,12 @@
 """Utils for System Monitor."""
+
 import logging
 import os
 
-import psutil
 from psutil._common import shwtemp
+import psutil_home_assistant as ha_psutil
+
+from homeassistant.core import HomeAssistant
 
 from .const import CPU_SENSOR_PREFIXES
 
@@ -12,10 +15,12 @@ _LOGGER = logging.getLogger(__name__)
 SKIP_DISK_TYPES = {"proc", "tmpfs", "devtmpfs"}
 
 
-def get_all_disk_mounts() -> set[str]:
+def get_all_disk_mounts(
+    hass: HomeAssistant, psutil_wrapper: ha_psutil.PsutilWrapper
+) -> set[str]:
     """Return all disk mount points on system."""
     disks: set[str] = set()
-    for part in psutil.disk_partitions(all=True):
+    for part in psutil_wrapper.psutil.disk_partitions(all=True):
         if os.name == "nt":
             if "cdrom" in part.opts or part.fstype == "":
                 # skip cd-rom drives with no disk in it; they may raise
@@ -26,7 +31,13 @@ def get_all_disk_mounts() -> set[str]:
             # Ignore disks which are memory
             continue
         try:
-            usage = psutil.disk_usage(part.mountpoint)
+            if not os.path.isdir(part.mountpoint):
+                _LOGGER.debug(
+                    "Mountpoint %s was excluded because it is not a directory",
+                    part.mountpoint,
+                )
+                continue
+            usage = psutil_wrapper.psutil.disk_usage(part.mountpoint)
         except PermissionError:
             _LOGGER.debug(
                 "No permission for running user to access %s", part.mountpoint
@@ -43,10 +54,12 @@ def get_all_disk_mounts() -> set[str]:
     return disks
 
 
-def get_all_network_interfaces() -> set[str]:
+def get_all_network_interfaces(
+    hass: HomeAssistant, psutil_wrapper: ha_psutil.PsutilWrapper
+) -> set[str]:
     """Return all network interfaces on system."""
     interfaces: set[str] = set()
-    for interface, _ in psutil.net_if_addrs().items():
+    for interface in psutil_wrapper.psutil.net_if_addrs():
         if interface.startswith("veth"):
             # Don't load docker virtual network interfaces
             continue
@@ -55,22 +68,22 @@ def get_all_network_interfaces() -> set[str]:
     return interfaces
 
 
-def get_all_running_processes() -> set[str]:
+def get_all_running_processes(hass: HomeAssistant) -> set[str]:
     """Return all running processes on system."""
+    psutil_wrapper = ha_psutil.PsutilWrapper()
     processes: set[str] = set()
-    for proc in psutil.process_iter(["name"]):
+    for proc in psutil_wrapper.psutil.process_iter(["name"]):
         if proc.name() not in processes:
             processes.add(proc.name())
     _LOGGER.debug("Running processes: %s", ", ".join(processes))
     return processes
 
 
-def read_cpu_temperature(temps: dict[str, list[shwtemp]] | None = None) -> float | None:
+def read_cpu_temperature(temps: dict[str, list[shwtemp]]) -> float | None:
     """Attempt to read CPU / processor temperature."""
-    if not temps:
-        temps = psutil.sensors_temperatures()
     entry: shwtemp
 
+    _LOGGER.debug("CPU Temperatures: %s", temps)
     for name, entries in temps.items():
         for i, entry in enumerate(entries, start=1):
             # In case the label is empty (e.g. on Raspberry PI 4),

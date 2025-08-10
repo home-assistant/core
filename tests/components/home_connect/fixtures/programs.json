@@ -1,0 +1,209 @@
+{
+  "Oven": {
+    "data": {
+      "programs": [
+        {
+          "key": "Cooking.Oven.Program.HeatingMode.HotAir",
+          "name": "Hot air",
+          "contraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "Cooking.Oven.Program.HeatingMode.TopBottomHeating",
+          "name": "Top/bottom heating",
+          "contraints": {
+            "execution": "none"
+          }
+        },
+        {
+          "key": "Cooking.Oven.Program.HeatingMode.PizzaSetting",
+          "name": "Pizza setting",
+          "contraints": {
+            "execution": "startonly"
+          }
+        }
+      ]
+    }
+  },
+  "Dishwasher": {
+    "data": {
+      "programs": [
+        {
+          "key": "Dishcare.Dishwasher.Program.Auto1",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "Dishcare.Dishwasher.Program.Auto2",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "Dishcare.Dishwasher.Program.Auto3",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "Dishcare.Dishwasher.Program.Eco50",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "Dishcare.Dishwasher.Program.Quick45",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        }
+      ]
+    }
+  },
+  "Washer": {
+    "data": {
+      "programs": [
+        {
+          "key": "LaundryCare.Washer.Program.Cotton",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "LaundryCare.Washer.Program.EasyCare",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "LaundryCare.Washer.Program.Mix",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "LaundryCare.Washer.Program.DelicatesSilk",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "LaundryCare.Washer.Program.Wool",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        }
+      ]
+    }
+  },
+  "Dryer": {
+    "data": {
+      "programs": [
+        {
+          "key": "LaundryCare.Dryer.Program.Cotton",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "LaundryCare.Dryer.Program.Synthetic",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "LaundryCare.Dryer.Program.Mix",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        }
+      ]
+    }
+  },
+  "CoffeeMaker": {
+    "data": {
+      "programs": [
+        {
+          "key": "ConsumerProducts.CoffeeMaker.Program.Beverage.Espresso",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "ConsumerProducts.CoffeeMaker.Program.Beverage.EspressoMacchiato",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "ConsumerProducts.CoffeeMaker.Program.Beverage.Coffee",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "ConsumerProducts.CoffeeMaker.Program.Beverage.Cappuccino",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "ConsumerProducts.CoffeeMaker.Program.Beverage.LatteMacchiato",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "ConsumerProducts.CoffeeMaker.Program.Beverage.CaffeLatte",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        }
+      ]
+    }
+  },
+  "WasherDryer": {
+    "data": {
+      "programs": [
+        {
+          "key": "LaundryCare.WasherDryer.Program.Mix",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "LaundryCare.Washer.Option.Temperature",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        }
+      ]
+    }
+  },
+  "Hood": {
+    "data": {
+      "programs": [
+        {
+          "key": "Cooking.Common.Program.Hood.Automatic",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "Cooking.Common.Program.Hood.Venting",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        },
+        {
+          "key": "Cooking.Common.Program.Hood.DelayedShutOff",
+          "constraints": {
+            "execution": "selectandstart"
+          }
+        }
+      ]
+    }
+  }
+}

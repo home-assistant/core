@@ -4,10 +4,11 @@ Test setup of RFLink lights component/platform. State tracking and
 control of RFLink switch devices.
 
 """
-import asyncio
+
+import pytest
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
-from homeassistant.components.rflink import EVENT_BUTTON_PRESSED
+from homeassistant.components.rflink.entity import EVENT_BUTTON_PRESSED
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -39,7 +40,9 @@ CONFIG = {
 }
 
 
-async def test_default_setup(hass: HomeAssistant, monkeypatch) -> None:
+async def test_default_setup(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test all basic functionality of the RFLink switch component."""
     # setup mocking rflink module
     event_callback, create, protocol, _ = await mock_rflink(
@@ -147,7 +150,9 @@ async def test_default_setup(hass: HomeAssistant, monkeypatch) -> None:
     assert protocol.send_command_ack.call_args_list[5][0][1] == "7"
 
 
-async def test_firing_bus_event(hass: HomeAssistant, monkeypatch) -> None:
+async def test_firing_bus_event(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Incoming RFLink command events should be put on the HA event bus."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},
@@ -182,7 +187,9 @@ async def test_firing_bus_event(hass: HomeAssistant, monkeypatch) -> None:
     assert calls[0].data == {"state": "off", "entity_id": f"{DOMAIN}.test"}
 
 
-async def test_signal_repetitions(hass: HomeAssistant, monkeypatch) -> None:
+async def test_signal_repetitions(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Command should be sent amount of configured repetitions."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},
@@ -238,7 +245,9 @@ async def test_signal_repetitions(hass: HomeAssistant, monkeypatch) -> None:
     assert protocol.send_command_ack.call_count == 8
 
 
-async def test_signal_repetitions_alternation(hass: HomeAssistant, monkeypatch) -> None:
+async def test_signal_repetitions_alternation(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Simultaneously switching entities must alternate repetitions."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},
@@ -269,7 +278,9 @@ async def test_signal_repetitions_alternation(hass: HomeAssistant, monkeypatch) 
     assert protocol.send_command_ack.call_args_list[3][0][0] == "protocol_0_1"
 
 
-async def test_signal_repetitions_cancelling(hass: HomeAssistant, monkeypatch) -> None:
+async def test_signal_repetitions_cancelling(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Cancel outstanding repetitions when state changed."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},
@@ -281,13 +292,13 @@ async def test_signal_repetitions_cancelling(hass: HomeAssistant, monkeypatch) -
 
     # setup mocking rflink module
     _, _, protocol, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}
     )
+    await hass.async_block_till_done()
 
-    # Get background service time to start running
-    await asyncio.sleep(0)
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: f"{DOMAIN}.test"}, blocking=True
     )
@@ -295,13 +306,17 @@ async def test_signal_repetitions_cancelling(hass: HomeAssistant, monkeypatch) -
 
     assert [call[0][1] for call in protocol.send_command_ack.call_args_list] == [
         "off",
+        "off",
+        "off",
         "on",
         "on",
         "on",
     ]
 
 
-async def test_type_toggle(hass: HomeAssistant, monkeypatch) -> None:
+async def test_type_toggle(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test toggle type lights (on/on)."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},
@@ -346,7 +361,9 @@ async def test_type_toggle(hass: HomeAssistant, monkeypatch) -> None:
     assert hass.states.get(f"{DOMAIN}.toggle_test").state == "off"
 
 
-async def test_set_level_command(hass: HomeAssistant, monkeypatch) -> None:
+async def test_set_level_command(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test 'set_level=XX' events."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},
@@ -433,7 +450,9 @@ async def test_set_level_command(hass: HomeAssistant, monkeypatch) -> None:
     assert state.attributes[ATTR_BRIGHTNESS] == 0
 
 
-async def test_group_alias(hass: HomeAssistant, monkeypatch) -> None:
+async def test_group_alias(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Group aliases should only respond to group commands (allon/alloff)."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},
@@ -470,7 +489,9 @@ async def test_group_alias(hass: HomeAssistant, monkeypatch) -> None:
     assert hass.states.get(f"{DOMAIN}.test2").state == "on"
 
 
-async def test_nogroup_alias(hass: HomeAssistant, monkeypatch) -> None:
+async def test_nogroup_alias(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Non group aliases should not respond to group commands."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},
@@ -503,7 +524,9 @@ async def test_nogroup_alias(hass: HomeAssistant, monkeypatch) -> None:
     assert hass.states.get(f"{DOMAIN}.test").state == "on"
 
 
-async def test_nogroup_device_id(hass: HomeAssistant, monkeypatch) -> None:
+async def test_nogroup_device_id(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Device id that do not respond to group commands (allon/alloff)."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},
@@ -531,7 +554,9 @@ async def test_nogroup_device_id(hass: HomeAssistant, monkeypatch) -> None:
     assert hass.states.get(f"{DOMAIN}.test").state == "on"
 
 
-async def test_disable_automatic_add(hass: HomeAssistant, monkeypatch) -> None:
+async def test_disable_automatic_add(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """If disabled new devices should not be automatically added."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},
@@ -549,7 +574,9 @@ async def test_disable_automatic_add(hass: HomeAssistant, monkeypatch) -> None:
     assert not hass.states.get(f"{DOMAIN}.protocol_0_0")
 
 
-async def test_restore_state(hass: HomeAssistant, monkeypatch) -> None:
+async def test_restore_state(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Ensure states are restored on startup."""
     config = {
         "rflink": {"port": "/dev/ttyABC0"},

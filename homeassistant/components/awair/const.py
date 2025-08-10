@@ -1,10 +1,12 @@
 """Constants for the Awair component."""
+
 from __future__ import annotations
 
 from datetime import timedelta
 import logging
 
 API_CO2 = "carbon_dioxide"
+API_DEW_POINT = "dew_point"
 API_DUST = "dust"
 API_HUMID = "humidity"
 API_LUX = "illuminance"

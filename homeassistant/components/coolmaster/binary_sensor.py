@@ -1,4 +1,5 @@
 """Binary Sensor platform for CoolMasterNet integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -6,26 +7,23 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DATA_COORDINATOR, DATA_INFO, DOMAIN
+from .coordinator import CoolmasterConfigEntry
 from .entity import CoolmasterEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: CoolmasterConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the CoolMasterNet binary_sensor platform."""
-    info = hass.data[DOMAIN][config_entry.entry_id][DATA_INFO]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
+    coordinator = config_entry.runtime_data
     async_add_entities(
-        CoolmasterCleanFilter(coordinator, unit_id, info)
-        for unit_id in coordinator.data
+        CoolmasterCleanFilter(coordinator, unit_id) for unit_id in coordinator.data
     )
 
 
@@ -37,7 +35,6 @@ class CoolmasterCleanFilter(CoolmasterEntity, BinarySensorEntity):
         translation_key="clean_filter",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:air-filter",
     )
 
     @property

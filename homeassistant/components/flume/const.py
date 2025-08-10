@@ -1,4 +1,5 @@
 """The Flume component."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -24,12 +25,6 @@ _LOGGER = logging.getLogger(__package__)
 
 FLUME_TYPE_BRIDGE = 1
 FLUME_TYPE_SENSOR = 2
-
-
-FLUME_AUTH = "flume_auth"
-FLUME_HTTP_SESSION = "http_session"
-FLUME_DEVICES = "devices"
-FLUME_NOTIFICATIONS_COORDINATOR = "notifications_coordinator"
 
 CONF_TOKEN_FILE = "token_filename"
 BASE_TOKEN_FILENAME = "FLUME_TOKEN_FILE"

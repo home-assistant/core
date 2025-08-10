@@ -24,7 +24,7 @@
       },
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The bosch_shc integration needs to re-authenticate your account",
+        "description": "The Bosch SHC integration needs to re-authenticate your account",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         }
@@ -34,7 +34,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "pairing_failed": "Pairing failed; please check the Bosch Smart Home Controller is in pairing mode (LED flashing) as well as your password is correct.",
-      "session_error": "Session error: API return Non-OK result.",
+      "session_error": "Session error: API returned Non-OK result.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
