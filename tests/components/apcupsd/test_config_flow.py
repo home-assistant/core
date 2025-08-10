@@ -59,19 +59,19 @@ async def test_config_flow_duplicate_host_port(hass: HomeAssistant) -> None:
         ) as mock_request_status,
         _patch_setup(),
     ):
-        # Assign a different serial number, but we should still reject the creation since the
-        # host and port are the same as the existing entry.
-        mock_request_status.return_value = MOCK_STATUS | {
-            "SERIALNO": MOCK_STATUS["SERIALNO"] + "ZZZ"
-        }
+        # Assign the same host and port, which we should reject since the entry already exists.
+        mock_request_status.return_value = MOCK_STATUS
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
-        # Now we change the host and add it again. This should be successful.
+        # Now we change the host with a different serial number and add it again. This should be successful.
         another_host = CONF_DATA | {CONF_HOST: "another_host"}
+        mock_request_status.return_value = MOCK_STATUS | {
+            "SERIALNO": MOCK_STATUS["SERIALNO"] + "ZZZ"
+        }
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -100,7 +100,7 @@ async def test_config_flow_duplicate_serial_number(hass: HomeAssistant) -> None:
         ) as mock_request_status,
         _patch_setup(),
     ):
-        # Assign the same host and port, but we should still reject the creation since the
+        # Assign the different host and port, but we should still reject the creation since the
         # serial number is the same as the existing entry.
         mock_request_status.return_value = MOCK_STATUS
         another_host = CONF_DATA | {CONF_HOST: "another_host"}
