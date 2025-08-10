@@ -1,0 +1,7 @@
+{
+  "services": {
+    "get_price": {
+      "service": "mdi:currency-eur"
+    }
+  }
+}

@@ -12,44 +12,49 @@ async def test_sensor_setup(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensor setup."""
-    # 28 sensors: 24 hourly sensors + 4 special sensors (highest, lowest_day, lowest_night, current)
-    # Chart sensor removed to avoid database storage issues
-    assert len(entity_registry.entities) == 28
+    # 4 statistical sensors only - hourly prices available via service
+    assert len(entity_registry.entities) == 4
 
-    # Check that all expected sensors exist
-    for hour in range(24):
-        entity_id = f"sensor.gpe_price_{hour:02d}"
+    # Check that all expected statistical sensors exist
+    expected_sensors = [
+        "sensor.gpe_highest_price_today",
+        "sensor.gpe_lowest_price_day",
+        "sensor.gpe_lowest_price_night",
+        "sensor.gpe_current_price",
+    ]
+
+    for entity_id in expected_sensors:
         state = hass.states.get(entity_id)
         assert state is not None
-        assert state.attributes["hour"] == hour
         assert state.attributes["unit_of_measurement"] == "€/kWh"
 
 
 async def test_sensor_values(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
-    """Test sensor values from mocked API."""
-    # Test some specific sensor values based on mock data
+    """Test statistical sensor values from mocked API."""
+    # Test statistical sensor values based on mock data
     # Mock data generates price = 0.20 + (hour * 0.01)
 
-    state_00 = hass.states.get("sensor.gpe_price_00")
-    # The sensor returns "0.2" instead of "0.20" due to float formatting in the integration
-    assert state_00.state == "0.2"
+    # Test highest price (should be hour 23 with 0.43)
+    state_highest = hass.states.get("sensor.gpe_highest_price_today")
+    assert state_highest.state == "0.43"
+    assert state_highest.attributes["highest_price_hour"] == 23
 
-    state_09 = hass.states.get("sensor.gpe_price_09")
-    assert state_09.state == "0.29"
+    # Test lowest price day (should be hour 6 with 0.26)
+    state_lowest_day = hass.states.get("sensor.gpe_lowest_price_day")
+    assert state_lowest_day.state == "0.26"
+    assert state_lowest_day.attributes["lowest_price_hour"] == 6
 
-    state_12 = hass.states.get("sensor.gpe_price_12")
-    assert state_12.state == "0.32"
+    # Test lowest price night (should be hour 0 with 0.20)
+    state_lowest_night = hass.states.get("sensor.gpe_lowest_price_night")
+    assert state_lowest_night.state == "0.2"
+    assert state_lowest_night.attributes["lowest_price_hour"] == 0
 
-    state_15 = hass.states.get("sensor.gpe_price_15")
-    assert state_15.state == "0.35"
-
-    state_18 = hass.states.get("sensor.gpe_price_18")
-    assert state_18.state == "0.38"
-
-    state_23 = hass.states.get("sensor.gpe_price_23")
-    assert state_23.state == "0.43"
+    # Test current price (depends on current hour in test environment)
+    state_current = hass.states.get("sensor.gpe_current_price")
+    assert state_current is not None
+    assert state_current.state is not None
 
 
 async def test_special_sensors(
