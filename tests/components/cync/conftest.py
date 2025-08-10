@@ -1,4 +1,4 @@
-"""Common fixtures for the Cync by GE tests."""
+"""Common fixtures for the Cync tests."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, create_autospec, patch
@@ -22,7 +22,7 @@ def client():
     client_mock.user = MOCKED_USER
     client_mock.login = AsyncMock()
 
-    with patch("homeassistant.components.cync_by_ge.config_flow.Auth") as sc_class_mock:
+    with patch("homeassistant.components.cync.config_flow.Auth") as sc_class_mock:
         sc_class_mock.return_value = client_mock
         yield client_mock
 
@@ -31,6 +31,6 @@ def client():
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
-        "homeassistant.components.cync_by_ge.async_setup_entry", return_value=True
+        "homeassistant.components.cync.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry

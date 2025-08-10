@@ -27,11 +27,11 @@ async def async_setup_entry(
     entry: CyncConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Cync by GE lights from a config entry."""
+    """Set up Cync lights from a config entry."""
 
     cync_data = entry.runtime_data
-    cync = cync_data.api
     coordinator = cync_data.coordinator
+    cync = coordinator.cync
 
     entities_to_add = []
 
@@ -60,11 +60,15 @@ class CyncLightEntity(CyncBaseEntity, LightEntity):
 
     _attr_color_mode = ColorMode.ONOFF
     _attr_translation_key = "light"
+    _attr_name = None
 
     BRIGHTNESS_SCALE = (0, 100)
 
     def __init__(
-        self, device: CyncLight, coordinator: CyncCoordinator, room_name=None
+        self,
+        device: CyncLight,
+        coordinator: CyncCoordinator,
+        room_name: str | None = None,
     ) -> None:
         """Set up base attributes."""
         super().__init__(device, coordinator, room_name)

@@ -13,7 +13,7 @@
       },
       "two_factor": {
         "data": {
-          "two_factor_code": "Two-Factor Code"
+          "two_factor_code": "Two-factor code"
         },
         "data_description": {
           "two_factor_code": "The two-factor code sent to your account's email"
