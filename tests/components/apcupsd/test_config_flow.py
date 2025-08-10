@@ -272,10 +272,7 @@ async def test_reconfigure_flow_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-
-    # Check that the entry was updated with the new configuration.
-    assert mock_entry.data[CONF_HOST] == new_conf_data[CONF_HOST]
-    assert mock_entry.data[CONF_PORT] == new_conf_data[CONF_PORT]
+    assert mock_entry.data == new_conf_data
 
 
 @pytest.mark.parametrize(
