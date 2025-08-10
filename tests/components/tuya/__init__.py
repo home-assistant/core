@@ -294,6 +294,14 @@ DEVICE_MOCKS = {
         # https://github.com/home-assistant/core/pull/148646
         Platform.CLIMATE,
     ],
+    "kt_ibmmirhhq62mmf1g": [
+        # https://github.com/home-assistant/core/pull/150077
+        Platform.CLIMATE,
+    ],
+    "kt_vdadlnmsorlhw4td": [
+        # https://github.com/home-assistant/core/pull/149635
+        Platform.CLIMATE,
+    ],
     "ldcg_9kbbfeho": [
         # https://github.com/orgs/home-assistant/discussions/482
         Platform.SENSOR,
