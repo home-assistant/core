@@ -1,11 +1,12 @@
 """Config flow for OMIE - Spain and Portugal electricity prices integration."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any
 
 from homeassistant import config_entries
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlowResult
 
 from .const import DEFAULT_NAME, DOMAIN
 
@@ -19,7 +20,7 @@ class OMIEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the first and only step."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")

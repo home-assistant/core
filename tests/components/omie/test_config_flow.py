@@ -1,4 +1,5 @@
 """Test the OMIE - Spain and Portugal electricity prices config flow."""
+
 from unittest.mock import AsyncMock
 
 import pytest
@@ -7,6 +8,7 @@ from homeassistant import config_entries
 from homeassistant.components.omie.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
 from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
@@ -29,7 +31,9 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_already_setup(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+async def test_form_already_setup(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
     """Test we get the form."""
 
     entry = MockConfigEntry(domain=DOMAIN, data={})
