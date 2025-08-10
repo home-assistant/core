@@ -65,6 +65,6 @@ class LMStudioTaskEntity(
         return ai_task.GenDataTaskResult(
             conversation_id=chat_log.conversation_id,
             data=last_message.content
-            if last_message and hasattr(last_message, "content")
+            if last_message and isinstance(last_message, AssistantContent)
             else "",
         )
