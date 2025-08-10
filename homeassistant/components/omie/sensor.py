@@ -33,14 +33,15 @@ class OMIEPriceEntityDescription(SensorEntityDescription):
     """Describes OMIE price entities."""
 
     def __init__(self, key: str) -> None:
-        """Construct an OMIEPriceEntityDescription that reports prices in €/MWh."""
+        """Construct an OMIEPriceEntityDescription that reports prices in €/kWh."""
         super().__init__(
             key=key,
             has_entity_name=True,
             translation_key=key,
             state_class=SensorStateClass.MEASUREMENT,
-            native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.MEGA_WATT_HOUR}",
+            native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
             icon="mdi:currency-eur",
+            suggested_display_precision=4,
         )
 
 
@@ -69,7 +70,7 @@ async def async_setup_entry(
             """Initialize the sensor."""
             self.entity_description = OMIEPriceEntityDescription(key)
             self._attr_device_info = device_info
-            self._attr_unique_id = slugify(f"omie_{key}")
+            self._attr_unique_id = slugify(f"{key}")
             self._attr_should_poll = False
             self._attr_attribution = _ATTRIBUTION
 
@@ -98,7 +99,9 @@ async def async_setup_entry(
             day_hours_raw = coordinator.data.get(hour_start_cet.date())
             day_hours_cet = _pick_series_cet(day_hours_raw, series_name)
 
-            return day_hours_cet.get(hour_start_cet)
+            # Convert to €/kWh
+            value_mwh = day_hours_cet.get(hour_start_cet)
+            return value_mwh / 1000 if value_mwh is not None else None
 
     sensors = [
         OMIEPriceEntity("spot_price_pt"),
