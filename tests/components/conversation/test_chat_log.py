@@ -568,7 +568,8 @@ async def test_add_delta_content_stream(
         """Yield deltas."""
         for d in deltas:
             yield d
-            expected_delta.append(d)
+            if filtered_delta := {k: v for k, v in d.items() if k != "native"}:
+                expected_delta.append(filtered_delta)
 
     captured_deltas = []
 
