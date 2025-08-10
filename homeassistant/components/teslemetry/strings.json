@@ -6,7 +6,7 @@
     "wake_up_failed": "Failed to wake up vehicle: {message}",
     "wake_up_timeout": "Timed out trying to wake up vehicle",
     "schedule_id": "Schedule ID",
-    "schedule_id_description": "The ID of an existing schedule to modify. Omit if creating a new schedule.",
+    "schedule_id_description": "The ID of the schedule, use an existing ID to modify.",
     "days_of_week": "Days of week",
     "days_of_week_description": "Select which days this schedule should be enabled on. You can select multiple days.",
     "one_time": "One-time",
