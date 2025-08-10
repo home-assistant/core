@@ -268,7 +268,6 @@ async def test_reconfigure_flow_cannot_connect(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=new_conf_data
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
