@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from copy import copy
 from unittest.mock import patch
 
 import pytest
@@ -41,9 +40,9 @@ async def test_config_flow_cannot_connect(hass: HomeAssistant) -> None:
         assert result["errors"]["base"] == "cannot_connect"
 
 
-async def test_config_flow_duplicate(hass: HomeAssistant) -> None:
-    """Test duplicate config flow setup."""
-    # First add an exiting config entry to hass.
+async def test_config_flow_duplicate_host_port(hass: HomeAssistant) -> None:
+    """Test duplicate config flow setup with the same host / port."""
+    # First add an existing config entry to hass.
     mock_entry = MockConfigEntry(
         version=1,
         domain=DOMAIN,
@@ -60,25 +59,51 @@ async def test_config_flow_duplicate(hass: HomeAssistant) -> None:
         ) as mock_request_status,
         _patch_setup(),
     ):
+        # Assign the same host and port, which we should reject since the entry already exists.
         mock_request_status.return_value = MOCK_STATUS
-
-        # Now, create the integration again using the same config data, we should reject
-        # the creation due same host / port.
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=CONF_DATA,
+            DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
         )
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
-        # Then, we create the integration once again using a different port. However,
-        # the apcaccess patch is kept to report the same serial number, we should
-        # reject the creation as well.
-        another_host = {
-            CONF_HOST: CONF_DATA[CONF_HOST],
-            CONF_PORT: CONF_DATA[CONF_PORT] + 1,
+        # Now we change the host with a different serial number and add it again. This should be successful.
+        another_host = CONF_DATA | {CONF_HOST: "another_host"}
+        mock_request_status.return_value = MOCK_STATUS | {
+            "SERIALNO": MOCK_STATUS["SERIALNO"] + "ZZZ"
         }
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data=another_host,
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["data"] == another_host
+
+
+async def test_config_flow_duplicate_serial_number(hass: HomeAssistant) -> None:
+    """Test duplicate config flow setup with different host but the same serial number."""
+    # First add an existing config entry to hass.
+    mock_entry = MockConfigEntry(
+        version=1,
+        domain=DOMAIN,
+        title="APCUPSd",
+        data=CONF_DATA,
+        unique_id=MOCK_STATUS["SERIALNO"],
+        source=SOURCE_USER,
+    )
+    mock_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.apcupsd.coordinator.aioapcaccess.request_status"
+        ) as mock_request_status,
+        _patch_setup(),
+    ):
+        # Assign the different host and port, but we should still reject the creation since the
+        # serial number is the same as the existing entry.
+        mock_request_status.return_value = MOCK_STATUS
+        another_host = CONF_DATA | {CONF_HOST: "another_host"}
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_USER},
@@ -88,14 +113,11 @@ async def test_config_flow_duplicate(hass: HomeAssistant) -> None:
         assert result["reason"] == "already_configured"
 
         # Now we change the serial number and add it again. This should be successful.
-        another_device_status = copy(MOCK_STATUS)
-        another_device_status["SERIALNO"] = MOCK_STATUS["SERIALNO"] + "ZZZ"
-        mock_request_status.return_value = another_device_status
-
+        mock_request_status.return_value = MOCK_STATUS | {
+            "SERIALNO": MOCK_STATUS["SERIALNO"] + "ZZZ"
+        }
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=another_host,
+            DOMAIN, context={"source": SOURCE_USER}, data=another_host
         )
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"] == another_host
@@ -123,6 +145,7 @@ async def test_flow_works(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == MOCK_STATUS["UPSNAME"]
         assert result["data"] == CONF_DATA
+        assert result["result"].unique_id == MOCK_STATUS["SERIALNO"]
 
         mock_setup.assert_called_once()
 

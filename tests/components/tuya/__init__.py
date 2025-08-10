@@ -89,6 +89,11 @@ DEVICE_MOCKS = {
         Platform.NUMBER,
         Platform.SENSOR,
     ],
+    "cwysj_akln8rb04cav403q": [
+        # https://github.com/home-assistant/core/pull/146599
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
     "cwysj_z3rpyvznfcch99aa": [
         # https://github.com/home-assistant/core/pull/146599
         Platform.SENSOR,
@@ -266,6 +271,13 @@ DEVICE_MOCKS = {
         Platform.FAN,
         Platform.SWITCH,
     ],
+    "kj_fsxtzzhujkrak2oy": [
+        # https://github.com/orgs/home-assistant/discussions/439
+        Platform.FAN,
+        Platform.SELECT,
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
     "kj_yrzylxax1qspdgpp": [
         # https://github.com/orgs/home-assistant/discussions/61
         Platform.FAN,
@@ -280,6 +292,14 @@ DEVICE_MOCKS = {
     ],
     "kt_5wnlzekkstwcdsvm": [
         # https://github.com/home-assistant/core/pull/148646
+        Platform.CLIMATE,
+    ],
+    "kt_ibmmirhhq62mmf1g": [
+        # https://github.com/home-assistant/core/pull/150077
+        Platform.CLIMATE,
+    ],
+    "kt_vdadlnmsorlhw4td": [
+        # https://github.com/home-assistant/core/pull/149635
         Platform.CLIMATE,
     ],
     "ldcg_9kbbfeho": [
@@ -428,9 +448,22 @@ DEVICE_MOCKS = {
     "wfcon_b25mh8sxawsgndck": [
         # https://github.com/home-assistant/core/issues/149704
     ],
+    "wg2_haclbl0qkqlf2qds": [
+        # https://github.com/orgs/home-assistant/discussions/517
+        Platform.BINARY_SENSOR,
+        Platform.SWITCH,
+    ],
     "wg2_nwxr8qcu4seltoro": [
         # https://github.com/orgs/home-assistant/discussions/430
         Platform.BINARY_SENSOR,
+    ],
+    "wg2_setmxeqgs63xwopm": [
+        # https://github.com/orgs/home-assistant/discussions/539
+        Platform.BINARY_SENSOR,
+    ],
+    "wg2_v7owd9tzcaninc36": [
+        # https://github.com/orgs/home-assistant/discussions/539
+        # SDK information is empty
     ],
     "wk_6kijc7nd": [
         # https://github.com/home-assistant/core/issues/136513
@@ -489,6 +522,11 @@ DEVICE_MOCKS = {
         Platform.NUMBER,
         Platform.SENSOR,
     ],
+    "zndb_4ggkyflayu1h1ho9": [
+        # https://github.com/home-assistant/core/pull/149317
+        Platform.SENSOR,
+        Platform.SWITCH,
+    ],
     "zndb_ze8faryrxr0glqnn": [
         # https://github.com/home-assistant/core/issues/138372
         Platform.SENSOR,
@@ -527,13 +565,14 @@ async def initialize_entry(
     hass: HomeAssistant,
     mock_manager: ManagerCompat,
     mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
+    mock_devices: CustomerDevice | list[CustomerDevice],
 ) -> None:
     """Initialize the Tuya component with a mock manager and config entry."""
+    if not isinstance(mock_devices, list):
+        mock_devices = [mock_devices]
+    mock_manager.device_map = {device.id: device for device in mock_devices}
+
     # Setup
-    mock_manager.device_map = {
-        mock_device.id: mock_device,
-    }
     mock_config_entry.add_to_hass(hass)
 
     # Initialize the component
