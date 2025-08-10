@@ -62,10 +62,10 @@
         "name": "Charge level"
       },
       "charging_power": {
-        "name": "Charging battery"
+        "name": "Charging power"
       },
       "discharging_power": {
-        "name": "Discharging battery"
+        "name": "Discharging power"
       },
       "last_update": {
         "name": "Last update"
