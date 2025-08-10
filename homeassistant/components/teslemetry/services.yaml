@@ -152,6 +152,7 @@ add_charge_schedule:
             - saturday
             - sunday
           multiple: true
+          translation_key: days_of_week
     enable:
       required: true
       selector:
@@ -221,6 +222,7 @@ add_precondition_schedule:
             - saturday
             - sunday
           multiple: true
+          translation_key: days_of_week
     enable:
       required: true
       selector:
