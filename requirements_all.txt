@@ -2153,7 +2153,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.11.0
+pymodbus==3.11.1
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -2966,7 +2966,7 @@ tololib==1.2.2
 toonapi==0.3.0
 
 # homeassistant.components.totalconnect
-total-connect-client==2025.1.4
+total-connect-client==2025.5
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4
