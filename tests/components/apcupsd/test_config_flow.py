@@ -41,7 +41,7 @@ async def test_config_flow_cannot_connect(hass: HomeAssistant) -> None:
 
 
 async def test_config_flow_duplicate_host_port(hass: HomeAssistant) -> None:
-    """Test duplicate config flow setup with the same host / port but different serial number."""
+    """Test duplicate config flow setup with the same host / port."""
     # First add an existing config entry to hass.
     mock_entry = MockConfigEntry(
         version=1,
