@@ -33,6 +33,9 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .common import (
+    MOCK_ALARM_CONTROL_PANEL_LOCAL_CODE_SUBENTRY_DATA_SINGLE,
+    MOCK_ALARM_CONTROL_PANEL_REMOTE_CODE_SUBENTRY_DATA_SINGLE,
+    MOCK_ALARM_CONTROL_PANEL_REMOTE_CODE_TEXT_SUBENTRY_DATA_SINGLE,
     MOCK_BINARY_SENSOR_SUBENTRY_DATA_SINGLE,
     MOCK_BUTTON_SUBENTRY_DATA_SINGLE,
     MOCK_CLIMATE_HIGH_LOW_SUBENTRY_DATA_SINGLE,
@@ -2666,6 +2669,112 @@ async def test_migrate_of_incompatible_config_entry(
     ),
     [
         (
+            MOCK_ALARM_CONTROL_PANEL_LOCAL_CODE_SUBENTRY_DATA_SINGLE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Alarm"},
+            {
+                "entity_category": "config",
+                "supported_features": ["arm_home", "arm_away", "trigger"],
+                "alarm_control_panel_code_mode": "local_code",
+            },
+            (),
+            {
+                "command_topic": "test-topic",
+                "state_topic": "test-topic",
+                "command_template": "{{action}}",
+                "value_template": "{{ value_json.value }}",
+                "code": "1234",
+                "code_arm_required": True,
+                "code_disarm_required": True,
+                "code_trigger_required": True,
+                "alarm_control_panel_payload_settings": {
+                    "payload_arm_away": "ARM_AWAY",
+                    "payload_arm_custom_bypass": "ARM_CUSTOM_BYPASS",
+                    "payload_arm_home": "ARM_HOME",
+                    "payload_arm_night": "ARM_NIGHT",
+                    "payload_arm_vacation": "ARM_VACATION",
+                    "payload_trigger": "TRIGGER",
+                },
+            },
+            (
+                (
+                    {
+                        "state_topic": "test-topic",
+                        "command_topic": "test-topic#invalid",
+                    },
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+            ),
+            "Milk notifier Alarm",
+        ),
+        (
+            MOCK_ALARM_CONTROL_PANEL_REMOTE_CODE_SUBENTRY_DATA_SINGLE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 1}},
+            {"name": "Alarm"},
+            {
+                "supported_features": ["arm_home", "arm_away", "arm_custom_bypass"],
+                "alarm_control_panel_code_mode": "remote_code",
+            },
+            (),
+            {
+                "command_topic": "test-topic",
+                "state_topic": "test-topic",
+                "command_template": "{{action}}",
+                "value_template": "{{ value_json.value }}",
+                "code": "REMOTE_CODE",
+                "code_arm_required": True,
+                "code_disarm_required": True,
+                "code_trigger_required": True,
+                "alarm_control_panel_payload_settings": {
+                    "payload_arm_away": "ARM_AWAY",
+                    "payload_arm_custom_bypass": "ARM_CUSTOM_BYPASS",
+                    "payload_arm_home": "ARM_HOME",
+                    "payload_arm_night": "ARM_NIGHT",
+                    "payload_arm_vacation": "ARM_VACATION",
+                    "payload_trigger": "TRIGGER",
+                },
+            },
+            (),
+            "Milk notifier Alarm",
+        ),
+        (
+            MOCK_ALARM_CONTROL_PANEL_REMOTE_CODE_TEXT_SUBENTRY_DATA_SINGLE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 2}},
+            {"name": "Alarm"},
+            {
+                "supported_features": ["arm_home", "arm_away", "arm_vacation"],
+                "alarm_control_panel_code_mode": "remote_code_text",
+            },
+            (),
+            {
+                "command_topic": "test-topic",
+                "state_topic": "test-topic",
+                "command_template": "{{action}}",
+                "value_template": "{{ value_json.value }}",
+                "code": "REMOTE_CODE_TEXT",
+                "code_arm_required": True,
+                "code_disarm_required": True,
+                "code_trigger_required": True,
+                "alarm_control_panel_payload_settings": {
+                    "payload_arm_away": "ARM_AWAY",
+                    "payload_arm_custom_bypass": "ARM_CUSTOM_BYPASS",
+                    "payload_arm_home": "ARM_HOME",
+                    "payload_arm_night": "ARM_NIGHT",
+                    "payload_arm_vacation": "ARM_VACATION",
+                    "payload_trigger": "TRIGGER",
+                },
+            },
+            (),
+            "Milk notifier Alarm",
+        ),
+        (
             MOCK_BINARY_SENSOR_SUBENTRY_DATA_SINGLE,
             {"name": "Milk notifier", "mqtt_settings": {"qos": 2}},
             {"name": "Hatch"},
@@ -3399,6 +3508,9 @@ async def test_migrate_of_incompatible_config_entry(
         # MOCK_LOCK_SUBENTRY_DATA_SINGLE
     ],
     ids=[
+        "alarm_control_panel_local_code",
+        "alarm_control_panel_remote_code",
+        "alarm_control_panel_remote_code_text",
         "binary_sensor",
         "button",
         "climate_single",

@@ -71,6 +71,7 @@ from homeassistant.const import (
     ATTR_SW_VERSION,
     CONF_BRIGHTNESS,
     CONF_CLIENT_ID,
+    CONF_CODE,
     CONF_DEVICE,
     CONF_DEVICE_CLASS,
     CONF_DISCOVERY,
@@ -129,6 +130,7 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 from .addon import get_addon_manager
 from .client import MqttClientSetup
 from .const import (
+    ALARM_CONTROL_PANEL_SUPPORTED_FEATURES,
     ATTR_PAYLOAD,
     ATTR_QOS,
     ATTR_RETAIN,
@@ -149,7 +151,10 @@ from .const import (
     CONF_CERTIFICATE,
     CONF_CLIENT_CERT,
     CONF_CLIENT_KEY,
+    CONF_CODE_ARM_REQUIRED,
     CONF_CODE_FORMAT,
+    CONF_CODE_DISARM_REQUIRED,
+    CONF_CODE_TRIGGER_REQUIRED,
     CONF_COLOR_MODE_STATE_TOPIC,
     CONF_COLOR_MODE_VALUE_TEMPLATE,
     CONF_COLOR_TEMP_COMMAND_TEMPLATE,
@@ -216,6 +221,11 @@ from .const import (
     CONF_OSCILLATION_COMMAND_TOPIC,
     CONF_OSCILLATION_STATE_TOPIC,
     CONF_OSCILLATION_VALUE_TEMPLATE,
+    CONF_PAYLOAD_ARM_AWAY,
+    CONF_PAYLOAD_ARM_CUSTOM_BYPASS,
+    CONF_PAYLOAD_ARM_HOME,
+    CONF_PAYLOAD_ARM_NIGHT,
+    CONF_PAYLOAD_ARM_VACATION,
     CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_CLOSE,
     CONF_PAYLOAD_LOCK,
@@ -229,6 +239,7 @@ from .const import (
     CONF_PAYLOAD_RESET_PRESET_MODE,
     CONF_PAYLOAD_STOP,
     CONF_PAYLOAD_STOP_TILT,
+    CONF_PAYLOAD_TRIGGER,
     CONF_PAYLOAD_UNLOCK,
     CONF_PERCENTAGE_COMMAND_TEMPLATE,
     CONF_PERCENTAGE_COMMAND_TOPIC,
@@ -280,6 +291,7 @@ from .const import (
     CONF_STATE_VALUE_TEMPLATE,
     CONF_SUGGESTED_DISPLAY_PRECISION,
     CONF_SUPPORTED_COLOR_MODES,
+    CONF_SUPPORTED_FEATURES,
     CONF_SWING_HORIZONTAL_MODE_COMMAND_TEMPLATE,
     CONF_SWING_HORIZONTAL_MODE_COMMAND_TOPIC,
     CONF_SWING_HORIZONTAL_MODE_LIST,
@@ -329,12 +341,18 @@ from .const import (
     CONF_XY_VALUE_TEMPLATE,
     CONFIG_ENTRY_MINOR_VERSION,
     CONFIG_ENTRY_VERSION,
+    DEFAULT_ALARM_CONTROL_PANEL_COMMAND_TEMPLATE,
     DEFAULT_BIRTH,
     DEFAULT_CLIMATE_INITIAL_TEMPERATURE,
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
     DEFAULT_KEEPALIVE,
     DEFAULT_ON_COMMAND_TYPE,
+    DEFAULT_PAYLOAD_ARM_AWAY,
+    DEFAULT_PAYLOAD_ARM_CUSTOM_BYPASS,
+    DEFAULT_PAYLOAD_ARM_HOME,
+    DEFAULT_PAYLOAD_ARM_NIGHT,
+    DEFAULT_PAYLOAD_ARM_VACATION,
     DEFAULT_PAYLOAD_AVAILABLE,
     DEFAULT_PAYLOAD_CLOSE,
     DEFAULT_PAYLOAD_LOCK,
@@ -347,6 +365,7 @@ from .const import (
     DEFAULT_PAYLOAD_PRESS,
     DEFAULT_PAYLOAD_RESET,
     DEFAULT_PAYLOAD_STOP,
+    DEFAULT_PAYLOAD_TRIGGER,
     DEFAULT_PAYLOAD_UNLOCK,
     DEFAULT_PORT,
     DEFAULT_POSITION_CLOSED,
@@ -370,6 +389,8 @@ from .const import (
     DEFAULT_WILL,
     DEFAULT_WS_PATH,
     DOMAIN,
+    REMOTE_CODE,
+    REMOTE_CODE_TEXT,
     SUPPORTED_PROTOCOLS,
     TRANSPORT_TCP,
     TRANSPORT_WEBSOCKETS,
@@ -468,6 +489,7 @@ KEY_UPLOAD_SELECTOR = FileSelector(
 
 # Subentry selectors
 SUBENTRY_PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CLIMATE,
@@ -571,6 +593,21 @@ SUGGESTED_DISPLAY_PRECISION_SELECTOR = NumberSelector(
 )
 TIMEOUT_SELECTOR = NumberSelector(
     NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0)
+)
+
+# Alarm control panel selectors
+ALARM_CONTROL_PANEL_FEATURES_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=list(ALARM_CONTROL_PANEL_SUPPORTED_FEATURES),
+        multiple=True,
+        translation_key="alarm_control_panel_features",
+    )
+)
+ALARM_CONTROL_PANEL_CODE_MODE = SelectSelector(
+    SelectSelectorConfig(
+        options=["local_code", "remote_code", "remote_code_text"],
+        translation_key="alarm_control_panel_code_mode",
+    )
 )
 
 # Climate specific selectors
@@ -728,6 +765,25 @@ HUMIDITY_SELECTOR = vol.All(
     ),
     vol.Coerce(int),
 )
+
+_CODE_VALIDATION_MODE = {
+    "remote_code": REMOTE_CODE,
+    "remote_code_text": REMOTE_CODE_TEXT,
+}
+
+
+@callback
+def default_alarm_control_panel_code(config: dict[str, Any]) -> str:
+    """Return the thermostat precision for system default unit."""
+
+    code_validation_mode: str = config["alarm_control_panel_code_mode"]
+    code: str = config.get(CONF_CODE, "")
+
+    default = _CODE_VALIDATION_MODE.get(code_validation_mode, code)
+    if code_validation_mode in _CODE_VALIDATION_MODE:
+        config[CONF_CODE] = default
+
+    return default
 
 
 @callback
@@ -995,6 +1051,23 @@ SHARED_PLATFORM_ENTITY_FIELDS: dict[str, PlatformField] = {
 }
 
 PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
+    Platform.ALARM_CONTROL_PANEL.value: {
+        CONF_SUPPORTED_FEATURES: PlatformField(
+            selector=ALARM_CONTROL_PANEL_FEATURES_SELECTOR,
+            required=True,
+            default=lambda config: config.get(
+                CONF_SUPPORTED_FEATURES, list(ALARM_CONTROL_PANEL_SUPPORTED_FEATURES)
+            ),
+        ),
+        "alarm_control_panel_code_mode": PlatformField(
+            selector=ALARM_CONTROL_PANEL_CODE_MODE,
+            required=True,
+            exclude_from_config=True,
+            default=lambda config: config[CONF_CODE].lower()
+            if config.get(CONF_CODE) in (REMOTE_CODE, REMOTE_CODE_TEXT)
+            else "local_code",
+        ),
+    },
     Platform.BINARY_SENSOR.value: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=BINARY_SENSOR_DEVICE_CLASS_SELECTOR,
@@ -1168,6 +1241,89 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
     Platform.LOCK.value: {},
 }
 PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
+    Platform.ALARM_CONTROL_PANEL: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            default=DEFAULT_ALARM_CONTROL_PANEL_COMMAND_TEMPLATE,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_CODE: PlatformField(
+            selector=PASSWORD_SELECTOR,
+            required=True,
+            default=default_alarm_control_panel_code,
+        ),
+        CONF_CODE_ARM_REQUIRED: PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=True,
+            default=True,
+        ),
+        CONF_CODE_DISARM_REQUIRED: PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=True,
+            default=True,
+        ),
+        CONF_CODE_TRIGGER_REQUIRED: PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=True,
+            default=True,
+        ),
+        CONF_PAYLOAD_ARM_HOME: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            default=DEFAULT_PAYLOAD_ARM_HOME,
+            section="alarm_control_panel_payload_settings",
+        ),
+        CONF_PAYLOAD_ARM_AWAY: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            default=DEFAULT_PAYLOAD_ARM_AWAY,
+            section="alarm_control_panel_payload_settings",
+        ),
+        CONF_PAYLOAD_ARM_NIGHT: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            default=DEFAULT_PAYLOAD_ARM_NIGHT,
+            section="alarm_control_panel_payload_settings",
+        ),
+        CONF_PAYLOAD_ARM_VACATION: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            default=DEFAULT_PAYLOAD_ARM_VACATION,
+            section="alarm_control_panel_payload_settings",
+        ),
+        CONF_PAYLOAD_ARM_CUSTOM_BYPASS: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            default=DEFAULT_PAYLOAD_ARM_CUSTOM_BYPASS,
+            section="alarm_control_panel_payload_settings",
+        ),
+        CONF_PAYLOAD_TRIGGER: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            default=DEFAULT_PAYLOAD_TRIGGER,
+            section="alarm_control_panel_payload_settings",
+        ),
+    },
     Platform.BINARY_SENSOR.value: {
         CONF_STATE_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
@@ -2774,6 +2930,7 @@ ENTITY_CONFIG_VALIDATOR: dict[
     str,
     Callable[[dict[str, Any]], dict[str, str]] | None,
 ] = {
+    Platform.ALARM_CONTROL_PANEL: None,
     Platform.BINARY_SENSOR.value: None,
     Platform.BUTTON.value: None,
     Platform.CLIMATE.value: validate_climate_platform_config,
