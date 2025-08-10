@@ -381,6 +381,67 @@
     'state': 'on',
   })
 # ---
+# name: test_platform_setup_and_discovery[fan.kalado_air_purifier-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'preset_modes': list([
+        'manual',
+        'auto',
+        'sleep',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.kalado_air_purifier',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 56>,
+    'translation_key': None,
+    'unique_id': 'tuya.yo2karkjuhzztxsfjk',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[fan.kalado_air_purifier-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kalado Air Purifier',
+      'preset_mode': 'auto',
+      'preset_modes': list([
+        'manual',
+        'auto',
+        'sleep',
+      ]),
+      'supported_features': <FanEntityFeature: 56>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.kalado_air_purifier',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_platform_setup_and_discovery[fan.tower_fan_ca_407g_smart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
