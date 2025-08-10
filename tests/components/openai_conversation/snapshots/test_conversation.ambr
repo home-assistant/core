@@ -17,10 +17,7 @@
     dict({
       'agent_id': 'conversation.openai_conversation',
       'content': None,
-      'native': dict({
-        'encrypted_content': 'AAABBB',
-        'id': 'rs_A',
-      }),
+      'native': ResponseReasoningItem(id='rs_A', summary=[], type='reasoning', content=None, encrypted_content='AAABBB', status=None),
       'role': 'assistant',
       'thinking_content': 'Thinking more',
       'tool_calls': None,

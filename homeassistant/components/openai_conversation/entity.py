@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import base64
 from collections.abc import AsyncGenerator, Callable, Iterable
-from dataclasses import dataclass
 import json
 from mimetypes import guess_file_type
 from pathlib import Path
@@ -144,17 +143,6 @@ def _format_tool(
     )
 
 
-@dataclass(slots=True)
-class ResponseDetails:
-    """Additional native data."""
-
-    id: str
-    """The unique identifier of the content."""
-
-    encrypted_content: str | None = None
-    """The encrypted content of the reasoning item."""
-
-
 def _convert_content_to_param(
     chat_content: Iterable[conversation.Content],
 ) -> ResponseInputParam:
@@ -198,7 +186,7 @@ def _convert_content_to_param(
             if content.thinking_content:
                 reasoning_summary.append(content.thinking_content)
 
-            if isinstance(content.native, ResponseDetails):
+            if isinstance(content.native, ResponseReasoningItem):
                 messages.append(
                     ResponseReasoningItemParam(
                         type="reasoning",
@@ -245,8 +233,10 @@ async def _transform_stream(
         elif isinstance(event, ResponseOutputItemDoneEvent):
             if isinstance(event.item, ResponseReasoningItem):
                 yield {
-                    "native": ResponseDetails(
+                    "native": ResponseReasoningItem(
+                        type="reasoning",
                         id=event.item.id,
+                        summary=[],  # Remove summaries
                         encrypted_content=event.item.encrypted_content,
                     )
                 }
