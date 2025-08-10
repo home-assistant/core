@@ -575,49 +575,6 @@ class ConstantSelector(Selector[ConstantSelectorConfig]):
         return self.config["value"]
 
 
-class QrErrorCorrectionLevel(StrEnum):
-    """Possible error correction levels for QR code selector."""
-
-    LOW = "low"
-    MEDIUM = "medium"
-    QUARTILE = "quartile"
-    HIGH = "high"
-
-
-class QrCodeSelectorConfig(BaseSelectorConfig, total=False):
-    """Class to represent a QR code selector config."""
-
-    data: str
-    scale: int
-    error_correction_level: QrErrorCorrectionLevel
-
-
-@SELECTORS.register("qr_code")
-class QrCodeSelector(Selector[QrCodeSelectorConfig]):
-    """QR code selector."""
-
-    selector_type = "qr_code"
-
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
-        {
-            vol.Required("data"): str,
-            vol.Optional("scale"): int,
-            vol.Optional("error_correction_level"): vol.All(
-                vol.Coerce(QrErrorCorrectionLevel), lambda val: val.value
-            ),
-        }
-    )
-
-    def __init__(self, config: QrCodeSelectorConfig) -> None:
-        """Instantiate a selector."""
-        super().__init__(config)
-
-    def __call__(self, data: Any) -> Any:
-        """Validate the passed selection."""
-        vol.Schema(vol.Any(str, None))(data)
-        return self.config["data"]
-
-
 class ConversationAgentSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a conversation agent selector config."""
 
@@ -813,6 +770,7 @@ class EntitySelectorConfig(BaseSelectorConfig, EntityFilterSelectorConfig, total
     exclude_entities: list[str]
     include_entities: list[str]
     multiple: bool
+    reorder: bool
     filter: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
 
 
@@ -829,6 +787,7 @@ class EntitySelector(Selector[EntitySelectorConfig]):
             vol.Optional("exclude_entities"): [str],
             vol.Optional("include_entities"): [str],
             vol.Optional("multiple", default=False): cv.boolean,
+            vol.Optional("reorder", default=False): cv.boolean,
             vol.Optional("filter"): vol.All(
                 cv.ensure_list,
                 [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
@@ -868,6 +827,39 @@ class EntitySelector(Selector[EntitySelectorConfig]):
         if not isinstance(data, list):
             raise vol.Invalid("Value should be a list")
         return cast(list, vol.Schema([validate])(data))  # Output is a list
+
+
+class FileSelectorConfig(BaseSelectorConfig):
+    """Class to represent a file selector config."""
+
+    accept: str  # required
+
+
+@SELECTORS.register("file")
+class FileSelector(Selector[FileSelectorConfig]):
+    """Selector of a file."""
+
+    selector_type = "file"
+
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+        {
+            # https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file#accept
+            vol.Required("accept"): str,
+        }
+    )
+
+    def __init__(self, config: FileSelectorConfig) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        if not isinstance(data, str):
+            raise vol.Invalid("Value should be a string")
+
+        UUID(data)
+
+        return data
 
 
 class FloorSelectorConfig(BaseSelectorConfig, total=False):
@@ -1108,10 +1100,12 @@ class NumberSelectorMode(StrEnum):
 
 def validate_slider(data: Any) -> Any:
     """Validate configuration."""
-    if data["mode"] == "box":
-        return data
+    has_min_max = "min" in data and "max" in data
 
-    if "min" not in data or "max" not in data:
+    if "mode" not in data:
+        data["mode"] = "slider" if has_min_max else "box"
+
+    if data["mode"] == "slider" and not has_min_max:
         raise vol.Invalid("min and max are required in slider mode")
 
     return data
@@ -1134,7 +1128,7 @@ class NumberSelector(Selector[NumberSelectorConfig]):
                     "any", vol.All(vol.Coerce(float), vol.Range(min=1e-3))
                 ),
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT): str,
-                vol.Optional(CONF_MODE, default=NumberSelectorMode.SLIDER): vol.All(
+                vol.Optional(CONF_MODE): vol.All(
                     vol.Coerce(NumberSelectorMode), lambda val: val.value
                 ),
                 vol.Optional("translation_key"): str,
@@ -1207,6 +1201,49 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
         return data
+
+
+class QrErrorCorrectionLevel(StrEnum):
+    """Possible error correction levels for QR code selector."""
+
+    LOW = "low"
+    MEDIUM = "medium"
+    QUARTILE = "quartile"
+    HIGH = "high"
+
+
+class QrCodeSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent a QR code selector config."""
+
+    data: str
+    scale: int
+    error_correction_level: QrErrorCorrectionLevel
+
+
+@SELECTORS.register("qr_code")
+class QrCodeSelector(Selector[QrCodeSelectorConfig]):
+    """QR code selector."""
+
+    selector_type = "qr_code"
+
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+        {
+            vol.Required("data"): str,
+            vol.Optional("scale"): int,
+            vol.Optional("error_correction_level"): vol.All(
+                vol.Coerce(QrErrorCorrectionLevel), lambda val: val.value
+            ),
+        }
+    )
+
+    def __init__(self, config: QrCodeSelectorConfig) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        vol.Schema(vol.Any(str, None))(data)
+        return self.config["data"]
 
 
 select_option = vol.All(
@@ -1291,6 +1328,41 @@ class SelectSelector(Selector[SelectSelectorConfig]):
         return [parent_schema(vol.Schema(str)(val)) for val in data]
 
 
+class StateSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent an state selector config."""
+
+    entity_id: str
+    hide_states: list[str]
+
+
+@SELECTORS.register("state")
+class StateSelector(Selector[StateSelectorConfig]):
+    """Selector for an entity state."""
+
+    selector_type = "state"
+
+    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
+        {
+            vol.Optional("entity_id"): cv.entity_id,
+            vol.Optional("hide_states"): [str],
+            # The attribute to filter on, is currently deliberately not
+            # configurable/exposed. We are considering separating state
+            # selectors into two types: one for state and one for attribute.
+            # Limiting the public use, prevents breaking changes in the future.
+            # vol.Optional("attribute"): str,
+        }
+    )
+
+    def __init__(self, config: StateSelectorConfig) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> str:
+        """Validate the passed selection."""
+        state: str = vol.Schema(str)(data)
+        return state
+
+
 class StatisticSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a statistic selector config."""
 
@@ -1329,39 +1401,6 @@ class TargetSelectorConfig(BaseSelectorConfig, total=False):
 
     entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
     device: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
-
-
-class StateSelectorConfig(BaseSelectorConfig, total=False):
-    """Class to represent an state selector config."""
-
-    entity_id: Required[str]
-
-
-@SELECTORS.register("state")
-class StateSelector(Selector[StateSelectorConfig]):
-    """Selector for an entity state."""
-
-    selector_type = "state"
-
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
-        {
-            vol.Required("entity_id"): cv.entity_id,
-            # The attribute to filter on, is currently deliberately not
-            # configurable/exposed. We are considering separating state
-            # selectors into two types: one for state and one for attribute.
-            # Limiting the public use, prevents breaking changes in the future.
-            # vol.Optional("attribute"): str,
-        }
-    )
-
-    def __init__(self, config: StateSelectorConfig) -> None:
-        """Instantiate a selector."""
-        super().__init__(config)
-
-    def __call__(self, data: Any) -> str:
-        """Validate the passed selection."""
-        state: str = vol.Schema(str)(data)
-        return state
 
 
 @SELECTORS.register("target")
@@ -1551,39 +1590,6 @@ class TriggerSelector(Selector[TriggerSelectorConfig]):
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
         return vol.Schema(cv.TRIGGER_SCHEMA)(data)
-
-
-class FileSelectorConfig(BaseSelectorConfig):
-    """Class to represent a file selector config."""
-
-    accept: str  # required
-
-
-@SELECTORS.register("file")
-class FileSelector(Selector[FileSelectorConfig]):
-    """Selector of a file."""
-
-    selector_type = "file"
-
-    CONFIG_SCHEMA = BASE_SELECTOR_CONFIG_SCHEMA.extend(
-        {
-            # https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input/file#accept
-            vol.Required("accept"): str,
-        }
-    )
-
-    def __init__(self, config: FileSelectorConfig) -> None:
-        """Instantiate a selector."""
-        super().__init__(config)
-
-    def __call__(self, data: Any) -> str:
-        """Validate the passed selection."""
-        if not isinstance(data, str):
-            raise vol.Invalid("Value should be a string")
-
-        UUID(data)
-
-        return data
 
 
 dumper.add_representer(

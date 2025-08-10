@@ -94,7 +94,7 @@ def mock_config_entry_with_reasoning_model(
     hass.config_entries.async_update_subentry(
         mock_config_entry,
         next(iter(mock_config_entry.subentries.values())),
-        data={CONF_LLM_HASS_API: llm.LLM_API_ASSIST, CONF_CHAT_MODEL: "o4-mini"},
+        data={CONF_LLM_HASS_API: llm.LLM_API_ASSIST, CONF_CHAT_MODEL: "gpt-5-mini"},
     )
     return mock_config_entry
 
@@ -156,9 +156,10 @@ def mock_create_stream() -> Generator[AsyncMock]:
         )
         yield ResponseInProgressEvent(
             response=response,
-            sequence_number=0,
+            sequence_number=1,
             type="response.in_progress",
         )
+        sequence_number = 2
         response.status = "completed"
 
         for value in events:
@@ -173,6 +174,8 @@ def mock_create_stream() -> Generator[AsyncMock]:
                 response.error = value
                 break
 
+            value.sequence_number = sequence_number
+            sequence_number += 1
             yield value
 
             if isinstance(value, ResponseErrorEvent):
@@ -181,19 +184,19 @@ def mock_create_stream() -> Generator[AsyncMock]:
         if response.status == "incomplete":
             yield ResponseIncompleteEvent(
                 response=response,
-                sequence_number=0,
+                sequence_number=sequence_number,
                 type="response.incomplete",
             )
         elif response.status == "failed":
             yield ResponseFailedEvent(
                 response=response,
-                sequence_number=0,
+                sequence_number=sequence_number,
                 type="response.failed",
             )
         else:
             yield ResponseCompletedEvent(
                 response=response,
-                sequence_number=0,
+                sequence_number=sequence_number,
                 type="response.completed",
             )
 

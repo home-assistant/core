@@ -38,6 +38,9 @@ FIELD_SCHEMA = vol.Schema(
 TRIGGER_SCHEMA = vol.Any(
     vol.Schema(
         {
+            vol.Optional("target"): vol.Any(
+                selector.TargetSelector.CONFIG_SCHEMA, None
+            ),
             vol.Optional("fields"): vol.Schema({str: FIELD_SCHEMA}),
         }
     ),
@@ -47,7 +50,7 @@ TRIGGER_SCHEMA = vol.Any(
 TRIGGERS_SCHEMA = vol.Schema(
     {
         vol.Remove(vol.All(str, trigger.starts_with_dot)): object,
-        cv.slug: TRIGGER_SCHEMA,
+        cv.underscore_slug: TRIGGER_SCHEMA,
     }
 )
 

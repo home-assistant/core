@@ -11,12 +11,14 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
+    SearchMedia,
+    SearchMediaQuery,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import parse_datetime
 
-from .browse_media import build_item_response, build_root_response
+from .browse_media import build_item_response, build_root_response, search_items
 from .client_wrapper import get_artwork_url
 from .const import CONTENT_TYPE_MAP, LOGGER, MAX_IMAGE_WIDTH
 from .coordinator import JellyfinConfigEntry, JellyfinDataUpdateCoordinator
@@ -196,6 +198,7 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
                 | MediaPlayerEntityFeature.PLAY
                 | MediaPlayerEntityFeature.STOP
                 | MediaPlayerEntityFeature.SEEK
+                | MediaPlayerEntityFeature.SEARCH_MEDIA
             )
 
             if "Mute" in commands:
@@ -274,3 +277,13 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
             media_content_type,
             media_content_id,
         )
+
+    async def async_search_media(
+        self,
+        query: SearchMediaQuery,
+    ) -> SearchMedia:
+        """Search the media player."""
+        result = await search_items(
+            self.hass, self.coordinator.api_client, self.coordinator.user_id, query
+        )
+        return SearchMedia(result=result)
