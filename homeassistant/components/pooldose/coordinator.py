@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -23,7 +24,6 @@ class PooldoseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self,
         hass: HomeAssistant,
         client: PooldoseClient,
-        update_interval,
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
@@ -31,7 +31,7 @@ class PooldoseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             _LOGGER,
             name="Pooldose",
-            update_interval=update_interval,
+            update_interval=timedelta(seconds=600),  # Default update interval
             config_entry=config_entry,
         )
         self.client = client

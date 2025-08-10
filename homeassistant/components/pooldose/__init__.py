@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import timedelta
 import logging
 
 from pooldose.client import PooldoseClient
@@ -42,11 +41,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> 
     client = PooldoseClient(host)
     client_status = await client.connect()
     if client_status != RequestStatus.SUCCESS:
-        _LOGGER.error("Failed to create PoolDose client: %s", client_status)
         raise ConfigEntryNotReady(f"Failed to create PoolDose client: {client_status}")
 
     # Create coordinator and perform first refresh
-    coordinator = PooldoseCoordinator(hass, client, timedelta(seconds=600), entry)
+    coordinator = PooldoseCoordinator(hass, client, entry)
     await coordinator.async_config_entry_first_refresh()
 
     # Get device info from client after successful connection
