@@ -12,8 +12,9 @@ async def test_sensor_setup(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sensor setup."""
-    # 29 sensors: 24 hourly sensors + 5 special sensors (highest, lowest_day, lowest_night, current, chart_48h)
-    assert len(entity_registry.entities) == 29
+    # 28 sensors: 24 hourly sensors + 4 special sensors (highest, lowest_day, lowest_night, current)
+    # Chart sensor removed to avoid database storage issues
+    assert len(entity_registry.entities) == 28
 
     # Check that all expected sensors exist
     for hour in range(24):
@@ -113,16 +114,7 @@ async def test_special_sensors(
     # Current price depends on current hour, so we just check it's not None
     assert current_state.state is not None
 
-    # Test 24h chart sensor
-    assert chart_entity is not None
-    chart_state = hass.states.get(chart_entity)
-    assert chart_state is not None
-    # Chart sensor shows current price as value
-    assert chart_state.state is not None
-    # Check that essential attributes exist but no large chart_data
-    assert "chart_data" not in chart_state.attributes  # Should not store large data
-    assert chart_state.attributes["data_points"] == 24
-    assert "current_hour" in chart_state.attributes
-    assert "time_slot" in chart_state.attributes
+    # Test 24h chart sensor - REMOVED as requested to avoid database storage
+    assert chart_entity is None  # Chart sensor should not exist anymore
 
     assert "current_hour" in current_state.attributes

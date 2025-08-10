@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -25,11 +25,79 @@ from .coordinator import GreenPlanetEnergyUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
+def get_highest_price_today(data: dict[str, Any]) -> float | None:
+    """Get the highest price from today's data."""
+    if not data:
+        return None
+
+    prices = []
+    for hour in range(24):
+        price_key = f"gpe_price_{hour:02d}"
+        if price_key in data:
+            price = data[price_key]
+            if price is not None:
+                prices.append(price)
+
+    return max(prices) if prices else None
+
+
+def get_lowest_price_day(data: dict[str, Any]) -> float | None:
+    """Get the lowest price during day hours (6-18)."""
+    if not data:
+        return None
+
+    prices = []
+    for hour in range(6, 18):  # Day period: 6:00 to 18:00
+        price_key = f"gpe_price_{hour:02d}"
+        if price_key in data:
+            price = data[price_key]
+            if price is not None:
+                prices.append(price)
+
+    return min(prices) if prices else None
+
+
+def get_lowest_price_night(data: dict[str, Any]) -> float | None:
+    """Get the lowest price during night hours (18-6)."""
+    if not data:
+        return None
+
+    prices = []
+    # Evening hours (18-23)
+    for hour in range(18, 24):
+        price_key = f"gpe_price_{hour:02d}"
+        if price_key in data:
+            price = data[price_key]
+            if price is not None:
+                prices.append(price)
+
+    # Early morning hours (0-5)
+    for hour in range(6):
+        price_key = f"gpe_price_{hour:02d}"
+        if price_key in data:
+            price = data[price_key]
+            if price is not None:
+                prices.append(price)
+
+    return min(prices) if prices else None
+
+
+def get_current_price(data: dict[str, Any]) -> float | None:
+    """Get the price for the current hour."""
+    if not data:
+        return None
+
+    current_hour = dt_util.now().hour
+    price_key = f"gpe_price_{current_hour:02d}"
+    return data.get(price_key)
+
+
 @dataclass(frozen=True, kw_only=True)
 class GreenPlanetEnergySensorEntityDescription(SensorEntityDescription):
     """Describes Green Planet Energy sensor entity."""
 
     hour: int
+    value_fn: Callable[[dict[str, Any]], float | None] | None = None
 
 
 SENSOR_HOURLY_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
@@ -53,6 +121,7 @@ SENSOR_STAT_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=4,
         hour=-1,  # Special value to indicate this is not an hourly sensor
+        value_fn=get_highest_price_today,
     ),
     GreenPlanetEnergySensorEntityDescription(
         key="gpe_lowest_price_day",
@@ -61,6 +130,7 @@ SENSOR_STAT_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=4,
         hour=-2,  # Special value for day period (6-18h)
+        value_fn=get_lowest_price_day,
     ),
     GreenPlanetEnergySensorEntityDescription(
         key="gpe_lowest_price_night",
@@ -69,6 +139,7 @@ SENSOR_STAT_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=4,
         hour=-3,  # Special value for night period (18-6h)
+        value_fn=get_lowest_price_night,
     ),
     GreenPlanetEnergySensorEntityDescription(
         key="gpe_current_price",
@@ -77,6 +148,7 @@ SENSOR_STAT_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=4,
         hour=-1,  # Special value to indicate this is not an hourly sensor
+        value_fn=get_current_price,
     ),
 ]
 
@@ -141,136 +213,12 @@ class GreenPlanetEnergySensor(
         if not self.coordinator.data:
             return None
 
-        # Handle different sensor types
-        if self.entity_description.key == "gpe_highest_price_today":
-            return self._get_highest_price_today()
-        if self.entity_description.key == "gpe_lowest_price_day":
-            return self._get_lowest_price_day()
-        if self.entity_description.key == "gpe_lowest_price_night":
-            return self._get_lowest_price_night()
-        if self.entity_description.key == "gpe_current_price":
-            return self._get_current_price()
-        if self.entity_description.key == "gpe_price_chart_24h":
-            return self._get_current_price()  # Use current price as main value
+        # Use value_fn if available, otherwise get from coordinator data
+        if self.entity_description.value_fn:
+            return self.entity_description.value_fn(self.coordinator.data)
 
         # Regular hourly sensor
         return self.coordinator.data.get(self.entity_description.key)
-
-    def _get_highest_price_today(self) -> float | None:
-        """Get the highest price from today's data."""
-        if not self.coordinator.data:
-            return None
-
-        prices = []
-        for hour in range(24):
-            price_key = f"gpe_price_{hour:02d}"
-            if price_key in self.coordinator.data:
-                price = self.coordinator.data[price_key]
-                if price is not None:
-                    prices.append(price)
-
-        return max(prices) if prices else None
-
-    def _get_lowest_price_day(self) -> float | None:
-        """Get the lowest price during day hours (6-18)."""
-        if not self.coordinator.data:
-            return None
-
-        prices = []
-        # Tag: 6-18 Uhr (6, 7, 8, ..., 17)
-        for hour in range(6, 18):
-            price_key = f"gpe_price_{hour:02d}"
-            if price_key in self.coordinator.data:
-                price = self.coordinator.data[price_key]
-                if price is not None:
-                    prices.append(price)
-
-        return min(prices) if prices else None
-
-    def _get_lowest_price_night(self) -> float | None:
-        """Get the lowest price during night hours (18-6)."""
-        if not self.coordinator.data:
-            return None
-
-        prices = []
-        # Nacht: 18-24 Uhr und 0-6 Uhr
-        # Abend: 18, 19, 20, 21, 22, 23
-        for hour in range(18, 24):
-            price_key = f"gpe_price_{hour:02d}"
-            if price_key in self.coordinator.data:
-                price = self.coordinator.data[price_key]
-                if price is not None:
-                    prices.append(price)
-
-        # Frühe Morgenstunden: 0, 1, 2, 3, 4, 5
-        for hour in range(6):
-            price_key = f"gpe_price_{hour:02d}"
-            if price_key in self.coordinator.data:
-                price = self.coordinator.data[price_key]
-                if price is not None:
-                    prices.append(price)
-
-        return min(prices) if prices else None
-
-    def _get_current_price(self) -> float | None:
-        """Get the price for the current hour."""
-        if not self.coordinator.data:
-            return None
-
-        current_hour = dt_util.now().hour
-        price_key = f"gpe_price_{current_hour:02d}"
-        return self.coordinator.data.get(price_key)
-
-    def _get_24h_chart_data(self) -> list[dict[str, Any]]:
-        """Get next 24 hours of price data for charting."""
-        if not self.coordinator.data:
-            return []
-
-        chart_data = []
-        current_hour = dt_util.now().hour
-
-        # Get remaining hours of today (from current hour to 23)
-        for hour in range(current_hour, 24):
-            price_key = f"gpe_price_{hour:02d}"
-            price = self.coordinator.data.get(price_key)
-
-            # Create datetime for this hour
-            hour_datetime = dt_util.now().replace(
-                hour=hour, minute=0, second=0, microsecond=0
-            )
-
-            chart_data.append(
-                {
-                    "hour": hour,
-                    "price": price,
-                    "datetime": hour_datetime.isoformat(),
-                    "time_slot": f"{hour:02d}:00-{hour + 1:02d}:00",
-                    "day": "today",
-                }
-            )
-
-        # Get tomorrow's hours to fill up to 24 hours total
-        hours_needed = 24 - len(chart_data)
-        for hour in range(hours_needed):
-            price_key = f"gpe_price_{hour:02d}_tomorrow"
-            price = self.coordinator.data.get(price_key)
-
-            # Create datetime for tomorrow's hour
-            tomorrow_datetime = (dt_util.now() + timedelta(days=1)).replace(
-                hour=hour, minute=0, second=0, microsecond=0
-            )
-
-            chart_data.append(
-                {
-                    "hour": hour,
-                    "price": price,
-                    "datetime": tomorrow_datetime.isoformat(),
-                    "time_slot": f"{hour:02d}:00-{hour + 1:02d}:00",
-                    "day": "tomorrow",
-                }
-            )
-
-        return chart_data
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
@@ -283,7 +231,7 @@ class GreenPlanetEnergySensor(
             }
         if self.entity_description.key == "gpe_highest_price_today":
             # Find the hour with the highest price
-            highest_price = self._get_highest_price_today()
+            highest_price = get_highest_price_today(self.coordinator.data)
             highest_hour = None
             if highest_price is not None and self.coordinator.data:
                 for hour in range(24):
@@ -299,7 +247,7 @@ class GreenPlanetEnergySensor(
             }
         if self.entity_description.key == "gpe_lowest_price_day":
             # Find the hour with the lowest price during day (6-18)
-            lowest_price = self._get_lowest_price_day()
+            lowest_price = get_lowest_price_day(self.coordinator.data)
             lowest_hour = None
             if lowest_price is not None and self.coordinator.data:
                 for hour in range(6, 18):
@@ -316,7 +264,7 @@ class GreenPlanetEnergySensor(
             }
         if self.entity_description.key == "gpe_lowest_price_night":
             # Find the hour with the lowest price during night (18-6)
-            lowest_price = self._get_lowest_price_night()
+            lowest_price = get_lowest_price_night(self.coordinator.data)
             lowest_hour = None
             if lowest_price is not None and self.coordinator.data:
                 # Check evening hours (18-23)
