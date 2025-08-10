@@ -17,6 +17,18 @@ try:
 except ImportError:  # pytest-socket not installed
     HAS_PYTEST_SOCKET = False
 
+# Optional asyncio Windows internals import (must be top-level for lint compliance)
+try:
+    from asyncio import windows_events as _we  # type: ignore[attr-defined]
+except (ImportError, AttributeError):
+    _we = None  # type: ignore[assignment]
+
+# Optional Home Assistant runner import (top-level for lint compliance)
+try:
+    import homeassistant.runner as ha_runner  # type: ignore[import-not-found]
+except Exception:  # noqa: BLE001 - third-party optional import may fail for many reasons in test env
+    ha_runner = None  # type: ignore[assignment]
+
 # Ensure Windows uses the SelectorEventLoopPolicy to avoid Proactor issues in tests
 if sys.platform == "win32":
     # Unconditionally set Selector policy at import time
@@ -38,13 +50,9 @@ if sys.platform == "win32":
     if hasattr(asyncio, "ProactorEventLoop"):
         asyncio.ProactorEventLoop = asyncio.SelectorEventLoop  # type: ignore[assignment]
     # Also patch the windows_events module classes used internally
-    try:
-        from asyncio import windows_events as _we  # type: ignore[attr-defined]
-
+    if _we is not None:
         _we.ProactorEventLoop = asyncio.SelectorEventLoop  # type: ignore[assignment]
         _we.WindowsProactorEventLoopPolicy = asyncio.WindowsSelectorEventLoopPolicy  # type: ignore[assignment]
-    except Exception:
-        pass
     # Ensure default policy reference points to selector
     if hasattr(asyncio, "DefaultEventLoopPolicy"):
         asyncio.DefaultEventLoopPolicy = asyncio.WindowsSelectorEventLoopPolicy  # type: ignore[assignment]
@@ -66,9 +74,7 @@ def pytest_configure(config: pytest.Config) -> None:
         socket_allow_hosts(["127.0.0.1", "::1", "localhost"])
 
     # Override Home Assistant's event loop factory early to force Selector on Windows
-    try:
-        import homeassistant.runner as ha_runner
-
+    if ha_runner is not None:
         def _new_event_loop_selector() -> asyncio.AbstractEventLoop:
             if sys.platform == "win32":
                 asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
@@ -80,9 +86,6 @@ def pytest_configure(config: pytest.Config) -> None:
             return loop
 
         setattr(ha_runner, "new_event_loop", _new_event_loop_selector)
-    except ImportError:
-        # homeassistant not importable; ignore as some test subsets may not need it
-        pass
 
 
 @pytest.hookimpl(tryfirst=True)
