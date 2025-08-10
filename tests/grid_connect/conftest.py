@@ -12,10 +12,7 @@ import pytest
 
 # Optional pytest-socket support
 try:
-    from pytest_socket import (
-        enable_socket,
-        socket_allow_hosts,
-    )
+    from pytest_socket import enable_socket, socket_allow_hosts
     HAS_PYTEST_SOCKET = True
 except ImportError:  # pytest-socket not installed
     HAS_PYTEST_SOCKET = False
