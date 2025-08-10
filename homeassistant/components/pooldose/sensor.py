@@ -171,16 +171,14 @@ async def async_setup_entry(
     available = client.available_sensors()
 
     async_add_entities(
-        [
-            PooldoseSensor(
-                coordinator,
-                description,
-                serial_number,
-                device_properties,
-            )
-            for description in SENSOR_DESCRIPTIONS
-            if description.key in available
-        ]
+        PooldoseSensor(
+            coordinator,
+            description,
+            serial_number,
+            device_properties,
+        )
+        for description in SENSOR_DESCRIPTIONS
+        if description.key in available
     )
 
 
