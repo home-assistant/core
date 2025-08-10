@@ -1575,6 +1575,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
                     self.unique_id,
                 )
                 self._attr_device_class = None
+                self._attr_suggested_unit_of_measurement = None
                 return
 
             uoms = DEVICE_CLASS_UNITS[self.device_class]
@@ -1585,6 +1586,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             # Unknown unit of measurement, device class should not be used.
             if uom is None:
                 self._attr_device_class = None
+                self._attr_suggested_unit_of_measurement = None
                 return
 
             # Found unit of measurement, use the standardized Unit
