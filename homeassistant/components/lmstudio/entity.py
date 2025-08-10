@@ -158,7 +158,7 @@ class LMStudioBaseLLMEntity(Entity):
         request_params = {
             "model": model,
             "messages": messages,
-            "stream": options.get("stream", False),  # Allow streaming if requested
+            "stream": options.get(CONF_STREAM, False),  # Allow streaming if requested
         }
 
         # Add optional parameters
