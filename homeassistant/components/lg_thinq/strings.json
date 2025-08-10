@@ -178,7 +178,7 @@
               "no_battery_error": "Robot cleaner's battery is low",
               "no_dust_bin_error": "Dust bin is not installed",
               "no_filter_error": "[%key:component::lg_thinq::entity::event::error::state_attributes::event_type::state::filter_clogging_error%]",
-              "out_of_balance_error": "Out of balance load",
+              "out_of_balance_error": "Out-of-balance load",
               "overfill_error": "Overfill error",
               "part_malfunction_error": "AIE error",
               "power_code_connection_error": "Power cord connection error",
