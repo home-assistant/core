@@ -1,21 +1,19 @@
-"""Config flow for the Cync by GE integration."""
+"""Config flow for the Cync integration."""
 
 from __future__ import annotations
 
 import logging
 from typing import Any
 
-from pycync import Auth, User
+from pycync import Auth
 from pycync.exceptions import AuthFailedError, CyncError, TwoFactorRequiredError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
-    CONF_ACCESS_TOKEN,
     CONF_AUTHORIZE_STRING,
     CONF_EXPIRES_AT,
     CONF_REFRESH_TOKEN,
@@ -36,32 +34,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 STEP_TWO_FACTOR_SCHEMA = vol.Schema({vol.Required(CONF_TWO_FACTOR_CODE): str})
 
 
-async def attempt_login(cync_auth: Auth) -> User:
-    """Attempt to log in to Cync using the credentials configured in the Auth parameter."""
-
-    try:
-        return await cync_auth.login()
-    except AuthFailedError:
-        raise InvalidAuth from AuthFailedError
-    except TwoFactorRequiredError:
-        raise TwoFactorRequiredError from None
-    except CyncError:
-        raise CannotConnect from CyncError
-
-
-async def attempt_login_with_two_factor(cync_auth: Auth, two_factor_code) -> User:
-    """Attempt to log in to Cync using the cync_auth credentials, along with a two factor code."""
-
-    try:
-        return await cync_auth.login(two_factor_code)
-    except AuthFailedError:
-        raise InvalidAuth from AuthFailedError
-    except CyncError:
-        raise CannotConnect from CyncError
-
-
 class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Cync by GE."""
+    """Handle a config flow for Cync."""
 
     VERSION = 1
 
@@ -84,19 +58,19 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
                 username=user_input[CONF_EMAIL],
                 password=user_input[CONF_PASSWORD],
             )
-            await attempt_login(self.cync_auth)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
+            await self.cync_auth.login()
+        except AuthFailedError:
             errors["base"] = "invalid_auth"
         except TwoFactorRequiredError:
             return await self.async_step_two_factor()
+        except CyncError:
+            errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
             cync_user = self.cync_auth.user
-            config_unique_id = f"{DOMAIN}-{cync_user.user_id}"
+            config_unique_id = str(cync_user.user_id)
             await self.async_set_unique_id(config_unique_id)
             self._abort_if_unique_id_configured()
 
@@ -124,39 +98,29 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="two_factor", data_schema=STEP_TWO_FACTOR_SCHEMA, errors=errors
             )
         try:
-            await attempt_login_with_two_factor(
-                self.cync_auth, user_input[CONF_TWO_FACTOR_CODE]
-            )
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
+            await self.cync_auth.login(user_input[CONF_TWO_FACTOR_CODE])
+        except AuthFailedError:
             errors["base"] = "invalid_auth"
+        except CyncError:
+            errors["base"] = "cannot_connect"
         except Exception:
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            user = self.cync_auth.user
-            config_unique_id = f"{DOMAIN}-{user.user_id}"
+            cync_user = self.cync_auth.user
+            config_unique_id = str(cync_user.user_id)
             await self.async_set_unique_id(config_unique_id)
             self._abort_if_unique_id_configured()
 
             config = {
-                CONF_USER_ID: user.user_id,
-                CONF_AUTHORIZE_STRING: user.authorize,
-                CONF_EXPIRES_AT: user.expires_at,
-                CONF_ACCESS_TOKEN: user.access_token,
-                CONF_REFRESH_TOKEN: user.refresh_token,
+                CONF_USER_ID: cync_user.user_id,
+                CONF_AUTHORIZE_STRING: cync_user.authorize,
+                CONF_EXPIRES_AT: cync_user.expires_at,
+                CONF_ACCESS_TOKEN: cync_user.access_token,
+                CONF_REFRESH_TOKEN: cync_user.refresh_token,
             }
             return self.async_create_entry(title=config_unique_id, data=config)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""

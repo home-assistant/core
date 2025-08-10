@@ -1,12 +1,11 @@
-"""Test the Cync by GE config flow."""
+"""Test the Cync config flow."""
 
 from unittest.mock import AsyncMock, MagicMock
 
 from pycync.exceptions import AuthFailedError, CyncError, TwoFactorRequiredError
 
 from homeassistant import config_entries
-from homeassistant.components.cync_by_ge.const import (
-    CONF_ACCESS_TOKEN,
+from homeassistant.components.cync.const import (
     CONF_AUTHORIZE_STRING,
     CONF_EXPIRES_AT,
     CONF_REFRESH_TOKEN,
@@ -14,7 +13,7 @@ from homeassistant.components.cync_by_ge.const import (
     CONF_USER_ID,
     DOMAIN,
 )
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -37,7 +36,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "cync_by_ge-123456789"
+    assert result["title"] == "123456789"
     assert result["data"] == {
         CONF_USER_ID: 123456789,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
@@ -79,7 +78,7 @@ async def test_form_two_factor_success(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "cync_by_ge-123456789"
+    assert result["title"] == "123456789"
     assert result["data"] == {
         CONF_USER_ID: 123456789,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
@@ -145,7 +144,7 @@ async def test_form_two_factor_bad_code(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "cync_by_ge-123456789"
+    assert result["title"] == "123456789"
     assert result["data"] == {
         CONF_USER_ID: 123456789,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
@@ -211,7 +210,7 @@ async def test_form_two_factor_cant_connect(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "cync_by_ge-123456789"
+    assert result["title"] == "123456789"
     assert result["data"] == {
         CONF_USER_ID: 123456789,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
@@ -277,7 +276,7 @@ async def test_form_two_factor_unknown_error(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "cync_by_ge-123456789"
+    assert result["title"] == "123456789"
     assert result["data"] == {
         CONF_USER_ID: 123456789,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
@@ -322,7 +321,7 @@ async def test_form_invalid_auth(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "cync_by_ge-123456789"
+    assert result["title"] == "123456789"
     assert result["data"] == {
         CONF_USER_ID: 123456789,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
@@ -368,7 +367,7 @@ async def test_form_cannot_connect(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "cync_by_ge-123456789"
+    assert result["title"] == "123456789"
     assert result["data"] == {
         CONF_USER_ID: 123456789,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
@@ -414,7 +413,7 @@ async def test_form_unknown_error(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "cync_by_ge-123456789"
+    assert result["title"] == "123456789"
     assert result["data"] == {
         CONF_USER_ID: 123456789,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
