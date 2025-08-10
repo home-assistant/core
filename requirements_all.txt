@@ -1130,7 +1130,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.4.1
 
 # homeassistant.components.bluetooth
-habluetooth==4.0.2
+habluetooth==5.0.1
 
 # homeassistant.components.cloud
 hass-nabucasa==0.111.2
@@ -1602,7 +1602,7 @@ open-meteo==0.3.2
 # homeassistant.components.lmstudio
 # homeassistant.components.open_router
 # homeassistant.components.openai_conversation
-openai==1.99.3
+openai==1.99.5
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
