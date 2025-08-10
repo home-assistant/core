@@ -20,9 +20,6 @@
       'native': dict({
         'encrypted_content': 'AAABBB',
         'id': 'rs_A',
-        'summary': list([
-        ]),
-        'type': 'reasoning',
       }),
       'role': 'assistant',
       'thinking_content': 'Thinking more',
