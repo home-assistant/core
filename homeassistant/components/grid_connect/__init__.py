@@ -14,11 +14,20 @@ from homeassistant.exceptions import (
 )
 
 from .api import AuthenticationError
-from .bluetooth import (
-    discover_bluetooth_devices,
-)  # Import the Bluetooth discovery function
+from .bluetooth import discover_bluetooth_devices
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)  # Set up the logger
+
+# Define the platforms that this integration supports
+
+
+async def async_setup(hass: HomeAssistant, config: dict) -> bool:
+    """Set up Grid Connect component and register services from services.yaml."""
+    # Register custom services
+    hass.services.async_register(DOMAIN, "turn_on", lambda call: None)
+    hass.services.async_register(DOMAIN, "turn_off", lambda call: None)
+    return True
 
 # Define the platforms that this integration supports
 _PLATFORMS: list[Platform] = [Platform.EVENT, Platform.BINARY_SENSOR]

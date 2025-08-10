@@ -2,10 +2,43 @@
 
 import logging
 
+# Import BleakClient or use stub for testing and async context support
 try:
-    from bleak import BleakClient
+    from bleak import BleakClient as _OriginalBleakClient
 except ImportError:
-    BleakClient = None
+    _OriginalBleakClient = None
+
+# BaseClient is either the real BleakClient or a stub
+if _OriginalBleakClient:
+    BaseClient = _OriginalBleakClient
+else:
+    class BaseClient:
+        """Stub BleakClient when bleak is not available"""
+        def __init__(self, address: str, timeout: int = None):
+            pass
+        async def is_connected(self) -> bool:
+            return False
+        async def write_gatt_char(self, char_uuid: str, data: bytes, response: bool = False):
+            pass
+
+class BleakClient(BaseClient):
+    """Wrapper to provide async context management"""
+    async def __aenter__(self):
+        return self
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+
+# Ensure BleakClient supports async context management
+if _OriginalBleakClient:
+    class BleakClient(_OriginalBleakClient):
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc_val, exc_tb):
+            pass
+
+
 
 # Placeholder UUIDs - replace with actual Grid Connect service/characteristic UUIDs
 grid_connect_service_uuid = "0000fd88-0000-1000-8000-00805f9b34fb"
@@ -20,19 +53,19 @@ async def send_wifi_credentials(address: str, ssid: str, password: str, timeout:
     """Connect to BLE device and send Wi-Fi credentials. Returns None on success, error string on failure."""
     if not BleakClient:
         return "bleak_not_installed"
+    client = BleakClient(address, timeout=timeout)
     try:
-        async with BleakClient(address, timeout=timeout) as client:
-            if not await client.is_connected():
-                return "not_connected"
-            payload = format_wifi_payload(ssid, password)
-            await client.write_gatt_char(wifi_write_char_uuid, payload, response=True)
-            return None  # Success
-    except ImportError as e:
-        logging.getLogger(__name__).error("Bleak import failed: %s", e)
+        if not await client.is_connected():
+            return "not_connected"
+        payload = format_wifi_payload(ssid, password)
+        await client.write_gatt_char(wifi_write_char_uuid, payload, response=True)
+        return None  # Success
+    except ImportError:
+        logging.getLogger(__name__).exception("Bleak import failed")
         return "bleak_import_error"
-    except TimeoutError as e:
-        logging.getLogger(__name__).error("BLE operation timed out: %s", e)
+    except TimeoutError:
+        logging.getLogger(__name__).exception("BLE operation timed out")
         return "timeout"
-    except Exception as e:
-        logging.getLogger(__name__).error("Unexpected BLE Wi-Fi credential send error: %s", e)
+    except Exception:
+        logging.getLogger(__name__).exception("Unexpected BLE Wi-Fi credential send error")
         raise

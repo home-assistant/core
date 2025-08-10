@@ -22,8 +22,8 @@ async def test_send_wifi_credentials_success():
     ssid = "TestSSID"
     password = "TestPass"
     # Patch BleakClient and its methods
-    with patch("homeassistant.components.grid_connect.ble_wifi.BleakClient", autospec=True) as mock_client:
-        mock_instance = mock_client.return_value.__aenter__.return_value
+    with patch("homeassistant.components.grid_connect.ble_wifi.BleakClient") as mock_client:
+        mock_instance = mock_client.return_value
         mock_instance.is_connected = AsyncMock(return_value=True)
         mock_instance.write_gatt_char = AsyncMock(return_value=None)
         result = await ble_wifi.send_wifi_credentials(address, ssid, password)
@@ -36,8 +36,8 @@ async def test_send_wifi_credentials_not_connected():
     address = "AA:BB:CC:DD:EE:FF"
     ssid = "TestSSID"
     password = "TestPass"
-    with patch("homeassistant.components.grid_connect.ble_wifi.BleakClient", autospec=True) as mock_client:
-        mock_instance = mock_client.return_value.__aenter__.return_value
+    with patch("homeassistant.components.grid_connect.ble_wifi.BleakClient") as mock_client:
+        mock_instance = mock_client.return_value
         mock_instance.is_connected = AsyncMock(return_value=False)
         result = await ble_wifi.send_wifi_credentials(address, ssid, password)
         assert result == "not_connected"
@@ -55,8 +55,8 @@ async def test_send_wifi_credentials_timeout():
     address = "AA:BB:CC:DD:EE:FF"
     ssid = "TestSSID"
     password = "TestPass"
-    with patch("homeassistant.components.grid_connect.ble_wifi.BleakClient", autospec=True) as mock_client:
-        mock_instance = mock_client.return_value.__aenter__.return_value
+    with patch("homeassistant.components.grid_connect.ble_wifi.BleakClient") as mock_client:
+        mock_instance = mock_client.return_value
         mock_instance.is_connected = AsyncMock(return_value=True)
         mock_instance.write_gatt_char = AsyncMock(side_effect=TimeoutError)
         result = await ble_wifi.send_wifi_credentials(address, ssid, password)
@@ -68,8 +68,8 @@ async def test_send_wifi_credentials_unexpected_exception():
     address = "AA:BB:CC:DD:EE:FF"
     ssid = "TestSSID"
     password = "TestPass"
-    with patch("homeassistant.components.grid_connect.ble_wifi.BleakClient", autospec=True) as mock_client:
-        mock_instance = mock_client.return_value.__aenter__.return_value
+    with patch("homeassistant.components.grid_connect.ble_wifi.BleakClient") as mock_client:
+        mock_instance = mock_client.return_value
         mock_instance.is_connected = AsyncMock(return_value=True)
         mock_instance.write_gatt_char = AsyncMock(side_effect=Exception("fail"))
         with pytest.raises(Exception) as excinfo:

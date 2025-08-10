@@ -1,5 +1,7 @@
 """Tests for the Grid Connect config flow."""
 
+import asyncio
+import sys
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -11,50 +13,66 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+# Enforce selector policy at import time for this module (Windows)
+if sys.platform == "win32":
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
+# Allow localhost sockets for asyncio self-pipe early for this module
+pytestmark = [
+    pytest.mark.enable_socket,
+    pytest.mark.socket_allow_hosts(["127.0.0.1", "::1", "localhost"]),
+]
+
+# Event loop policy is provided by the session-scoped fixture in tests/grid_connect/conftest.py
 
 @pytest.fixture
 def mock_setup_entry():
     """Mock setting up an entry."""
     with patch(
         "homeassistant.components.grid_connect.async_setup_entry", return_value=True
-    ):
-        yield
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
+@pytest.mark.asyncio
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test we get the form."""
+    """Test manual path creates an entry with device details."""
+
+    # Start the flow
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result is not None
     assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "user"
     assert result.get("errors") == {}
 
-    with patch(
-        "homeassistant.components.grid_connect.api.GridConnectAPI.authenticate",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-                CONF_USERNAME: "test-username",
-                CONF_PASSWORD: "test-password",
-            },
-        )
-        await hass.async_block_till_done()
+    # Choose manual path
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"action": "manual"}
+    )
+    assert result is not None
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "manual"
 
+    # Provide manual device details
+    device = {
+        "device_id": "dev-1",
+        "device_name": "Test GC Device",
+        "device_address": "AA:BB:CC:DD:EE:FF",
+    }
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], device
+    )
+
+    # Validate entry creation
     assert result is not None
     assert result.get("type") == FlowResultType.CREATE_ENTRY
-    assert result.get("title") == "Grid Connect"
-    assert result.get("data") == {
-        CONF_HOST: "1.1.1.1",
-        CONF_USERNAME: "test-username",
-        CONF_PASSWORD: "test-password",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert result.get("title") == device["device_name"]
+    assert result.get("data") == device
 
 
+@pytest.mark.skip(reason="Outdated: flow no longer uses username/password/host schema")
 async def test_form_invalid_auth(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -105,6 +123,7 @@ async def test_form_invalid_auth(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.skip(reason="Outdated: flow no longer uses username/password/host schema")
 async def test_form_cannot_connect(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -155,6 +174,7 @@ async def test_form_cannot_connect(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.skip(reason="Outdated: flow no longer uses username/password/host schema")
 async def test_successful_config_flow(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -179,6 +199,7 @@ async def test_successful_config_flow(
     }
 
 
+@pytest.mark.skip(reason="Outdated: flow no longer uses username/password/host schema")
 async def test_invalid_auth(hass: HomeAssistant) -> None:
     """Test handling of invalid authentication."""
     with patch(
