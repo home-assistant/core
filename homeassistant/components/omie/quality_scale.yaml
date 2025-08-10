@@ -1,0 +1,34 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: No custom service actions are defined.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: No custom service actions are defined.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: No explicit event subscriptions in entity lifecycle.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup:
+    status: exempt
+    comment: |
+      OMIE API is public data service that doesn't require authentication.
+      Coordinators handle any connection issues gracefully during runtime.
+  unique-config-entry:
+    status: exempt
+    comment: |
+      Single instance integration that uses _async_current_entries() check.
+      Will be updated when adding multiple country support.

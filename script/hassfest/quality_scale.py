@@ -724,7 +724,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "ohmconnect",
     "ollama",
     "ombi",
-    "omie",
     "omnilogic",
     "oncue",
     "ondilo_ico",
