@@ -24,6 +24,7 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
 from .entity import TuyaEntity
 from .models import EnumTypeData, IntegerTypeData
+from .util import get_dpcode
 
 TUYA_SUPPORT_TYPE = {
     # Dehumidifier
@@ -45,8 +46,6 @@ TUYA_SUPPORT_TYPE = {
     "ks",
 }
 
-_SWITCH_DP_CODES = (DPCode.SWITCH_FAN, DPCode.FAN_SWITCH, DPCode.SWITCH)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -62,9 +61,7 @@ async def async_setup_entry(
         entities: list[TuyaFanEntity] = []
         for device_id in device_ids:
             device = hass_data.manager.device_map[device_id]
-            if device.category in TUYA_SUPPORT_TYPE and any(
-                code in device.status for code in _SWITCH_DP_CODES
-            ):
+            if device and device.category in TUYA_SUPPORT_TYPE:
                 entities.append(TuyaFanEntity(device, hass_data.manager))
         async_add_entities(entities)
 
@@ -94,7 +91,9 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         """Init Tuya Fan Device."""
         super().__init__(device, device_manager)
 
-        self._switch = self.find_dpcode(_SWITCH_DP_CODES, prefer_function=True)
+        self._switch = get_dpcode(
+            self.device, (DPCode.SWITCH_FAN, DPCode.FAN_SWITCH, DPCode.SWITCH)
+        )
 
         self._attr_preset_modes = []
         if enum_type := self.find_dpcode(
@@ -122,8 +121,8 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
             self._speeds = enum_type
 
-        if dpcode := self.find_dpcode(
-            (DPCode.SWITCH_HORIZONTAL, DPCode.SWITCH_VERTICAL), prefer_function=True
+        if dpcode := get_dpcode(
+            self.device, (DPCode.SWITCH_HORIZONTAL, DPCode.SWITCH_VERTICAL)
         ):
             self._oscillate = dpcode
             self._attr_supported_features |= FanEntityFeature.OSCILLATE
@@ -269,7 +268,9 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
             return int(self._speed.remap_value_to(value, 1, 100))
 
         if self._speeds is not None:
-            if (value := self.device.status.get(self._speeds.dpcode)) is None:
+            if (
+                value := self.device.status.get(self._speeds.dpcode)
+            ) is None or value not in self._speeds.range:
                 return None
             return ordered_list_item_to_percentage(self._speeds.range, value)
 

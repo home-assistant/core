@@ -46,6 +46,7 @@ SENSORS: tuple[AirOSSensorEntityDescription, ...] = (
         translation_key="host_cpuload",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
         value_fn=lambda data: data.host.cpuload,
         entity_registry_enabled_default=False,
     ),
@@ -83,6 +84,8 @@ SENSORS: tuple[AirOSSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         value_fn=lambda data: data.wireless.throughput.tx,
     ),
     AirOSSensorEntityDescription(
@@ -91,6 +94,8 @@ SENSORS: tuple[AirOSSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         value_fn=lambda data: data.wireless.throughput.rx,
     ),
     AirOSSensorEntityDescription(
@@ -99,6 +104,8 @@ SENSORS: tuple[AirOSSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         value_fn=lambda data: data.wireless.polling.dl_capacity,
     ),
     AirOSSensorEntityDescription(
@@ -107,6 +114,8 @@ SENSORS: tuple[AirOSSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfDataRate.KILOBITS_PER_SECOND,
         device_class=SensorDeviceClass.DATA_RATE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        suggested_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
         value_fn=lambda data: data.wireless.polling.ul_capacity,
     ),
 )

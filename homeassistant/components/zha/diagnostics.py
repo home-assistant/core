@@ -8,6 +8,7 @@ from typing import Any
 
 from zha.application.const import ATTR_IEEE
 from zha.application.gateway import Gateway
+from zigpy.application import ControllerApplication
 from zigpy.config import CONF_NWK_EXTENDED_PAN_ID
 from zigpy.types import Channels
 
@@ -63,6 +64,19 @@ def shallow_asdict(obj: Any) -> dict:
     return obj
 
 
+def get_application_state_diagnostics(app: ControllerApplication) -> dict:
+    """Dump the application state as a dictionary."""
+    data = shallow_asdict(app.state)
+
+    # EUI64 objects in zigpy are not subclasses of any JSON-serializable key type and
+    # must be converted to strings.
+    data["network_info"]["nwk_addresses"] = {
+        str(k): v for k, v in data["network_info"]["nwk_addresses"].items()
+    }
+
+    return data
+
+
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
@@ -79,7 +93,7 @@ async def async_get_config_entry_diagnostics(
         {
             "config": zha_data.yaml_config,
             "config_entry": config_entry.as_dict(),
-            "application_state": shallow_asdict(app.state),
+            "application_state": get_application_state_diagnostics(app),
             "energy_scan": {
                 channel: 100 * energy / 255 for channel, energy in energy_scan.items()
             },
