@@ -26,6 +26,7 @@
     }),
     'solarlog_data': dict({
       'alternator_loss': 2.0,
+      'battery_data': None,
       'capacity': 85.5,
       'consumption_ac': 54.87,
       'consumption_day': 5.31,
