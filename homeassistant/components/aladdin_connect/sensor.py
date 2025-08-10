@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 from genie_partner_sdk.client import AladdinConnectClient
 
@@ -13,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -22,6 +22,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import api
 from .const import DOMAIN
 from .model import GarageDoor
+
+if TYPE_CHECKING:
+    from . import AladdinConnectConfigEntry
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -45,7 +48,9 @@ SENSOR_TYPES: tuple[AccSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AladdinConnectConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Aladdin Connect sensor devices."""
 
