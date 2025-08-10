@@ -74,7 +74,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     )
 
     # Test connection by listing models
-    await hass.async_add_executor_job(client.with_options(timeout=10.0).models.list)
+    await client.with_options(timeout=10.0).models.list()
 
 
 class LMStudioConfigFlow(ConfigFlow, domain=DOMAIN):
