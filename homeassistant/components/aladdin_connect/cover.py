@@ -1,12 +1,13 @@
 """Cover Entity for Genie Garage Door."""
 
+from __future__ import annotations
+
 from datetime import timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from genie_partner_sdk.client import AladdinConnectClient
 
 from homeassistant.components.cover import CoverDeviceClass, CoverEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.device_registry as dr
@@ -17,12 +18,15 @@ from . import api
 from .const import DOMAIN, SUPPORTED_FEATURES
 from .model import GarageDoor
 
+if TYPE_CHECKING:
+    from . import AladdinConnectConfigEntry
+
 SCAN_INTERVAL = timedelta(seconds=15)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AladdinConnectConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Aladdin Connect platform."""
@@ -45,7 +49,9 @@ async def async_setup_entry(
 
 
 def remove_stale_devices(
-    hass: HomeAssistant, config_entry: ConfigEntry, devices: list[GarageDoor]
+    hass: HomeAssistant,
+    config_entry: AladdinConnectConfigEntry,
+    devices: list[GarageDoor],
 ) -> None:
     """Remove stale devices from device registry."""
     device_registry = dr.async_get(hass)
@@ -76,7 +82,10 @@ class AladdinDevice(CoverEntity):
     _attr_name = None
 
     def __init__(
-        self, acc: AladdinConnectClient, device: GarageDoor, entry: ConfigEntry
+        self,
+        acc: AladdinConnectClient,
+        device: GarageDoor,
+        entry: AladdinConnectConfigEntry,
     ) -> None:
         """Initialize the Aladdin Connect cover."""
         self._acc = acc
@@ -103,7 +112,9 @@ class AladdinDevice(CoverEntity):
         """Update status of cover."""
         await self._acc.update_door(self._device_id, self._number)
         # Cache the door status to avoid redundant API calls
-        self._cached_door_status = self._acc.get_door_status(self._device_id, self._number)
+        self._cached_door_status = self._acc.get_door_status(
+            self._device_id, self._number
+        )
 
     def _get_door_status(self) -> str | None:
         """Get cached door status."""

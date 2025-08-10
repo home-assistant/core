@@ -4,9 +4,7 @@ rules:
     status: exempt
     comment: Integration does not register any service actions.
   appropriate-polling: done
-  brands:
-    status: todo
-    comment: No branding assets provided yet.
+  brands: done
   common-modules: done
   config-flow: done
   config-flow-test-coverage: todo
@@ -99,4 +97,4 @@ rules:
   # Platinum
   async-dependency: todo
   inject-websession: todo
-  strict-typing: todo
+  strict-typing: done

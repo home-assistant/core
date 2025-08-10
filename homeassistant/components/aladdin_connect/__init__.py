@@ -10,10 +10,14 @@ from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 from . import api
 from .const import CONFIG_FLOW_MINOR_VERSION, CONFIG_FLOW_VERSION
 
+type AladdinConnectConfigEntry = ConfigEntry[api.AsyncConfigEntryAuth]
+
 PLATFORMS: list[Platform] = [Platform.COVER, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: AladdinConnectConfigEntry
+) -> bool:
     """Set up Aladdin Connect Genie from a config entry."""
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
@@ -33,12 +37,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: AladdinConnectConfigEntry
+) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: AladdinConnectConfigEntry
+) -> bool:
     """Migrate old config."""
     if config_entry.version < CONFIG_FLOW_VERSION:
         config_entry.async_start_reauth(hass)
