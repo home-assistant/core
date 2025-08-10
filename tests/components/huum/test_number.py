@@ -39,7 +39,7 @@ async def test_set_humidity(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setting the humidity."""
-    await setup_with_selected_platforms(hass, mock_config_entry, [NUMBER_HUMIDITY])
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.NUMBER])
 
     mock_huum.status = SaunaStatus.ONLINE_HEATING
     await hass.services.async_call(
@@ -61,7 +61,7 @@ async def test_dont_set_humidity_when_sauna_not_heating(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setting the humidity."""
-    await setup_with_selected_platforms(hass, mock_config_entry, [NUMBER_HUMIDITY])
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.NUMBER])
 
     mock_huum.status = SaunaStatus.ONLINE_NOT_HEATING
     await hass.services.async_call(
