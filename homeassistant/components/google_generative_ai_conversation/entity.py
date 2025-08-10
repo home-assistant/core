@@ -328,15 +328,15 @@ async def _transform_stream(
     result: AsyncIterator[GenerateContentResponse],
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     new_message = True
-    content_details: ContentDetails | None = None
+    part_details: list[PartDetails] = []
     try:
         async for response in result:
             LOGGER.debug("Received response chunk: %s", response)
 
             if new_message:
-                if content_details is not None:
-                    yield {"native": content_details}
-                    content_details = None
+                if part_details:
+                    yield {"native": ContentDetails(part_details=part_details)}
+                    part_details.clear()
                 yield {"role": "assistant"}
                 new_message = False
                 content_index = 0
@@ -382,9 +382,7 @@ async def _transform_stream(
                     if part.thought:
                         chunk["thinking_content"] = part.text
                         if part.thought_signature:
-                            if content_details is None:
-                                content_details = ContentDetails(part_details=[])
-                            content_details.part_details.append(
+                            part_details.append(
                                 PartDetails(
                                     part_type="thought",
                                     index=thinking_content_index,
@@ -398,9 +396,7 @@ async def _transform_stream(
                     else:
                         chunk["content"] = part.text
                         if part.thought_signature:
-                            if content_details is None:
-                                content_details = ContentDetails(part_details=[])
-                            content_details.part_details.append(
+                            part_details.append(
                                 PartDetails(
                                     part_type="text",
                                     index=content_index,
@@ -420,9 +416,7 @@ async def _transform_stream(
                         llm.ToolInput(tool_name=tool_name, tool_args=tool_args)
                     ]
                     if part.thought_signature:
-                        if content_details is None:
-                            content_details = ContentDetails(part_details=[])
-                        content_details.part_details.append(
+                        part_details.append(
                             PartDetails(
                                 part_type="function_call",
                                 index=tool_call_index,
@@ -434,8 +428,8 @@ async def _transform_stream(
 
                 yield chunk
 
-        if content_details is not None:
-            yield {"native": content_details}
+        if part_details:
+            yield {"native": ContentDetails(part_details=part_details)}
 
     except (
         APIError,
