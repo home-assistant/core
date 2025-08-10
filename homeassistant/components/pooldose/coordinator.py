@@ -20,6 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 class PooldoseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for PoolDose integration."""
 
+    self.device_info: dict[str, str | None]
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -35,7 +37,6 @@ class PooldoseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=config_entry,
         )
         self.client = client
-        self.device_info: dict[str, str | None] = {}
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
