@@ -39,7 +39,7 @@ class SolarLogCoordinatorSensorEntityDescription(SensorEntityDescription):
 class SolarLogBatterySensorEntityDescription(SensorEntityDescription):
     """Describes Solarlog battery sensor entity."""
 
-    value_fn: Callable[[BatteryData | None], float | int | None]
+    value_fn: Callable[[BatteryData], float | int | None]
 
 
 @dataclass(frozen=True, kw_only=True)
