@@ -45,13 +45,6 @@ class HuumSteamer(HuumBaseEntity, NumberEntity):
         self._attr_unique_id = coordinator.config_entry.entry_id
 
     @property
-    def icon(self) -> str:
-        """Return nice icon for the steamer."""
-        if self.native_value > 0:
-            return "mdi:water"
-        return "mdi:water-off"
-
-    @property
     def native_value(self) -> float:
         """Return the current value."""
         return self.coordinator.data.humidity
