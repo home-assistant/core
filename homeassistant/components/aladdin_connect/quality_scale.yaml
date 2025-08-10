@@ -14,9 +14,7 @@ rules:
   docs-actions:
     status: exempt
     comment: Integration does not register any service actions.
-  docs-high-level-description:
-    status: todo
-    comment: Documentation needs to be created.
+  docs-high-level-description: done
   docs-installation-instructions:
     status: todo
     comment: Documentation needs to be created.
@@ -33,7 +31,7 @@ rules:
     status: todo
     comment: Config flow does not currently test connection during setup.
   test-before-setup: todo
-  unique-config-entry: todo
+  unique-config-entry: done
 
   # Silver
   action-exceptions:
