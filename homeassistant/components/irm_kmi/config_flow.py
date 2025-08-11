@@ -5,7 +5,12 @@ import logging
 from irm_kmi_api import IrmKmiApiClient, IrmKmiApiError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, CONF_LOCATION
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -86,7 +91,7 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class IrmKmiOptionFlow(OptionsFlow):
+class IrmKmiOptionFlow(OptionsFlowWithReload):
     """Option flow for the IRM KMI integration, help change the options once the integration was configured."""
 
     async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:
