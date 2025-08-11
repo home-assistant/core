@@ -342,7 +342,12 @@ class ChatLog:
                             name=f"llm_tool_{tool_call.id}",
                         )
                 if self.delta_listener:
-                    self.delta_listener(self, delta)  # type: ignore[arg-type]
+                    if filtered_delta := {
+                        k: v for k, v in delta.items() if k != "native"
+                    }:
+                        # We do not want to send the native content to the listener
+                        # as it is not JSON serializable
+                        self.delta_listener(self, filtered_delta)
                 continue
 
             # Starting a new message
