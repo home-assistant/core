@@ -62,7 +62,7 @@
   "issues": {
     "deprecated_grouping_actions": {
       "title": "Snapcast Actions Deprecated",
-      "description": "Actions 'snapcast.join' and 'snapcast.unjoin' are deprecated and will be removed in 2026.2. Use the 'media_player.join' and 'media_player.unjoin' actions instead.'"
+      "description": "Actions 'snapcast.join' and 'snapcast.unjoin' are deprecated and will be removed in 2026.2. Use the 'media_player.join' and 'media_player.unjoin' actions instead."
     },
     "deprecated_group_entities": {
       "title": "Snapcast Groups Entities Deprecated",
