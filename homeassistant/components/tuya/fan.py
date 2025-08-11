@@ -24,6 +24,7 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
 from .entity import TuyaEntity
 from .models import EnumTypeData, IntegerTypeData
+from .util import get_dpcode
 
 TUYA_SUPPORT_TYPE = {
     # Dehumidifier
@@ -90,8 +91,8 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         """Init Tuya Fan Device."""
         super().__init__(device, device_manager)
 
-        self._switch = self.find_dpcode(
-            (DPCode.SWITCH_FAN, DPCode.FAN_SWITCH, DPCode.SWITCH), prefer_function=True
+        self._switch = get_dpcode(
+            self.device, (DPCode.SWITCH_FAN, DPCode.FAN_SWITCH, DPCode.SWITCH)
         )
 
         self._attr_preset_modes = []
@@ -120,8 +121,8 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
             self._speeds = enum_type
 
-        if dpcode := self.find_dpcode(
-            (DPCode.SWITCH_HORIZONTAL, DPCode.SWITCH_VERTICAL), prefer_function=True
+        if dpcode := get_dpcode(
+            self.device, (DPCode.SWITCH_HORIZONTAL, DPCode.SWITCH_VERTICAL)
         ):
             self._oscillate = dpcode
             self._attr_supported_features |= FanEntityFeature.OSCILLATE
@@ -267,7 +268,9 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
             return int(self._speed.remap_value_to(value, 1, 100))
 
         if self._speeds is not None:
-            if (value := self.device.status.get(self._speeds.dpcode)) is None:
+            if (
+                value := self.device.status.get(self._speeds.dpcode)
+            ) is None or value not in self._speeds.range:
                 return None
             return ordered_list_item_to_percentage(self._speeds.range, value)
 
