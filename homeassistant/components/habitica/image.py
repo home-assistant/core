@@ -6,7 +6,7 @@ from enum import StrEnum
 
 from habiticalib import Avatar, ContentData, extract_avatar
 
-from homeassistant.components.image import ImageEntity, ImageEntityDescription
+from homeassistant.components.image import Image, ImageEntity, ImageEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -97,6 +97,7 @@ class HabiticaPartyImage(HabiticaPartyBase, ImageEntity):
         key=HabiticaImageEntity.QUEST_IMAGE,
         translation_key=HabiticaImageEntity.QUEST_IMAGE,
     )
+    _attr_content_type = "image/png"
 
     def __init__(
         self,
@@ -127,6 +128,18 @@ class HabiticaPartyImage(HabiticaPartyBase, ImageEntity):
         """Return URL of image."""
         return (
             f"{ASSETS_URL}quest_{key}.png"
-            if (key := self.coordinator.data.party.quest.key)
+            if (key := self.coordinator.data.quest.key)
             else None
         )
+
+    async def _async_load_image_from_url(self, url: str) -> Image | None:
+        """Load an image by url.
+
+        AWS sometimes returns 'application/octet-stream' as content-type
+        """
+        if response := await self._fetch_url(url):
+            return Image(
+                content=response.content,
+                content_type=self._attr_content_type,
+            )
+        return None

@@ -48,13 +48,6 @@ class HabiticaData:
     tasks: list[TaskData]
 
 
-@dataclass
-class HabiticaParty:
-    """Habitica Party data."""
-
-    party: GroupData
-
-
 type HabiticaConfigEntry = ConfigEntry[HabiticaDataUpdateCoordinator]
 
 
@@ -199,11 +192,11 @@ class HabiticaDataUpdateCoordinator(HabiticaBaseCoordinator[HabiticaData]):
         return png.getvalue()
 
 
-class HabiticaPartyCoordinator(HabiticaBaseCoordinator[HabiticaParty]):
+class HabiticaPartyCoordinator(HabiticaBaseCoordinator[GroupData]):
     """Habitica Party Coordinator."""
 
     _update_interval = timedelta(minutes=15)
 
-    async def _update_data(self) -> HabiticaParty:
+    async def _update_data(self) -> GroupData:
         """Fetch the latest party data."""
-        return HabiticaParty(party=(await self.habitica.get_group()).data)
+        return (await self.habitica.get_group()).data
