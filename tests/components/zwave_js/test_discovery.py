@@ -28,7 +28,13 @@ from homeassistant.components.zwave_js.discovery_data_template import (
     DynamicCurrentTempClimateDataTemplate,
 )
 from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNKNOWN, EntityCategory
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_UNKNOWN,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -253,6 +259,7 @@ async def test_merten_507801_disabled_enitites(
         assert updated_entry.disabled is False
 
 
+@pytest.mark.parametrize("platforms", [[Platform.BUTTON, Platform.NUMBER]])
 async def test_zooz_zen72(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -324,6 +331,9 @@ async def test_zooz_zen72(
     assert args["value"] is True
 
 
+@pytest.mark.parametrize(
+    "platforms", [[Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]]
+)
 async def test_indicator_test(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
