@@ -212,12 +212,16 @@ class FreeboxRouter:
                     if isinstance(sfp_pwr_rx, (int, float)):
                         self.sensors_connection["sfp_pwr_rx"] = sfp_pwr_rx / 100
                     else:
-                        _LOGGER.warning("Unexpected type for sfp_pwr_rx: %r", sfp_pwr_rx)
+                        _LOGGER.warning(
+                            "Unexpected type for sfp_pwr_rx: %r", sfp_pwr_rx
+                        )
                 if (sfp_pwr_tx := ftth_datas.get("sfp_pwr_tx")) is not None:
                     if isinstance(sfp_pwr_tx, (int, float)):
                         self.sensors_connection["sfp_pwr_tx"] = sfp_pwr_tx / 100
                     else:
-                        _LOGGER.warning("Unexpected type for sfp_pwr_tx: %r", sfp_pwr_tx)
+                        _LOGGER.warning(
+                            "Unexpected type for sfp_pwr_tx: %r", sfp_pwr_tx
+                        )
             except HttpRequestError as err:
                 _LOGGER.debug("Could not fetch FTTH status: %s", err)
                 self.ftth_info = {}
