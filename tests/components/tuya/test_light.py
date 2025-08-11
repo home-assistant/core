@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -39,11 +40,14 @@ async def test_platform_setup_and_discovery(
 
 
 @pytest.mark.parametrize(
-    ("mock_device_code", "turn_on_input", "expected_commands"),
+    "mock_device_code",
+    ["dj_mki13ie507rlry4r"],
+)
+@pytest.mark.parametrize(
+    ("turn_on_input", "expected_commands"),
     [
         (
-            "dj_mki13ie507rlry4r",
-            {"entity_id": "light.garage_light", "white": True},
+            {"white": True},
             [
                 {"code": "switch_led", "value": True},
                 {"code": "work_mode", "value": "white"},
@@ -51,9 +55,7 @@ async def test_platform_setup_and_discovery(
             ],
         ),
         (
-            "dj_mki13ie507rlry4r",
             {
-                "entity_id": "light.garage_light",
                 "brightness": 150,
             },
             [
@@ -62,9 +64,7 @@ async def test_platform_setup_and_discovery(
             ],
         ),
         (
-            "dj_mki13ie507rlry4r",
             {
-                "entity_id": "light.garage_light",
                 "white": True,
                 "brightness": 150,
             },
@@ -75,9 +75,7 @@ async def test_platform_setup_and_discovery(
             ],
         ),
         (
-            "dj_mki13ie507rlry4r",
             {
-                "entity_id": "light.garage_light",
                 "white": 150,
             },
             [
@@ -88,24 +86,27 @@ async def test_platform_setup_and_discovery(
         ),
     ],
 )
-async def test_turn_on(
+async def test_turn_on_white(
     hass: HomeAssistant,
     mock_manager: ManagerCompat,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
-    turn_on_input: dict,
-    expected_commands: list[dict],
+    turn_on_input: dict[str, Any],
+    expected_commands: list[dict[str, Any]],
 ) -> None:
     """Test turn_on service."""
+    entity_id = "light.garage_light"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
-    entity_id = turn_on_input["entity_id"]
     state = hass.states.get(entity_id)
     assert state is not None, f"{entity_id} does not exist"
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        turn_on_input,
+        {
+            "entity_id": entity_id,
+            **turn_on_input,
+        },
     )
     await hass.async_block_till_done()
     mock_manager.send_commands.assert_called_once_with(
