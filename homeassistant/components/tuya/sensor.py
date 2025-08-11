@@ -985,6 +985,13 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="rolling_brush_life",
             state_class=SensorStateClass.MEASUREMENT,
         ),
+        TuyaSensorEntityDescription(
+            key=DPCode.ELECTRICITY_LEFT,
+            translation_key="battery",
+            device_class=SensorDeviceClass.BATTERY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
     ),
     # Smart Water Timer
     "sfkzq": (
@@ -1294,6 +1301,25 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
+    # Tank Level Sensor
+    # Note: Undocumented
+    "ywcgq": (
+        TuyaSensorEntityDescription(
+            key=DPCode.LIQUID_STATE,
+            translation_key="liquid_state",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.LIQUID_DEPTH,
+            translation_key="depth",
+            device_class=SensorDeviceClass.DISTANCE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.LIQUID_LEVEL_PERCENT,
+            translation_key="liquid_level",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
     # Vibration Sensor
     # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
     "zd": BATTERY_SENSORS,
@@ -1308,7 +1334,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.REVERSE_ENERGY_TOTAL,
-            translation_key="total_energy",
+            translation_key="total_production",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
@@ -1549,6 +1575,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
                     self.unique_id,
                 )
                 self._attr_device_class = None
+                self._attr_suggested_unit_of_measurement = None
                 return
 
             uoms = DEVICE_CLASS_UNITS[self.device_class]
@@ -1559,6 +1586,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             # Unknown unit of measurement, device class should not be used.
             if uom is None:
                 self._attr_device_class = None
+                self._attr_suggested_unit_of_measurement = None
                 return
 
             # Found unit of measurement, use the standardized Unit
@@ -1608,10 +1636,11 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             if (
                 self.entity_description.complex_type is None
                 or self.entity_description.subkey is None
+                or (raw_values := self.entity_description.complex_type.from_raw(value))
+                is None
             ):
                 return None
-            values = self.entity_description.complex_type.from_raw(value)
-            return getattr(values, self.entity_description.subkey)
+            return getattr(raw_values, self.entity_description.subkey)
 
         # Valid string or enum value
         return value

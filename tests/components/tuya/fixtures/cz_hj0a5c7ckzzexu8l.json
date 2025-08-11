@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "051724052462ab286504",
   "name": "droger",
   "category": "cz",
   "product_id": "hj0a5c7ckzzexu8l",
