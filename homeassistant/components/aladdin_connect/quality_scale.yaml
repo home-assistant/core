@@ -32,9 +32,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: exempt
-    comment: Integration does not register any service actions.
+  action-exceptions: todo
   config-entry-unloading: done
   docs-configuration-parameters:
     status: todo
@@ -54,12 +52,8 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery:
-    status: exempt
-    comment: Cloud-based service that requires OAuth2 authentication, not discoverable.
-  discovery-update-info:
-    status: exempt
-    comment: Cloud-based service, no local network discovery.
+  discovery: todo
+  discovery-update-info: todo
   docs-data-update:
     status: todo
     comment: Documentation needs to be created.
@@ -82,9 +76,7 @@ rules:
     status: todo
     comment: Documentation needs to be created.
   dynamic-devices: todo
-  entity-category:
-    status: done
-    comment: Battery sensor is disabled by default and uses diagnostic category implicitly.
+  entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
@@ -92,9 +84,11 @@ rules:
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues: todo
-  stale-devices: done
+  stale-devices:
+    status: todo
+    comment: Stale devices can be done dynamically
 
   # Platinum
   async-dependency: todo
-  inject-websession: todo
+  inject-websession: done
   strict-typing: done
