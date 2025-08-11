@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 
-from powerfox import Powerfox, PowerfoxConnectionError
+from powerfox import DeviceType, Powerfox, PowerfoxConnectionError
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
@@ -26,6 +26,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> 
 
     try:
         devices = await client.all_devices()
+        # Filter out devices with type GAS_METER, as a workaround for missing support
+        devices = [device for device in devices if device.type != DeviceType.GAS_METER]
     except PowerfoxConnectionError as err:
         await client.close()
         raise ConfigEntryNotReady from err
