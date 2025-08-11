@@ -75,10 +75,10 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors[CONF_LOCATION] = "out_of_benelux"
 
             if not errors:
-                await self.async_set_unique_id(f"{lat}-{lon}")
-                self._abort_if_unique_id_configured()
-
                 name: str = api_data.get("cityName", "")
+                country: str = api_data.get("country", "")
+                await self.async_set_unique_id(f"{name.lower()} {country.lower()}")
+                self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(title=name, data=user_input)
 
