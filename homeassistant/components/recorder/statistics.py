@@ -42,6 +42,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.unit_conversion import (
+    ApparentPowerConverter,
     AreaConverter,
     BaseUnitConverter,
     BloodGlucoseConcentrationConverter,
@@ -201,6 +202,7 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     **dict.fromkeys(
         MassVolumeConcentrationConverter.VALID_UNITS, MassVolumeConcentrationConverter
     ),
+    **dict.fromkeys(ApparentPowerConverter.VALID_UNITS, ApparentPowerConverter),
     **dict.fromkeys(ConductivityConverter.VALID_UNITS, ConductivityConverter),
     **dict.fromkeys(DataRateConverter.VALID_UNITS, DataRateConverter),
     **dict.fromkeys(DistanceConverter.VALID_UNITS, DistanceConverter),
