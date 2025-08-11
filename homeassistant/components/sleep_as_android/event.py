@@ -15,7 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SleepAsAndroidConfigEntry
-from .const import ATTR_EVENT, DOMAIN
+from .const import ATTR_EVENT, DOMAIN, MAP_EVENTS
 from .entity import SleepAsAndroidEntity
 
 PARALLEL_UPDATES = 0
@@ -47,22 +47,22 @@ EVENT_DESCRIPTIONS: tuple[SleepAsAndroidEventEntityDescription, ...] = (
         translation_key=SleepAsAndroidEvent.SLEEP_TRACKING,
         device_class=EventDeviceClass.BUTTON,
         event_types=[
-            "sleep_tracking_paused",
-            "sleep_tracking_resumed",
-            "sleep_tracking_started",
-            "sleep_tracking_stopped",
+            "paused",
+            "resumed",
+            "started",
+            "stopped",
         ],
     ),
     SleepAsAndroidEventEntityDescription(
         key=SleepAsAndroidEvent.ALARM_CLOCK,
         translation_key=SleepAsAndroidEvent.ALARM_CLOCK,
         event_types=[
-            "alarm_alert_dismiss",
-            "alarm_alert_start",
-            "alarm_rescheduled",
-            "alarm_skip_next",
-            "alarm_snooze_canceled",
-            "alarm_snooze_clicked",
+            "alert_dismiss",
+            "alert_start",
+            "rescheduled",
+            "skip_next",
+            "snooze_canceled",
+            "snooze_clicked",
         ],
     ),
     SleepAsAndroidEventEntityDescription(
@@ -77,7 +77,7 @@ EVENT_DESCRIPTIONS: tuple[SleepAsAndroidEventEntityDescription, ...] = (
         key=SleepAsAndroidEvent.USER_NOTIFICATION,
         translation_key=SleepAsAndroidEvent.USER_NOTIFICATION,
         event_types=[
-            "alarm_wake_up_check",
+            "wake_up_check",
             "show_skip_next_alarm",
             "time_to_bed_alarm_alert",
         ],
@@ -97,20 +97,20 @@ EVENT_DESCRIPTIONS: tuple[SleepAsAndroidEventEntityDescription, ...] = (
         key=SleepAsAndroidEvent.SOUND_EVENT,
         translation_key=SleepAsAndroidEvent.SOUND_EVENT,
         event_types=[
-            "sound_event_baby",
-            "sound_event_cough",
-            "sound_event_laugh",
-            "sound_event_snore",
-            "sound_event_talk",
+            "baby",
+            "cough",
+            "laugh",
+            "snore",
+            "talk",
         ],
     ),
     SleepAsAndroidEventEntityDescription(
         key=SleepAsAndroidEvent.LULLABY,
         translation_key=SleepAsAndroidEvent.LULLABY,
         event_types=[
-            "lullaby_start",
-            "lullaby_stop",
-            "lullaby_volume_down",
+            "start",
+            "stop",
+            "volume_down",
         ],
     ),
     SleepAsAndroidEventEntityDescription(
@@ -145,14 +145,12 @@ class SleepAsAndroidEventEntity(SleepAsAndroidEntity, EventEntity):
     @callback
     def _async_handle_event(self, webhook_id: str, data: dict[str, str]) -> None:
         """Handle the Sleep as Android event."""
-
+        event = MAP_EVENTS.get(data[ATTR_EVENT], data[ATTR_EVENT])
         if (
             webhook_id == self.webhook_id
-            and data[ATTR_EVENT] in self.entity_description.event_types
+            and event in self.entity_description.event_types
         ):
-            self._trigger_event(
-                data[ATTR_EVENT],
-            )
+            self._trigger_event(event)
             self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:

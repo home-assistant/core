@@ -21,10 +21,10 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "sleep_tracking_paused": "[%key:common::state::paused%]",
-              "sleep_tracking_resumed": "Resumed",
-              "sleep_tracking_started": "Started",
-              "sleep_tracking_stopped": "[%key:common::state::stopped%]"
+              "paused": "[%key:common::state::paused%]",
+              "resumed": "Resumed",
+              "started": "Started",
+              "stopped": "[%key:common::state::stopped%]"
             }
           }
         }
@@ -34,12 +34,12 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "alarm_alert_dismiss": "Alarm dismissed",
-              "alarm_alert_start": "Alarm started",
-              "alarm_rescheduled": "Alarm rescheduled",
-              "alarm_skip_next": "Alarm skipped",
-              "alarm_snooze_canceled": "Snooze canceled",
-              "alarm_snooze_clicked": "Snoozing"
+              "alert_dismiss": "Alarm dismissed",
+              "alert_start": "Alarm started",
+              "rescheduled": "Alarm rescheduled",
+              "skip_next": "Alarm skipped",
+              "snooze_canceled": "Snooze canceled",
+              "snooze_clicked": "Snoozing"
             }
           }
         }
@@ -60,7 +60,7 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "alarm_wake_up_check": "Wake-up check",
+              "wake_up_check": "Wake-up check",
               "show_skip_next_alarm": "Skip next alarm",
               "time_to_bed_alarm_alert": "Time to bed"
             }
@@ -86,11 +86,11 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "sound_event_baby": "Baby crying",
-              "sound_event_cough": "Coughing or sneezing",
-              "sound_event_laugh": "Laughter",
-              "sound_event_snore": "Snoring",
-              "sound_event_talk": "Talking"
+              "baby": "Baby crying",
+              "cough": "Coughing or sneezing",
+              "laugh": "Laughter",
+              "snore": "Snoring",
+              "talk": "Talking"
             }
           }
         }
@@ -100,9 +100,9 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "lullaby_start": "Started",
-              "lullaby_stop": "[%key:common::state::stopped%]",
-              "lullaby_volume_down": "Lowering volume"
+              "start": "Started",
+              "stop": "[%key:common::state::stopped%]",
+              "volume_down": "Lowering volume"
             }
           }
         }
