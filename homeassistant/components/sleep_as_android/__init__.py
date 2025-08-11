@@ -15,7 +15,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import ATTR_EVENT, ATTR_VALUE1, ATTR_VALUE2, ATTR_VALUE3, DOMAIN
 
-PLATFORMS: list[Platform] = [Platform.EVENT]
+PLATFORMS: list[Platform] = [Platform.EVENT, Platform.SENSOR]
 
 type SleepAsAndroidConfigEntry = ConfigEntry
 
