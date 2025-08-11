@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerfoxConfigEntry) -> 
 
     try:
         devices = await client.all_devices()
-        # Filter out devices with type GAS_METER, as a workaround for missing support
+        # Filter out gas meter devices (Powerfox FLOW adapters) as they are not yet supported and cause integration failures
         devices = [device for device in devices if device.type != DeviceType.GAS_METER]
     except PowerfoxConnectionError as err:
         await client.close()
