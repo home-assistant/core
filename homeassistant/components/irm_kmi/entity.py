@@ -1,15 +1,11 @@
 """Base class shared among IRM KMI entities."""
 
-import logging
-
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, IRM_KMI_NAME
 from .coordinator import IrmKmiConfigEntry, IrmKmiCoordinator
 from .utils import preferred_language
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class IrmKmiBaseEntity(CoordinatorEntity[IrmKmiCoordinator]):
