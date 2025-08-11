@@ -40,7 +40,7 @@ async def async_setup_entry(
     # Add controller entity
     entities.append(LutronControllerConnectivitySensor(entry_data.controller))
 
-    async_add_entities(entities, False)
+    async_add_entities(entities, True)
 
 
 class LutronOccupancySensor(LutronBaseEntity, BinarySensorEntity):
@@ -78,22 +78,11 @@ class LutronControllerConnectivitySensor(
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-
         return f"{self._controller.guid} connection_status"
 
-    def update(self) -> None:
-        """Update the connection status."""
+    async def async_update(self) -> None:
+        """Periodically update the entity's status."""
         if self._controller:
             self._attr_is_on = self._controller.connected
         else:
             self._attr_is_on = False
-
-    async def async_added_to_hass(self) -> None:
-        """Handle when the entity is added to Home Assistant."""
-        await super().async_added_to_hass()
-        self.update()  # Update the status when the entity is first added
-
-    async def async_update(self) -> None:
-        """Periodically update the entity's status."""
-        self.update()
-        self.async_write_ha_state()

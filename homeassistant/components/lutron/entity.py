@@ -69,15 +69,11 @@ class LutronBaseEntity(Entity):
         )
 
     async def async_update(self) -> None:
-        """Update the entity's state."""
+        """Update the entity's state. It's called after async_added."""
         await self._request_state()
-        self._update_attrs()
 
     async def _request_state(self) -> None:
         """Request the state."""
-
-    def _update_attrs(self) -> None:
-        """Update the entity's attributes."""
 
     def _update_callback(self, value) -> None:
         """Handle Lutron messages for this integration_id."""
@@ -203,7 +199,6 @@ class LutronKeypadComponent(LutronBaseEntity):
             self._component_number,
             self._update_callback,
         )
-        await self._request_state()
 
 
 class LutronControllerBaseEntity(Entity):
