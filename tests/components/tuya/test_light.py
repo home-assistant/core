@@ -59,6 +59,111 @@ async def test_turn_on_white(
         SERVICE_TURN_ON,
         {
             "entity_id": entity_id,
+            "white": True,
+        },
+    )
+    await hass.async_block_till_done()
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id,
+        [
+            {"code": "switch_led", "value": True},
+            {"code": "work_mode", "value": "white"},
+            {"code": "bright_value_v2", "value": 546},
+        ],
+    )
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["dj_mki13ie507rlry4r"],
+)
+async def test_turn_on_brightness(
+    hass: HomeAssistant,
+    mock_manager: ManagerCompat,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Test turn_on service."""
+    entity_id = "light.garage_light"
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            "entity_id": entity_id,
+            "brightness": 150,
+        },
+    )
+    await hass.async_block_till_done()
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id,
+        [
+            {"code": "switch_led", "value": True},
+            {"code": "bright_value_v2", "value": 592},
+        ],
+    )
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["dj_mki13ie507rlry4r"],
+)
+async def test_turn_on_white_and_brightness_1(
+    hass: HomeAssistant,
+    mock_manager: ManagerCompat,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Test turn_on service."""
+    entity_id = "light.garage_light"
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            "entity_id": entity_id,
+            "white": True,
+            "brightness": 150,
+        },
+    )
+    await hass.async_block_till_done()
+    mock_manager.send_commands.assert_called_once_with(
+        mock_device.id,
+        [
+            {"code": "switch_led", "value": True},
+            {"code": "work_mode", "value": "white"},
+            {"code": "bright_value_v2", "value": 592},
+        ],
+    )
+
+
+@pytest.mark.parametrize(
+    "mock_device_code",
+    ["dj_mki13ie507rlry4r"],
+)
+async def test_turn_on_white_and_brightness_2(
+    hass: HomeAssistant,
+    mock_manager: ManagerCompat,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Test turn_on service."""
+    entity_id = "light.garage_light"
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            "entity_id": entity_id,
             "white": 150,
         },
     )
@@ -68,6 +173,7 @@ async def test_turn_on_white(
         [
             {"code": "switch_led", "value": True},
             {"code": "work_mode", "value": "white"},
+            {"code": "bright_value_v2", "value": 592},
         ],
     )
 
