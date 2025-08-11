@@ -27,7 +27,10 @@ from aiounifi.interfaces.traffic_rules import TrafficRules
 from aiounifi.interfaces.wlans import Wlans
 from aiounifi.models.api import ApiItem
 from aiounifi.models.client import Client, ClientBlockRequest
-from aiounifi.models.device import DeviceSetOutletRelayRequest, DeviceSetPortEnabledRequest
+from aiounifi.models.device import (
+    DeviceSetOutletRelayRequest,
+    DeviceSetPortEnabledRequest,
+)
 from aiounifi.models.dpi_restriction_app import DPIRestrictionAppEnableRequest
 from aiounifi.models.dpi_restriction_group import DPIRestrictionGroup
 from aiounifi.models.event import Event, EventKey

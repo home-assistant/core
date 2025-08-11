@@ -1805,9 +1805,7 @@ async def test_hub_state_change(
         assert hass.states.get(entity_id).state == STATE_ON
 
 
-@pytest.mark.parametrize(
-    "device_payload", [[DEVICE_1]]
-)
+@pytest.mark.parametrize("device_payload", [[DEVICE_1]])
 async def test_port_control_switches(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -1841,7 +1839,9 @@ async def test_port_control_switches(
 
     # Update state object - disable port via port_overrides
     device_1 = deepcopy(device_payload[0])
-    device_1["port_overrides"] = [{"port_idx": 1, "portconf_id": "1a1", "enable": False}]
+    device_1["port_overrides"] = [
+        {"port_idx": 1, "portconf_id": "1a1", "enable": False}
+    ]
     mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
     assert hass.states.get("switch.mock_name_port_1").state == STATE_OFF
