@@ -115,6 +115,7 @@ class FreeboxRouter:
 
         self._api: Freepybox = api
         self.name: str = freebox_config["model_info"]["pretty_name"]
+        self.model_id: str = freebox_config["model_info"]["name"]
         self.mac: str = freebox_config["mac"]
         self._sw_v: str = freebox_config["firmware_version"]
         self._hw_v: str | None = freebox_config.get("board_name")
@@ -284,6 +285,7 @@ class FreeboxRouter:
             manufacturer="Freebox SAS",
             name=self.name,
             model=self.name,
+            model_id=self.model_id,
             sw_version=self._sw_v,
             hw_version=self._hw_v,
         )
