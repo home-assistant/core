@@ -39,11 +39,10 @@ async def test_platform_setup_and_discovery(
 
 
 @pytest.mark.parametrize(
-    ("mock_device_code", "entity_id", "turn_on_input", "expected_commands"),
+    ("mock_device_code", "turn_on_input", "expected_commands"),
     [
         (
             "dj_mki13ie507rlry4r",
-            "light.garage_light",
             {"entity_id": "light.garage_light", "white": True},
             [
                 {"code": "switch_led", "value": True},
@@ -53,7 +52,6 @@ async def test_platform_setup_and_discovery(
         ),
         (
             "dj_mki13ie507rlry4r",
-            "light.garage_light",
             {
                 "entity_id": "light.garage_light",
                 "brightness": 150,
@@ -65,7 +63,6 @@ async def test_platform_setup_and_discovery(
         ),
         (
             "dj_mki13ie507rlry4r",
-            "light.garage_light",
             {
                 "entity_id": "light.garage_light",
                 "white": True,
@@ -79,7 +76,6 @@ async def test_platform_setup_and_discovery(
         ),
         (
             "dj_mki13ie507rlry4r",
-            "light.garage_light",
             {
                 "entity_id": "light.garage_light",
                 "white": 150,
@@ -97,13 +93,13 @@ async def test_turn_on(
     mock_manager: ManagerCompat,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
-    entity_id: str,
     turn_on_input: dict,
     expected_commands: list[dict],
 ) -> None:
     """Test turn_on service."""
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
+    entity_id = turn_on_input["entity_id"]
     state = hass.states.get(entity_id)
     assert state is not None, f"{entity_id} does not exist"
     await hass.services.async_call(
