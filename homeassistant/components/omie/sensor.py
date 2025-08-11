@@ -24,6 +24,7 @@ from .coordinator import OMIECoordinator
 from .util import _pick_series_cet
 
 _LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 _ATTRIBUTION = "Data provided by OMIE.es"
 
