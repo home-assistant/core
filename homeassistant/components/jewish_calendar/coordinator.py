@@ -37,7 +37,6 @@ class JewishCalendarUpdateCoordinator(DataUpdateCoordinator[JewishCalendarData])
     """Data update coordinator class for Jewish calendar."""
 
     config_entry: JewishCalendarConfigEntry
-    _attr_should_poll = False
     event_unsub: CALLBACK_TYPE | None = None
 
     def __init__(
