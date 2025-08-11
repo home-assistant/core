@@ -167,7 +167,7 @@ async def test_update_entity_states(
 
     client.async_send_command.return_value = {"updates": []}
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -186,7 +186,7 @@ async def test_update_entity_states(
 
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=2))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=2))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -224,7 +224,7 @@ async def test_update_entity_states(
 
     client.async_send_command.return_value = {"updates": []}
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=3))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=3))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -246,7 +246,7 @@ async def test_update_entity_install_raises(
     """Test update entity install raises exception."""
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
     await hass.async_block_till_done()
 
     # Test failed installation by driver
@@ -279,7 +279,7 @@ async def test_update_entity_sleep(
 
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
     await hass.async_block_till_done()
 
     # Two nodes in total, the controller node and the zen_31 node.
@@ -308,7 +308,7 @@ async def test_update_entity_dead(
 
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
     await hass.async_block_till_done()
 
     # Two nodes in total, the controller node and the zen_31 node.
@@ -352,14 +352,14 @@ async def test_update_entity_ha_not_running(
     # Update should be delayed by a day because Home Assistant is not running
     hass.set_state(CoreState.starting)
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15))
     await hass.async_block_till_done()
 
     assert client.async_send_command.call_count == 0
 
     hass.set_state(CoreState.running)
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
     await hass.async_block_till_done()
 
     # Two nodes in total, the controller node and the zen_31 node.
@@ -385,7 +385,7 @@ async def test_update_entity_update_failure(
     assert client.async_send_command.call_count == 0
     client.async_send_command.side_effect = FailedZWaveCommand("test", 260, "test")
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
     await hass.async_block_till_done()
 
     entity_ids = (CONTROLLER_UPDATE_ENTITY, NODE_UPDATE_ENTITY)
@@ -493,7 +493,7 @@ async def test_update_entity_progress(
     client.async_send_command.return_value = FIRMWARE_UPDATES
     driver = client.driver
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -641,7 +641,7 @@ async def test_update_entity_install_failed(
     driver = client.driver
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -717,7 +717,7 @@ async def test_update_entity_reload(
 
     client.async_send_command.return_value = {"updates": []}
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -726,7 +726,7 @@ async def test_update_entity_reload(
 
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=2))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=2))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -758,7 +758,7 @@ async def test_update_entity_reload(
     await hass.async_block_till_done()
 
     # Trigger another update and make sure the skipped version is still skipped
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=4))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=4))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -793,7 +793,7 @@ async def test_update_entity_delay(
 
     assert client.async_send_command.call_count == 0
 
-    update_interval = timedelta(minutes=5)
+    update_interval = timedelta(seconds=15)
     freezer.tick(update_interval)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
