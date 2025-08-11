@@ -149,6 +149,7 @@ FLOWS = {
         "drop_connect",
         "dsmr",
         "dsmr_reader",
+        "duckdns",
         "duke_energy",
         "dunehd",
         "duotecno",
