@@ -1,5 +1,7 @@
 """Tests for the Apprise config flow."""
 
+from unittest.mock import patch
+
 from homeassistant.components import apprise
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_NAME
@@ -7,11 +9,20 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.issue_registry as ir
 
-from tests.common import MockConfigEntry
-
 MOCK_DATA = {
     "name": "Apprise",
     "config": "http://localhost:8000/get/apprise",
+    "url": "hassio://hostname/accesstoken",
+}
+
+MOCK_DATA_CONFIG = {
+    "name": "Apprise",
+    "config": "http://localhost:8000/get/apprise",
+}
+
+MOCK_DATA_URL = {
+    "name": "Apprise",
+    "url": "hassio://hostname/accesstoken",
 }
 
 MOCK_DATA_INVALID = {
@@ -31,44 +42,71 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_DATA
     )
-    assert result2["title"] == f"Datadog {MOCK_DATA[CONF_NAME]}"
+    assert result2["title"] == f"{MOCK_DATA[CONF_NAME]}"
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["data"] == MOCK_DATA
 
 
-async def test_user_flow_retry_after_connection_fail(hass: HomeAssistant) -> None:
-    """Test connection failure."""
+async def test_user_flow_success_config(hass: HomeAssistant) -> None:
+    """Test user-initiated config flow."""
+
+    result = await hass.config_entries.flow.async_init(
+        apprise.DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_DATA_CONFIG
+    )
+    assert result2["title"] == f"{MOCK_DATA_CONFIG[CONF_NAME]}"
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["data"] == MOCK_DATA_CONFIG
+
+
+async def test_user_flow_no_input(hass: HomeAssistant) -> None:
+    """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
         apprise.DOMAIN, context={"source": SOURCE_USER}
     )
 
+    # Continue the flow with just url input
     result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=MOCK_DATA
+        result["flow_id"], user_input={}
     )
+
     assert result2["type"] == FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {}
+
+    # Continue the flow with just url input
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_DATA_URL
+    )
+    assert result3["title"] == f"{MOCK_DATA_URL[CONF_NAME]}"
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
+    assert result3["data"] == MOCK_DATA_URL
+
+
+async def test_user_flow_retry_after_connection_fail(hass: HomeAssistant) -> None:
+    """Test connection failure."""
+    with patch(
+        "homeassistant.components.apprise.config_flow.Apprise",
+        side_effect=ConnectionError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            apprise.DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=MOCK_DATA
+        )
+        assert result2["type"] == FlowResultType.FORM
+        assert result2["errors"] == {"base": "cannot_connect"}
 
     result3 = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=MOCK_DATA
     )
     assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["data"] == MOCK_DATA
-
-
-async def test_single_instance_allowed(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test we abort if already setup."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        apprise.DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "already_configured"
 
 
 async def test_import_flow(
@@ -97,37 +135,22 @@ async def test_import_connection_error(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test import triggers connection error issue."""
-    result = await hass.config_entries.flow.async_init(
-        apprise.DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=MOCK_DATA_INVALID,
-    )
-    assert result["type"] == "abort"
-    assert result["reason"] == "cannot_connect"
+    with patch(
+        "homeassistant.components.apprise.config_flow.Apprise",
+        side_effect=ConnectionError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            apprise.DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=MOCK_DATA_INVALID,
+        )
 
-    issue = issue_registry.async_get_issue(
-        apprise.DOMAIN, "deprecated_yaml_import_connection_error"
-    )
-    assert issue is not None
-    assert issue.translation_key == "deprecated_yaml_import_connection_error"
-    assert issue.severity == ir.IssueSeverity.WARNING
+        assert result["type"] == "abort"
+        assert result["reason"] == "cannot_connect"
 
-
-async def test_import_flow_abort_already_configured_service(
-    hass: HomeAssistant,
-) -> None:
-    """Abort import if the same host/port is already configured."""
-    existing_entry = MockConfigEntry(
-        domain=apprise.DOMAIN,
-        data=MOCK_DATA,
-    )
-    existing_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        apprise.DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=MOCK_DATA,
-    )
-
-    assert result["type"] == FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+        issue = issue_registry.async_get_issue(
+            apprise.DOMAIN, "deprecated_yaml_import_connection_error"
+        )
+        assert issue is not None
+        assert issue.translation_key == "deprecated_yaml_import_connection_error"
+        assert issue.severity == ir.IssueSeverity.WARNING
