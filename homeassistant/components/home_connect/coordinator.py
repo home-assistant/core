@@ -253,14 +253,12 @@ class HomeConnectCoordinator(
                                         EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
                                         EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
                                     ):
-                                        program_key = ProgramKey(
-                                            ProgramKey(cast(str, event.value)),
-                                        )
+                                        program_key = ProgramKey(cast(str, event.value))
                                         # If the active program is unknown, options must be updated using the selected program.
                                         if (
                                             event_key
-                                            == EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
-                                            and event.value == ProgramKey.UNKNOWN
+                                            is EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
+                                            and event.value is ProgramKey.UNKNOWN
                                         ):
                                             select_program_event = events.get(
                                                 EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM
