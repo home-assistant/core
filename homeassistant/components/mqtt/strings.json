@@ -349,11 +349,11 @@
           "data_description": {
             "blue_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract blue color from the state payload value. Expected result of the template is an integer from 0-255 range.",
             "brightness_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract brightness from the state payload value. Expected result of the template is an integer from 0-255 range.",
-            "code": "Specifies a code to enable or disable the alarm in the frontend. Note that if the code is validated locally, it blocks sending MQTT messages command to the remote device if the code validation fails. For remote code validation, the code is configured to either one of the special values `REMOTE_CODE` (numeric code) or `REMOTE_CODE_TEXT` (text code). In this case, local code validation is bypassed but the frontend will still show a numeric or text code dialog. Use the command template to send the code to the remote device. Example configurations for remote code validation can be found [here]({url}#configurations-with-remote-code-validation). [Learn more.]({url}#code)",
+            "code": "Specifies a code to enable or disable the alarm in the frontend. Note that if the code is validated locally, it blocks sending MQTT message commands to the remote device if the code validation fails. For remote code validation, the code is configured to either one of the special values `REMOTE_CODE` (numeric code) or `REMOTE_CODE_TEXT` (text code). In this case, local code validation is bypassed but the frontend will still show a numeric or text code dialog. Use the command template to send the code to the remote device. Example configurations for remote code validation can be found [here]({url}#configurations-with-remote-code-validation). [Learn more.]({url}#code)",
             "code_format": "A regular expression to validate a supplied code when it is set during the action to open, lock or unlock the MQTT lock. [Learn more.]({url}#code_format)",
-            "code_arm_required": "If set the code is required to arm the alarm. If not set, the code is not validated.",
-            "code_disarm_required": "If set the code is required to disarm the alarm. If not set, the code is not validated.",
-            "code_trigger_required": "If set the code is required to manually trigger the alarm. If not set, the code is not validated.",
+            "code_arm_required": "If set, the code is required to arm the alarm. If not set, the code is not validated.",
+            "code_disarm_required": "If set, the code is required to disarm the alarm. If not set, the code is not validated.",
+            "code_trigger_required": "If set, the code is required to manually trigger the alarm. If not set, the code is not validated.",
             "command_off_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) for \"off\" state changes. Available variables are: `state` and `transition`.",
             "command_on_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) for \"on\" state changes. Available variables: `state`, `brightness`, `color_temp`, `red`, `green`, `blue`, `hue`, `sat`, `flash`, `transition` and `effect`. Values `red`, `green`, `blue` and `brightness` are provided as integers from range 0-255. Value of `hue` is provided as float from range 0-360. Value of `sat` is provided as float from range 0-100. Value of `color_temp` is provided as integer representing Kelvin units.",
             "command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be published at the command topic. [Learn more.]({url}#command_template)",
@@ -407,7 +407,7 @@
               }
             },
             "alarm_control_panel_payload_settings": {
-              "name": "Alarm control payload settings",
+              "name": "Alarm control panel payload settings",
               "data": {
                 "payload_arm_away": "Payload \"arm away\"",
                 "payload_arm_custom_bypass": "Payload \"arm custom bypass\"",
@@ -418,12 +418,12 @@
                 "payload_trigger": "Payload \"trigger alarm\""
               },
               "data_description": {
-                "payload_arm_away": "The payload sent when a \"arm away\" command is issued.",
-                "payload_arm_custom_bypass": "The payload sent when a \"arm custom bypass\" command is issued.",
+                "payload_arm_away": "The payload sent when an \"arm away\" command is issued.",
+                "payload_arm_custom_bypass": "The payload sent when an \"arm custom bypass\" command is issued.",
                 "payload_arm_disarm": "The payload sent when a \"disarm\" command is issued.",
-                "payload_arm_home": "The payload sent when a \"arm home\" command is issued.",
-                "payload_arm_night": "The payload sent when a \"arm night\" command is issued.",
-                "payload_arm_vacation": "The payload sent when a \"arm vacation\" command is issued.",
+                "payload_arm_home": "The payload sent when an \"arm home\" command is issued.",
+                "payload_arm_night": "The payload sent when an \"arm night\" command is issued.",
+                "payload_arm_vacation": "The payload sent when an \"arm vacation\" command is issued.",
                 "payload_trigger": "The payload sent when a \"trigger alarm\" command is issued."
               }
             },
