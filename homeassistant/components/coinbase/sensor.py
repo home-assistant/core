@@ -27,7 +27,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_NATIVE_BALANCE = "Balance in native currency"
-ATTR_API_VERSION = "API Version"
 
 CURRENCY_ICONS = {
     "BTC": "mdi:currency-btc",
@@ -71,9 +70,8 @@ async def async_setup_entry(
 
     for currency in desired_currencies:
         _LOGGER.debug(
-            "Attempting to set up %s account sensor with %s API",
+            "Attempting to set up %s account sensor",
             currency,
-            instance.api_version,
         )
         if currency not in provided_currencies:
             _LOGGER.warning(
@@ -89,9 +87,8 @@ async def async_setup_entry(
     if CONF_EXCHANGE_RATES in config_entry.options:
         for rate in config_entry.options[CONF_EXCHANGE_RATES]:
             _LOGGER.debug(
-                "Attempting to set up %s account sensor with %s API",
+                "Attempting to set up %s exchange rate sensor",
                 rate,
-                instance.api_version,
             )
             entities.append(
                 ExchangeRateSensor(
@@ -146,15 +143,13 @@ class AccountSensor(SensorEntity):
         """Return the state attributes of the sensor."""
         return {
             ATTR_NATIVE_BALANCE: f"{self._native_balance} {self._coinbase_data.exchange_base}",
-            ATTR_API_VERSION: self._coinbase_data.api_version,
         }
 
     def update(self) -> None:
         """Get the latest state of the sensor."""
         _LOGGER.debug(
-            "Updating %s account sensor with %s API",
+            "Updating %s account sensor",
             self._currency,
-            self._coinbase_data.api_version,
         )
         self._coinbase_data.update()
         for account in self._coinbase_data.accounts:
@@ -210,9 +205,8 @@ class ExchangeRateSensor(SensorEntity):
     def update(self) -> None:
         """Get the latest state of the sensor."""
         _LOGGER.debug(
-            "Updating %s rate sensor with %s API",
+            "Updating %s rate sensor",
             self._currency,
-            self._coinbase_data.api_version,
         )
         self._coinbase_data.update()
         self._attr_native_value = round(
