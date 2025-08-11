@@ -13,7 +13,9 @@ from homeassistant.const import (
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_UP,
 )
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -39,6 +41,8 @@ INTENT_MEDIA_UNPAUSE = "HassMediaUnpause"
 INTENT_MEDIA_NEXT = "HassMediaNext"
 INTENT_MEDIA_PREVIOUS = "HassMediaPrevious"
 INTENT_SET_VOLUME = "HassSetVolume"
+INTENT_VOLUME_UP = "HassVolumeUp"
+INTENT_VOLUME_DOWN = "HassVolumeDown"
 INTENT_MEDIA_SEARCH_AND_PLAY = "HassMediaSearchAndPlay"
 
 _LOGGER = logging.getLogger(__name__)
@@ -123,6 +127,32 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
                 ),
             },
             description="Sets the volume percentage of a media player",
+            platforms={DOMAIN},
+            device_classes={MediaPlayerDeviceClass},
+        ),
+    )
+    intent.async_register(
+        hass,
+        intent.ServiceIntentHandler(
+            INTENT_VOLUME_UP,
+            DOMAIN,
+            SERVICE_VOLUME_UP,
+            required_domains={DOMAIN},
+            required_features=MediaPlayerEntityFeature.VOLUME_SET,
+            description="Increases the volume of a media player",
+            platforms={DOMAIN},
+            device_classes={MediaPlayerDeviceClass},
+        ),
+    )
+    intent.async_register(
+        hass,
+        intent.ServiceIntentHandler(
+            INTENT_VOLUME_DOWN,
+            DOMAIN,
+            SERVICE_VOLUME_DOWN,
+            required_domains={DOMAIN},
+            required_features=MediaPlayerEntityFeature.VOLUME_SET,
+            description="Decreases the volume of a media player",
             platforms={DOMAIN},
             device_classes={MediaPlayerDeviceClass},
         ),
