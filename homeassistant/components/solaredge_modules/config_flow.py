@@ -15,10 +15,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN
+from .const import CONF_SITE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-CONF_SITE_ID = "site_id"
 DEFAULT_NAME = "SolarEdge"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
