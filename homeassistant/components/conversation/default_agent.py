@@ -227,6 +227,8 @@ class DefaultAgent(ConversationEntity):
         # intent -> [sentences]
         self._config_intents: dict[str, Any] = config_intents
         self._slot_lists: dict[str, SlotList] | None = None
+        self._slot_lists_language: str | None = None
+        self._lang_specific_slot_lists: dict[str, dict[str, SlotList]] = {}
 
         # Used to filter slot lists before intent matching
         self._exposed_names_trie: Trie | None = None
@@ -260,10 +262,10 @@ class DefaultAgent(ConversationEntity):
         """Filter state changed events."""
         return not event_data["old_state"] or not event_data["new_state"]
 
-    @core.callback
     def _listen_clear_slot_list(self) -> None:
         """Listen for changes that can invalidate slot list."""
-        assert self._unsub_clear_slot_list is None
+        if self._unsub_clear_slot_list is not None:
+            return
 
         self._unsub_clear_slot_list = [
             self.hass.bus.async_listen(
@@ -299,7 +301,7 @@ class DefaultAgent(ConversationEntity):
             _LOGGER.warning("No intents were loaded for language: %s", language)
             return None
 
-        slot_lists = self._make_slot_lists()
+        slot_lists = await self._make_slot_lists(language)
         intent_context = self._make_intent_context(user_input)
 
         if self._exposed_names_trie is not None:
@@ -851,7 +853,7 @@ class DefaultAgent(ConversationEntity):
         if lang_intents is None:
             return
 
-        self._make_slot_lists()
+        await self._make_slot_lists(language)
 
     async def async_get_or_load_intents(self, language: str) -> LanguageIntents | None:
         """Load all intents of a language with lock."""
@@ -1027,82 +1029,121 @@ class DefaultAgent(ConversationEntity):
         # Slot lists have changed, so we must clear the cache
         self._intent_cache.clear()
 
-    @core.callback
-    def _make_slot_lists(self) -> dict[str, SlotList]:
+    async def _make_slot_lists(self, language: str) -> dict[str, SlotList]:
         """Create slot lists with areas and entity names/aliases."""
-        if self._slot_lists is not None:
+        if (self._slot_lists is not None) and (self._slot_lists_language == language):
             return self._slot_lists
 
         start = time.monotonic()
 
-        # Gather entity names, keeping track of exposed names.
-        # We try intent recognition with only exposed names first, then all names.
-        #
-        # NOTE: We do not pass entity ids in here because multiple entities may
-        # have the same name. The intent matcher doesn't gather all matching
-        # values for a list, just the first. So we will need to match by name no
-        # matter what.
-        exposed_entity_names = list(self._get_entity_name_tuples(exposed=True))
-        _LOGGER.debug("Exposed entities: %s", exposed_entity_names)
+        if not self._slot_lists:
+            # Gather entity names, keeping track of exposed names.
+            # We try intent recognition with only exposed names first, then all names.
+            #
+            # NOTE: We do not pass entity ids in here because multiple entities may
+            # have the same name. The intent matcher doesn't gather all matching
+            # values for a list, just the first. So we will need to match by name no
+            # matter what.
+            exposed_entity_names = list(self._get_entity_name_tuples(exposed=True))
+            _LOGGER.debug("Exposed entities: %s", exposed_entity_names)
 
-        # Expose all areas.
-        areas = ar.async_get(self.hass)
-        area_names = []
-        for area in areas.async_list_areas():
-            area_names.append((area.name, area.name))
-            if not area.aliases:
-                continue
-
-            for alias in area.aliases:
-                alias = alias.strip()
-                if not alias:
+            # Expose all areas.
+            areas = ar.async_get(self.hass)
+            area_names = []
+            for area in areas.async_list_areas():
+                area_names.append((area.name, area.name))
+                if not area.aliases:
                     continue
 
-                area_names.append((alias, alias))
+                for alias in area.aliases:
+                    alias = alias.strip()
+                    if not alias:
+                        continue
 
-        # Expose all floors.
-        floors = fr.async_get(self.hass)
-        floor_names = []
-        for floor in floors.async_list_floors():
-            floor_names.append((floor.name, floor.name))
-            if not floor.aliases:
-                continue
+                    area_names.append((alias, alias))
 
-            for alias in floor.aliases:
-                alias = alias.strip()
-                if not alias:
+            # Expose all floors.
+            floors = fr.async_get(self.hass)
+            floor_names = []
+            for floor in floors.async_list_floors():
+                floor_names.append((floor.name, floor.name))
+                if not floor.aliases:
                     continue
 
-                floor_names.append((alias, floor.name))
+                for alias in floor.aliases:
+                    alias = alias.strip()
+                    if not alias:
+                        continue
 
-        # Build trie
-        self._exposed_names_trie = Trie()
-        name_list = TextSlotList.from_tuples(exposed_entity_names, allow_template=False)
-        for name_value in name_list.values:
-            assert isinstance(name_value.text_in, TextChunk)
-            name_text = name_value.text_in.text.strip().lower()
-            self._exposed_names_trie.insert(name_text, name_value)
+                    floor_names.append((alias, floor.name))
 
-        # Get preset modes for all exposed fans
-        fan_preset_modes: set[str] = set()
-        for state in self.hass.states.async_all():
-            if state.domain != "fan":
-                continue
+            # Build trie
+            self._exposed_names_trie = Trie()
+            name_list = TextSlotList.from_tuples(
+                exposed_entity_names, allow_template=False
+            )
+            for name_value in name_list.values:
+                assert isinstance(name_value.text_in, TextChunk)
+                name_text = name_value.text_in.text.strip().lower()
+                self._exposed_names_trie.insert(name_text, name_value)
 
-            if not async_should_expose(self.hass, DOMAIN, state.entity_id):
-                continue
+            self._slot_lists = {
+                "area": TextSlotList.from_tuples(area_names, allow_template=False),
+                "name": name_list,
+                "floor": TextSlotList.from_tuples(floor_names, allow_template=False),
+            }
 
-            if preset_modes := state.attributes.get("preset_modes"):
-                fan_preset_modes.update(preset_modes)
+        lang_slot_lists = self._lang_specific_slot_lists.setdefault(language, {})
+        if "fan_preset_modes" not in lang_slot_lists:
+            # Get preset modes for all exposed fans
+            entity_registry = er.async_get(self.hass)
+            strings = await translation.async_get_translations(
+                self.hass,
+                language=language,
+                category="entity",
+            )
 
-        self._slot_lists = {
-            "area": TextSlotList.from_tuples(area_names, allow_template=False),
-            "name": name_list,
-            "floor": TextSlotList.from_tuples(floor_names, allow_template=False),
-            "fan_preset_modes": TextSlotList.from_strings(
+            fan_preset_modes: set[tuple[str, str]] = set()
+            for state in self.hass.states.async_all("fan"):
+                if not async_should_expose(self.hass, DOMAIN, state.entity_id):
+                    continue
+
+                entry = entity_registry.async_get(state.entity_id)
+                if entry is None:
+                    continue
+
+                preset_modes = state.attributes.get("preset_modes")
+                if not preset_modes:
+                    continue
+
+                key_prefixes = []
+                if entry.platform and entry.translation_key:
+                    key_prefixes.append(
+                        f"component.{entry.platform}.entity.{state.domain}.{entry.translation_key}.state_attributes.preset_mode.state"
+                    )
+
+                if entry.platform:
+                    key_prefixes.append(
+                        f"component.{entry.platform}.entity.{state.domain}.state_attributes.preset_mode.state"
+                    )
+
+                key_prefixes.append(
+                    f"component.{state.domain}.entity.state_attributes.preset_mode.state"
+                )
+
+                for preset_mode in preset_modes:
+                    for key_prefix in key_prefixes:
+                        key = f"{key_prefix}.{preset_mode}"
+                        if label := strings.get(key):
+                            fan_preset_modes.add((label, preset_mode))
+                            break
+
+            lang_slot_lists["fan_preset_modes"] = TextSlotList.from_tuples(
                 fan_preset_modes, allow_template=False
-            ),
-        }
+            )
+
+        self._slot_lists.update(lang_slot_lists)
+        self._slot_lists_language = language
 
         self._listen_clear_slot_list()
 
