@@ -219,6 +219,9 @@ async def determine_api_version(
         )
     else:
         # it seems occassionally the auth can succeed unexpectedly when there is a valid session
+        _LOGGER.warning(
+            "Authenticated with %s : succeeded with an incorrect password.", holeV6.base_url
+        )
         return 6
     holeV5 = api_by_version(hass, entry, 5, password="wrong_token")
     try:
