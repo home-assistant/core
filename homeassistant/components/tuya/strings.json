@@ -532,8 +532,8 @@
       "wind_direction": {
         "name": "Wind direction"
       },
-      "precipitation_daily": {
-        "name": "Total daily precipitation"
+      "precipitation_today": {
+        "name": "Total precipitation today"
       },
       "precipitation_intensity": {
         "name": "Precipitation intensity"
