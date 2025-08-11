@@ -38,6 +38,15 @@ class IrmKmiWeather(
     """Weather entity for IRM KMI weather."""
 
     _attr_name = None
+    _attr_supported_features = (
+        WeatherEntityFeature.FORECAST_DAILY
+        | WeatherEntityFeature.FORECAST_TWICE_DAILY
+        | WeatherEntityFeature.FORECAST_HOURLY
+    )
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
+    _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
+    _attr_native_pressure_unit = UnitOfPressure.HPA
 
     def __init__(self, entry: IrmKmiConfigEntry) -> None:
         """Create a new instance of the weather entity from a configuration entry."""
@@ -45,15 +54,6 @@ class IrmKmiWeather(
         SingleCoordinatorWeatherEntity.__init__(self, entry.runtime_data)
         self._name = entry.title
         self._attr_unique_id = entry.entry_id
-
-    @property
-    def supported_features(self) -> WeatherEntityFeature:
-        """Flag supported features."""
-        features = WeatherEntityFeature(0)
-        features |= WeatherEntityFeature.FORECAST_DAILY
-        features |= WeatherEntityFeature.FORECAST_TWICE_DAILY
-        features |= WeatherEntityFeature.FORECAST_HOURLY
-        return features
 
     @property
     def name(self) -> str:
@@ -71,16 +71,6 @@ class IrmKmiWeather(
         return self.coordinator.data.current_weather.get("temperature")
 
     @property
-    def native_temperature_unit(self) -> str | None:
-        """Return the native unit of measurement for temperature."""
-        return UnitOfTemperature.CELSIUS
-
-    @property
-    def native_wind_speed_unit(self) -> str | None:
-        """Return the native unit of measurement for wind speed."""
-        return UnitOfSpeed.KILOMETERS_PER_HOUR
-
-    @property
     def native_wind_speed(self) -> float | None:
         """Return the wind speed in native units."""
         return self.coordinator.data.current_weather.get("wind_speed")
@@ -96,19 +86,9 @@ class IrmKmiWeather(
         return self.coordinator.data.current_weather.get("wind_bearing")
 
     @property
-    def native_precipitation_unit(self) -> str | None:
-        """Return the native unit of measurement for accumulated precipitation."""
-        return UnitOfPrecipitationDepth.MILLIMETERS
-
-    @property
     def native_pressure(self) -> float | None:
         """Return the pressure in native units."""
         return self.coordinator.data.current_weather.get("pressure")
-
-    @property
-    def native_pressure_unit(self) -> str | None:
-        """Return the native unit of measurement for pressure."""
-        return UnitOfPressure.HPA
 
     @property
     def uv_index(self) -> float | None:
