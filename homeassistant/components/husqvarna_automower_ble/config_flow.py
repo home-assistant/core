@@ -158,8 +158,11 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             (channel_id, mower) = await self.connect_mower(device)
 
             response_result = await mower.connect(device)
+            await mower.disconnect()
 
             if response_result is not ResponseResult.OK:
+                LOGGER.debug("cannot connect, response: {response_result}")
+
                 if (
                     response_result is ResponseResult.INVALID_PIN
                     or response_result is ResponseResult.NOT_ALLOWED
@@ -235,6 +238,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                 (channel_id, mower) = await self.connect_mower(device)
 
                 response_result = await mower.connect(device)
+                await mower.disconnect()
                 if (
                     response_result is ResponseResult.INVALID_PIN
                     or response_result is ResponseResult.NOT_ALLOWED
