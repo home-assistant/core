@@ -7,7 +7,7 @@ from typing import Any
 import jwt
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import CONFIG_FLOW_MINOR_VERSION, CONFIG_FLOW_VERSION, DOMAIN
@@ -21,8 +21,6 @@ class OAuth2FlowHandler(
     DOMAIN = DOMAIN
     VERSION = CONFIG_FLOW_VERSION
     MINOR_VERSION = CONFIG_FLOW_MINOR_VERSION
-
-    reauth_entry: ConfigEntry | None = None
 
     async def async_step_reauth(
         self, user_input: Mapping[str, Any]

@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
+from genie_partner_sdk.client import AladdinConnectClient
+
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_entry_oauth2_flow,
+    device_registry as dr,
+)
 
 from . import api
-from .const import CONFIG_FLOW_MINOR_VERSION, CONFIG_FLOW_VERSION
-
-type AladdinConnectConfigEntry = ConfigEntry[api.AsyncConfigEntryAuth]
+from .const import CONFIG_FLOW_MINOR_VERSION, CONFIG_FLOW_VERSION, DOMAIN
+from .coordinator import AladdinConnectConfigEntry, AladdinConnectCoordinator
 
 PLATFORMS: list[Platform] = [Platform.COVER, Platform.SENSOR]
 
@@ -27,12 +31,20 @@ async def async_setup_entry(
 
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
 
-    # If using an aiohttp-based API lib
-    entry.runtime_data = api.AsyncConfigEntryAuth(
-        aiohttp_client.async_get_clientsession(hass), session
+    client = AladdinConnectClient(
+        api.AsyncConfigEntryAuth(aiohttp_client.async_get_clientsession(hass), session)
     )
 
+    doors = await client.get_doors()
+
+    entry.runtime_data = {
+        door.unique_id: AladdinConnectCoordinator(hass, entry, client, door)
+        for door in doors
+    }
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    remove_stale_devices(hass, entry)
 
     return True
 
@@ -59,3 +71,27 @@ async def async_migrate_entry(
         )
 
     return True
+
+
+def remove_stale_devices(
+    hass: HomeAssistant,
+    config_entry: AladdinConnectConfigEntry,
+) -> None:
+    """Remove stale devices from device registry."""
+    device_registry = dr.async_get(hass)
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    )
+    all_device_ids = set(config_entry.runtime_data)
+
+    for device_entry in device_entries:
+        device_id: str | None = None
+        for identifier in device_entry.identifiers:
+            if identifier[0] == DOMAIN:
+                device_id = identifier[1]
+                break
+
+        if device_id and device_id not in all_device_ids:
+            device_registry.async_update_device(
+                device_entry.id, remove_config_entry_id=config_entry.entry_id
+            )

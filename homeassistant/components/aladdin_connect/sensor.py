@@ -4,9 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
-
-from genie_partner_sdk.client import AladdinConnectClient
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,35 +11,31 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE
+from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import api
-from .const import DOMAIN
+from .coordinator import AladdinConnectConfigEntry, AladdinConnectCoordinator
+from .entity import AladdinConnectEntity
 from .model import GarageDoor
-
-if TYPE_CHECKING:
-    from . import AladdinConnectConfigEntry
 
 
 @dataclass(frozen=True, kw_only=True)
-class AccSensorEntityDescription(SensorEntityDescription):
+class AladdinConnectSensorEntityDescription(SensorEntityDescription):
     """Sensor entity description for Aladdin Connect."""
 
-    value_fn: Callable[[AladdinConnectClient, str, int], float | None]
+    value_fn: Callable[[GarageDoor], float | None]
 
 
-SENSOR_TYPES: tuple[AccSensorEntityDescription, ...] = (
-    AccSensorEntityDescription(
+SENSOR_TYPES: tuple[AladdinConnectSensorEntityDescription, ...] = (
+    AladdinConnectSensorEntityDescription(
         key="battery_level",
-        translation_key="battery_level",
         device_class=SensorDeviceClass.BATTERY,
         entity_registry_enabled_default=False,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=AladdinConnectClient.get_battery_status,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda garage_door: garage_door.battery_level,
     ),
 )
 
@@ -50,54 +43,34 @@ SENSOR_TYPES: tuple[AccSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AladdinConnectConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Aladdin Connect sensor devices."""
+    coordinators = entry.runtime_data
 
-    session: api.AsyncConfigEntryAuth = entry.runtime_data
-    acc = AladdinConnectClient(session)
-
-    doors = await acc.get_doors()
-    if doors is None:
-        return
-
-    entities = [
-        AladdinConnectSensor(acc, door, description)
-        for door in doors
+    async_add_entities(
+        AladdinConnectSensor(coordinator, description)
+        for coordinator in coordinators.values()
         for description in SENSOR_TYPES
-    ]
-
-    async_add_entities(entities)
+    )
 
 
-class AladdinConnectSensor(SensorEntity):
+class AladdinConnectSensor(AladdinConnectEntity, SensorEntity):
     """A sensor implementation for Aladdin Connect device."""
 
-    entity_description: AccSensorEntityDescription
-    _attr_has_entity_name = True
+    entity_description: AladdinConnectSensorEntityDescription
 
     def __init__(
         self,
-        acc: AladdinConnectClient,
-        device: GarageDoor,
-        description: AccSensorEntityDescription,
+        coordinator: AladdinConnectCoordinator,
+        entity_description: AladdinConnectSensorEntityDescription,
     ) -> None:
-        """Initialize a sensor for an Aladdin Connect device."""
-        self._device_id = device.device_id
-        self._number = device.door_number
-        self._acc = acc
-        self.entity_description = description
-        self._attr_unique_id = f"{device.unique_id}-{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.unique_id)},
-            name=device.name,
-            manufacturer="Overhead Door",
-        )
-        self._attr_native_value: float | None = None
+        """Initialize the Aladdin Connect sensor."""
+        super().__init__(coordinator)
+        self.entity_description = entity_description
+        self._attr_unique_id = f"{coordinator.data.unique_id}-{entity_description.key}"
 
-    async def async_update(self) -> None:
-        """Update the sensor."""
-        await self._acc.update_door(self._device_id, self._number)
-        self._attr_native_value = self.entity_description.value_fn(
-            self._acc, self._device_id, self._number
-        )
+    @property
+    def native_value(self) -> float | None:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.coordinator.data)
