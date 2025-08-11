@@ -27,14 +27,13 @@ from typing import Any
 
 from greencell_client.access import GreencellAccess, GreencellHaAccessLevel
 from greencell_client.elec_data import ElecData3Phase, ElecDataSinglePhase
-import voluptuous as vol
 
+from homeassistant.components import mqtt
 from homeassistant.components.mqtt import async_subscribe
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -51,16 +50,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_SERIAL_NUMBER): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+PLATFORMS = [Platform.SENSOR]
 
 
 def setup_discovery_listener(hass: HomeAssistant) -> Callable[[], None]:
@@ -87,21 +77,18 @@ def setup_discovery_listener(hass: HomeAssistant) -> Callable[[], None]:
             _LOGGER.debug("Device %s already configured", device_id)
             return
 
-        try:
-            hass.async_create_task(
-                hass.services.async_call(
-                    "mqtt",
-                    "publish",
-                    {
-                        "topic": f"/greencell/evse/{device_id}/cmd",
-                        "payload": json.dumps({"name": "QUERY"}),
-                        "retain": False,
-                    },
-                )
-            )
-            _LOGGER.info("Sent QUERY to new device %s", device_id)
-        except HomeAssistantError as err:
-            _LOGGER.error("Error publishing QUERY for %s: %s", device_id, err)
+        topic = f"/greencell/evse/{device_id}/cmd"
+        pub_payload = json.dumps({"name": "QUERY"})
+
+        async def _async_send_query() -> None:
+            try:
+                await mqtt.async_wait_for_mqtt_client(hass)
+                await mqtt.async_publish(hass, topic, pub_payload, qos=0, retain=False)
+                _LOGGER.info("Sent QUERY to new device %s", device_id)
+            except HomeAssistantError as err:
+                _LOGGER.error("Error publishing QUERY for %s: %s", device_id, err)
+
+        hass.async_create_task(_async_send_query())
 
     async def _async_subscribe() -> None:
         nonlocal unsub
@@ -163,8 +150,7 @@ def wait_for_device_ready(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Greencell integration (global discovery)."""
-    setup_discovery_listener(hass)
+    """Setup by YAML configuration is not supported."""
     return True
 
 
@@ -194,8 +180,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.runtime_data = runtime
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = runtime
 
-    platforms = [Platform.SENSOR]
-    await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     setup_discovery_listener(hass)
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry and clean up resources."""
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
+    return unload_ok

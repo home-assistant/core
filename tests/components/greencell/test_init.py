@@ -13,7 +13,7 @@ from homeassistant.components.greencell import (
 )
 from homeassistant.core import HomeAssistant
 
-from .conftest import TEST_SERIAL_NUMBER, DummyHass, DummyMessage, ExpectedCallGenerator
+from .conftest import TEST_SERIAL_NUMBER, DummyHass, DummyMessage
 
 # --- Happy-path test for setup_discovery_listener ---
 
@@ -35,10 +35,15 @@ async def test_setup_discovery_listener_happy_path(
     msg = DummyMessage(payload=json.dumps({"id": TEST_SERIAL_NUMBER}))
     callback(msg)
 
-    expected_call = ExpectedCallGenerator.generate_mqtt_publish_cmd(
+    expected_call = (
+        f"/greencell/evse/{TEST_SERIAL_NUMBER}/cmd",
         json.dumps({"name": "QUERY"}),
+        0,
+        False,
     )
-    assert expected_call in hass.services.calls
+
+    await asyncio.sleep(0)
+    assert expected_call in hass.published
 
     unsubscribe()
     assert stub_subscribe == []

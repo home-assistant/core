@@ -134,37 +134,6 @@ class DummyHass:
         return list(self.subscriptions.keys())
 
 
-class ExpectedCallGenerator:
-    """Generates expected service call tuples for verification."""
-
-    @staticmethod
-    def generate(domain, service, topic, payload, retain=False):
-        """Generate a service call tuple, with correct payload string."""
-        # If payload is already a JSON string, use as-is; otherwise dump it
-        if isinstance(payload, str):
-            payload_str = payload
-        else:
-            payload_str = json.dumps(payload)
-        return (
-            domain,
-            service,
-            {
-                "topic": topic,
-                "payload": payload_str,
-                "retain": retain,
-            },
-        )
-
-    @staticmethod
-    def generate_mqtt_publish_cmd(
-        payload: dict, device_id: str = TEST_SERIAL_NUMBER
-    ) -> tuple[str, str, dict]:
-        """Generate expected MQTT publish call tuple."""
-        return ExpectedCallGenerator.generate(
-            "mqtt", "publish", f"/greencell/evse/{device_id}/cmd", payload, retain=False
-        )
-
-
 @pytest.fixture(autouse=True)
 def stub_async_create_task(monkeypatch: pytest.MonkeyPatch):
     """Stub DummyHass.async_create_task to capture tasks for verification."""
@@ -194,11 +163,25 @@ def stub_subscribe(monkeypatch: pytest.MonkeyPatch):
         subs.append((topic, callback))
         return lambda: subs.remove((topic, callback))
 
+    async def fake_wait_for_client(hass_):
+        """Simulate async_wait_for_mqtt_client by returning True. Tests don't need real MQTT client."""
+        return True
+
+    async def fake_publish(hass, topic, payload, qos, retain):
+        """Simulate async_publish by storing the call."""
+        if not hasattr(hass, "published"):
+            hass.published = []
+        hass.published.append((topic, payload, qos, retain))
+
     # Patch the exact symbol imported by the integration
     monkeypatch.setattr(
         "homeassistant.components.greencell.async_subscribe",
         fake_subscribe,
     )
+    monkeypatch.setattr(
+        "homeassistant.components.mqtt.async_wait_for_mqtt_client", fake_wait_for_client
+    )
+    monkeypatch.setattr("homeassistant.components.mqtt.async_publish", fake_publish)
     return subs
 
 
