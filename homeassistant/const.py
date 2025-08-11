@@ -588,7 +588,7 @@ ATTR_PERSONS: Final = "persons"
 class UnitOfApparentPower(StrEnum):
     """Apparent power units."""
 
-    MILIVOLT_AMPERE = "mVA"
+    MILLIVOLT_AMPERE = "mVA"
     VOLT_AMPERE = "VA"
 
 

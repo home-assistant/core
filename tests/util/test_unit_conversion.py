@@ -142,7 +142,7 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         1000,
     ),
     ApparentPowerConverter: (
-        UnitOfApparentPower.MILIVOLT_AMPERE,
+        UnitOfApparentPower.MILLIVOLT_AMPERE,
         UnitOfApparentPower.VOLT_AMPERE,
         1000,
     ),
@@ -626,7 +626,7 @@ _CONVERTED_VALUE: dict[
     ApparentPowerConverter: [
         (
             10,
-            UnitOfApparentPower.MILIVOLT_AMPERE,
+            UnitOfApparentPower.MILLIVOLT_AMPERE,
             0.01,
             UnitOfApparentPower.VOLT_AMPERE,
         ),

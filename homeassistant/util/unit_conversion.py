@@ -384,15 +384,15 @@ class MassConverter(BaseUnitConverter):
 
 
 class ApparentPowerConverter(BaseUnitConverter):
-    """Utility to convert power values."""
+    """Utility to convert apparent power values."""
 
-    UNIT_CLASS = "power"
+    UNIT_CLASS = "apparent_power"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        UnitOfApparentPower.MILIVOLT_AMPERE: 1 * 1000,
+        UnitOfApparentPower.MILLIVOLT_AMPERE: 1 * 1000,
         UnitOfApparentPower.VOLT_AMPERE: 1,
     }
     VALID_UNITS = {
-        UnitOfApparentPower.MILIVOLT_AMPERE,
+        UnitOfApparentPower.MILLIVOLT_AMPERE,
         UnitOfApparentPower.VOLT_AMPERE,
     }
 
