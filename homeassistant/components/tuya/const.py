@@ -24,6 +24,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfVolume,
+    UnitOfVolumetricFlux,
 )
 
 DOMAIN = "tuya"
@@ -287,6 +288,8 @@ class DPCode(StrEnum):
     PUMP_RESET = "pump_reset"  # Water pump reset
     PUMP_TIME = "pump_time"  # Water pump duration
     OXYGEN = "oxygen"  # Oxygen bar
+    RAIN_24H = "rain_24h"  # Total daily rainfall in mm
+    RAIN_RATE = "rain_rate"  # Rain intensity in mm/h
     RECORD_MODE = "record_mode"
     RECORD_SWITCH = "record_switch"  # Recording switch
     RELAY_STATUS = "relay_status"
@@ -513,6 +516,11 @@ UNITS = (
         unit=UnitOfVolume.CUBIC_METERS,
         aliases={"m3"},
         device_classes={SensorDeviceClass.GAS},
+    ),
+    UnitOfMeasurement(
+        unit=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        aliases={"mm"},
+        device_classes={SensorDeviceClass.PRECIPITATION_INTENSITY},
     ),
     UnitOfMeasurement(
         unit=LIGHT_LUX,

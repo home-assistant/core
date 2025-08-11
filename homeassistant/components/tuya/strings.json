@@ -532,6 +532,12 @@
       "air_pressure": {
         "name": "Air pressure"
       },
+      "precipitation_today": {
+        "name": "Total precipitation today"
+      },
+      "precipitation_intensity": {
+        "name": "Precipitation intensity"
+      },
       "pm25": {
         "name": "[%key:component::sensor::entity_component::pm25::name%]"
       },
