@@ -73,7 +73,14 @@
     },
     "unsupported_utility": {
       "title": "Unsupported utility: {utility}",
-      "description": "The utility {utility} is no longer supported by the Opower integration. Please remove this integration."
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::opower::issues::unsupported_utility::title%]",
+            "description": "The utility `{utility}` used by entry `{title}` is no longer supported by the Opower integration. Select **Submit** to remove this integration entry now."
+          }
+        }
+      }
     }
   },
   "entity": {

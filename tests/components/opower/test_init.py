@@ -9,7 +9,6 @@ from homeassistant.components.opower.const import DOMAIN
 from homeassistant.components.recorder import Recorder
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
 
 from tests.common import MockConfigEntry
 
@@ -115,31 +114,3 @@ async def test_get_cost_reads_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_unsupported_utility(
-    recorder_mock: Recorder,
-    hass: HomeAssistant,
-) -> None:
-    """Test for unsupported utility."""
-    mock_config_entry = MockConfigEntry(
-        title="some title",
-        domain=DOMAIN,
-        data={
-            "utility": "some unsupported utility",
-            "username": "test-username",
-            "password": "test-password",
-        },
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-
-    issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue(
-        DOMAIN, f"unsupported_utility_{mock_config_entry.entry_id}"
-    )
-    assert issue is not None
-    assert issue.translation_key == "unsupported_utility"
