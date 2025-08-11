@@ -529,11 +529,11 @@
       "air_pressure": {
         "name": "Air pressure"
       },
-      "wind_direct": {
+      "wind_direction": {
         "name": "Wind direction"
       },
-      "precipitation": {
-        "name": "Total precipitation"
+      "precipitation_daily": {
+        "name": "Total daily precipitation"
       },
       "precipitation_intensity": {
         "name": "Precipitation intensity"

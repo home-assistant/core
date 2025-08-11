@@ -1077,7 +1077,7 @@
     'state': '24.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_total_precipitation-entry]
+# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_total_daily_precipitation-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1092,7 +1092,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_total_precipitation',
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_total_daily_precipitation',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1107,26 +1107,26 @@
     }),
     'original_device_class': <SensorDeviceClass.PRECIPITATION: 'precipitation'>,
     'original_icon': None,
-    'original_name': 'Total precipitation',
+    'original_name': 'Total daily precipitation',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'precipitation',
+    'translation_key': 'precipitation_daily',
     'unique_id': 'tuya.6tbtkuv3tal1aesfjxqrain_24h',
     'unit_of_measurement': 'mm',
   })
 # ---
-# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_total_precipitation-state]
+# name: test_platform_setup_and_discovery[sensor.br_7_in_1_wlan_wetterstation_anthrazit_total_daily_precipitation-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'precipitation',
-      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Total precipitation',
+      'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Total daily precipitation',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'mm',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_total_precipitation',
+    'entity_id': 'sensor.br_7_in_1_wlan_wetterstation_anthrazit_total_daily_precipitation',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1217,7 +1217,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'wind_direct',
+    'translation_key': 'wind_direction',
     'unique_id': 'tuya.6tbtkuv3tal1aesfjxqwind_direct',
     'unit_of_measurement': None,
   })

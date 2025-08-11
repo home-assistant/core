@@ -24,6 +24,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfVolume,
+    UnitOfVolumetricFlux,
 )
 
 DOMAIN = "tuya"
@@ -67,25 +68,6 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.VACUUM,
 ]
-
-WIND_DIRECTIONS = {
-    "north": 0.0,
-    "north_north_east": 22.5,
-    "north_east": 45.0,
-    "east_north_east": 67.5,
-    "east": 90.0,
-    "east_south_east": 112.5,
-    "south_east": 135.0,
-    "south_south_east": 157.5,
-    "south": 180.0,
-    "south_south_west": 202.5,
-    "south_west": 225.0,
-    "west_south_west": 247.5,
-    "west": 270.0,
-    "west_north_west": 292.5,
-    "north_west": 315.0,
-    "north_north_west": 337.5,
-}
 
 
 class WorkMode(StrEnum):
@@ -534,6 +516,11 @@ UNITS = (
         unit=UnitOfVolume.CUBIC_METERS,
         aliases={"m3"},
         device_classes={SensorDeviceClass.GAS},
+    ),
+    UnitOfMeasurement(
+        unit=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        aliases={"mm"},
+        device_classes={SensorDeviceClass.PRECIPITATION_INTENSITY},
     ),
     UnitOfMeasurement(
         unit=LIGHT_LUX,
