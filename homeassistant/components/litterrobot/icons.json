@@ -49,6 +49,9 @@
       },
       "total_cycles": {
         "default": "mdi:counter"
+      },
+      "visits_today": {
+        "default": "mdi:counter"
       }
     },
     "switch": {

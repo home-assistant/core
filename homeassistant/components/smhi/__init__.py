@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import SMHIConfigEntry, SMHIDataUpdateCoordinator
 
-PLATFORMS = [Platform.WEATHER]
+PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SMHIConfigEntry) -> bool:

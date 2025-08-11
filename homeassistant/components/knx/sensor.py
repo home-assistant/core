@@ -1,4 +1,4 @@
-"""Support for KNX/IP sensors."""
+"""Support for KNX sensor entities."""
 
 from __future__ import annotations
 
@@ -33,9 +33,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, StateType
 from homeassistant.util.enum import try_parse_enum
 
-from . import KNXModule
 from .const import ATTR_SOURCE, KNX_MODULE_KEY
 from .entity import KnxYamlEntity
+from .knx_module import KNXModule
 from .schema import SensorSchema
 
 SCAN_INTERVAL = timedelta(seconds=10)

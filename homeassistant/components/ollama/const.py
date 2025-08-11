@@ -158,7 +158,7 @@ MODEL_NAMES = [  # https://ollama.com/library
     "yi",
     "zephyr",
 ]
-DEFAULT_MODEL = "llama3.2:latest"
+DEFAULT_MODEL = "qwen3:4b"
 
 DEFAULT_CONVERSATION_NAME = "Ollama Conversation"
 DEFAULT_AI_TASK_NAME = "Ollama AI Task"

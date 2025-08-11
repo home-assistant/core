@@ -157,7 +157,6 @@ class EventStateEventData(TypedDict):
     """Base class for EVENT_STATE_CHANGED and EVENT_STATE_REPORTED data."""
 
     entity_id: str
-    new_state: State | None
 
 
 class EventStateChangedData(EventStateEventData):
@@ -166,6 +165,7 @@ class EventStateChangedData(EventStateEventData):
     A state changed event is fired when on state write the state is changed.
     """
 
+    new_state: State | None
     old_state: State | None
 
 
@@ -175,6 +175,8 @@ class EventStateReportedData(EventStateEventData):
     A state reported event is fired when on state write the state is unchanged.
     """
 
+    last_reported: datetime.datetime
+    new_state: State
     old_last_reported: datetime.datetime
 
 
@@ -384,7 +386,7 @@ def get_hassjob_callable_job_type(target: Callable[..., Any]) -> HassJobType:
     while isinstance(check_target, functools.partial):
         check_target = check_target.func
 
-    if asyncio.iscoroutinefunction(check_target):
+    if inspect.iscoroutinefunction(check_target):
         return HassJobType.Coroutinefunction
     if is_callback(check_target):
         return HassJobType.Callback
@@ -1749,18 +1751,38 @@ class CompressedState(TypedDict):
 
 
 class State:
-    """Object to represent a state within the state machine.
+    """Object to represent a state within the state machine."""
 
-    entity_id: the entity that is represented.
-    state: the state of the entity
-    attributes: extra information on entity and state
-    last_changed: last time the state was changed.
-    last_reported: last time the state was reported.
-    last_updated: last time the state or attributes were changed.
-    context: Context in which it was created
-    domain: Domain of this state.
-    object_id: Object id of this state.
+    entity_id: str
+    """The entity that is represented by the state."""
+    domain: str
+    """Domain of the entity that is represented by the state."""
+    object_id: str
+    """object_id: Object id of this state."""
+    state: str
+    """The state of the entity."""
+    attributes: ReadOnlyDict[str, Any]
+    """Extra information on entity and state"""
+    last_changed: datetime.datetime
+    """Last time the state was changed."""
+    last_reported: datetime.datetime
+    """Last time the state was reported.
+
+    Note: When the state is set and neither the state nor attributes are
+    changed, the existing state will be mutated with an updated last_reported.
+
+    When handling a state change event, the last_reported attribute of the old
+    state will not be modified and can safely be used. The last_reported attribute
+    of the new state may be modified and the last_updated attribute should be used
+    instead.
+
+    When handling a state report event, the last_reported attribute may be
+    modified and last_reported from the event data should be used instead.
     """
+    last_updated: datetime.datetime
+    """Last time the state or attributes were changed."""
+    context: Context
+    """Context in which the state was created."""
 
     __slots__ = (
         "_cache",
@@ -1841,7 +1863,20 @@ class State:
 
     @under_cached_property
     def last_reported_timestamp(self) -> float:
-        """Timestamp of last report."""
+        """Timestamp of last report.
+
+        Note: When the state is set and neither the state nor attributes are
+        changed, the existing state will be mutated with an updated last_reported.
+
+        When handling a state change event, the last_reported_timestamp attribute
+        of the old state will not be modified and can safely be used. The
+        last_reported_timestamp attribute of the new state may be modified and the
+        last_updated_timestamp attribute should be used instead.
+
+        When handling a state report event, the last_reported_timestamp attribute may
+        be modified and last_reported from the event data should be used instead.
+        """
+
         return self.last_reported.timestamp()
 
     @under_cached_property
@@ -2340,6 +2375,7 @@ class StateMachine:
                 EVENT_STATE_REPORTED,
                 {
                     "entity_id": entity_id,
+                    "last_reported": now,
                     "old_last_reported": old_last_reported,
                     "new_state": old_state,
                 },

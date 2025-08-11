@@ -311,11 +311,13 @@ def _create_token_stats(
 class AnthropicBaseLLMEntity(Entity):
     """Anthropic base LLM entity."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, entry: AnthropicConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the entity."""
         self.entry = entry
         self.subentry = subentry
-        self._attr_name = subentry.title
         self._attr_unique_id = subentry.subentry_id
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, subentry.subentry_id)},
@@ -359,7 +361,10 @@ class AnthropicBaseLLMEntity(Entity):
                 "system": system.content,
                 "stream": True,
             }
-            if model in THINKING_MODELS and thinking_budget >= MIN_THINKING_BUDGET:
+            if (
+                model.startswith(tuple(THINKING_MODELS))
+                and thinking_budget >= MIN_THINKING_BUDGET
+            ):
                 model_args["thinking"] = ThinkingConfigEnabledParam(
                     type="enabled", budget_tokens=thinking_budget
                 )

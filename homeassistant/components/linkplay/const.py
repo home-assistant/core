@@ -19,5 +19,5 @@ class LinkPlaySharedData:
 DOMAIN = "linkplay"
 SHARED_DATA = "shared_data"
 SHARED_DATA_KEY: HassKey[LinkPlaySharedData] = HassKey(SHARED_DATA)
-PLATFORMS = [Platform.BUTTON, Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.BUTTON, Platform.MEDIA_PLAYER, Platform.SELECT]
 DATA_SESSION = "session"

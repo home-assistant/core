@@ -110,13 +110,16 @@ def async_create_api_client(
     """Create ProtectApiClient from config entry."""
 
     session = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
+    public_api_session = async_create_clientsession(hass)
     return ProtectApiClient(
         host=entry.data[CONF_HOST],
         port=entry.data[CONF_PORT],
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
+        api_key=entry.data.get("api_key"),
         verify_ssl=entry.data[CONF_VERIFY_SSL],
         session=session,
+        public_api_session=public_api_session,
         subscribed_models=DEVICES_FOR_SUBSCRIBE,
         override_connection_host=entry.options.get(CONF_OVERRIDE_CHOST, False),
         ignore_stats=not entry.options.get(CONF_ALL_UPDATES, False),
