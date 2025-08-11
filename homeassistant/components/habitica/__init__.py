@@ -64,7 +64,7 @@ async def async_setup_entry(
 
     config_entry.runtime_data = coordinator
 
-    party = coordinator.data.user.party._id  # noqa: SLF001
+    party = coordinator.data.user.party.id
     if HABITICA_KEY not in hass.data:
         hass.data[HABITICA_KEY] = {}
 
@@ -79,7 +79,7 @@ async def async_setup_entry(
     def _party_update_listener() -> None:
         """On party change, unload coordinator, remove device and reload."""
         nonlocal party, party_added_by_this_entry
-        party_updated = coordinator.data.user.party._id  # noqa: SLF001
+        party_updated = coordinator.data.user.party.id
 
         if (
             party is not None and (party not in hass.data[HABITICA_KEY])

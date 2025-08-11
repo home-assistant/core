@@ -70,7 +70,7 @@ async def async_setup_entry(
         for description in BINARY_SENSOR_DESCRIPTIONS
     ]
 
-    if party := coordinator.data.user.party._id:  # noqa: SLF001
+    if party := coordinator.data.user.party.id:
         party_coordinator = hass.data[HABITICA_KEY][party]
         entities.append(
             HabiticaPartyBinarySensorEntity(

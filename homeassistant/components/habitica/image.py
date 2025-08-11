@@ -40,7 +40,7 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
     entities: list[ImageEntity] = [HabiticaImage(hass, coordinator)]
 
-    if party := coordinator.data.user.party._id:  # noqa: SLF001
+    if party := coordinator.data.user.party.id:
         party_coordinator = hass.data[HABITICA_KEY][party]
         entities.append(
             HabiticaPartyImage(
