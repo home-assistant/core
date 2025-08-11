@@ -15,7 +15,3 @@ class ProcessedCoordinatorData:
     country: str
     hourly_forecast: list[Forecast] = field(default_factory=list)
     daily_forecast: list[ExtendedForecast] = field(default_factory=list)
-
-    def get(self, key, default=None):
-        """Return the value for key if key is in the ProcessedCoordinatorData, else default."""
-        return getattr(self, key, default)
