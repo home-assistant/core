@@ -399,7 +399,7 @@ aiotedee==0.2.25
 aiotractive==0.6.0
 
 # homeassistant.components.unifi
-aiounifi==84
+aiounifi==86
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.1
@@ -1023,7 +1023,7 @@ hole==0.9.0
 holidays==0.78
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250806.0
+home-assistant-frontend==20250811.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.7.30
@@ -1988,7 +1988,7 @@ pyspeex-noise==1.0.2
 pysqueezebox==0.12.1
 
 # homeassistant.components.stiebel_eltron
-pystiebeleltron==0.1.0
+pystiebeleltron==0.2.3
 
 # homeassistant.components.suez_water
 pysuezV2==2.0.7
