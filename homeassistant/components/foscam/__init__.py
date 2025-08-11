@@ -30,7 +30,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FoscamConfigEntry) -> bo
         verbose=False,
     )
     coordinator = FoscamCoordinator(hass, entry, session)
-
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
@@ -89,7 +88,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: FoscamConfigEntry) -> 
 
 
 async def async_migrate_entities(hass: HomeAssistant, entry: FoscamConfigEntry) -> None:
-    """Migrate old entry."""
+    """Migrate old entries to support config_entry_id-based unique IDs."""
 
     @callback
     def _update_unique_id(
