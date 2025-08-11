@@ -1,7 +1,5 @@
 """Support for IRM KMI weather."""
 
-import logging
-
 from irm_kmi_api import CurrentWeatherData
 
 from homeassistant.components.weather import (
@@ -20,8 +18,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import IrmKmiConfigEntry, IrmKmiCoordinator
 from .entity import IrmKmiBaseEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
