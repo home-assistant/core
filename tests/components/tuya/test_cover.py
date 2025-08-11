@@ -21,53 +21,29 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotSupported
 from homeassistant.helpers import entity_registry as er
 
-from . import DEVICE_MOCKS, initialize_entry
+from . import initialize_entry
 
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.parametrize(
-    "mock_device_code",
-    [k for k, v in DEVICE_MOCKS.items() if Platform.COVER in v],
-)
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: ManagerCompat,
     mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
+    mock_devices: list[CustomerDevice],
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test platform setup and discovery."""
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    [k for k, v in DEVICE_MOCKS.items() if Platform.COVER not in v],
-)
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
-async def test_platform_setup_no_discovery(
-    hass: HomeAssistant,
-    mock_manager: ManagerCompat,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test platform setup without discovery."""
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    assert not er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-
-
-@pytest.mark.parametrize(
-    "mock_device_code",
-    ["cl_am43_corded_motor_zigbee_cover"],
+    ["cl_zah67ekd"],
 )
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
 async def test_open_service(
@@ -101,7 +77,7 @@ async def test_open_service(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cl_am43_corded_motor_zigbee_cover"],
+    ["cl_zah67ekd"],
 )
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.COVER])
 async def test_close_service(
@@ -135,7 +111,7 @@ async def test_close_service(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cl_am43_corded_motor_zigbee_cover"],
+    ["cl_zah67ekd"],
 )
 async def test_set_position(
     hass: HomeAssistant,
@@ -168,7 +144,7 @@ async def test_set_position(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cl_am43_corded_motor_zigbee_cover"],
+    ["cl_zah67ekd"],
 )
 @pytest.mark.parametrize(
     ("percent_control", "percent_state"),
@@ -202,7 +178,7 @@ async def test_percent_state_on_cover(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cl_am43_corded_motor_zigbee_cover"],
+    ["cl_zah67ekd"],
 )
 async def test_set_tilt_position_not_supported(
     hass: HomeAssistant,

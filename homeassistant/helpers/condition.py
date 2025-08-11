@@ -58,9 +58,9 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
-from homeassistant.util.yaml.loader import JSON_TYPE
 
 from . import config_validation as cv, entity_registry as er
+from .automation import get_absolute_description_key, get_relative_description_key
 from .integration_platform import async_process_integration_platforms
 from .template import Template, render_complex
 from .trace import (
@@ -132,7 +132,7 @@ def starts_with_dot(key: str) -> str:
 _CONDITIONS_SCHEMA = vol.Schema(
     {
         vol.Remove(vol.All(str, starts_with_dot)): object,
-        cv.slug: vol.Any(None, _CONDITION_SCHEMA),
+        cv.underscore_slug: vol.Any(None, _CONDITION_SCHEMA),
     }
 )
 
@@ -171,6 +171,9 @@ async def _register_condition_platform(
 
     if hasattr(platform, "async_get_conditions"):
         for condition_key in await platform.async_get_conditions(hass):
+            condition_key = get_absolute_description_key(
+                integration_domain, condition_key
+            )
             hass.data[CONDITIONS][condition_key] = integration_domain
             new_conditions.add(condition_key)
     else:
@@ -199,14 +202,14 @@ class Condition(abc.ABC):
 
     @classmethod
     @abc.abstractmethod
-    async def async_validate_condition_config(
+    async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
 
     @abc.abstractmethod
-    async def async_condition_from_config(self) -> ConditionCheckerType:
-        """Evaluate state based on configuration."""
+    async def async_get_checker(self) -> ConditionCheckerType:
+        """Get the condition checker."""
 
 
 class ConditionProtocol(Protocol):
@@ -288,22 +291,21 @@ def trace_condition_function(condition: ConditionCheckerType) -> ConditionChecke
 
 
 async def _async_get_condition_platform(
-    hass: HomeAssistant, config: ConfigType
-) -> ConditionProtocol | None:
-    condition_key: str = config[CONF_CONDITION]
-    platform_and_sub_type = condition_key.partition(".")
+    hass: HomeAssistant, condition_key: str
+) -> tuple[str, ConditionProtocol | None]:
+    platform_and_sub_type = condition_key.split(".")
     platform: str | None = platform_and_sub_type[0]
     platform = _PLATFORM_ALIASES.get(platform, platform)
     if platform is None:
-        return None
+        return "", None
     try:
         integration = await async_get_integration(hass, platform)
     except IntegrationNotFound:
         raise HomeAssistantError(
-            f'Invalid condition "{condition_key}" specified {config}'
+            f'Invalid condition "{condition_key}" specified'
         ) from None
     try:
-        return await integration.async_get_platform("condition")
+        return platform, await integration.async_get_platform("condition")
     except ImportError:
         raise HomeAssistantError(
             f"Integration '{platform}' does not provide condition support"
@@ -339,17 +341,20 @@ async def async_from_config(
 
             return disabled_condition
 
-    condition: str = config[CONF_CONDITION]
+    condition_key: str = config[CONF_CONDITION]
     factory: Any = None
-    platform = await _async_get_condition_platform(hass, config)
+    platform_domain, platform = await _async_get_condition_platform(hass, condition_key)
 
     if platform is not None:
         condition_descriptors = await platform.async_get_conditions(hass)
-        condition_instance = condition_descriptors[condition](hass, config)
-        return await condition_instance.async_condition_from_config()
+        relative_condition_key = get_relative_description_key(
+            platform_domain, condition_key
+        )
+        condition_instance = condition_descriptors[relative_condition_key](hass, config)
+        return await condition_instance.async_get_checker()
 
     for fmt in (ASYNC_FROM_CONFIG_FORMAT, FROM_CONFIG_FORMAT):
-        factory = getattr(sys.modules[__name__], fmt.format(condition), None)
+        factory = getattr(sys.modules[__name__], fmt.format(condition_key), None)
 
         if factory:
             break
@@ -960,8 +965,9 @@ async def async_validate_condition_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConfigType:
     """Validate config."""
-    condition: str = config[CONF_CONDITION]
-    if condition in ("and", "not", "or"):
+    condition_key: str = config[CONF_CONDITION]
+
+    if condition_key in ("and", "not", "or"):
         conditions = []
         for sub_cond in config["conditions"]:
             sub_cond = await async_validate_condition_config(hass, sub_cond)
@@ -969,16 +975,23 @@ async def async_validate_condition_config(
         config["conditions"] = conditions
         return config
 
-    platform = await _async_get_condition_platform(hass, config)
+    platform_domain, platform = await _async_get_condition_platform(hass, condition_key)
+
     if platform is not None:
         condition_descriptors = await platform.async_get_conditions(hass)
-        if not (condition_class := condition_descriptors.get(condition)):
-            raise vol.Invalid(f"Invalid condition '{condition}' specified")
-        return await condition_class.async_validate_condition_config(hass, config)
-    if platform is None and condition in ("numeric_state", "state"):
+        relative_condition_key = get_relative_description_key(
+            platform_domain, condition_key
+        )
+        if not (condition_class := condition_descriptors.get(relative_condition_key)):
+            raise vol.Invalid(f"Invalid condition '{condition_key}' specified")
+        return await condition_class.async_validate_config(hass, config)
+
+    if platform is None and condition_key in ("numeric_state", "state"):
         validator = cast(
             Callable[[HomeAssistant, ConfigType], ConfigType],
-            getattr(sys.modules[__name__], VALIDATE_CONFIG_FORMAT.format(condition)),
+            getattr(
+                sys.modules[__name__], VALIDATE_CONFIG_FORMAT.format(condition_key)
+            ),
         )
         return validator(hass, config)
 
@@ -1088,11 +1101,11 @@ def async_extract_devices(config: ConfigType | Template) -> set[str]:
     return referenced
 
 
-def _load_conditions_file(hass: HomeAssistant, integration: Integration) -> JSON_TYPE:
+def _load_conditions_file(integration: Integration) -> dict[str, Any]:
     """Load conditions file for an integration."""
     try:
         return cast(
-            JSON_TYPE,
+            dict[str, Any],
             _CONDITIONS_SCHEMA(
                 load_yaml_dict(str(integration.file_path / "conditions.yaml"))
             ),
@@ -1112,11 +1125,14 @@ def _load_conditions_file(hass: HomeAssistant, integration: Integration) -> JSON
 
 
 def _load_conditions_files(
-    hass: HomeAssistant, integrations: Iterable[Integration]
-) -> dict[str, JSON_TYPE]:
+    integrations: Iterable[Integration],
+) -> dict[str, dict[str, Any]]:
     """Load condition files for multiple integrations."""
     return {
-        integration.domain: _load_conditions_file(hass, integration)
+        integration.domain: {
+            get_absolute_description_key(integration.domain, key): value
+            for key, value in _load_conditions_file(integration).items()
+        }
         for integration in integrations
     }
 
@@ -1137,7 +1153,7 @@ async def async_get_all_descriptions(
         return descriptions_cache
 
     # Files we loaded for missing descriptions
-    new_conditions_descriptions: dict[str, JSON_TYPE] = {}
+    new_conditions_descriptions: dict[str, dict[str, Any]] = {}
     # We try to avoid making a copy in the event the cache is good,
     # but now we must make a copy in case new conditions get added
     # while we are loading the missing ones so we do not
@@ -1166,7 +1182,7 @@ async def async_get_all_descriptions(
 
         if integrations:
             new_conditions_descriptions = await hass.async_add_executor_job(
-                _load_conditions_files, hass, integrations
+                _load_conditions_files, integrations
             )
 
     # Make a copy of the old cache and add missing descriptions to it
@@ -1175,7 +1191,7 @@ async def async_get_all_descriptions(
         domain = conditions[missing_condition]
 
         if (
-            yaml_description := new_conditions_descriptions.get(domain, {}).get(  # type: ignore[union-attr]
+            yaml_description := new_conditions_descriptions.get(domain, {}).get(
                 missing_condition
             )
         ) is None:
