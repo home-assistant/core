@@ -236,56 +236,6 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             ),
         }
 
-    if domain == Platform.COVER:
-        schema |= _SCHEMA_STATE | {
-            vol.Inclusive(OPEN_ACTION, CONF_OPEN_AND_CLOSE): selector.ActionSelector(),
-            vol.Inclusive(CLOSE_ACTION, CONF_OPEN_AND_CLOSE): selector.ActionSelector(),
-            vol.Optional(STOP_ACTION): selector.ActionSelector(),
-            vol.Optional(CONF_POSITION): selector.TemplateSelector(),
-            vol.Optional(POSITION_ACTION): selector.ActionSelector(),
-        }
-        if flow_type == "config":
-            schema |= {
-                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[cls.value for cls in CoverDeviceClass],
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                        translation_key="cover_device_class",
-                        sort=True,
-                    ),
-                )
-            }
-
-    if domain == Platform.FAN:
-        schema |= _SCHEMA_STATE | {
-            vol.Required(CONF_ON_ACTION): selector.ActionSelector(),
-            vol.Required(CONF_OFF_ACTION): selector.ActionSelector(),
-            vol.Optional(CONF_PERCENTAGE): selector.TemplateSelector(),
-            vol.Optional(CONF_SET_PERCENTAGE_ACTION): selector.ActionSelector(),
-            vol.Optional(CONF_SPEED_COUNT): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=1, max=100, step=1, mode=selector.NumberSelectorMode.BOX
-                ),
-            ),
-        }
-
-    if domain == Platform.EVENT:
-        schema |= {
-            vol.Required(CONF_EVENT_TYPE): selector.TemplateSelector(),
-            vol.Required(CONF_EVENT_TYPES): selector.TemplateSelector(),
-        }
-
-        if flow_type == "config":
-            schema |= {
-                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[cls.value for cls in EventDeviceClass],
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                        translation_key="event_device_class",
-                        sort=True,
-                    ),
-                )
-            }
     if domain == Platform.IMAGE:
         schema |= {
             vol.Required(CONF_URL): selector.TemplateSelector(),
