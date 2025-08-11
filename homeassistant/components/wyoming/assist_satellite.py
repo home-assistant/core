@@ -340,13 +340,14 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         )
 
         timestamp = 0
-        try:
-            media_ids = []
-            # Play the preannounce media first if provided
-            if announcement.preannounce_media_id is not None:
-                media_ids.append(announcement.preannounce_media_id)
-            media_ids.append(announcement.media_id)
 
+        media_ids = []
+        # Play the preannounce media first if provided
+        if announcement.preannounce_media_id is not None:
+            media_ids.append(announcement.preannounce_media_id)
+        media_ids.append(announcement.media_id)
+
+        try:
             # Use ffmpeg to convert to raw PCM audio with the appropriate format
             for media_id in media_ids:
                 proc = await asyncio.create_subprocess_exec(
