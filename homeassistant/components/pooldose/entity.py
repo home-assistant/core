@@ -62,5 +62,6 @@ class PooldoseEntity(CoordinatorEntity[PooldoseCoordinator]):
         """Return True if the sensor is available."""
         return (
             super().available
+            and self.coordinator.data is not None  # must have data
             and self.entity_description.key in self.coordinator.data
         )

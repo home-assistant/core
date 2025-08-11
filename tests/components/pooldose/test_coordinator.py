@@ -7,7 +7,6 @@ import pytest
 
 from homeassistant.components.pooldose.coordinator import PooldoseCoordinator
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
@@ -141,9 +140,7 @@ async def test_coordinator_setup_connection_failure(
         mock_config_entry,
     )
 
-    with pytest.raises(
-        ConfigEntryNotReady, match="Failed to connect to PoolDose client"
-    ):
+    with pytest.raises(UpdateFailed, match="Failed to connect to PoolDose client"):
         await coordinator._async_setup()
 
     mock_client.connect.assert_called_once()

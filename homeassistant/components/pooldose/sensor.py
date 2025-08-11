@@ -25,20 +25,14 @@ _LOGGER = logging.getLogger(__name__)
 class PooldoseSensorEntityDescription(SensorEntityDescription):
     """Describe a PoolDose sensor entity."""
 
-    entity_category: EntityCategory | None = None
-
 
 SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
     PooldoseSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        # Unit comes from API (°C or °F)
+        # Unit dynamically determined via API
     ),
-    PooldoseSensorEntityDescription(
-        key="ph",
-        device_class=SensorDeviceClass.PH,
-        # has no unit
-    ),
+    PooldoseSensorEntityDescription(key="ph", device_class=SensorDeviceClass.PH),
     PooldoseSensorEntityDescription(
         key="orp",
         translation_key="orp",
@@ -51,7 +45,6 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
         options=["alcalyne", "acid"],
-        # has no unit
     ),
     PooldoseSensorEntityDescription(
         key="peristaltic_ph_dosing",
@@ -60,7 +53,6 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
         options=["proportional", "on_off", "timed"],
-        # has no unit
     ),
     PooldoseSensorEntityDescription(
         key="ofa_ph_value",
@@ -77,7 +69,6 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
         options=["low", "high"],
-        # has no unit
     ),
     PooldoseSensorEntityDescription(
         key="peristaltic_orp_dosing",
@@ -86,7 +77,6 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
         options=["off", "proportional", "on_off", "timed"],
-        # has no unit
     ),
     PooldoseSensorEntityDescription(
         key="ofa_orp_value",
@@ -103,7 +93,6 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
         options=["off", "reference", "1_point", "2_points"],
-        # has no unit
     ),
     PooldoseSensorEntityDescription(
         key="ph_calibration_offset",
@@ -130,7 +119,6 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
         options=["off", "reference", "1_point"],
-        # has no unit
     ),
     PooldoseSensorEntityDescription(
         key="orp_calibration_offset",
@@ -159,7 +147,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up PoolDose sensor entities from a config entry."""
-    # Assert for type checker that unique_id is not None
     if TYPE_CHECKING:
         assert config_entry.unique_id is not None
 

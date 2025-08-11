@@ -11,7 +11,6 @@ from pooldose.request_status import RequestStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,8 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 
 class PooldoseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for PoolDose integration."""
-
-    self.device_info: dict[str, str | None]
 
     def __init__(
         self,
@@ -37,15 +34,14 @@ class PooldoseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=config_entry,
         )
         self.client = client
+        self.device_info: dict[str, Any]
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         # Connect to the client
         client_status = await self.client.connect()
         if client_status != RequestStatus.SUCCESS:
-            raise UpdateFailed(
-                f"Failed to connect to PoolDose client: {client_status}"
-            )
+            raise UpdateFailed(f"Failed to connect to PoolDose client: {client_status}")
 
         # Update device info after successful connection
         self.device_info = self.client.device_info
