@@ -10,21 +10,17 @@
     },
     "step": {
       "user": {
-        "title": "Configuration",
         "data": {
-          "location": "[%key:common::config_flow::data::location%]",
-          "language_override": "[%key:common::config_flow::data::language%]"
+          "location": "[%key:common::config_flow::data::location%]"
         },
         "data_description": {
-          "language_override": "[%key:component::irm_kmi::common::language_override_description%]",
           "location": "[%key:common::config_flow::data::location%]"
         }
       }
     },
     "error": {
       "out_of_benelux": "The location is outside of Benelux. Pick a location in Benelux.",
-      "api_error": "[%key:common::config_flow::error::cannot_connect%]",
-      "config_entry_none": "Unknown configuration entry"
+      "api_error": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "selector": {
