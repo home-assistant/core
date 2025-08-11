@@ -58,12 +58,12 @@ class IrmKmiWeather(WeatherEntity, IrmKmiBaseEntity):
     @property
     def condition(self) -> str | None:
         """Return the current condition."""
-        return self.coordinator.data.get("current_weather", {}).get("condition")
+        return self.coordinator.data.current_weather.get("condition")
 
     @property
     def native_temperature(self) -> float | None:
         """Return the temperature in native units."""
-        return self.coordinator.data.get("current_weather", {}).get("temperature")
+        return self.coordinator.data.current_weather.get("temperature")
 
     @property
     def native_temperature_unit(self) -> str | None:
@@ -78,17 +78,17 @@ class IrmKmiWeather(WeatherEntity, IrmKmiBaseEntity):
     @property
     def native_wind_speed(self) -> float | None:
         """Return the wind speed in native units."""
-        return self.coordinator.data.get("current_weather", {}).get("wind_speed")
+        return self.coordinator.data.current_weather.get("wind_speed")
 
     @property
     def native_wind_gust_speed(self) -> float | None:
         """Return the wind gust speed in native units."""
-        return self.coordinator.data.get("current_weather", {}).get("wind_gust_speed")
+        return self.coordinator.data.current_weather.get("wind_gust_speed")
 
     @property
     def wind_bearing(self) -> float | str | None:
         """Return the wind bearing."""
-        return self.coordinator.data.get("current_weather", {}).get("wind_bearing")
+        return self.coordinator.data.current_weather.get("wind_bearing")
 
     @property
     def native_precipitation_unit(self) -> str | None:
@@ -98,7 +98,7 @@ class IrmKmiWeather(WeatherEntity, IrmKmiBaseEntity):
     @property
     def native_pressure(self) -> float | None:
         """Return the pressure in native units."""
-        return self.coordinator.data.get("current_weather", {}).get("pressure")
+        return self.coordinator.data.current_weather.get("pressure")
 
     @property
     def native_pressure_unit(self) -> str | None:
@@ -108,11 +108,11 @@ class IrmKmiWeather(WeatherEntity, IrmKmiBaseEntity):
     @property
     def uv_index(self) -> float | None:
         """Return the UV index."""
-        return self.coordinator.data.get("current_weather", {}).get("uv_index")
+        return self.coordinator.data.current_weather.get("uv_index")
 
     async def async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        return self.coordinator.data.get("daily_forecast")
+        return self.coordinator.data.daily_forecast
 
     async def async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
@@ -120,11 +120,11 @@ class IrmKmiWeather(WeatherEntity, IrmKmiBaseEntity):
 
     async def async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
-        return self.coordinator.data.get("hourly_forecast")
+        return self.coordinator.data.hourly_forecast
 
     def daily_forecast(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
-        data: list[Forecast] = self.coordinator.data.get("daily_forecast", [])
+        data: list[Forecast] = self.coordinator.data.daily_forecast
         if not isinstance(data, list):
             return None
 
