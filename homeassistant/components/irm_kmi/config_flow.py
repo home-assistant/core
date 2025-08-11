@@ -23,7 +23,7 @@ from .const import (
     OUT_OF_BENELUX,
     USER_AGENT,
 )
-from .types import IrmKmiConfigEntry
+from .coordinator import IrmKmiConfigEntry
 from .utils import get_config_value_options
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,7 +67,7 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
                     "Encountered an unexpected error while configuring the integration"
                 )
 
-            if api_data.get("cityName", None) in OUT_OF_BENELUX:
+            if api_data.get("cityName") in OUT_OF_BENELUX:
                 errors[CONF_LOCATION] = "out_of_benelux"
 
             if not errors:

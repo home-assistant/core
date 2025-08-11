@@ -6,8 +6,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, IRM_KMI_NAME
-from .coordinator import IrmKmiCoordinator
-from .types import IrmKmiConfigEntry
+from .coordinator import IrmKmiConfigEntry, IrmKmiCoordinator
 from .utils import preferred_language
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,7 +22,7 @@ class IrmKmiBaseEntity(CoordinatorEntity[IrmKmiCoordinator]):
 
     def __init__(self, entry: IrmKmiConfigEntry, name: str) -> None:
         """Init base properties for IRM KMI entities."""
-        coordinator = entry.runtime_data.coordinator
+        coordinator = entry.runtime_data
         super().__init__(coordinator)
 
         self._attr_device_info = DeviceInfo(
