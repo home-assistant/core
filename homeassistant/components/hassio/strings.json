@@ -117,7 +117,7 @@
     },
     "issue_system_disk_lifetime": {
       "title": "Disk lifetime exceeding 90%",
-      "description": "The disk reports it has exceeded 90% of its manufacturer expected lifetime. This means that the disk is nearing the end of its useful life and may begin to cause issues with the system. You should consider replacing it soon and then migrating to the new data disk."
+      "description": "The data disk has exceeded 90% of its expected lifespan. The disk may soon malfunction which can lead to data loss. You should replace it soon and migrate your data."
     },
     "unhealthy": {
       "title": "Unhealthy system - {reason}",
