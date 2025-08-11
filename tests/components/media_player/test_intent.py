@@ -940,6 +940,13 @@ async def test_volume_relative_media_player_intent(
     assert call.service == service_name
     assert call.data == {"entity_id": idle_entity_id}
 
+    # No media players are playing should not match
+    hass.states.async_set(playing_entity_id, STATE_IDLE, attributes=attributes)
+    calls = async_mock_service(hass, DOMAIN, service_name)
+
+    with pytest.raises(intent.MatchFailedError):
+        await intent.async_handle(hass, "test", intent_name)
+
     # Test feature not supported
     for entity_id in (idle_entity_id, playing_entity_id):
         hass.states.async_set(
@@ -949,4 +956,4 @@ async def test_volume_relative_media_player_intent(
         )
 
     with pytest.raises(intent.MatchFailedError):
-        response = await intent.async_handle(hass, "test", intent_name)
+        await intent.async_handle(hass, "test", intent_name)

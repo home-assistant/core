@@ -397,7 +397,13 @@ class MediaVolumeUpHandler(intent.ServiceIntentHandler):
             ]
             if not match_result.states:
                 # No media players are playing
-                return intent_obj.create_response()
+                raise intent.MatchFailedError(
+                    result=intent.MatchTargetsResult(
+                        is_match=False, no_match_reason=intent.MatchFailedReason.STATE
+                    ),
+                    constraints=match_constraints,
+                    preferences=match_preferences,
+                )
 
         return await super().async_handle_states(
             intent_obj, match_result, match_constraints
@@ -438,7 +444,13 @@ class MediaVolumeDownHandler(intent.ServiceIntentHandler):
             ]
             if not match_result.states:
                 # No media players are playing
-                return intent_obj.create_response()
+                raise intent.MatchFailedError(
+                    result=intent.MatchTargetsResult(
+                        is_match=False, no_match_reason=intent.MatchFailedReason.STATE
+                    ),
+                    constraints=match_constraints,
+                    preferences=match_preferences,
+                )
 
         return await super().async_handle_states(
             intent_obj, match_result, match_constraints
