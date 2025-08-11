@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from asyncio import sleep as asyncio_sleep
 from collections import defaultdict
 from collections.abc import Callable
@@ -53,6 +54,7 @@ _LOGGER = logging.getLogger(__name__)
 
 MAX_EXECUTIONS_TIME_WINDOW = 60 * 60  # 1 hour
 MAX_EXECUTIONS = 8
+UPDATE_PROGRAMS_INTERVAL_SEC = 1  # 1 second
 
 type HomeConnectConfigEntry = ConfigEntry[HomeConnectCoordinator]
 
@@ -251,11 +253,32 @@ class HomeConnectCoordinator(
                                         EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
                                         EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
                                     ):
-                                        await self.update_options(
-                                            event_message_ha_id,
-                                            event_key,
+                                        program_key = ProgramKey(
                                             ProgramKey(cast(str, event.value)),
                                         )
+                                        # If the active program is unknown, options must be updated using the selected program.
+                                        if (
+                                            event_key
+                                            == EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
+                                            and event.value == ProgramKey.UNKNOWN
+                                        ):
+                                            select_program_event = events.get(
+                                                EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM
+                                            )
+                                            if select_program_event:
+                                                program_key = cast(
+                                                    ProgramKey,
+                                                    select_program_event.value,
+                                                )
+                                        # Wait for a second before updating options because it may take time for the Home Connect API
+                                        # to update the options after the program change.
+                                        await asyncio.sleep(
+                                            UPDATE_PROGRAMS_INTERVAL_SEC
+                                        )
+                                        await self.update_options(
+                                            event_message_ha_id, event_key, program_key
+                                        )
+
                                     events[event_key] = event
                             self._call_event_listener(event_message)
 
