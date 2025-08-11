@@ -338,7 +338,7 @@ class NumberDeviceClass(StrEnum):
     REACTIVE_POWER = "reactive_power"
     """Reactive power.
 
-    Unit of measurement: `var`, `kvar`
+    Unit of measurement: `mvar`, `var`, `kvar`
     """
 
     SIGNAL_STRENGTH = "signal_strength"
