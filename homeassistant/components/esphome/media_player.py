@@ -54,32 +54,30 @@ _STATES: EsphomeEnumMapper[EspMediaPlayerState, MediaPlayerState] = EsphomeEnumM
     }
 )
 
-_FEATURES: EsphomeEnumMapper[EspMediaPlayerEntityFeature, MediaPlayerEntityFeature] = EsphomeEnumMapper(
-    {
-        EspMediaPlayerEntityFeature.PAUSE: MediaPlayerEntityFeature.PAUSE,
-        EspMediaPlayerEntityFeature.SEEK: MediaPlayerEntityFeature.SEEK,
-        EspMediaPlayerEntityFeature.VOLUME_SET: MediaPlayerEntityFeature.VOLUME_SET,
-        EspMediaPlayerEntityFeature.VOLUME_MUTE: MediaPlayerEntityFeature.VOLUME_MUTE,
-        EspMediaPlayerEntityFeature.PREVIOUS_TRACK: MediaPlayerEntityFeature.PREVIOUS_TRACK,
-        EspMediaPlayerEntityFeature.NEXT_TRACK: MediaPlayerEntityFeature.NEXT_TRACK,
-        EspMediaPlayerEntityFeature.TURN_ON: MediaPlayerEntityFeature.TURN_ON,
-        EspMediaPlayerEntityFeature.TURN_OFF: MediaPlayerEntityFeature.TURN_OFF,
-        EspMediaPlayerEntityFeature.PLAY_MEDIA: MediaPlayerEntityFeature.PLAY_MEDIA,
-        EspMediaPlayerEntityFeature.VOLUME_STEP: MediaPlayerEntityFeature.VOLUME_STEP,
-        EspMediaPlayerEntityFeature.SELECT_SOURCE: MediaPlayerEntityFeature.SELECT_SOURCE,
-        EspMediaPlayerEntityFeature.STOP: MediaPlayerEntityFeature.STOP,
-        EspMediaPlayerEntityFeature.CLEAR_PLAYLIST: MediaPlayerEntityFeature.CLEAR_PLAYLIST,
-        EspMediaPlayerEntityFeature.PLAY: MediaPlayerEntityFeature.PLAY,
-        EspMediaPlayerEntityFeature.SHUFFLE_SET: MediaPlayerEntityFeature.SHUFFLE_SET,
-        EspMediaPlayerEntityFeature.SELECT_SOUND_MODE: MediaPlayerEntityFeature.SELECT_SOUND_MODE,
-        EspMediaPlayerEntityFeature.BROWSE_MEDIA: MediaPlayerEntityFeature.BROWSE_MEDIA,
-        EspMediaPlayerEntityFeature.REPEAT_SET: MediaPlayerEntityFeature.REPEAT_SET,
-        EspMediaPlayerEntityFeature.GROUPING: MediaPlayerEntityFeature.GROUPING,
-        EspMediaPlayerEntityFeature.MEDIA_ANNOUNCE: MediaPlayerEntityFeature.MEDIA_ANNOUNCE,
-        EspMediaPlayerEntityFeature.MEDIA_ENQUEUE: MediaPlayerEntityFeature.MEDIA_ENQUEUE,
-        EspMediaPlayerEntityFeature.SEARCH_MEDIA: MediaPlayerEntityFeature.SEARCH_MEDIA,
-    }
-)
+_FEATURES = {
+    EspMediaPlayerEntityFeature.PAUSE: MediaPlayerEntityFeature.PAUSE,
+    EspMediaPlayerEntityFeature.SEEK: MediaPlayerEntityFeature.SEEK,
+    EspMediaPlayerEntityFeature.VOLUME_SET: MediaPlayerEntityFeature.VOLUME_SET,
+    EspMediaPlayerEntityFeature.VOLUME_MUTE: MediaPlayerEntityFeature.VOLUME_MUTE,
+    EspMediaPlayerEntityFeature.PREVIOUS_TRACK: MediaPlayerEntityFeature.PREVIOUS_TRACK,
+    EspMediaPlayerEntityFeature.NEXT_TRACK: MediaPlayerEntityFeature.NEXT_TRACK,
+    EspMediaPlayerEntityFeature.TURN_ON: MediaPlayerEntityFeature.TURN_ON,
+    EspMediaPlayerEntityFeature.TURN_OFF: MediaPlayerEntityFeature.TURN_OFF,
+    EspMediaPlayerEntityFeature.PLAY_MEDIA: MediaPlayerEntityFeature.PLAY_MEDIA,
+    EspMediaPlayerEntityFeature.VOLUME_STEP: MediaPlayerEntityFeature.VOLUME_STEP,
+    EspMediaPlayerEntityFeature.SELECT_SOURCE: MediaPlayerEntityFeature.SELECT_SOURCE,
+    EspMediaPlayerEntityFeature.STOP: MediaPlayerEntityFeature.STOP,
+    EspMediaPlayerEntityFeature.CLEAR_PLAYLIST: MediaPlayerEntityFeature.CLEAR_PLAYLIST,
+    EspMediaPlayerEntityFeature.PLAY: MediaPlayerEntityFeature.PLAY,
+    EspMediaPlayerEntityFeature.SHUFFLE_SET: MediaPlayerEntityFeature.SHUFFLE_SET,
+    EspMediaPlayerEntityFeature.SELECT_SOUND_MODE: MediaPlayerEntityFeature.SELECT_SOUND_MODE,
+    EspMediaPlayerEntityFeature.BROWSE_MEDIA: MediaPlayerEntityFeature.BROWSE_MEDIA,
+    EspMediaPlayerEntityFeature.REPEAT_SET: MediaPlayerEntityFeature.REPEAT_SET,
+    EspMediaPlayerEntityFeature.GROUPING: MediaPlayerEntityFeature.GROUPING,
+    EspMediaPlayerEntityFeature.MEDIA_ANNOUNCE: MediaPlayerEntityFeature.MEDIA_ANNOUNCE,
+    EspMediaPlayerEntityFeature.MEDIA_ENQUEUE: MediaPlayerEntityFeature.MEDIA_ENQUEUE,
+    EspMediaPlayerEntityFeature.SEARCH_MEDIA: MediaPlayerEntityFeature.SEARCH_MEDIA,
+}
 
 ATTR_BYPASS_PROXY = "bypass_proxy"
 
@@ -100,7 +98,7 @@ class EsphomeMediaPlayer(
         )
         flags = 0
         for espflag in esp_flags:
-            flags |= _FEATURES.from_esphome(espflag)
+            flags |= _FEATURES[espflag]
         self._attr_supported_features = flags
         self._entry_data.media_player_formats[self.unique_id] = cast(
             MediaPlayerInfo, static_info
