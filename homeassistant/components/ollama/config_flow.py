@@ -46,6 +46,8 @@ from .const import (
     CONF_NUM_CTX,
     CONF_PROMPT,
     CONF_THINK,
+    DEFAULT_AI_TASK_NAME,
+    DEFAULT_CONVERSATION_NAME,
     DEFAULT_KEEP_ALIVE,
     DEFAULT_MAX_HISTORY,
     DEFAULT_MODEL,
@@ -74,7 +76,7 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ollama."""
 
     VERSION = 3
-    MINOR_VERSION = 1
+    MINOR_VERSION = 3
 
     def __init__(self) -> None:
         """Initialize config flow."""
@@ -136,11 +138,14 @@ class OllamaConfigFlow(ConfigFlow, domain=DOMAIN):
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
-        return {"conversation": ConversationSubentryFlowHandler}
+        return {
+            "conversation": OllamaSubentryFlowHandler,
+            "ai_task_data": OllamaSubentryFlowHandler,
+        }
 
 
-class ConversationSubentryFlowHandler(ConfigSubentryFlow):
-    """Flow for managing conversation subentries."""
+class OllamaSubentryFlowHandler(ConfigSubentryFlow):
+    """Flow for managing Ollama subentries."""
 
     def __init__(self) -> None:
         """Initialize the subentry flow."""
@@ -201,7 +206,11 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 step_id="set_options",
                 data_schema=vol.Schema(
                     ollama_config_option_schema(
-                        self.hass, self._is_new, options, models_to_list
+                        self.hass,
+                        self._is_new,
+                        self._subentry_type,
+                        options,
+                        models_to_list,
                     )
                 ),
             )
@@ -300,13 +309,19 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
 def ollama_config_option_schema(
     hass: HomeAssistant,
     is_new: bool,
+    subentry_type: str,
     options: Mapping[str, Any],
     models_to_list: list[SelectOptionDict],
 ) -> dict:
     """Ollama options schema."""
     if is_new:
+        if subentry_type == "ai_task_data":
+            default_name = DEFAULT_AI_TASK_NAME
+        else:
+            default_name = DEFAULT_CONVERSATION_NAME
+
         schema: dict = {
-            vol.Required(CONF_NAME, default="Ollama Conversation"): str,
+            vol.Required(CONF_NAME, default=default_name): str,
         }
     else:
         schema = {}
@@ -319,29 +334,38 @@ def ollama_config_option_schema(
             ): SelectSelector(
                 SelectSelectorConfig(options=models_to_list, custom_value=True)
             ),
-            vol.Optional(
-                CONF_PROMPT,
-                description={
-                    "suggested_value": options.get(
-                        CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
-                    )
-                },
-            ): TemplateSelector(),
-            vol.Optional(
-                CONF_LLM_HASS_API,
-                description={"suggested_value": options.get(CONF_LLM_HASS_API)},
-            ): SelectSelector(
-                SelectSelectorConfig(
-                    options=[
-                        SelectOptionDict(
-                            label=api.name,
-                            value=api.id,
+        }
+    )
+    if subentry_type == "conversation":
+        schema.update(
+            {
+                vol.Optional(
+                    CONF_PROMPT,
+                    description={
+                        "suggested_value": options.get(
+                            CONF_PROMPT, llm.DEFAULT_INSTRUCTIONS_PROMPT
                         )
-                        for api in llm.async_get_apis(hass)
-                    ],
-                    multiple=True,
-                )
-            ),
+                    },
+                ): TemplateSelector(),
+                vol.Optional(
+                    CONF_LLM_HASS_API,
+                    description={"suggested_value": options.get(CONF_LLM_HASS_API)},
+                ): SelectSelector(
+                    SelectSelectorConfig(
+                        options=[
+                            SelectOptionDict(
+                                label=api.name,
+                                value=api.id,
+                            )
+                            for api in llm.async_get_apis(hass)
+                        ],
+                        multiple=True,
+                    )
+                ),
+            }
+        )
+    schema.update(
+        {
             vol.Optional(
                 CONF_NUM_CTX,
                 description={

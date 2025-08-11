@@ -49,7 +49,7 @@ class RestData:
         # Convert auth tuple to aiohttp.BasicAuth if needed
         if isinstance(auth, tuple) and len(auth) == 2:
             self._auth: aiohttp.BasicAuth | aiohttp.DigestAuthMiddleware | None = (
-                aiohttp.BasicAuth(auth[0], auth[1])
+                aiohttp.BasicAuth(auth[0], auth[1], encoding="utf-8")
             )
         else:
             self._auth = auth
@@ -115,6 +115,16 @@ class RestData:
             for key, value in rendered_params.items():
                 if isinstance(value, bool):
                     rendered_params[key] = str(value).lower()
+                elif not isinstance(value, (str, int, float, type(None))):
+                    # For backward compatibility with httpx behavior, convert non-primitive
+                    # types to strings. This maintains compatibility after switching from
+                    # httpx to aiohttp. See https://github.com/home-assistant/core/issues/148153
+                    _LOGGER.debug(
+                        "REST query parameter '%s' has type %s, converting to string",
+                        key,
+                        type(value).__name__,
+                    )
+                    rendered_params[key] = str(value)
 
         _LOGGER.debug("Updating from %s", self._resource)
         # Create request kwargs
@@ -140,7 +150,14 @@ class RestData:
                 self._method, self._resource, **request_kwargs
             ) as response:
                 # Read the response
-                self.data = await response.text(encoding=self._encoding)
+                # Only use configured encoding if no charset in Content-Type header
+                # If charset is present in Content-Type, let aiohttp use it
+                if response.charset:
+                    # Let aiohttp use the charset from Content-Type header
+                    self.data = await response.text()
+                else:
+                    # Use configured encoding as fallback
+                    self.data = await response.text(encoding=self._encoding)
                 self.headers = response.headers
 
         except TimeoutError as ex:
