@@ -34,16 +34,20 @@ class AbstractTemplateEntity(Entity):
         self._action_scripts: dict[str, Script] = {}
 
         if self._optimistic_entity:
+            optimistic = config.get(CONF_OPTIMISTIC)
+
             self._template = config.get(CONF_STATE)
 
-            optimistic = self._template is None
+            assumed_optimistic = self._template is None
             if self._extra_optimistic_options:
-                optimistic = optimistic and all(
+                assumed_optimistic = assumed_optimistic and all(
                     config.get(option) is None
                     for option in self._extra_optimistic_options
                 )
 
-            self._attr_assumed_state = optimistic or config.get(CONF_OPTIMISTIC, False)
+            self._attr_assumed_state = optimistic or (
+                optimistic is None and assumed_optimistic
+            )
 
         if (object_id := config.get(CONF_OBJECT_ID)) is not None:
             self.entity_id = async_generate_entity_id(
