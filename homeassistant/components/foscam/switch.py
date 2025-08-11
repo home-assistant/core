@@ -9,21 +9,21 @@ from typing import Any
 from libpyfoscamcgi import FoscamCamera
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import FoscamConfigEntry, FoscamCoordinator
 from .entity import FoscamEntity
 
 
-def handle_ir_turn_on(session):
+def handle_ir_turn_on(session: FoscamCamera) -> None:
     """Turn on IR LED: sets IR mode to auto (if supported), then turns off the IR LED."""
 
     session.set_infra_led_config(1)
     session.open_infra_led()
 
 
-def handle_ir_turn_off(session):
+def handle_ir_turn_off(session: FoscamCamera) -> None:
     """Turn off IR LED: sets IR mode to manual (if supported), then turns open the IR LED."""
 
     session.set_infra_led_config(0)
@@ -34,11 +34,9 @@ def handle_ir_turn_off(session):
 class FoscamSwitchEntityDescription(SwitchEntityDescription):
     """A custom entity description that supports a turn_off function."""
 
-    native_value_fn: Callable[..., bool] | None = None
+    native_value_fn: Callable[..., bool]
     turn_off_fn: Callable[[FoscamCamera], None]
     turn_on_fn: Callable[[FoscamCamera], None]
-    set_ir_config_auto_close: Callable[[FoscamCamera], None] | None = None
-    set_ir_config_auto: Callable[[FoscamCamera], None] | None = None
 
 
 SWITCH_DESCRIPTIONS: list[FoscamSwitchEntityDescription] = [
@@ -60,13 +58,11 @@ SWITCH_DESCRIPTIONS: list[FoscamSwitchEntityDescription] = [
         key="is_open_ir",
         translation_key="ir_switch",
         native_value_fn=lambda data: data.is_open_ir,
-        set_ir_config_auto_close=lambda session: session.set_infra_led_config(0),
-        set_ir_config_auto=lambda session: session.set_infra_led_config(1),
         turn_off_fn=handle_ir_turn_off,
         turn_on_fn=handle_ir_turn_on,
     ),
     FoscamSwitchEntityDescription(
-        key="is_asleep",
+        key="sleep_switch",
         translation_key="sleep_switch",
         native_value_fn=lambda data: data.is_asleep["status"],
         turn_off_fn=lambda session: session.wake_up(),
@@ -165,33 +161,21 @@ class FoscamGenericSwitch(FoscamEntity, SwitchEntity):
         self.entity_description = description
         self._attr_unique_id = f"{entry_id}_{description.key}"
 
-        if self.entity_description.native_value_fn:
-            self._state = self.entity_description.native_value_fn(self.coordinator.data)
-
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
-        return self._state
+        return self.entity_description.native_value_fn(self.coordinator.data)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the entity."""
-        if self.entity_description.turn_off_fn is not None:
-            self.hass.async_add_executor_job(
-                self.entity_description.turn_off_fn, self.coordinator.session
-            )
+        self.hass.async_add_executor_job(
+            self.entity_description.turn_off_fn, self.coordinator.session
+        )
         await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the entity."""
-        if self.entity_description.turn_on_fn is not None:
-            self.hass.async_add_executor_job(
-                self.entity_description.turn_on_fn, self.coordinator.session
-            )
+        self.hass.async_add_executor_job(
+            self.entity_description.turn_on_fn, self.coordinator.session
+        )
         await self.coordinator.async_request_refresh()
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        if self.entity_description.native_value_fn:
-            self._state = self.entity_description.native_value_fn(self.coordinator.data)
-        self.async_write_ha_state()
