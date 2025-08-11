@@ -544,7 +544,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.ENERGY_STORAGE: EnergyConverter,
     SensorDeviceClass.GAS: VolumeConverter,
     SensorDeviceClass.POWER: PowerConverter,
-    SensorDeviceClass.POWER: ApparentPowerConverter,
+    SensorDeviceClass.APPARENT_POWER: ApparentPowerConverter,
     SensorDeviceClass.POWER_FACTOR: UnitlessRatioConverter,
     SensorDeviceClass.PRECIPITATION: DistanceConverter,
     SensorDeviceClass.PRECIPITATION_INTENSITY: SpeedConverter,
