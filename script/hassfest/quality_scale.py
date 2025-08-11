@@ -922,7 +922,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "somfy_mylink",
     "sonarr",
     "songpal",
-    "sonos",
     "sony_projector",
     "soundtouch",
     "spaceapi",
