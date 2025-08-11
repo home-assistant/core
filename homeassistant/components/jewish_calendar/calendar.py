@@ -89,8 +89,8 @@ class JewishCalendar(JewishCalendarEntity, CalendarEntity):
         """Get all configured events for a specific date."""
         events = []
 
-        info = HDateInfo(target_date, self.data.diaspora)
-        zmanim = self.make_zmanim(target_date)
+        info = HDateInfo(target_date, self.coordinator.data.diaspora)
+        zmanim = self.coordinator.make_zmanim(target_date)
 
         for event_type in self._events_config:
             if _events := self._create_event_for_type(
