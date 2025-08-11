@@ -47,7 +47,6 @@ class TelegramBotNotifyEntity(NotifyEntity):
         self.name = subentry.title
 
         self._attr_device_info = DeviceInfo(
-            name=config_entry.title,
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="Telegram",
             model=config_entry.data[CONF_PLATFORM].capitalize(),
