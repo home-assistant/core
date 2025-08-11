@@ -53,19 +53,22 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = "Template Update"
 
 ATTR_BACKUP = "backup"
-ATTR_VERSION = "version"
+ATTR_SPECIFIC_VERSION = "specific_version"
 
+CONF_BACKUP = "backup"
 CONF_IN_PROGRESS = "in_progress"
 CONF_INSTALL = "install"
 CONF_INSTALLED_VERSION = "installed_version"
 CONF_LATEST_VERSION = "latest_version"
 CONF_RELEASE_SUMMARY = "release_summary"
 CONF_RELEASE_URL = "release_url"
+CONF_SPECIFIC_VERSION = "specific_version"
 CONF_TITLE = "title"
 CONF_UPDATE_PERCENTAGE = "update_percentage"
 
 UPDATE_COMMON_SCHEMA = vol.Schema(
     {
+        vol.Optional(CONF_BACKUP, default=False): cv.boolean,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_IN_PROGRESS): cv.template,
         vol.Optional(CONF_INSTALL): cv.SCRIPT_SCHEMA,
@@ -73,6 +76,7 @@ UPDATE_COMMON_SCHEMA = vol.Schema(
         vol.Required(CONF_LATEST_VERSION): cv.template,
         vol.Optional(CONF_RELEASE_SUMMARY): cv.template,
         vol.Optional(CONF_RELEASE_URL): cv.template,
+        vol.Optional(CONF_SPECIFIC_VERSION, default=False): cv.boolean,
         vol.Optional(CONF_TITLE): cv.template,
         vol.Optional(CONF_UPDATE_PERCENTAGE): cv.template,
     }
@@ -155,10 +159,11 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
         self._title_template = config.get(CONF_TITLE)
         self._update_percentage_template = config.get(CONF_UPDATE_PERCENTAGE)
 
-        self._attr_supported_features = (
-            UpdateEntityFeature.BACKUP | UpdateEntityFeature.SPECIFIC_VERSION
-        )
-
+        self._attr_supported_features = UpdateEntityFeature(0)
+        if config[CONF_BACKUP]:
+            self._attr_supported_features |= UpdateEntityFeature.BACKUP
+        if config[CONF_SPECIFIC_VERSION]:
+            self._attr_supported_features |= UpdateEntityFeature.SPECIFIC_VERSION
         if (
             self._in_progress_template is not None
             or self._update_percentage_template is not None
@@ -259,7 +264,7 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
         """Install an update."""
         await self.async_run_script(
             self._action_scripts[CONF_INSTALL],
-            run_variables={ATTR_VERSION: version, ATTR_BACKUP: backup},
+            run_variables={ATTR_SPECIFIC_VERSION: version, ATTR_BACKUP: backup},
             context=self._context,
         )
 

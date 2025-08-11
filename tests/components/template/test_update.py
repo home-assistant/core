@@ -57,7 +57,12 @@ TEST_UNIQUE_ID_CONFIG = {
 INSTALL_ACTION = {
     "install": {
         "action": "test.automation",
-        "data": {"caller": "{{ this.entity_id }}", "action": "install"},
+        "data": {
+            "caller": "{{ this.entity_id }}",
+            "action": "install",
+            "backup": "{{ backup }}",
+            "specific_version": "{{ specific_version }}",
+        },
     }
 }
 
@@ -753,6 +758,87 @@ async def test_optimistic_in_progress_with_update_percent_template(
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.attributes["in_progress"] is False
     assert state.attributes["update_percentage"] is None
+
+
+@pytest.mark.parametrize(
+    (
+        "count",
+        "installed_template",
+        "latest_template",
+    ),
+    [(1, TEST_INSTALLED_TEMPLATE, TEST_LATEST_TEMPLATE)],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    (
+        "extra_config",
+        "supported_feature",
+        "action_data",
+        "expected_backup",
+        "expected_version",
+    ),
+    [
+        (
+            {"backup": True, **INSTALL_ACTION},
+            update.UpdateEntityFeature.BACKUP | update.UpdateEntityFeature.INSTALL,
+            {"backup": True},
+            True,
+            None,
+        ),
+        (
+            {"specific_version": True, **INSTALL_ACTION},
+            update.UpdateEntityFeature.SPECIFIC_VERSION
+            | update.UpdateEntityFeature.INSTALL,
+            {"version": "v2.0"},
+            False,
+            "v2.0",
+        ),
+        (
+            {"backup": True, "specific_version": True, **INSTALL_ACTION},
+            update.UpdateEntityFeature.SPECIFIC_VERSION
+            | update.UpdateEntityFeature.BACKUP
+            | update.UpdateEntityFeature.INSTALL,
+            {"backup": True, "version": "v2.0"},
+            True,
+            "v2.0",
+        ),
+        (INSTALL_ACTION, update.UpdateEntityFeature.INSTALL, {}, False, None),
+    ],
+)
+@pytest.mark.usefixtures("setup_update")
+async def test_supported_features(
+    hass: HomeAssistant,
+    supported_feature: update.UpdateEntityFeature,
+    action_data: dict,
+    calls: list[ServiceCall],
+    expected_backup: bool,
+    expected_version: str | None,
+) -> None:
+    """Test release summary and title templates."""
+    # Ensure trigger entities trigger.
+    state = hass.states.async_set(TEST_INSTALLED_SENSOR, STATE_OFF)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.attributes["supported_features"] == supported_feature
+
+    await hass.services.async_call(
+        update.DOMAIN,
+        update.SERVICE_INSTALL,
+        {"entity_id": TEST_ENTITY_ID, **action_data},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # verify
+    assert len(calls) == 1
+    data = calls[-1].data
+    assert data["action"] == "install"
+    assert data["caller"] == TEST_ENTITY_ID
+    assert data["backup"] == expected_backup
+    assert data["specific_version"] == expected_version
 
 
 @pytest.mark.parametrize(

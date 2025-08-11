@@ -106,12 +106,14 @@ from .sensor import async_create_preview_sensor
 from .switch import async_create_preview_switch
 from .template_entity import TemplateEntity
 from .update import (
+    CONF_BACKUP,
     CONF_IN_PROGRESS,
     CONF_INSTALL,
     CONF_INSTALLED_VERSION,
     CONF_LATEST_VERSION,
     CONF_RELEASE_SUMMARY,
     CONF_RELEASE_URL,
+    CONF_SPECIFIC_VERSION,
     CONF_TITLE,
     CONF_UPDATE_PERCENTAGE,
     async_create_preview_update,
@@ -337,6 +339,8 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Optional(CONF_RELEASE_URL): selector.TemplateSelector(),
             vol.Optional(CONF_TITLE): selector.TemplateSelector(),
             vol.Optional(CONF_UPDATE_PERCENTAGE): selector.TemplateSelector(),
+            vol.Optional(CONF_BACKUP): selector.BooleanSelector(),
+            vol.Optional(CONF_SPECIFIC_VERSION): selector.BooleanSelector(),
         }
         if flow_type == "config":
             schema |= {
