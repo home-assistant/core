@@ -20,5 +20,3 @@ ATTR_LATENCY = "latency"
 
 DOMAIN = "snapcast"
 DEFAULT_TITLE = "Snapcast"
-
-CONF_CREATE_GROUP_ENTITIES = "create_group_entities"

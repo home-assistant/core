@@ -34,7 +34,6 @@ from .const import (
     ATTR_MASTER,
     CLIENT_PREFIX,
     CLIENT_SUFFIX,
-    CONF_CREATE_GROUP_ENTITIES,
     DOMAIN,
     GROUP_PREFIX,
     GROUP_SUFFIX,
@@ -156,20 +155,17 @@ async def async_setup_entry(
     _update_clients()
     coordinator.async_add_listener(_update_clients)
 
-    # Enable group entities
-    if config_entry.options.get(CONF_CREATE_GROUP_ENTITIES):
+    def _update_groups() -> None:
+        _update_entities(
+            SnapcastGroupDevice,
+            _known_group_ids,
+            coordinator.server.group,
+            lambda: coordinator.server.groups,
+        )
 
-        def _update_groups() -> None:
-            _update_entities(
-                SnapcastGroupDevice,
-                _known_group_ids,
-                coordinator.server.group,
-                lambda: coordinator.server.groups,
-            )
-
-        # Create group entities and add listener to update groups on server update
-        _update_groups()
-        coordinator.async_add_listener(_update_groups)
+    # Create group entities and add listener to update groups on server update
+    _update_groups()
+    coordinator.async_add_listener(_update_groups)
 
 
 class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
@@ -281,7 +277,7 @@ class SnapcastBaseDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
             self.hass,
             DOMAIN,
             "deprecated_grouping_actions",
-            breaks_in_ha_version="2025.12.0",
+            breaks_in_ha_version="2026.2.0",
             is_fixable=False,
             is_persistent=False,
             severity=ir.IssueSeverity.WARNING,
@@ -397,6 +393,54 @@ class SnapcastGroupDevice(SnapcastBaseDevice):
     async def async_unjoin(self) -> None:
         """Handle the unjoin service."""
         raise ServiceValidationError("Entity is not a client. Can only unjoin clients.")
+
+    def _async_create_group_deprecation_issue(self) -> None:
+        """Create an issue for deprecated group entities."""
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            "deprecated_group_entities",
+            breaks_in_ha_version="2026.2.0",
+            is_fixable=False,
+            is_persistent=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_group_entities",
+        )
+
+    async def async_select_source(self, source: str) -> None:
+        """Set input source."""
+        # Groups are deprecated, create an issue when used
+        self._async_create_group_deprecation_issue()
+
+        await super().async_select_source(source)
+
+    async def async_mute_volume(self, mute: bool) -> None:
+        """Send the mute command."""
+        # Groups are deprecated, create an issue when used
+        self._async_create_group_deprecation_issue()
+
+        await super().async_mute_volume(mute)
+
+    async def async_set_volume_level(self, volume: float) -> None:
+        """Set the volume level."""
+        # Groups are deprecated, create an issue when used
+        self._async_create_group_deprecation_issue()
+
+        await super().async_set_volume_level(volume)
+
+    def snapshot(self) -> None:
+        """Snapshot the group state."""
+        # Groups are deprecated, create an issue when used
+        self._async_create_group_deprecation_issue()
+
+        super().snapshot()
+
+    async def async_restore(self) -> None:
+        """Restore the group state."""
+        # Groups are deprecated, create an issue when used
+        self._async_create_group_deprecation_issue()
+
+        await super().async_restore()
 
 
 class SnapcastClientDevice(SnapcastBaseDevice):
