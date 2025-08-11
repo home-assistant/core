@@ -7,8 +7,8 @@
   },
   "electricRange": {
     "status": "OK",
-    "value": 220,
-    "unit": "km",
+    "value": 150,
+    "unit": "mi",
     "updatedAt": "2025-07-02T08:51:23Z"
   },
   "chargerConnectionStatus": {
