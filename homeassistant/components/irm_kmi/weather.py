@@ -4,7 +4,7 @@ import logging
 
 from homeassistant.components.weather import (
     Forecast,
-    WeatherEntity,
+    SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
 from homeassistant.const import (
@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import IrmKmiConfigEntry
+from .coordinator import IrmKmiConfigEntry, IrmKmiCoordinator
 from .entity import IrmKmiBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,13 +31,16 @@ async def async_setup_entry(
     async_add_entities([IrmKmiWeather(entry)])
 
 
-class IrmKmiWeather(WeatherEntity, IrmKmiBaseEntity):
+class IrmKmiWeather(
+    IrmKmiBaseEntity,  # WeatherEntity
+    SingleCoordinatorWeatherEntity[IrmKmiCoordinator],
+):
     """Weather entity for IRM KMI weather."""
 
     def __init__(self, entry: IrmKmiConfigEntry) -> None:
         """Create a new instance of the weather entity from a configuration entry."""
-        WeatherEntity.__init__(self)
         IrmKmiBaseEntity.__init__(self, entry, "Forecast")
+        SingleCoordinatorWeatherEntity.__init__(self, entry.runtime_data)
         self._name = entry.title
         self._attr_unique_id = entry.entry_id
 
@@ -110,23 +113,21 @@ class IrmKmiWeather(WeatherEntity, IrmKmiBaseEntity):
         """Return the UV index."""
         return self.coordinator.data.current_weather.get("uv_index")
 
-    async def async_forecast_twice_daily(self) -> list[Forecast] | None:
+    def _async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         return self.coordinator.data.daily_forecast
 
-    async def async_forecast_daily(self) -> list[Forecast] | None:
+    def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         return self.daily_forecast()
 
-    async def async_forecast_hourly(self) -> list[Forecast] | None:
+    def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
         return self.coordinator.data.hourly_forecast
 
     def daily_forecast(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         data: list[Forecast] = self.coordinator.data.daily_forecast
-        if not isinstance(data, list):
-            return None
 
         # The data in daily_forecast might contain nighttime forecast.
         # The following handle the lowest temperature attribute to be displayed correctly.
