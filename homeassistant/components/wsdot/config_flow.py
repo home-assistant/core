@@ -19,16 +19,10 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME
 from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.selector import selector
 
-from .const import (
-    CONF_TRAVEL_TIMES,
-    DIALOG_API_KEY,
-    DIALOG_NAME,
-    DIALOG_ROUTE,
-    DOMAIN,
-    SUBENTRY_TRAVEL_TIMES,
-)
+from .const import CONF_TRAVEL_TIMES, DOMAIN, SUBENTRY_TRAVEL_TIMES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,27 +46,21 @@ class WSDOTConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 wsdot_travel_times = wsdot_api.WsdotTravelTimes(
-                    user_input[DIALOG_API_KEY]
+                    user_input[CONF_API_KEY]
                 )
-                travel_time_routes = await wsdot_travel_times.get_all_travel_times()
+                await wsdot_travel_times.get_all_travel_times()
             except wsdot_api.WsdotTravelError as ws_error:
                 if ws_error.status == 400:
-                    errors[DIALOG_API_KEY] = (
-                        "Invalid API Key. If you do not have an API Key, you can get a new one at https://wsdot.wa.gov/traffic/api/"
-                    )
+                    errors[CONF_API_KEY] = "invalid_api_key"
                 else:
-                    err_msg = "Unable to retrieve routes from WSDOT"
-                    _LOGGER.exception(err_msg)
-                    errors["base"] = err_msg
+                    errors["base"] = "cannot_connect"
             else:
+                await self.async_set_unique_id(user_input[CONF_API_KEY])
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=user_input[DIALOG_NAME],
+                    title=DOMAIN,
                     data={
-                        CONF_API_KEY: user_input[DIALOG_API_KEY],
-                        CONF_TRAVEL_TIMES: [
-                            {"id": t.TravelTimeID, "name": t.Name}
-                            for t in travel_time_routes
-                        ],
+                        CONF_API_KEY: user_input[CONF_API_KEY],
                     },
                 )
 
@@ -80,8 +68,7 @@ class WSDOTConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id=SOURCE_USER,
             data_schema=vol.Schema(
                 {
-                    vol.Required(DIALOG_API_KEY): str,
-                    vol.Required(DIALOG_NAME, default=DOMAIN): str,
+                    vol.Required(CONF_API_KEY): str,
                 }
             ),
             errors=errors,
@@ -89,6 +76,8 @@ class WSDOTConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
         """Handle a flow initialized by import."""
+        await self.async_set_unique_id(import_info[CONF_API_KEY])
+        self._abort_if_unique_id_configured()
         try:
             wsdot_travel_times = wsdot_api.WsdotTravelTimes(import_info[CONF_API_KEY])
             travel_time_routes = await wsdot_travel_times.get_all_travel_times()
@@ -104,6 +93,7 @@ class WSDOTConfigFlow(ConfigFlow, domain=DOMAIN):
             maybe_travel_time = [
                 tt
                 for tt in travel_time_routes
+                # old platform configs could store the id as either a str or an int
                 if str(tt.TravelTimeID) == str(route[CONF_ID])
             ]
             if not maybe_travel_time:
@@ -113,8 +103,8 @@ class WSDOTConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 continue
             travel_time = maybe_travel_time[0]
-            route_name = route.get(CONF_NAME, travel_time.Name)
-            unique_id = "_".join((DOMAIN, *travel_time.Name.split()))
+            route_name = travel_time.Name
+            unique_id = "_".join(travel_time.Name.split())
             subentries.append(
                 ConfigSubentry(
                     subentry_type=SUBENTRY_TRAVEL_TIMES,
@@ -130,9 +120,6 @@ class WSDOTConfigFlow(ConfigFlow, domain=DOMAIN):
             title=DOMAIN,
             data={
                 CONF_API_KEY: import_info[CONF_API_KEY],
-                CONF_TRAVEL_TIMES: [
-                    {"id": t.TravelTimeID, "name": t.Name} for t in travel_time_routes
-                ],
             },
             subentries=subentries,
         )
@@ -153,21 +140,26 @@ class TravelTimeSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Add a new Travel Time subentry."""
-        travel_times = self._get_entry().data[CONF_TRAVEL_TIMES]
+        runtime = self._get_entry().runtime_data
+        if runtime is None:
+            raise ConfigEntryError("WSDOT entry has no runtime_data")
+        travel_times = await runtime.wsdot_travel_times.get_all_travel_times()
         if user_input is not None:
             route = [
-                tt for tt in travel_times if tt[CONF_NAME] == user_input[DIALOG_ROUTE]
+                {CONF_NAME: tt.Name, CONF_ID: tt.TravelTimeID}
+                for tt in travel_times
+                if tt.Name == user_input[CONF_NAME]
             ][0]
-            title = user_input[DIALOG_NAME] or route[CONF_NAME]
-            return self.async_create_entry(title=title, data=route)
+            name = route[CONF_NAME]
+            unique_id = "_".join(name.split())
+            return self.async_create_entry(title=name, unique_id=unique_id, data=route)
 
-        names = sorted(tt[CONF_NAME] for tt in travel_times)
+        names = sorted(tt.Name for tt in travel_times)
         return self.async_show_form(
             step_id=SOURCE_USER,
             data_schema=vol.Schema(
                 {
-                    vol.Optional(DIALOG_NAME, default=""): str,
-                    vol.Required(DIALOG_ROUTE): selector(
+                    vol.Required(CONF_NAME): selector(
                         {"select": {"options": names, "mode": "dropdown"}}
                     ),
                 }

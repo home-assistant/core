@@ -1,10 +1,24 @@
 """The wsdot component."""
 
+from dataclasses import dataclass
+
+import wsdot as wsdot_api
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 PLATFORMS = [Platform.SENSOR]
+
+
+@dataclass
+class WsdotRuntimeData:
+    """WSDOT API handlers."""
+
+    wsdot_travel_times: wsdot_api.WsdotTravelTimes
+
+
+type WsdotConfigEntry = ConfigEntry[WsdotRuntimeData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

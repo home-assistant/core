@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_ID,
@@ -22,6 +22,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import (
@@ -30,6 +31,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import WsdotConfigEntry, WsdotRuntimeData
 from .const import ATTRIBUTION, CONF_TRAVEL_TIMES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,16 +81,21 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WsdotConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the WSDOT sensor."""
     session = async_get_clientsession(hass)
     api_key = entry.data[CONF_API_KEY]
     wsdot_travel_times = wsdot_api.WsdotTravelTimes(api_key=api_key, session=session)
+    try:
+        await wsdot_travel_times.get_all_travel_times()
+    except wsdot_api.WsdotError as api_error:
+        raise ConfigEntryAuthFailed from api_error
+    entry.runtime_data = WsdotRuntimeData(wsdot_travel_times=wsdot_travel_times)
     for subentry_id, subentry in entry.subentries.items():
         name = subentry.data[CONF_NAME]
-        travel_time_id = int(subentry.data[CONF_ID])
+        travel_time_id = subentry.data[CONF_ID]
         sensor = WashingtonStateTravelTimeSensor(
             name, wsdot_travel_times, travel_time_id
         )

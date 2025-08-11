@@ -7,8 +7,8 @@ from unittest.mock import patch
 import pytest
 from wsdot import TravelTime
 
-from homeassistant.components.wsdot.const import CONF_TRAVEL_TIMES, DOMAIN
-from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME
+from homeassistant.components.wsdot.const import DOMAIN
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -30,7 +30,6 @@ def mock_config_data() -> dict[str, Any]:
     """Return valid test config data."""
     return {
         CONF_API_KEY: "foo",
-        CONF_TRAVEL_TIMES: [{CONF_ID: 96, CONF_NAME: "I90 EB"}],
     }
 
 
