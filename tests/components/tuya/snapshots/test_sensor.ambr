@@ -747,7 +747,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -786,7 +786,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'precipitation_intensity',
       'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Precipitation intensity',
-      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR: 'mm/h'>,
     }),
     'context': <ANY>,
@@ -1083,7 +1083,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1122,7 +1122,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'precipitation',
       'friendly_name': 'BR 7-in-1 WLAN Wetterstation Anthrazit Total precipitation today',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'mm',
     }),
     'context': <ANY>,

@@ -957,13 +957,13 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             key=DPCode.RAIN_24H,
             translation_key="precipitation_today",
             device_class=SensorDeviceClass.PRECIPITATION,
-            state_class=SensorStateClass.MEASUREMENT,
+            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.RAIN_RATE,
             translation_key="precipitation_intensity",
             device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
-            state_class=SensorStateClass.TOTAL_INCREASING,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.UV_INDEX,
