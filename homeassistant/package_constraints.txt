@@ -217,6 +217,6 @@ rpds-py==0.26.0
 num2words==0.5.14
 
 # pymodbus does not follow SemVer, and it keeps getting
-# downgraded or upgrade by custom components
+# downgraded or upgraded by custom components
 # This ensures all use the same version
 pymodbus==3.11.0
