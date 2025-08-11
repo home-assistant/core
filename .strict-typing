@@ -310,7 +310,6 @@ homeassistant.components.letpot.*
 homeassistant.components.lidarr.*
 homeassistant.components.lifx.*
 homeassistant.components.light.*
-homeassistant.components.linear_garage_door.*
 homeassistant.components.linkplay.*
 homeassistant.components.litejet.*
 homeassistant.components.litterrobot.*
@@ -467,6 +466,7 @@ homeassistant.components.simplisafe.*
 homeassistant.components.siren.*
 homeassistant.components.skybell.*
 homeassistant.components.slack.*
+homeassistant.components.sleep_as_android.*
 homeassistant.components.sleepiq.*
 homeassistant.components.smhi.*
 homeassistant.components.smlight.*

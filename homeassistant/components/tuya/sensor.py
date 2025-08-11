@@ -1334,7 +1334,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         TuyaSensorEntityDescription(
             key=DPCode.REVERSE_ENERGY_TOTAL,
-            translation_key="total_energy",
+            translation_key="total_production",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
         ),
@@ -1575,6 +1575,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
                     self.unique_id,
                 )
                 self._attr_device_class = None
+                self._attr_suggested_unit_of_measurement = None
                 return
 
             uoms = DEVICE_CLASS_UNITS[self.device_class]
@@ -1585,6 +1586,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             # Unknown unit of measurement, device class should not be used.
             if uom is None:
                 self._attr_device_class = None
+                self._attr_suggested_unit_of_measurement = None
                 return
 
             # Found unit of measurement, use the standardized Unit
@@ -1634,10 +1636,11 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             if (
                 self.entity_description.complex_type is None
                 or self.entity_description.subkey is None
+                or (raw_values := self.entity_description.complex_type.from_raw(value))
+                is None
             ):
                 return None
-            values = self.entity_description.complex_type.from_raw(value)
-            return getattr(values, self.entity_description.subkey)
+            return getattr(raw_values, self.entity_description.subkey)
 
         # Valid string or enum value
         return value
