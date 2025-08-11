@@ -588,6 +588,7 @@ ATTR_PERSONS: Final = "persons"
 class UnitOfApparentPower(StrEnum):
     """Apparent power units."""
 
+    MILLIVOLT_AMPERE = "mVA"
     VOLT_AMPERE = "VA"
 
 
@@ -608,7 +609,7 @@ class UnitOfPower(StrEnum):
 class UnitOfReactivePower(StrEnum):
     """Reactive power units."""
 
-    MILIVOLT_AMPERE_REACTIVE = "mvar"
+    MILLIVOLT_AMPERE_REACTIVE = "mvar"
     VOLT_AMPERE_REACTIVE = "var"
     KILO_VOLT_AMPERE_REACTIVE = "kvar"
 

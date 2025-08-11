@@ -28,6 +28,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfReactiveEnergy,
+    UnitOfReactivePower,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
@@ -55,6 +56,7 @@ from homeassistant.util.unit_conversion import (
     PowerConverter,
     PressureConverter,
     ReactiveEnergyConverter,
+    ReactivePowerConverter,
     SpeedConverter,
     TemperatureConverter,
     UnitlessRatioConverter,
@@ -86,6 +88,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         PowerConverter,
         PressureConverter,
         ReactiveEnergyConverter,
+        ReactivePowerConverter,
         SpeedConverter,
         TemperatureConverter,
         UnitlessRatioConverter,
@@ -136,6 +139,11 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     MassVolumeConcentrationConverter: (
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        1000,
+    ),
+    ReactivePowerConverter: (
+        UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE,
+        UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         1000,
     ),
     PowerConverter: (UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
@@ -614,6 +622,26 @@ _CONVERTED_VALUE: dict[
         (1, UnitOfMass.STONES, 6350293, UnitOfMass.MILLIGRAMS),
         (1, UnitOfMass.STONES, 14, UnitOfMass.POUNDS),
         (1, UnitOfMass.STONES, 224, UnitOfMass.OUNCES),
+    ],
+    ReactivePowerConverter: [
+        (
+            10,
+            UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
+            10000,
+            UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        ),
+        (
+            10,
+            UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+            0.01,
+            UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
+        ),
+        (
+            10,
+            UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE,
+            0.01,
+            UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        ),
     ],
     PowerConverter: [
         (10, UnitOfPower.KILO_WATT, 10000, UnitOfPower.WATT),
