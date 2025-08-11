@@ -35,6 +35,7 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[date, OMIEResults[SpotData]]
         super().__init__(hass, _LOGGER, name=f"{DOMAIN}", config_entry=config_entry)
         self.data: Mapping[date, OMIEResults[SpotData]] = {}
         self._client_session = async_get_clientsession(hass)
+        self._unavailable_logged = False
 
         # Random delay to avoid thundering herd
         delay_micros = random.randint(0, _SCHEDULE_MAX_DELAY.seconds * 10**6)
@@ -60,11 +61,21 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[date, OMIEResults[SpotData]]
             if date in relevant_dates
         }
 
-        # off to OMIE for anything that's still missing
-        for d in {pd for pd in published_dates if pd not in data}:
-            _LOGGER.debug("Fetching data for %s", d)
-            if results := await pyomie.spot_price(self._client_session, d):
-                data.update({d: results})
+        try:
+            # off to OMIE for anything that's still missing
+            for d in {pd for pd in published_dates if pd not in data}:
+                _LOGGER.debug("Fetching data for %s", d)
+                if results := await pyomie.spot_price(self._client_session, d):
+                    data.update({d: results})
+        except Exception as error:
+            if not self._unavailable_logged:
+                _LOGGER.error("Unable to fetch OMIE data: %s", error)
+                self._unavailable_logged = True
+            raise
+        else:
+            if self._unavailable_logged:
+                _LOGGER.info("OMIE data is available again")
+                self._unavailable_logged = False
 
         _LOGGER.debug("_async_update_data: %s", data)
         return data
