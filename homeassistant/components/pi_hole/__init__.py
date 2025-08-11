@@ -217,6 +217,9 @@ async def determine_api_version(
         _LOGGER.debug(
             "Connection to %s failed: %s, trying API version 5", holeV6.base_url, ex_v6
         )
+    else:
+        # it seems occassionally the auth can succeed unexpectedly when there is a valid session
+        return 6
     holeV5 = api_by_version(hass, entry, 5, password="wrong_token")
     try:
         await holeV5.get_data()
