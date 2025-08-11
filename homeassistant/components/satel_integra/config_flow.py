@@ -109,7 +109,9 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
             SUBENTRY_TYPE_SWITCHABLE_OUTPUT: SwitchableOutputSubentryFlowHandler,
         }
 
-    async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
 

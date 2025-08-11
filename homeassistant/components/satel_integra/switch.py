@@ -28,7 +28,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Satel Integra switch devices."""
 
-    controller = config_entry.runtime_data.controller
+    controller = config_entry.runtime_data
 
     switchable_output_subentries = filter(
         lambda entry: entry.subentry_type == SUBENTRY_TYPE_SWITCHABLE_OUTPUT,

@@ -45,7 +45,6 @@ from .const import (
     SUBENTRY_TYPE_ZONE,
     ZONES,
     SatelConfigEntry,
-    SatelData,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -161,34 +160,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
     # Make sure we initialize the Satel controller with the configured entries to monitor
     partitions = [
         subentry.data[CONF_PARTITION_NUMBER]
-        for subentry in filter(
-            lambda subentry: subentry.subentry_type == SUBENTRY_TYPE_PARTITION,
-            entry.subentries.values(),
-        )
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == SUBENTRY_TYPE_PARTITION
     ]
 
     zones = [
         subentry.data[CONF_ZONE_NUMBER]
-        for subentry in filter(
-            lambda subentry: subentry.subentry_type == SUBENTRY_TYPE_ZONE,
-            entry.subentries.values(),
-        )
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == SUBENTRY_TYPE_ZONE
     ]
 
     outputs = [
         subentry.data[CONF_OUTPUT_NUMBER]
-        for subentry in filter(
-            lambda subentry: subentry.subentry_type == SUBENTRY_TYPE_OUTPUT,
-            entry.subentries.values(),
-        )
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == SUBENTRY_TYPE_OUTPUT
     ]
 
     switchable_outputs = [
         subentry.data[CONF_SWITCHABLE_OUTPUT_NUMBER]
-        for subentry in filter(
-            lambda subentry: subentry.subentry_type == SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
-            entry.subentries.values(),
-        )
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == SUBENTRY_TYPE_SWITCHABLE_OUTPUT
     ]
 
     monitored_outputs = outputs + switchable_outputs
@@ -200,7 +191,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
     if not result:
         raise ConfigEntryNotReady("Controller failed to connect")
 
-    entry.runtime_data = SatelData(controller)
+    entry.runtime_data = controller
 
     @callback
     def _close(*_):
@@ -210,10 +201,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
 
-    await hass.config_entries.async_forward_entry_setups(
-        entry,
-        PLATFORMS,
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @callback
     def alarm_status_update_callback():
@@ -254,7 +242,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> bo
     """Unloading the Satel platforms."""
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        controller = entry.runtime_data.controller
+        controller = entry.runtime_data
         controller.close()
 
     return unload_ok

@@ -30,7 +30,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Satel Integra binary sensor devices."""
 
-    controller = config_entry.runtime_data.controller
+    controller = config_entry.runtime_data
 
     zone_subentries = filter(
         lambda entry: entry.subentry_type == SUBENTRY_TYPE_ZONE,

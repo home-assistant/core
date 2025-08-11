@@ -37,7 +37,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up for Satel Integra alarm panels."""
 
-    controller = config_entry.runtime_data.controller
+    controller = config_entry.runtime_data
 
     partition_subentries = filter(
         lambda entry: entry.subentry_type == SUBENTRY_TYPE_PARTITION,
@@ -69,7 +69,7 @@ class SatelIntegraAlarmPanel(AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
 
-    def __init__(self, controller, name, arm_home_mode, partition_id):
+    def __init__(self, controller, name, arm_home_mode, partition_id) -> None:
         """Initialize the alarm panel."""
         self._attr_name = name
         self._attr_unique_id = f"satel_alarm_panel_{partition_id}"
