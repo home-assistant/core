@@ -16,7 +16,7 @@ class IrmKmiBaseEntity(CoordinatorEntity[IrmKmiCoordinator]):
     )
     _attr_has_entity_name = True
 
-    def __init__(self, entry: IrmKmiConfigEntry, name: str) -> None:
+    def __init__(self, entry: IrmKmiConfigEntry) -> None:
         """Init base properties for IRM KMI entities."""
         coordinator = entry.runtime_data
         super().__init__(coordinator)
@@ -25,5 +25,4 @@ class IrmKmiBaseEntity(CoordinatorEntity[IrmKmiCoordinator]):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry.entry_id)},
             manufacturer=IRM_KMI_NAME.get(preferred_language(self.hass, entry)),
-            name=name,
         )

@@ -37,9 +37,11 @@ class IrmKmiWeather(
 ):
     """Weather entity for IRM KMI weather."""
 
+    _attr_name = None
+
     def __init__(self, entry: IrmKmiConfigEntry) -> None:
         """Create a new instance of the weather entity from a configuration entry."""
-        IrmKmiBaseEntity.__init__(self, entry, "Forecast")
+        IrmKmiBaseEntity.__init__(self, entry)
         SingleCoordinatorWeatherEntity.__init__(self, entry.runtime_data)
         self._name = entry.title
         self._attr_unique_id = entry.entry_id
