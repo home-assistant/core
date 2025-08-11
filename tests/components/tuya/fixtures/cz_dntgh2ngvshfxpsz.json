@@ -1,0 +1,33 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "fakkel veranda ",
+  "category": "cz",
+  "product_id": "dntgh2ngvshfxpsz",
+  "product_name": "Smart Plug",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2023-01-18T07:59:28+00:00",
+  "create_time": "2023-01-18T07:59:28+00:00",
+  "update_time": "2023-01-18T07:59:28+00:00",
+  "function": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "switch_1": true
+  },
+  "set_up": true,
+  "support_local": true
+}

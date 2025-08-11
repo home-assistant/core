@@ -1,9 +1,8 @@
 """Test the air-Q coordinator."""
 
 import logging
-from unittest.mock import patch
+from unittest.mock import AsyncMock
 
-from aioairq import DeviceInfo as AirQDeviceInfo
 import pytest
 
 from homeassistant.components.airq import AirQCoordinator
@@ -12,9 +11,10 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 
+from .common import TEST_DEVICE_DATA, TEST_DEVICE_INFO
+
 from tests.common import MockConfigEntry
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 MOCKED_ENTRY = MockConfigEntry(
     domain=DOMAIN,
     data={
@@ -24,14 +24,6 @@ MOCKED_ENTRY = MockConfigEntry(
     unique_id="123-456",
 )
 
-TEST_DEVICE_INFO = AirQDeviceInfo(
-    id="id",
-    name="name",
-    model="model",
-    sw_version="sw",
-    hw_version="hw",
-)
-TEST_DEVICE_DATA = {"co2": 500.0, "Status": "OK"}
 STATUS_WARMUP = {
     "co": "co sensor still in warm up phase; waiting time = 18 s",
     "tvoc": "tvoc sensor still in warm up phase; waiting time = 18 s",
@@ -40,7 +32,9 @@ STATUS_WARMUP = {
 
 
 async def test_logging_in_coordinator_first_update_data(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_airq: AsyncMock,
 ) -> None:
     """Test that the first AirQCoordinator._async_update_data call logs necessary setup.
 
@@ -56,11 +50,7 @@ async def test_logging_in_coordinator_first_update_data(
     assert "name" not in coordinator.device_info
 
     # First call: fetch missing device info
-    with (
-        patch("aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO),
-        patch("aioairq.AirQ.get_latest_data", return_value=TEST_DEVICE_DATA),
-    ):
-        await coordinator._async_update_data()
+    await coordinator._async_update_data()
 
     # check that the missing name is logged...
     assert (
@@ -79,7 +69,9 @@ async def test_logging_in_coordinator_first_update_data(
 
 
 async def test_logging_in_coordinator_subsequent_update_data(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_airq: AsyncMock,
 ) -> None:
     """Test that the second AirQCoordinator._async_update_data call has nothing to log.
 
@@ -91,11 +83,7 @@ async def test_logging_in_coordinator_subsequent_update_data(
     coordinator = AirQCoordinator(hass, MOCKED_ENTRY)
     coordinator.device_info.update(DeviceInfo(**TEST_DEVICE_INFO))
 
-    with (
-        patch("aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO),
-        patch("aioairq.AirQ.get_latest_data", return_value=TEST_DEVICE_DATA),
-    ):
-        await coordinator._async_update_data()
+    await coordinator._async_update_data()
     # check that the name _is not_ missing
     assert "name" in coordinator.device_info
     # and that nothing of the kind is logged
@@ -110,19 +98,17 @@ async def test_logging_in_coordinator_subsequent_update_data(
 
 
 async def test_logging_when_warming_up_sensor_present(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    mock_airq: AsyncMock,
 ) -> None:
     """Test that warming up sensors are logged."""
     caplog.set_level(logging.DEBUG)
     coordinator = AirQCoordinator(hass, MOCKED_ENTRY)
-    with (
-        patch("aioairq.AirQ.fetch_device_info", return_value=TEST_DEVICE_INFO),
-        patch(
-            "aioairq.AirQ.get_latest_data",
-            return_value=TEST_DEVICE_DATA | {"Status": STATUS_WARMUP},
-        ),
-    ):
-        await coordinator._async_update_data()
+    mock_airq.get_latest_data.return_value = TEST_DEVICE_DATA | {
+        "Status": STATUS_WARMUP
+    }
+    await coordinator._async_update_data()
     assert (
         f"Following sensors are still warming up: {set(STATUS_WARMUP.keys())}"
         in caplog.text

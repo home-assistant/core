@@ -24,7 +24,6 @@ async def test_binary_sensor_generic_entity(
             object_id="mybinary_sensor",
             key=1,
             name="my binary_sensor",
-            unique_id="my_binary_sensor",
         )
     ]
     esphome_state, hass_state = binary_state
@@ -52,7 +51,6 @@ async def test_status_binary_sensor(
             object_id="mybinary_sensor",
             key=1,
             name="my binary_sensor",
-            unique_id="my_binary_sensor",
             is_status_binary_sensor=True,
         )
     ]
@@ -80,7 +78,6 @@ async def test_binary_sensor_missing_state(
             object_id="mybinary_sensor",
             key=1,
             name="my binary_sensor",
-            unique_id="my_binary_sensor",
         )
     ]
     states = [BinarySensorState(key=1, state=True, missing_state=True)]
@@ -107,7 +104,6 @@ async def test_binary_sensor_has_state_false(
             object_id="mybinary_sensor",
             key=1,
             name="my binary_sensor",
-            unique_id="my_binary_sensor",
         )
     ]
     states = []
@@ -152,14 +148,12 @@ async def test_binary_sensors_same_key_different_device_id(
             object_id="sensor",
             key=1,
             name="Motion",
-            unique_id="motion_1",
             device_id=11111111,
         ),
         BinarySensorInfo(
             object_id="sensor",
             key=1,
             name="Motion",
-            unique_id="motion_2",
             device_id=22222222,
         ),
     ]
@@ -235,14 +229,12 @@ async def test_binary_sensor_main_and_sub_device_same_key(
             object_id="main_sensor",
             key=1,
             name="Main Sensor",
-            unique_id="main_1",
             device_id=0,  # Main device
         ),
         BinarySensorInfo(
             object_id="sub_sensor",
             key=1,
             name="Sub Sensor",
-            unique_id="sub_1",
             device_id=11111111,
         ),
     ]

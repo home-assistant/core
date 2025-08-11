@@ -42,6 +42,26 @@
           "availabletocommunicate": "mdi:cellphone",
           "offline": "mdi:account-off-outline"
         }
+      },
+      "now_playing": {
+        "default": "mdi:controller",
+        "state": {
+          "unknown": "mdi:controller-off",
+          "unavailable": "mdi:controller-off"
+        }
+      }
+    },
+    "image": {
+      "share_profile": {
+        "default": "mdi:share-variant"
+      },
+      "avatar": {
+        "default": "mdi:account-circle"
+      }
+    },
+    "notify": {
+      "group_message": {
+        "default": "mdi:forum"
       }
     }
   }

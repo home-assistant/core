@@ -569,6 +569,10 @@ ZEROCONF = {
             "name": "bosch shc*",
         },
         {
+            "domain": "bsblan",
+            "name": "bsb-lan*",
+        },
+        {
             "domain": "eheimdigital",
             "name": "eheimdigital._http._tcp.local.",
         },
@@ -886,6 +890,10 @@ ZEROCONF = {
         },
     ],
     "_ssh._tcp.local.": [
+        {
+            "domain": "homee",
+            "name": "homee-*",
+        },
         {
             "domain": "smappee",
             "name": "smappee1*",
