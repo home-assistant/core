@@ -6,7 +6,7 @@
         "description": "Configure your LM Studio server connection",
         "data": {
           "base_url": "Base URL",
-          "api_key": "API Key"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
           "base_url": "The base URL of your LM Studio server (e.g., http://localhost:1234/v1)",
