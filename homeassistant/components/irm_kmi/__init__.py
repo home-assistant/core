@@ -8,8 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import IRM_KMI_TO_HA_CONDITION_MAP, PLATFORMS, USER_AGENT
-from .coordinator import IrmKmiCoordinator
-from .types import IrmKmiConfigEntry, IrmKmiData
+from .coordinator import IrmKmiConfigEntry, IrmKmiCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,11 +21,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: IrmKmiConfigEntry) -> bo
         cdt_map=IRM_KMI_TO_HA_CONDITION_MAP,
     )
 
-    entry.runtime_data = IrmKmiData(
-        coordinator=IrmKmiCoordinator(hass, entry, api_client),
-    )
+    entry.runtime_data = IrmKmiCoordinator(hass, entry, api_client)
 
-    await entry.runtime_data.coordinator.async_config_entry_first_refresh()
+    await entry.runtime_data.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))

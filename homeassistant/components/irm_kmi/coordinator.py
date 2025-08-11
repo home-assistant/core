@@ -20,12 +20,17 @@ from .utils import get_config_value_data, preferred_language
 
 _LOGGER = logging.getLogger(__name__)
 
+type IrmKmiConfigEntry = ConfigEntry[IrmKmiCoordinator]
+
 
 class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]):
     """Coordinator to update data from IRM KMI."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, api_client: IrmKmiApiClientHa
+        self,
+        hass: HomeAssistant,
+        entry: IrmKmiConfigEntry,
+        api_client: IrmKmiApiClientHa,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(

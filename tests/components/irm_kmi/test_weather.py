@@ -12,7 +12,7 @@ from homeassistant.components.irm_kmi.weather import IrmKmiWeather
 from homeassistant.components.weather import Forecast
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 
 
 @freeze_time(datetime.fromisoformat("2023-12-28T15:30:00+01:00"))
@@ -22,10 +22,10 @@ async def test_weather_nl(
     """Test weather with forecast from the Netherland."""
     mock_config_entry.runtime_data = MagicMock()
     mock_config_entry.runtime_data.api_client = IrmKmiApiClientHa(MagicMock(), "test")
-    forecast = json.loads(load_fixture("forecast_nl.json", "irm_kmi"))
+    forecast = json.loads(await async_load_fixture(hass, "forecast_nl.json", "irm_kmi"))
     mock_config_entry.runtime_data.api_client._api_data = forecast
 
-    mock_config_entry.runtime_data.coordinator = coordinator = IrmKmiCoordinator(
+    mock_config_entry.runtime_data = coordinator = IrmKmiCoordinator(
         hass, mock_config_entry, mock_config_entry.runtime_data.api_client
     )
     coordinator.data = await coordinator.process_api_data()
@@ -49,10 +49,12 @@ async def test_weather_higher_temp_at_night(
     # Test case for https://github.com/jdejaegh/irm-kmi-ha/issues/8
     mock_config_entry.runtime_data = MagicMock()
     mock_config_entry.runtime_data.api_client = IrmKmiApiClientHa(MagicMock(), "test")
-    forecast = json.loads(load_fixture("high_low_temp.json", "irm_kmi"))
+    forecast = json.loads(
+        await async_load_fixture(hass, "high_low_temp.json", "irm_kmi")
+    )
     mock_config_entry.runtime_data.api_client._api_data = forecast
 
-    mock_config_entry.runtime_data.coordinator = coordinator = IrmKmiCoordinator(
+    mock_config_entry.runtime_data = coordinator = IrmKmiCoordinator(
         hass, mock_config_entry, mock_config_entry.runtime_data.api_client
     )
     coordinator.data = await coordinator.process_api_data()
