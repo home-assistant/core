@@ -218,7 +218,7 @@ async def determine_api_version(
             "Connection to %s failed: %s, trying API version 5", holeV6.base_url, ex_v6
         )
     else:
-        # it seems occassionally the auth can succeed unexpectedly when there is a valid session
+        # It seems that occasionally the auth can succeed unexpectedly when there is a valid session
         _LOGGER.warning(
             "Authenticated with %s : succeeded with an incorrect password.", holeV6.base_url
         )
