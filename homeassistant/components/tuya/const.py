@@ -433,6 +433,7 @@ class DPCode(StrEnum):
     WINDOW_STATE = "window_state"
     WINDSPEED = "windspeed"
     WINDSPEED_AVG = "windspeed_avg"
+    WIND_DIRECT = "wind_direct"
     WIRELESS_BATTERYLOCK = "wireless_batterylock"
     WIRELESS_ELECTRICITY = "wireless_electricity"
     WORK_MODE = "work_mode"  # Working mode

@@ -541,6 +541,9 @@
       "uv_index": {
         "name": "UV index"
       },
+      "wind_direction": {
+        "name": "Wind direction"
+      },
       "pm25": {
         "name": "[%key:component::sensor::entity_component::pm25::name%]"
       },

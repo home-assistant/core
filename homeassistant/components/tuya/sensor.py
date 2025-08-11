@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from tuya_sharing import CustomerDevice, Manager
 from tuya_sharing.device import DeviceStatusRange
@@ -42,6 +44,25 @@ from .const import (
 from .entity import TuyaEntity
 from .models import ComplexTypeData, ElectricityTypeData, EnumTypeData, IntegerTypeData
 
+_WIND_DIRECTIONS = {
+    "north": 0.0,
+    "north_north_east": 22.5,
+    "north_east": 45.0,
+    "east_north_east": 67.5,
+    "east": 90.0,
+    "east_south_east": 112.5,
+    "south_east": 135.0,
+    "south_south_east": 157.5,
+    "south": 180.0,
+    "south_south_west": 202.5,
+    "south_west": 225.0,
+    "west_south_west": 247.5,
+    "west": 270.0,
+    "west_north_west": 292.5,
+    "north_west": 315.0,
+    "north_north_west": 337.5,
+}
+
 
 @dataclass(frozen=True)
 class TuyaSensorEntityDescription(SensorEntityDescription):
@@ -49,6 +70,7 @@ class TuyaSensorEntityDescription(SensorEntityDescription):
 
     complex_type: type[ComplexTypeData] | None = None
     subkey: str | None = None
+    state_conversion: Callable[[Any], StateType] | None = None
 
 
 # Commonly used battery sensors, that are reused in the sensors down below.
@@ -941,6 +963,13 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="uv_index",
             state_class=SensorStateClass.MEASUREMENT,
         ),
+        TuyaSensorEntityDescription(
+            key=DPCode.WIND_DIRECT,
+            translation_key="wind_direction",
+            device_class=SensorDeviceClass.WIND_DIRECTION,
+            state_class=SensorStateClass.MEASUREMENT,
+            state_conversion=lambda state: _WIND_DIRECTIONS.get(str(state)),
+        ),
         *BATTERY_SENSORS,
     ),
     # Gas Detector
@@ -1627,6 +1656,10 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
         value = self.device.status.get(self.entity_description.key)
         if value is None:
             return None
+
+        # Convert value, if required
+        if (convert := self.entity_description.state_conversion) is not None:
+            return convert(value)
 
         # Scale integer/float value
         if isinstance(self._type_data, IntegerTypeData):
