@@ -114,6 +114,7 @@ DEVICE_MOCKS = {
     "kj_CAjWAxBUZt7QZHfz": [
         # https://github.com/home-assistant/core/issues/146023
         Platform.FAN,
+        Platform.SENSOR,
         Platform.SWITCH,
     ],
     "kj_yrzylxax1qspdgpp": [

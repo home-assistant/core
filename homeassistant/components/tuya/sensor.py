@@ -40,13 +40,14 @@ from .const import (
     UnitOfMeasurement,
 )
 from .entity import TuyaEntity
-from .models import ElectricityTypeData, EnumTypeData, IntegerTypeData
+from .models import ComplexTypeData, ElectricityTypeData, EnumTypeData, IntegerTypeData
 
 
 @dataclass(frozen=True)
 class TuyaSensorEntityDescription(SensorEntityDescription):
     """Describes Tuya sensor entity."""
 
+    complex_type: type[ComplexTypeData] | None = None
     subkey: str | None = None
 
 
@@ -368,6 +369,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.CURRENT,
             native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
+            complex_type=ElectricityTypeData,
             subkey="electriccurrent",
         ),
         TuyaSensorEntityDescription(
@@ -376,6 +378,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPower.KILO_WATT,
+            complex_type=ElectricityTypeData,
             subkey="power",
         ),
         TuyaSensorEntityDescription(
@@ -384,6 +387,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            complex_type=ElectricityTypeData,
             subkey="voltage",
         ),
         TuyaSensorEntityDescription(
@@ -392,6 +396,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.CURRENT,
             native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
+            complex_type=ElectricityTypeData,
             subkey="electriccurrent",
         ),
         TuyaSensorEntityDescription(
@@ -400,6 +405,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPower.KILO_WATT,
+            complex_type=ElectricityTypeData,
             subkey="power",
         ),
         TuyaSensorEntityDescription(
@@ -408,6 +414,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            complex_type=ElectricityTypeData,
             subkey="voltage",
         ),
         TuyaSensorEntityDescription(
@@ -416,6 +423,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.CURRENT,
             native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
+            complex_type=ElectricityTypeData,
             subkey="electriccurrent",
         ),
         TuyaSensorEntityDescription(
@@ -424,6 +432,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPower.KILO_WATT,
+            complex_type=ElectricityTypeData,
             subkey="power",
         ),
         TuyaSensorEntityDescription(
@@ -432,6 +441,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            complex_type=ElectricityTypeData,
             subkey="voltage",
         ),
         TuyaSensorEntityDescription(
@@ -1254,6 +1264,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="total_power",
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
+            complex_type=ElectricityTypeData,
             subkey="power",
         ),
         TuyaSensorEntityDescription(
@@ -1262,6 +1273,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.CURRENT,
             native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
+            complex_type=ElectricityTypeData,
             subkey="electriccurrent",
         ),
         TuyaSensorEntityDescription(
@@ -1270,6 +1282,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPower.KILO_WATT,
+            complex_type=ElectricityTypeData,
             subkey="power",
         ),
         TuyaSensorEntityDescription(
@@ -1278,6 +1291,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            complex_type=ElectricityTypeData,
             subkey="voltage",
         ),
         TuyaSensorEntityDescription(
@@ -1286,6 +1300,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.CURRENT,
             native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
+            complex_type=ElectricityTypeData,
             subkey="electriccurrent",
         ),
         TuyaSensorEntityDescription(
@@ -1294,6 +1309,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPower.KILO_WATT,
+            complex_type=ElectricityTypeData,
             subkey="power",
         ),
         TuyaSensorEntityDescription(
@@ -1302,6 +1318,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            complex_type=ElectricityTypeData,
             subkey="voltage",
         ),
         TuyaSensorEntityDescription(
@@ -1310,6 +1327,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.CURRENT,
             native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
+            complex_type=ElectricityTypeData,
             subkey="electriccurrent",
         ),
         TuyaSensorEntityDescription(
@@ -1318,6 +1336,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfPower.KILO_WATT,
+            complex_type=ElectricityTypeData,
             subkey="power",
         ),
         TuyaSensorEntityDescription(
@@ -1326,6 +1345,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+            complex_type=ElectricityTypeData,
             subkey="voltage",
         ),
     ),
@@ -1424,7 +1444,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
     _status_range: DeviceStatusRange | None = None
     _type: DPType | None = None
-    _type_data: IntegerTypeData | EnumTypeData | None = None
+    _type_data: IntegerTypeData | EnumTypeData | ComplexTypeData | None = None
     _uom: UnitOfMeasurement | None = None
 
     def __init__(
@@ -1476,6 +1496,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
                     self.unique_id,
                 )
                 self._attr_device_class = None
+                self._attr_suggested_unit_of_measurement = None
                 return
 
             uoms = DEVICE_CLASS_UNITS[self.device_class]
@@ -1486,6 +1507,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             # Unknown unit of measurement, device class should not be used.
             if uom is None:
                 self._attr_device_class = None
+                self._attr_suggested_unit_of_measurement = None
                 return
 
             # Found unit of measurement, use the standardized Unit
@@ -1523,16 +1545,23 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
 
         # Get subkey value from Json string.
         if self._type is DPType.JSON:
-            if self.entity_description.subkey is None:
+            if (
+                self.entity_description.complex_type is None
+                or self.entity_description.subkey is None
+            ):
                 return None
-            values = ElectricityTypeData.from_json(value)
+            values = self.entity_description.complex_type.from_json(value)
             return getattr(values, self.entity_description.subkey)
 
         if self._type is DPType.RAW:
-            if self.entity_description.subkey is None:
+            if (
+                self.entity_description.complex_type is None
+                or self.entity_description.subkey is None
+                or (raw_values := self.entity_description.complex_type.from_raw(value))
+                is None
+            ):
                 return None
-            values = ElectricityTypeData.from_raw(value)
-            return getattr(values, self.entity_description.subkey)
+            return getattr(raw_values, self.entity_description.subkey)
 
         # Valid string or enum value
         return value
