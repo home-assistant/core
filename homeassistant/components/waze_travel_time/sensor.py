@@ -63,11 +63,8 @@ class WazeTravelTimeSensor(CoordinatorEntity[WazeTravelTimeCoordinator], SensorE
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        if (
-            self.coordinator.data is not None
-            and self.coordinator.data.duration is not None
-        ):
-            return round(self.coordinator.data.duration)
+        if self.coordinator.data is not None:
+            return self.coordinator.data.duration
         return None
 
     @property
