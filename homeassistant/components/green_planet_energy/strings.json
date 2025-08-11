@@ -24,17 +24,5 @@
         "name": "Current price"
       }
     }
-  },
-  "services": {
-    "get_price": {
-      "name": "Get price",
-      "description": "Get Green Planet Energy price for a specific hour or current hour.",
-      "fields": {
-        "hour": {
-          "name": "Hour",
-          "description": "Hour of the day (0-23). If not provided, returns current hour price."
-        }
-      }
-    }
   }
 }

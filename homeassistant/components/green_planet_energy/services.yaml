@@ -1,9 +1,0 @@
-get_price:
-  fields:
-    hour:
-      required: false
-      selector:
-        number:
-          min: 0
-          max: 23
-          mode: box
