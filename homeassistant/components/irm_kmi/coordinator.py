@@ -16,7 +16,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.dt import utcnow
 
 from .data import ProcessedCoordinatorData
-from .utils import get_config_value_data, preferred_language
+from .utils import preferred_language
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
             update_interval=timedelta(minutes=7),
         )
         self._api = api_client
-        self._location = get_config_value_data(entry, CONF_LOCATION)
+        self._location = entry.data.get(CONF_LOCATION)
 
     async def _async_update_data(self) -> ProcessedCoordinatorData:
         """Fetch data from API endpoint.
@@ -51,11 +51,22 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
         """
 
         self._api.expire_cache()
+
+        # Condition is needed to avoid mypy error about Any | None type having no attribute get or non-indexable value
+        if (
+            self._location is None
+            or self._location.get(ATTR_LATITUDE) is None
+            or self._location.get(ATTR_LONGITUDE) is None
+        ):
+            raise UpdateFailed(
+                "Unknown value for either latitude or longitude in the configuration"
+            )
+
         try:
             await self._api.refresh_forecasts_coord(
                 {
-                    "lat": self._location[ATTR_LATITUDE],
-                    "long": self._location[ATTR_LONGITUDE],
+                    "lat": self._location.get(ATTR_LATITUDE),
+                    "long": self._location.get(ATTR_LONGITUDE),
                 }
             )
 
