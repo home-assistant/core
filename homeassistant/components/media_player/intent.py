@@ -16,6 +16,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
+    STATE_PLAYING,
 )
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -131,32 +132,8 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
             device_classes={MediaPlayerDeviceClass},
         ),
     )
-    intent.async_register(
-        hass,
-        intent.ServiceIntentHandler(
-            INTENT_VOLUME_UP,
-            DOMAIN,
-            SERVICE_VOLUME_UP,
-            required_domains={DOMAIN},
-            required_features=MediaPlayerEntityFeature.VOLUME_SET,
-            description="Increases the volume of a media player",
-            platforms={DOMAIN},
-            device_classes={MediaPlayerDeviceClass},
-        ),
-    )
-    intent.async_register(
-        hass,
-        intent.ServiceIntentHandler(
-            INTENT_VOLUME_DOWN,
-            DOMAIN,
-            SERVICE_VOLUME_DOWN,
-            required_domains={DOMAIN},
-            required_features=MediaPlayerEntityFeature.VOLUME_SET,
-            description="Decreases the volume of a media player",
-            platforms={DOMAIN},
-            device_classes={MediaPlayerDeviceClass},
-        ),
-    )
+    intent.async_register(hass, MediaVolumeUpHandler())
+    intent.async_register(hass, MediaVolumeDownHandler())
     intent.async_register(hass, MediaSearchAndPlayHandler())
 
 
@@ -384,3 +361,85 @@ class MediaSearchAndPlayHandler(intent.IntentHandler):
         response.async_set_speech_slots({"media": first_result.as_dict()})
         response.response_type = intent.IntentResponseType.ACTION_DONE
         return response
+
+
+class MediaVolumeUpHandler(intent.ServiceIntentHandler):
+    """Handler for volume up."""
+
+    def __init__(self) -> None:
+        """Initialize handler."""
+        super().__init__(
+            INTENT_VOLUME_UP,
+            DOMAIN,
+            SERVICE_VOLUME_UP,
+            required_domains={DOMAIN},
+            required_features=MediaPlayerEntityFeature.VOLUME_SET,
+            description="Increase the volume of a media player",
+            platforms={DOMAIN},
+            device_classes={MediaPlayerDeviceClass},
+        )
+
+    async def async_handle_states(
+        self,
+        intent_obj: intent.Intent,
+        match_result: intent.MatchTargetsResult,
+        match_constraints: intent.MatchTargetsConstraints,
+        match_preferences: intent.MatchTargetsPreferences | None = None,
+    ) -> intent.IntentResponse:
+        """Target playing media players only if not using name."""
+        if (
+            match_result.is_match
+            and (len(match_result.states) > 1)
+            and ("name" not in intent_obj.slots)
+        ):
+            match_result.states = [
+                s for s in match_result.states if s.state == STATE_PLAYING
+            ]
+            if not match_result.states:
+                # No media players are playing
+                return intent_obj.create_response()
+
+        return await super().async_handle_states(
+            intent_obj, match_result, match_constraints
+        )
+
+
+class MediaVolumeDownHandler(intent.ServiceIntentHandler):
+    """Handler for volume down."""
+
+    def __init__(self) -> None:
+        """Initialize handler."""
+        super().__init__(
+            INTENT_VOLUME_DOWN,
+            DOMAIN,
+            SERVICE_VOLUME_DOWN,
+            required_domains={DOMAIN},
+            required_features=MediaPlayerEntityFeature.VOLUME_SET,
+            description="Decrease the volume of a media player",
+            platforms={DOMAIN},
+            device_classes={MediaPlayerDeviceClass},
+        )
+
+    async def async_handle_states(
+        self,
+        intent_obj: intent.Intent,
+        match_result: intent.MatchTargetsResult,
+        match_constraints: intent.MatchTargetsConstraints,
+        match_preferences: intent.MatchTargetsPreferences | None = None,
+    ) -> intent.IntentResponse:
+        """Target playing media players only if not using name."""
+        if (
+            match_result.is_match
+            and (len(match_result.states) > 1)
+            and ("name" not in intent_obj.slots)
+        ):
+            match_result.states = [
+                s for s in match_result.states if s.state == STATE_PLAYING
+            ]
+            if not match_result.states:
+                # No media players are playing
+                return intent_obj.create_response()
+
+        return await super().async_handle_states(
+            intent_obj, match_result, match_constraints
+        )

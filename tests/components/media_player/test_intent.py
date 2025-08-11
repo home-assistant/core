@@ -877,18 +877,59 @@ async def test_search_and_play_media_player_intent_with_media_class(
         )
 
 
-async def test_volume_up_media_player_intent(hass: HomeAssistant) -> None:
-    """Test HassVolumeUp intent for media players."""
+@pytest.mark.parametrize(
+    ("intent_name", "service_name"),
+    [
+        (media_player_intent.INTENT_VOLUME_UP, SERVICE_VOLUME_UP),
+        (media_player_intent.INTENT_VOLUME_DOWN, SERVICE_VOLUME_DOWN),
+    ],
+)
+async def test_volume_relative_media_player_intent(
+    hass: HomeAssistant, intent_name: str, service_name: str
+) -> None:
+    """Test voluem up/down intents for media players."""
     await media_player_intent.async_setup_intents(hass)
 
-    entity_id = f"{DOMAIN}.test_media_player"
+    idle_entity_id = f"{DOMAIN}.idle_media_player"
     attributes = {ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.VOLUME_SET}
 
-    hass.states.async_set(entity_id, STATE_PLAYING, attributes=attributes)
-    calls = async_mock_service(hass, DOMAIN, SERVICE_VOLUME_UP)
+    hass.states.async_set(idle_entity_id, STATE_IDLE, attributes=attributes)
+    calls = async_mock_service(hass, DOMAIN, service_name)
+
+    # Only 1 media player is present, so it's targeted even though its idle
+    response = await intent.async_handle(hass, "test", intent_name)
+    await hass.async_block_till_done()
+
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == DOMAIN
+    assert call.service == service_name
+    assert call.data == {"entity_id": idle_entity_id}
+
+    # Multiple media players (playing one should be targeted)
+    playing_entity_id = f"{DOMAIN}.playing_media_player"
+    hass.states.async_set(playing_entity_id, STATE_PLAYING, attributes=attributes)
+    calls = async_mock_service(hass, DOMAIN, service_name)
+
+    response = await intent.async_handle(hass, "test", intent_name)
+    await hass.async_block_till_done()
+
+    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == DOMAIN
+    assert call.service == service_name
+    assert call.data == {"entity_id": playing_entity_id}
+
+    # We can still target by name even if the media player is idle
+    calls = async_mock_service(hass, DOMAIN, service_name)
 
     response = await intent.async_handle(
-        hass, "test", media_player_intent.INTENT_VOLUME_UP
+        hass,
+        "test",
+        intent_name,
+        {"name": {"value": "Idle media player"}},
     )
     await hass.async_block_till_done()
 
@@ -896,52 +937,16 @@ async def test_volume_up_media_player_intent(hass: HomeAssistant) -> None:
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == DOMAIN
-    assert call.service == SERVICE_VOLUME_UP
-    assert call.data == {"entity_id": entity_id}
+    assert call.service == service_name
+    assert call.data == {"entity_id": idle_entity_id}
 
     # Test feature not supported
-    hass.states.async_set(
-        entity_id,
-        STATE_PLAYING,
-        attributes={ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature(0)},
-    )
-
-    with pytest.raises(intent.MatchFailedError):
-        response = await intent.async_handle(
-            hass, "test", media_player_intent.INTENT_VOLUME_UP
+    for entity_id in (idle_entity_id, playing_entity_id):
+        hass.states.async_set(
+            entity_id,
+            STATE_PLAYING,
+            attributes={ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature(0)},
         )
 
-
-async def test_volume_down_media_player_intent(hass: HomeAssistant) -> None:
-    """Test HassVolumeDown intent for media players."""
-    await media_player_intent.async_setup_intents(hass)
-
-    entity_id = f"{DOMAIN}.test_media_player"
-    attributes = {ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature.VOLUME_SET}
-
-    hass.states.async_set(entity_id, STATE_PLAYING, attributes=attributes)
-    calls = async_mock_service(hass, DOMAIN, SERVICE_VOLUME_DOWN)
-
-    response = await intent.async_handle(
-        hass, "test", media_player_intent.INTENT_VOLUME_DOWN
-    )
-    await hass.async_block_till_done()
-
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert len(calls) == 1
-    call = calls[0]
-    assert call.domain == DOMAIN
-    assert call.service == SERVICE_VOLUME_DOWN
-    assert call.data == {"entity_id": entity_id}
-
-    # Test feature not supported
-    hass.states.async_set(
-        entity_id,
-        STATE_PLAYING,
-        attributes={ATTR_SUPPORTED_FEATURES: MediaPlayerEntityFeature(0)},
-    )
-
     with pytest.raises(intent.MatchFailedError):
-        response = await intent.async_handle(
-            hass, "test", media_player_intent.INTENT_VOLUME_DOWN
-        )
+        response = await intent.async_handle(hass, "test", intent_name)
