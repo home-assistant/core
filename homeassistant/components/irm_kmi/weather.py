@@ -2,6 +2,8 @@
 
 import logging
 
+from irm_kmi_api import CurrentWeatherData
+
 from homeassistant.components.weather import (
     Forecast,
     SingleCoordinatorWeatherEntity,
@@ -61,39 +63,44 @@ class IrmKmiWeather(
         return self._name
 
     @property
+    def current_weather(self) -> CurrentWeatherData:
+        """Return the current weather."""
+        return self.coordinator.data.current_weather
+
+    @property
     def condition(self) -> str | None:
         """Return the current condition."""
-        return self.coordinator.data.current_weather.get("condition")
+        return self.current_weather.get("condition")
 
     @property
     def native_temperature(self) -> float | None:
         """Return the temperature in native units."""
-        return self.coordinator.data.current_weather.get("temperature")
+        return self.current_weather.get("temperature")
 
     @property
     def native_wind_speed(self) -> float | None:
         """Return the wind speed in native units."""
-        return self.coordinator.data.current_weather.get("wind_speed")
+        return self.current_weather.get("wind_speed")
 
     @property
     def native_wind_gust_speed(self) -> float | None:
         """Return the wind gust speed in native units."""
-        return self.coordinator.data.current_weather.get("wind_gust_speed")
+        return self.current_weather.get("wind_gust_speed")
 
     @property
     def wind_bearing(self) -> float | str | None:
         """Return the wind bearing."""
-        return self.coordinator.data.current_weather.get("wind_bearing")
+        return self.current_weather.get("wind_bearing")
 
     @property
     def native_pressure(self) -> float | None:
         """Return the pressure in native units."""
-        return self.coordinator.data.current_weather.get("pressure")
+        return self.current_weather.get("pressure")
 
     @property
     def uv_index(self) -> float | None:
         """Return the UV index."""
-        return self.coordinator.data.current_weather.get("uv_index")
+        return self.current_weather.get("uv_index")
 
     def _async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
