@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
+from .config_flow import validate_apprise_connection
 from .const import DEFAULT_NAME, DOMAIN
 
 type AppriseConfigEntry = ConfigEntry[apprise.AppriseConfig]
@@ -34,10 +35,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: AppriseConfigEntry) -> bool:
     """Set up Apprise from a config entry."""
 
-    conf = entry.data
+    conf = dict(entry.data)
     name = conf.get(CONF_NAME, DEFAULT_NAME)
     config = conf.get("config")
     url = conf.get(CONF_URL)
+
+    if not await validate_apprise_connection(hass, conf):
+        return False
 
     apprise_config = apprise.AppriseConfig(name=name, config=config, url=url)
     entry.runtime_data = apprise_config
