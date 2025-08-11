@@ -2485,3 +2485,36 @@ async def test_reconfig_name_conflict_overwrite(
         )
         is None
     )
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_discovery_dhcp_no_probe_same_host_port_none(
+    hass: HomeAssistant, mock_client: APIClient
+) -> None:
+    """Test dhcp discovery does not probe when host matches and port is None."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        unique_id="11:22:33:44:55:aa",
+    )
+    entry.add_to_hass(hass)
+
+    # DHCP discovery with same MAC and host (WiFi device)
+    service_info = DhcpServiceInfo(
+        ip="192.168.43.183",
+        hostname="test8266",
+        macaddress="11:22:33:44:55:aa",  # Same MAC as configured
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=service_info
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    # Verify device_info was NOT called (no probing)
+    mock_client.device_info.assert_not_called()
+
+    # Host should remain unchanged
+    assert entry.data[CONF_HOST] == "192.168.43.183"

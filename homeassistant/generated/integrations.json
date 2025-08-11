@@ -3512,12 +3512,6 @@
       "integration_type": "virtual",
       "supported_by": "idasen_desk"
     },
-    "linear_garage_door": {
-      "name": "Linear Garage Door",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_polling"
-    },
     "linkedgo": {
       "name": "LinkedGo",
       "integration_type": "virtual",
@@ -3838,11 +3832,6 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_polling"
-    },
-    "mercury_nz": {
-      "name": "Mercury NZ Limited",
-      "integration_type": "virtual",
-      "supported_by": "opower"
     },
     "message_bird": {
       "name": "MessageBird",
@@ -6728,6 +6717,7 @@
     "third_reality": {
       "name": "Third Reality",
       "iot_standards": [
+        "matter",
         "zigbee"
       ]
     },
@@ -6794,6 +6784,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "togrill": {
+      "name": "ToGrill",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "tolo": {
       "name": "TOLO Sauna",

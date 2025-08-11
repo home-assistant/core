@@ -7,15 +7,16 @@ from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice
 
 from homeassistant.components.tuya import ManagerCompat
+from homeassistant.components.tuya.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import initialize_entry
+from . import DEVICE_MOCKS, initialize_entry
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
-@pytest.mark.parametrize("mock_device_code", ["ydkt_dolceclima_unsupported"])
+@pytest.mark.parametrize("mock_device_code", ["ydkt_jevroj5aguwdbs2e"])
 async def test_unsupported_device(
     hass: HomeAssistant,
     mock_manager: ManagerCompat,
@@ -24,7 +25,6 @@ async def test_unsupported_device(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test unsupported device."""
 
@@ -40,10 +40,20 @@ async def test_unsupported_device(
         entity_registry, mock_config_entry.entry_id
     )
 
-    # Information log entry added
-    assert (
-        "Device DOLCECLIMA 10 HP WIFI (mock_device_id) has been ignored"
-        " as it does not provide any standard instructions (status, status_range"
-        " and function are all empty) - see "
-        "https://github.com/tuya/tuya-device-sharing-sdk/issues/11" in caplog.text
-    )
+
+async def test_fixtures_valid(hass: HomeAssistant) -> None:
+    """Ensure Tuya fixture files are valid."""
+    # We want to ensure that the fixture files do not contain
+    # `home_assistant`, `id`, or `terminal_id` keys.
+    # These are provided by the Tuya diagnostics and should be removed
+    # from the fixture.
+    EXCLUDE_KEYS = ("home_assistant", "id", "terminal_id")
+
+    for device_code in DEVICE_MOCKS:
+        details = await async_load_json_object_fixture(
+            hass, f"{device_code}.json", DOMAIN
+        )
+        for key in EXCLUDE_KEYS:
+            assert key not in details, (
+                f"Please remove data[`'{key}']` from {device_code}.json"
+            )

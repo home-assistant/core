@@ -1,0 +1,147 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "LSC Party String Light RGBIC+CCT ",
+  "category": "dc",
+  "product_id": "l3bpgg8ibsagon4x",
+  "product_name": "LSC Party String Light RGBIC+CCT ",
+  "online": false,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2024-07-18T20:38:14+00:00",
+  "create_time": "2024-07-18T20:38:14+00:00",
+  "update_time": "2024-07-18T20:38:14+00:00",
+  "function": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["white", "colour", "scene", "music"]
+      }
+    },
+    "bright_value": {
+      "type": "Integer",
+      "value": {
+        "min": 10,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_value": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "colour_data": {
+      "type": "Json",
+      "value": {
+        "h": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        },
+        "v": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        }
+      }
+    },
+    "music_data": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    }
+  },
+  "status_range": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["white", "colour", "scene", "music"]
+      }
+    },
+    "bright_value": {
+      "type": "Integer",
+      "value": {
+        "min": 10,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_value": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "colour_data": {
+      "type": "Json",
+      "value": {
+        "h": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        },
+        "v": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        }
+      }
+    }
+  },
+  "status": {
+    "switch_led": true,
+    "work_mode": "colour",
+    "bright_value": 1000,
+    "temp_value": 0,
+    "colour_data": {
+      "h": 229,
+      "s": 1000,
+      "v": 1000
+    }
+  },
+  "set_up": true,
+  "support_local": true
+}

@@ -167,7 +167,7 @@ async def test_update_entity_states(
 
     client.async_send_command.return_value = {"updates": []}
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -186,7 +186,7 @@ async def test_update_entity_states(
 
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=2))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=2))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -224,7 +224,7 @@ async def test_update_entity_states(
 
     client.async_send_command.return_value = {"updates": []}
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=3))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=3))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -246,7 +246,7 @@ async def test_update_entity_install_raises(
     """Test update entity install raises exception."""
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
     await hass.async_block_till_done()
 
     # Test failed installation by driver
@@ -269,7 +269,7 @@ async def test_update_entity_sleep(
     zen_31: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test update occurs when device is asleep after it wakes up."""
+    """Test update occurs when device is asleep."""
     event = Event(
         "sleep",
         data={"source": "node", "event": "sleep", "nodeId": zen_31.node_id},
@@ -279,33 +279,17 @@ async def test_update_entity_sleep(
 
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
     await hass.async_block_till_done()
 
     # Two nodes in total, the controller node and the zen_31 node.
-    # The zen_31 node is asleep,
-    # so we should only check for updates for the controller node.
-    assert client.async_send_command.call_count == 1
-    args = client.async_send_command.call_args[0][0]
-    assert args["command"] == "controller.get_available_firmware_updates"
-    assert args["nodeId"] == 1
-
-    client.async_send_command.reset_mock()
-
-    event = Event(
-        "wake up",
-        data={"source": "node", "event": "wake up", "nodeId": zen_31.node_id},
-    )
-    zen_31.receive_event(event)
-    await hass.async_block_till_done()
-
-    # Now that the zen_31 node is awake we can check for updates for it.
-    # The controller node has already been checked,
-    # so won't get another check now.
-    assert client.async_send_command.call_count == 1
-    args = client.async_send_command.call_args[0][0]
-    assert args["command"] == "controller.get_available_firmware_updates"
-    assert args["nodeId"] == 94
+    # We should check for updates for both nodes, including the sleeping one
+    # since the firmware check no longer requires device communication first.
+    assert client.async_send_command.call_count == 2
+    # Check calls were made for both nodes
+    call_args = [call[0][0] for call in client.async_send_command.call_args_list]
+    assert any(args["nodeId"] == 1 for args in call_args)  # Controller node
+    assert any(args["nodeId"] == 94 for args in call_args)  # zen_31 node
 
 
 async def test_update_entity_dead(
@@ -324,7 +308,7 @@ async def test_update_entity_dead(
 
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
     await hass.async_block_till_done()
 
     # Two nodes in total, the controller node and the zen_31 node.
@@ -368,14 +352,14 @@ async def test_update_entity_ha_not_running(
     # Update should be delayed by a day because Home Assistant is not running
     hass.set_state(CoreState.starting)
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15))
     await hass.async_block_till_done()
 
     assert client.async_send_command.call_count == 0
 
     hass.set_state(CoreState.running)
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
     await hass.async_block_till_done()
 
     # Two nodes in total, the controller node and the zen_31 node.
@@ -401,7 +385,7 @@ async def test_update_entity_update_failure(
     assert client.async_send_command.call_count == 0
     client.async_send_command.side_effect = FailedZWaveCommand("test", 260, "test")
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
     await hass.async_block_till_done()
 
     entity_ids = (CONTROLLER_UPDATE_ENTITY, NODE_UPDATE_ENTITY)
@@ -509,7 +493,7 @@ async def test_update_entity_progress(
     client.async_send_command.return_value = FIRMWARE_UPDATES
     driver = client.driver
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -657,7 +641,7 @@ async def test_update_entity_install_failed(
     driver = client.driver
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -733,7 +717,7 @@ async def test_update_entity_reload(
 
     client.async_send_command.return_value = {"updates": []}
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=1))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -742,7 +726,7 @@ async def test_update_entity_reload(
 
     client.async_send_command.return_value = FIRMWARE_UPDATES
 
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=2))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=2))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -774,7 +758,7 @@ async def test_update_entity_reload(
     await hass.async_block_till_done()
 
     # Trigger another update and make sure the skipped version is still skipped
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=4))
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=15, days=4))
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -809,7 +793,7 @@ async def test_update_entity_delay(
 
     assert client.async_send_command.call_count == 0
 
-    update_interval = timedelta(minutes=5)
+    update_interval = timedelta(seconds=15)
     freezer.tick(update_interval)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -1158,28 +1142,3 @@ async def test_update_entity_no_latest_version(
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_SKIPPED_VERSION] is None
     assert state.attributes[ATTR_LATEST_VERSION] == latest_version
-
-
-async def test_update_entity_unload_asleep_node(
-    hass: HomeAssistant,
-    client: MagicMock,
-    wallmote_central_scene: Node,
-    integration: MockConfigEntry,
-) -> None:
-    """Test unloading config entry after attempting an update for an asleep node."""
-    config_entry = integration
-    assert client.async_send_command.call_count == 0
-
-    client.async_send_command.reset_mock()
-    client.async_send_command.return_value = {"updates": []}
-
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5, days=1))
-    await hass.async_block_till_done()
-
-    # Once call completed for the (awake) controller node.
-    assert client.async_send_command.call_count == 1
-    assert len(wallmote_central_scene._listeners["wake up"]) == 1
-
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    assert client.async_send_command.call_count == 1
-    assert len(wallmote_central_scene._listeners["wake up"]) == 0
