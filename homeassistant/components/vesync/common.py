@@ -59,6 +59,6 @@ def is_wall_switch(device: VeSyncBaseDevice) -> bool:
 
 
 def is_purifier(device: VeSyncBaseDevice) -> bool:
-    """Check if the device represents a fan."""
+    """Check if the device represents an air purifier."""
 
     return isinstance(device, VeSyncPurifier)
