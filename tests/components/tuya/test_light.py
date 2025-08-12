@@ -47,7 +47,9 @@ async def test_platform_setup_and_discovery(
     ("turn_on_input", "expected_commands"),
     [
         (
-            {"white": True},
+            {
+                "white": True,
+            },
             [
                 {"code": "switch_led", "value": True},
                 {"code": "work_mode", "value": "white"},
