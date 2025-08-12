@@ -56,7 +56,7 @@ async def test_media_player_entity(
             key=1,
             name="my media_player",
             supports_pause=True,
-            #PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
+            # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
             feature_flags=1200653,
         )
     ]
@@ -204,7 +204,7 @@ async def test_media_player_entity_with_source(
             key=1,
             name="my media_player",
             supports_pause=True,
-            #PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
+            # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
             feature_flags=1200653,
         )
     ]
@@ -321,7 +321,7 @@ async def test_media_player_proxy(
                 key=1,
                 name="my media_player",
                 supports_pause=True,
-                #PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
+                # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
                 feature_flags=1200653,
                 supported_formats=[
                     MediaPlayerSupportedFormat(
@@ -481,7 +481,7 @@ async def test_media_player_formats_reload_preserves_data(
                 key=1,
                 name="Test Media Player",
                 supports_pause=True,
-                #PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
+                # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
                 feature_flags=1200653,
                 supported_formats=supported_formats,
             )
