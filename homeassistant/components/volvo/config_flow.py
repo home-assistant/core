@@ -69,7 +69,7 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an entry for the flow."""
-        self._config_data |= self.init_data or {} | data
+        self._config_data |= (self.init_data or {}) | data
         return await self.async_step_api_key()
 
     async def async_step_reauth(self, _: Mapping[str, Any]) -> ConfigFlowResult:
