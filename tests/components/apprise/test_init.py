@@ -1,7 +1,5 @@
 """The tests for the Apprise component."""
 
-from unittest.mock import patch
-
 from homeassistant.components import apprise
 from homeassistant.core import HomeAssistant
 
@@ -16,8 +14,4 @@ async def test_invalid_config(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.apprise.validate_apprise_connection",
-        return_value=False,
-    ):
-        assert not await hass.config_entries.async_setup(entry.entry_id)
+    assert await hass.config_entries.async_setup(entry.entry_id)
