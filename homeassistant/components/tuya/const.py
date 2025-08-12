@@ -24,6 +24,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfVolume,
+    UnitOfVolumetricFlux,
 )
 
 DOMAIN = "tuya"
@@ -66,6 +67,7 @@ PLATFORMS = [
     Platform.SIREN,
     Platform.SWITCH,
     Platform.VACUUM,
+    Platform.VALVE,
 ]
 
 
@@ -166,6 +168,14 @@ class DPCode(StrEnum):
     CONTROL_BACK = "control_back"
     CONTROL_BACK_MODE = "control_back_mode"
     COUNTDOWN = "countdown"  # Countdown
+    COUNTDOWN_1 = "countdown_1"
+    COUNTDOWN_2 = "countdown_2"
+    COUNTDOWN_3 = "countdown_3"
+    COUNTDOWN_4 = "countdown_4"
+    COUNTDOWN_5 = "countdown_5"
+    COUNTDOWN_6 = "countdown_6"
+    COUNTDOWN_7 = "countdown_7"
+    COUNTDOWN_8 = "countdown_8"
     COUNTDOWN_LEFT = "countdown_left"
     COUNTDOWN_SET = "countdown_set"  # Countdown setting
     CRY_DETECTION_SWITCH = "cry_detection_switch"
@@ -209,6 +219,7 @@ class DPCode(StrEnum):
     FLOODLIGHT_LIGHTNESS = "floodlight_lightness"
     FLOODLIGHT_SWITCH = "floodlight_switch"
     FORWARD_ENERGY_TOTAL = "forward_energy_total"
+    FROST = "frost"  # Frost protection
     GAS_SENSOR_STATE = "gas_sensor_state"
     GAS_SENSOR_STATUS = "gas_sensor_status"
     GAS_SENSOR_VALUE = "gas_sensor_value"
@@ -286,6 +297,8 @@ class DPCode(StrEnum):
     PUMP_RESET = "pump_reset"  # Water pump reset
     PUMP_TIME = "pump_time"  # Water pump duration
     OXYGEN = "oxygen"  # Oxygen bar
+    RAIN_24H = "rain_24h"  # Total daily rainfall in mm
+    RAIN_RATE = "rain_rate"  # Rain intensity in mm/h
     RECORD_MODE = "record_mode"
     RECORD_SWITCH = "record_switch"  # Recording switch
     RELAY_STATUS = "relay_status"
@@ -318,6 +331,7 @@ class DPCode(StrEnum):
     STATUS = "status"
     STERILIZATION = "sterilization"  # Sterilization
     SUCTION = "suction"
+    SUPPLY_FREQUENCY = "supply_frequency"
     SWING = "swing"  # Swing mode
     SWITCH = "switch"  # Switch
     SWITCH_1 = "switch_1"  # Switch 1
@@ -404,10 +418,12 @@ class DPCode(StrEnum):
     UPPER_TEMP = "upper_temp"
     UPPER_TEMP_F = "upper_temp_f"
     UV = "uv"  # UV sterilization
+    UV_INDEX = "uv_index"
     UV_RUNTIME = "uv_runtime"  # UV runtime
     VA_BATTERY = "va_battery"
     VA_HUMIDITY = "va_humidity"
     VA_TEMPERATURE = "va_temperature"
+    VALVE_STATE = "valve_state"
     VOC_STATE = "voc_state"
     VOC_VALUE = "voc_value"
     VOICE_SWITCH = "voice_switch"
@@ -427,6 +443,7 @@ class DPCode(StrEnum):
     WINDOW_STATE = "window_state"
     WINDSPEED = "windspeed"
     WINDSPEED_AVG = "windspeed_avg"
+    WIND_DIRECT = "wind_direct"
     WIRELESS_BATTERYLOCK = "wireless_batterylock"
     WIRELESS_ELECTRICITY = "wireless_electricity"
     WORK_MODE = "work_mode"  # Working mode
@@ -511,6 +528,11 @@ UNITS = (
         unit=UnitOfVolume.CUBIC_METERS,
         aliases={"m3"},
         device_classes={SensorDeviceClass.GAS},
+    ),
+    UnitOfMeasurement(
+        unit=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        aliases={"mm"},
+        device_classes={SensorDeviceClass.PRECIPITATION_INTENSITY},
     ),
     UnitOfMeasurement(
         unit=LIGHT_LUX,
