@@ -536,13 +536,13 @@
         "name": "Total precipitation today"
       },
       "precipitation_intensity": {
-        "name": "Precipitation intensity"
+        "name": "[%key:component::sensor::entity_component::precipitation_intensity::name%]"
       },
       "uv_index": {
         "name": "UV index"
       },
       "wind_direction": {
-        "name": "Wind direction"
+        "name": "[%key:component::sensor::entity_component::wind_direction::name%]"
       },
       "pm25": {
         "name": "[%key:component::sensor::entity_component::pm25::name%]"
