@@ -8,13 +8,13 @@ import logging
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CURRENCY_EURO, UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
+from . import GreenPlanetEnergyConfigEntry
 from .coordinator import GreenPlanetEnergyUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -129,7 +129,7 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: GreenPlanetEnergyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Green Planet Energy sensors."""
@@ -153,7 +153,7 @@ class GreenPlanetEnergySensor(
         self,
         coordinator: GreenPlanetEnergyUpdateCoordinator,
         description: GreenPlanetEnergySensorEntityDescription,
-        config_entry: ConfigEntry,
+        config_entry: GreenPlanetEnergyConfigEntry,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
