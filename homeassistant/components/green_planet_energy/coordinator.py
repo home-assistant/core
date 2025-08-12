@@ -34,8 +34,7 @@ class GreenPlanetEnergyUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=timedelta(minutes=DEFAULT_SCAN_INTERVAL),
             config_entry=config_entry,
         )
-        self.session = async_get_clientsession(hass)
-        self.api = GreenPlanetEnergyAPI(session=self.session)
+        self.api = GreenPlanetEnergyAPI(session=async_get_clientsession(hass))
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
