@@ -16,7 +16,6 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.components.totalconnect.alarm_control_panel import (
     SERVICE_ALARM_ARM_AWAY_INSTANT,
     SERVICE_ALARM_ARM_HOME_INSTANT,
-    SERVICE_ALARM_BYPASS_ALL,
 )
 from homeassistant.components.totalconnect.const import DOMAIN
 from homeassistant.const import (

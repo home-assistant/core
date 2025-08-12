@@ -67,10 +67,6 @@
     "arm_home_instant": {
       "name": "Arm home instant",
       "description": "Arms home with zero entry delay."
-    },
-    "bypass_all": {
-      "name": "Bypass all zones",
-      "description": "Bypasses all zones currently in the FAULT state."
     }
   },
   "entity": {
