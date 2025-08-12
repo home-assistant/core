@@ -168,10 +168,6 @@ class GreenPlanetEnergySensor(
         self.entity_description = description
         # Use fixed unique_id with just the key for predictable entity IDs
         self._attr_unique_id = description.key
-        # Set entity_id to use the full key
-        self.entity_id = f"sensor.{description.key}"
-        # Use translation_key for all sensor names
-        self._attr_name = None
 
     @property
     def native_value(self) -> float | None:
