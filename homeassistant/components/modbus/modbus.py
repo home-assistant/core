@@ -28,11 +28,10 @@ from homeassistant.const import (
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
@@ -317,11 +316,15 @@ class ModbusHub:
             try:
                 await self._client.connect()  # type: ignore[union-attr]
             except ModbusException as exception_error:
-                err = f"{self.name} connect failed, retry in pymodbus  ({exception_error!s})"
-                self._log_error(err)
+                self._log_error(
+                    f"{self.name} connect failed, please check your configuration ({exception_error!s})"
+                )
                 return
             message = f"modbus {self.name} communication open"
             _LOGGER.info(message)
+
+        if self._config_delay:
+            await asyncio.sleep(self._config_delay)
 
     async def async_setup(self) -> bool:
         """Set up pymodbus client."""
@@ -340,19 +343,7 @@ class ModbusHub:
         self._connect_task = self.hass.async_create_background_task(
             self.async_pb_connect(), "modbus-connect"
         )
-
-        # Start counting down to allow modbus requests.
-        if self._config_delay:
-            self._async_cancel_listener = async_call_later(
-                self.hass, self._config_delay, self.async_end_delay
-            )
         return True
-
-    @callback
-    def async_end_delay(self, args: Any) -> None:
-        """End startup delay."""
-        self._async_cancel_listener = None
-        self._config_delay = 0
 
     async def async_restart(self) -> None:
         """Reconnect client."""
@@ -425,8 +416,6 @@ class ModbusHub:
         use_call: str,
     ) -> ModbusPDU | None:
         """Convert async to sync pymodbus call."""
-        if self._config_delay:
-            return None
         async with self._lock:
             if not self._client:
                 return None
