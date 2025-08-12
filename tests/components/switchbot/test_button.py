@@ -1,4 +1,4 @@
-"""Test the switchbot switches."""
+"""Test the switchbot buttons."""
 
 from collections.abc import Callable
 from unittest.mock import AsyncMock, patch
