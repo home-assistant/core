@@ -21,7 +21,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD
+from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, format_mac
@@ -50,6 +50,43 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_device: BLEDevice | None = None
         self._discovered_devices: dict[str, str] = {}
 
+    async def check_and_update_bluetooth_device(self, device: BLEDevice) -> ConfigEntry:
+        """Check if the device is already configured and update ble mac if needed."""
+        device_registry = dr.async_get(self.hass)
+        current_entries = self.hass.config_entries.async_entries(DOMAIN)
+
+        for entry in current_entries:
+            if not entry.data.get(CONF_ACCOUNT_ID):
+                continue
+
+            device_entries = dr.async_entries_for_config_entry(
+                device_registry, entry.entry_id
+            )
+
+            for device_entry in device_entries:
+                # Check both MAC address and any other identifiers
+                identifiers = {device_id[1] for device_id in device_entry.identifiers}
+                if device.name in identifiers:
+                    await self.async_set_unique_id(entry.data.get(CONF_ACCOUNT_ID))
+                    # # Update existing entry with BLE info
+                    formatted_ble = format_mac(self._discovered_device.address)
+
+                    if (
+                        CONNECTION_BLUETOOTH,
+                        formatted_ble,
+                    ) not in device_entry.connections:
+                        device_registry.async_update_device(
+                            device_entry.id,
+                            merge_connections={(CONNECTION_BLUETOOTH, formatted_ble)},
+                        )
+                        if entry.state == config_entries.ConfigEntryState.LOADED:
+                            # reload the entry now we have a ble address
+                            self.hass.config_entries.async_schedule_reload(
+                                entry.entry_id
+                            )
+                    return entry
+        return None
+
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo | None = None
     ) -> ConfigFlowResult:
@@ -57,6 +94,9 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
         LOGGER.debug("Discovered bluetooth device: %s", discovery_info)
         if discovery_info is None:
             return self.async_abort(reason="no_devices_found")
+
+        await self.async_set_unique_id(format_mac(discovery_info.address))
+        self._abort_if_unique_id_configured()
 
         device = bluetooth.async_ble_device_from_address(
             self.hass, discovery_info.address
@@ -72,45 +112,14 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._discovered_device = device
 
-        device_registry = dr.async_get(self.hass)
-        current_entries = self.hass.config_entries.async_entries(DOMAIN)
-
-        for entry in current_entries:
-            if not entry.data.get(CONF_ACCOUNT_ID):
-                continue
-
-            device_entries = dr.async_entries_for_config_entry(
-                device_registry, entry.entry_id
-            )
-
-            for device_entry in device_entries:
-                # Check both MAC address and any other identifiers
-                identifiers = {identifier[1] for identifier in device_entry.identifiers}
-                if device.name in identifiers:
-                    if (
-                        entry.state == config_entries.ConfigEntryState.LOADED
-                        and len(device_entry.connections) == 0
-                    ):
-                        # # Update existing entry with BLE info
-
-                        formatted_ble = format_mac(self._discovered_device.address)
-
-                        device_registry.async_update_device(
-                            device_entry.id,
-                            new_connections={(CONNECTION_BLUETOOTH, formatted_ble)},
-                        )
-                        # reload the entry now we have a ble address
-                        self.hass.config_entries.async_schedule_reload(entry.entry_id)
-
-                    await self.async_set_unique_id(entry.data.get(CONF_ACCOUNT_ID))
-                    self._abort_if_unique_id_configured(
-                        updates={CONF_ADDRESS: discovery_info.address}
-                    )
-
-        await self.async_set_unique_id(discovery_info.name)
-        self._abort_if_unique_id_configured(
-            updates={CONF_ADDRESS: discovery_info.address}
-        )
+        if entry := await self.check_and_update_bluetooth_device(device):
+            ble_devices = {
+                self._discovered_device.name: format_mac(
+                    self._discovered_device.address
+                ),
+                **entry.data.get(CONF_BLE_DEVICES, {}),
+            }
+            self._abort_if_unique_id_configured(updates={CONF_BLE_DEVICES: ble_devices})
 
         return await self.async_step_bluetooth_confirm()
 
@@ -120,12 +129,23 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
 
         assert self._discovered_device
+
+        if entry := await self.check_and_update_bluetooth_device(
+            self._discovered_device
+        ):
+            ble_devices = {
+                self._discovered_device.name: format_mac(
+                    self._discovered_device.address
+                ),
+                **entry.data.get(CONF_BLE_DEVICES, None),
+            }
+            self._abort_if_unique_id_configured(updates={CONF_BLE_DEVICES: ble_devices})
+
         ble_devices: dict[str, str] = {
-            self._discovered_device.name: self._discovered_device.address
+            self._discovered_device.name: format_mac(self._discovered_device.address)
         }
         self._config = {
             CONF_BLE_DEVICES: ble_devices,
-            CONF_ADDRESS: self._discovered_device.address,
         }
 
         if user_input is not None:
@@ -151,18 +171,7 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the user step to pick discovered device."""
 
         if user_input is not None:
-            address = user_input.get(CONF_ADDRESS) or self._config.get(CONF_ADDRESS)
-            if address is not None:
-                self._config = {
-                    CONF_ADDRESS: address,
-                }
-                self._stay_connected = user_input.get(
-                    CONF_STAY_CONNECTED_BLUETOOTH, False
-                )
-
-                self._discovered_device = bluetooth.async_ble_device_from_address(
-                    self.hass, address
-                )
+            self._stay_connected = user_input.get(CONF_STAY_CONNECTED_BLUETOOTH, False)
 
             return await self.async_step_wifi(user_input)
 
@@ -188,7 +197,6 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
             last_step=False,
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_ADDRESS): vol.In(self._discovered_devices),
                     vol.Optional(
                         CONF_STAY_CONNECTED_BLUETOOTH,
                         default=False,
@@ -240,7 +248,6 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=self._discovered_device.name,
                 data={
-                    CONF_ADDRESS: self._discovered_device.address,
                     CONF_USE_WIFI: user_input.get(CONF_USE_WIFI),
                     **self._config,
                 },
@@ -259,9 +266,6 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any]
     ) -> ConfigFlowResult:
         """Confirm device discovery."""
-
-        address = self._config.get(CONF_ADDRESS)
-        name = self._discovered_devices.get(address)
         mammotion = Mammotion()
 
         if user_input is not None:
@@ -290,13 +294,11 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_ACCOUNTNAME: account,
                     CONF_PASSWORD: password,
-                    CONF_DEVICE_NAME: name,
                     CONF_USE_WIFI: user_input.get(CONF_USE_WIFI, True),
                     **self._config,
                 },
                 options={CONF_STAY_CONNECTED_BLUETOOTH: self._stay_connected},
             )
-        return self.async_abort(reason="missing_wifi_data")
 
     @staticmethod
     @callback
@@ -338,16 +340,6 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_USE_WIFI, default=entry.data.get(CONF_USE_WIFI, True)
             ): cv.boolean,
         }
-
-        if user_input is not None and entry.data.get(CONF_ADDRESS) is None:
-            schema = {
-                vol.Required(
-                    CONF_ACCOUNTNAME, default=entry.data.get(CONF_ACCOUNTNAME)
-                ): vol.All(cv.string, vol.Strip),
-                vol.Required(
-                    CONF_PASSWORD, default=entry.data.get(CONF_PASSWORD)
-                ): vol.All(cv.string, vol.Strip),
-            }
 
         return self.async_show_form(
             step_id="reconfigure",
