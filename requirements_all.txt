@@ -247,7 +247,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==37.2.2
+aioesphomeapi==38.2.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -417,7 +417,7 @@ aiotedee==0.2.25
 aiotractive==0.6.0
 
 # homeassistant.components.unifi
-aiounifi==84
+aiounifi==86
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.1
@@ -453,7 +453,7 @@ airgradient==0.9.2
 airly==1.1.0
 
 # homeassistant.components.airos
-airos==0.2.7
+airos==0.2.8
 
 # homeassistant.components.airthings_ble
 airthings-ble==0.9.2
@@ -526,6 +526,9 @@ arris-tg2492lg==2.2.0
 
 # homeassistant.components.ampio
 asmog==0.0.6
+
+# homeassistant.components.asuswrt
+asusrouter==1.18.1
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
@@ -625,7 +628,7 @@ bizkaibus==0.1.1
 bleak-esphome==3.1.0
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==4.0.0
+bleak-retry-connector==4.0.1
 
 # homeassistant.components.bluetooth
 bleak==1.0.1
@@ -724,9 +727,6 @@ clx-sdk-xms==1.0.0
 # homeassistant.components.coinbase
 coinbase-advanced-py==1.2.2
 
-# homeassistant.components.coinbase
-coinbase==2.1.0
-
 # homeassistant.scripts.check_config
 colorlog==6.9.0
 
@@ -743,7 +743,7 @@ connect-box==0.3.1
 construct==2.10.68
 
 # homeassistant.components.cookidoo
-cookidoo-api==0.12.2
+cookidoo-api==0.14.0
 
 # homeassistant.components.backup
 # homeassistant.components.utility_meter
@@ -1127,10 +1127,10 @@ ha-philipsjs==3.2.2
 ha-silabs-firmware-client==0.2.0
 
 # homeassistant.components.habitica
-habiticalib==0.4.1
+habiticalib==0.4.2
 
 # homeassistant.components.bluetooth
-habluetooth==4.0.2
+habluetooth==5.0.1
 
 # homeassistant.components.cloud
 hass-nabucasa==0.111.2
@@ -1174,7 +1174,7 @@ hole==0.9.0
 holidays==0.78
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250806.0
+home-assistant-frontend==20250811.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.7.30
@@ -1601,7 +1601,7 @@ open-meteo==0.3.2
 
 # homeassistant.components.open_router
 # homeassistant.components.openai_conversation
-openai==1.99.3
+openai==1.99.5
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
@@ -1841,9 +1841,6 @@ pyairvisual==2023.08.1
 
 # homeassistant.components.aprilaire
 pyaprilaire==0.9.1
-
-# homeassistant.components.asuswrt
-pyasuswrt==0.1.21
 
 # homeassistant.components.atag
 pyatag==0.3.5.3
@@ -2152,7 +2149,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.11.0
+pymodbus==3.11.1
 
 # homeassistant.components.monoprice
 pymonoprice==0.4
@@ -2346,7 +2343,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smarla
-pysmarlaapi==0.9.1
+pysmarlaapi==0.9.2
 
 # homeassistant.components.smartthings
 pysmartthings==3.2.8
@@ -2382,7 +2379,7 @@ pyspeex-noise==1.0.2
 pysqueezebox==0.12.1
 
 # homeassistant.components.stiebel_eltron
-pystiebeleltron==0.1.0
+pystiebeleltron==0.2.3
 
 # homeassistant.components.suez_water
 pysuezV2==2.0.7
@@ -2509,7 +2506,7 @@ python-roborock==2.18.2
 python-smarttub==0.0.44
 
 # homeassistant.components.snoo
-python-snoo==0.6.6
+python-snoo==0.7.0
 
 # homeassistant.components.songpal
 python-songpal==0.16.2
@@ -2705,7 +2702,7 @@ rpi-bad-power==0.1.0
 russound==0.2.0
 
 # homeassistant.components.ruuvitag_ble
-ruuvitag-ble==0.1.2
+ruuvitag-ble==0.2.1
 
 # homeassistant.components.yamaha
 rxv==0.7.0
@@ -2808,7 +2805,7 @@ soco==0.30.11
 solaredge-local==0.2.3
 
 # homeassistant.components.solarlog
-solarlog_cli==0.4.0
+solarlog_cli==0.5.0
 
 # homeassistant.components.solax
 solax==3.2.3
@@ -2965,7 +2962,7 @@ tololib==1.2.2
 toonapi==0.3.0
 
 # homeassistant.components.totalconnect
-total-connect-client==2025.1.4
+total-connect-client==2025.5
 
 # homeassistant.components.tplink_lte
 tp-connected==0.0.4
@@ -3176,7 +3173,7 @@ yeelight==0.7.16
 yeelightsunflower==0.0.10
 
 # homeassistant.components.yolink
-yolink-api==0.5.7
+yolink-api==0.5.8
 
 # homeassistant.components.youless
 youless-api==2.2.0

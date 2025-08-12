@@ -39,7 +39,13 @@ def async_setup(hass: HomeAssistant) -> None:
 def serialize_service_info(
     service_info: BluetoothServiceInfoBleak, time_diff: float
 ) -> dict[str, Any]:
-    """Serialize a BluetoothServiceInfoBleak object."""
+    """Serialize a BluetoothServiceInfoBleak object.
+
+    The raw field is included for:
+    1. Debugging - to see the actual advertisement packet
+    2. Data freshness - manufacturer_data and service_data are aggregated
+       across multiple advertisements, raw shows the latest packet only
+    """
     return {
         "name": service_info.name,
         "address": service_info.address,
@@ -57,6 +63,7 @@ def serialize_service_info(
         "connectable": service_info.connectable,
         "time": service_info.time + time_diff,
         "tx_power": service_info.tx_power,
+        "raw": service_info.raw.hex() if service_info.raw else None,
     }
 
 
