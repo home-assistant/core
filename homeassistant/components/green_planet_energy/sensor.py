@@ -171,8 +171,8 @@ class GreenPlanetEnergySensor(
         if self.entity_description.value_fn:
             return self.entity_description.value_fn(self.coordinator.data)
 
-        # Fallback to coordinator data
-        return self.coordinator.data.get(self.entity_description.key)
+        # All our sensors have value_fn, so this should never happen
+        return None
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
