@@ -55,8 +55,11 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 2
 
-    airos_device: AirOS8
-    errors: dict[str, str] = {}
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        super().__init__()
+        self.airos_device: AirOS8
+        self.errors: dict[str, str] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
