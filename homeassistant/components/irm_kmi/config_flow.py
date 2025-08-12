@@ -71,12 +71,12 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
                     "Encountered an unexpected error while configuring the integration"
                 )
 
-            if api_data.get("cityName") in OUT_OF_BENELUX:
+            if not errors and api_data["cityName"] in OUT_OF_BENELUX:
                 errors[CONF_LOCATION] = "out_of_benelux"
 
             if not errors:
-                name: str = api_data.get("cityName", "")
-                country: str = api_data.get("country", "")
+                name: str = api_data["cityName"]
+                country: str = api_data["country"]
                 await self.async_set_unique_id(f"{name.lower()} {country.lower()}")
                 self._abort_if_unique_id_configured()
 

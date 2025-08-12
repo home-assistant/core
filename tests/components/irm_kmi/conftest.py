@@ -38,7 +38,7 @@ def mock_get_forecast_in_benelux():
     """Mock a call to IrmKmiApiClient.get_forecasts_coord() so that it returns something valid and in the Benelux."""
     with patch(
         "homeassistant.components.irm_kmi.config_flow.IrmKmiApiClient.get_forecasts_coord",
-        return_value={"cityName": "Brussels"},
+        return_value={"cityName": "Brussels", "country": "BE"},
     ):
         yield
 
@@ -48,7 +48,7 @@ def mock_get_forecast_out_benelux():
     """Mock a call to IrmKmiApiClient.get_forecasts_coord() so that it returns something outside Benelux."""
     with patch(
         "homeassistant.components.irm_kmi.config_flow.IrmKmiApiClient.get_forecasts_coord",
-        return_value={"cityName": "Outside the Benelux (Brussels)"},
+        return_value={"cityName": "Outside the Benelux (Brussels)", "country": "BE"},
     ):
         yield
 
