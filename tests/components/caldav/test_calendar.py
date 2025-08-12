@@ -17,6 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
+from .conftest import ClientFixture
+
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
@@ -1239,13 +1241,11 @@ async def test_remove_vevent(
     hass: HomeAssistant,
     setup_platform_cb: Callable[[], Awaitable[None]],
     calendars: list[Mock],
+    ws_client: ClientFixture,
 ) -> None:
     """Test removing a VEVENT from the calendar."""
     await setup_platform_cb()
-    entity_id = TEST_ENTITY
-    state = hass.states.get(entity_id)
-    assert state is not None
-    entity = hass.data["entity_components"]["calendar"].get_entity(entity_id)
+    client = await ws_client()
 
     class FakeEvent:
         def delete(self) -> None:
@@ -1253,5 +1253,10 @@ async def test_remove_vevent(
 
     deleted = {}
     calendars[0].search = MagicMock(return_value=[FakeEvent()])
-    await entity.async_delete_event(uid="1")
+
+    await client.cmd_result(
+        "delete",
+        {"entity_id": TEST_ENTITY, "uid": "0"},
+    )
+
     assert deleted.get("deleted") is True
