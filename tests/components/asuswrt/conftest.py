@@ -1,7 +1,7 @@
 """Fixtures for Asuswrt component."""
 
 from datetime import datetime
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 from aioasuswrt.asuswrt import AsusWrt as AsusWrtLegacy
 from aioasuswrt.connection import TelnetConnection
@@ -156,28 +156,24 @@ def mock_controller_connect_http(mock_devices_http):
         instance.connected = True
 
         # Identity
-        instance.async_get_identity = AsyncMock(
-            return_value=AsusDevice(
-                mac=ROUTER_MAC_ADDR,
-                model="FAKE_MODEL",
-                firmware="FAKE_FIRMWARE",
-            )
+        instance.async_get_identity.return_value = AsusDevice(
+            mac=ROUTER_MAC_ADDR,
+            model="FAKE_MODEL",
+            firmware="FAKE_FIRMWARE",
         )
 
         # Data fetches via async_get_data
-        instance.async_get_data = AsyncMock(
-            side_effect=lambda datatype, *args, **kwargs: {
-                AsusData.CLIENTS: mock_devices_http,
-                AsusData.NETWORK: MOCK_CURRENT_NETWORK,
-                AsusData.SYSINFO: MOCK_SYSINFO,
-                AsusData.TEMPERATURE: {
-                    k: v for k, v in MOCK_TEMPERATURES_HTTP.items() if k != "5.0GHz"
-                },
-                AsusData.CPU: MOCK_CPU_USAGE,
-                AsusData.RAM: MOCK_MEMORY_USAGE,
-                AsusData.BOOTTIME: MOCK_BOOTTIME,
-            }[datatype]
-        )
+        instance.async_get_data.side_effect = lambda datatype, *args, **kwargs: {
+            AsusData.CLIENTS: mock_devices_http,
+            AsusData.NETWORK: MOCK_CURRENT_NETWORK,
+            AsusData.SYSINFO: MOCK_SYSINFO,
+            AsusData.TEMPERATURE: {
+                k: v for k, v in MOCK_TEMPERATURES_HTTP.items() if k != "5.0GHz"
+            },
+            AsusData.CPU: MOCK_CPU_USAGE,
+            AsusData.RAM: MOCK_MEMORY_USAGE,
+            AsusData.BOOTTIME: MOCK_BOOTTIME,
+        }[datatype]
 
         yield service_mock
 

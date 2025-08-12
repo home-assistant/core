@@ -15,7 +15,6 @@ from asusrouter import AsusRouter, AsusRouterError
 from asusrouter.modules.client import AsusClient
 from asusrouter.modules.data import AsusData
 from asusrouter.modules.homeassistant import convert_to_ha_data, convert_to_ha_sensors
-from asusrouter.modules.identity import AsusDevice
 
 from homeassistant.const import (
     CONF_HOST,
@@ -311,7 +310,7 @@ class AsusWrtHttpBridge(AsusWrtBridge):
     def __init__(self, conf: dict[str, Any], session: ClientSession) -> None:
         """Initialize Bridge that use HTTP library."""
         super().__init__(conf[CONF_HOST])
-        self._api: AsusRouter = self._get_api(conf, session)
+        self._api = self._get_api(conf, session)
 
     @staticmethod
     def _get_api(conf: dict[str, Any], session: ClientSession) -> AsusRouter:
@@ -335,7 +334,7 @@ class AsusWrtHttpBridge(AsusWrtBridge):
         await self._api.async_connect()
 
         # Collect the identity
-        _identity: AsusDevice = await self._api.async_get_identity()
+        _identity = await self._api.async_get_identity()
 
         # get main router properties
         if mac := _identity.mac:
