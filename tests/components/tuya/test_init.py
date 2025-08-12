@@ -31,7 +31,7 @@ async def test_device_registry(
     device_registry_entries = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     )
-    assert device_registry_entries == snapshot
+    assert sorted(device_registry_entries, key=lambda x: x.model_id) == snapshot
 
     # Ensure the device registry contains same amount as DEVICE_MOCKS
     assert len(device_registry_entries) == len(DEVICE_MOCKS)
