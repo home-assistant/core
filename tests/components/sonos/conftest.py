@@ -278,6 +278,7 @@ class SoCoMockFactory:
         mock_soco.music_source_from_uri = SoCo.music_source_from_uri
         mock_soco.get_sonos_playlists.return_value = self.sonos_playlists
         mock_soco.get_queue.return_value = self.sonos_queue
+        mock_soco._player_name = name
         my_speaker_info = self.speaker_info.copy()
         my_speaker_info["zone_name"] = name
         my_speaker_info["uid"] = mock_soco.uid
