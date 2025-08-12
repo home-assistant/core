@@ -15,6 +15,9 @@
     },
     "arm_home_instant": {
       "service": "mdi:shield-home"
+    },
+    "bypass_all": {
+      "service": "mdi:shield-off"
     }
   }
 }
