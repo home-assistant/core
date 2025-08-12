@@ -223,7 +223,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_abort(reason="Failed to connect")
 
-    async def test_connection(self, host, port) -> bool:
+    async def test_connection(self, host: str, port: int) -> bool:
         """Test a connection to the Satel alarm."""
         controller = AsyncSatel(host, port, self.hass.loop)
 
