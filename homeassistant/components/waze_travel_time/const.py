@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Final
+
 DOMAIN = "waze_travel_time"
 SEMAPHORE = "semaphore"
 
@@ -41,3 +43,7 @@ DEFAULT_OPTIONS: dict[str, str | bool | list[str]] = {
     CONF_INCL_FILTER: DEFAULT_FILTER,
     CONF_EXCL_FILTER: DEFAULT_FILTER,
 }
+
+ATTR_DURATION: Final = "duration"
+ATTR_DISTANCE: Final = "distance"
+ATTR_ROUTE: Final = "route"

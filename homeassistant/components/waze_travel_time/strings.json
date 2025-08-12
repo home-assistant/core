@@ -112,5 +112,18 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "distance": {
+        "name": "Distance"
+      },
+      "duration": {
+        "name": "Duration"
+      },
+      "route": {
+        "name": "Route"
+      }
+    }
   }
 }

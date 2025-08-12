@@ -2,22 +2,57 @@
 
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Callable
+from dataclasses import dataclass
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, UnitOfTime
+from homeassistant.const import CONF_NAME, UnitOfLength, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_NAME, DOMAIN
-from .coordinator import WazeTravelTimeCoordinator
+from .const import ATTR_DISTANCE, ATTR_DURATION, ATTR_ROUTE, DEFAULT_NAME, DOMAIN
+from .coordinator import WazeTravelTimeCoordinator, WazeTravelTimeData
+
+
+@dataclass(frozen=True, kw_only=True)
+class WazeSensorDescription(SensorEntityDescription):
+    """Class describing Waze Travel Time sensor entities."""
+
+    value_fn: Callable[[WazeTravelTimeData], float | str | None]
+
+
+SENSOR_DESCRIPTIONS: tuple[WazeSensorDescription, ...] = (
+    WazeSensorDescription(
+        key=ATTR_DURATION,
+        translation_key="duration",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=0,
+        value_fn=lambda data: data.duration,
+    ),
+    WazeSensorDescription(
+        key=ATTR_DISTANCE,
+        translation_key="distance",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        value_fn=lambda data: data.distance,
+    ),
+    WazeSensorDescription(
+        key=ATTR_ROUTE,
+        translation_key="route",
+        value_fn=lambda data: data.route,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -29,55 +64,44 @@ async def async_setup_entry(
     name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
     coordinator = config_entry.runtime_data
 
-    sensor = WazeTravelTimeSensor(config_entry.entry_id, name, coordinator)
-
-    async_add_entities([sensor], False)
+    sensors: list[WazeTravelTimeSensor] = [
+        WazeTravelTimeSensor(
+            config_entry.entry_id,
+            name,
+            sensor_description,
+            coordinator,
+        )
+        for sensor_description in SENSOR_DESCRIPTIONS
+    ]
+    async_add_entities(sensors, False)
 
 
 class WazeTravelTimeSensor(CoordinatorEntity[WazeTravelTimeCoordinator], SensorEntity):
     """Representation of a Waze travel time sensor."""
 
     _attr_attribution = "Powered by Waze"
-    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
-    _attr_suggested_display_precision = 0
-    _attr_device_class = SensorDeviceClass.DURATION
-    _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_device_info = DeviceInfo(
-        entry_type=DeviceEntryType.SERVICE,
-        name="Waze",
-        identifiers={(DOMAIN, DOMAIN)},
-        configuration_url="https://www.waze.com",
-    )
-    _attr_translation_key = "waze_travel_time"
+    _attr_has_entity_name = True
+    entity_description: WazeSensorDescription
 
     def __init__(
         self,
-        unique_id: str,
+        unique_id_prefix: str,
         name: str,
+        description: WazeSensorDescription,
         coordinator: WazeTravelTimeCoordinator,
     ) -> None:
         """Initialize the Waze travel time sensor."""
         super().__init__(coordinator)
-        self._attr_unique_id = unique_id
-        self._attr_name = name
+        self.entity_description = description
+        self._attr_unique_id = f"{unique_id_prefix}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            name=name,
+            identifiers={(DOMAIN, DOMAIN)},
+            configuration_url="https://www.waze.com",
+        )
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float | str | None:
         """Return the state of the sensor."""
-        if self.coordinator.data is not None:
-            return self.coordinator.data.duration
-        return None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes of the last update."""
-        if self.coordinator.data is None:
-            return None
-
-        return {
-            "duration": self.coordinator.data.duration,
-            "distance": self.coordinator.data.distance,
-            "route": self.coordinator.data.route,
-            "origin": self.coordinator.data.origin,
-            "destination": self.coordinator.data.destination,
-        }
+        return self.entity_description.value_fn(self.coordinator.data)
