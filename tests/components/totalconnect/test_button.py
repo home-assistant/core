@@ -1,6 +1,6 @@
 """Tests for the TotalConnect buttons."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -45,7 +45,13 @@ async def test_bypass_button(
     """Test pushing a bypass button."""
     responses = [FailedToBypassZone, None]
     await setup_platform(hass, BUTTON)
-    with patch(tcc_request, side_effect=responses) as mock_request:
+    with (
+        patch(tcc_request, side_effect=responses) as mock_request,
+        patch(
+            "homeassistant.components.totalconnect.button.TotalConnectDataUpdateCoordinator.async_request_refresh",
+            new=AsyncMock(),
+        ) as mock_refresh,
+    ):
         # try to bypass, but fails
         with pytest.raises(FailedToBypassZone):
             await hass.services.async_call(
@@ -55,6 +61,7 @@ async def test_bypass_button(
                 blocking=True,
             )
         assert mock_request.call_count == 1
+        assert mock_refresh.call_count == 1
 
         # try to bypass, works this time
         await hass.services.async_call(
@@ -64,6 +71,7 @@ async def test_bypass_button(
             blocking=True,
         )
         assert mock_request.call_count == 2
+        assert mock_refresh.call_count == 2
 
 
 async def test_clear_button(hass: HomeAssistant) -> None:
@@ -74,7 +82,13 @@ async def test_clear_button(hass: HomeAssistant) -> None:
         "total_connect_client.location.TotalConnectLocation.clear_bypass"
     )
 
-    with patch(TOTALCONNECT_REQUEST) as mock_request:
+    with (
+        patch(TOTALCONNECT_REQUEST) as mock_request,
+        patch(
+            "homeassistant.components.totalconnect.button.TotalConnectDataUpdateCoordinator.async_request_refresh",
+            new=AsyncMock(),
+        ) as mock_refresh,
+    ):
         await hass.services.async_call(
             domain=BUTTON,
             service=SERVICE_PRESS,
@@ -82,3 +96,4 @@ async def test_clear_button(hass: HomeAssistant) -> None:
             blocking=True,
         )
         assert mock_request.call_count == 1
+        assert mock_refresh.call_count == 1
