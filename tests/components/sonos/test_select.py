@@ -2,20 +2,25 @@
 
 from unittest.mock import patch
 
-import pytest
-
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.components.sonos.const import ATTR_DIALOG_LEVEL, MODEL_SONOS_ARC_ULTRA, SCAN_INTERVAL
+from homeassistant.components.sonos.const import (
+    ATTR_DIALOG_LEVEL,
+    MODEL_SONOS_ARC_ULTRA,
+    SCAN_INTERVAL,
+)
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from tests.common import async_fire_time_changed
+
 from .conftest import create_rendering_control_event
+
+from tests.common import async_fire_time_changed
 
 SELECT_DIALOG_LEVEL_ENTITY = "select.zone_a_dialog_level"
 
@@ -132,7 +137,6 @@ async def test_select_dialog_level_event(
     dialog_level_select = entity_registry.entities[SELECT_DIALOG_LEVEL_ENTITY]
     dialog_level_state = hass.states.get(dialog_level_select.entity_id)
     assert dialog_level_state.state == "high"
-
 
 
 async def test_select_dialog_level_poll(

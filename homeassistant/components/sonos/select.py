@@ -104,7 +104,7 @@ class SonosSelectEntity(SonosEntity, SelectEntity):
     async def _async_fallback_poll(self) -> None:
         """Poll the value if subscriptions are not working."""
         await self.hass.async_add_executor_job(self.poll_state)
-        await self.async_write_ha_state()        
+        self.async_write_ha_state()
 
     @soco_error()
     def poll_state(self) -> None:
