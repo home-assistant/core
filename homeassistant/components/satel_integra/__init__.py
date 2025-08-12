@@ -193,7 +193,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
 
     entry.runtime_data = controller
 
-    entry.async_on_unload(entry.add_update_listener(update_listener))
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.close)
     )
@@ -228,11 +227,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
     )
 
     return True
-
-
-async def update_listener(hass: HomeAssistant, entry: SatelConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> bool:
