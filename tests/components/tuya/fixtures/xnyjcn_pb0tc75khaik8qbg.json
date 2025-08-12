@@ -734,7 +734,7 @@
     }
   },
   "status": {
-    "serial_number": "",
+    "serial_number": "sn1234",
     "battery_capacity": 0,
     "error_code": "",
     "connection_state": "paired_connected",
