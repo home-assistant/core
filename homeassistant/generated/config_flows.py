@@ -570,6 +570,7 @@ FLOWS = {
         "shelly",
         "shopping_list",
         "sia",
+        "signal_messenger",
         "simplefin",
         "simplepush",
         "simplisafe",
