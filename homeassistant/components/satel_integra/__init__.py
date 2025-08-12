@@ -193,9 +193,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> boo
 
     entry.runtime_data = controller
 
-    entry.async_on_unload(
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.close)
-    )
+    @callback
+    def _close(*_):
+        controller.close()
+
+    entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
