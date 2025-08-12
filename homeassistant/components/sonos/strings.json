@@ -50,6 +50,17 @@
         "name": "Music surround level"
       }
     },
+    "select": {
+      "dialog_level": {
+        "name": "Dialog level",
+        "state": {
+          "off": "Off",
+          "low": "Low",
+          "medium": "Medium",
+          "Max": "Maximum"
+        }
+      }
+    },
     "sensor": {
       "audio_input_format": {
         "name": "Audio input format"

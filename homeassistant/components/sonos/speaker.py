@@ -47,6 +47,7 @@ from .const import (
     SONOS_CREATE_LEVELS,
     SONOS_CREATE_MEDIA_PLAYER,
     SONOS_CREATE_MIC_SENSOR,
+    SONOS_CREATE_SELECTS,
     SONOS_CREATE_SWITCHES,
     SONOS_FALLBACK_POLL,
     SONOS_REBOOTED,
@@ -158,6 +159,7 @@ class SonosSpeaker:
         # Home theater
         self.audio_delay: int | None = None
         self.dialog_level: bool | None = None
+        self.dialog_level_enum: int | None = None
         self.speech_enhance_enabled: bool | None = None
         self.night_mode: bool | None = None
         self.sub_enabled: bool | None = None
@@ -253,6 +255,7 @@ class SonosSpeaker:
         ]:
             dispatches.append((SONOS_CREATE_ALARM, self, new_alarms))
 
+        dispatches.append((SONOS_CREATE_SELECTS, self))
         dispatches.append((SONOS_CREATE_SWITCHES, self))
         dispatches.append((SONOS_CREATE_MEDIA_PLAYER, self))
         dispatches.append((SONOS_SPEAKER_ADDED, self.soco.uid))
@@ -592,6 +595,10 @@ class SonosSpeaker:
         ):
             if int_var in variables:
                 setattr(self, int_var, variables[int_var])
+
+        for enum_var in ("dialog_level",):
+            if enum_var in variables:
+                setattr(self, f"{enum_var}_enum", variables[int_var])
 
         self.async_write_entity_states()
 
