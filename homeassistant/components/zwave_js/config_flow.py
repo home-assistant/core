@@ -88,6 +88,7 @@ ADDON_USER_INPUT_MAP = {
     CONF_ADDON_LR_S2_AUTHENTICATED_KEY: CONF_LR_S2_AUTHENTICATED_KEY,
 }
 
+EXAMPLE_SERVER_URL = "ws://localhost:3000"
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
 MIN_MIGRATION_SDK_VERSION = AwesomeVersion("6.61")
 
@@ -536,7 +537,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="manual",
                 data_schema=get_manual_schema({}),
                 description_placeholders={
-                    "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS
+                    "example_server_url": EXAMPLE_SERVER_URL,
+                    "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS,
                 },
             )
 
@@ -569,7 +571,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="manual",
             data_schema=get_manual_schema(user_input),
             description_placeholders={
-                "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS
+                "example_server_url": EXAMPLE_SERVER_URL,
+                "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS,
             },
             errors=errors,
         )
@@ -1030,7 +1033,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="manual_reconfigure",
                 data_schema=get_manual_schema({CONF_URL: config_entry.data[CONF_URL]}),
                 description_placeholders={
-                    "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS
+                    "example_server_url": EXAMPLE_SERVER_URL,
+                    "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS,
                 },
             )
 
@@ -1063,7 +1067,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="manual_reconfigure",
             data_schema=get_manual_schema(user_input),
             description_placeholders={
-                "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS
+                "example_server_url": EXAMPLE_SERVER_URL,
+                "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS,
             },
             errors=errors,
         )

@@ -87,7 +87,7 @@
           "url": "[%key:common::config_flow::data::url%]"
         },
         "data_description": {
-          "url": "The URL of the Z-Wave Server WebSocket API, e.g. ws://localhost:3000"
+          "url": "The URL of the Z-Wave Server WebSocket API, e.g. {example_server_url}"
         }
       },
       "manual_reconfigure": {
