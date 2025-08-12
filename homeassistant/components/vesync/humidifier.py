@@ -164,7 +164,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
 
         if mode == MODE_SLEEP:
             # We successfully changed the mode. Consider it a success even if display operation fails.
-            await self.device.set_display(False)
+            await self.device.toggle_display(False)
 
         # Changing mode while humidifier is off actually turns it on, as per the app. But
         # the library does not seem to update the device_status. It is also possible that
