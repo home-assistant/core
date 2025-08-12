@@ -138,19 +138,19 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         """Return the state attributes of the fan."""
         attr = {}
 
-        if hasattr(self.device, "active_time"):
+        if hasattr(self.device.state, "active_time"):
             attr["active_time"] = self.device.state.active_time
 
-        if hasattr(self.device, "screen_status"):
+        if hasattr(self.device.state, "screen_status"):
             attr["screen_status"] = self.device.state.screen_status
 
-        if hasattr(self.device, "child_lock"):
+        if hasattr(self.device.state, "child_lock"):
             attr["child_lock"] = self.device.state.child_lock
 
-        if hasattr(self.device, "night_light"):
+        if hasattr(self.device.state, "night_light"):
             attr["night_light"] = self.device.state.night_light
 
-        if hasattr(self.device, "mode"):
+        if hasattr(self.device.state, "mode"):
             attr["mode"] = self.device.state.mode
 
         return attr
