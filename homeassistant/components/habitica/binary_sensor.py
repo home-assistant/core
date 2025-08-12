@@ -121,4 +121,4 @@ class HabiticaPartyBinarySensorEntity(HabiticaPartyBase, BinarySensorEntity):
     @property
     def is_on(self) -> bool | None:
         """If the binary sensor is on."""
-        return self.coordinator.data.quest.active
+        return self.coordinator.data.party.quest.active
