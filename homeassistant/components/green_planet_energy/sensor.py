@@ -164,9 +164,6 @@ class GreenPlanetEnergySensor(
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        if not self.coordinator.data:
-            return None
-
         # Use value_fn to get calculated values
         if self.entity_description.value_fn:
             return self.entity_description.value_fn(self.coordinator.data)
