@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any, Final, cast
 
 import pyatmo
 from pyatmo.modules import Module, PublicWeatherArea
@@ -46,6 +46,7 @@ from .const import (
     CONF_URL_ENERGY,
     CONF_URL_PUBLIC_WEATHER,
     CONF_URL_SECURITY,
+    CONF_URL_WEATHER,
     CONF_WEATHER_AREAS,
     DATA_HANDLER,
     DOMAIN,
@@ -389,9 +390,39 @@ BATTERY_SENSOR_DESCRIPTION = NetatmoSensorEntityDescription(
     device_class=SensorDeviceClass.BATTERY,
 )
 
+NETATMO_SENSOR_DESCRIPTIONS: Final[list[NetatmoSensorEntityDescription]] = [
+    NetatmoSensorEntityDescription(
+        key="battery",
+        netatmo_name="battery",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.BATTERY,
+    ),
+    NetatmoSensorEntityDescription(
+        key="rf_status",
+        netatmo_name="rf_strength",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=process_rf,
+    ),
+]
 
-class NetatmoBatterySensor(NetatmoModuleEntity, SensorEntity):
-    """Implementation of new Netatmo battery sensor."""
+OPENING_SENSOR_DESCRIPTIONS: Final[list[NetatmoSensorEntityDescription]] = []
+
+DEVICE_CATEGORY_SENSORS: Final[dict[NetatmoDeviceCategory, list]] = {
+    NetatmoDeviceCategory.opening: OPENING_SENSOR_DESCRIPTIONS,
+}
+
+DEVICE_CATEGORY_URLS: Final[dict[NetatmoDeviceCategory, str]] = {
+    NetatmoDeviceCategory.opening: CONF_URL_SECURITY,
+    NetatmoDeviceCategory.weather: CONF_URL_WEATHER,
+    NetatmoDeviceCategory.climate: CONF_URL_ENERGY,
+}
+
+
+class NetatmoCommonSensor(NetatmoModuleEntity, SensorEntity):
+    """Implementation of new Netatmo common sensor."""
 
     entity_description: NetatmoSensorEntityDescription
 
@@ -410,17 +441,18 @@ class NetatmoBatterySensor(NetatmoModuleEntity, SensorEntity):
         )
         self._attr_name = name_suffix
 
-        if self.device.device_category is NetatmoDeviceCategory.climate:
-            self._attr_configuration_url = CONF_URL_ENERGY
-        elif self.device.device_category is NetatmoDeviceCategory.opening:
-            self._attr_configuration_url = CONF_URL_SECURITY
+        if self.device.device_category:
+            self._attr_configuration_url = DEVICE_CATEGORY_URLS.get(
+                self.device.device_category, None
+            )
         else:
             self._attr_configuration_url = None
 
         super().__init__(netatmo_device)
 
         _LOGGER.debug(
-            "Adding battery sensor for device %s",
+            "Adding %s sensor for device %s",
+            self.entity_description.key,
             netatmo_device.device.name,
         )
 
@@ -456,31 +488,83 @@ class NetatmoBatterySensor(NetatmoModuleEntity, SensorEntity):
 def _add_entities_from_home(
     data_handler: NetatmoDataHandler, async_add_entities: Callable
 ) -> None:
-    """Factory function to create battery sensors for each module."""
-    entities = []
-    module: Module
+    """Factory function to create sensors for each module."""
+    # module: Module
 
     for home in data_handler.account.homes.values():
         signal_name: str = f"{HOME}-{home.entity_id}"
         for room in home.rooms.values():
             for module in room.modules.values():
-                if module.device_category is NetatmoDeviceCategory.opening:
-                    _LOGGER.debug(
-                        "Dispatching battery sensor for device %s", module.name
-                    )
-                    entities.append(
-                        NetatmoBatterySensor(
-                            NetatmoDevice(
-                                data_handler,
-                                module,
-                                room.entity_id,
-                                signal_name,
+                if module.device_category not in DEVICE_CATEGORY_SENSORS:
+                    continue
+
+                # We'll explicitly check for the existence of the keys we're interested in
+                attributes_to_check = ["status", "battery", "rf_strength", "reachable"]
+                found_attributes = {}
+                for attr in attributes_to_check:
+                    value = getattr(module, attr, "NOT FOUND")
+                    found_attributes[attr] = value
+
+                _LOGGER.debug(
+                    "Discovered attributes for module %s: %s",
+                    module.name,
+                    found_attributes,
+                )
+
+                #  Combine the common sensors and the specific sensors
+                descriptions_to_add = cast(
+                    list[NetatmoSensorEntityDescription],
+                    NETATMO_SENSOR_DESCRIPTIONS
+                    + DEVICE_CATEGORY_SENSORS.get(module.device_category, []),
+                )
+
+                _LOGGER.debug(
+                    "Descriptions %s to add for module %s, features: %s",
+                    len(descriptions_to_add),
+                    module.name,
+                    module.features,
+                )
+
+                entities = []
+
+                # Create common sensors for module
+                for description in descriptions_to_add:
+                    if description.netatmo_name in module.features:
+                        _LOGGER.debug(
+                            "Dispatching %s sensor for device %s",
+                            description.key,
+                            module.name,
+                        )
+                        entities.append(
+                            NetatmoCommonSensor(
+                                NetatmoDevice(
+                                    data_handler,
+                                    module,
+                                    room.entity_id,
+                                    signal_name,
+                                ),
                             )
                         )
-                    )
+                    else:
+                        _LOGGER.debug(
+                            "Skipping %s (%s) sensor for device %s",
+                            description.key,
+                            description.netatmo_name,
+                            module.name,
+                        )
 
-    if entities:
-        async_add_entities(entities)
+                if entities:
+                    _LOGGER.debug(
+                        "Adding %s sensor entities for module %s",
+                        len(entities),
+                        module.name,
+                    )
+                    async_add_entities(entities)
+                else:
+                    _LOGGER.debug(
+                        "No sensor entities created for module %s",
+                        module.name,
+                    )
 
 
 async def async_setup_entry(
