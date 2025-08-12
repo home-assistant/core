@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "73486068483fda10d633",
   "name": "rat trap hedge",
   "category": "pir",
   "product_id": "3amxzozho9xp4mkh",

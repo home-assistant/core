@@ -314,6 +314,25 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         ),
         TAMPER_BINARY_SENSOR,
     ),
+    # Gateway control
+    # https://developer.tuya.com/en/docs/iot/wg?id=Kbcdadk79ejok
+    "wg2": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.MASTER_STATE,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            on_value="alarm",
+        ),
+    ),
+    # Thermostat
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
+    "wk": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.VALVE_STATE,
+            translation_key="valve",
+            on_value="open",
+        ),
+    ),
     # Thermostatic Radiator Valve
     # Not documented
     "wkf": (

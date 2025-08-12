@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from collections import namedtuple
 from collections.abc import Callable
-import logging
 from typing import Any
 
 from pymodbus.client import (
@@ -38,6 +37,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
+    _LOGGER,
     ATTR_ADDRESS,
     ATTR_HUB,
     ATTR_SLAVE,
@@ -57,6 +57,7 @@ from .const import (
     CONF_PARITY,
     CONF_STOPBITS,
     DEFAULT_HUB,
+    DEVICE_ID,
     MODBUS_DOMAIN as DOMAIN,
     PLATFORMS,
     RTUOVERTCP,
@@ -70,7 +71,6 @@ from .const import (
 )
 from .validators import check_config
 
-_LOGGER = logging.getLogger(__name__)
 DATA_MODBUS_HUBS: HassKey[dict[str, ModbusHub]] = HassKey(DOMAIN)
 
 
@@ -381,7 +381,7 @@ class ModbusHub:
     ) -> ModbusPDU | None:
         """Call sync. pymodbus."""
         kwargs: dict[str, Any] = (
-            {ATTR_SLAVE: slave} if slave is not None else {ATTR_SLAVE: 1}
+            {DEVICE_ID: slave} if slave is not None else {DEVICE_ID: 1}
         )
         entry = self._pb_request[use_call]
 

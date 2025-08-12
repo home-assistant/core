@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "1708196692712PHOeqy",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "bff00f6abe0563b284t77p",
   "name": "Frysen",
   "category": "qxj",
   "product_id": "is2indt9nlth6esa",

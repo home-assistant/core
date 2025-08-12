@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaus.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "00450321483fda81c529",
   "name": "Master bedroom TV lights",
   "category": "dj",
   "product_id": "hp6orhaqm6as3jnv",

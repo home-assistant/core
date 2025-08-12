@@ -35,6 +35,7 @@ from homeassistant.util import dt as dt_util
 
 from .alarms import SonosAlarms
 from .const import (
+    ATTR_SPEECH_ENHANCEMENT_ENABLED,
     AVAILABILITY_TIMEOUT,
     BATTERY_SCAN_INTERVAL,
     DOMAIN,
@@ -157,6 +158,7 @@ class SonosSpeaker:
         # Home theater
         self.audio_delay: int | None = None
         self.dialog_level: bool | None = None
+        self.speech_enhance_enabled: bool | None = None
         self.night_mode: bool | None = None
         self.sub_enabled: bool | None = None
         self.sub_crossover: int | None = None
@@ -548,6 +550,11 @@ class SonosSpeaker:
     @callback
     def async_update_volume(self, event: SonosEvent) -> None:
         """Update information about currently volume settings."""
+        _LOGGER.debug(
+            "Updating volume for %s with event variables: %s",
+            self.zone_name,
+            event.variables,
+        )
         self.event_stats.process(event)
         variables = event.variables
 
@@ -565,6 +572,7 @@ class SonosSpeaker:
 
         for bool_var in (
             "dialog_level",
+            ATTR_SPEECH_ENHANCEMENT_ENABLED,
             "night_mode",
             "sub_enabled",
             "surround_enabled",

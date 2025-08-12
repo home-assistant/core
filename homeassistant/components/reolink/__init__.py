@@ -59,7 +59,7 @@ PLATFORMS = [
     Platform.UPDATE,
 ]
 DEVICE_UPDATE_INTERVAL = timedelta(seconds=60)
-FIRMWARE_UPDATE_INTERVAL = timedelta(hours=12)
+FIRMWARE_UPDATE_INTERVAL = timedelta(hours=24)
 NUM_CRED_ERRORS = 3
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)

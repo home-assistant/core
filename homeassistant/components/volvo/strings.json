@@ -94,7 +94,7 @@
         "state": {
           "connected": "[%key:common::state::connected%]",
           "disconnected": "[%key:common::state::disconnected%]",
-          "fault": "[%key:common::state::error%]"
+          "fault": "[%key:common::state::fault%]"
         }
       },
       "charging_current_limit": {
@@ -106,6 +106,8 @@
       "charging_power_status": {
         "name": "Charging power status",
         "state": {
+          "fault": "[%key:common::state::fault%]",
+          "power_available_but_not_activated": "Power available",
           "providing_power": "Providing power",
           "no_power_available": "No power"
         }

@@ -15,6 +15,7 @@ from volvocarsapi.models import (
     VolvoAuthException,
     VolvoCarsApiBaseModel,
     VolvoCarsValue,
+    VolvoCarsValueStatusField,
     VolvoCarsVehicle,
 )
 
@@ -34,6 +35,16 @@ _LOGGER = logging.getLogger(__name__)
 
 type VolvoConfigEntry = ConfigEntry[tuple[VolvoBaseCoordinator, ...]]
 type CoordinatorData = dict[str, VolvoCarsApiBaseModel | None]
+
+
+def _is_invalid_api_field(field: VolvoCarsApiBaseModel | None) -> bool:
+    if not field:
+        return True
+
+    if isinstance(field, VolvoCarsValueStatusField) and field.status == "ERROR":
+        return True
+
+    return False
 
 
 class VolvoBaseCoordinator(DataUpdateCoordinator[CoordinatorData]):
@@ -121,7 +132,13 @@ class VolvoBaseCoordinator(DataUpdateCoordinator[CoordinatorData]):
                     translation_key="update_failed",
                 ) from result
 
-            data |= cast(CoordinatorData, result)
+            api_data = cast(CoordinatorData, result)
+            data |= {
+                key: field
+                for key, field in api_data.items()
+                if not _is_invalid_api_field(field)
+            }
+
             valid = True
 
         # Raise an error if not a single API call succeeded

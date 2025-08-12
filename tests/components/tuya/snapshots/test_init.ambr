@@ -15,7 +15,7 @@
       'identifiers': set({
         tuple(
           'tuya',
-          'mock_device_id',
+          'e2sbdwuga5jorvejtkdy',
         ),
       }),
       'labels': set({

@@ -8,6 +8,14 @@
     "button": {
       "sync_clock": {
         "default": "mdi:clock-check-outline"
+      },
+      "reset_cutting_blade_usage_time": {
+        "default": "mdi:saw-blade"
+      }
+    },
+    "event": {
+      "message": {
+        "default": "mdi:alert-circle-check-outline"
       }
     },
     "number": {

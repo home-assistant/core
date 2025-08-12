@@ -1,48 +1,22 @@
 """Entity representing a Jewish Calendar sensor."""
 
 from abc import abstractmethod
-from dataclasses import dataclass
 import datetime as dt
-import logging
 
-from hdate import HDateInfo, Location, Zmanim
-from hdate.translator import Language, set_language
+from hdate import Zmanim
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
-
-type JewishCalendarConfigEntry = ConfigEntry[JewishCalendarData]
+from .coordinator import JewishCalendarConfigEntry, JewishCalendarUpdateCoordinator
 
 
-@dataclass
-class JewishCalendarDataResults:
-    """Jewish Calendar results dataclass."""
-
-    dateinfo: HDateInfo
-    zmanim: Zmanim
-
-
-@dataclass
-class JewishCalendarData:
-    """Jewish Calendar runtime dataclass."""
-
-    language: Language
-    diaspora: bool
-    location: Location
-    candle_lighting_offset: int
-    havdalah_offset: int
-    results: JewishCalendarDataResults | None = None
-
-
-class JewishCalendarEntity(Entity):
+class JewishCalendarEntity(CoordinatorEntity[JewishCalendarUpdateCoordinator]):
     """An HA implementation for Jewish Calendar entity."""
 
     _attr_has_entity_name = True
@@ -55,22 +29,12 @@ class JewishCalendarEntity(Entity):
         description: EntityDescription,
     ) -> None:
         """Initialize a Jewish Calendar entity."""
+        super().__init__(config_entry.runtime_data)
         self.entity_description = description
         self._attr_unique_id = f"{config_entry.entry_id}-{description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, config_entry.entry_id)},
-        )
-        self.data = config_entry.runtime_data
-        set_language(self.data.language)
-
-    def make_zmanim(self, date: dt.date) -> Zmanim:
-        """Create a Zmanim object."""
-        return Zmanim(
-            date=date,
-            location=self.data.location,
-            candle_lighting_offset=self.data.candle_lighting_offset,
-            havdalah_offset=self.data.havdalah_offset,
         )
 
     async def async_added_to_hass(self) -> None:
@@ -92,10 +56,9 @@ class JewishCalendarEntity(Entity):
     def _schedule_update(self) -> None:
         """Schedule the next update of the sensor."""
         now = dt_util.now()
-        zmanim = self.make_zmanim(now.date())
         update = dt_util.start_of_local_day() + dt.timedelta(days=1)
 
-        for update_time in self._update_times(zmanim):
+        for update_time in self._update_times(self.coordinator.zmanim):
             if update_time is not None and now < update_time < update:
                 update = update_time
 
@@ -110,17 +73,4 @@ class JewishCalendarEntity(Entity):
         """Update the sensor data."""
         self._update_unsub = None
         self._schedule_update()
-        self.create_results(now)
         self.async_write_ha_state()
-
-    def create_results(self, now: dt.datetime | None = None) -> None:
-        """Create the results for the sensor."""
-        if now is None:
-            now = dt_util.now()
-
-        _LOGGER.debug("Now: %s Location: %r", now, self.data.location)
-
-        today = now.date()
-        zmanim = self.make_zmanim(today)
-        dateinfo = HDateInfo(today, diaspora=self.data.diaspora)
-        self.data.results = JewishCalendarDataResults(dateinfo, zmanim)

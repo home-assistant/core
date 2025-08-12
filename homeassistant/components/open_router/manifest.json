@@ -9,5 +9,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["openai==1.93.3", "python-open-router==0.3.1"]
+  "requirements": ["openai==1.99.5", "python-open-router==0.3.1"]
 }

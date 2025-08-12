@@ -1,11 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaus.com",
-  "terminal_id": "1732306182276g6jQLp",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-
-  "id": "eb3e988f33c233290cfs3l",
   "name": "Colorful PIR Night Light",
   "category": "gyd",
   "product_id": "lgekqfxdabipm3tn",

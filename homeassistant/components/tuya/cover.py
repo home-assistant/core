@@ -23,6 +23,7 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
 from .entity import TuyaEntity
 from .models import IntegerTypeData
+from .util import get_dpcode
 
 
 @dataclass(frozen=True)
@@ -202,7 +203,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self._attr_supported_features = CoverEntityFeature(0)
 
         # Check if this cover is based on a switch or has controls
-        if self.find_dpcode(description.key, prefer_function=True):
+        if get_dpcode(self.device, description.key):
             if device.function[description.key].type == "Boolean":
                 self._attr_supported_features |= (
                     CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE

@@ -2032,3 +2032,34 @@ async def test_tts_cache() -> None:
         assert await consume_mid_data_task == b"012"
     with pytest.raises(ValueError):
         assert await consume_pre_data_loaded_task == b"012"
+
+
+async def test_async_internal_get_tts_audio_called(
+    hass: HomeAssistant,
+    mock_tts_entity: MockTTSEntity,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test that non-streaming entity has its async_internal_get_tts_audio method called."""
+
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    # Non-streaming
+    assert mock_tts_entity.async_supports_streaming_input() is False
+
+    with patch(
+        "homeassistant.components.tts.entity.TextToSpeechEntity.async_internal_get_tts_audio"
+    ) as internal_get_tts_audio:
+        media_source_id = tts.generate_media_source_id(
+            hass,
+            "test message",
+            "tts.test",
+            "en_US",
+            cache=None,
+        )
+
+        url = await get_media_source_url(hass, media_source_id)
+        client = await hass_client()
+        await client.get(url)
+
+        # async_internal_get_tts_audio is called
+        internal_get_tts_audio.assert_called_once_with("test message", "en_US", {})

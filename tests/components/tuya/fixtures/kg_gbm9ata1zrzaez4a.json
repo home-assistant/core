@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaus.com",
-  "terminal_id": "1750526976566fMhqJs",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": true,
-  "id": "0665305284f3ebe9fdc1",
   "name": "QT-Switch",
   "category": "kg",
   "product_id": "gbm9ata1zrzaez4a",
