@@ -9,6 +9,8 @@ import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry
+
 BASE_COMPONENT = "notify"
 
 
@@ -73,9 +75,14 @@ async def test_apprise_config_load_okay(hass: HomeAssistant, tmp_path: Path) -> 
     f = d / "apprise"
     f.write_text("mailto://user:pass@example.com/")
 
-    config = {BASE_COMPONENT: {"name": "test", "platform": "apprise", "config": str(f)}}
+    entry = MockConfigEntry(
+        domain="apprise",
+        data={"file_url": str(f), "name": "test"},
+        title="Test Apprise",
+    )
+    entry.add_to_hass(hass)
 
-    assert await async_setup_component(hass, BASE_COMPONENT, config)
+    assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
     # Valid configuration was loaded; our service is good
@@ -106,14 +113,6 @@ async def test_apprise_url_load_fail(hass: HomeAssistant) -> None:
 async def test_apprise_notification(hass: HomeAssistant) -> None:
     """Test apprise notification."""
 
-    config = {
-        BASE_COMPONENT: {
-            "name": "test",
-            "platform": "apprise",
-            "url": "mailto://user:pass@example.com",
-        }
-    }
-
     # Our Message
     data = {"title": "Test Title", "message": "Test Message"}
 
@@ -124,10 +123,21 @@ async def test_apprise_notification(hass: HomeAssistant) -> None:
         obj.add.return_value = True
         obj.notify.return_value = True
         mock_apprise.return_value = obj
-        assert await async_setup_component(hass, BASE_COMPONENT, config)
+
+        entry = MockConfigEntry(
+            domain="apprise",
+            data={
+                "name": "test",
+                "platform": "apprise",
+                "url": "mailto://user:pass@example.com",
+            },
+            title="Test Apprise",
+        )
+        entry.add_to_hass(hass)
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        # Test the existence of our service
         assert hass.services.has_service(BASE_COMPONENT, "test")
 
         # Test the call to our underlining notify() call
@@ -135,7 +145,7 @@ async def test_apprise_notification(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         # Validate calls were made under the hood correctly
-        obj.add.assert_called_once_with(config[BASE_COMPONENT]["url"])
+        obj.add.assert_called_once_with("mailto://user:pass@example.com")
         obj.notify.assert_called_once_with(
             body=data["message"], title=data["title"], tag=None
         )
@@ -144,17 +154,6 @@ async def test_apprise_notification(hass: HomeAssistant) -> None:
 async def test_apprise_multiple_notification(hass: HomeAssistant) -> None:
     """Test apprise notification."""
 
-    config = {
-        BASE_COMPONENT: {
-            "name": "test",
-            "platform": "apprise",
-            "url": [
-                "mailto://user:pass@example.com, mailto://user:pass@gmail.com",
-                "json://user:pass@gmail.com",
-            ],
-        }
-    }
-
     # Our Message
     data = {"title": "Test Title", "message": "Test Message"}
 
@@ -165,7 +164,22 @@ async def test_apprise_multiple_notification(hass: HomeAssistant) -> None:
         obj.add.return_value = True
         obj.notify.return_value = True
         mock_apprise.return_value = obj
-        assert await async_setup_component(hass, BASE_COMPONENT, config)
+
+        entry = MockConfigEntry(
+            domain="apprise",
+            data={
+                "name": "test",
+                "platform": "apprise",
+                "url": [
+                    "mailto://user:pass@example.com, mailto://user:pass@gmail.com",
+                    "json://user:pass@gmail.com",
+                ],
+            },
+            title="Test Apprise",
+        )
+        entry.add_to_hass(hass)
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
         # Test the existence of our service
@@ -196,8 +210,6 @@ async def test_apprise_notification_with_target(
     f.write_text("devops=mailto://user:pass@example.com/\r\n")
     f.write_text("system,alert=syslog://\r\n")
 
-    config = {BASE_COMPONENT: {"name": "test", "platform": "apprise", "config": str(f)}}
-
     # Our Message, only notify the services tagged with "devops"
     data = {"title": "Test Title", "message": "Test Message", "target": ["devops"]}
 
@@ -208,7 +220,19 @@ async def test_apprise_notification_with_target(
         apprise_obj.add.return_value = True
         apprise_obj.notify.return_value = True
         mock_apprise.return_value = apprise_obj
-        assert await async_setup_component(hass, BASE_COMPONENT, config)
+
+        entry = MockConfigEntry(
+            domain="apprise",
+            data={
+                "name": "test",
+                "platform": "apprise",
+                "config": str(f),
+            },
+            title="Test Apprise",
+        )
+        entry.add_to_hass(hass)
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
         # Test the existence of our service

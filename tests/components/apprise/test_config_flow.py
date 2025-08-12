@@ -1,13 +1,14 @@
 """Tests for the Apprise config flow."""
 
-from unittest.mock import patch
-
 from homeassistant.components import apprise
+from homeassistant.components.apprise.const import CONF_FILE_URL
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.issue_registry as ir
+
+from tests.common import MockConfigEntry
 
 MOCK_DATA = {
     "name": "Apprise",
@@ -34,41 +35,33 @@ MOCK_DATA_INVALID = {
 async def test_user_flow_success(hass: HomeAssistant) -> None:
     """Test user-initiated config flow."""
 
-    with patch(
-        "homeassistant.components.apprise.config_flow.apprise.Apprise.notify",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            apprise.DOMAIN, context={"source": SOURCE_USER}
-        )
-        assert result["type"] == FlowResultType.FORM
+    result = await hass.config_entries.flow.async_init(
+        apprise.DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
 
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=MOCK_DATA
-        )
-        assert result2["title"] == f"{MOCK_DATA[CONF_NAME]}"
-        assert result2["type"] == FlowResultType.CREATE_ENTRY
-        assert result2["data"] == MOCK_DATA
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_DATA
+    )
+    assert result2["title"] == f"{MOCK_DATA[CONF_NAME]}"
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["data"] == MOCK_DATA
 
 
 async def test_user_flow_success_config(hass: HomeAssistant) -> None:
     """Test user-initiated config flow."""
 
-    with patch(
-        "homeassistant.components.apprise.config_flow.apprise.Apprise.notify",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            apprise.DOMAIN, context={"source": SOURCE_USER}
-        )
-        assert result["type"] == FlowResultType.FORM
+    result = await hass.config_entries.flow.async_init(
+        apprise.DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
 
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=MOCK_DATA_CONFIG
-        )
-        assert result2["title"] == f"{MOCK_DATA_CONFIG[CONF_NAME]}"
-        assert result2["type"] == FlowResultType.CREATE_ENTRY
-        assert result2["data"] == MOCK_DATA_CONFIG
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_DATA_CONFIG
+    )
+    assert result2["title"] == f"{MOCK_DATA_CONFIG[CONF_NAME]}"
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["data"] == MOCK_DATA_CONFIG
 
 
 async def test_user_flow_no_input(hass: HomeAssistant) -> None:
@@ -94,78 +87,66 @@ async def test_user_flow_no_input(hass: HomeAssistant) -> None:
     assert result3["data"] == MOCK_DATA_URL
 
 
-async def test_user_flow_retry_after_connection_fail(hass: HomeAssistant) -> None:
-    """Test connection failure."""
-    with patch(
-        "homeassistant.components.apprise.config_flow.apprise.Apprise",
-        side_effect=ConnectionError,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            apprise.DOMAIN, context={"source": SOURCE_USER}
-        )
-
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=MOCK_DATA
-        )
-        assert result2["type"] == FlowResultType.FORM
-        assert result2["errors"] == {"base": "cannot_connect"}
-
-    with patch(
-        "homeassistant.components.apprise.config_flow.apprise.Apprise",
-    ):
-        result3 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input=MOCK_DATA
-        )
-        assert result3["type"] == FlowResultType.CREATE_ENTRY
-        assert result3["data"] == MOCK_DATA
-
-
 async def test_import_flow(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test import triggers config flow and is accepted."""
-    with patch(
-        "homeassistant.components.apprise.config_flow.apprise.Apprise.notify",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            apprise.DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=MOCK_DATA,
-        )
+    result = await hass.config_entries.flow.async_init(
+        apprise.DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=MOCK_DATA,
+    )
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["data"] == MOCK_DATA
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["data"] == MOCK_DATA
 
-        # Deprecation issue should be created
-        issue = issue_registry.async_get_issue(
-            HOMEASSISTANT_DOMAIN, "deprecated_yaml_apprise"
-        )
-        assert issue is not None
-        assert issue.translation_key == "deprecated_yaml"
-        assert issue.severity == ir.IssueSeverity.WARNING
+    # Deprecation issue should be created
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, "deprecated_yaml_apprise"
+    )
+    assert issue is not None
+    assert issue.translation_key == "deprecated_yaml"
+    assert issue.severity == ir.IssueSeverity.WARNING
 
 
-async def test_import_connection_error(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
-    """Test import triggers connection error issue."""
-    with patch(
-        "homeassistant.components.apprise.config_flow.apprise.Apprise",
-        side_effect=ConnectionError,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            apprise.DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=MOCK_DATA_INVALID,
-        )
+async def test_reconfigure_flow(hass: HomeAssistant) -> None:
+    """Test reconfigure flow."""
 
-        assert result["type"] == "abort"
-        assert result["reason"] == "cannot_connect"
+    # Create a mock config entry and add it to hass
+    entry = MockConfigEntry(
+        domain="apprise",
+        data={
+            CONF_NAME: "OldName",
+            "config": "http://old-config-url",
+            CONF_URL: "mailto://user:old@example.com",
+        },
+        title="Test Apprise",
+    )
+    entry.add_to_hass(hass)
 
-        issue = issue_registry.async_get_issue(
-            apprise.DOMAIN, "deprecated_yaml_import_connection_error"
-        )
-        assert issue is not None
-        assert issue.translation_key == "deprecated_yaml_import_connection_error"
-        assert issue.severity == ir.IssueSeverity.WARNING
+    # Start reconfigure flow
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # Provide new data to update the config entry
+    new_data = {
+        CONF_NAME: "NewName",
+        CONF_FILE_URL: "http://new-config-url",
+        CONF_URL: "mailto://user:new@example.com",
+    }
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=new_data
+    )
+
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+
+    # Check that data is updated
+    updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert updated_entry is not None
+    assert updated_entry.data[CONF_NAME] == "NewName"
+    assert updated_entry.data[CONF_FILE_URL] == "http://new-config-url"
+    assert updated_entry.data[CONF_URL] == "mailto://user:new@example.com"
