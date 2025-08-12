@@ -12,7 +12,11 @@ from paho.mqtt import MQTTException
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 
 from .const import LOGGER
 
@@ -50,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: InelsConfigEntry) -> boo
 
     mqtt = InelsMqtt(entry.data)
 
-    def connect_and_discover_devices() -> list[Device] | None:
+    def connect_and_discover_devices() -> list[Device]:
         """Test connection and discover devices."""
         conn_result = mqtt.test_connection()
         if isinstance(conn_result, int):  # None -> no error, int -> error code
@@ -59,16 +63,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: InelsConfigEntry) -> boo
                 raise ConfigEntryAuthFailed("Invalid authentication")
             if conn_result == 3:
                 raise ConfigEntryNotReady("MQTT Broker is offline or cannot be reached")
-            return None
+            raise ConfigEntryError("..")
         return inels_discovery(mqtt)
 
     # Raising errors signals to Home Assistant that the setup should be retried later.
     # It is better to retry the entire setup than to recover from errors.
     devices = await hass.async_add_executor_job(connect_and_discover_devices)
-
-    # Check for errors that were not explicitly raised
-    if devices is None:
-        return False
 
     # If no devices are discovered, continue with the setup
     if not devices:
