@@ -564,7 +564,7 @@ class ESPHomeManager:
             )
             entry_data.loaded_platforms.add(Platform.ASSIST_SATELLITE)
 
-        cli.subscribe_homeassistant_states_and_services(
+        cli.subscribe_home_assistant_states_and_services(
             on_state=entry_data.async_update_state,
             on_service_call=self.async_on_service_call,
             on_state_sub=self.async_on_state_subscription,

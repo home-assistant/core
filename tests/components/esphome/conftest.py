@@ -518,7 +518,7 @@ async def _mock_generic_device_entry(
         return_value=mock_list_entities_services
     )
 
-    def _subscribe_homeassistant_states_and_services(
+    def _subscribe_home_assistant_states_and_services(
         *,
         on_state: Callable[[EntityState], None],
         on_service_call: Callable[[HomeassistantServiceCall], None],
@@ -535,8 +535,8 @@ async def _mock_generic_device_entry(
         for state in states:
             on_state(state)
 
-    mock_client.subscribe_homeassistant_states_and_services = (
-        _subscribe_homeassistant_states_and_services
+    mock_client.subscribe_home_assistant_states_and_services = (
+        _subscribe_home_assistant_states_and_services
     )
     mock_client.subscribe_logs = _subscribe_logs
 
