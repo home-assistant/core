@@ -52,11 +52,6 @@ class IRobotEntity(Entity):
         return self.robot_unique_id
 
     @property
-    def battery_level(self):
-        """Return the battery level of the vacuum cleaner."""
-        return self.vacuum_state.get("batPct")
-
-    @property
     def run_stats(self):
         """Return the run stats."""
         return self.vacuum_state.get("bbrun", {})
