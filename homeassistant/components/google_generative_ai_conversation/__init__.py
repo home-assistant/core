@@ -124,7 +124,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 f"Error generating content due to content violations, reason: {response.prompt_feedback.block_reason_message}"
             )
 
-        if not response.candidates[0].content.parts:
+        if (
+            not response.candidates
+            or not response.candidates[0].content
+            or not response.candidates[0].content.parts
+        ):
             raise HomeAssistantError("Unknown error generating content")
 
         return {"text": response.text}

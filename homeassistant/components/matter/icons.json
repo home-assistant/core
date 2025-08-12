@@ -17,6 +17,9 @@
       },
       "stop": {
         "default": "mdi:stop"
+      },
+      "self_test_request": {
+        "default": "mdi:refresh-auto"
       }
     },
     "fan": {
@@ -97,6 +100,9 @@
         "default": "mdi:battery-clock"
       },
       "esa_opt_out_state": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "esa_state": {
         "default": "mdi:home-lightning-bolt"
       },
       "evse_state": {
