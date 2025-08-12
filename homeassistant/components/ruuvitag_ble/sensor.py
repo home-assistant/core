@@ -75,6 +75,35 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
+    # Acceleration keys exported in newer versions of ruuvitag-ble
+    "acceleration_x": SensorEntityDescription(
+        key=f"acceleration_x_{Units.ACCELERATION_METERS_PER_SQUARE_SECOND}",
+        translation_key="acceleration_x",
+        native_unit_of_measurement=Units.ACCELERATION_METERS_PER_SQUARE_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    "acceleration_y": SensorEntityDescription(
+        key=f"acceleration_y_{Units.ACCELERATION_METERS_PER_SQUARE_SECOND}",
+        translation_key="acceleration_y",
+        native_unit_of_measurement=Units.ACCELERATION_METERS_PER_SQUARE_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    "acceleration_z": SensorEntityDescription(
+        key=f"acceleration_z_{Units.ACCELERATION_METERS_PER_SQUARE_SECOND}",
+        translation_key="acceleration_z",
+        native_unit_of_measurement=Units.ACCELERATION_METERS_PER_SQUARE_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
+    "acceleration_total": SensorEntityDescription(
+        key=f"acceleration_total_{Units.ACCELERATION_METERS_PER_SQUARE_SECOND}",
+        translation_key="acceleration_total",
+        native_unit_of_measurement=Units.ACCELERATION_METERS_PER_SQUARE_SECOND,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+    ),
 }
 
 

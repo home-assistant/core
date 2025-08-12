@@ -1,4 +1,212 @@
 # serializer version: 1
+# name: test_sensors[v5][sensor.ruuvitag_efaf_acceleration_total-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ruuvitag_efaf_acceleration_total',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Acceleration total',
+    'platform': 'ruuvitag_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'acceleration_total',
+    'unique_id': '01:03:05:07:09:11-acceleration_total',
+    'unit_of_measurement': <Units.ACCELERATION_METERS_PER_SQUARE_SECOND: 'm/s²'>,
+  })
+# ---
+# name: test_sensors[v5][sensor.ruuvitag_efaf_acceleration_total-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'RuuviTag EFAF Acceleration total',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <Units.ACCELERATION_METERS_PER_SQUARE_SECOND: 'm/s²'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ruuvitag_efaf_acceleration_total',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '9.82',
+  })
+# ---
+# name: test_sensors[v5][sensor.ruuvitag_efaf_acceleration_x-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ruuvitag_efaf_acceleration_x',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Acceleration X',
+    'platform': 'ruuvitag_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'acceleration_x',
+    'unique_id': '01:03:05:07:09:11-acceleration_x',
+    'unit_of_measurement': <Units.ACCELERATION_METERS_PER_SQUARE_SECOND: 'm/s²'>,
+  })
+# ---
+# name: test_sensors[v5][sensor.ruuvitag_efaf_acceleration_x-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'RuuviTag EFAF Acceleration X',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <Units.ACCELERATION_METERS_PER_SQUARE_SECOND: 'm/s²'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ruuvitag_efaf_acceleration_x',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-7.02',
+  })
+# ---
+# name: test_sensors[v5][sensor.ruuvitag_efaf_acceleration_y-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ruuvitag_efaf_acceleration_y',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Acceleration Y',
+    'platform': 'ruuvitag_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'acceleration_y',
+    'unique_id': '01:03:05:07:09:11-acceleration_y',
+    'unit_of_measurement': <Units.ACCELERATION_METERS_PER_SQUARE_SECOND: 'm/s²'>,
+  })
+# ---
+# name: test_sensors[v5][sensor.ruuvitag_efaf_acceleration_y-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'RuuviTag EFAF Acceleration Y',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <Units.ACCELERATION_METERS_PER_SQUARE_SECOND: 'm/s²'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ruuvitag_efaf_acceleration_y',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '6.39',
+  })
+# ---
+# name: test_sensors[v5][sensor.ruuvitag_efaf_acceleration_z-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ruuvitag_efaf_acceleration_z',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Acceleration Z',
+    'platform': 'ruuvitag_ble',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'acceleration_z',
+    'unique_id': '01:03:05:07:09:11-acceleration_z',
+    'unit_of_measurement': <Units.ACCELERATION_METERS_PER_SQUARE_SECOND: 'm/s²'>,
+  })
+# ---
+# name: test_sensors[v5][sensor.ruuvitag_efaf_acceleration_z-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'RuuviTag EFAF Acceleration Z',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <Units.ACCELERATION_METERS_PER_SQUARE_SECOND: 'm/s²'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ruuvitag_efaf_acceleration_z',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-2.51',
+  })
+# ---
 # name: test_sensors[v5][sensor.ruuvitag_efaf_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
