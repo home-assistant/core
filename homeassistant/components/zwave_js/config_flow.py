@@ -88,11 +88,16 @@ ADDON_USER_INPUT_MAP = {
     CONF_ADDON_LR_S2_AUTHENTICATED_KEY: CONF_LR_S2_AUTHENTICATED_KEY,
 }
 
+EXAMPLE_SERVER_URL = "ws://localhost:3000"
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
 MIN_MIGRATION_SDK_VERSION = AwesomeVersion("6.61")
 
 NETWORK_TYPE_NEW = "new"
 NETWORK_TYPE_EXISTING = "existing"
+ZWAVE_JS_SERVER_INSTRUCTIONS = (
+    "https://www.home-assistant.io/integrations/zwave_js/"
+    "#advanced-installation-instructions"
+)
 ZWAVE_JS_UI_MIGRATION_INSTRUCTIONS = (
     "https://www.home-assistant.io/integrations/zwave_js/"
     "#how-to-migrate-from-one-adapter-to-a-new-adapter-using-z-wave-js-ui"
@@ -529,7 +534,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a manual configuration."""
         if user_input is None:
             return self.async_show_form(
-                step_id="manual", data_schema=get_manual_schema({})
+                step_id="manual",
+                data_schema=get_manual_schema({}),
+                description_placeholders={
+                    "example_server_url": EXAMPLE_SERVER_URL,
+                    "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS,
+                },
             )
 
         errors = {}
@@ -558,7 +568,13 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             return self._async_create_entry_from_vars()
 
         return self.async_show_form(
-            step_id="manual", data_schema=get_manual_schema(user_input), errors=errors
+            step_id="manual",
+            data_schema=get_manual_schema(user_input),
+            description_placeholders={
+                "example_server_url": EXAMPLE_SERVER_URL,
+                "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS,
+            },
+            errors=errors,
         )
 
     async def async_step_hassio(
@@ -1016,6 +1032,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="manual_reconfigure",
                 data_schema=get_manual_schema({CONF_URL: config_entry.data[CONF_URL]}),
+                description_placeholders={
+                    "example_server_url": EXAMPLE_SERVER_URL,
+                    "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS,
+                },
             )
 
         errors = {}
@@ -1046,6 +1066,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="manual_reconfigure",
             data_schema=get_manual_schema(user_input),
+            description_placeholders={
+                "example_server_url": EXAMPLE_SERVER_URL,
+                "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS,
+            },
             errors=errors,
         )
 
