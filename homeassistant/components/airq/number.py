@@ -72,7 +72,7 @@ class AirQLEDBrightness(CoordinatorEntity[AirQCoordinator], NumberEntity):
     @property
     def native_value(self) -> float:
         """Return the brightness of the LEDs in %."""
-        return float(self.entity_description.value(self.coordinator.data))
+        return self.entity_description.value(self.coordinator.data)
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the brightness of the LEDs to the value in %."""
