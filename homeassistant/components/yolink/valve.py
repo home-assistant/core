@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from yolink.client_request import ClientRequest
@@ -31,8 +30,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DEV_MODEL_WATER_METER_YS5007, DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -153,7 +150,6 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
     @callback
     def update_entity_state(self, state: dict[str, str | list[str]]) -> None:
         """Update HA Entity State."""
-        _LOGGER.info(state)
         if (
             attr_val := self.entity_description.value(
                 state.get(self.entity_description.key)
