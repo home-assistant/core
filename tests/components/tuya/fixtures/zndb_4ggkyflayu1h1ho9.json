@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyacn.com",
-  "terminal_id": "1753864737914eTkTk2",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "6c0887b46a2eaf56e0ui7d",
   "name": "XOCA-DAC212XC V2-S1",
   "category": "zndb",
   "product_id": "4ggkyflayu1h1ho9",
