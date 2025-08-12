@@ -214,22 +214,17 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         """Create a new event in the calendar."""
         _LOGGER.debug("Event: %s", kwargs)
 
-        _summary = kwargs.get("summary")
-        _start = kwargs.get("dtstart")
-        _end = kwargs.get("dtend")
-        _tzinfo = kwargs.get("tzinfo")
-        _description = kwargs.get("description")
-        _rrule = kwargs.get("rrule")
-
         event = Event()
-        event.add("summary", _summary)
-        event.add("dtstart", _start)
-        event.add("dtend", _end)
-        event.add("dtstamp", datetime.now(_tzinfo))
-        event.add("description", _description)
+        event.add("summary", kwargs.get("summary"))
+        event.add("dtstart", kwargs.get("dtstart"))
+        event.add("dtend", kwargs.get("dtend"))
+        event.add("dtstamp", datetime.now(kwargs.get("tzinfo")))
+        event.add("description", kwargs.get("description"))
         event.add("uid", str(uuid.uuid4()))
+
+        _rrule = kwargs.get("rrule")
         if _rrule is not None and _rrule != "":
-            # If rrule is "" or None it icalendar errors out.
+            # If rrule is set as "" or None, icalendar errors out.
             event.add("rrule", _rrule)
 
         cal = Calendar()
