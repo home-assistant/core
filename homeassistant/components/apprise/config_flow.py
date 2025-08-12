@@ -1,8 +1,9 @@
 """Config flow for Apprise."""
 
+import logging
 from typing import Any
 
-from apprise import Apprise
+import apprise
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -11,6 +12,8 @@ from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class AppriseConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -87,6 +90,28 @@ class AppriseConfigFlow(ConfigFlow, domain=DOMAIN):
         await deprecate_yaml_issue(self.hass, True)
         return result
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the Apprise config entry."""
+        if user_input is not None:
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(),
+                data_updates=user_input,
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_NAME, default="Apprise"): str,
+                    vol.Optional("config"): str,
+                    vol.Optional(CONF_URL): str,
+                }
+            ),
+            errors={},
+        )
+
 
 async def validate_apprise_connection(
     hass: HomeAssistant, user_input: dict[str, Any]
@@ -96,8 +121,10 @@ async def validate_apprise_connection(
         return True
 
     try:
-        client = Apprise()
-        client.add(user_input["config"])
+        client = apprise.Apprise()
+        apprise_config = apprise.AppriseConfig()
+        await hass.async_add_executor_job(apprise_config.add, user_input["config"])
+        client.add(apprise_config)
 
         if user_input.get(CONF_URL):
             client.add(user_input[CONF_URL])
