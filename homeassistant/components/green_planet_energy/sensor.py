@@ -7,11 +7,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    SensorEntityDescription,
-)
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CURRENCY_EURO, UnitOfEnergy
 from homeassistant.core import HomeAssistant
@@ -104,7 +100,6 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         key="gpe_highest_price_today",
         translation_key="highest_price_today",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
-        device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=4,
         value_fn=get_highest_price_today,
     ),
@@ -112,7 +107,6 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         key="gpe_lowest_price_day",
         translation_key="lowest_price_day",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
-        device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=4,
         value_fn=get_lowest_price_day,
     ),
@@ -120,7 +114,6 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         key="gpe_lowest_price_night",
         translation_key="lowest_price_night",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
-        device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=4,
         value_fn=get_lowest_price_night,
     ),
@@ -128,7 +121,6 @@ SENSOR_DESCRIPTIONS: list[GreenPlanetEnergySensorEntityDescription] = [
         key="gpe_current_price",
         translation_key="current_price",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
-        device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=4,
         value_fn=get_current_price,
     ),
