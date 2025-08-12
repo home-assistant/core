@@ -31,13 +31,16 @@ async def test_device_registry(
     device_registry_entries = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     )
-    assert sorted(device_registry_entries, key=lambda x: x.model_id) == snapshot
 
     # Ensure the device registry contains same amount as DEVICE_MOCKS
     assert len(device_registry_entries) == len(DEVICE_MOCKS)
 
-    # Ensure model is suffixed with "(unsupported)" when no entities are generated
     for device_registry_entry in device_registry_entries:
+        assert device_registry_entries == snapshot(
+            name=list(device_registry_entry.identifiers)[0][1],
+        )
+
+        # Ensure model is suffixed with "(unsupported)" when no entities are generated
         assert (" (unsupported)" in device_registry_entry.model) == (
             not er.async_entries_for_device(
                 entity_registry,
