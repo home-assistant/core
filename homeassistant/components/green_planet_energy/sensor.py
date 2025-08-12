@@ -188,7 +188,6 @@ class GreenPlanetEnergySensor(
                         highest_hour = hour
                         break
             return {
-                "highest_price_hour": highest_hour,
                 "time_slot": f"{highest_hour:02d}:00-{highest_hour + 1:02d}:00"
                 if highest_hour is not None
                 else None,
@@ -205,11 +204,9 @@ class GreenPlanetEnergySensor(
                         lowest_hour = hour
                         break
             return {
-                "lowest_price_hour": lowest_hour,
                 "time_slot": f"{lowest_hour:02d}:00-{lowest_hour + 1:02d}:00"
                 if lowest_hour is not None
                 else None,
-                "period": "day (06:00-18:00)",
             }
 
         if self.entity_description.key == "gpe_lowest_price_night":
@@ -231,17 +228,14 @@ class GreenPlanetEnergySensor(
                             lowest_hour = hour
                             break
             return {
-                "lowest_price_hour": lowest_hour,
                 "time_slot": f"{lowest_hour:02d}:00-{lowest_hour + 1:02d}:00"
                 if lowest_hour is not None
                 else None,
-                "period": "night (18:00-06:00)",
             }
 
         if self.entity_description.key == "gpe_current_price":
             current_hour = dt_util.now().hour
             return {
-                "current_hour": current_hour,
                 "time_slot": f"{current_hour:02d}:00-{current_hour + 1:02d}:00",
             }
 
