@@ -179,6 +179,10 @@ async def async_setup_entry(
 class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarEntity):
     """A device for getting the next Task from a WebDav Calendar."""
 
+    _attr_supported_features = (
+        CalendarEntityFeature.CREATE_EVENT | CalendarEntityFeature.DELETE_EVENT
+    )
+
     def __init__(
         self,
         name: str | None,
@@ -195,9 +199,6 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         if unique_id is not None:
             self._attr_unique_id = unique_id
         self._supports_offset = supports_offset
-        self._attr_supported_features = (
-            CalendarEntityFeature.CREATE_EVENT | CalendarEntityFeature.DELETE_EVENT
-        )
 
     @property
     def event(self) -> CalendarEvent | None:
