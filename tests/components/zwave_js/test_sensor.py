@@ -869,7 +869,7 @@ async def test_statistics_sensors_migration(
             )
 
 
-async def test_statistics_sensors_no_last_seen(
+async def test_statistics_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     zp3111,
@@ -877,7 +877,7 @@ async def test_statistics_sensors_no_last_seen(
     integration,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test all statistics sensors but last seen which is enabled by default."""
+    """Test statistics sensors."""
 
     for prefix, suffixes in (
         (CONTROLLER_STATISTICS_ENTITY_PREFIX, CONTROLLER_STATISTICS_SUFFIXES),
@@ -1029,7 +1029,16 @@ async def test_last_seen_statistics_sensors(
     entity_id = f"{NODE_STATISTICS_ENTITY_PREFIX}last_seen"
     entry = entity_registry.async_get(entity_id)
     assert entry
-    assert not entry.disabled
+    assert entry.disabled
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(entity_id) is None  # disabled by default
+
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    async_fire_time_changed(
+        hass,
+        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state

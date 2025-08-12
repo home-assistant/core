@@ -1,0 +1,38 @@
+[
+  {
+    "programId": 1,
+    "program": "Cottons",
+    "parameters": {}
+  },
+  {
+    "programId": 146,
+    "program": "QuickPowerWash",
+    "parameters": {}
+  },
+  {
+    "programId": 123,
+    "program": "Dark garments / Denim ",
+    "parameters": {}
+  },
+  {
+    "programId": 13,
+    "program": "Fan plus",
+    "parameters": {
+      "temperature": {
+        "min": 30,
+        "max": 250,
+        "step": 5,
+        "mandatory": false
+      },
+      "duration": {
+        "min": [0, 1],
+        "max": [12, 0],
+        "mandatory": true
+      }
+    }
+  },
+  {
+    "programId": 24000,
+    "program": "Ristretto"
+  }
+]

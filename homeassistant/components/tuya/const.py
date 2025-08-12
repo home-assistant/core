@@ -24,6 +24,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfVolume,
+    UnitOfVolumetricFlux,
 )
 
 DOMAIN = "tuya"
@@ -66,6 +67,7 @@ PLATFORMS = [
     Platform.SIREN,
     Platform.SWITCH,
     Platform.VACUUM,
+    Platform.VALVE,
 ]
 
 
@@ -109,6 +111,7 @@ class DPCode(StrEnum):
     ANION = "anion"  # Ionizer unit
     ARM_DOWN_PERCENT = "arm_down_percent"
     ARM_UP_PERCENT = "arm_up_percent"
+    ATMOSPHERIC_PRESSTURE = "atmospheric_pressture"  # Typo is in Tuya API
     BASIC_ANTI_FLICKER = "basic_anti_flicker"
     BASIC_DEVICE_VOLUME = "basic_device_volume"
     BASIC_FLIP = "basic_flip"
@@ -165,6 +168,14 @@ class DPCode(StrEnum):
     CONTROL_BACK = "control_back"
     CONTROL_BACK_MODE = "control_back_mode"
     COUNTDOWN = "countdown"  # Countdown
+    COUNTDOWN_1 = "countdown_1"
+    COUNTDOWN_2 = "countdown_2"
+    COUNTDOWN_3 = "countdown_3"
+    COUNTDOWN_4 = "countdown_4"
+    COUNTDOWN_5 = "countdown_5"
+    COUNTDOWN_6 = "countdown_6"
+    COUNTDOWN_7 = "countdown_7"
+    COUNTDOWN_8 = "countdown_8"
     COUNTDOWN_LEFT = "countdown_left"
     COUNTDOWN_SET = "countdown_set"  # Countdown setting
     CRY_DETECTION_SWITCH = "cry_detection_switch"
@@ -208,6 +219,7 @@ class DPCode(StrEnum):
     FLOODLIGHT_LIGHTNESS = "floodlight_lightness"
     FLOODLIGHT_SWITCH = "floodlight_switch"
     FORWARD_ENERGY_TOTAL = "forward_energy_total"
+    FROST = "frost"  # Frost protection
     GAS_SENSOR_STATE = "gas_sensor_state"
     GAS_SENSOR_STATUS = "gas_sensor_status"
     GAS_SENSOR_VALUE = "gas_sensor_value"
@@ -215,8 +227,13 @@ class DPCode(StrEnum):
     HUMIDITY = "humidity"  # Humidity
     HUMIDITY_CURRENT = "humidity_current"  # Current humidity
     HUMIDITY_INDOOR = "humidity_indoor"  # Indoor humidity
+    HUMIDITY_OUTDOOR = "humidity_outdoor"  # Outdoor humidity
+    HUMIDITY_OUTDOOR_1 = "humidity_outdoor_1"  # Outdoor humidity
+    HUMIDITY_OUTDOOR_2 = "humidity_outdoor_2"  # Outdoor humidity
+    HUMIDITY_OUTDOOR_3 = "humidity_outdoor_3"  # Outdoor humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
+    INSTALLATION_HEIGHT = "installation_height"
     IPC_WORK_MODE = "ipc_work_mode"
     LED_TYPE_1 = "led_type_1"
     LED_TYPE_2 = "led_type_2"
@@ -227,12 +244,18 @@ class DPCode(StrEnum):
     LEVEL_CURRENT = "level_current"
     LIGHT = "light"  # Light
     LIGHT_MODE = "light_mode"
+    LIQUID_DEPTH = "liquid_depth"
+    LIQUID_DEPTH_MAX = "liquid_depth_max"
+    LIQUID_LEVEL_PERCENT = "liquid_level_percent"
+    LIQUID_STATE = "liquid_state"
     LOCK = "lock"  # Lock / Child lock
     MASTER_MODE = "master_mode"  # alarm mode
     MASTER_STATE = "master_state"  # alarm state
     MACH_OPERATE = "mach_operate"
     MANUAL_FEED = "manual_feed"
     MATERIAL = "material"  # Material
+    MAX_SET = "max_set"
+    MINI_SET = "mini_set"
     MODE = "mode"  # Working mode / Mode
     MOODLIGHTING = "moodlighting"  # Mood light
     MOTION_RECORD = "motion_record"
@@ -274,6 +297,8 @@ class DPCode(StrEnum):
     PUMP_RESET = "pump_reset"  # Water pump reset
     PUMP_TIME = "pump_time"  # Water pump duration
     OXYGEN = "oxygen"  # Oxygen bar
+    RAIN_24H = "rain_24h"  # Total daily rainfall in mm
+    RAIN_RATE = "rain_rate"  # Rain intensity in mm/h
     RECORD_MODE = "record_mode"
     RECORD_SWITCH = "record_switch"  # Recording switch
     RELAY_STATUS = "relay_status"
@@ -306,6 +331,7 @@ class DPCode(StrEnum):
     STATUS = "status"
     STERILIZATION = "sterilization"  # Sterilization
     SUCTION = "suction"
+    SUPPLY_FREQUENCY = "supply_frequency"
     SWING = "swing"  # Swing mode
     SWITCH = "switch"  # Switch
     SWITCH_1 = "switch_1"  # Switch 1
@@ -360,6 +386,15 @@ class DPCode(StrEnum):
     TEMP_CURRENT_EXTERNAL = (
         "temp_current_external"  # Current external temperature in Celsius
     )
+    TEMP_CURRENT_EXTERNAL_1 = (
+        "temp_current_external_1"  # Current external temperature in Celsius
+    )
+    TEMP_CURRENT_EXTERNAL_2 = (
+        "temp_current_external_2"  # Current external temperature in Celsius
+    )
+    TEMP_CURRENT_EXTERNAL_3 = (
+        "temp_current_external_3"  # Current external temperature in Celsius
+    )
     TEMP_CURRENT_EXTERNAL_F = (
         "temp_current_external_f"  # Current external temperature in Fahrenheit
     )
@@ -383,10 +418,12 @@ class DPCode(StrEnum):
     UPPER_TEMP = "upper_temp"
     UPPER_TEMP_F = "upper_temp_f"
     UV = "uv"  # UV sterilization
+    UV_INDEX = "uv_index"
     UV_RUNTIME = "uv_runtime"  # UV runtime
     VA_BATTERY = "va_battery"
     VA_HUMIDITY = "va_humidity"
     VA_TEMPERATURE = "va_temperature"
+    VALVE_STATE = "valve_state"
     VOC_STATE = "voc_state"
     VOC_VALUE = "voc_value"
     VOICE_SWITCH = "voice_switch"
@@ -405,6 +442,8 @@ class DPCode(StrEnum):
     WINDOW_CHECK = "window_check"
     WINDOW_STATE = "window_state"
     WINDSPEED = "windspeed"
+    WINDSPEED_AVG = "windspeed_avg"
+    WIND_DIRECT = "wind_direct"
     WIRELESS_BATTERYLOCK = "wireless_batterylock"
     WIRELESS_ELECTRICITY = "wireless_electricity"
     WORK_MODE = "work_mode"  # Working mode
@@ -489,6 +528,11 @@ UNITS = (
         unit=UnitOfVolume.CUBIC_METERS,
         aliases={"m3"},
         device_classes={SensorDeviceClass.GAS},
+    ),
+    UnitOfMeasurement(
+        unit=UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+        aliases={"mm"},
+        device_classes={SensorDeviceClass.PRECIPITATION_INTENSITY},
     ),
     UnitOfMeasurement(
         unit=LIGHT_LUX,

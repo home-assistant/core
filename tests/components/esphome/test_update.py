@@ -436,7 +436,6 @@ async def test_generic_device_update_entity(
             object_id="myupdate",
             key=1,
             name="my update",
-            unique_id="my_update",
         )
     ]
     states = [
@@ -470,7 +469,6 @@ async def test_generic_device_update_entity_has_update(
             object_id="myupdate",
             key=1,
             name="my update",
-            unique_id="my_update",
         )
     ]
     states = [
@@ -561,7 +559,6 @@ async def test_update_entity_release_notes(
             object_id="myupdate",
             key=1,
             name="my update",
-            unique_id="my_update",
         )
     ]
 

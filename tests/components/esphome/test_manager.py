@@ -1,8 +1,10 @@
 """Test ESPHome manager."""
 
 import asyncio
+import base64
 import logging
-from unittest.mock import AsyncMock, Mock, call
+from typing import Any
+from unittest.mock import AsyncMock, Mock, call, patch
 
 from aioesphomeapi import (
     APIClient,
@@ -27,10 +29,14 @@ from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_BLUETOOTH_MAC_ADDRESS,
     CONF_DEVICE_NAME,
+    CONF_NOISE_PSK,
     CONF_SUBSCRIBE_LOGS,
     DOMAIN,
     STABLE_BLE_URL_VERSION,
     STABLE_BLE_VERSION_STR,
+)
+from homeassistant.components.esphome.encryption_key_storage import (
+    ENCRYPTION_KEY_STORAGE_KEY,
 )
 from homeassistant.components.esphome.manager import DEVICE_CONFLICT_ISSUE_FORMAT
 from homeassistant.components.tag import DOMAIN as TAG_DOMAIN
@@ -44,6 +50,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
+    area_registry as ar,
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
@@ -409,10 +416,12 @@ async def test_unique_id_updated_to_mac(
     entry.add_to_hass(hass)
     subscribe_done = hass.loop.create_future()
 
-    def async_subscribe_states(*args, **kwargs) -> None:
+    def async_subscribe_home_assistant_states_and_services(*args, **kwargs) -> None:
         subscribe_done.set_result(None)
 
-    mock_client.subscribe_states = async_subscribe_states
+    mock_client.subscribe_home_assistant_states_and_services = (
+        async_subscribe_home_assistant_states_and_services
+    )
     mock_client.device_info = AsyncMock(
         return_value=DeviceInfo(
             mac_address="1122334455aa",
@@ -440,10 +449,12 @@ async def test_add_missing_bluetooth_mac_address(
     entry.add_to_hass(hass)
     subscribe_done = hass.loop.create_future()
 
-    def async_subscribe_states(*args, **kwargs) -> None:
+    def async_subscribe_home_assistant_states_and_services(*args, **kwargs) -> None:
         subscribe_done.set_result(None)
 
-    mock_client.subscribe_states = async_subscribe_states
+    mock_client.subscribe_home_assistant_states_and_services = (
+        async_subscribe_home_assistant_states_and_services
+    )
     mock_client.device_info = AsyncMock(
         return_value=DeviceInfo(
             mac_address="1122334455aa",
@@ -580,10 +591,12 @@ async def test_name_updated_only_if_mac_matches(
     entry.add_to_hass(hass)
     subscribe_done = hass.loop.create_future()
 
-    def async_subscribe_states(*args, **kwargs) -> None:
+    def async_subscribe_home_assistant_states_and_services(*args, **kwargs) -> None:
         subscribe_done.set_result(None)
 
-    mock_client.subscribe_states = async_subscribe_states
+    mock_client.subscribe_home_assistant_states_and_services = (
+        async_subscribe_home_assistant_states_and_services
+    )
     mock_client.device_info = AsyncMock(
         return_value=DeviceInfo(mac_address="1122334455aa", name="new")
     )
@@ -615,10 +628,12 @@ async def test_name_updated_only_if_mac_was_unset(
     entry.add_to_hass(hass)
     subscribe_done = hass.loop.create_future()
 
-    def async_subscribe_states(*args, **kwargs) -> None:
+    def async_subscribe_home_assistant_states_and_services(*args, **kwargs) -> None:
         subscribe_done.set_result(None)
 
-    mock_client.subscribe_states = async_subscribe_states
+    mock_client.subscribe_home_assistant_states_and_services = (
+        async_subscribe_home_assistant_states_and_services
+    )
     mock_client.device_info = AsyncMock(
         return_value=DeviceInfo(mac_address="1122334455aa", name="new")
     )
@@ -1164,6 +1179,7 @@ async def test_esphome_user_services_changes(
 
 async def test_esphome_device_with_suggested_area(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
@@ -1178,11 +1194,12 @@ async def test_esphome_device_with_suggested_area(
     dev = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
     )
-    assert dev.suggested_area == "kitchen"
+    assert dev.area_id == area_registry.async_get_area_by_name("kitchen").id
 
 
 async def test_esphome_device_area_priority(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
@@ -1201,7 +1218,7 @@ async def test_esphome_device_area_priority(
         connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
     )
     # Should use device_info.area.name instead of suggested_area
-    assert dev.suggested_area == "Living Room"
+    assert dev.area_id == area_registry.async_get_area_by_name("Living Room").id
 
 
 async def test_esphome_device_with_project(
@@ -1529,6 +1546,7 @@ async def test_assist_in_progress_issue_deleted(
 
 async def test_sub_device_creation(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
@@ -1565,7 +1583,7 @@ async def test_sub_device_creation(
         connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
     )
     assert main_device is not None
-    assert main_device.suggested_area == "Main Hub"
+    assert main_device.area_id == area_registry.async_get_area_by_name("Main Hub").id
 
     # Check sub devices are created
     sub_device_1 = device_registry.async_get_device(
@@ -1573,7 +1591,9 @@ async def test_sub_device_creation(
     )
     assert sub_device_1 is not None
     assert sub_device_1.name == "Motion Sensor"
-    assert sub_device_1.suggested_area == "Living Room"
+    assert (
+        sub_device_1.area_id == area_registry.async_get_area_by_name("Living Room").id
+    )
     assert sub_device_1.via_device_id == main_device.id
 
     sub_device_2 = device_registry.async_get_device(
@@ -1581,7 +1601,9 @@ async def test_sub_device_creation(
     )
     assert sub_device_2 is not None
     assert sub_device_2.name == "Light Switch"
-    assert sub_device_2.suggested_area == "Living Room"
+    assert (
+        sub_device_2.area_id == area_registry.async_get_area_by_name("Living Room").id
+    )
     assert sub_device_2.via_device_id == main_device.id
 
     sub_device_3 = device_registry.async_get_device(
@@ -1589,7 +1611,7 @@ async def test_sub_device_creation(
     )
     assert sub_device_3 is not None
     assert sub_device_3.name == "Temperature Sensor"
-    assert sub_device_3.suggested_area == "Bedroom"
+    assert sub_device_3.area_id == area_registry.async_get_area_by_name("Bedroom").id
     assert sub_device_3.via_device_id == main_device.id
 
 
@@ -1725,6 +1747,7 @@ async def test_sub_device_with_empty_name(
 
 async def test_sub_device_references_main_device_area(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
@@ -1766,25 +1789,507 @@ async def test_sub_device_references_main_device_area(
         connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
     )
     assert main_device is not None
-    assert main_device.suggested_area == "Main Hub Area"
+    assert (
+        main_device.area_id == area_registry.async_get_area_by_name("Main Hub Area").id
+    )
 
     # Check sub device 1 uses main device's area
     sub_device_1 = device_registry.async_get_device(
         identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
     )
     assert sub_device_1 is not None
-    assert sub_device_1.suggested_area == "Main Hub Area"
+    assert (
+        sub_device_1.area_id == area_registry.async_get_area_by_name("Main Hub Area").id
+    )
 
     # Check sub device 2 uses Living Room
     sub_device_2 = device_registry.async_get_device(
         identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
     )
     assert sub_device_2 is not None
-    assert sub_device_2.suggested_area == "Living Room"
+    assert (
+        sub_device_2.area_id == area_registry.async_get_area_by_name("Living Room").id
+    )
 
     # Check sub device 3 uses Bedroom
     sub_device_3 = device_registry.async_get_device(
         identifiers={(DOMAIN, f"{device.device_info.mac_address}_33333333")}
     )
     assert sub_device_3 is not None
-    assert sub_device_3.suggested_area == "Bedroom"
+    assert sub_device_3.area_id == area_registry.async_get_area_by_name("Bedroom").id
+
+
+@patch("homeassistant.components.esphome.manager.secrets.token_bytes")
+async def test_dynamic_encryption_key_generation(
+    mock_token_bytes: Mock,
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test that a device without a key in storage gets a new one generated."""
+    mac_address = "11:22:33:44:55:aa"
+    test_key_bytes = b"test_key_32_bytes_long_exactly!"
+    mock_token_bytes.return_value = test_key_bytes
+    expected_key = base64.b64encode(test_key_bytes).decode()
+
+    # Create entry without noise PSK
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test-device",
+        },
+        unique_id=mac_address,
+    )
+    entry.add_to_hass(hass)
+
+    # Mock the client methods
+    mock_client.noise_encryption_set_key = AsyncMock(return_value=True)
+
+    # Set up device with encryption support
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entry=entry,
+        device_info={
+            "uses_password": False,
+            "name": "test-device",
+            "mac_address": mac_address,
+            "esphome_version": "2023.12.0",
+            "api_encryption_supported": True,
+        },
+    )
+
+    # Force reconnect to trigger key generation
+    await device.mock_disconnect(True)
+    await device.mock_connect()
+
+    # Verify the key was generated and set
+    mock_token_bytes.assert_called_once_with(32)
+    mock_client.noise_encryption_set_key.assert_called_once()
+
+    # Verify config entry was updated
+    assert entry.data[CONF_NOISE_PSK] == expected_key
+
+
+async def test_manager_retrieves_key_from_storage_on_reconnect(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test that manager retrieves encryption key from storage during reconnect."""
+    mac_address = "11:22:33:44:55:aa"
+    test_key = base64.b64encode(b"existing_key_32_bytes_long!!!").decode()
+
+    # Set up storage with existing key
+    hass_storage[ENCRYPTION_KEY_STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": ENCRYPTION_KEY_STORAGE_KEY,
+        "data": {"keys": {mac_address: test_key}},
+    }
+
+    # Create entry without noise PSK (will be loaded from storage)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test-device",
+        },
+        unique_id=mac_address,
+    )
+    entry.add_to_hass(hass)
+
+    # Mock the client methods
+    mock_client.noise_encryption_set_key = AsyncMock(return_value=True)
+
+    # Set up device with encryption support
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entry=entry,
+        device_info={
+            "uses_password": False,
+            "name": "test-device",
+            "mac_address": mac_address,
+            "esphome_version": "2023.12.0",
+            "api_encryption_supported": True,
+        },
+    )
+
+    # Force reconnect to trigger key retrieval from storage
+    await device.mock_disconnect(True)
+    await device.mock_connect()
+
+    # Verify noise_encryption_set_key was called with the stored key
+    mock_client.noise_encryption_set_key.assert_called_once_with(test_key.encode())
+
+    # Verify config entry was updated with key from storage
+    assert entry.data[CONF_NOISE_PSK] == test_key
+
+
+async def test_manager_handle_dynamic_encryption_key_guard_clauses(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test _handle_dynamic_encryption_key guard clauses and early returns."""
+    # Test guard clause - no unique_id
+    entry_no_id = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test-device",
+        },
+        unique_id=None,  # No unique ID - should not generate key
+    )
+    entry_no_id.add_to_hass(hass)
+
+    # Set up device without unique ID
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entry=entry_no_id,
+        device_info={
+            "uses_password": False,
+            "name": "test-device",
+            "mac_address": "11:22:33:44:55:aa",
+            "esphome_version": "2023.12.0",
+            "api_encryption_supported": True,
+        },
+    )
+
+    # noise_encryption_set_key should not be called when no unique_id
+    mock_client.noise_encryption_set_key = AsyncMock()
+    await device.mock_disconnect(True)
+    await device.mock_connect()
+
+    mock_client.noise_encryption_set_key.assert_not_called()
+
+
+async def test_manager_handle_dynamic_encryption_key_edge_cases(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test _handle_dynamic_encryption_key edge cases for better coverage."""
+    mac_address = "11:22:33:44:55:aa"
+
+    # Test device without encryption support
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test-device",
+        },
+        unique_id=mac_address,
+    )
+    entry.add_to_hass(hass)
+
+    # Set up device without encryption support
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entry=entry,
+        device_info={
+            "uses_password": False,
+            "name": "test-device",
+            "mac_address": mac_address,
+            "esphome_version": "2023.12.0",
+            "api_encryption_supported": False,  # No encryption support
+        },
+    )
+
+    # noise_encryption_set_key should not be called when encryption not supported
+    mock_client.noise_encryption_set_key = AsyncMock()
+    await device.mock_disconnect(True)
+    await device.mock_connect()
+
+    mock_client.noise_encryption_set_key.assert_not_called()
+
+
+@patch("homeassistant.components.esphome.manager.secrets.token_bytes")
+async def test_manager_dynamic_encryption_key_generation_flow(
+    mock_token_bytes: Mock,
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the complete dynamic encryption key generation flow."""
+    mac_address = "11:22:33:44:55:aa"
+    test_key_bytes = b"test_key_32_bytes_long_exactly!"
+    mock_token_bytes.return_value = test_key_bytes
+    expected_key = base64.b64encode(test_key_bytes).decode()
+
+    # Initialize empty storage
+    hass_storage[ENCRYPTION_KEY_STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": ENCRYPTION_KEY_STORAGE_KEY,
+        "data": {
+            "keys": {}  # No existing keys
+        },
+    }
+
+    # Create entry without noise PSK
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test-device",
+        },
+        unique_id=mac_address,
+    )
+    entry.add_to_hass(hass)
+
+    # Mock the client methods
+    mock_client.noise_encryption_set_key = AsyncMock(return_value=True)
+
+    # Set up device with encryption support
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entry=entry,
+        device_info={
+            "uses_password": False,
+            "name": "test-device",
+            "mac_address": mac_address,
+            "esphome_version": "2023.12.0",
+            "api_encryption_supported": True,
+        },
+    )
+
+    # Force reconnect to trigger key generation
+    await device.mock_disconnect(True)
+    await device.mock_connect()
+
+    # Verify the complete flow
+    mock_token_bytes.assert_called_once_with(32)
+    mock_client.noise_encryption_set_key.assert_called_once()
+    assert entry.data[CONF_NOISE_PSK] == expected_key
+
+    # Verify key was stored in hass_storage
+    assert (
+        hass_storage[ENCRYPTION_KEY_STORAGE_KEY]["data"]["keys"][mac_address]
+        == expected_key
+    )
+
+
+@patch("homeassistant.components.esphome.manager.secrets.token_bytes")
+async def test_manager_handle_dynamic_encryption_key_no_existing_key(
+    mock_token_bytes: Mock,
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test _handle_dynamic_encryption_key when no existing key is found."""
+    mac_address = "11:22:33:44:55:aa"
+    test_key_bytes = b"test_key_32_bytes_long_exactly!"
+    mock_token_bytes.return_value = test_key_bytes
+    expected_key = base64.b64encode(test_key_bytes).decode()
+
+    # Initialize empty storage
+    hass_storage[ENCRYPTION_KEY_STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": ENCRYPTION_KEY_STORAGE_KEY,
+        "data": {
+            "keys": {}  # No existing keys
+        },
+    }
+
+    # Create entry without noise PSK
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test-device",
+        },
+        unique_id=mac_address,
+    )
+    entry.add_to_hass(hass)
+
+    # Mock the client methods
+    mock_client.noise_encryption_set_key = AsyncMock(return_value=True)
+
+    # Set up device with encryption support
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entry=entry,
+        device_info={
+            "uses_password": False,
+            "name": "test-device",
+            "mac_address": mac_address,
+            "esphome_version": "2023.12.0",
+            "api_encryption_supported": True,
+        },
+    )
+
+    # Force reconnect to trigger key generation
+    await device.mock_disconnect(True)
+    await device.mock_connect()
+
+    # Verify key generation flow
+    mock_token_bytes.assert_called_once_with(32)
+    mock_client.noise_encryption_set_key.assert_called_once()
+
+    # Verify config entry was updated
+    assert entry.data[CONF_NOISE_PSK] == expected_key
+
+    # Verify key was stored
+    assert (
+        hass_storage[ENCRYPTION_KEY_STORAGE_KEY]["data"]["keys"][mac_address]
+        == expected_key
+    )
+
+
+@patch("homeassistant.components.esphome.manager.secrets.token_bytes")
+async def test_manager_handle_dynamic_encryption_key_device_set_key_fails(
+    mock_token_bytes: Mock,
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test _handle_dynamic_encryption_key when noise_encryption_set_key returns False."""
+    mac_address = "11:22:33:44:55:aa"
+    test_key_bytes = b"test_key_32_bytes_long_exactly!"
+    mock_token_bytes.return_value = test_key_bytes
+
+    # Initialize empty storage
+    hass_storage[ENCRYPTION_KEY_STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": ENCRYPTION_KEY_STORAGE_KEY,
+        "data": {
+            "keys": {}  # No existing keys
+        },
+    }
+
+    # Create entry without noise PSK
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test-device",
+        },
+        unique_id=mac_address,
+    )
+    entry.add_to_hass(hass)
+
+    # Mock the client methods - set_key returns False
+    mock_client.noise_encryption_set_key = AsyncMock(return_value=False)
+
+    # Set up device with encryption support
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entry=entry,
+        device_info={
+            "uses_password": False,
+            "name": "test-device",
+            "mac_address": mac_address,
+            "esphome_version": "2023.12.0",
+            "api_encryption_supported": True,
+        },
+    )
+
+    # Reset mocks since initial connection already happened
+    mock_token_bytes.reset_mock()
+    mock_client.noise_encryption_set_key.reset_mock()
+
+    # Force reconnect to trigger key generation
+    await device.mock_disconnect(True)
+    await device.mock_connect()
+
+    # Verify key generation was attempted with the expected key
+    mock_token_bytes.assert_called_once_with(32)
+    mock_client.noise_encryption_set_key.assert_called_once_with(
+        base64.b64encode(test_key_bytes)
+    )
+
+    # Verify config entry was NOT updated since set_key failed
+    assert CONF_NOISE_PSK not in entry.data
+
+
+@patch("homeassistant.components.esphome.manager.secrets.token_bytes")
+async def test_manager_handle_dynamic_encryption_key_connection_error(
+    mock_token_bytes: Mock,
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test _handle_dynamic_encryption_key when noise_encryption_set_key raises APIConnectionError."""
+    mac_address = "11:22:33:44:55:aa"
+    test_key_bytes = b"test_key_32_bytes_long_exactly!"
+    mock_token_bytes.return_value = test_key_bytes
+
+    # Initialize empty storage
+    hass_storage[ENCRYPTION_KEY_STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": ENCRYPTION_KEY_STORAGE_KEY,
+        "data": {
+            "keys": {}  # No existing keys
+        },
+    }
+
+    # Create entry without noise PSK
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+            CONF_DEVICE_NAME: "test-device",
+        },
+        unique_id=mac_address,
+    )
+    entry.add_to_hass(hass)
+
+    # Mock the client methods - set_key raises APIConnectionError
+    mock_client.noise_encryption_set_key = AsyncMock(
+        side_effect=APIConnectionError("Connection failed")
+    )
+
+    # Set up device with encryption support
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entry=entry,
+        device_info={
+            "uses_password": False,
+            "name": "test-device",
+            "mac_address": mac_address,
+            "esphome_version": "2023.12.0",
+            "api_encryption_supported": True,
+        },
+    )
+
+    # Force reconnect to trigger key generation
+    await device.mock_disconnect(True)
+    await device.mock_connect()
+
+    # Verify key generation was attempted twice (once during setup, once during reconnect)
+    # This is expected because the first attempt failed with connection error
+    assert mock_token_bytes.call_count == 2
+    mock_token_bytes.assert_called_with(32)
+    assert mock_client.noise_encryption_set_key.call_count == 2
+
+    # Verify config entry was NOT updated since connection error occurred
+    assert CONF_NOISE_PSK not in entry.data
+
+    # Verify key was NOT stored due to connection error
+    assert mac_address not in hass_storage[ENCRYPTION_KEY_STORAGE_KEY]["data"]["keys"]

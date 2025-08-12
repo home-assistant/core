@@ -62,9 +62,12 @@ from .const import (
     CONF_USB_PATH,
     CONF_USE_ADDON,
     DOMAIN,
-    DRIVER_READY_TIMEOUT,
 )
-from .helpers import CannotConnect, async_get_version_info
+from .helpers import (
+    CannotConnect,
+    async_get_version_info,
+    async_wait_for_driver_ready_event,
+)
 from .models import ZwaveJSConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,11 +88,20 @@ ADDON_USER_INPUT_MAP = {
     CONF_ADDON_LR_S2_AUTHENTICATED_KEY: CONF_LR_S2_AUTHENTICATED_KEY,
 }
 
+EXAMPLE_SERVER_URL = "ws://localhost:3000"
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
 MIN_MIGRATION_SDK_VERSION = AwesomeVersion("6.61")
 
 NETWORK_TYPE_NEW = "new"
 NETWORK_TYPE_EXISTING = "existing"
+ZWAVE_JS_SERVER_INSTRUCTIONS = (
+    "https://www.home-assistant.io/integrations/zwave_js/"
+    "#advanced-installation-instructions"
+)
+ZWAVE_JS_UI_MIGRATION_INSTRUCTIONS = (
+    "https://www.home-assistant.io/integrations/zwave_js/"
+    "#how-to-migrate-from-one-adapter-to-a-new-adapter-using-z-wave-js-ui"
+)
 
 
 def get_manual_schema(user_input: dict[str, Any]) -> vol.Schema:
@@ -443,7 +455,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 None,
             )
             if not self._reconfigure_config_entry:
-                return self.async_abort(reason="addon_required")
+                return self.async_abort(
+                    reason="addon_required",
+                    description_placeholders={
+                        "zwave_js_ui_migration": ZWAVE_JS_UI_MIGRATION_INSTRUCTIONS,
+                    },
+                )
 
         vid = discovery_info.vid
         pid = discovery_info.pid
@@ -494,9 +511,22 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._usb_discovery = True
         if current_config_entries:
-            return await self.async_step_intent_migrate()
+            return await self.async_step_confirm_usb_migration()
 
         return await self.async_step_installation_type()
+
+    async def async_step_confirm_usb_migration(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm USB migration."""
+        if user_input is not None:
+            return await self.async_step_intent_migrate()
+        return self.async_show_form(
+            step_id="confirm_usb_migration",
+            description_placeholders={
+                "usb_title": self.context["title_placeholders"][CONF_NAME],
+            },
+        )
 
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
@@ -504,7 +534,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a manual configuration."""
         if user_input is None:
             return self.async_show_form(
-                step_id="manual", data_schema=get_manual_schema({})
+                step_id="manual",
+                data_schema=get_manual_schema({}),
+                description_placeholders={
+                    "example_server_url": EXAMPLE_SERVER_URL,
+                    "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS,
+                },
             )
 
         errors = {}
@@ -533,7 +568,13 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             return self._async_create_entry_from_vars()
 
         return self.async_show_form(
-            step_id="manual", data_schema=get_manual_schema(user_input), errors=errors
+            step_id="manual",
+            data_schema=get_manual_schema(user_input),
+            description_placeholders={
+                "example_server_url": EXAMPLE_SERVER_URL,
+                "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS,
+            },
+            errors=errors,
         )
 
     async def async_step_hassio(
@@ -874,7 +915,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
         if not self._usb_discovery and not config_entry.data.get(CONF_USE_ADDON):
-            return self.async_abort(reason="addon_required")
+            return self.async_abort(
+                reason="addon_required",
+                description_placeholders={
+                    "zwave_js_ui_migration": ZWAVE_JS_UI_MIGRATION_INSTRUCTIONS,
+                },
+            )
 
         try:
             driver = self._get_driver()
@@ -986,6 +1032,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="manual_reconfigure",
                 data_schema=get_manual_schema({CONF_URL: config_entry.data[CONF_URL]}),
+                description_placeholders={
+                    "example_server_url": EXAMPLE_SERVER_URL,
+                    "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS,
+                },
             )
 
         errors = {}
@@ -1016,6 +1066,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="manual_reconfigure",
             data_schema=get_manual_schema(user_input),
+            description_placeholders={
+                "example_server_url": EXAMPLE_SERVER_URL,
+                "server_instructions": ZWAVE_JS_SERVER_INSTRUCTIONS,
+            },
             errors=errors,
         )
 
@@ -1383,19 +1437,15 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     event["bytesWritten"] / event["total"] * 0.5 + 0.5
                 )
 
-        @callback
-        def set_driver_ready(event: dict) -> None:
-            "Set the driver ready event."
-            wait_driver_ready.set()
-
         driver = self._get_driver()
         controller = driver.controller
-        wait_driver_ready = asyncio.Event()
         unsubs = [
             controller.on("nvm convert progress", forward_progress),
             controller.on("nvm restore progress", forward_progress),
-            driver.once("driver ready", set_driver_ready),
         ]
+
+        wait_for_driver_ready = async_wait_for_driver_ready_event(config_entry, driver)
+
         try:
             await controller.async_restore_nvm(
                 self.backup_data, {"preserveRoutes": False}
@@ -1404,8 +1454,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             raise AbortFlow(f"Failed to restore network: {err}") from err
         else:
             with suppress(TimeoutError):
-                async with asyncio.timeout(DRIVER_READY_TIMEOUT):
-                    await wait_driver_ready.wait()
+                await wait_for_driver_ready()
             try:
                 version_info = await async_get_version_info(
                     self.hass, config_entry.data[CONF_URL]
@@ -1422,10 +1471,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(
                     config_entry, unique_id=str(version_info.home_id)
                 )
-            await self.hass.config_entries.async_reload(config_entry.entry_id)
 
-            # Reload the config entry two times to clean up
-            # the stale device entry.
+            # The config entry will be also be reloaded when the driver is ready,
+            # by the listener in the package module,
+            # and two reloads are needed to clean up the stale controller device entry.
             # Since both the old and the new controller have the same node id,
             # but different hardware identifiers, the integration
             # will create a new device for the new controller, on the first reload,
