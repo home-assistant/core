@@ -15,7 +15,7 @@ DEVICE_SUPPORT = ("Luba", "Yuka")
 
 ATTR_DIRECTION = "direction"
 
-DEFAULT_RETRY_COUNT = 5
+DEFAULT_RETRY_COUNT = 3
 CONF_RETRY_COUNT = "retry_count"
 LOGGER: Final = logging.getLogger(__package__)
 
@@ -48,4 +48,8 @@ NO_REQUEST_MODES = (
     WorkMode.MODE_CHANNEL_DRAW,
     WorkMode.MODE_ERASER_DRAW,
     WorkMode.MODE_UPDATING,
+    WorkMode.MODE_EDIT_BOUNDARY,
+    WorkMode.MODE_UPDATING,
+    WorkMode.MODE_LOCK,
+    WorkMode.MODE_MANUAL_MOWING,
 )
