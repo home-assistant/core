@@ -10,7 +10,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import MODEL_SONOS_ARC_ULTRA, SONOS_CREATE_SELECTS
+from .const import (
+    ATTR_DIALOG_LEVEL,
+    ATTR_DIALOG_LEVEL_ENUM,
+    MODEL_SONOS_ARC_ULTRA,
+    SONOS_CREATE_SELECTS,
+)
 from .entity import SonosEntity
 from .helpers import SonosConfigEntry, soco_error
 from .speaker import SonosSpeaker
@@ -28,8 +33,8 @@ class SonosSelectType:
 
 SELECT_TYPES: list[SonosSelectType] = [
     SonosSelectType(
-        feature="dialog_level",
-        attribute="dialog_level_enum",
+        feature=ATTR_DIALOG_LEVEL,
+        attribute=ATTR_DIALOG_LEVEL_ENUM,
         model=MODEL_SONOS_ARC_ULTRA,
         options=["off", "low", "medium", "high", "max"],
     ),
