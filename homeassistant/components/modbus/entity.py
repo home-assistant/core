@@ -380,8 +380,6 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
 
     async def _async_update(self) -> None:
         """Update the entity state."""
-        # remark "now" is a dummy parameter to avoid problems with
-        # async_track_time_interval
         if not self._verify_active:
             self._attr_available = True
             return
