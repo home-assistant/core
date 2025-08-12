@@ -1,20 +1,32 @@
 """The apprise component."""
 
 import apprise
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_NAME, CONF_URL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DATA_HASS_CONFIG, DOMAIN
+from .const import CONF_FILE_URL, DATA_HASS_CONFIG, DEFAULT_NAME, DOMAIN
 
 type AppriseConfigEntry = ConfigEntry[apprise.AppriseConfig]
 
 PLATFORMS = [Platform.NOTIFY]
 
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(CONF_FILE_URL): cv.string,
+                vol.Optional(CONF_URL): cv.string,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

@@ -5,17 +5,22 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_NAME, CONF_URL
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import CONF_FILE_URL, DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class DEFAULT_NAMEConfigFlow(ConfigFlow, domain=DOMAIN):
+class AppriseConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Apprise."""
 
     VERSION = 1
@@ -27,20 +32,20 @@ class DEFAULT_NAMEConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input:
-            if user_input.get("config"):
+            if user_input.get(CONF_FILE_URL):
                 if user_input.get(CONF_URL):
-                    input_data = {
+                    input_options = {
                         CONF_NAME: user_input.get(CONF_NAME, DEFAULT_NAME),
-                        "config": user_input["config"],
+                        CONF_FILE_URL: user_input[CONF_FILE_URL],
                         CONF_URL: user_input[CONF_URL],
                     }
                 else:
-                    input_data = {
+                    input_options = {
                         CONF_NAME: user_input.get(CONF_NAME, DEFAULT_NAME),
-                        "config": user_input["config"],
+                        CONF_FILE_URL: user_input[CONF_FILE_URL],
                     }
             elif user_input.get(CONF_URL):
-                input_data = {
+                input_options = {
                     CONF_NAME: user_input.get(CONF_NAME, DEFAULT_NAME),
                     CONF_URL: user_input[CONF_URL],
                 }
@@ -49,8 +54,8 @@ class DEFAULT_NAMEConfigFlow(ConfigFlow, domain=DOMAIN):
                     step_id="user",
                     data_schema=vol.Schema(
                         {
-                            vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
-                            vol.Optional("config"): str,
+                            vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
+                            vol.Optional(CONF_FILE_URL): str,
                             vol.Optional(CONF_URL): str,
                         }
                     ),
@@ -58,15 +63,16 @@ class DEFAULT_NAMEConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
             return self.async_create_entry(
                 title=user_input.get(CONF_NAME, DEFAULT_NAME),
-                data=input_data,
+                data={},
+                options=input_options,
             )
 
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
-                    vol.Optional("config"): str,
+                    vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
+                    vol.Optional(CONF_FILE_URL): str,
                     vol.Optional(CONF_URL): str,
                 }
             ),
@@ -80,26 +86,46 @@ class DEFAULT_NAMEConfigFlow(ConfigFlow, domain=DOMAIN):
         await deprecate_yaml_issue(self.hass, True)
         return result
 
-    async def async_step_reconfigure(
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+        """Get the options flow handler."""
+        return AppriseOptionsFlowHandler()
+
+
+class AppriseOptionsFlowHandler(OptionsFlow):
+    """Handle Apprise options."""
+
+    async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle reconfiguration of the Apprise config entry."""
-        if user_input is not None:
-            return self.async_update_reload_and_abort(
-                self._get_reconfigure_entry(),
-                data_updates=user_input,
-            )
+        """Manage the Apprise options."""
+        options = self.config_entry.options
+
+        if user_input:
+            new_options = {
+                CONF_NAME: user_input.get(
+                    CONF_NAME, options.get(CONF_NAME, DEFAULT_NAME)
+                ),
+                CONF_FILE_URL: user_input.get(CONF_FILE_URL, ""),
+                CONF_URL: user_input.get(CONF_URL, ""),
+            }
+            return self.async_create_entry(title="", data=new_options)
 
         return self.async_show_form(
-            step_id="reconfigure",
+            step_id="init",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
-                    vol.Optional("config"): str,
-                    vol.Optional(CONF_URL): str,
+                    vol.Optional(
+                        CONF_NAME,
+                        default=options.get(CONF_NAME, DEFAULT_NAME),
+                    ): str,
+                    vol.Optional(
+                        CONF_FILE_URL, default=options.get(CONF_FILE_URL, "")
+                    ): str,
+                    vol.Optional(CONF_URL, default=options.get(CONF_URL, "")): str,
                 }
             ),
-            errors={},
         )
 
 
