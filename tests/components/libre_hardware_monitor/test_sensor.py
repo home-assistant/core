@@ -7,7 +7,10 @@ from types import MappingProxyType
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from librehardwaremonitor_api import LibreHardwareMonitorConnectionError
+from librehardwaremonitor_api import (
+    LibreHardwareMonitorConnectionError,
+    LibreHardwareMonitorNoDevicesError,
+)
 from librehardwaremonitor_api.model import (
     DeviceId,
     DeviceName,
@@ -42,6 +45,9 @@ async def test_sensors_are_created(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    "error", [LibreHardwareMonitorConnectionError, LibreHardwareMonitorNoDevicesError]
+)
 async def test_sensors_go_unavailable_in_case_of_error_and_recover_after_successful_retry(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -49,6 +55,7 @@ async def test_sensors_go_unavailable_in_case_of_error_and_recover_after_success
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
+    error: type[Exception],
 ) -> None:
     """Test sensors go unavailable."""
     await init_integration(hass, mock_config_entry)
@@ -56,7 +63,7 @@ async def test_sensors_go_unavailable_in_case_of_error_and_recover_after_success
     initial_states = hass.states.async_all()
     assert initial_states == snapshot(name="valid_sensor_data")
 
-    mock_lhm_client.get_data.side_effect = LibreHardwareMonitorConnectionError()
+    mock_lhm_client.get_data.side_effect = error
 
     freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))
     async_fire_time_changed(hass)
