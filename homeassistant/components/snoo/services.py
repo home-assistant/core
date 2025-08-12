@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 
 from python_snoo.baby import Baby
-from python_snoo.containers import DiaperTypes
+from python_snoo.containers import DiaperActivity, DiaperTypes
 import voluptuous as vol
 
 from homeassistant.core import (
@@ -19,20 +19,27 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import (
+    ATTR_BABY_ID,
+    ATTR_DIAPER_CHANGE_TYPES,
+    ATTR_NOTE,
+    ATTR_START_TIME,
+    DOMAIN,
+    SERVICE_LOG_DIAPER_CHANGE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 # Service schema for log_diaper_change
 LOG_DIAPER_CHANGE_SCHEMA = vol.Schema(
     {
-        vol.Required("baby_id"): cv.string,
-        vol.Required("diaper_types"): vol.All(
+        vol.Required(ATTR_BABY_ID): cv.string,
+        vol.Required(ATTR_DIAPER_CHANGE_TYPES): vol.All(
             cv.ensure_list,
             [vol.In([k.title() for k in DiaperTypes.__members__])],
         ),
-        vol.Optional("note"): cv.string,
-        vol.Optional("start_time"): cv.datetime,
+        vol.Optional(ATTR_NOTE): cv.string,
+        vol.Optional(ATTR_START_TIME): cv.datetime,
     }
 )
 
@@ -42,7 +49,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Snoo integration."""
     hass.services.async_register(
         DOMAIN,
-        "log_diaper_change",
+        SERVICE_LOG_DIAPER_CHANGE,
         _async_log_diaper_change,
         schema=LOG_DIAPER_CHANGE_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
@@ -96,7 +103,7 @@ async def _async_log_diaper_change(call: ServiceCall) -> ServiceResponse:
         start_time = dt_util.as_local(start_time)
 
     baby = Baby(baby_id, snoo)
-    result = await baby.log_diaper_change(
+    result: DiaperActivity = await baby.log_diaper_change(
         [DiaperTypes[dt.upper()] for dt in call.data["diaper_types"]],
         note=call.data.get("note"),
         start_time=start_time,

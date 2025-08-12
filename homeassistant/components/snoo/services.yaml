@@ -8,16 +8,16 @@ log_diaper_change:
         text:
     diaper_types:
       required: true
-      example: ["Wet", "Dirty"]
+      example: ["wet", "dirty"]
       selector:
         select:
           multiple: true
           options:
-            - "Wet"
-            - "Dirty"
+            - "[%key:component::snoo::services::log_diaper_change::fields::diaper_types::options::wet%]"
+            - "[%key:component::snoo::services::log_diaper_change::fields::diaper_types::options::dirty%]"
     note:
       required: false
-      example: "Wet diaper"
+      example: "Logged via Home Assistant"
       selector:
         text:
     start_time:
