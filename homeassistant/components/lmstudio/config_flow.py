@@ -13,6 +13,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
+    OptionsFlow,
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
@@ -83,6 +84,11 @@ class LMStudioConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        super().__init__()
+        self._connection_data: dict[str, Any] = {}
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -107,9 +113,28 @@ class LMStudioConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
+            # Store connection data and move to model selection
+            self._connection_data = user_input
+            return await self.async_step_model()
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
+            ),
+            errors=errors,
+        )
+
+    async def async_step_model(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle model selection step."""
+        if user_input is not None:
+            # Combine connection data with model selection
+            data = {**self._connection_data, **user_input}
             return self.async_create_entry(
-                title=user_input[CONF_BASE_URL],
-                data=user_input,
+                title=self._connection_data[CONF_BASE_URL],
+                data=data,
                 subentries=[
                     {
                         "subentry_type": "conversation",
@@ -126,13 +151,44 @@ class LMStudioConfigFlow(ConfigFlow, domain=DOMAIN):
                 ],
             )
 
-        return self.async_show_form(
-            step_id="user",
-            data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, user_input
-            ),
-            errors=errors,
+        # Get available models
+        models = await self._get_available_models()
+
+        schema = vol.Schema(
+            {
+                vol.Optional(CONF_MODEL, default=DEFAULT_MODEL): SelectSelector(
+                    SelectSelectorConfig(
+                        options=models,
+                        mode=SelectSelectorMode.DROPDOWN,
+                        custom_value=True,
+                    )
+                ),
+            }
         )
+
+        return self.async_show_form(step_id="model", data_schema=schema)
+
+    async def _get_available_models(self) -> list[SelectOptionDict]:
+        """Get available models from the LM Studio server."""
+        try:
+            client = openai.AsyncOpenAI(
+                base_url=self._connection_data[CONF_BASE_URL],
+                api_key=self._connection_data[CONF_API_KEY],
+                http_client=get_async_client(self.hass),
+            )
+            models = await client.with_options(timeout=10.0).models.list()
+            return [
+                SelectOptionDict(value=model.id, label=model.id)
+                for model in models.data
+            ]
+        except Exception:
+            _LOGGER.exception("Failed to fetch models")
+            return []
+
+    @staticmethod
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
+        """Return the options flow."""
+        return OptionsFlowHandler()
 
     @classmethod
     @callback
@@ -194,10 +250,13 @@ class ConversationFlowHandler(LMStudioSubentryFlowHandler):
 
         models = await self._get_available_models()
 
+        # Use parent config entry's model as default if available
+        default_model = self.config_entry.data.get(CONF_MODEL, DEFAULT_MODEL)
+
         schema = vol.Schema(
             {
                 vol.Required(CONF_NAME, default=DEFAULT_CONVERSATION_NAME): str,
-                vol.Optional(CONF_MODEL, default=DEFAULT_MODEL): SelectSelector(
+                vol.Optional(CONF_MODEL, default=default_model): SelectSelector(
                     SelectSelectorConfig(
                         options=models,
                         mode=SelectSelectorMode.DROPDOWN,
@@ -241,10 +300,13 @@ class AITaskDataFlowHandler(LMStudioSubentryFlowHandler):
 
         models = await self._get_available_models()
 
+        # Use parent config entry's model as default if available
+        default_model = self.config_entry.data.get(CONF_MODEL, DEFAULT_MODEL)
+
         schema = vol.Schema(
             {
                 vol.Required(CONF_NAME, default=DEFAULT_AI_TASK_NAME): str,
-                vol.Optional(CONF_MODEL, default=DEFAULT_MODEL): SelectSelector(
+                vol.Optional(CONF_MODEL, default=default_model): SelectSelector(
                     SelectSelectorConfig(
                         options=models,
                         mode=SelectSelectorMode.DROPDOWN,
@@ -268,3 +330,53 @@ class AITaskDataFlowHandler(LMStudioSubentryFlowHandler):
         )
 
         return self.async_show_form(step_id="init", data_schema=schema)
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Handle options flow for LM Studio."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle options flow."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        models = await self._get_available_models()
+
+        schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_MODEL,
+                    default=self.config_entry.data.get(CONF_MODEL, DEFAULT_MODEL),
+                ): SelectSelector(
+                    SelectSelectorConfig(
+                        options=models,
+                        mode=SelectSelectorMode.DROPDOWN,
+                        custom_value=True,
+                    )
+                ),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=schema,
+        )
+
+    async def _get_available_models(self) -> list[SelectOptionDict]:
+        """Get available models from the LM Studio server."""
+        try:
+            client = openai.AsyncOpenAI(
+                base_url=self.config_entry.data[CONF_BASE_URL],
+                api_key=self.config_entry.data[CONF_API_KEY],
+                http_client=get_async_client(self.hass),
+            )
+            models = await client.with_options(timeout=10.0).models.list()
+            return [
+                SelectOptionDict(value=model.id, label=model.id)
+                for model in models.data
+            ]
+        except Exception:
+            _LOGGER.exception("Failed to fetch models")
+            return []

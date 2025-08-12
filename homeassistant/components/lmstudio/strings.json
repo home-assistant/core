@@ -13,6 +13,16 @@
           "api_key": "API key for authentication (optional for local servers)"
         }
       },
+      "model": {
+        "title": "Select Default Model",
+        "description": "Choose a default model for your LM Studio integration",
+        "data": {
+          "model": "Model"
+        },
+        "data_description": {
+          "model": "The default model to use. You can choose from available models or enter a custom model name."
+        }
+      },
       "init": {
         "title": "Configure {subentry_type}",
         "description": "Configure your LM Studio {subentry_type}",
@@ -43,6 +53,20 @@
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "LM Studio Options",
+        "description": "Update your LM Studio configuration",
+        "data": {
+          "model": "Default Model"
+        },
+        "data_description": {
+          "model": "The default model to use for new conversations and AI tasks"
+        }
+      }
     }
   }
 }

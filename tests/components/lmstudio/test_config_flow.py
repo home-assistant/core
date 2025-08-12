@@ -27,6 +27,7 @@ async def test_form(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
 
+    # Configure connection step
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -34,17 +35,30 @@ async def test_form(
             "api_key": "test-key",
         },
     )
+
+    # Should show model selection step
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "model"
+
+    # Configure model step
+    result3 = await hass.config_entries.flow.async_configure(
+        result2["flow_id"],
+        {
+            "model": "test-model",
+        },
+    )
     await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "http://localhost:1234/v1"
-    assert result2["data"] == {
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "http://localhost:1234/v1"
+    assert result3["data"] == {
         "base_url": "http://localhost:1234/v1",
         "api_key": "test-key",
+        "model": "test-model",
     }
-    assert len(result2["subentries"]) == 2
-    assert result2["subentries"][0]["subentry_type"] == "conversation"
-    assert result2["subentries"][1]["subentry_type"] == "ai_task_data"
+    assert len(result3["subentries"]) == 2
+    assert result3["subentries"][0]["subentry_type"] == "conversation"
+    assert result3["subentries"][1]["subentry_type"] == "ai_task_data"
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:
@@ -180,3 +194,32 @@ async def test_validate_input_connection_error(hass: HomeAssistant) -> None:
                 "api_key": "test-key",
             },
         )
+
+
+async def test_options_flow(
+    hass: HomeAssistant, mock_openai_client_config_flow: AsyncMock
+) -> None:
+    """Test options flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "base_url": "http://localhost:1234/v1",
+            "api_key": "test-key",
+            "model": "old-model",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {
+            "model": "new-model",
+        },
+    )
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {"model": "new-model"}
