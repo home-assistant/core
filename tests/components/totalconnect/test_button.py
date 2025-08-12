@@ -44,7 +44,6 @@ async def test_bypass_button(
     )
 
     assert mock_location.zones[2].bypass.call_count == 1
-
 async def test_clear_button(
     hass: HomeAssistant,
     mock_client: AsyncMock,
