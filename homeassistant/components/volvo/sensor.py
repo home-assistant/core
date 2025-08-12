@@ -107,6 +107,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
             "power_saving_mode",
         ],
         value_fn=_availability_status,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -218,6 +219,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=_CHARGING_POWER_STATUS_OPTIONS,
         value_fn=_charging_power_status_value,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # energy state endpoint
     VolvoSensorDescription(
@@ -232,6 +234,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
             "idle",
             "scheduled",
         ],
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # energy state endpoint
     VolvoSensorDescription(
@@ -243,6 +246,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
             "dc",
             "none",
         ],
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # statistics endpoint
     # We're not using `electricRange` from the energy state endpoint because
