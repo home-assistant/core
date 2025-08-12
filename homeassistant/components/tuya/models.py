@@ -99,8 +99,22 @@ class EnumTypeData:
         return cls(dpcode, **parsed)
 
 
+class ComplexTypeData:
+    """Complex Type Data (for JSON/RAW parsing)."""
+
+    @classmethod
+    def from_json(cls, data: str) -> Self:
+        """Load JSON string and return a ComplexTypeData object."""
+        raise NotImplementedError("from_json is not implemented for this type")
+
+    @classmethod
+    def from_raw(cls, data: str) -> Self | None:
+        """Decode base64 string and return a ComplexTypeData object."""
+        raise NotImplementedError("from_raw is not implemented for this type")
+
+
 @dataclass
-class ElectricityTypeData:
+class ElectricityTypeData(ComplexTypeData):
     """Electricity Type Data."""
 
     electriccurrent: str | None = None
@@ -113,9 +127,11 @@ class ElectricityTypeData:
         return cls(**json.loads(data.lower()))
 
     @classmethod
-    def from_raw(cls, data: str) -> Self:
+    def from_raw(cls, data: str) -> Self | None:
         """Decode base64 string and return a ElectricityTypeData object."""
         raw = base64.b64decode(data)
+        if len(raw) == 0:
+            return None
         voltage = struct.unpack(">H", raw[0:2])[0] / 10.0
         electriccurrent = struct.unpack(">L", b"\x00" + raw[2:5])[0] / 1000.0
         power = struct.unpack(">L", b"\x00" + raw[5:8])[0] / 1000.0
