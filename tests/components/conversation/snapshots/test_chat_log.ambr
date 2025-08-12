@@ -16,6 +16,34 @@
     }),
   ])
 # ---
+# name: test_add_delta_content_stream[deltas11]
+  list([
+    dict({
+      'agent_id': 'mock-agent-id',
+      'content': 'Test',
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': list([
+        dict({
+          'external': True,
+          'id': 'mock-tool-call-id',
+          'tool_args': dict({
+            'param1': 'Test Param 1',
+          }),
+          'tool_name': 'test_tool',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'mock-agent-id',
+      'role': 'tool_result',
+      'tool_call_id': 'mock-tool-call-id',
+      'tool_name': 'test_tool',
+      'tool_result': 'Test Result',
+    }),
+  ])
+# ---
 # name: test_add_delta_content_stream[deltas1]
   list([
     dict({
@@ -58,6 +86,7 @@
       'thinking_content': None,
       'tool_calls': list([
         dict({
+          'external': False,
           'id': 'mock-tool-call-id',
           'tool_args': dict({
             'param1': 'Test Param 1',
@@ -85,6 +114,7 @@
       'thinking_content': None,
       'tool_calls': list([
         dict({
+          'external': False,
           'id': 'mock-tool-call-id',
           'tool_args': dict({
             'param1': 'Test Param 1',
@@ -112,6 +142,7 @@
       'thinking_content': None,
       'tool_calls': list([
         dict({
+          'external': False,
           'id': 'mock-tool-call-id',
           'tool_args': dict({
             'param1': 'Test Param 1',
@@ -147,6 +178,7 @@
       'thinking_content': None,
       'tool_calls': list([
         dict({
+          'external': False,
           'id': 'mock-tool-call-id',
           'tool_args': dict({
             'param1': 'Test Param 1',
@@ -154,6 +186,7 @@
           'tool_name': 'test_tool',
         }),
         dict({
+          'external': False,
           'id': 'mock-tool-call-id-2',
           'tool_args': dict({
             'param1': 'Test Param 2',
