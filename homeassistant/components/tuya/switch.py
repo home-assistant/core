@@ -890,6 +890,15 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Smoke Detector
+    # https://developer.tuya.com/en/docs/iot/categoryywbj?id=Kaiuz3f6sf952
+    "ywbj": (
+        SwitchEntityDescription(
+            key=DPCode.MUFFLING,
+            translation_key="mute",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Smart Electricity Meter
     # https://developer.tuya.com/en/docs/iot/smart-meter?id=Kaiuz4gv6ack7
     "zndb": (

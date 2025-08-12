@@ -148,6 +148,9 @@
       "heat_preservation_time": {
         "name": "Heat preservation time"
       },
+      "indexed_irrigation_duration": {
+        "name": "Irrigation duration {index}"
+      },
       "feed": {
         "name": "Feed"
       },
@@ -790,6 +793,9 @@
       },
       "liquid_level": {
         "name": "Liquid level"
+      },
+      "supply_frequency": {
+        "name": "Supply frequency"
       }
     },
     "switch": {
@@ -951,6 +957,11 @@
       },
       "feedin_power_limit_enable": {
         "name": "Feed-in power limit enable"
+      }
+    },
+    "valve": {
+      "indexed_valve": {
+        "name": "Valve {index}"
       }
     }
   },
