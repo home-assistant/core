@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_1-entry]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_switch_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -30,11 +30,11 @@
     'suggested_object_id': None,
     'supported_features': <ValveEntityFeature: 3>,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.6c6fec8c06c8d3261chmbcswitch_1',
+    'unique_id': 'tuya.cijerqyssiwrf7deqzkfsswitch_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_1-state]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_switch_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
@@ -49,7 +49,7 @@
     'state': 'open',
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_2-entry]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_switch_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -80,11 +80,11 @@
     'suggested_object_id': None,
     'supported_features': <ValveEntityFeature: 3>,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.6c6fec8c06c8d3261chmbcswitch_2',
+    'unique_id': 'tuya.cijerqyssiwrf7deqzkfsswitch_2',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_2-state]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_switch_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
@@ -99,7 +99,7 @@
     'state': 'closed',
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_3-entry]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_switch_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -130,11 +130,11 @@
     'suggested_object_id': None,
     'supported_features': <ValveEntityFeature: 3>,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.6c6fec8c06c8d3261chmbcswitch_3',
+    'unique_id': 'tuya.cijerqyssiwrf7deqzkfsswitch_3',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_3-state]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_switch_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
@@ -149,7 +149,7 @@
     'state': 'open',
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_4-entry]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_switch_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -180,11 +180,11 @@
     'suggested_object_id': None,
     'supported_features': <ValveEntityFeature: 3>,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.6c6fec8c06c8d3261chmbcswitch_4',
+    'unique_id': 'tuya.cijerqyssiwrf7deqzkfsswitch_4',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_4-state]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_switch_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
@@ -199,7 +199,7 @@
     'state': 'closed',
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_5-entry]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_switch_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -230,11 +230,11 @@
     'suggested_object_id': None,
     'supported_features': <ValveEntityFeature: 3>,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.6c6fec8c06c8d3261chmbcswitch_5',
+    'unique_id': 'tuya.cijerqyssiwrf7deqzkfsswitch_5',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_5-state]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_switch_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
@@ -249,7 +249,7 @@
     'state': 'open',
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_6-entry]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_switch_6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -280,11 +280,11 @@
     'suggested_object_id': None,
     'supported_features': <ValveEntityFeature: 3>,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.6c6fec8c06c8d3261chmbcswitch_6',
+    'unique_id': 'tuya.cijerqyssiwrf7deqzkfsswitch_6',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_6-state]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_switch_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
@@ -299,7 +299,7 @@
     'state': 'closed',
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_7-entry]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_switch_7-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -330,11 +330,11 @@
     'suggested_object_id': None,
     'supported_features': <ValveEntityFeature: 3>,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.6c6fec8c06c8d3261chmbcswitch_7',
+    'unique_id': 'tuya.cijerqyssiwrf7deqzkfsswitch_7',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_7-state]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_switch_7-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
@@ -349,7 +349,7 @@
     'state': 'open',
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_8-entry]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_switch_8-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -380,11 +380,11 @@
     'suggested_object_id': None,
     'supported_features': <ValveEntityFeature: 3>,
     'translation_key': 'indexed_switch',
-    'unique_id': 'tuya.6c6fec8c06c8d3261chmbcswitch_8',
+    'unique_id': 'tuya.cijerqyssiwrf7deqzkfsswitch_8',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[sfkzq_ed7frwissyqrejic][valve.jie_hashui_fa_switch_8-state]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_switch_8-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
