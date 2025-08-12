@@ -115,6 +115,10 @@
         }
       }
     },
+    "issue_system_disk_lifetime": {
+      "title": "Disk lifetime exceeding 90%",
+      "description": "The data disk has exceeded 90% of its expected lifespan. The disk may soon malfunction which can lead to data loss. You should replace it soon and migrate your data."
+    },
     "unhealthy": {
       "title": "Unhealthy system - {reason}",
       "description": "System is currently unhealthy due to {reason}. For troubleshooting information, select Learn more."
