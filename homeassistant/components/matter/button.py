@@ -154,6 +154,5 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterCommandButton,
         required_attributes=(clusters.SmokeCoAlarm.Attributes.AcceptedCommandList,),
         value_contains=clusters.SmokeCoAlarm.Commands.SelfTestRequest.command_id,
-        # allow_multi=True,
     ),
 ]
