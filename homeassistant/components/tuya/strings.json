@@ -603,9 +603,6 @@
       "cuml_e_export_offgrid1": {
         "name": "Cumulative off-grid port 1 output energy"
       },
-      "serial_number": {
-        "name": "Serial number"
-      },
       "gas": {
         "name": "Gas"
       },

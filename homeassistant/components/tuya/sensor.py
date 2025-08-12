@@ -1366,11 +1366,6 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         ),
         TuyaSensorEntityDescription(
-            key=DPCode.SERIAL_NUMBER,
-            translation_key="serial_number",
-            entity_category=EntityCategory.DIAGNOSTIC,
-        ),
-        TuyaSensorEntityDescription(
             key=DPCode.BATTERY_CAPACITY,
             translation_key="battery_capacity",
             device_class=SensorDeviceClass.ENERGY,

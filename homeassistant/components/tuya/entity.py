@@ -41,13 +41,19 @@ class TuyaEntity(Entity):
     @property
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.device.id)},
-            manufacturer="Tuya",
-            name=self.device.name,
-            model=self.device.product_name,
-            model_id=self.device.product_id,
-        )
+        device_info_data: DeviceInfo = {
+            "identifiers": {(DOMAIN, self.device.id)},
+            "manufacturer": "Tuya",
+            "name": self.device.name,
+            "model": self.device.product_name,
+            "model_id": self.device.product_id,
+        }
+
+        # Add serial number if available in device status
+        if serial_number := self.device.status.get(DPCode.SERIAL_NUMBER):
+            device_info_data["serial_number"] = str(serial_number)
+
+        return device_info_data
 
     @property
     def available(self) -> bool:
