@@ -133,7 +133,6 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
         """Call setState api to change valve state."""
         if (
             self.coordinator.device.is_support_mode_switching()
-            and self.coordinator.dev_net_type is not None
             and self.coordinator.dev_net_type == ATTR_DEVICE_MODEL_A
         ):
             raise HomeAssistantError(
