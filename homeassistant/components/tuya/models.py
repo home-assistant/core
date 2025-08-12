@@ -100,7 +100,7 @@ class EnumTypeData:
 
 
 class ComplexValue:
-    """Complex Type value (for JSON/RAW parsing)."""
+    """Complex value (for JSON/RAW parsing)."""
 
     @classmethod
     def from_json(cls, data: str) -> Self:
@@ -115,7 +115,7 @@ class ComplexValue:
 
 @dataclass
 class ElectricityValue(ComplexValue):
-    """Electricity Type value."""
+    """Electricity complex value."""
 
     electriccurrent: str | None = None
     power: str | None = None
