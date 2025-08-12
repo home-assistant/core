@@ -327,7 +327,7 @@ class AsusWrtHttpBridge(AsusWrtBridge):
     @property
     def is_connected(self) -> bool:
         """Get connected status."""
-        return cast(bool, self._api.connected)
+        return self._api.connected
 
     async def async_connect(self) -> None:
         """Connect to the device."""
@@ -393,7 +393,9 @@ class AsusWrtHttpBridge(AsusWrtBridge):
                 dev.connection.ip_address, dev.description.name, dev.connection.node
             )
             for mac, dev in api_devices.items()
-            if dev.connection.ip_address is not None
+            if dev.connection is not None
+            and dev.description is not None
+            and dev.connection.ip_address is not None
         }
 
     async def async_get_available_sensors(self) -> dict[str, dict[str, Any]]:
