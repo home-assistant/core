@@ -262,6 +262,7 @@ class ModbusHub:
         self._config_type = client_config[CONF_TYPE]
         self._config_delay = client_config[CONF_DELAY]
         self._pb_request: dict[str, RunEntry] = {}
+        self._connect_task: asyncio.Task
         self._pb_class = {
             SERIAL: AsyncModbusSerialClient,
             TCP: AsyncModbusTcpClient,
@@ -336,7 +337,7 @@ class ModbusHub:
                 entry.attr, func, entry.value_attr_name
             )
 
-        self.hass.async_create_background_task(
+        self._connect_task = self.hass.async_create_background_task(
             self.async_pb_connect(), "modbus-connect"
         )
 
@@ -365,6 +366,9 @@ class ModbusHub:
         if self._async_cancel_listener:
             self._async_cancel_listener()
             self._async_cancel_listener = None
+        if not self._connect_task.done():
+            self._connect_task.cancel()
+
         async with self._lock:
             if self._client:
                 try:
