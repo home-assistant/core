@@ -104,6 +104,35 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
     ),
+    # Keys exported for dataformat 06 sensors in newer versions of ruuvitag-ble
+    "pm25": SensorEntityDescription(
+        key=f"{SSDSensorDeviceClass.PM25}_{Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER}",
+        device_class=SensorDeviceClass.PM25,
+        native_unit_of_measurement=Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "carbon_dioxide": SensorEntityDescription(
+        key=f"{SSDSensorDeviceClass.CO2}_{Units.CONCENTRATION_PARTS_PER_MILLION}",
+        device_class=SensorDeviceClass.CO2,
+        native_unit_of_measurement=Units.CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "illuminance": SensorEntityDescription(
+        key=f"{SSDSensorDeviceClass.ILLUMINANCE}_{Units.LIGHT_LUX}",
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        native_unit_of_measurement=Units.LIGHT_LUX,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "voc_index": SensorEntityDescription(
+        key="voc_index",
+        translation_key="voc_index",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "nox_index": SensorEntityDescription(
+        key="nox_index",
+        translation_key="nox_index",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 }
 
 

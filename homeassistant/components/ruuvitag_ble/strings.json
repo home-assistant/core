@@ -35,6 +35,12 @@
       },
       "movement_counter": {
         "name": "Movement counter"
+      },
+      "nox_index": {
+        "name": "NOx index"
+      },
+      "voc_index": {
+        "name": "VOC index"
       }
     }
   }
