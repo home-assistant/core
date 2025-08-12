@@ -904,8 +904,8 @@
       }
     },
     "valve": {
-      "indexed_switch": {
-        "name": "Switch {index}"
+      "indexed_valve": {
+        "name": "Valve {index}"
       }
     }
   },
