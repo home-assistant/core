@@ -19,6 +19,8 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -50,11 +52,11 @@ async def access_token(hass: HomeAssistant) -> str:
     )
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
     setup_credentials,
     access_token,
 ) -> None:
@@ -103,11 +105,11 @@ async def test_full_flow(
     assert len(mock_setup.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_flow_reauth(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
     setup_credentials,
     access_token,
 ) -> None:
@@ -196,11 +198,11 @@ async def test_flow_reauth(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_flow_wrong_account_reauth(
     hass: HomeAssistant,
-    hass_client_no_auth,
-    aioclient_mock,
-    current_request_with_host,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
     setup_credentials,
 ) -> None:
     """Test reauth flow with wrong account."""
