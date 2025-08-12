@@ -8,11 +8,12 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
+from homeassistant.components.sonos.const import MODEL_SONOS_ARC_ULTRA
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-CROSSOVER_ENTITY = "number.zone_a_sub_crossover_frequency"
+SELECT_DIALOG_LEVEL_ENTITY = "select.zone_a_dialog_level"
 
 
 @pytest.fixture(name="platform_select", autouse=True)
@@ -41,15 +42,15 @@ async def test_select_dialog_level(
     level: int,
     result: str,
 ) -> None:
-    """Test number entities."""
+    """Test dialog level select entity."""
 
-    speaker_info["model_name"] = "Sonos Arc Ultra"
+    speaker_info["model_name"] = MODEL_SONOS_ARC_ULTRA.lower()
     soco.get_speaker_info.return_value = speaker_info
     soco.dialog_level = level
 
     await async_setup_sonos()
 
-    dialog_level_select = entity_registry.entities["select.zone_a_dialog_level"]
+    dialog_level_select = entity_registry.entities[SELECT_DIALOG_LEVEL_ENTITY]
     dialog_level_state = hass.states.get(dialog_level_select.entity_id)
     assert dialog_level_state.state == result
 
@@ -68,14 +69,13 @@ async def test_select_dialog_level_set(
     hass: HomeAssistant,
     async_setup_sonos,
     soco,
-    entity_registry: er.EntityRegistry,
     speaker_info: dict[str, str],
     result: int,
     option: str,
 ) -> None:
-    """Test number entities."""
+    """Test setting dialog level select entity."""
 
-    speaker_info["model_name"] = "Sonos Arc Ultra"
+    speaker_info["model_name"] = MODEL_SONOS_ARC_ULTRA.lower()
     soco.get_speaker_info.return_value = speaker_info
     soco.dialog_level = 0
 
@@ -84,7 +84,7 @@ async def test_select_dialog_level_set(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: "select.zone_a_dialog_level", ATTR_OPTION: option},
+        {ATTR_ENTITY_ID: SELECT_DIALOG_LEVEL_ENTITY, ATTR_OPTION: option},
         blocking=True,
     )
 
@@ -102,4 +102,4 @@ async def test_select_dialog_level_only_arc_ultra(
     speaker_info["model_name"] = "Sonos S1"
     await async_setup_sonos()
 
-    assert "select.zone_a_dialog_level" not in entity_registry.entities
+    assert SELECT_DIALOG_LEVEL_ENTITY not in entity_registry.entities

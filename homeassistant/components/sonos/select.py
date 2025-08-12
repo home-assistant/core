@@ -85,7 +85,7 @@ async def async_setup_entry(
 
 
 class SonosSelectEntity(SonosEntity, SelectEntity):
-    """Representation of a Sonos level entity."""
+    """Representation of a Sonos select entity."""
 
     def __init__(
         self,
