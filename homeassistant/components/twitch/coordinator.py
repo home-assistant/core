@@ -79,6 +79,7 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
         if not (user := await first(self.twitch.get_users())):
             raise UpdateFailed("Logged in user not found")
         self.current_user = user
+        self.users.append(self.current_user)  # Add current_user to users list.
 
     async def _async_update_data(self) -> dict[str, TwitchUpdate]:
         await self.session.async_ensure_token_valid()
