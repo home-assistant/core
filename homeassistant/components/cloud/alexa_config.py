@@ -344,9 +344,6 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         except (AlexaApiNoTokenError, AlexaApiError) as exception:
             raise alexa_errors.NoTokenAvailable from exception
 
-        if details is None:
-            raise alexa_errors.NoTokenAvailable
-
         self._token = details["access_token"]
         self._endpoint = details["event_endpoint"]
         self._token_valid = utcnow() + timedelta(seconds=details["expires_in"])
