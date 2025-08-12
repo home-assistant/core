@@ -663,11 +663,11 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
                 },
             ]
 
-        elif (ATTR_BRIGHTNESS in kwargs or ATTR_WHITE in kwargs) and self._brightness:
-            brightness_attr = (
-                ATTR_BRIGHTNESS if ATTR_BRIGHTNESS in kwargs else ATTR_WHITE
-            )
-            brightness = kwargs[brightness_attr]
+        elif self._brightness and (ATTR_BRIGHTNESS in kwargs or ATTR_WHITE in kwargs):
+            if ATTR_BRIGHTNESS in kwargs:
+                brightness = kwargs[ATTR_BRIGHTNESS]
+            else:
+                brightness = kwargs[ATTR_WHITE]
 
             # If there is a min/max value, the brightness is actually limited.
             # Meaning it is actually not on a 0-255 scale.
