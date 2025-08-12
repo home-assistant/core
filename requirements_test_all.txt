@@ -491,6 +491,9 @@ aranet4==2.5.1
 # homeassistant.components.arcam_fmj
 arcam-fmj==1.8.2
 
+# homeassistant.components.asuswrt
+asusrouter==1.18.1
+
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
 # homeassistant.components.samsungtv
@@ -1543,9 +1546,6 @@ pyairvisual==2023.08.1
 
 # homeassistant.components.aprilaire
 pyaprilaire==0.9.1
-
-# homeassistant.components.asuswrt
-pyasuswrt==0.1.21
 
 # homeassistant.components.atag
 pyatag==0.3.5.3
