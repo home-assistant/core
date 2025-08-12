@@ -467,6 +467,7 @@
         'chat_log_delta': dict({
           'tool_calls': list([
             dict({
+              'external': False,
               'id': 'test_tool_id',
               'tool_args': dict({
               }),
