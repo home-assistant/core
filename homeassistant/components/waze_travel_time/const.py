@@ -44,6 +44,8 @@ DEFAULT_OPTIONS: dict[str, str | bool | list[str]] = {
     CONF_EXCL_FILTER: DEFAULT_FILTER,
 }
 
+ATTR_DESTINATION: Final = "destination"
 ATTR_DURATION: Final = "duration"
 ATTR_DISTANCE: Final = "distance"
+ATTR_ORIGIN: Final = "origin"
 ATTR_ROUTE: Final = "route"

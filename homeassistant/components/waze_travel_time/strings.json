@@ -115,11 +115,17 @@
   },
   "entity": {
     "sensor": {
+      "destination": {
+        "name": "Destination"
+      },
       "distance": {
         "name": "Distance"
       },
       "duration": {
         "name": "Duration"
+      },
+      "origin": {
+        "name": "Origin"
       },
       "route": {
         "name": "Route"

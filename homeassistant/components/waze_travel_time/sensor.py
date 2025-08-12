@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -12,13 +13,27 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, UnitOfLength, UnitOfTime
+from homeassistant.const import (
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    CONF_NAME,
+    UnitOfLength,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_DISTANCE, ATTR_DURATION, ATTR_ROUTE, DEFAULT_NAME, DOMAIN
+from .const import (
+    ATTR_DESTINATION,
+    ATTR_DISTANCE,
+    ATTR_DURATION,
+    ATTR_ORIGIN,
+    ATTR_ROUTE,
+    DEFAULT_NAME,
+    DOMAIN,
+)
 from .coordinator import WazeTravelTimeCoordinator, WazeTravelTimeData
 
 
@@ -63,16 +78,19 @@ async def async_setup_entry(
     """Set up a Waze travel time sensor entry."""
     name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
     coordinator = config_entry.runtime_data
+    entry_id = config_entry.entry_id
 
     sensors: list[WazeTravelTimeSensor] = [
         WazeTravelTimeSensor(
-            config_entry.entry_id,
+            entry_id,
             name,
             sensor_description,
             coordinator,
         )
         for sensor_description in SENSOR_DESCRIPTIONS
     ]
+    sensors.append(OriginSensor(entry_id, name, coordinator))
+    sensors.append(DestinationSensor(entry_id, name, coordinator))
     async_add_entities(sensors, False)
 
 
@@ -105,3 +123,67 @@ class WazeTravelTimeSensor(CoordinatorEntity[WazeTravelTimeCoordinator], SensorE
     def native_value(self) -> float | str | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+
+class OriginSensor(WazeTravelTimeSensor):
+    """Sensor holding information about the route origin."""
+
+    def __init__(
+        self,
+        unique_id_prefix: str,
+        name: str,
+        coordinator: WazeTravelTimeCoordinator,
+    ) -> None:
+        """Initialize the sensor."""
+        description = WazeSensorDescription(
+            key=ATTR_ORIGIN,
+            translation_key="origin",
+            value_fn=lambda data: data.origin,
+        )
+        super().__init__(unique_id_prefix, name, description, coordinator)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """GPS coordinates."""
+        if (
+            self.coordinator.data.origin_coordinates is None
+            or "," not in self.coordinator.data.origin_coordinates
+        ):
+            return None
+
+        return {
+            ATTR_LATITUDE: self.coordinator.data.origin_coordinates.split(",")[0],
+            ATTR_LONGITUDE: self.coordinator.data.origin_coordinates.split(",")[1],
+        }
+
+
+class DestinationSensor(WazeTravelTimeSensor):
+    """Sensor holding information about the route destination."""
+
+    def __init__(
+        self,
+        unique_id_prefix: str,
+        name: str,
+        coordinator: WazeTravelTimeCoordinator,
+    ) -> None:
+        """Initialize the sensor."""
+        description = WazeSensorDescription(
+            key=ATTR_DESTINATION,
+            translation_key="destination",
+            value_fn=lambda data: data.destination,
+        )
+        super().__init__(unique_id_prefix, name, description, coordinator)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """GPS coordinates."""
+        if (
+            self.coordinator.data.destination_coordinates is None
+            or "," not in self.coordinator.data.destination_coordinates
+        ):
+            return None
+
+        return {
+            ATTR_LATITUDE: self.coordinator.data.destination_coordinates.split(",")[0],
+            ATTR_LONGITUDE: self.coordinator.data.destination_coordinates.split(",")[1],
+        }
