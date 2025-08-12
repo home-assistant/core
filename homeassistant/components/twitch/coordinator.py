@@ -96,6 +96,8 @@ class TwitchCoordinator(DataUpdateCoordinator[dict[str, TwitchUpdate]]):
                 user_id=self.current_user.id, first=100
             )
         }
+        async for s in self.twitch.get_streams(user_id=[self.current_user.id]):
+            streams.update({s.user_id: s})
         follows: dict[str, FollowedChannel] = {
             f.broadcaster_id: f
             async for f in await self.twitch.get_followed_channels(
