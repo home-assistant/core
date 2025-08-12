@@ -5,14 +5,10 @@ from __future__ import annotations
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
 from .coordinator import GreenPlanetEnergyUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
