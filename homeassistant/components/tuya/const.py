@@ -328,6 +328,7 @@ class DPCode(StrEnum):
     STATUS = "status"
     STERILIZATION = "sterilization"  # Sterilization
     SUCTION = "suction"
+    SUPPLY_FREQUENCY = "supply_frequency"
     SWING = "swing"  # Swing mode
     SWITCH = "switch"  # Switch
     SWITCH_1 = "switch_1"  # Switch 1
