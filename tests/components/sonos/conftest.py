@@ -169,7 +169,7 @@ async def async_autosetup_sonos(async_setup_sonos):
 
 @pytest.fixture
 def async_setup_sonos(
-    hass: HomeAssistant, config_entry: MockConfigEntry, fire_zgs_event
+    hass: HomeAssistant, config_entry: MockConfigEntry, fire_zgs_event, alarm_event
 ) -> Callable[[], Coroutine[Any, Any, None]]:
     """Return a coroutine to set up a Sonos integration instance on demand."""
 
@@ -177,6 +177,7 @@ def async_setup_sonos(
         config_entry.add_to_hass(hass)
         sonos_alarms = Alarms()
         sonos_alarms.last_alarm_list_version = "RINCON_test:0"
+        alarm_event.variables["alarm_list_version"] = "RINCON_test:0"
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
         await fire_zgs_event()
@@ -278,6 +279,7 @@ class SoCoMockFactory:
         mock_soco.music_source_from_uri = SoCo.music_source_from_uri
         mock_soco.get_sonos_playlists.return_value = self.sonos_playlists
         mock_soco.get_queue.return_value = self.sonos_queue
+        mock_soco._player_name = name
         my_speaker_info = self.speaker_info.copy()
         my_speaker_info["zone_name"] = name
         my_speaker_info["uid"] = mock_soco.uid
