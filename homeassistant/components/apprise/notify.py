@@ -50,21 +50,21 @@ def get_service(
     if CONF_FILE_URL in discovery_info:
         # Sourced from a Configuration File
         a_config = apprise.AppriseConfig()
-        if not a_config.add(discovery_info[CONF_FILE_URL]):
-            _LOGGER.error("Invalid Apprise config url provided")
-            return None
+        conf_urls = discovery_info[CONF_FILE_URL]
+        if isinstance(conf_urls, str):
+            conf_urls = [conf_urls]
+        for url in conf_urls:
+            a_config.add(url)
 
-        if not a_obj.add(a_config):
-            _LOGGER.error("Invalid Apprise config url provided")
-            return None
+        a_obj.add(a_config)
 
     # Ordered list of URLs
     if CONF_URL in discovery_info:
         urls = discovery_info[CONF_URL]
-        for entry in urls:
-            if not a_obj.add(entry):
-                _LOGGER.error("One or more specified Apprise URL(s) are invalid")
-                return None
+        if isinstance(urls, str):
+            urls = [urls]
+        for url in urls:
+            a_obj.add(url)
 
     return AppriseNotificationService(a_obj)
 
