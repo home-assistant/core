@@ -38,10 +38,4 @@ class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
 
-        await self.async_update_data_all()
-
-    async def async_update_data_all(self) -> None:
-        """Update all the devices."""
-
-        # Using `update_all_devices` instead of `update` to avoid fetching device list every time.
         await self._manager.update_all_devices()
