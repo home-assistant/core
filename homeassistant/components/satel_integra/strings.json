@@ -1,8 +1,7 @@
 {
   "common": {
     "code_input_description": "Code to toggle switchable outputs",
-    "code": "Access code",
-    "already_configured": "This entry is already configured"
+    "code": "Access code"
   },
   "config": {
     "step": {
@@ -49,7 +48,7 @@
         }
       },
       "error": {
-        "already_configured": "[%key:component::satel_integra::common::already_configured%]"
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
       }
     },
     "zone": {
@@ -77,7 +76,7 @@
         }
       },
       "error": {
-        "already_configured": "[%key:component::satel_integra::common::already_configured%]"
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
       }
     },
     "output": {
@@ -105,7 +104,7 @@
         }
       },
       "error": {
-        "already_configured": "[%key:component::satel_integra::common::already_configured%]"
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
       }
     },
     "switchable_output": {
@@ -131,7 +130,7 @@
         }
       },
       "error": {
-        "already_configured": "[%key:component::satel_integra::common::already_configured%]"
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
       }
     }
   },
