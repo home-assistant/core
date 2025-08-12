@@ -11,7 +11,7 @@ API_URL = "https://twdvzuefzh.execute-api.us-east-2.amazonaws.com/v1"
 API_KEY = "k6QaiQmcTm2zfaNns5L1Z8duBtJmhDOW8JawlCC3"
 
 
-class AsyncConfigEntryAuth(Auth):  # type: ignore[misc]
+class AsyncConfigEntryAuth(Auth):
     """Provide Aladdin Connect Genie authentication tied to an OAuth2 based config entry."""
 
     def __init__(
