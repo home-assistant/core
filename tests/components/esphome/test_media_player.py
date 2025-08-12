@@ -58,8 +58,8 @@ async def test_media_player_entity(
             key=1,
             name="my media_player",
             supports_pause=True,
-            # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
-            feature_flags=1200653,
+            # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY,TURN_OFF,TURN_ON
+            feature_flags=1201037,
         )
     ]
     states = [
@@ -168,7 +168,7 @@ async def test_media_player_entity(
         blocking=True,
     )
     mock_client.media_player_command.assert_has_calls(
-        [call(1, command=MediaPlayerCommand.TURN_OFF)]
+        [call(1, command=MediaPlayerCommand.TURN_OFF, device_id=0)]
     )
 
     await hass.services.async_call(
@@ -180,7 +180,7 @@ async def test_media_player_entity(
         blocking=True,
     )
     mock_client.media_player_command.assert_has_calls(
-        [call(1, command=MediaPlayerCommand.TURN_ON)]
+        [call(1, command=MediaPlayerCommand.TURN_ON, device_id=0)]
     )
     mock_client.media_player_command.reset_mock()
 
