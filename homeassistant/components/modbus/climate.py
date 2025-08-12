@@ -467,9 +467,6 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
     async def _async_update(self) -> None:
         """Update Target & Current Temperature."""
-        # remark "now" is a dummy parameter to avoid problems with
-        # async_track_time_interval
-
         self._attr_target_temperature = await self._async_read_register(
             CALL_TYPE_REGISTER_HOLDING,
             self._target_temperature_register[
