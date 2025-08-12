@@ -63,6 +63,9 @@
       "defrost": {
         "name": "Defrost"
       },
+      "valve": {
+        "name": "Valve"
+      },
       "wet": {
         "name": "Wet"
       }
@@ -478,7 +481,7 @@
       },
       "blanket_level": {
         "state": {
-          "level_1": "Low",
+          "level_1": "[%key:common::state::low%]",
           "level_2": "Level 2",
           "level_3": "Level 3",
           "level_4": "Level 4",
@@ -487,7 +490,7 @@
           "level_7": "Level 7",
           "level_8": "Level 8",
           "level_9": "Level 9",
-          "level_10": "High"
+          "level_10": "[%key:common::state::high%]"
         }
       },
       "odor_elimination_mode": {
@@ -942,6 +945,9 @@
       },
       "siren": {
         "name": "Siren"
+      },
+      "frost_protection": {
+        "name": "Frost protection"
       },
       "feedin_power_limit_enable": {
         "name": "Feed-in power limit enable"

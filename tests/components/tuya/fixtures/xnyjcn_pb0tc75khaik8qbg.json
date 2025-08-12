@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyacn.com",
-  "terminal_id": "1753084452677EEP3gH",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "6cd9ce33d5275082e9inhv",
   "name": "CBE Pro 2",
   "category": "xnyjcn",
   "product_id": "pb0tc75khaik8qbg",
