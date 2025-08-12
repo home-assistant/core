@@ -1330,4 +1330,5 @@ class PlatePowerStep(MieleEnum):
     plate_step_17 = 17
     plate_step_18 = 18
     plate_step_boost = 117, 118, 218
+    plate_step_boost_2 = 217
     missing2none = -9999
