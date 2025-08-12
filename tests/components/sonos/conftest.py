@@ -214,25 +214,11 @@ class MockSoCo(MagicMock):
     surround_level = 3
     music_surround_level = 4
     soundbar_audio_input_format = "Dolby 5.1"
-    factory: SoCoMockFactory | None = None
 
     @property
     def visible_zones(self):
         """Return visible zones and allow property to be overridden by device classes."""
         return {self}
-
-    @property
-    def all_zones(self) -> set[MockSoCo]:
-        """Return all mock zones if a factory is set and enabled, else just self."""
-        return (
-            self.factory.mock_all_zones
-            if self.factory and self.factory.mock_all_zones
-            else {self}
-        )
-
-    def set_factory(self, factory: SoCoMockFactory) -> None:
-        """Set the factory for this mock."""
-        self.factory = factory
 
 
 class SoCoMockFactory:
@@ -257,19 +243,12 @@ class SoCoMockFactory:
         self.alarm_clock = alarm_clock
         self.sonos_playlists = sonos_playlists
         self.sonos_queue = sonos_queue
-        self.mock_zones: bool = False
-
-    @property
-    def mock_all_zones(self) -> set[MockSoCo] | None:
-        """Return a set of all mock zones, or None if not enabled."""
-        return set(self.mock_list.values()) if self.mock_zones else None
 
     def cache_mock(
         self, mock_soco: MockSoCo, ip_address: str, name: str = "Zone A"
     ) -> MockSoCo:
         """Put a user created mock into the cache."""
         mock_soco.mock_add_spec(SoCo)
-        mock_soco.set_factory(self)
         mock_soco.ip_address = ip_address
         if ip_address != "192.168.42.2":
             mock_soco.uid += f"_{ip_address}"
@@ -281,11 +260,6 @@ class SoCoMockFactory:
         my_speaker_info = self.speaker_info.copy()
         my_speaker_info["zone_name"] = name
         my_speaker_info["uid"] = mock_soco.uid
-        # Generate a different MAC for the non-default speakers.
-        # otherwise new devices will not be created.
-        if ip_address != "192.168.42.2":
-            last_octet = ip_address.split(".")[-1]
-            my_speaker_info["mac_address"] = f"00-00-00-00-00-{last_octet.zfill(2)}"
         mock_soco.get_speaker_info = Mock(return_value=my_speaker_info)
         mock_soco.add_to_queue = Mock(return_value=10)
         mock_soco.add_uri_to_queue = Mock(return_value=10)
@@ -304,6 +278,7 @@ class SoCoMockFactory:
 
         mock_soco.alarmClock = self.alarm_clock
         mock_soco.get_battery_info.return_value = self.battery_info
+        mock_soco.all_zones = {mock_soco}
         mock_soco.group.coordinator = mock_soco
         mock_soco.household_id = "test_household_id"
         self.mock_list[ip_address] = mock_soco
