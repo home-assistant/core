@@ -72,6 +72,13 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
         """Mute or unmute the media player."""
         # OnOff attribute == True state means volume is on, so HA should show mute switch as off
         if mute:
+            # Save current volume before muting to be able to restore it
+            current_volume = self._attr_volume_level or 1
+            matter_volume_level = int(current_volume * 254)
+            await self.write_attribute(
+                matter_volume_level, clusters.LevelControl.Attributes.OnLevel
+            )
+            # Send Matter Off command
             await self.send_device_command(
                 clusters.OnOff.Commands.Off(),
             )
@@ -127,6 +134,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.OnOff.Attributes.OnOff,
             clusters.LevelControl.Attributes.CurrentLevel,
+            clusters.LevelControl.Attributes.OnLevel,
         ),
         device_type=(device_types.Speaker,),
     ),
