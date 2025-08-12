@@ -26,7 +26,7 @@ from homeassistant.const import (
     UnitOfTime,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -741,6 +741,11 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
         if last_value and last_value.state != STATE_UNKNOWN:
             self._last_value = last_value.state
 
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self._last_value
+
 
 class MielePlateSensor(MieleSensor):
     """Representation of a Sensor."""
@@ -846,21 +851,21 @@ class MieleProgramIdSensor(MieleSensor):
 class MieleElapsedTimeSensor(MieleRestorableSensor):
     """Representation of the elapsed time sensor."""
 
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
 
         current_value = self.entity_description.value_fn(self.device)
         current_status = StateStatus(self.device.state_status)
 
         # keep value when program ends (some devices are immediately reporting 0...)
         if current_status == StateStatus.PROGRAM_ENDED:
-            return self._last_value
-
+            pass
         # force default value when appliance is off (some devices are keeping last value until a new cycle starts)
-        if current_status == StateStatus.OFF:
-            return self.entity_description.default_value
-
+        elif current_status == StateStatus.OFF:
+            self._last_value = self.entity_description.default_value
         # otherwise, cache value and return it
-        self._last_value = current_value
-        return current_value
+        else:
+            self._last_value = current_value
+
+        super()._handle_coordinator_update()
