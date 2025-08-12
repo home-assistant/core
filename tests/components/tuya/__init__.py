@@ -96,6 +96,7 @@ DEVICE_MOCKS = [
     "dj_zav1pa32pyxray78",  # https://github.com/home-assistant/core/issues/149704
     "dj_zputiamzanuk6yky",  # https://github.com/home-assistant/core/issues/149704
     "dlq_0tnvg2xaisqdadcf",  # https://github.com/home-assistant/core/issues/102769
+    "dlq_cnpkf4xdmd9v49iq",  # https://github.com/home-assistant/core/pull/149320
     "dlq_jdj6ccklup7btq3a",  #  https://github.com/home-assistant/core/issues/143209
     "dlq_kxdr6su0c55p7bbo",  # https://github.com/home-assistant/core/issues/143499
     "dlq_r9kg2g1uhhyicycb",  #  https://github.com/home-assistant/core/issues/149650
