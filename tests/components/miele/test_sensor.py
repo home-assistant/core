@@ -297,8 +297,8 @@ async def test_laundry_wash_scenario(
     )
     check_sensor_state(hass, "sensor.washing_machine_spin_speed", "unknown", step)
     check_sensor_state(hass, "sensor.washing_machine_remaining_time", "0", step)
-    # OFF -> elapsed forced to 0 (some devices continue reporting last value of last cycle)
-    check_sensor_state(hass, "sensor.washing_machine_elapsed_time", "0", step)
+    # OFF -> elapsed forced to unknown (some devices continue reporting last value of last cycle)
+    check_sensor_state(hass, "sensor.washing_machine_elapsed_time", "unknown", step)
 
     # Simulate program started
     device_fixture["DummyWasher"]["state"]["status"]["value_raw"] = 5
@@ -443,8 +443,8 @@ async def test_laundry_dry_scenario(
     check_sensor_state(hass, "sensor.tumble_dryer_program_phase", "not_running", step)
     check_sensor_state(hass, "sensor.tumble_dryer_drying_step", "unknown", step)
     check_sensor_state(hass, "sensor.tumble_dryer_remaining_time", "0", step)
-    # OFF -> elapsed forced to 0 (some devices continue reporting last value of last cycle)
-    check_sensor_state(hass, "sensor.tumble_dryer_elapsed_time", "0", step)
+    # OFF -> elapsed forced to unknown (some devices continue reporting last value of last cycle)
+    check_sensor_state(hass, "sensor.tumble_dryer_elapsed_time", "unknown", step)
 
     # Simulate program started
     device_fixture["DummyDryer"]["state"]["status"]["value_raw"] = 5
