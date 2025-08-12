@@ -6,7 +6,7 @@ from homeassistant.components.airq.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import TEST_DEVICE_INFO, TEST_USER_DATA
+from .common import TEST_DEVICE_INFO, TEST_USER_DATA
 
 from tests.common import MockConfigEntry
 
