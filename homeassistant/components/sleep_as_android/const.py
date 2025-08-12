@@ -28,3 +28,5 @@ MAP_EVENTS = {
     "lullaby_stop": "stop",
     "lullaby_volume_down": "volume_down",
 }
+
+ALARM_LABEL_DEFAULT = "alarm"
