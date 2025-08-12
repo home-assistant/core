@@ -13,13 +13,6 @@ from .coordinator import GreenPlanetEnergyUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-# Config entry only (no YAML config)
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Green Planet Energy component."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
