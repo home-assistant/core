@@ -1,6 +1,7 @@
 """The tests for the media_player platform."""
 
 import math
+from unittest.mock import patch
 
 import pytest
 
@@ -999,6 +1000,20 @@ async def test_volume_relative_media_player_intent(
     playing_expected_volume += volume_change_int / 100
     assert math.isclose(idle_entity.volume_level, idle_expected_volume)
     assert math.isclose(playing_entity.volume_level, playing_expected_volume)
+
+    # Test error in method
+    with (
+        patch.object(
+            playing_entity, "async_volume_up", side_effect=RuntimeError("boom!")
+        ),
+        pytest.raises(intent.IntentError),
+    ):
+        await intent.async_handle(
+            hass,
+            "test",
+            media_player_intent.INTENT_SET_VOLUME_RELATIVE,
+            {"volume_step": {"value": "up"}},
+        )
 
     # Multiple idle media players should not match
     hass.states.async_set(
