@@ -99,22 +99,22 @@ class EnumTypeData:
         return cls(dpcode, **parsed)
 
 
-class ComplexTypeValue:
+class ComplexValue:
     """Complex Type value (for JSON/RAW parsing)."""
 
     @classmethod
     def from_json(cls, data: str) -> Self:
-        """Load JSON string and return a ComplexTypeValue object."""
+        """Load JSON string and return a ComplexValue object."""
         raise NotImplementedError("from_json is not implemented for this type")
 
     @classmethod
     def from_raw(cls, data: str) -> Self | None:
-        """Decode base64 string and return a ComplexTypeValue object."""
+        """Decode base64 string and return a ComplexValue object."""
         raise NotImplementedError("from_raw is not implemented for this type")
 
 
 @dataclass
-class ElectricityTypeValue(ComplexTypeValue):
+class ElectricityValue(ComplexValue):
     """Electricity Type value."""
 
     electriccurrent: str | None = None
@@ -123,12 +123,12 @@ class ElectricityTypeValue(ComplexTypeValue):
 
     @classmethod
     def from_json(cls, data: str) -> Self:
-        """Load JSON string and return a ElectricityTypeValue object."""
+        """Load JSON string and return a ElectricityValue object."""
         return cls(**json.loads(data.lower()))
 
     @classmethod
     def from_raw(cls, data: str) -> Self | None:
-        """Decode base64 string and return a ElectricityTypeValue object."""
+        """Decode base64 string and return a ElectricityValue object."""
         raw = base64.b64decode(data)
         if len(raw) == 0:
             return None
