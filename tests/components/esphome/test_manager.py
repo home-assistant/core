@@ -416,10 +416,12 @@ async def test_unique_id_updated_to_mac(
     entry.add_to_hass(hass)
     subscribe_done = hass.loop.create_future()
 
-    def async_subscribe_states(*args, **kwargs) -> None:
+    def async_subscribe_homeassistant_states_and_services(*args, **kwargs) -> None:
         subscribe_done.set_result(None)
 
-    mock_client.subscribe_states = async_subscribe_states
+    mock_client.subscribe_homeassistant_states_and_services = (
+        async_subscribe_homeassistant_states_and_services
+    )
     mock_client.device_info = AsyncMock(
         return_value=DeviceInfo(
             mac_address="1122334455aa",
@@ -447,10 +449,12 @@ async def test_add_missing_bluetooth_mac_address(
     entry.add_to_hass(hass)
     subscribe_done = hass.loop.create_future()
 
-    def async_subscribe_states(*args, **kwargs) -> None:
+    def async_subscribe_homeassistant_states_and_services(*args, **kwargs) -> None:
         subscribe_done.set_result(None)
 
-    mock_client.subscribe_states = async_subscribe_states
+    mock_client.subscribe_homeassistant_states_and_services = (
+        async_subscribe_homeassistant_states_and_services
+    )
     mock_client.device_info = AsyncMock(
         return_value=DeviceInfo(
             mac_address="1122334455aa",
@@ -587,10 +591,12 @@ async def test_name_updated_only_if_mac_matches(
     entry.add_to_hass(hass)
     subscribe_done = hass.loop.create_future()
 
-    def async_subscribe_states(*args, **kwargs) -> None:
+    def async_subscribe_homeassistant_states_and_services(*args, **kwargs) -> None:
         subscribe_done.set_result(None)
 
-    mock_client.subscribe_states = async_subscribe_states
+    mock_client.subscribe_homeassistant_states_and_services = (
+        async_subscribe_homeassistant_states_and_services
+    )
     mock_client.device_info = AsyncMock(
         return_value=DeviceInfo(mac_address="1122334455aa", name="new")
     )
@@ -622,10 +628,12 @@ async def test_name_updated_only_if_mac_was_unset(
     entry.add_to_hass(hass)
     subscribe_done = hass.loop.create_future()
 
-    def async_subscribe_states(*args, **kwargs) -> None:
+    def async_subscribe_homeassistant_states_and_services(*args, **kwargs) -> None:
         subscribe_done.set_result(None)
 
-    mock_client.subscribe_states = async_subscribe_states
+    mock_client.subscribe_homeassistant_states_and_services = (
+        async_subscribe_homeassistant_states_and_services
+    )
     mock_client.device_info = AsyncMock(
         return_value=DeviceInfo(mac_address="1122334455aa", name="new")
     )
