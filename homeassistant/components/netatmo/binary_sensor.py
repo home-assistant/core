@@ -12,6 +12,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -23,9 +24,9 @@ from .entity import NetatmoModuleEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-def process_opening_status(device: Module) -> bool | None:
+def process_opening_status(module: Module) -> bool | None:
     """Process opening Module status and return bool."""
-    status = device.status  # type: ignore[attr-defined]
+    status = module.status  # type: ignore[attr-defined]
 
     if status == "closed":
         return False
@@ -34,19 +35,33 @@ def process_opening_status(device: Module) -> bool | None:
     return None
 
 
+def process_opening_category(netatmo_device: NetatmoDevice) -> BinarySensorDeviceClass:
+    """Helper function to map Netatmo category to Home Assistant device class."""
+
+    # Return None if the device or category is not found in the raw data.
+    _LOGGER.warning(
+        "Category not found for device_id: %s in raw data",
+        netatmo_device.device.name,
+    )
+    return BinarySensorDeviceClass.OPENING
+
+
 @dataclass(frozen=True, kw_only=True)
 class NetatmoBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Netatmo binary sensor entity."""
 
     netatmo_name: str | None = None
     value_fn: Callable[[Module], bool | None] = lambda device: None
+    category_fn: Callable[[NetatmoDevice], BinarySensorDeviceClass] | None = None
 
 
 NETATMO_BINARY_SENSOR_TYPES: tuple[NetatmoBinarySensorEntityDescription, ...] = (
     NetatmoBinarySensorEntityDescription(
         key="reachable",
         translation_key="reachable",
-        netatmo_name="Connectivity",
+        netatmo_name="Reachability",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         value_fn=lambda module: module.reachable,
     ),
@@ -59,6 +74,7 @@ OPENING_BINARY_SENSOR_TYPES: tuple[NetatmoBinarySensorEntityDescription, ...] = 
         device_class=BinarySensorDeviceClass.OPENING,
         netatmo_name="Opening",
         value_fn=process_opening_status,
+        category_fn=process_opening_category,
     ),
 )
 
@@ -126,12 +142,17 @@ class NetatmoBinarySensor(NetatmoModuleEntity, BinarySensorEntity):
         description: NetatmoBinarySensorEntityDescription,
     ) -> None:
         """Initialize a Netatmo binary sensor."""
-        self._attr_unique_id = f"{netatmo_device.device.entity_id}-{description.key}"
         name_suffix = (
             description.netatmo_name or description.key.replace("_", " ").title()
         )
+
+        self._attr_unique_id = f"{netatmo_device.device.entity_id}-{description.key}"
         self._attr_name = name_suffix
         self._attr_configuration_url = CONF_URL_SECURITY
+        if description.category_fn:
+            self._attr_device_class = description.category_fn(netatmo_device)
+        else:
+            self._attr_device_class = description.device_class
 
         super().__init__(netatmo_device)
         self.entity_description = description
