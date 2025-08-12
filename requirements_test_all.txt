@@ -235,7 +235,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==37.2.2
+aioesphomeapi==38.2.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -643,7 +643,7 @@ colorthief==0.2.1
 construct==2.10.68
 
 # homeassistant.components.cookidoo
-cookidoo-api==0.12.2
+cookidoo-api==0.14.0
 
 # homeassistant.components.backup
 # homeassistant.components.utility_meter
@@ -2623,7 +2623,7 @@ yalexs==8.11.1
 yeelight==0.7.16
 
 # homeassistant.components.yolink
-yolink-api==0.5.7
+yolink-api==0.5.8
 
 # homeassistant.components.youless
 youless-api==2.2.0
