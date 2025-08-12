@@ -64,6 +64,7 @@ NETATMO_BINARY_SENSOR_TYPES: tuple[NetatmoBinarySensorEntityDescription, ...] = 
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         value_fn=lambda module: module.reachable,
+        icon="mdi:signal",
     ),
 )
 
