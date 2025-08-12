@@ -41,7 +41,7 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
             update_interval=timedelta(minutes=7),
         )
         self._api = api_client
-        self._location = entry.data.get(CONF_LOCATION)
+        self._location = entry.data[CONF_LOCATION]
 
     async def _async_update_data(self) -> ProcessedCoordinatorData:
         """Fetch data from API endpoint.
@@ -52,21 +52,11 @@ class IrmKmiCoordinator(TimestampDataUpdateCoordinator[ProcessedCoordinatorData]
 
         self._api.expire_cache()
 
-        # Condition is needed to avoid mypy error about Any | None type having no attribute get or non-indexable value
-        if (
-            self._location is None
-            or self._location.get(ATTR_LATITUDE) is None
-            or self._location.get(ATTR_LONGITUDE) is None
-        ):
-            raise UpdateFailed(
-                "Unknown value for either latitude or longitude in the configuration"
-            )
-
         try:
             await self._api.refresh_forecasts_coord(
                 {
-                    "lat": self._location.get(ATTR_LATITUDE),
-                    "long": self._location.get(ATTR_LONGITUDE),
+                    "lat": self._location[ATTR_LATITUDE],
+                    "long": self._location[ATTR_LONGITUDE],
                 }
             )
 
