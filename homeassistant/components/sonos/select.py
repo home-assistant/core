@@ -49,7 +49,7 @@ async def async_setup_entry(
     config_entry: SonosConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Sonos number platform from a config entry."""
+    """Set up the Sonos select platform from a config entry."""
 
     def available_soco_attributes(speaker: SonosSpeaker) -> list[SonosSelectType]:
         features: list[SonosSelectType] = []

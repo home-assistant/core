@@ -89,3 +89,17 @@ async def test_select_dialog_level_set(
     )
 
     assert soco.dialog_level == result
+
+
+async def test_select_dialog_level_only_arc_ultra(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    entity_registry: er.EntityRegistry,
+    speaker_info: dict[str, str],
+) -> None:
+    """Test the dialog level select is only created for Sonos Arc Ultra."""
+
+    speaker_info["model_name"] = "Sonos S1"
+    await async_setup_sonos()
+
+    assert "select.zone_a_dialog_level" not in entity_registry.entities
