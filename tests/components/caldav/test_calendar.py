@@ -1209,24 +1209,27 @@ async def test_add_vevent(
 ) -> None:
     """Test adding a VEVENT to the calendar."""
     await setup_platform_cb()
-    entity_id = TEST_ENTITY
-    state = hass.states.get(entity_id)
-    assert state is not None
-    entity = hass.data["entity_components"]["calendar"].get_entity(entity_id)
     called = {}
 
     def fake_add_event(ics_data: str) -> None:
         called["ics_data"] = ics_data
 
     monkeypatch.setattr(calendars[0], "add_event", fake_add_event)
-    await entity.async_create_event(
-        summary="Test Event",
-        dtstart=datetime.datetime(2025, 8, 6, 10, 0, 0),
-        dtend=datetime.datetime(2025, 8, 6, 11, 0, 0),
-        tzinfo=dt_util.UTC,
-        description="Test Description",
-        rrule=None,
+    await hass.services.async_call(
+        "calendar",
+        "create_event",
+        {
+            "summary": "Test Event",
+            "start_date_time": datetime.datetime(2025, 8, 6, 10, 0, 0),
+            "end_date_time": datetime.datetime(2025, 8, 6, 11, 0, 0),
+            "description": "Test Description",
+        },
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
     )
+    # Ensure data is written to disk
+    await hass.async_block_till_done()
+
     assert "ics_data" in called
     assert "SUMMARY:Test Event" in called["ics_data"]
     assert "DESCRIPTION:Test Description" in called["ics_data"]
