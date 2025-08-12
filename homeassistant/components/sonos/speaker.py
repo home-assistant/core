@@ -35,6 +35,7 @@ from homeassistant.util import dt as dt_util
 
 from .alarms import SonosAlarms
 from .const import (
+    ATTR_DIALOG_LEVEL,
     ATTR_SPEECH_ENHANCEMENT_ENABLED,
     AVAILABILITY_TIMEOUT,
     BATTERY_SCAN_INTERVAL,
@@ -596,9 +597,9 @@ class SonosSpeaker:
             if int_var in variables:
                 setattr(self, int_var, variables[int_var])
 
-        for enum_var in ("dialog_level",):
+        for enum_var in (ATTR_DIALOG_LEVEL,):
             if enum_var in variables:
-                setattr(self, f"{enum_var}_enum", variables[int_var])
+                setattr(self, f"{enum_var}_enum", variables[enum_var])
 
         self.async_write_entity_states()
 
