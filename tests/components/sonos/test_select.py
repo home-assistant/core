@@ -4,14 +4,17 @@ from unittest.mock import patch
 
 import pytest
 
+from freezegun.api import FrozenDateTimeFactory
+
 from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.components.sonos.const import ATTR_DIALOG_LEVEL, MODEL_SONOS_ARC_ULTRA
+from homeassistant.components.sonos.const import ATTR_DIALOG_LEVEL, MODEL_SONOS_ARC_ULTRA, SCAN_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from tests.common import async_fire_time_changed
 from .conftest import create_rendering_control_event
 
 SELECT_DIALOG_LEVEL_ENTITY = "select.zone_a_dialog_level"
@@ -129,4 +132,30 @@ async def test_select_dialog_level_event(
     dialog_level_select = entity_registry.entities[SELECT_DIALOG_LEVEL_ENTITY]
     dialog_level_state = hass.states.get(dialog_level_select.entity_id)
     assert dialog_level_state.state == "high"
-    pass
+
+
+
+async def test_select_dialog_level_poll(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco,
+    entity_registry: er.EntityRegistry,
+    speaker_info: dict[str, str],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test entity updated by poll when subscription fails."""
+
+    speaker_info["model_name"] = MODEL_SONOS_ARC_ULTRA.lower()
+    soco.get_speaker_info.return_value = speaker_info
+    soco.dialog_level = 0
+
+    await async_setup_sonos()
+
+    soco.dialog_level = 3
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    dialog_level_select = entity_registry.entities[SELECT_DIALOG_LEVEL_ENTITY]
+    dialog_level_state = hass.states.get(dialog_level_select.entity_id)
+    assert dialog_level_state.state == "high"
