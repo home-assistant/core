@@ -36,8 +36,8 @@ async def test_device_registry(
     assert len(device_registry_entries) == len(DEVICE_MOCKS)
 
     for device_registry_entry in device_registry_entries:
-        assert device_registry_entries == snapshot(
-            name=list(device_registry_entry.identifiers)[0][1],
+        assert device_registry_entry == snapshot(
+            name=list(device_registry_entry.identifiers)[0][1]
         )
 
         # Ensure model is suffixed with "(unsupported)" when no entities are generated
