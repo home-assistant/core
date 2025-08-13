@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -18,59 +19,82 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import DEVICE_MOCKS, initialize_entry
+from . import initialize_entry
 
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.parametrize(
-    "mock_device_code",
-    [k for k, v in DEVICE_MOCKS.items() if Platform.LIGHT in v],
-)
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.LIGHT])
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: ManagerCompat,
     mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
+    mock_devices: list[CustomerDevice],
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test platform setup and discovery."""
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    [k for k, v in DEVICE_MOCKS.items() if Platform.LIGHT not in v],
-)
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.LIGHT])
-async def test_platform_setup_no_discovery(
-    hass: HomeAssistant,
-    mock_manager: ManagerCompat,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test platform setup without discovery."""
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    assert not er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
-    )
-
-
-@pytest.mark.parametrize(
-    "mock_device_code",
     ["dj_mki13ie507rlry4r"],
+)
+@pytest.mark.parametrize(
+    ("turn_on_input", "expected_commands"),
+    [
+        (
+            {
+                "white": True,
+            },
+            [
+                {"code": "switch_led", "value": True},
+                {"code": "work_mode", "value": "white"},
+                {"code": "bright_value_v2", "value": 546},
+            ],
+        ),
+        (
+            {
+                "brightness": 150,
+            },
+            [
+                {"code": "switch_led", "value": True},
+                {"code": "bright_value_v2", "value": 592},
+            ],
+        ),
+        (
+            {
+                "white": True,
+                "brightness": 150,
+            },
+            [
+                {"code": "switch_led", "value": True},
+                {"code": "work_mode", "value": "white"},
+                {"code": "bright_value_v2", "value": 592},
+            ],
+        ),
+        (
+            {
+                "white": 150,
+            },
+            [
+                {"code": "switch_led", "value": True},
+                {"code": "work_mode", "value": "white"},
+                {"code": "bright_value_v2", "value": 592},
+            ],
+        ),
+    ],
 )
 async def test_turn_on_white(
     hass: HomeAssistant,
     mock_manager: ManagerCompat,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
+    turn_on_input: dict[str, Any],
+    expected_commands: list[dict[str, Any]],
 ) -> None:
     """Test turn_on service."""
     entity_id = "light.garage_light"
@@ -83,16 +107,13 @@ async def test_turn_on_white(
         SERVICE_TURN_ON,
         {
             "entity_id": entity_id,
-            "white": 150,
+            **turn_on_input,
         },
     )
     await hass.async_block_till_done()
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id,
-        [
-            {"code": "switch_led", "value": True},
-            {"code": "work_mode", "value": "white"},
-        ],
+        expected_commands,
     )
 
 
