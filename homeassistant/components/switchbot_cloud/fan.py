@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudData
-from .const import DOMAIN
+from .const import AFTER_COMMAND_REFRESH, DOMAIN
 from .entity import SwitchBotCloudEntity
 
 
@@ -88,13 +88,13 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
                 command=BatteryCirculatorFanCommands.SET_WIND_SPEED,
                 parameters=str(self.percentage),
             )
-        await asyncio.sleep(5)
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         await self.send_api_command(CommonCommands.OFF)
-        await asyncio.sleep(5)
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
     async def async_set_percentage(self, percentage: int) -> None:
@@ -107,7 +107,7 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
             command=BatteryCirculatorFanCommands.SET_WIND_SPEED,
             parameters=str(percentage),
         )
-        await asyncio.sleep(5)
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -116,5 +116,5 @@ class SwitchBotCloudFan(SwitchBotCloudEntity, FanEntity):
             command=BatteryCirculatorFanCommands.SET_WIND_MODE,
             parameters=preset_mode,
         )
-        await asyncio.sleep(5)
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
