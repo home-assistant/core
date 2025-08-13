@@ -5,23 +5,20 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 import aiohttp
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import CONF_API_KEY, CONF_URL, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-from homeassistant.util.dt import utcnow
-
-from tests.common import async_fire_time_changed
 
 
-@pytest.mark.asyncio
 async def test_setup_valid_config(hass: HomeAssistant) -> None:
     """Test setting up the emoncms_history component with valid configuration."""
     config = {
         "emoncms_history": {
-            "api_key": "dummy",
-            "url": "https://emoncms.example",
+            CONF_API_KEY: "dummy",
+            CONF_URL: "https://emoncms.example",
             "inputnode": 42,
             "whitelist": ["sensor.temp"],
         }
@@ -34,7 +31,6 @@ async def test_setup_valid_config(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-@pytest.mark.asyncio
 async def test_setup_missing_config(hass: HomeAssistant) -> None:
     """Test setting up the emoncms_history component with missing configuration."""
     config = {"emoncms_history": {"api_key": "dummy"}}
@@ -53,9 +49,11 @@ async def emoncms_client() -> AsyncGenerator[AsyncMock]:
         yield client
 
 
-@pytest.mark.asyncio
 async def test_emoncms_send_data(
-    hass: HomeAssistant, emoncms_client: AsyncMock, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    emoncms_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sending data to Emoncms with and without success."""
 
@@ -75,15 +73,23 @@ async def test_emoncms_send_data(
         hass.states.async_set("sensor.temp", state, {"unit_of_measurement": "°C"})
         await hass.async_block_till_done()
 
-        async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
+        freezer.tick(timedelta(seconds=60))
         await hass.async_block_till_done()
 
         assert emoncms_client.async_input_post.call_args is None
 
+    hass.states.async_set("sensor.temp", "not_a_number", {"unit_of_measurement": "°C"})
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=60))
+    await hass.async_block_till_done()
+
+    emoncms_client.async_input_post.assert_not_called()
+
     hass.states.async_set("sensor.temp", "23.4", {"unit_of_measurement": "°C"})
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
+    freezer.tick(timedelta(seconds=60))
     await hass.async_block_till_done()
 
     emoncms_client.async_input_post.assert_called_once()
@@ -98,7 +104,7 @@ async def test_emoncms_send_data(
     )
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
+    freezer.tick(timedelta(seconds=60))
     await hass.async_block_till_done()
 
     assert any(
@@ -110,7 +116,7 @@ async def test_emoncms_send_data(
 
     await hass.async_block_till_done()
 
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=60))
+    freezer.tick(timedelta(seconds=60))
     await hass.async_block_till_done()
 
     assert any(

@@ -65,11 +65,12 @@ async def async_send_to_emoncms(
     if payload_dict:
         try:
             await emoncms_client.async_input_post(data=payload_dict, node=node)
-            _LOGGER.debug("Sent data to Emoncms: %s", payload_dict)
         except (aiohttp.ClientError, TimeoutError) as err:
             _LOGGER.warning("Network error when sending data to Emoncms: %s", err)
         except ValueError as err:
             _LOGGER.warning("Value error when preparing data for Emoncms: %s", err)
+        else:
+            _LOGGER.debug("Sent data to Emoncms: %s", payload_dict)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
