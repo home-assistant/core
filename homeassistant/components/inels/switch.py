@@ -7,9 +7,11 @@ from dataclasses import dataclass
 from typing import Any
 
 from inelsmqtt.devices import Device
+from inelsmqtt.utils.common import Bit, Relay, SimpleRelay
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import InelsConfigEntry
@@ -20,11 +22,8 @@ from .entity import InelsBaseEntity
 class InelsSwitchEntityDescription(SwitchEntityDescription):
     """Class describing iNELS switch entities."""
 
-    value_fn: Callable[[Device, int], bool | None]
-    set_fn: Callable[[Device, int, bool], None]
-    get_state_fn: Callable[[Device, int], Any]
-    get_last_state_fn: Callable[[Device, int], Any]
-    alerts: list[tuple[str, str]] | None = None
+    get_state_fn: Callable[[Device, int], Bit | SimpleRelay | Relay]
+    alerts: list[str] | None = None
     placeholder_fn: Callable[[Device, int, bool], dict[str, str]]
 
 
@@ -32,12 +31,7 @@ SWITCH_TYPES = [
     InelsSwitchEntityDescription(
         key="bit",
         translation_key="bit",
-        value_fn=lambda device, index: device.state.bit[index].is_on,
-        set_fn=lambda device, index, value: setattr(
-            device.state.bit[index], "is_on", value
-        ),
         get_state_fn=lambda device, index: device.state.bit[index],
-        get_last_state_fn=lambda device, index: device.last_values.ha_value.bit[index],
         placeholder_fn=lambda device, index, indexed: {
             "addr": f" {device.state.bit[index].addr}"
         },
@@ -45,14 +39,7 @@ SWITCH_TYPES = [
     InelsSwitchEntityDescription(
         key="simple_relay",
         translation_key="simple_relay",
-        value_fn=lambda device, index: device.state.simple_relay[index].is_on,
-        set_fn=lambda device, index, value: setattr(
-            device.state.simple_relay[index], "is_on", value
-        ),
         get_state_fn=lambda device, index: device.state.simple_relay[index],
-        get_last_state_fn=(
-            lambda device, index: device.last_values.ha_value.simple_relay[index]
-        ),
         placeholder_fn=lambda device, index, indexed: {
             "index": f" {index + 1}" if indexed else ""
         },
@@ -60,15 +47,8 @@ SWITCH_TYPES = [
     InelsSwitchEntityDescription(
         key="relay",
         translation_key="relay",
-        value_fn=lambda device, index: device.state.relay[index].is_on,
-        set_fn=lambda device, index, value: setattr(
-            device.state.relay[index], "is_on", value
-        ),
         get_state_fn=lambda device, index: device.state.relay[index],
-        get_last_state_fn=(
-            lambda device, index: device.last_values.ha_value.relay[index]
-        ),
-        alerts=[("overflow", "Relay overflow in %s of %s")],
+        alerts=["overflow"],
         placeholder_fn=lambda device, index, indexed: {
             "index": f" {index + 1}" if indexed else ""
         },
@@ -128,36 +108,34 @@ class InelsSwitch(InelsBaseEntity, SwitchEntity):
             self._device, self._index, self._switch_count > 1
         )
 
-    @property
-    def available(self) -> bool:
-        """Return entity availability."""
-        if not self.entity_description.alerts:
-            return super().available
-
-        current_value = self.entity_description.get_state_fn(self._device, self._index)
-        return (
-            not any(
-                getattr(current_value, alert_key, None)
-                for alert_key, _ in self.entity_description.alerts
-            )
-            and super().available
-        )
+    def _check_alerts(self, current_state: Bit | SimpleRelay | Relay) -> None:
+        """Check if there are active alerts and raise ServiceValidationError if found."""
+        if self.entity_description.alerts and any(
+            getattr(current_state, alert_key, None)
+            for alert_key in self.entity_description.alerts
+        ):
+            raise ServiceValidationError("Cannot operate switch with active alerts")
 
     @property
     def is_on(self) -> bool | None:
         """Return if switch is on."""
-        return self.entity_description.value_fn(self._device, self._index)
+        current_state = self.entity_description.get_state_fn(self._device, self._index)
+        return current_state.is_on  # type: ignore[no-any-return] # dataclasses properly typed, mypy limitation
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
-        self.entity_description.set_fn(self._device, self._index, False)
+        current_state = self.entity_description.get_state_fn(self._device, self._index)
+        self._check_alerts(current_state)
+        current_state.is_on = False
         await self.hass.async_add_executor_job(
             self._device.set_ha_value, self._device.state
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the switch to turn on."""
-        self.entity_description.set_fn(self._device, self._index, True)
+        current_state = self.entity_description.get_state_fn(self._device, self._index)
+        self._check_alerts(current_state)
+        current_state.is_on = True
         await self.hass.async_add_executor_job(
             self._device.set_ha_value, self._device.state
         )
