@@ -84,7 +84,7 @@ class MetWeatherData:
         time_zone = dt_util.get_default_time_zone()
         self.daily_forecast = self._weather_data.get_forecast(time_zone, False, 0)
         self.hourly_forecast = self._weather_data.get_forecast(
-            time_zone, True, range_stop=48
+            time_zone, True, range_stop=49
         )
         return self
 
