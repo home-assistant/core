@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
+    UnitOfApparentPower,
     UnitOfArea,
     UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
@@ -379,6 +380,20 @@ class MassConverter(BaseUnitConverter):
         UnitOfMass.OUNCES,
         UnitOfMass.POUNDS,
         UnitOfMass.STONES,
+    }
+
+
+class ApparentPowerConverter(BaseUnitConverter):
+    """Utility to convert apparent power values."""
+
+    UNIT_CLASS = "apparent_power"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfApparentPower.MILLIVOLT_AMPERE: 1 * 1000,
+        UnitOfApparentPower.VOLT_AMPERE: 1,
+    }
+    VALID_UNITS = {
+        UnitOfApparentPower.MILLIVOLT_AMPERE,
+        UnitOfApparentPower.VOLT_AMPERE,
     }
 
 

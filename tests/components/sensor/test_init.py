@@ -2958,7 +2958,6 @@ def test_device_class_units_are_complete() -> None:
 def test_device_class_converters_are_complete() -> None:
     """Test that the device class converters enum is complete."""
     no_converter_device_classes = {
-        SensorDeviceClass.APPARENT_POWER,
         SensorDeviceClass.AQI,
         SensorDeviceClass.BATTERY,
         SensorDeviceClass.CO,
