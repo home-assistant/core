@@ -71,6 +71,7 @@ from .validators import check_config
 
 DATA_MODBUS_HUBS: HassKey[dict[str, ModbusHub]] = HassKey(DOMAIN)
 
+PRIMARY_RECONNECT_DELAY = 60
 
 ConfEntry = namedtuple("ConfEntry", "call_type attr func_name value_attr_name")  # noqa: PYI024
 RunEntry = namedtuple("RunEntry", "attr func value_attr_name")  # noqa: PYI024
@@ -311,18 +312,21 @@ class ModbusHub:
 
     async def async_pb_connect(self) -> None:
         """Connect to device, async."""
-        async with self._lock:
-            try:
-                await self._client.connect()  # type: ignore[union-attr]
-            except ModbusException as exception_error:
-                self._log_error(
-                    f"{self.name} connect failed, please check your configuration ({exception_error!s})"
-                )
-                return
-            message = f"modbus {self.name} communication open"
-            _LOGGER.info(message)
+        while True:
+            async with self._lock:
+                try:
+                    if await self._client.connect():  # type: ignore[union-attr]
+                        _LOGGER.info(f"modbus {self.name} communication open")
+                        break
+                except ModbusException as exception_error:
+                    self._log_error(
+                        f"{self.name} connect failed, please check your configuration ({exception_error!s})"
+                    )
+            _LOGGER.info(
+                f"modbus {self.name} connect NOT a success ! retrying in {PRIMARY_RECONNECT_DELAY} seconds"
+            )
+            await asyncio.sleep(PRIMARY_RECONNECT_DELAY)
 
-        # Start counting down to allow modbus requests.
         if self.config_delay:
             await asyncio.sleep(self.config_delay)
         self.config_delay = 0
