@@ -7,7 +7,7 @@ from inelsmqtt.devices import Device
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN
 
 
 class InelsBaseEntity(Entity):
@@ -24,27 +24,28 @@ class InelsBaseEntity(Entity):
     ) -> None:
         """Init base entity."""
         self._device = device
-        self._device_id = self._device.unique_id
-        self._parent_id = self._device.parent_id
+        self._device_id = device.unique_id
+        self._parent_id = device.parent_id
         self._attr_unique_id = self._device_id
 
         self._key = key
         self._index = index
 
-        info = self._device.info()
+        info = device.info()
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._device.unique_id)},
+            identifiers={(DOMAIN, device.unique_id)},
             manufacturer=info.manufacturer,
             model=info.model_number,
-            name=self._device.title,
+            name=device.title,
             sw_version=info.sw_version,
             via_device=(DOMAIN, self._parent_id),
         )
 
-        self._device.add_ha_callback(self.key, self.index, self._callback)
-
     async def async_added_to_hass(self) -> None:
         """Add subscription of the data listener."""
+        # Register the HA callback
+        self._device.add_ha_callback(self.key, self.index, self._callback)
+        # Subscribe to MQTT updates
         self._device.mqtt.subscribe_listener(
             self._device.state_topic, self._device.unique_id, self._device.callback
         )
@@ -52,15 +53,7 @@ class InelsBaseEntity(Entity):
     def _callback(self) -> None:
         """Get data from broker into the HA."""
         if hasattr(self, "hass"):
-            try:
-                self.schedule_update_ha_state()
-            except Exception as e:  # noqa: BLE001
-                LOGGER.error(
-                    "Error scheduling HA state update for DT_%s, %s, %s",
-                    self._device.device_class,
-                    self._device.info_serialized(),
-                    e,
-                )
+            self.schedule_update_ha_state()
 
     @property
     def available(self) -> bool:

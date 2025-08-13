@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/inels",
   "iot_class": "local_push",
   "quality_scale": "bronze",
-  "requirements": ["elkoep-mqtt==0.2.33b22"]
+  "requirements": ["elkoep-mqtt==0.2.33b30"]
 }
