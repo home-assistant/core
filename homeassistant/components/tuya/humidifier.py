@@ -24,29 +24,29 @@ from .models import IntegerTypeData
 from .util import ActionDPCodeNotFoundError, get_dpcode
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True)
 class TuyaHumidifierEntityDescription(HumidifierEntityDescription):
     """Describe an Tuya (de)humidifier entity."""
 
     # DPCode, to use. If None, the key will be used as DPCode
     dpcode: DPCode | tuple[DPCode, ...] | None = None
 
-    current_humidity: DPCode
-    humidity: DPCode
+    current_humidity: DPCode | None = None
+    humidity: DPCode | None = None
 
 
 def _has_a_valid_dpcode(
     device: CustomerDevice, description: TuyaHumidifierEntityDescription
 ) -> bool:
     """Check if the device has at least one valid DP code."""
-    codes_to_check = (
+    properties_to_check: list[DPCode | tuple[DPCode, ...] | None] = [
         # Main control switch
-        *(description.dpcode or (DPCode(description.key),)),
+        description.dpcode or DPCode(description.key),
         # Other humidity properties
         description.current_humidity,
         description.humidity,
-    )
-    return any(get_dpcode(device, code) for code in codes_to_check)
+    ]
+    return any(get_dpcode(device, code) for code in properties_to_check)
 
 
 HUMIDIFIERS: dict[str, TuyaHumidifierEntityDescription] = {
