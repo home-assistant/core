@@ -709,6 +709,12 @@ _CONVERTED_VALUE: dict[
             0.01,
             UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         ),
+        (
+            10,
+            UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE,
+            0.00001,
+            UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
+        ),
     ],
     SpeedConverter: [
         # 5 km/h / 1.609 km/mi = 3.10686 mi/h
