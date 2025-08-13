@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_SOURCE,
     CONF_URL,
+    Platform,
 )
 from homeassistant.core import (
     HomeAssistant,
@@ -292,6 +293,8 @@ MODULES: dict[str, ModuleType] = {
     PLATFORM_WEBHOOKS: webhooks,
 }
 
+PLATFORMS: list[Platform] = [Platform.NOTIFY]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telegram bot component."""
@@ -478,15 +481,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
     )
     entry.runtime_data = notify_service
 
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 
 
 async def update_listener(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> None:
-    """Handle options update."""
+    """Handle config changes."""
     entry.runtime_data.parse_mode = entry.options[ATTR_PARSER]
     entry.runtime_data.allow_any_reply = entry.options.get(CONF_ALLOW_ANY_REPLY, False)
+
+    # reload entities
+    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
 async def async_unload_entry(
@@ -496,4 +505,5 @@ async def async_unload_entry(
     # broadcast platform has no app
     if entry.runtime_data.app:
         await entry.runtime_data.app.shutdown()
-    return True
+
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
