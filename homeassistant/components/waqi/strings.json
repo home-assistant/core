@@ -3,19 +3,10 @@
     "step": {
       "user": {
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "method": "How do you want to select a measuring station?"
-        }
-      },
-      "map": {
-        "description": "Select a location to get the closest measuring station.",
-        "data": {
-          "location": "[%key:common::config_flow::data::location%]"
-        }
-      },
-      "station_number": {
-        "data": {
-          "station_number": "Measuring station number"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "API key for the World Air Quality Index"
         }
       }
     },
@@ -25,15 +16,44 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   },
-  "selector": {
-    "method": {
-      "options": {
-        "map": "Select nearest from point on the map",
-        "station_number": "Enter a station number"
-      }
+  "config_subentries": {
+    "station": {
+      "step": {
+        "user": {
+          "title": "Add measuring station",
+          "description": "How do you want to select a measuring station?",
+          "menu_options": {
+            "map": "[%key:common::config_flow::data::location%]",
+            "station_number": "Measuring station number"
+          }
+        },
+        "map": {
+          "data": {
+            "location": "[%key:common::config_flow::data::location%]"
+          },
+          "data_description": {
+            "location": "The location to get the nearest measuring station from"
+          }
+        },
+        "station_number": {
+          "data": {
+            "station_number": "[%key:component::waqi::config_subentries::station::step::user::menu_options::station_number%]"
+          },
+          "data_description": {
+            "station_number": "The number of the measuring station"
+          }
+        }
+      },
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      },
+      "initiate_flow": {
+        "user": "Add measuring station"
+      },
+      "entry_type": "Measuring station"
     }
   },
   "entity": {
