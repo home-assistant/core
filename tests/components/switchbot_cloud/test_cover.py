@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+import pytest
 from switchbot_api import (
     BlindTiltCommands,
     CommonCommands,
@@ -52,8 +53,15 @@ async def test_cover_set_attributes_normal(
     assert state.state == STATE_CLOSED
 
 
+@pytest.mark.parametrize(
+    "device_model",
+    [
+        "Roller Shade",
+        "Blind Tilt",
+    ],
+)
 async def test_cover_set_attributes_position_is_none(
-    hass: HomeAssistant, mock_list_devices, mock_get_status
+    hass: HomeAssistant, mock_list_devices, mock_get_status, device_model
 ) -> None:
     """Test cover_set_attributes position is none."""
     mock_list_devices.return_value = [
@@ -61,7 +69,7 @@ async def test_cover_set_attributes_position_is_none(
             version="V1.0",
             deviceId="cover-id-1",
             deviceName="cover-1",
-            deviceType="Roller Shade",
+            deviceType=device_model,
             hubDeviceId="test-hub-id",
         ),
     ]
@@ -73,29 +81,15 @@ async def test_cover_set_attributes_position_is_none(
     assert state.state == STATE_UNKNOWN
 
 
-async def test_cover_set_attributes_position_is_none_for_blind_tilt(
-    hass: HomeAssistant, mock_list_devices, mock_get_status
-) -> None:
-    """Test cover set_attributes position is none for blind_tilt."""
-    mock_list_devices.return_value = [
-        Device(
-            version="V1.0",
-            deviceId="cover-id-1",
-            deviceName="cover-1",
-            deviceType="Blind Tilt",
-            hubDeviceId="test-hub-id",
-        ),
-    ]
-
-    cover_id = "cover.cover_1"
-    mock_get_status.side_effect = [{"direction": "up"}, {"direction": "up"}]
-    await configure_integration(hass)
-    state = hass.states.get(cover_id)
-    assert state.state == STATE_UNKNOWN
-
-
+@pytest.mark.parametrize(
+    "device_model",
+    [
+        "Roller Shade",
+        "Blind Tilt",
+    ],
+)
 async def test_cover_set_attributes_coordinator_is_none(
-    hass: HomeAssistant, mock_list_devices, mock_get_status
+    hass: HomeAssistant, mock_list_devices, mock_get_status, device_model
 ) -> None:
     """Test cover set_attributes coordinator is none."""
     mock_list_devices.return_value = [
@@ -103,28 +97,7 @@ async def test_cover_set_attributes_coordinator_is_none(
             version="V1.0",
             deviceId="cover-id-1",
             deviceName="cover-1",
-            deviceType="Roller Shade",
-            hubDeviceId="test-hub-id",
-        ),
-    ]
-
-    cover_id = "cover.cover_1"
-    mock_get_status.return_value = None
-    await configure_integration(hass)
-    state = hass.states.get(cover_id)
-    assert state.state == STATE_UNKNOWN
-
-
-async def test_cover_set_attributes_coordinator_is_none_blind_tilt(
-    hass: HomeAssistant, mock_list_devices, mock_get_status
-) -> None:
-    """Test cover set attributes_coordinator is none blind_tilt."""
-    mock_list_devices.return_value = [
-        Device(
-            version="V1.0",
-            deviceId="cover-id-1",
-            deviceName="cover-1",
-            deviceType="Blind Tilt",
+            deviceType=device_model,
             hubDeviceId="test-hub-id",
         ),
     ]
