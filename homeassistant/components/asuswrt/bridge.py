@@ -109,7 +109,9 @@ class AsusWrtBridge(ABC):
     ) -> AsusWrtBridge:
         """Get Bridge instance."""
         if conf[CONF_PROTOCOL] in (PROTOCOL_HTTPS, PROTOCOL_HTTP):
-            session = async_get_clientsession(hass)
+            session = async_get_clientsession(
+                hass, verify_ssl=conf[CONF_PROTOCOL] != PROTOCOL_HTTPS
+            )
             return AsusWrtHttpBridge(conf, session)
         return AsusWrtLegacyBridge(conf, options)
 
