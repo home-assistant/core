@@ -15,6 +15,7 @@
           "lock": "Lock group",
           "media_player": "Media player group",
           "notify": "Notify group",
+          "number": "Numerical group",
           "sensor": "Sensor group",
           "switch": "Switch group"
         }
@@ -93,6 +94,23 @@
           "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
           "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
           "name": "[%key:common::config_flow::data::name%]"
+        }
+      },
+      "number": {
+        "title": "[%key:component::group::config::step::user::title%]",
+        "data": {
+          "ignore_non_numeric": "Ignore non-numeric",
+          "entities": "[%key:component::group::config::step::binary_sensor::data::entities%]",
+          "hide_members": "[%key:component::group::config::step::binary_sensor::data::hide_members%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "type": "Type",
+          "round_digits": "Round value to number of decimals",
+          "device_class": "Device class",
+          "state_class": "State class",
+          "unit_of_measurement": "Unit of measurement"
+        },
+        "data_description": {
+          "ignore_non_numeric": "If enabled, the group's state is calculated if at least one member has a numerical value. If disabled, the group's state is calculated only if all group members have numerical values."
         }
       },
       "sensor": {
