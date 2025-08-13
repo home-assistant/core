@@ -153,7 +153,6 @@ class HassFoscamCamera(FoscamEntity, Camera):
         """Return the stream source."""
         if self._rtsp_port:
             return f"rtsp://{self._username}:{self._password}@{self._foscam_session.host}:{self._rtsp_port}/video{self._stream}"
-
         return None
 
     def enable_motion_detection(self) -> None:
