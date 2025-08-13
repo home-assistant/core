@@ -1,4 +1,4 @@
-"""Support for the Switchbot Bot as a Cover."""
+"""Support for the Switchbot BlindTilt, Curtain, Curtain3, RollerShade as Cover."""
 
 import asyncio
 from typing import Any
@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudData, SwitchBotCoordinator
-from .const import DOMAIN
+from .const import COVER_ENTITY_AFTER_COMMAND_REFRESH, DOMAIN
 from .entity import SwitchBotCloudEntity
 
 
@@ -71,13 +71,13 @@ class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.send_api_command(CommonCommands.ON)
-        await asyncio.sleep(10)
+        await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.send_api_command(CommonCommands.OFF)
-        await asyncio.sleep(10)
+        await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
@@ -110,7 +110,7 @@ class SwitchBotCloudCoverRollerShade(SwitchBotCloudCover):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.send_api_command(RollerShadeCommands.SET_POSITION, parameters=str(0))
-        await asyncio.sleep(10)
+        await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
@@ -118,7 +118,7 @@ class SwitchBotCloudCoverRollerShade(SwitchBotCloudCover):
         await self.send_api_command(
             RollerShadeCommands.SET_POSITION, parameters=str(100)
         )
-        await asyncio.sleep(10)
+        await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
@@ -167,13 +167,13 @@ class SwitchBotCloudCoverBlindTilt(SwitchBotCloudCover):
                 BlindTiltCommands.SET_POSITION,
                 parameters=f"{self._attr_direction};{percent}",
             )
-            await asyncio.sleep(10)
+            await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
             await self.coordinator.async_request_refresh()
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.send_api_command(BlindTiltCommands.FULLY_OPEN)
-        await asyncio.sleep(10)
+        await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
@@ -183,7 +183,7 @@ class SwitchBotCloudCoverBlindTilt(SwitchBotCloudCover):
                 await self.send_api_command(BlindTiltCommands.CLOSE_UP)
             else:
                 await self.send_api_command(BlindTiltCommands.CLOSE_DOWN)
-            await asyncio.sleep(10)
+            await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
             await self.coordinator.async_request_refresh()
 
 
@@ -204,13 +204,13 @@ class SwitchBotCloudCoverGarageDoorOpener(SwitchBotCloudCover):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.send_api_command(CommonCommands.ON)
-        await asyncio.sleep(1)
+        await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.send_api_command(CommonCommands.OFF)
-        await asyncio.sleep(1)
+        await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
 
