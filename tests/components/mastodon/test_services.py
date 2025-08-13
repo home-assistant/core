@@ -6,7 +6,6 @@ from mastodon.Mastodon import MastodonAPIError, MediaAttachment
 import pytest
 
 from homeassistant.components.mastodon.const import (
-    ATTR_CONFIG_ENTRY_ID,
     ATTR_CONTENT_WARNING,
     ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
@@ -15,6 +14,7 @@ from homeassistant.components.mastodon.const import (
     DOMAIN,
 )
 from homeassistant.components.mastodon.services import SERVICE_POST
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 

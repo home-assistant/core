@@ -721,10 +721,10 @@ async def test_subscribe_conditions(
 ) -> None:
     """Test condition_platforms/subscribe command."""
     sun_condition_descriptions = """
-        sun: {}
+        _: {}
         """
     device_automation_condition_descriptions = """
-        device: {}
+        _device: {}
         """
 
     def _load_yaml(fname, secrets=None):
@@ -806,10 +806,10 @@ async def test_subscribe_triggers(
 ) -> None:
     """Test trigger_platforms/subscribe command."""
     sun_trigger_descriptions = """
-        sun: {}
+        _: {}
         """
     tag_trigger_descriptions = """
-        tag: {}
+        _: {}
         """
 
     def _load_yaml(fname, secrets=None):
@@ -2738,10 +2738,7 @@ async def test_validate_config_works(
                 "entity_id": "hello.world",
                 "state": "paulus",
             },
-            (
-                "Invalid condition \"non_existing\" specified {'condition': "
-                "'non_existing', 'entity_id': 'hello.world', 'state': 'paulus'}"
-            ),
+            'Invalid condition "non_existing" specified',
         ),
         # Raises HomeAssistantError
         (

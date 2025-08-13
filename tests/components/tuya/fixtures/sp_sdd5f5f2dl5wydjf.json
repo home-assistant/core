@@ -1,0 +1,381 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "C9",
+  "category": "sp",
+  "product_id": "sdd5f5f2dl5wydjf",
+  "product_name": "Security Camera",
+  "online": true,
+  "sub": false,
+  "time_zone": "+11:00",
+  "active_time": "2025-03-13T07:28:30+00:00",
+  "create_time": "2025-03-13T07:28:30+00:00",
+  "update_time": "2025-03-13T07:28:30+00:00",
+  "function": {
+    "basic_flip": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "basic_osd": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "motion_sensitivity": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2"]
+      }
+    },
+    "basic_wdr": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "sd_format": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "motion_record": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "ptz_stop": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "ptz_control": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2", "3", "4", "5", "6", "7"]
+      }
+    },
+    "ipc_auto_siren": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "nightvision_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["auto", "ir_mode", "color_mode"]
+      }
+    },
+    "ptz_calibration": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "motion_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "wireless_lowpower": {
+      "type": "Integer",
+      "value": {
+        "min": 10,
+        "max": 50,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "wireless_awake": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "record_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "record_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["1", "2"]
+      }
+    },
+    "pir_switch": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2", "3", "4"]
+      }
+    },
+    "siren_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "basic_device_volume": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 1,
+        "max": 10,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "motion_tracking": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "device_restart": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "humanoid_filter": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "cruise_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "cruise_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1"]
+      }
+    },
+    "ipc_work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1"]
+      }
+    }
+  },
+  "status_range": {
+    "basic_flip": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "basic_osd": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "motion_sensitivity": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2"]
+      }
+    },
+    "basic_wdr": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "sd_storge": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "sd_status": {
+      "type": "Integer",
+      "value": {
+        "min": 1,
+        "max": 5,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "sd_format": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "motion_record": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "movement_detect_pic": {
+      "type": "Raw",
+      "value": {}
+    },
+    "ptz_stop": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "sd_format_state": {
+      "type": "Integer",
+      "value": {
+        "min": -20000,
+        "max": 200000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "ptz_control": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2", "3", "4", "5", "6", "7"]
+      }
+    },
+    "ipc_auto_siren": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "nightvision_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["auto", "ir_mode", "color_mode"]
+      }
+    },
+    "battery_report_cap": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 15,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "ptz_calibration": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "motion_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "doorbell_active": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "wireless_electricity": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "wireless_powermode": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1"]
+      }
+    },
+    "wireless_lowpower": {
+      "type": "Integer",
+      "value": {
+        "min": 10,
+        "max": 50,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "wireless_awake": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "record_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "record_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["1", "2"]
+      }
+    },
+    "pir_switch": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2", "3", "4"]
+      }
+    },
+    "doorbell_pic": {
+      "type": "Raw",
+      "value": {}
+    },
+    "siren_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "basic_device_volume": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 1,
+        "max": 10,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "motion_tracking": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "device_restart": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "humanoid_filter": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "cruise_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "cruise_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1"]
+      }
+    },
+    "alarm_message": {
+      "type": "String",
+      "value": {}
+    },
+    "ipc_work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1"]
+      }
+    },
+    "initiative_message": {
+      "type": "Raw",
+      "value": {}
+    }
+  },
+  "status": {
+    "basic_flip": false,
+    "basic_osd": true,
+    "motion_sensitivity": 1,
+    "basic_wdr": false,
+    "sd_storge": "30932992|3407872|27525120",
+    "sd_status": 1,
+    "sd_format": false,
+    "motion_record": false,
+    "movement_detect_pic": "**REDACTED**",
+    "ptz_stop": true,
+    "sd_format_state": 0,
+    "ptz_control": 5,
+    "ipc_auto_siren": false,
+    "nightvision_mode": "auto",
+    "battery_report_cap": 1,
+    "ptz_calibration": false,
+    "motion_switch": true,
+    "doorbell_active": "",
+    "wireless_electricity": 80,
+    "wireless_powermode": 0,
+    "wireless_lowpower": 10,
+    "wireless_awake": false,
+    "record_switch": true,
+    "record_mode": 1,
+    "pir_switch": 2,
+    "doorbell_pic": "",
+    "siren_switch": false,
+    "basic_device_volume": 1,
+    "motion_tracking": true,
+    "device_restart": false,
+    "humanoid_filter": true,
+    "cruise_switch": false,
+    "cruise_mode": 0,
+    "alarm_message": "**REDACTED**",
+    "ipc_work_mode": 0,
+    "initiative_message": ""
+  },
+  "set_up": true,
+  "support_local": false
+}

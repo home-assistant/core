@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import base64
 from functools import partial
 import logging
+import secrets
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 from aioesphomeapi import (
@@ -68,6 +70,7 @@ from .const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_BLUETOOTH_MAC_ADDRESS,
     CONF_DEVICE_NAME,
+    CONF_NOISE_PSK,
     CONF_SUBSCRIBE_LOGS,
     DEFAULT_ALLOW_SERVICE_CALLS,
     DEFAULT_URL,
@@ -78,6 +81,7 @@ from .const import (
 )
 from .dashboard import async_get_dashboard
 from .domain_data import DomainData
+from .encryption_key_storage import async_get_encryption_key_storage
 
 # Import config flow so that it's added to the registry
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
@@ -85,9 +89,7 @@ from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 DEVICE_CONFLICT_ISSUE_FORMAT = "device_conflict-{}"
 
 if TYPE_CHECKING:
-    from aioesphomeapi.api_pb2 import (  # type: ignore[attr-defined]
-        SubscribeLogsResponse,
-    )
+    from aioesphomeapi.api_pb2 import SubscribeLogsResponse  # type: ignore[attr-defined]  # noqa: I001
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -515,6 +517,8 @@ class ESPHomeManager:
         assert api_version is not None, "API version must be set"
         entry_data.async_on_connect(device_info, api_version)
 
+        await self._handle_dynamic_encryption_key(device_info)
+
         if device_info.name:
             reconnect_logic.name = device_info.name
 
@@ -560,11 +564,11 @@ class ESPHomeManager:
             )
             entry_data.loaded_platforms.add(Platform.ASSIST_SATELLITE)
 
-        cli.subscribe_states(entry_data.async_update_state)
-        cli.subscribe_service_calls(self.async_on_service_call)
-        cli.subscribe_home_assistant_states(
-            self.async_on_state_subscription,
-            self.async_on_state_request,
+        cli.subscribe_home_assistant_states_and_services(
+            on_state=entry_data.async_update_state,
+            on_service_call=self.async_on_service_call,
+            on_state_sub=self.async_on_state_subscription,
+            on_state_request=self.async_on_state_request,
         )
 
         entry_data.async_save_to_store()
@@ -618,6 +622,7 @@ class ESPHomeManager:
             ),
         ):
             return
+
         if isinstance(err, InvalidEncryptionKeyAPIError):
             if (
                 (received_name := err.received_name)
@@ -647,6 +652,93 @@ class ESPHomeManager:
                         await self.reconnect_logic.stop()
                     return
         self.entry.async_start_reauth(self.hass)
+
+    async def _handle_dynamic_encryption_key(
+        self, device_info: EsphomeDeviceInfo
+    ) -> None:
+        """Handle dynamic encryption keys.
+
+        If a device reports it supports encryption, but we connected without a key,
+        we need to generate and store one.
+        """
+        noise_psk: str | None = self.entry.data.get(CONF_NOISE_PSK)
+        if noise_psk:
+            # we're already connected with a noise PSK - nothing to do
+            return
+
+        if not device_info.api_encryption_supported:
+            # device does not support encryption - nothing to do
+            return
+
+        # Connected to device without key and the device supports encryption
+        storage = await async_get_encryption_key_storage(self.hass)
+
+        # First check if we have a key in storage for this device
+        from_storage: bool = False
+        if self.entry.unique_id and (
+            stored_key := await storage.async_get_key(self.entry.unique_id)
+        ):
+            _LOGGER.debug(
+                "Retrieved encryption key from storage for device %s",
+                self.entry.unique_id,
+            )
+            # Use the stored key
+            new_key = stored_key.encode()
+            new_key_str = stored_key
+            from_storage = True
+        else:
+            # No stored key found, generate a new one
+            _LOGGER.debug(
+                "Generating new encryption key for device %s", self.entry.unique_id
+            )
+            new_key = base64.b64encode(secrets.token_bytes(32))
+            new_key_str = new_key.decode()
+
+        try:
+            # Store the key on the device using the existing connection
+            result = await self.cli.noise_encryption_set_key(new_key)
+        except APIConnectionError as ex:
+            _LOGGER.error(
+                "Connection error while storing encryption key for device %s (%s): %s",
+                self.entry.data.get(CONF_DEVICE_NAME, self.host),
+                self.entry.unique_id,
+                ex,
+            )
+            return
+        else:
+            if not result:
+                _LOGGER.error(
+                    "Failed to set dynamic encryption key on device %s (%s)",
+                    self.entry.data.get(CONF_DEVICE_NAME, self.host),
+                    self.entry.unique_id,
+                )
+                return
+
+        # Key stored successfully on device
+        assert self.entry.unique_id is not None
+
+        # Only store in storage if it was newly generated
+        if not from_storage:
+            await storage.async_store_key(self.entry.unique_id, new_key_str)
+
+        # Always update config entry
+        self.hass.config_entries.async_update_entry(
+            self.entry,
+            data={**self.entry.data, CONF_NOISE_PSK: new_key_str},
+        )
+
+        if from_storage:
+            _LOGGER.info(
+                "Set encryption key from storage on device %s (%s)",
+                self.entry.data.get(CONF_DEVICE_NAME, self.host),
+                self.entry.unique_id,
+            )
+        else:
+            _LOGGER.info(
+                "Generated and stored encryption key for device %s (%s)",
+                self.entry.data.get(CONF_DEVICE_NAME, self.host),
+                self.entry.unique_id,
+            )
 
     @callback
     def _async_handle_logging_changed(self, _event: Event) -> None:
