@@ -11,7 +11,8 @@
           "stream": "Stream"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Foscam camera."
+          "host": "The hostname or IP address of your Foscam camera.",
+          "rtsp_port": "New model cameras support RTSP ports: 88 and 554; old model cameras support RTSP ports: 88 and 65534."
         }
       }
     },
