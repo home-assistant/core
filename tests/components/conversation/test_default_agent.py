@@ -12,7 +12,7 @@ from syrupy.assertion import SnapshotAssertion
 import yaml
 
 from homeassistant.components import conversation, cover, media_player, weather
-from homeassistant.components.conversation import DOMAIN, default_agent
+from homeassistant.components.conversation import default_agent
 from homeassistant.components.conversation.const import DATA_DEFAULT_ENTITY
 from homeassistant.components.conversation.default_agent import METADATA_CUSTOM_SENTENCE
 from homeassistant.components.conversation.models import ConversationInput
@@ -83,10 +83,12 @@ class OrderBeerIntentHandler(intent.IntentHandler):
 async def init_components(hass: HomeAssistant) -> None:
     """Initialize relevant components with empty configs."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(
-        hass, "conversation", {DOMAIN: {"fuzzy_matching": False}}
-    )
+    assert await async_setup_component(hass, "conversation", {})
     assert await async_setup_component(hass, "intent", {})
+
+    # Disable fuzzy matching by default for tests
+    agent = hass.data[DATA_DEFAULT_ENTITY]
+    agent.fuzzy_matching = False
 
 
 @pytest.mark.parametrize(
@@ -3326,9 +3328,7 @@ async def test_fuzzy_matching(
 ) -> None:
     """Test fuzzy vs. non-fuzzy matching on some English sentences."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(
-        hass, "conversation", {DOMAIN: {"fuzzy_matching": fuzzy_matching}}
-    )
+    assert await async_setup_component(hass, "conversation", {})
     assert await async_setup_component(hass, "intent", {})
     await light_intent.async_setup_intents(hass)
 

@@ -207,10 +207,9 @@ async def async_setup_default_agent(
     hass: core.HomeAssistant,
     entity_component: EntityComponent[ConversationEntity],
     config_intents: dict[str, Any],
-    fuzzy_matching: bool,
 ) -> None:
     """Set up entity registry listener for the default agent."""
-    entity = DefaultAgent(hass, config_intents, fuzzy_matching)
+    entity = DefaultAgent(hass, config_intents)
     await entity_component.async_add_entities([entity])
     hass.data[DATA_DEFAULT_ENTITY] = entity
 
@@ -238,10 +237,7 @@ class DefaultAgent(ConversationEntity):
     _attr_supported_features = ConversationEntityFeature.CONTROL
 
     def __init__(
-        self,
-        hass: core.HomeAssistant,
-        config_intents: dict[str, Any],
-        fuzzy_matching: bool,
+        self, hass: core.HomeAssistant, config_intents: dict[str, Any]
     ) -> None:
         """Initialize the default agent."""
         self.hass = hass
@@ -265,7 +261,7 @@ class DefaultAgent(ConversationEntity):
         self._intent_cache = IntentCache(capacity=128)
 
         # Shared configuration for fuzzy matching
-        self.fuzzy_matching = fuzzy_matching
+        self.fuzzy_matching = True
         self._fuzzy_config: FuzzyConfig | None = None
 
     @property

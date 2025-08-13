@@ -271,10 +271,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     agent_config = config.get(DOMAIN, {})
     await async_setup_default_agent(
-        hass,
-        entity_component,
-        config_intents=agent_config.get("intents", {}),
-        fuzzy_matching=agent_config.get("fuzzy_matching", True),
+        hass, entity_component, config_intents=agent_config.get("intents", {})
     )
 
     async def handle_process(service: ServiceCall) -> ServiceResponse:
