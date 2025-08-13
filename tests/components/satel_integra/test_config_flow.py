@@ -195,7 +195,7 @@ async def test_import_flow_connection_failure(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "Failed to connect"
+    assert result["reason"] == "cannot_connect"
 
 
 @pytest.mark.parametrize(
