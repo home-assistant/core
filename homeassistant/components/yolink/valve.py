@@ -21,6 +21,7 @@ from homeassistant.components.valve import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DEV_MODEL_WATER_METER_YS5007, DOMAIN
@@ -131,6 +132,13 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
     async def _async_invoke_device(self, state: str) -> None:
         """Call setState api to change valve state."""
         if (
+            self.coordinator.device.is_support_mode_switching()
+            and self.coordinator.dev_net_type == ATTR_DEVICE_MODEL_A
+        ):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="valve_inoperable_currently"
+            )
+        if (
             self.coordinator.device.device_type
             == ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER
         ):
@@ -155,10 +163,4 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
     @property
     def available(self) -> bool:
         """Return true is device is available."""
-        if (
-            self.coordinator.device.is_support_mode_switching()
-            and self.coordinator.dev_net_type is not None
-        ):
-            # When the device operates in Class A mode, it cannot be controlled.
-            return self.coordinator.dev_net_type != ATTR_DEVICE_MODEL_A
         return super().available

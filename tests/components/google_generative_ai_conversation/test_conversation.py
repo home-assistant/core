@@ -195,10 +195,13 @@ async def test_function_call(
             "response": {
                 "result": "Test response",
             },
+            "scheduling": None,
+            "will_continue": None,
         },
         "inline_data": None,
         "text": None,
         "thought": None,
+        "thought_signature": None,
         "video_metadata": None,
     }
 
@@ -359,7 +362,7 @@ async def test_empty_response(
     assert result.response.response_type == intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
     assert result.response.as_dict()["speech"]["plain"]["speech"] == (
-        ERROR_GETTING_RESPONSE
+        "Unable to get response"
     )
 
 

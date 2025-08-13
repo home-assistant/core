@@ -13,7 +13,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
-    OptionsFlow,
+    OptionsFlowWithReload,
     SubentryFlowResult,
 )
 from homeassistant.core import callback
@@ -65,7 +65,7 @@ class KitchenSinkConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason="reauth_successful")
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle options."""
 
     async def async_step_init(
@@ -99,7 +99,7 @@ class OptionsFlowHandler(OptionsFlow):
                 ),
             }
         )
-        self.add_suggested_values_to_schema(
+        data_schema = self.add_suggested_values_to_schema(
             data_schema,
             {"section_1": {"int": self.config_entry.options.get(CONF_INT, 10)}},
         )
@@ -146,7 +146,7 @@ class SubentryFlowHandler(ConfigSubentryFlow):
         """Reconfigure a sensor."""
         if user_input is not None:
             title = user_input.pop("name")
-            return self.async_update_and_abort(
+            return self.async_update_reload_and_abort(
                 self._get_entry(),
                 self._get_reconfigure_subentry(),
                 data=user_input,

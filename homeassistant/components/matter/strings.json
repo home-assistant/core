@@ -111,6 +111,9 @@
       },
       "reset_filter_condition": {
         "name": "Reset filter condition"
+      },
+      "self_test_request": {
+        "name": "Self-test"
       }
     },
     "climate": {
@@ -180,6 +183,9 @@
       "altitude": {
         "name": "Altitude above sea level"
       },
+      "cook_time": {
+        "name": "Cook time"
+      },
       "pump_setpoint": {
         "name": "Setpoint"
       },
@@ -221,6 +227,9 @@
       },
       "device_energy_management_mode": {
         "name": "Energy management mode"
+      },
+      "power_level": {
+        "name": "Power level (W)"
       },
       "sensitivity_level": {
         "name": "Sensitivity",
@@ -310,7 +319,7 @@
         "name": "Flow"
       },
       "hepa_filter_condition": {
-        "name": "Hepa filter condition"
+        "name": "HEPA filter condition"
       },
       "operational_state": {
         "name": "Operational state",
