@@ -1,0 +1,89 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "invalid_response": "Invalid response from the device",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "port": "Port",
+                    "rtsp_port": "RTSP port",
+                    "stream": "Stream",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "host": "The hostname or IP address of your Foscam camera.",
+                    "rtsp_port": "New model cameras support RTSP ports: 88 and 554; old model cameras support RTSP ports: 88 and 65534."
+                }
+            }
+        }
+    },
+    "entity": {
+        "switch": {
+            "flip_switch": {
+                "name": "Flip"
+            },
+            "hdr_switch": {
+                "name": "HDR"
+            },
+            "ir_switch": {
+                "name": "Infrared mode"
+            },
+            "mirror_switch": {
+                "name": "Mirror"
+            },
+            "siren_alarm_switch": {
+                "name": "Siren alarm"
+            },
+            "sleep_switch": {
+                "name": "Sleep mode"
+            },
+            "turn_off_light_switch": {
+                "name": "Light"
+            },
+            "turn_off_volume_switch": {
+                "name": "Volume muted"
+            },
+            "wdr_switch": {
+                "name": "WDR"
+            },
+            "white_light_switch": {
+                "name": "White light"
+            }
+        }
+    },
+    "services": {
+        "ptz": {
+            "description": "Moves a Foscam camera to a specified direction.",
+            "fields": {
+                "movement": {
+                    "description": "Direction of the movement.",
+                    "name": "Movement"
+                },
+                "travel_time": {
+                    "description": "Travel time in seconds.",
+                    "name": "Travel time"
+                }
+            },
+            "name": "PTZ"
+        },
+        "ptz_preset": {
+            "description": "Moves a Foscam camera to a predefined position.",
+            "fields": {
+                "preset_name": {
+                    "description": "The name of the preset to move to. Presets can be created from within the official Foscam apps.",
+                    "name": "Preset name"
+                }
+            },
+            "name": "PTZ preset"
+        }
+    }
+}
