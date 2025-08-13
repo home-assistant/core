@@ -1,0 +1,42 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Droplet integration",
+        "description": "Manually enter Droplet's connection details.",
+        "data": {
+          "host": "Hostname",
+          "code": "Pairing code"
+        },
+        "data_description": {
+          "host": "Droplet's IP address",
+          "code": "Code from the Droplet app."
+        }
+      },
+      "confirm": {
+        "title": "Confirm association",
+        "description": "Enter pairing code to connect to {device_name}.",
+        "data": {
+          "code": "Pairing code"
+        },
+        "data_description": {
+          "code": "Code from the Droplet app."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "{device_id} is already configured!"
+    },
+    "error": {
+      "failed_connect": "Failed to connect to Droplet!"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_flow_rate": { "name": "Flow rate" },
+      "server_connectivity": { "name": "Server status" },
+      "signal_quality": { "name": "Signal quality" },
+      "volume": { "name": "Live volume" }
+    }
+  }
+}
