@@ -136,4 +136,5 @@ class ReolinkHostSirenEntity(ReolinkHostCoordinatorEntity, SirenEntity):
         """Turn on the siren."""
         if (volume := kwargs.get(ATTR_VOLUME_LEVEL)) is not None:
             await self._host.api.set_hub_audio(alarm_volume=int(volume * 100))
-        await self._host.api.set_siren()
+        else:
+            await self._host.api.set_siren()
