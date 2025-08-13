@@ -270,18 +270,21 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.DURATION,
             state_class=SensorStateClass.MEASUREMENT,
             entity_registry_enabled_default=False,
+            native_unit_of_measurement=UnitOfTime.SECONDS,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PUMP_TIME,
             translation_key="pump_time",
             device_class=SensorDeviceClass.DURATION,
             state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfTime.MINUTES,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.FILTER_DURATION,
             translation_key="filter_duration",
             device_class=SensorDeviceClass.DURATION,
             state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfTime.MINUTES,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.WATER_TIME,
@@ -289,6 +292,7 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.DURATION,
             state_class=SensorStateClass.MEASUREMENT,
             entity_registry_enabled_default=False,
+            native_unit_of_measurement=UnitOfTime.MINUTES,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.WATER_LEVEL, translation_key="water_level_state"
