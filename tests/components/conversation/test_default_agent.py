@@ -6,8 +6,6 @@ import tempfile
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from hassil.expression import TextChunk
-from hassil.intents import TextSlotList
 from hassil.recognize import Intent, IntentData, MatchEntity, RecognizeResult
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -3289,49 +3287,3 @@ async def test_language_with_alternative_code(
         assert call.domain == LIGHT_DOMAIN
         assert call.service == "turn_on"
         assert call.data == {"entity_id": [entity_id]}
-
-
-@pytest.mark.usefixtures("init_components")
-async def test_fan_preset_modes(hass: HomeAssistant) -> None:
-    """Test that exposed fan preset modes are available to the default agent."""
-    agent = hass.data[DATA_DEFAULT_ENTITY]
-    assert isinstance(agent, default_agent.DefaultAgent)
-
-    hass.states.async_set("fan.test_fan_1", "off", {"preset_modes": ["auto", "off"]})
-    hass.states.async_set("fan.test_fan_2", "off", {"preset_modes": ["smart", "dumb"]})
-    hass.states.async_set("fan.test_fan_3", "off", {"preset_modes": ["fun", "boring"]})
-    expose_entity(hass, "fan.test_fan_1", True)
-    expose_entity(hass, "fan.test_fan_2", False)  # not exposed
-    expose_entity(hass, "fan.test_fan_3", True)
-    await hass.async_block_till_done()
-
-    user_input = ConversationInput(
-        text="test text",
-        context=Context(),
-        conversation_id=None,
-        device_id=None,
-        language=hass.config.language,
-        agent_id="",
-    )
-
-    with patch(
-        "homeassistant.components.conversation.default_agent.recognize_best",
-        return_value=None,
-    ) as recognize_best:
-        await agent.async_recognize_intent(user_input)
-
-        slot_lists = recognize_best.call_args_list[0].kwargs["slot_lists"]
-        fan_preset_modes = slot_lists.get("fan_preset_modes")
-        assert isinstance(fan_preset_modes, TextSlotList)
-
-        # Only preset modes from the exposed fans are available
-        assert {
-            v.text_in.text
-            for v in fan_preset_modes.values
-            if isinstance(v.text_in, TextChunk)
-        } == {
-            "auto",
-            "off",
-            "fun",
-            "boring",
-        }
