@@ -3471,7 +3471,7 @@ class ConfigSubentryFlow(
             data=data,
             data_updates=data_updates,
         )
-        if reload_even_if_entry_is_unchanged or result is True:
+        if reload_even_if_entry_is_unchanged or result:
             if entry.update_listeners:
                 raise ValueError("Cannot update and reload entry with update listeners")
             self.hass.config_entries.async_schedule_reload(entry.entry_id)
