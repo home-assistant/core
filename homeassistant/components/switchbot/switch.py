@@ -87,6 +87,7 @@ class SwitchbotMultiChannelSwitch(SwitchbotSwitchedEntity, SwitchEntity):
 
     _attr_device_class = SwitchDeviceClass.SWITCH
     _device: switchbot.Switchbot
+    _attr_name = None
 
     def __init__(
         self, coordinator: SwitchbotDataUpdateCoordinator, channel: int
@@ -102,24 +103,11 @@ class SwitchbotMultiChannelSwitch(SwitchbotSwitchedEntity, SwitchEntity):
             model="RelaySwitch2PM",
             name=f"{coordinator.device_name} Channel {channel}",
         )
-        self._attr_name = None
-
-    async def async_added_to_hass(self) -> None:
-        """Active acquisition of current and voltage."""
-        await super().async_added_to_hass()
-        await self._device.update()
 
     @property
     def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._device.is_on(self._channel)
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        return {
-            **super().extra_state_attributes,
-        }
 
     @exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -127,7 +115,7 @@ class SwitchbotMultiChannelSwitch(SwitchbotSwitchedEntity, SwitchEntity):
         _LOGGER.debug(
             "Turn Switchbot device on %s, channel %d", self._address, self._channel
         )
-        self._last_run_success = bool(await self._device.turn_on(self._channel))
+        await self._device.turn_on(self._channel)
         self.async_write_ha_state()
 
     @exception_handler
@@ -136,5 +124,5 @@ class SwitchbotMultiChannelSwitch(SwitchbotSwitchedEntity, SwitchEntity):
         _LOGGER.debug(
             "Turn Switchbot device off %s, channel %d", self._address, self._channel
         )
-        self._last_run_success = bool(await self._device.turn_off(self._channel))
+        await self._device.turn_off(self._channel)
         self.async_write_ha_state()

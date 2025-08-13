@@ -169,17 +169,15 @@ class SwitchBotSensor(SwitchbotEntity, SensorEntity):
         self._channel = channel
         self.entity_description = SENSOR_TYPES[sensor]
 
-        if self._channel:
-            self._attr_unique_id = (
-                f"{coordinator.base_unique_id}-{sensor}-{self._channel}"
-            )
+        if channel:
+            self._attr_unique_id = f"{coordinator.base_unique_id}-{sensor}-{channel}"
             self._attr_device_info = DeviceInfo(
                 identifiers={
-                    (DOMAIN, f"{coordinator.base_unique_id}-channel-{self._channel}")
+                    (DOMAIN, f"{coordinator.base_unique_id}-channel-{channel}")
                 },
                 manufacturer="SwitchBot",
-                model="RelaySwitch2PM",
-                name=f"{coordinator.device_name} Channel {self._channel}",
+                model_id="RelaySwitch2PM",
+                name=f"{coordinator.device_name} Channel {channel}",
             )
         else:
             self._attr_unique_id = f"{coordinator.base_unique_id}-{sensor}"
