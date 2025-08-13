@@ -33,6 +33,7 @@ from .light import async_create_preview_light
 from .lock import async_create_preview_lock
 from .media_player import MediaPlayerGroup, async_create_preview_media_player
 from .notify import async_create_preview_notify
+from .number import async_create_preview_number
 from .sensor import async_create_preview_sensor
 from .switch import async_create_preview_switch
 
@@ -156,6 +157,7 @@ GROUP_TYPES = [
     "lock",
     "media_player",
     "notify",
+    "number",
     "sensor",
     "switch",
 ]
