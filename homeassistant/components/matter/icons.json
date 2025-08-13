@@ -17,6 +17,9 @@
       },
       "stop": {
         "default": "mdi:stop"
+      },
+      "self_test_request": {
+        "default": "mdi:refresh-auto"
       }
     },
     "fan": {
@@ -39,6 +42,9 @@
     "select": {
       "laundry_washer_spin_speed": {
         "default": "mdi:reload"
+      },
+      "power_level": {
+        "default": "mdi:power-settings"
       },
       "temperature_level": {
         "default": "mdi:thermometer"
@@ -96,6 +102,9 @@
       "esa_opt_out_state": {
         "default": "mdi:home-lightning-bolt"
       },
+      "esa_state": {
+        "default": "mdi:home-lightning-bolt"
+      },
       "evse_state": {
         "default": "mdi:ev-station"
       },
@@ -113,6 +122,11 @@
       },
       "pump_status": {
         "default": "mdi:pump"
+      }
+    },
+    "number": {
+      "cook_time": {
+        "default": "mdi:microwave"
       }
     },
     "switch": {

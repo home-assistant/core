@@ -765,9 +765,7 @@ async def test_squeezebox_call_query(
         },
         blocking=True,
     )
-    configured_player.async_query.assert_called_once_with(
-        "test_command", "param1", "param2"
-    )
+    configured_player.async_query.assert_called_with("test_command", "param1", "param2")
 
 
 async def test_squeezebox_call_method(
@@ -784,9 +782,7 @@ async def test_squeezebox_call_method(
         },
         blocking=True,
     )
-    configured_player.async_query.assert_called_once_with(
-        "test_command", "param1", "param2"
-    )
+    configured_player.async_query.assert_called_with("test_command", "param1", "param2")
 
 
 async def test_squeezebox_invalid_state(

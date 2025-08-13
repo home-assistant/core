@@ -8,6 +8,7 @@ from operator import attrgetter
 from typing import TYPE_CHECKING, Any
 
 from aioautomower.model import (
+    ExternalReasons,
     InactiveReasons,
     MowerAttributes,
     MowerModes,
@@ -27,7 +28,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import AutomowerConfigEntry
-from .const import ERROR_STATES
+from .const import ERROR_KEYS, ERROR_STATES
 from .coordinator import AutomowerDataUpdateCoordinator
 from .entity import (
     AutomowerBaseEntity,
@@ -41,135 +42,8 @@ PARALLEL_UPDATES = 0
 
 ATTR_WORK_AREA_ID_ASSIGNMENT = "work_area_id_assignment"
 
-ERROR_KEYS = [
-    "alarm_mower_in_motion",
-    "alarm_mower_lifted",
-    "alarm_mower_stopped",
-    "alarm_mower_switched_off",
-    "alarm_mower_tilted",
-    "alarm_outside_geofence",
-    "angular_sensor_problem",
-    "battery_problem",
-    "battery_restriction_due_to_ambient_temperature",
-    "can_error",
-    "charging_current_too_high",
-    "charging_station_blocked",
-    "charging_system_problem",
-    "collision_sensor_defect",
-    "collision_sensor_error",
-    "collision_sensor_problem_front",
-    "collision_sensor_problem_rear",
-    "com_board_not_available",
-    "communication_circuit_board_sw_must_be_updated",
-    "complex_working_area",
-    "connection_changed",
-    "connection_not_changed",
-    "connectivity_problem",
-    "connectivity_settings_restored",
-    "cutting_drive_motor_1_defect",
-    "cutting_drive_motor_2_defect",
-    "cutting_drive_motor_3_defect",
-    "cutting_height_blocked",
-    "cutting_height_problem_curr",
-    "cutting_height_problem_dir",
-    "cutting_height_problem_drive",
-    "cutting_height_problem",
-    "cutting_motor_problem",
-    "cutting_stopped_slope_too_steep",
-    "cutting_system_blocked",
-    "cutting_system_imbalance_warning",
-    "cutting_system_major_imbalance",
-    "destination_not_reachable",
-    "difficult_finding_home",
-    "docking_sensor_defect",
-    "electronic_problem",
-    "empty_battery",
-    "folding_cutting_deck_sensor_defect",
-    "folding_sensor_activated",
-    "geofence_problem",
-    "gps_navigation_problem",
-    "guide_1_not_found",
-    "guide_2_not_found",
-    "guide_3_not_found",
-    "guide_calibration_accomplished",
-    "guide_calibration_failed",
-    "high_charging_power_loss",
-    "high_internal_power_loss",
-    "high_internal_temperature",
-    "internal_voltage_error",
-    "invalid_battery_combination_invalid_combination_of_different_battery_types",
-    "invalid_sub_device_combination",
-    "invalid_system_configuration",
-    "left_brush_motor_overloaded",
-    "lift_sensor_defect",
-    "lifted",
-    "limited_cutting_height_range",
-    "loop_sensor_defect",
-    "loop_sensor_problem_front",
-    "loop_sensor_problem_left",
-    "loop_sensor_problem_rear",
-    "loop_sensor_problem_right",
-    "low_battery",
-    "memory_circuit_problem",
-    "mower_lifted",
-    "mower_tilted",
-    "no_accurate_position_from_satellites",
-    "no_confirmed_position",
-    "no_drive",
-    "no_error",
-    "no_loop_signal",
-    "no_power_in_charging_station",
-    "no_response_from_charger",
-    "outside_working_area",
-    "poor_signal_quality",
-    "reference_station_communication_problem",
-    "right_brush_motor_overloaded",
-    "safety_function_faulty",
-    "settings_restored",
-    "sim_card_locked",
-    "sim_card_not_found",
-    "sim_card_requires_pin",
-    "slipped_mower_has_slipped_situation_not_solved_with_moving_pattern",
-    "slope_too_steep",
-    "sms_could_not_be_sent",
-    "stop_button_problem",
-    "stuck_in_charging_station",
-    "switch_cord_problem",
-    "temporary_battery_problem",
-    "tilt_sensor_problem",
-    "too_high_discharge_current",
-    "too_high_internal_current",
-    "trapped",
-    "ultrasonic_problem",
-    "ultrasonic_sensor_1_defect",
-    "ultrasonic_sensor_2_defect",
-    "ultrasonic_sensor_3_defect",
-    "ultrasonic_sensor_4_defect",
-    "unexpected_cutting_height_adj",
-    "unexpected_error",
-    "upside_down",
-    "weak_gps_signal",
-    "wheel_drive_problem_left",
-    "wheel_drive_problem_rear_left",
-    "wheel_drive_problem_rear_right",
-    "wheel_drive_problem_right",
-    "wheel_motor_blocked_left",
-    "wheel_motor_blocked_rear_left",
-    "wheel_motor_blocked_rear_right",
-    "wheel_motor_blocked_right",
-    "wheel_motor_overloaded_left",
-    "wheel_motor_overloaded_rear_left",
-    "wheel_motor_overloaded_rear_right",
-    "wheel_motor_overloaded_right",
-    "work_area_not_valid",
-    "wrong_loop_signal",
-    "wrong_pin_code",
-    "zone_generator_problem",
-]
-
-
-ERROR_KEY_LIST = list(
-    dict.fromkeys(ERROR_KEYS + [state.lower() for state in ERROR_STATES])
+ERROR_KEY_LIST = sorted(
+    set(ERROR_KEYS) | {state.lower() for state in ERROR_STATES} | {"no_error"}
 )
 
 INACTIVE_REASONS: list = [
@@ -190,9 +64,35 @@ RESTRICTED_REASONS: list = [
     RestrictedReasons.PARK_OVERRIDE,
     RestrictedReasons.SENSOR,
     RestrictedReasons.WEEK_SCHEDULE,
+    ExternalReasons.AMAZON_ALEXA,
+    ExternalReasons.DEVELOPER_PORTAL,
+    ExternalReasons.GARDENA_SMART_SYSTEM,
+    ExternalReasons.GOOGLE_ASSISTANT,
+    ExternalReasons.HOME_ASSISTANT,
+    ExternalReasons.IFTTT,
+    ExternalReasons.IFTTT_APPLETS,
+    ExternalReasons.IFTTT_CALENDAR_CONNECTION,
+    ExternalReasons.SMART_ROUTINE,
+    ExternalReasons.SMART_ROUTINE_FROST_GUARD,
+    ExternalReasons.SMART_ROUTINE_RAIN_GUARD,
+    ExternalReasons.SMART_ROUTINE_WILDLIFE_PROTECTION,
 ]
 
 STATE_NO_WORK_AREA_ACTIVE = "no_work_area_active"
+
+
+@callback
+def _get_restricted_reason(data: MowerAttributes) -> str:
+    """Return the restricted reason.
+
+    If there is an external reason, return that instead, if it's available.
+    """
+    if (
+        data.planner.restricted_reason == RestrictedReasons.EXTERNAL
+        and data.planner.external_reason is not None
+    ):
+        return data.planner.external_reason
+    return data.planner.restricted_reason
 
 
 @callback
@@ -400,7 +300,7 @@ MOWER_SENSOR_TYPES: tuple[AutomowerSensorEntityDescription, ...] = (
         translation_key="restricted_reason",
         device_class=SensorDeviceClass.ENUM,
         option_fn=lambda data: RESTRICTED_REASONS,
-        value_fn=attrgetter("planner.restricted_reason"),
+        value_fn=_get_restricted_reason,
     ),
     AutomowerSensorEntityDescription(
         key="inactive_reason",
