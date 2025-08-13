@@ -1,6 +1,6 @@
 """Test for the switchbot_cloud Cover."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from switchbot_api import (
     BlindTiltCommands,
@@ -157,15 +157,27 @@ async def test_curtain_features(
         {
             "slidePosition": 95,
         },
+        {
+            "slidePosition": 95,
+        },
+        {
+            "slidePosition": 95,
+        },
+        {
+            "slidePosition": 95,
+        },
+        {
+            "slidePosition": 95,
+        },
+        {
+            "slidePosition": 95,
+        },
     ]
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
 
     cover_id = "cover.cover_1"
-    with (
-        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
-        patch("asyncio.sleep", AsyncMock()),
-    ):
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER,
@@ -176,10 +188,7 @@ async def test_curtain_features(
         "cover-id-1", CommonCommands.ON, "command", "default"
     )
 
-    with (
-        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
-        patch("asyncio.sleep", AsyncMock()),
-    ):
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
@@ -190,10 +199,7 @@ async def test_curtain_features(
         "cover-id-1", CommonCommands.OFF, "command", "default"
     )
 
-    with (
-        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
-        patch("asyncio.sleep", AsyncMock()),
-    ):
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_STOP_COVER,
@@ -204,10 +210,7 @@ async def test_curtain_features(
         "cover-id-1", CurtainCommands.PAUSE, "command", "default"
     )
 
-    with (
-        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
-        patch("asyncio.sleep", AsyncMock()),
-    ):
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_SET_COVER_POSITION,
@@ -241,10 +244,7 @@ async def test_blind_tilt_features(
     assert entry.state is ConfigEntryState.LOADED
 
     cover_id = "cover.cover_1"
-    with (
-        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
-        patch("asyncio.sleep", AsyncMock()),
-    ):
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER_TILT,
@@ -255,10 +255,7 @@ async def test_blind_tilt_features(
         "cover-id-1", BlindTiltCommands.FULLY_OPEN, "command", "default"
     )
 
-    with (
-        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
-        patch("asyncio.sleep", AsyncMock()),
-    ):
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER_TILT,
@@ -269,10 +266,7 @@ async def test_blind_tilt_features(
         "cover-id-1", BlindTiltCommands.CLOSE_UP, "command", "default"
     )
 
-    with (
-        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
-        patch("asyncio.sleep", AsyncMock()),
-    ):
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_SET_COVER_TILT_POSITION,
@@ -306,10 +300,7 @@ async def test_blind_tilt_features_close_down(
     assert entry.state is ConfigEntryState.LOADED
 
     cover_id = "cover.cover_1"
-    with (
-        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
-        patch("asyncio.sleep", AsyncMock()),
-    ):
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER_TILT,
@@ -347,10 +338,7 @@ async def test_roller_shade_features(
     assert entry.state is ConfigEntryState.LOADED
 
     cover_id = "cover.cover_1"
-    with (
-        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
-        patch("asyncio.sleep", AsyncMock()),
-    ):
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER,
@@ -365,10 +353,7 @@ async def test_roller_shade_features(
     state = hass.states.get(cover_id)
     assert state.state == STATE_OPEN
 
-    with (
-        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
-        patch("asyncio.sleep", AsyncMock()),
-    ):
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
@@ -383,10 +368,7 @@ async def test_roller_shade_features(
     state = hass.states.get(cover_id)
     assert state.state == STATE_OPEN
 
-    with (
-        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
-        patch("asyncio.sleep", AsyncMock()),
-    ):
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_SET_COVER_POSITION,
@@ -444,10 +426,7 @@ async def test_garage_door_features_close(
     assert entry.state is ConfigEntryState.LOADED
 
     cover_id = "cover.cover_1"
-    with (
-        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
-        patch("asyncio.sleep", AsyncMock()),
-    ):
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
@@ -489,10 +468,7 @@ async def test_garage_door_features_open(
     assert entry.state is ConfigEntryState.LOADED
 
     cover_id = "cover.cover_1"
-    with (
-        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
-        patch("asyncio.sleep", AsyncMock()),
-    ):
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER,
