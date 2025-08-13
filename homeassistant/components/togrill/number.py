@@ -53,9 +53,6 @@ def _get_temperature_target_description(probe_number: int):
                 return packet.temperature_1
         return None
 
-    def _supported(config: Mapping[str, Any]):
-        return probe_number <= config[CONF_PROBE_COUNT]
-
     return ToGrillSensorEntityDescription(
         key=f"temperature_target_{probe_number}",
         translation_key="temperature_target",
@@ -67,7 +64,7 @@ def _get_temperature_target_description(probe_number: int):
         mode=NumberMode.BOX,
         set_packet=_set_packet,
         get_value=_get_value,
-        entity_supported=_supported,
+        entity_supported=lambda x: probe_number <= x[CONF_PROBE_COUNT],
     )
 
 
@@ -85,12 +82,12 @@ ENTITY_DESCRIPTIONS = (
         native_max_value=15,
         native_step=5,
         mode=NumberMode.BOX,
-        set_packet=lambda x: PacketA6Write(
-            temperature_unit=None, alarm_interval=round(x)
+        set_packet=lambda x: (
+            PacketA6Write(temperature_unit=None, alarm_interval=round(x))
         ),
-        get_value=lambda x: packet.alarm_interval
-        if (packet := x.get_packet(PacketA0Notify))
-        else None,
+        get_value=lambda x: (
+            packet.alarm_interval if (packet := x.get_packet(PacketA0Notify)) else None
+        ),
     ),
 )
 
