@@ -220,7 +220,7 @@ async def determine_api_version(
     else:
         # It seems that occasionally the auth can succeed unexpectedly when there is a valid session
         _LOGGER.warning(
-            "Authenticated with %s : succeeded with an incorrect password", 
+            "Authenticated with %s through v6 API, but succeeded with an incorrect password. This is a known bug",
             holeV6.base_url,
         )
         return 6
