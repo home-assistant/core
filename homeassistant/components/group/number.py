@@ -7,10 +7,11 @@ import voluptuous as vol
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_UNIT_OF_MEASUREMENT,
     CONF_TYPE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    ATTR_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant, callback, State
 from homeassistant.helpers.event import async_track_state_change_event
@@ -20,8 +21,9 @@ CONF_NAME = "name"
 CONF_ENTITIES = "entities"
 CONF_WRITE_TARGET = "write_target"
 
-# Keep in sync with config_flow's _STATISTIC_MEASURES (excluding "last")
 _STATISTIC_MEASURES = ["max", "mean", "median", "min", "product", "range", "stdev", "sum"]
+
+PARALLEL_UPDATES = 0
 
 PLATFORM_SCHEMA = vol.Schema(
     {
@@ -54,9 +56,15 @@ async def async_setup_platform(
     async_add_entities([GroupedNumber(hass, name, entities, stat, write_target)])
 
 
-class GroupedNumber(NumberEntity):
-    """Aggregated number group entity."""
+@callback
+def async_create_preview_number(hass: HomeAssistant, name: str, validated_config: dict[str, Any]) -> "GroupedNumber":
+    entities: List[str] = validated_config[CONF_ENTITIES]
+    stat: str = validated_config.get(CONF_TYPE, "mean")
+    write_target: str = validated_config.get(CONF_WRITE_TARGET, "none")
+    return GroupedNumber(hass, name, entities, stat, write_target)
 
+
+class GroupedNumber(NumberEntity):
     _attr_has_entity_name = True
     _attr_should_poll = False
 
@@ -75,13 +83,11 @@ class GroupedNumber(NumberEntity):
         self._write_target = write_target
         self._value: float | None = None
         self._unsub: Any = None
-
-    # ---------- Lifecycle ----------
+        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: list(entity_ids)}
 
     async def async_added_to_hass(self) -> None:
         @callback
         def _on_change(event):
-            # Only recompute when one of our members changes
             self._recompute()
 
         self._unsub = async_track_state_change_event(
@@ -93,8 +99,6 @@ class GroupedNumber(NumberEntity):
         if self._unsub:
             self._unsub()
             self._unsub = None
-
-    # ---------- Metadata / Properties ----------
 
     @property
     def available(self) -> bool:
@@ -123,8 +127,6 @@ class GroupedNumber(NumberEntity):
     def native_step(self) -> float | None:
         *_, step_v = self._collect_meta()
         return step_v
-
-    # ---------- Core Logic ----------
 
     @callback
     def _recompute(self) -> None:
@@ -158,7 +160,6 @@ class GroupedNumber(NumberEntity):
                 m = sum(vals) / len(vals)
                 self._value = (sum((v - m) ** 2 for v in vals) / len(vals)) ** 0.5
             else:
-                # Fallback: mean to be safe
                 self._value = sum(vals) / len(vals)
 
         self.async_write_ha_state()
@@ -191,8 +192,6 @@ class GroupedNumber(NumberEntity):
                     blocking=True,
                 )
 
-    # ---------- Helpers ----------
-
     def _iter_member_values(self) -> Iterable[Tuple[State, float]]:
         """Yield (State, numeric_value) for valid numeric member states."""
         for eid in self._entity_ids:
@@ -206,13 +205,6 @@ class GroupedNumber(NumberEntity):
             yield st, val
 
     def _collect_meta(self) -> tuple[str | None, float | None, float | None, float | None]:
-        """Collect unit/min/max/step from current valid members.
-
-        unit: first non-empty, but None if mixed
-        min:  max of member mins
-        max:  min of member maxes
-        step: max of member steps
-        """
         unit: str | None = None
         unit_mixed = False
         mins: list[float] = []
@@ -251,7 +243,6 @@ class GroupedNumber(NumberEntity):
         max_v = min(maxs) if maxs else None
         step_v = max(steps) if steps else None
 
-        # If min/max collapse, drop them to avoid a broken slider
         if (min_v is not None and max_v is not None) and min_v >= max_v:
             min_v = max_v = None
 
@@ -262,11 +253,13 @@ class GroupedNumber(NumberEntity):
         st = self.hass.states.get(eid)
         if not st:
             return value
+
         def _flt(x: Any) -> float | None:
             try:
                 return float(x)
             except (TypeError, ValueError):
                 return None
+
         mi = _flt(st.attributes.get("min"))
         ma = _flt(st.attributes.get("max"))
         v = value
