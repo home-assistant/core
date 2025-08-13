@@ -105,6 +105,14 @@ BINARY_SENSOR_CONFIG_SCHEMA = basic_group_config_schema("binary_sensor").extend(
     }
 )
 
+NUMBER_CONFIG_SCHEMA = basic_group_config_schema(["number", "input_number"])
+
+async def number_options_schema(
+    handler: SchemaCommonFlowHandler | None,
+) -> vol.Schema:
+    return await basic_group_options_schema(["number", "input_number"], handler)
+
+
 SENSOR_CONFIG_EXTENDS = {
     vol.Required(CONF_TYPE): selector.SelectSelector(
         selector.SelectSelectorConfig(
@@ -231,6 +239,11 @@ CONFIG_FLOW = {
         preview="group",
         validate_user_input=set_group_type("notify"),
     ),
+    "number": SchemaFlowFormStep(
+        NUMBER_CONFIG_SCHEMA,
+        preview="group",
+        validate_user_input=set_group_type("number"),
+    ),
     "sensor": SchemaFlowFormStep(
         SENSOR_CONFIG_SCHEMA,
         preview="group",
@@ -282,6 +295,10 @@ OPTIONS_FLOW = {
         partial(basic_group_options_schema, "notify"),
         preview="group",
     ),
+    "number": SchemaFlowFormStep(
+        partial(number_options_schema, "number"),
+        preview="group",
+    ),
     "sensor": SchemaFlowFormStep(
         partial(sensor_options_schema, "sensor"),
         preview="group",
@@ -307,6 +324,7 @@ CREATE_PREVIEW_ENTITY: dict[
     "lock": async_create_preview_lock,
     "media_player": async_create_preview_media_player,
     "notify": async_create_preview_notify,
+    "number": async_create_preview_number,
     "sensor": async_create_preview_sensor,
     "switch": async_create_preview_switch,
 }
