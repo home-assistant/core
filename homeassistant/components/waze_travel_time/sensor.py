@@ -31,6 +31,7 @@ from .const import (
     ATTR_DURATION,
     ATTR_ORIGIN,
     ATTR_ROUTE,
+    ATTR_STREET_NAMES,
     CONF_VEHICLE_TYPE,
     DEFAULT_NAME,
     DOMAIN,
@@ -70,12 +71,6 @@ def sensor_descriptions(vehicle_type: str) -> tuple[WazeSensorDescription, ...]:
             native_unit_of_measurement=UnitOfLength.KILOMETERS,
             value_fn=lambda data: data.distance,
         ),
-        WazeSensorDescription(
-            key=ATTR_ROUTE,
-            translation_key="route",
-            icon="mdi:routes",
-            value_fn=lambda data: data.route,
-        ),
     )
 
 
@@ -99,6 +94,7 @@ async def async_setup_entry(
         )
         for sensor_description in sensor_descriptions(options[CONF_VEHICLE_TYPE])
     ]
+    sensors.append(RouteSensor(entry_id, name, coordinator))
     sensors.append(OriginSensor(entry_id, name, coordinator))
     sensors.append(DestinationSensor(entry_id, name, coordinator))
     async_add_entities(sensors, False)
@@ -133,6 +129,30 @@ class WazeTravelTimeSensor(CoordinatorEntity[WazeTravelTimeCoordinator], SensorE
     def native_value(self) -> float | str | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+
+class RouteSensor(WazeTravelTimeSensor):
+    """Sensor holding information about the route."""
+
+    def __init__(
+        self,
+        unique_id_prefix: str,
+        name: str,
+        coordinator: WazeTravelTimeCoordinator,
+    ) -> None:
+        """Initialize the sensor."""
+        description = WazeSensorDescription(
+            key=ATTR_ROUTE,
+            translation_key="route",
+            icon="mdi:routes",
+            value_fn=lambda data: data.route,
+        )
+        super().__init__(unique_id_prefix, name, description, coordinator)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Street names."""
+        return {ATTR_STREET_NAMES: self.coordinator.data.street_names}
 
 
 class OriginSensor(WazeTravelTimeSensor):
