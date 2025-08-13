@@ -194,6 +194,7 @@ QUERY_STATISTICS_SUMMARY_SUM = (
 
 
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
+    **dict.fromkeys(ApparentPowerConverter.VALID_UNITS, ApparentPowerConverter),
     **dict.fromkeys(AreaConverter.VALID_UNITS, AreaConverter),
     **dict.fromkeys(
         BloodGlucoseConcentrationConverter.VALID_UNITS,
@@ -202,7 +203,6 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
     **dict.fromkeys(
         MassVolumeConcentrationConverter.VALID_UNITS, MassVolumeConcentrationConverter
     ),
-    **dict.fromkeys(ApparentPowerConverter.VALID_UNITS, ApparentPowerConverter),
     **dict.fromkeys(ConductivityConverter.VALID_UNITS, ConductivityConverter),
     **dict.fromkeys(DataRateConverter.VALID_UNITS, DataRateConverter),
     **dict.fromkeys(DistanceConverter.VALID_UNITS, DistanceConverter),
