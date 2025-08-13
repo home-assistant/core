@@ -155,7 +155,6 @@ class WazeTravelTimeData:
     duration: float | None
     distance: float | None
     route: str | None
-    street_names: list[str] | None
 
 
 class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
@@ -229,7 +228,6 @@ class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
                     duration=None,
                     distance=None,
                     route=None,
-                    street_names=None,
                 )
 
             else:
@@ -243,7 +241,6 @@ class WazeTravelTimeCoordinator(DataUpdateCoordinator[WazeTravelTimeData]):
                     duration=route.duration,
                     distance=route.distance,
                     route=route.name,
-                    street_names=route.street_names,
                 )
 
             await asyncio.sleep(SECONDS_BETWEEN_API_CALLS)
