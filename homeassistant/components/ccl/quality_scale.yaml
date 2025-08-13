@@ -28,10 +28,7 @@ rules:
     comment: |
       Data cannot be pushed without registering a webhook.
   test-before-setup: done
-  unique-config-entry:
-    status: exempt
-    comment: |
-      Data will only be pushed to one config entry from the device via webhook.
+  unique-config-entry: done
   # Silver
   action-exceptions:
     status: exempt
