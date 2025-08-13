@@ -103,6 +103,11 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
 
 # Dict containing all converters with a corresponding unit ratio.
 _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, float]] = {
+    ApparentPowerConverter: (
+        UnitOfApparentPower.MILLIVOLT_AMPERE,
+        UnitOfApparentPower.VOLT_AMPERE,
+        1000,
+    ),
     AreaConverter: (UnitOfArea.SQUARE_KILOMETERS, UnitOfArea.SQUARE_METERS, 0.000001),
     BloodGlucoseConcentrationConverter: (
         UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
@@ -144,21 +149,16 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         1000,
     ),
-    ReactivePowerConverter: (
-        UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE,
-        UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
-    ),
-    ApparentPowerConverter: (
-        UnitOfApparentPower.MILLIVOLT_AMPERE,
-        UnitOfApparentPower.VOLT_AMPERE,
-        1000,
-    ),
     PowerConverter: (UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
     PressureConverter: (UnitOfPressure.HPA, UnitOfPressure.INHG, 33.86389),
     ReactiveEnergyConverter: (
         UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
         UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
         1000,
+    ),
+    ReactivePowerConverter: (
+        UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE,
+        UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
     ),
     SpeedConverter: (
         UnitOfSpeed.KILOMETERS_PER_HOUR,
