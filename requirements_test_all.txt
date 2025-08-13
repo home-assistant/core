@@ -235,7 +235,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==38.2.1
+aioesphomeapi==39.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -492,7 +492,7 @@ aranet4==2.5.1
 arcam-fmj==1.8.2
 
 # homeassistant.components.asuswrt
-asusrouter==1.18.1
+asusrouter==1.18.2
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
@@ -2076,7 +2076,7 @@ python-roborock==2.18.2
 python-smarttub==0.0.44
 
 # homeassistant.components.snoo
-python-snoo==0.7.0
+python-snoo==0.8.1
 
 # homeassistant.components.songpal
 python-songpal==0.16.2
