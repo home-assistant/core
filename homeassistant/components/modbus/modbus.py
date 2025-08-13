@@ -28,10 +28,11 @@ from homeassistant.const import (
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall
+from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
@@ -323,8 +324,11 @@ class ModbusHub:
             message = f"modbus {self.name} communication open"
             _LOGGER.info(message)
 
+        # Start counting down to allow modbus requests.
         if self._config_delay:
-            await asyncio.sleep(self._config_delay)
+            self._async_cancel_listener = async_call_later(
+                self.hass, self._config_delay, self.async_end_delay
+            )
 
     async def async_setup(self) -> bool:
         """Set up pymodbus client."""
@@ -344,6 +348,12 @@ class ModbusHub:
             self.async_pb_connect(), "modbus-connect"
         )
         return True
+
+    @callback
+    def async_end_delay(self, args: Any) -> None:
+        """End startup delay."""
+        self._async_cancel_listener = None
+        self._config_delay = 0
 
     async def async_restart(self) -> None:
         """Reconnect client."""
@@ -416,6 +426,8 @@ class ModbusHub:
         use_call: str,
     ) -> ModbusPDU | None:
         """Convert async to sync pymodbus call."""
+        if self._config_delay:
+            return None
         async with self._lock:
             if not self._client:
                 return None
