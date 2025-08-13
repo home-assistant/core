@@ -59,7 +59,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryFlow,
-    OptionsFlow,
+    OptionsFlowWithReload,
     SubentryFlowResult,
 )
 from homeassistant.const import (
@@ -3313,7 +3313,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class MQTTOptionsFlowHandler(OptionsFlow):
+class MQTTOptionsFlowHandler(OptionsFlowWithReload):
     """Handle MQTT options."""
 
     async def async_step_init(self, user_input: None = None) -> ConfigFlowResult:
@@ -3927,7 +3927,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             ):
                 entity_registry.async_remove(entity_id)
 
-        return self.async_update_and_abort(
+        return self.async_update_reload_and_abort(
             entry,
             subentry,
             data=self._subentry_data,
@@ -4129,7 +4129,7 @@ def _validate_pki_file(
 
 
 async def async_get_broker_settings(  # noqa: C901
-    flow: ConfigFlow | OptionsFlow,
+    flow: ConfigFlow | OptionsFlowWithReload,
     fields: OrderedDict[Any, Any],
     entry_config: MappingProxyType[str, Any] | None,
     user_input: dict[str, Any] | None,
