@@ -1,7 +1,7 @@
 """Test the Cloud Google Config."""
 
 from http import HTTPStatus
-from unittest.mock import Mock, PropertyMock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from freezegun import freeze_time
 import pytest
@@ -119,15 +119,13 @@ async def test_sync_entities(
 
     assert len(mock_conf.async_get_agent_users()) == 1
 
-    with patch(
-        "hass_nabucasa.cloud_api.async_google_actions_request_sync",
-        return_value=Mock(status=HTTPStatus.NOT_FOUND),
-    ) as mock_request_sync:
-        assert (
-            await mock_conf.async_sync_entities("mock-user-id") == HTTPStatus.NOT_FOUND
-        )
-        assert len(mock_conf.async_get_agent_users()) == 0
-        assert len(mock_request_sync.mock_calls) == 1
+    mock_conf._cloud.google_report_state.request_sync = AsyncMock(
+        return_value=Mock(status=HTTPStatus.NOT_FOUND)
+    )
+
+    assert await mock_conf.async_sync_entities("mock-user-id") == HTTPStatus.NOT_FOUND
+    assert len(mock_conf.async_get_agent_users()) == 0
+    assert len(mock_conf._cloud.google_report_state.request_sync.mock_calls) == 1
 
 
 async def test_google_update_expose_trigger_sync(
