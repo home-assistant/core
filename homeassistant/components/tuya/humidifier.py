@@ -35,6 +35,20 @@ class TuyaHumidifierEntityDescription(HumidifierEntityDescription):
     humidity: DPCode | None = None
 
 
+def _has_a_valid_dpcode(
+    device: CustomerDevice, description: TuyaHumidifierEntityDescription
+) -> bool:
+    """Check if the device has at least one valid DP code."""
+    properties_to_check: list[DPCode | tuple[DPCode, ...] | None] = [
+        # Main control switch
+        description.dpcode or DPCode(description.key),
+        # Other humidity properties
+        description.current_humidity,
+        description.humidity,
+    ]
+    return any(get_dpcode(device, code) for code in properties_to_check)
+
+
 HUMIDIFIERS: dict[str, TuyaHumidifierEntityDescription] = {
     # Dehumidifier
     # https://developer.tuya.com/en/docs/iot/categorycs?id=Kaiuz1vcz4dha
@@ -71,7 +85,9 @@ async def async_setup_entry(
         entities: list[TuyaHumidifierEntity] = []
         for device_id in device_ids:
             device = hass_data.manager.device_map[device_id]
-            if description := HUMIDIFIERS.get(device.category):
+            if (
+                description := HUMIDIFIERS.get(device.category)
+            ) and _has_a_valid_dpcode(device, description):
                 entities.append(
                     TuyaHumidifierEntity(device, hass_data.manager, description)
                 )
