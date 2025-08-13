@@ -159,6 +159,7 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     ReactivePowerConverter: (
         UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE,
         UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
     ),
     SpeedConverter: (
         UnitOfSpeed.KILOMETERS_PER_HOUR,
