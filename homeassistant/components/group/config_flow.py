@@ -105,12 +105,31 @@ BINARY_SENSOR_CONFIG_SCHEMA = basic_group_config_schema("binary_sensor").extend(
     }
 )
 
-NUMBER_CONFIG_SCHEMA = basic_group_config_schema(["number", "input_number"])
+
+NUMBER_CONFIG_EXTENDS = {
+    vol.Required(CONF_TYPE): selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=_STATISTIC_MEASURES, translation_key=CONF_TYPE
+        ),
+    ),
+}
+NUMBER_OPTIONS = {
+    vol.Required(CONF_TYPE): selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=_STATISTIC_MEASURES, translation_key=CONF_TYPE
+        ),
+    ),
+}
+NUMBER_CONFIG_SCHEMA = basic_group_config_schema(["number", "input_number"]).extend(
+    NUMBER_CONFIG_EXTENDS
+)
 
 async def number_options_schema(
     handler: SchemaCommonFlowHandler | None,
 ) -> vol.Schema:
-    return await basic_group_options_schema(["number", "input_number"], handler)
+    return (await basic_group_options_schema(["number", "input_number"], handler)).extend(
+        NUMBER_OPTIONS
+    )
 
 
 SENSOR_CONFIG_EXTENDS = {
