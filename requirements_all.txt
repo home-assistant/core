@@ -1960,7 +1960,7 @@ pyegps==0.2.5
 pyemoncms==0.1.2
 
 # homeassistant.components.enphase_envoy
-pyenphase==2.2.3
+pyenphase==2.3.0
 
 # homeassistant.components.envisalink
 pyenvisalink==4.7
