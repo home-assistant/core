@@ -641,7 +641,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "moat",
     "mobile_app",
     "mochad",
-    "modbus",
     "modem_callerid",
     "modern_forms",
     "moehlenhoff_alpha2",
