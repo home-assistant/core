@@ -447,7 +447,7 @@ class ReactiveEnergyConverter(BaseUnitConverter):
 
 
 class ReactivePowerConverter(BaseUnitConverter):
-    """Utility to convert power values."""
+    """Utility to convert reactive power values."""
 
     UNIT_CLASS = "reactive_power"
     _UNIT_CONVERSION: dict[str | None, float] = {
