@@ -220,14 +220,12 @@ async def async_setup_entry(
     def _async_add_new_device(plant_id: int) -> None:
         plant_entities = [
             FytaPlantSensor(coordinator, entry, sensor, plant_id)
-            for plant_id in coordinator.fyta.plant_list
             for sensor in SENSORS
             if sensor.key in dir(coordinator.data.get(plant_id))
         ]
 
         plant_entities.extend(
             FytaPlantMeasurementSensor(coordinator, entry, sensor, plant_id)
-            for plant_id in coordinator.fyta.plant_list
             for sensor in MEASUREMENT_SENSORS
             if sensor.key in dir(coordinator.data.get(plant_id))
         )
