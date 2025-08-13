@@ -43,7 +43,7 @@ async def async_setup_entry(
 
 
 class WorkdayCalendarEntity(BaseWorkdayEntity, CalendarEntity):
-    """Representation of a Wokrday Calendar."""
+    """Representation of a Workday Calendar."""
 
     def __init__(
         self,
