@@ -100,7 +100,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         """Return the current speed."""
         if (
             self.device.state.mode == VS_FAN_MODE_MANUAL
-            and (current_level := self.device.state.fan_level) is not None
+            and (current_level := self.device.state.fan_set_level) is not None
         ):
             return ordered_list_item_to_percentage(
                 self.device.fan_levels, current_level
