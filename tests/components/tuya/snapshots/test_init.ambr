@@ -1601,7 +1601,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'Tower bladeless fan ',
+    'model': 'Tower bladeless fan  (unsupported)',
     'model_id': 'ibytpo6fpnugft1c',
     'name': 'Ventilador Cama',
     'name_by_user': None,
@@ -2593,7 +2593,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': '',
+    'model': ' (unsupported)',
     'model_id': 'qhxmvae667uap4zh',
     'name': 'DryFix',
     'name_by_user': None,
@@ -2779,7 +2779,7 @@
     'labels': set({
     }),
     'manufacturer': 'Tuya',
-    'model': 'the Smart Dry Plus™ Connect Dehumidifier ',
+    'model': 'the Smart Dry Plus™ Connect Dehumidifier  (unsupported)',
     'model_id': 'vmxuxszzjwp5smli',
     'name': 'Dehumidifier ',
     'name_by_user': None,
