@@ -52,9 +52,9 @@
         }
       },
       "initiate_flow": {
-        "user": "Add Generate data with AI service"
+        "user": "Add AI task"
       },
-      "entry_type": "Generate data with AI service",
+      "entry_type": "AI task",
       "abort": {
         "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
         "unknown": "[%key:common::config_flow::error::unknown%]"

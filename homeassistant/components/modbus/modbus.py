@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from collections import namedtuple
 from collections.abc import Callable
-import logging
 from typing import Any
 
 from pymodbus.client import (
@@ -38,6 +37,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
+    _LOGGER,
     ATTR_ADDRESS,
     ATTR_HUB,
     ATTR_SLAVE,
@@ -57,6 +57,7 @@ from .const import (
     CONF_PARITY,
     CONF_STOPBITS,
     DEFAULT_HUB,
+    DEVICE_ID,
     MODBUS_DOMAIN as DOMAIN,
     PLATFORMS,
     RTUOVERTCP,
@@ -70,7 +71,6 @@ from .const import (
 )
 from .validators import check_config
 
-_LOGGER = logging.getLogger(__name__)
 DATA_MODBUS_HUBS: HassKey[dict[str, ModbusHub]] = HassKey(DOMAIN)
 
 
@@ -262,6 +262,7 @@ class ModbusHub:
         self._config_type = client_config[CONF_TYPE]
         self._config_delay = client_config[CONF_DELAY]
         self._pb_request: dict[str, RunEntry] = {}
+        self._connect_task: asyncio.Task
         self._pb_class = {
             SERIAL: AsyncModbusSerialClient,
             TCP: AsyncModbusTcpClient,
@@ -336,7 +337,7 @@ class ModbusHub:
                 entry.attr, func, entry.value_attr_name
             )
 
-        self.hass.async_create_background_task(
+        self._connect_task = self.hass.async_create_background_task(
             self.async_pb_connect(), "modbus-connect"
         )
 
@@ -365,6 +366,9 @@ class ModbusHub:
         if self._async_cancel_listener:
             self._async_cancel_listener()
             self._async_cancel_listener = None
+        if not self._connect_task.done():
+            self._connect_task.cancel()
+
         async with self._lock:
             if self._client:
                 try:
@@ -381,7 +385,7 @@ class ModbusHub:
     ) -> ModbusPDU | None:
         """Call sync. pymodbus."""
         kwargs: dict[str, Any] = (
-            {ATTR_SLAVE: slave} if slave is not None else {ATTR_SLAVE: 1}
+            {DEVICE_ID: slave} if slave is not None else {DEVICE_ID: 1}
         )
         entry = self._pb_request[use_call]
 

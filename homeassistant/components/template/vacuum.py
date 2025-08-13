@@ -34,11 +34,16 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import (
+    config_validation as cv,
+    issue_registry as ir,
+    template,
+)
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
+from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DOMAIN
@@ -186,6 +191,26 @@ def async_create_preview_vacuum(
         TemplateStateVacuumEntity,
         VACUUM_CONFIG_ENTRY_SCHEMA,
     )
+
+
+def create_issue(
+    hass: HomeAssistant, supported_features: int, name: str, entity_id: str
+) -> None:
+    """Create the battery_level issue."""
+    if supported_features & VacuumEntityFeature.BATTERY:
+        key = "deprecated_battery_level"
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"{key}_{entity_id}",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key=key,
+            translation_placeholders={
+                "entity_name": name,
+                "entity_id": entity_id,
+            },
+        )
 
 
 class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
@@ -369,6 +394,16 @@ class TemplateStateVacuumEntity(TemplateEntity, AbstractTemplateVacuum):
             self.add_script(action_id, action_config, name, DOMAIN)
             self._attr_supported_features |= supported_feature
 
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        create_issue(
+            self.hass,
+            self._attr_supported_features,
+            self._attr_name or DEFAULT_NAME,
+            self.entity_id,
+        )
+
     @callback
     def _async_setup_templates(self) -> None:
         """Set up templates."""
@@ -433,6 +468,16 @@ class TriggerVacuumEntity(TriggerEntity, AbstractTemplateVacuum):
             if isinstance(config.get(key), template.Template):
                 self._to_render_simple.append(key)
                 self._parse_result.add(key)
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await super().async_added_to_hass()
+        create_issue(
+            self.hass,
+            self._attr_supported_features,
+            self._attr_name or DEFAULT_NAME,
+            self.entity_id,
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
