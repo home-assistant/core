@@ -1,0 +1,67 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Siren veranda ",
+  "category": "sgbj",
+  "product_id": "ulv4nnue7gqp0rjk",
+  "product_name": "Siren Sensor",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2020-05-05T20:15:05+00:00",
+  "create_time": "2020-05-05T20:15:05+00:00",
+  "update_time": "2020-05-05T20:15:05+00:00",
+  "function": {
+    "alarm_volume": {
+      "type": "Enum",
+      "value": {
+        "range": ["low", "middle", "high", "mute"]
+      }
+    },
+    "alarm_time": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 1,
+        "max": 30,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "alarm_switch": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "alarm_volume": {
+      "type": "Enum",
+      "value": {
+        "range": ["low", "middle", "high", "mute"]
+      }
+    },
+    "alarm_time": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 1,
+        "max": 30,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "alarm_switch": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "alarm_volume": "middle",
+    "alarm_time": 10,
+    "alarm_switch": false
+  },
+  "set_up": true,
+  "support_local": true
+}
