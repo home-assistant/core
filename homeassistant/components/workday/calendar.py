@@ -15,6 +15,8 @@ from . import WorkdayConfigEntry
 from .const import CONF_EXCLUDES, CONF_OFFSET, CONF_WORKDAYS
 from .entity import BaseWorkdayEntity
 
+CALENDAR_DAYS_AHEAD = 365
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -71,7 +73,7 @@ class WorkdayCalendarEntity(BaseWorkdayEntity, CalendarEntity):
     def update_data(self, now: datetime) -> None:
         """Update data."""
         event_list = []
-        for i in range(365):
+        for i in range(CALENDAR_DAYS_AHEAD):
             future_date = now.date() + timedelta(days=i)
             if self.date_is_workday(future_date):
                 event = CalendarEvent(
