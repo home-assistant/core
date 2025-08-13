@@ -151,3 +151,58 @@ async def test_relay_switch_2pm_control(
         )
 
         mocked_instance.assert_called_with(2)
+
+
+@pytest.mark.parametrize(
+    ("exception", "error_message"),
+    [
+        (
+            SwitchbotOperationError("Operation failed"),
+            "An error occurred while performing the action: Operation failed",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("service", "mock_method"),
+    [
+        (SERVICE_TURN_ON, "turn_on"),
+        (SERVICE_TURN_OFF, "turn_off"),
+    ],
+)
+@pytest.mark.parametrize(
+    "entry_id",
+    [
+        "switch.test_name_channel_1",
+        "switch.test_name_channel_2",
+    ],
+)
+async def test_relay_switch_2pm_exception(
+    hass: HomeAssistant,
+    mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
+    exception: Exception,
+    error_message: str,
+    service: str,
+    mock_method: str,
+    entry_id: str,
+) -> None:
+    """Test Relay Switch 2PM exception handling."""
+    inject_bluetooth_service_info(hass, RELAY_SWITCH_2PM_SERVICE_INFO)
+
+    entry = mock_entry_encrypted_factory(sensor_type="relay_switch_2pm")
+    entry.add_to_hass(hass)
+
+    with patch.multiple(
+        "homeassistant.components.switchbot.switch.switchbot.SwitchbotRelaySwitch2PM",
+        update=AsyncMock(return_value=None),
+        **{mock_method: AsyncMock(side_effect=exception)},
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        with pytest.raises(HomeAssistantError, match=error_message):
+            await hass.services.async_call(
+                SWITCH_DOMAIN,
+                service,
+                {ATTR_ENTITY_ID: entry_id},
+                blocking=True,
+            )
