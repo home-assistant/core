@@ -4184,7 +4184,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             full_entity_name = device_name
 
         self._async_update_component_data_defaults()
-        return self.async_create_entry(
+        result = self.async_create_entry(
             data=self._subentry_data,
             title=self._subentry_data[CONF_DEVICE][CONF_NAME],
             description_placeholders={
@@ -4192,6 +4192,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                 CONF_PLATFORM: platform,
             },
         )
+        self.hass.config_entries.async_schedule_reload(self._get_entry().entry_id)
+        return result
 
     async def async_step_availability(
         self, user_input: dict[str, Any] | None = None
