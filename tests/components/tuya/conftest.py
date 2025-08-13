@@ -144,7 +144,7 @@ async def mock_devices(hass: HomeAssistant) -> list[CustomerDevice]:
 
     Use this to generate global snapshots for each platform.
     """
-    return [await _create_device(hass, key) for key in DEVICE_MOCKS]
+    return [await _create_device(hass, device_code) for device_code in DEVICE_MOCKS]
 
 
 @pytest.fixture

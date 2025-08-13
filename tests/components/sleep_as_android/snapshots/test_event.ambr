@@ -1,0 +1,494 @@
+# serializer version: 1
+# name: test_setup[event.sleep_as_android_alarm_clock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'alert_dismiss',
+        'alert_start',
+        'rescheduled',
+        'skip_next',
+        'snooze_canceled',
+        'snooze_clicked',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.sleep_as_android_alarm_clock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Alarm clock',
+    'platform': 'sleep_as_android',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <SleepAsAndroidEvent.ALARM_CLOCK: 'alarm_clock'>,
+    'unique_id': '01JRD840SAZ55DGXBD78PTQ4EF_alarm_clock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[event.sleep_as_android_alarm_clock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'alert_dismiss',
+        'alert_start',
+        'rescheduled',
+        'skip_next',
+        'snooze_canceled',
+        'snooze_clicked',
+      ]),
+      'friendly_name': 'Sleep as Android Alarm clock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_alarm_clock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[event.sleep_as_android_lullaby-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'start',
+        'stop',
+        'volume_down',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.sleep_as_android_lullaby',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lullaby',
+    'platform': 'sleep_as_android',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <SleepAsAndroidEvent.LULLABY: 'lullaby'>,
+    'unique_id': '01JRD840SAZ55DGXBD78PTQ4EF_lullaby',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[event.sleep_as_android_lullaby-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'start',
+        'stop',
+        'volume_down',
+      ]),
+      'friendly_name': 'Sleep as Android Lullaby',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_lullaby',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[event.sleep_as_android_sleep_health-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'antisnoring',
+        'apnea_alarm',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.sleep_as_android_sleep_health',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sleep health',
+    'platform': 'sleep_as_android',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <SleepAsAndroidEvent.SLEEP_HEALTH: 'sleep_health'>,
+    'unique_id': '01JRD840SAZ55DGXBD78PTQ4EF_sleep_health',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[event.sleep_as_android_sleep_health-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'antisnoring',
+        'apnea_alarm',
+      ]),
+      'friendly_name': 'Sleep as Android Sleep health',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_sleep_health',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[event.sleep_as_android_sleep_phase-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'awake',
+        'deep_sleep',
+        'light_sleep',
+        'not_awake',
+        'rem',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.sleep_as_android_sleep_phase',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sleep phase',
+    'platform': 'sleep_as_android',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <SleepAsAndroidEvent.SLEEP_PHASE: 'sleep_phase'>,
+    'unique_id': '01JRD840SAZ55DGXBD78PTQ4EF_sleep_phase',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[event.sleep_as_android_sleep_phase-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'awake',
+        'deep_sleep',
+        'light_sleep',
+        'not_awake',
+        'rem',
+      ]),
+      'friendly_name': 'Sleep as Android Sleep phase',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_sleep_phase',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[event.sleep_as_android_sleep_tracking-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'paused',
+        'resumed',
+        'started',
+        'stopped',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.sleep_as_android_sleep_tracking',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.BUTTON: 'button'>,
+    'original_icon': None,
+    'original_name': 'Sleep tracking',
+    'platform': 'sleep_as_android',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <SleepAsAndroidEvent.SLEEP_TRACKING: 'sleep_tracking'>,
+    'unique_id': '01JRD840SAZ55DGXBD78PTQ4EF_sleep_tracking',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[event.sleep_as_android_sleep_tracking-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'button',
+      'event_type': None,
+      'event_types': list([
+        'paused',
+        'resumed',
+        'started',
+        'stopped',
+      ]),
+      'friendly_name': 'Sleep as Android Sleep tracking',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_sleep_tracking',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[event.sleep_as_android_smart_wake_up-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'before_smart_period',
+        'smart_period',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.sleep_as_android_smart_wake_up',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Smart wake-up',
+    'platform': 'sleep_as_android',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <SleepAsAndroidEvent.SMART_WAKEUP: 'smart_wakeup'>,
+    'unique_id': '01JRD840SAZ55DGXBD78PTQ4EF_smart_wakeup',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[event.sleep_as_android_smart_wake_up-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'before_smart_period',
+        'smart_period',
+      ]),
+      'friendly_name': 'Sleep as Android Smart wake-up',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_smart_wake_up',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[event.sleep_as_android_sound_recognition-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'baby',
+        'cough',
+        'laugh',
+        'snore',
+        'talk',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.sleep_as_android_sound_recognition',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sound recognition',
+    'platform': 'sleep_as_android',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <SleepAsAndroidEvent.SOUND_EVENT: 'sound_event'>,
+    'unique_id': '01JRD840SAZ55DGXBD78PTQ4EF_sound_event',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[event.sleep_as_android_sound_recognition-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'baby',
+        'cough',
+        'laugh',
+        'snore',
+        'talk',
+      ]),
+      'friendly_name': 'Sleep as Android Sound recognition',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_sound_recognition',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[event.sleep_as_android_user_notification-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'wake_up_check',
+        'show_skip_next_alarm',
+        'time_to_bed_alarm_alert',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.sleep_as_android_user_notification',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'User notification',
+    'platform': 'sleep_as_android',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <SleepAsAndroidEvent.USER_NOTIFICATION: 'user_notification'>,
+    'unique_id': '01JRD840SAZ55DGXBD78PTQ4EF_user_notification',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[event.sleep_as_android_user_notification-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'wake_up_check',
+        'show_skip_next_alarm',
+        'time_to_bed_alarm_alert',
+      ]),
+      'friendly_name': 'Sleep as Android User notification',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.sleep_as_android_user_notification',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
