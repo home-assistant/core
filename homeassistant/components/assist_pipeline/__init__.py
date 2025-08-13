@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterable
+from http import HTTPStatus
+from pathlib import Path
 from typing import Any
 
+from aiohttp import web
 import voluptuous as vol
 
-from homeassistant.components import stt
+from homeassistant.components import http, stt
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import chat_session
 from homeassistant.helpers.typing import ConfigType
@@ -86,6 +89,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await async_setup_pipeline_store(hass)
     async_register_websocket_api(hass)
 
+    hass.http.register_view(DefaultSoundsView(hass))
+
     return True
 
 
@@ -135,3 +140,19 @@ async def async_pipeline_from_audio_stream(
         )
         await pipeline_input.validate()
         await pipeline_input.execute()
+
+
+class DefaultSoundsView(http.HomeAssistantView):
+    url = f"/api/{DOMAIN}/sounds/{{filename}}"
+    name = f"api:{DOMAIN}:sounds"
+    requires_auth = False
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        self.hass = hass
+        self.base_dir = Path(__file__).parent / "sounds"
+
+    async def get(self, request: web.Request, filename: str):
+        if filename not in ("acknowledge.mp3",):
+            return web.Response(body="Invalid filename", status=HTTPStatus.BAD_REQUEST)
+
+        return web.FileResponse(self.base_dir / filename)
