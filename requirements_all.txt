@@ -983,7 +983,7 @@ freesms==0.2.0
 
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
-fritzconnection[qr]==1.14.0
+fritzconnection[qr]==1.145.0
 
 # homeassistant.components.fyta
 fyta_cli==0.7.2
