@@ -45,6 +45,7 @@ class PlaystationNetworkRuntimeData:
     trophy_titles: PlaystationNetworkTrophyTitlesCoordinator
     groups: PlaystationNetworkGroupsUpdateCoordinator
     friends: dict[str, PlaystationNetworkFriendDataCoordinator]
+    friends_list: PlaystationNetworkFriendlistCoordinator
 
 
 class PlayStationNetworkBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
@@ -132,6 +133,25 @@ class PlaystationNetworkTrophyTitlesCoordinator(
         )
         await self.config_entry.runtime_data.user_data.async_request_refresh()
         return self.psn.trophy_titles
+
+
+class PlaystationNetworkFriendlistCoordinator(
+    PlayStationNetworkBaseCoordinator[dict[str, User]]
+):
+    """Friend list data update coordinator for PSN."""
+
+    _update_interval = timedelta(hours=3)
+
+    async def update_data(self) -> dict[str, User]:
+        """Update trophy titles data."""
+
+        self.psn.friends_list = await self.hass.async_add_executor_job(
+            lambda: {
+                friend.account_id: friend for friend in self.psn.user.friends_list()
+            }
+        )
+        await self.config_entry.runtime_data.user_data.async_request_refresh()
+        return self.psn.friends_list
 
 
 class PlaystationNetworkGroupsUpdateCoordinator(
