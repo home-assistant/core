@@ -26,6 +26,16 @@ from .entity import TuyaEntity
 from .models import EnumTypeData, IntegerTypeData
 from .util import get_dpcode
 
+_DIRECTION_DPCODES = (DPCode.FAN_DIRECTION,)
+_OSCILLATE_DPCODES = (DPCode.SWITCH_HORIZONTAL, DPCode.SWITCH_VERTICAL)
+_SPEED_DPCODES = (
+    DPCode.FAN_SPEED_PERCENT,
+    DPCode.FAN_SPEED,
+    DPCode.SPEED,
+    DPCode.FAN_SPEED_ENUM,
+)
+_SWITCH_DPCODES = (DPCode.SWITCH_FAN, DPCode.FAN_SWITCH, DPCode.SWITCH)
+
 TUYA_SUPPORT_TYPE = {
     # Dehumidifier
     # https://developer.tuya.com/en/docs/iot/categorycs?id=Kaiuz1vcz4dha
@@ -47,6 +57,19 @@ TUYA_SUPPORT_TYPE = {
 }
 
 
+def _has_a_valid_dpcode(device: CustomerDevice) -> bool:
+    """Check if the device has at least one valid DP code."""
+    properties_to_check: list[DPCode | tuple[DPCode, ...] | None] = [
+        # Main control switch
+        _SWITCH_DPCODES,
+        # Other properties
+        _SPEED_DPCODES,
+        _OSCILLATE_DPCODES,
+        _DIRECTION_DPCODES,
+    ]
+    return any(get_dpcode(device, code) for code in properties_to_check)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TuyaConfigEntry,
@@ -61,7 +84,7 @@ async def async_setup_entry(
         entities: list[TuyaFanEntity] = []
         for device_id in device_ids:
             device = hass_data.manager.device_map[device_id]
-            if device and device.category in TUYA_SUPPORT_TYPE:
+            if device.category in TUYA_SUPPORT_TYPE and _has_a_valid_dpcode(device):
                 entities.append(TuyaFanEntity(device, hass_data.manager))
         async_add_entities(entities)
 
@@ -91,9 +114,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         """Init Tuya Fan Device."""
         super().__init__(device, device_manager)
 
-        self._switch = get_dpcode(
-            self.device, (DPCode.SWITCH_FAN, DPCode.FAN_SWITCH, DPCode.SWITCH)
-        )
+        self._switch = get_dpcode(self.device, _SWITCH_DPCODES)
 
         self._attr_preset_modes = []
         if enum_type := self.find_dpcode(
@@ -104,31 +125,23 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
             self._attr_preset_modes = enum_type.range
 
         # Find speed controls, can be either percentage or a set of speeds
-        dpcodes = (
-            DPCode.FAN_SPEED_PERCENT,
-            DPCode.FAN_SPEED,
-            DPCode.SPEED,
-            DPCode.FAN_SPEED_ENUM,
-        )
         if int_type := self.find_dpcode(
-            dpcodes, dptype=DPType.INTEGER, prefer_function=True
+            _SPEED_DPCODES, dptype=DPType.INTEGER, prefer_function=True
         ):
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
             self._speed = int_type
         elif enum_type := self.find_dpcode(
-            dpcodes, dptype=DPType.ENUM, prefer_function=True
+            _SPEED_DPCODES, dptype=DPType.ENUM, prefer_function=True
         ):
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
             self._speeds = enum_type
 
-        if dpcode := get_dpcode(
-            self.device, (DPCode.SWITCH_HORIZONTAL, DPCode.SWITCH_VERTICAL)
-        ):
+        if dpcode := get_dpcode(self.device, _OSCILLATE_DPCODES):
             self._oscillate = dpcode
             self._attr_supported_features |= FanEntityFeature.OSCILLATE
 
         if enum_type := self.find_dpcode(
-            DPCode.FAN_DIRECTION, dptype=DPType.ENUM, prefer_function=True
+            _DIRECTION_DPCODES, dptype=DPType.ENUM, prefer_function=True
         ):
             self._direction = enum_type
             self._attr_supported_features |= FanEntityFeature.DIRECTION

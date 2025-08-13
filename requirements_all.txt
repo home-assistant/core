@@ -220,7 +220,7 @@ aiobotocore==2.21.1
 aiocomelit==0.12.3
 
 # homeassistant.components.dhcp
-aiodhcpwatcher==1.2.0
+aiodhcpwatcher==1.2.1
 
 # homeassistant.components.dhcp
 aiodiscover==2.7.1
@@ -247,7 +247,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==38.2.1
+aioesphomeapi==39.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -438,7 +438,7 @@ aiowatttime==0.1.1
 aiowebdav2==0.4.6
 
 # homeassistant.components.webostv
-aiowebostv==0.7.4
+aiowebostv==0.7.5
 
 # homeassistant.components.withings
 aiowithings==3.1.6
@@ -526,6 +526,9 @@ arris-tg2492lg==2.2.0
 
 # homeassistant.components.ampio
 asmog==0.0.6
+
+# homeassistant.components.asuswrt
+asusrouter==1.18.2
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
@@ -625,7 +628,7 @@ bizkaibus==0.1.1
 bleak-esphome==3.1.0
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==4.0.0
+bleak-retry-connector==4.0.1
 
 # homeassistant.components.bluetooth
 bleak==1.0.1
@@ -1839,9 +1842,6 @@ pyairvisual==2023.08.1
 # homeassistant.components.aprilaire
 pyaprilaire==0.9.1
 
-# homeassistant.components.asuswrt
-pyasuswrt==0.1.21
-
 # homeassistant.components.atag
 pyatag==0.3.5.3
 
@@ -2506,7 +2506,7 @@ python-roborock==2.18.2
 python-smarttub==0.0.44
 
 # homeassistant.components.snoo
-python-snoo==0.7.0
+python-snoo==0.8.1
 
 # homeassistant.components.songpal
 python-songpal==0.16.2

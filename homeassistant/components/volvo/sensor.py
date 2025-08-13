@@ -107,6 +107,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
             "power_saving_mode",
         ],
         value_fn=_availability_status,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # statistics endpoint
     VolvoSensorDescription(

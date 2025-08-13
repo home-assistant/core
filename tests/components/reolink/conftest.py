@@ -43,7 +43,6 @@ TEST_PORT = 1234
 TEST_NVR_NAME = "test_reolink_name"
 TEST_CAM_NAME = "test_reolink_cam"
 TEST_NVR_NAME2 = "test2_reolink_name"
-TEST_CAM_NAME = "test_reolink_cam"
 TEST_USE_HTTPS = True
 TEST_HOST_MODEL = "RLN8-410"
 TEST_ITEM_NUMBER = "P000"
@@ -117,7 +116,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.supported.return_value = True
     host_mock.item_number.return_value = TEST_ITEM_NUMBER
     host_mock.camera_model.return_value = TEST_CAM_MODEL
-    host_mock.camera_name.return_value = TEST_NVR_NAME
+    host_mock.camera_name.return_value = TEST_CAM_NAME
     host_mock.camera_hardware_version.return_value = "IPC_00001"
     host_mock.camera_sw_version.return_value = "v1.1.0.0.0.0000"
     host_mock.camera_sw_version_update_required.return_value = False

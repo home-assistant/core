@@ -31,7 +31,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import TEST_NVR_NAME, TEST_UID, TEST_UID_CAM
+from .conftest import TEST_CAM_NAME, TEST_UID, TEST_UID_CAM
 
 from tests.common import MockConfigEntry
 
@@ -115,7 +115,7 @@ async def test_try_function(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.NUMBER}.{TEST_NVR_NAME}_volume"
+    entity_id = f"{Platform.NUMBER}.{TEST_CAM_NAME}_volume"
 
     reolink_host.set_volume.side_effect = side_effect
     with pytest.raises(expected.__class__) as err:

@@ -156,6 +156,24 @@
       },
       "pending_quest_items": {
         "default": "mdi:sack"
+      },
+      "group_leader": {
+        "default": "mdi:shield-crown"
+      },
+      "quest": {
+        "default": "mdi:script-text-outline"
+      },
+      "boss": {
+        "default": "mdi:emoticon-devil"
+      },
+      "boss_hp": {
+        "default": "mdi:heart"
+      },
+      "boss_hp_remaining": {
+        "default": "mdi:heart"
+      },
+      "collected_items": {
+        "default": "mdi:sack"
       }
     },
     "switch": {
@@ -172,6 +190,9 @@
         "state": {
           "on": "mdi:script-text-outline"
         }
+      },
+      "quest_running": {
+        "default": "mdi:script-text-play"
       }
     }
   },
