@@ -215,6 +215,6 @@ class CCLSensorEntity(CCLEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
-    def native_value(self) -> int | float | str | None:
+    def native_value(self) -> int | float | str:
         """Return the state of the sensor."""
         return self._internal.value

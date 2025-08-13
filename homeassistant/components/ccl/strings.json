@@ -17,6 +17,9 @@
           "pool": "Pool",
           "soil": "Soil"
         }
+      },
+      "uvi": {
+        "name": "UV Index"
       }
     }
   }
