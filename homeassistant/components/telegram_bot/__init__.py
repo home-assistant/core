@@ -117,6 +117,7 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Required(CONF_ALLOWED_CHAT_IDS): vol.All(
                             cv.ensure_list, [vol.Coerce(int)]
                         ),
+                        vol.Optional(CONF_ALLOW_ANY_REPLY, default=False): cv.boolean,
                         vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
                         vol.Optional(CONF_PROXY_URL): cv.string,
                         # webhooks
@@ -476,9 +477,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
         await bot.shutdown()
         return False
 
-    notify_service = TelegramNotificationService(
-        hass, receiver_service, bot, entry, entry.options[ATTR_PARSER]
-    )
+    notify_service = TelegramNotificationService(hass, receiver_service, bot, entry)
     entry.runtime_data = notify_service
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

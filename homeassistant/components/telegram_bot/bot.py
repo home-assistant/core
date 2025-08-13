@@ -245,7 +245,6 @@ class TelegramNotificationService:
         app: BaseTelegramBot,
         bot: Bot,
         config: TelegramBotConfigEntry,
-        parser: str,
     ) -> None:
         """Initialize the service."""
         self.app = app
@@ -256,11 +255,11 @@ class TelegramNotificationService:
             PARSER_MD2: ParseMode.MARKDOWN_V2,
             PARSER_PLAIN_TEXT: None,
         }
-        self.parse_mode = self._parsers[parser]
+        self.parse_mode = self._parsers[config.options[ATTR_PARSER]]
         self.bot = bot
         self.hass = hass
         self._last_message_id: dict[int, int] = {}
-        self.allow_any_reply = config.data.get(CONF_ALLOW_ANY_REPLY, False)
+        self.allow_any_reply = config.options.get(CONF_ALLOW_ANY_REPLY, False)
 
     def _get_allowed_chat_ids(self) -> list[int]:
         allowed_chat_ids: list[int] = [
