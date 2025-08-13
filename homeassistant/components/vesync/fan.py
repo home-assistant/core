@@ -17,7 +17,6 @@ from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
 )
-from homeassistant.util.scaling import int_states_in_range
 
 from .common import is_fan, is_purifier
 from .const import (
@@ -111,7 +110,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
     @property
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
-        return int_states_in_range(self.device.fan_levels)
+        return len(self.device.fan_levels)
 
     @property
     def preset_modes(self) -> list[str]:
