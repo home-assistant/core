@@ -136,5 +136,19 @@
         "name": "Block charge point"
       }
     }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "available": "Charge point becomes available",
+      "charging": "Charge point started charging",
+      "error": "Charge point has error",
+      "no_power": "Vehicle has no power",
+      "offline": "Charge point is offline",
+      "ready": "Vehicle is ready",
+      "standby": "Vehicle is in standby",
+      "unavailable": "Charge point becomes unavailable",
+      "vehicle_detected": "Vehicle is detected",
+      "vehicle_error": "Vehicle has error"
+    }
   }
 }
