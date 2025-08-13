@@ -30,10 +30,10 @@ async def mock_config_fixture(
 
 
 @pytest.fixture(name="mock_find_coordinates")
-def mock_find_coordinates_fixture():
+def mock_find_coordinates_fixture() -> str:
     """Mock find_coordinates to return test coordinates."""
 
-    def mock_find_coordinates_side_effect(hass, location):
+    def mock_find_coordinates_side_effect(hass: HomeAssistant, location: str):
         locations = {
             "location1": "48.8588255,2.2646343",
             "location2": "40.4375354,-3.9913465",
