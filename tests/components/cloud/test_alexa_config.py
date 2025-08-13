@@ -241,7 +241,7 @@ async def test_alexa_config_fail_refresh_token(
     cloud_prefs: CloudPreferences,
     aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
-    lib_exception: type[Exception],
+    lib_exception: Exception,
     expected_exception: type[Exception],
 ) -> None:
     """Test Alexa config failing to refresh token."""
