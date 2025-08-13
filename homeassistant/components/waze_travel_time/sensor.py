@@ -31,8 +31,11 @@ from .const import (
     ATTR_DURATION,
     ATTR_ORIGIN,
     ATTR_ROUTE,
+    CONF_VEHICLE_TYPE,
     DEFAULT_NAME,
     DOMAIN,
+    ICON_CAR,
+    VEHICLE_ICONS,
 )
 from .coordinator import WazeTravelTimeCoordinator, WazeTravelTimeData
 
@@ -44,30 +47,36 @@ class WazeSensorDescription(SensorEntityDescription):
     value_fn: Callable[[WazeTravelTimeData], float | str | None]
 
 
-SENSOR_DESCRIPTIONS: tuple[WazeSensorDescription, ...] = (
-    WazeSensorDescription(
-        key=ATTR_DURATION,
-        translation_key="duration",
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.MINUTES,
-        suggested_display_precision=0,
-        value_fn=lambda data: data.duration,
-    ),
-    WazeSensorDescription(
-        key=ATTR_DISTANCE,
-        translation_key="distance",
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.DISTANCE,
-        native_unit_of_measurement=UnitOfLength.KILOMETERS,
-        value_fn=lambda data: data.distance,
-    ),
-    WazeSensorDescription(
-        key=ATTR_ROUTE,
-        translation_key="route",
-        value_fn=lambda data: data.route,
-    ),
-)
+def sensor_descriptions(vehicle_type: str) -> tuple[WazeSensorDescription, ...]:
+    """Construct WazeSensorDescriptions."""
+
+    return (
+        WazeSensorDescription(
+            key=ATTR_DURATION,
+            translation_key="duration",
+            icon=VEHICLE_ICONS.get(vehicle_type, ICON_CAR),
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.DURATION,
+            native_unit_of_measurement=UnitOfTime.MINUTES,
+            suggested_display_precision=0,
+            value_fn=lambda data: data.duration,
+        ),
+        WazeSensorDescription(
+            key=ATTR_DISTANCE,
+            translation_key="distance",
+            icon=VEHICLE_ICONS.get(vehicle_type, ICON_CAR),
+            state_class=SensorStateClass.MEASUREMENT,
+            device_class=SensorDeviceClass.DISTANCE,
+            native_unit_of_measurement=UnitOfLength.KILOMETERS,
+            value_fn=lambda data: data.distance,
+        ),
+        WazeSensorDescription(
+            key=ATTR_ROUTE,
+            translation_key="route",
+            icon="mdi:routes",
+            value_fn=lambda data: data.route,
+        ),
+    )
 
 
 async def async_setup_entry(
@@ -79,6 +88,7 @@ async def async_setup_entry(
     name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
     coordinator = config_entry.runtime_data
     entry_id = config_entry.entry_id
+    options = config_entry.options
 
     sensors: list[WazeTravelTimeSensor] = [
         WazeTravelTimeSensor(
@@ -87,7 +97,7 @@ async def async_setup_entry(
             sensor_description,
             coordinator,
         )
-        for sensor_description in SENSOR_DESCRIPTIONS
+        for sensor_description in sensor_descriptions(options[CONF_VEHICLE_TYPE])
     ]
     sensors.append(OriginSensor(entry_id, name, coordinator))
     sensors.append(DestinationSensor(entry_id, name, coordinator))
@@ -138,6 +148,7 @@ class OriginSensor(WazeTravelTimeSensor):
         description = WazeSensorDescription(
             key=ATTR_ORIGIN,
             translation_key="origin",
+            icon="mdi:store-marker",
             value_fn=lambda data: data.origin,
         )
         super().__init__(unique_id_prefix, name, description, coordinator)
@@ -170,6 +181,7 @@ class DestinationSensor(WazeTravelTimeSensor):
         description = WazeSensorDescription(
             key=ATTR_DESTINATION,
             translation_key="destination",
+            icon="mdi:store-marker",
             value_fn=lambda data: data.destination,
         )
         super().__init__(unique_id_prefix, name, description, coordinator)
