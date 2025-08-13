@@ -3,7 +3,7 @@
   "name": "Assist pipeline",
   "after_dependencies": ["repairs"],
   "codeowners": ["@balloob", "@synesthesiam"],
-  "dependencies": ["conversation", "stt", "tts", "wake_word"],
+  "dependencies": ["conversation", "stt", "tts", "wake_word", "http"],
   "documentation": "https://www.home-assistant.io/integrations/assist_pipeline",
   "integration_type": "system",
   "iot_class": "local_push",
