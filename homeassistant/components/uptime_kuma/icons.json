@@ -1,0 +1,32 @@
+{
+  "entity": {
+    "sensor": {
+      "cert_days_remaining": {
+        "default": "mdi:certificate"
+      },
+      "response_time": {
+        "default": "mdi:timeline-clock-outline"
+      },
+      "status": {
+        "default": "mdi:lan-connect",
+        "state": {
+          "down": "mdi:lan-disconnect",
+          "pending": "mdi:lan-pending",
+          "maintenance": "mdi:account-hard-hat-outline"
+        }
+      },
+      "type": {
+        "default": "mdi:protocol"
+      },
+      "url": {
+        "default": "mdi:web"
+      },
+      "hostname": {
+        "default": "mdi:ip-outline"
+      },
+      "port": {
+        "default": "mdi:ip-outline"
+      }
+    }
+  }
+}

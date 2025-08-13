@@ -86,9 +86,11 @@ UNSUPPORTED_REASONS = {
 UNSUPPORTED_SKIP_REPAIR = {"privileged"}
 UNHEALTHY_REASONS = {
     "docker",
-    "supervisor",
-    "setup",
+    "duplicate_os_installation",
+    "oserror_bad_message",
     "privileged",
+    "setup",
+    "supervisor",
     "untrusted",
 }
 
@@ -101,6 +103,7 @@ ISSUE_KEYS_FOR_REPAIRS = {
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
+    "issue_system_disk_lifetime",
 }
 
 _LOGGER = logging.getLogger(__name__)

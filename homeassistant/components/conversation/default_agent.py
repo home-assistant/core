@@ -14,7 +14,7 @@ import re
 import time
 from typing import IO, Any, cast
 
-from hassil.expression import Expression, ListReference, Sequence, TextChunk
+from hassil.expression import Expression, Group, ListReference, TextChunk
 from hassil.intents import (
     Intents,
     SlotList,
@@ -1183,7 +1183,7 @@ class DefaultAgent(ConversationEntity):
         for trigger_intent in trigger_intents.intents.values():
             for intent_data in trigger_intent.data:
                 for sentence in intent_data.sentences:
-                    _collect_list_references(sentence, wildcard_names)
+                    _collect_list_references(sentence.expression, wildcard_names)
 
         for wildcard_name in wildcard_names:
             trigger_intents.slot_lists[wildcard_name] = WildcardSlotList(wildcard_name)
@@ -1520,9 +1520,9 @@ def _get_match_error_response(
 
 def _collect_list_references(expression: Expression, list_names: set[str]) -> None:
     """Collect list reference names recursively."""
-    if isinstance(expression, Sequence):
-        seq: Sequence = expression
-        for item in seq.items:
+    if isinstance(expression, Group):
+        grp: Group = expression
+        for item in grp.items:
             _collect_list_references(item, list_names)
     elif isinstance(expression, ListReference):
         # {list}

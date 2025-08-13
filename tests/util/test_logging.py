@@ -2,6 +2,7 @@
 
 import asyncio
 from functools import partial
+import inspect
 import logging
 import queue
 from unittest.mock import patch
@@ -102,7 +103,7 @@ def test_catch_log_exception() -> None:
     async def async_meth():
         pass
 
-    assert asyncio.iscoroutinefunction(
+    assert inspect.iscoroutinefunction(
         logging_util.catch_log_exception(partial(async_meth), lambda: None)
     )
 
@@ -120,7 +121,7 @@ def test_catch_log_exception() -> None:
     wrapped = logging_util.catch_log_exception(partial(sync_meth), lambda: None)
 
     assert not is_callback(wrapped)
-    assert not asyncio.iscoroutinefunction(wrapped)
+    assert not inspect.iscoroutinefunction(wrapped)
 
 
 @pytest.mark.no_fail_on_log_exception

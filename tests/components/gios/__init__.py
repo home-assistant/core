@@ -1,16 +1,29 @@
 """Tests for GIOS."""
 
-import json
 from unittest.mock import patch
 
 from homeassistant.components.gios.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_load_json_array_fixture,
+    async_load_json_object_fixture,
+)
 
 STATIONS = [
-    {"id": 123, "stationName": "Test Name 1", "gegrLat": "99.99", "gegrLon": "88.88"},
-    {"id": 321, "stationName": "Test Name 2", "gegrLat": "77.77", "gegrLon": "66.66"},
+    {
+        "Identyfikator stacji": 123,
+        "Nazwa stacji": "Test Name 1",
+        "WGS84 φ N": "99.99",
+        "WGS84 λ E": "88.88",
+    },
+    {
+        "Identyfikator stacji": 321,
+        "Nazwa stacji": "Test Name 2",
+        "WGS84 φ N": "77.77",
+        "WGS84 λ E": "66.66",
+    },
 ]
 
 
@@ -26,13 +39,13 @@ async def init_integration(
         entry_id="86129426118ae32020417a53712d6eef",
     )
 
-    indexes = json.loads(await async_load_fixture(hass, "indexes.json", DOMAIN))
-    station = json.loads(await async_load_fixture(hass, "station.json", DOMAIN))
-    sensors = json.loads(await async_load_fixture(hass, "sensors.json", DOMAIN))
+    indexes = await async_load_json_object_fixture(hass, "indexes.json", DOMAIN)
+    station = await async_load_json_array_fixture(hass, "station.json", DOMAIN)
+    sensors = await async_load_json_object_fixture(hass, "sensors.json", DOMAIN)
     if incomplete_data:
-        indexes["stIndexLevel"]["indexLevelName"] = "foo"
-        sensors["pm10"]["values"][0]["value"] = None
-        sensors["pm10"]["values"][1]["value"] = None
+        indexes["AqIndex"] = "foo"
+        sensors["pm10"]["Lista danych pomiarowych"][0]["Wartość"] = None
+        sensors["pm10"]["Lista danych pomiarowych"][1]["Wartość"] = None
     if invalid_indexes:
         indexes = {}
 

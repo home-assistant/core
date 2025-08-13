@@ -8,11 +8,13 @@ from itertools import chain
 import pytest
 
 from homeassistant.const import (
+    CONCENTRATION_GRAMS_PER_CUBIC_METER,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
+    UnitOfApparentPower,
     UnitOfArea,
     UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
@@ -37,6 +39,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import unit_conversion
 from homeassistant.util.unit_conversion import (
+    ApparentPowerConverter,
     AreaConverter,
     BaseUnitConverter,
     BloodGlucoseConcentrationConverter,
@@ -82,6 +85,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         EnergyConverter,
         InformationConverter,
         MassConverter,
+        ApparentPowerConverter,
         PowerConverter,
         PressureConverter,
         ReactiveEnergyConverter,
@@ -135,6 +139,11 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     MassVolumeConcentrationConverter: (
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        1000,
+    ),
+    ApparentPowerConverter: (
+        UnitOfApparentPower.MILLIVOLT_AMPERE,
+        UnitOfApparentPower.VOLT_AMPERE,
         1000,
     ),
     PowerConverter: (UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
@@ -614,6 +623,14 @@ _CONVERTED_VALUE: dict[
         (1, UnitOfMass.STONES, 14, UnitOfMass.POUNDS),
         (1, UnitOfMass.STONES, 224, UnitOfMass.OUNCES),
     ],
+    ApparentPowerConverter: [
+        (
+            10,
+            UnitOfApparentPower.MILLIVOLT_AMPERE,
+            0.01,
+            UnitOfApparentPower.VOLT_AMPERE,
+        ),
+    ],
     PowerConverter: [
         (10, UnitOfPower.KILO_WATT, 10000, UnitOfPower.WATT),
         (10, UnitOfPower.MEGA_WATT, 10e6, UnitOfPower.WATT),
@@ -761,6 +778,13 @@ _CONVERTED_VALUE: dict[
             CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
             2000,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
+        # 3 g/m³ = 3000 mg/m³
+        (
+            3,
+            CONCENTRATION_GRAMS_PER_CUBIC_METER,
+            3000,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
         ),
     ],
     VolumeConverter: [

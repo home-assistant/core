@@ -12,7 +12,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE, CONF_NAME
 from homeassistant.core import callback
@@ -311,7 +311,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class WorkdayOptionsFlowHandler(OptionsFlow):
+class WorkdayOptionsFlowHandler(OptionsFlowWithReload):
     """Handle Workday options."""
 
     async def async_step_init(

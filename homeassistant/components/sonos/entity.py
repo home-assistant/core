@@ -34,7 +34,10 @@ class SonosEntity(Entity):
 
     async def async_added_to_hass(self) -> None:
         """Handle common setup when added to hass."""
-        self.config_entry.runtime_data.entity_id_mappings[self.entity_id] = self.speaker
+        assert self.unique_id
+        self.config_entry.runtime_data.unique_id_speaker_mappings[self.unique_id] = (
+            self.speaker
+        )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -52,7 +55,8 @@ class SonosEntity(Entity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Clean up when entity is removed."""
-        del self.config_entry.runtime_data.entity_id_mappings[self.entity_id]
+        assert self.unique_id
+        del self.config_entry.runtime_data.unique_id_speaker_mappings[self.unique_id]
 
     async def async_fallback_poll(self, now: datetime.datetime) -> None:
         """Poll the entity if subscriptions fail."""

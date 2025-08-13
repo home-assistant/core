@@ -27,9 +27,11 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.WATER_HEATER]
 
+type MelCloudConfigEntry = ConfigEntry[dict[str, list[MelCloudDevice]]]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Establish connection with MELClooud."""
+
+async def async_setup_entry(hass: HomeAssistant, entry: MelCloudConfigEntry) -> bool:
+    """Establish connection with MELCloud."""
     conf = entry.data
     try:
         mel_devices = await mel_devices_setup(hass, conf[CONF_TOKEN])
@@ -40,20 +42,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (TimeoutError, ClientConnectionError) as ex:
         raise ConfigEntryNotReady from ex
 
-    hass.data.setdefault(DOMAIN, {}).update({entry.entry_id: mel_devices})
+    entry.runtime_data = mel_devices
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-    hass.data[DOMAIN].pop(config_entry.entry_id)
-    if not hass.data[DOMAIN]:
-        hass.data.pop(DOMAIN)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
 class MelCloudDevice:

@@ -78,11 +78,9 @@ async def test_advertisements_do_not_switch_adapters_for_no_reason(
 
     address = "44:44:33:11:23:12"
 
-    switchbot_device_signal_100 = generate_ble_device(
-        address, "wohand_signal_100", rssi=-100
-    )
+    switchbot_device_signal_100 = generate_ble_device(address, "wohand_signal_100")
     switchbot_adv_signal_100 = generate_advertisement_data(
-        local_name="wohand_signal_100", service_uuids=[]
+        local_name="wohand_signal_100", service_uuids=[], rssi=-100
     )
     inject_advertisement_with_source(
         hass, switchbot_device_signal_100, switchbot_adv_signal_100, HCI0_SOURCE_ADDRESS
@@ -93,11 +91,9 @@ async def test_advertisements_do_not_switch_adapters_for_no_reason(
         is switchbot_device_signal_100
     )
 
-    switchbot_device_signal_99 = generate_ble_device(
-        address, "wohand_signal_99", rssi=-99
-    )
+    switchbot_device_signal_99 = generate_ble_device(address, "wohand_signal_99")
     switchbot_adv_signal_99 = generate_advertisement_data(
-        local_name="wohand_signal_99", service_uuids=[]
+        local_name="wohand_signal_99", service_uuids=[], rssi=-99
     )
     inject_advertisement_with_source(
         hass, switchbot_device_signal_99, switchbot_adv_signal_99, HCI0_SOURCE_ADDRESS
@@ -108,11 +104,9 @@ async def test_advertisements_do_not_switch_adapters_for_no_reason(
         is switchbot_device_signal_99
     )
 
-    switchbot_device_signal_98 = generate_ble_device(
-        address, "wohand_good_signal", rssi=-98
-    )
+    switchbot_device_signal_98 = generate_ble_device(address, "wohand_good_signal")
     switchbot_adv_signal_98 = generate_advertisement_data(
-        local_name="wohand_good_signal", service_uuids=[]
+        local_name="wohand_good_signal", service_uuids=[], rssi=-98
     )
     inject_advertisement_with_source(
         hass, switchbot_device_signal_98, switchbot_adv_signal_98, HCI1_SOURCE_ADDRESS
@@ -805,13 +799,11 @@ async def test_goes_unavailable_connectable_only_and_recovers(
         "44:44:33:11:23:45",
         "wohand",
         {},
-        rssi=-100,
     )
     switchbot_device_non_connectable = generate_ble_device(
         "44:44:33:11:23:45",
         "wohand",
         {},
-        rssi=-100,
     )
     switchbot_device_adv = generate_advertisement_data(
         local_name="wohand",
@@ -978,7 +970,6 @@ async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
         "44:44:33:11:23:45",
         "wohand",
         {},
-        rssi=-100,
     )
     switchbot_device_adv = generate_advertisement_data(
         local_name="wohand",
@@ -1394,7 +1385,6 @@ async def test_bluetooth_rediscover(
         "44:44:33:11:23:45",
         "wohand",
         {},
-        rssi=-100,
     )
     switchbot_device_adv = generate_advertisement_data(
         local_name="wohand",
@@ -1571,7 +1561,6 @@ async def test_bluetooth_rediscover_no_match(
         "44:44:33:11:23:45",
         "wohand",
         {},
-        rssi=-100,
     )
     switchbot_device_adv = generate_advertisement_data(
         local_name="wohand",
@@ -1693,11 +1682,9 @@ async def test_async_register_disappeared_callback(
     """Test bluetooth async_register_disappeared_callback handles failures."""
     address = "44:44:33:11:23:12"
 
-    switchbot_device_signal_100 = generate_ble_device(
-        address, "wohand_signal_100", rssi=-100
-    )
+    switchbot_device_signal_100 = generate_ble_device(address, "wohand_signal_100")
     switchbot_adv_signal_100 = generate_advertisement_data(
-        local_name="wohand_signal_100", service_uuids=[]
+        local_name="wohand_signal_100", service_uuids=[], rssi=-100
     )
     inject_advertisement_with_source(
         hass, switchbot_device_signal_100, switchbot_adv_signal_100, "hci0"

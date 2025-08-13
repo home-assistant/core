@@ -199,7 +199,7 @@ async def test_config_flow_failures_code_login(
 
 
 async def test_options_flow_drawables(
-    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
+    hass: HomeAssistant, bypass_api_fixture, mock_roborock_entry: MockConfigEntry
 ) -> None:
     """Test that the options flow works."""
     with patch("homeassistant.components.roborock.roborock_storage"):
@@ -239,8 +239,11 @@ async def test_reauth_flow(
     assert result["step_id"] == "reauth_confirm"
 
     # Request a new code
-    with patch(
-        "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code"
+    with (
+        patch(
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.request_code"
+        ),
+        patch("homeassistant.components.roborock.async_setup_entry", return_value=True),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={}
@@ -250,9 +253,12 @@ async def test_reauth_flow(
     assert result["type"] is FlowResultType.FORM
     new_user_data = deepcopy(USER_DATA)
     new_user_data.rriot.s = "new_password_hash"
-    with patch(
-        "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login",
-        return_value=new_user_data,
+    with (
+        patch(
+            "homeassistant.components.roborock.config_flow.RoborockApiClient.code_login",
+            return_value=new_user_data,
+        ),
+        patch("homeassistant.components.roborock.async_setup_entry", return_value=True),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}

@@ -12,6 +12,9 @@
       },
       "round_trip_time_min": {
         "name": "Round-trip time minimum"
+      },
+      "jitter": {
+        "name": "Jitter"
       }
     }
   },

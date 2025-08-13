@@ -14,7 +14,7 @@ from homeassistant.config_entries import (
     SOURCE_REAUTH,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -335,7 +335,7 @@ class EnphaseConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class EnvoyOptionsFlowHandler(OptionsFlow):
+class EnvoyOptionsFlowHandler(OptionsFlowWithReload):
     """Envoy config flow options handler."""
 
     async def async_step_init(

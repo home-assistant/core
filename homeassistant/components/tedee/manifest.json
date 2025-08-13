@@ -8,5 +8,5 @@
   "iot_class": "local_push",
   "loggers": ["aiotedee"],
   "quality_scale": "platinum",
-  "requirements": ["aiotedee==0.2.23"]
+  "requirements": ["aiotedee==0.2.25"]
 }

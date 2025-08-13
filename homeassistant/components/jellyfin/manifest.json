@@ -7,6 +7,5 @@
   "integration_type": "service",
   "iot_class": "local_polling",
   "loggers": ["jellyfin_apiclient_python"],
-  "requirements": ["jellyfin-apiclient-python==1.10.0"],
-  "single_config_entry": true
+  "requirements": ["jellyfin-apiclient-python==1.11.0"]
 }

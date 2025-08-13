@@ -18,7 +18,6 @@ from homeassistant.const import (
     UnitOfFrequency,
     UnitOfPower,
     UnitOfTemperature,
-    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -34,20 +33,6 @@ _LOGGER = logging.getLogger(__name__)
 
 SENSOR_DESCRIPTIONS = (
     # Battery
-    SensorEntityDescription(
-        key="battery_autonomy",
-        translation_key="battery_autonomy",
-        native_unit_of_measurement=UnitOfTime.HOURS,
-        device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key="battery_charge_time",
-        translation_key="battery_charge_time",
-        native_unit_of_measurement=UnitOfTime.HOURS,
-        device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.TOTAL,
-    ),
     SensorEntityDescription(
         key="battery_power",
         translation_key="battery_power",
@@ -167,13 +152,6 @@ SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key="meter_power",
         translation_key="meter_power",
-        native_unit_of_measurement=UnitOfPower.WATT,
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key="meter_power_protocol",
-        translation_key="meter_power_protocol",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
@@ -309,45 +287,6 @@ SENSOR_DESCRIPTIONS = (
     ),
     # Monitoring (data over the last 24 hours)
     SensorEntityDescription(
-        key="monitoring_building_consumption",
-        translation_key="monitoring_building_consumption",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
-        suggested_display_precision=2,
-    ),
-    SensorEntityDescription(
-        key="monitoring_economy_factor",
-        translation_key="monitoring_economy_factor",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL,
-        suggested_display_precision=2,
-    ),
-    SensorEntityDescription(
-        key="monitoring_grid_consumption",
-        translation_key="monitoring_grid_consumption",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
-        suggested_display_precision=2,
-    ),
-    SensorEntityDescription(
-        key="monitoring_grid_injection",
-        translation_key="monitoring_grid_injection",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
-        suggested_display_precision=2,
-    ),
-    SensorEntityDescription(
-        key="monitoring_grid_power_flow",
-        translation_key="monitoring_grid_power_flow",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
-        suggested_display_precision=2,
-    ),
-    SensorEntityDescription(
         key="monitoring_self_consumption",
         translation_key="monitoring_self_consumption",
         native_unit_of_measurement=PERCENTAGE,
@@ -359,14 +298,6 @@ SENSOR_DESCRIPTIONS = (
         translation_key="monitoring_self_sufficiency",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        suggested_display_precision=2,
-    ),
-    SensorEntityDescription(
-        key="monitoring_solar_production",
-        translation_key="monitoring_solar_production",
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
         suggested_display_precision=2,
     ),
     # Monitoring (instant minute data)

@@ -50,7 +50,6 @@ def async_setup_services(hass: HomeAssistant) -> None:
         today = now.date()
         event_date = get_astral_event_date(hass, SUN_EVENT_SUNSET, today)
         if event_date is None:
-            _LOGGER.error("Can't get sunset event date for %s", today)
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="sunset_event"
             )

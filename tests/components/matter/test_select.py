@@ -235,3 +235,50 @@ async def test_pump(
     await trigger_subscription_callback(hass, matter_client)
     state = hass.states.get("select.mock_pump_mode")
     assert state.state == "local"
+
+
+@pytest.mark.parametrize("node_fixture", ["microwave_oven"])
+async def test_microwave_oven(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test ListSelect entity is discovered and working from a microwave oven fixture."""
+
+    # SupportedWatts    from MicrowaveOvenControl cluster (1/96/6)
+    # SelectedWattIndex from MicrowaveOvenControl cluster (1/96/7)
+    matter_client.write_attribute.reset_mock()
+    state = hass.states.get("select.microwave_oven_power_level_w")
+    assert state
+    assert state.state == "1000"
+    assert state.attributes["options"] == [
+        "100",
+        "200",
+        "300",
+        "400",
+        "500",
+        "600",
+        "700",
+        "800",
+        "900",
+        "1000",
+    ]
+
+    # test select option
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {
+            "entity_id": "select.microwave_oven_power_level_w",
+            "option": "900",
+        },
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.MicrowaveOvenControl.Commands.SetCookingParameters(
+            wattSettingIndex=8
+        ),
+    )
