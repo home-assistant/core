@@ -97,4 +97,8 @@ class WorkdayCalendarEntity(BaseWorkdayEntity, CalendarEntity):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        return self.event_list
+        return [
+            workday
+            for workday in self.event_list
+            if start_date.date() <= workday.start <= end_date.date()
+        ]

@@ -40,14 +40,15 @@ async def test_holiday_calendar_entity(
         SERVICE_GET_EVENTS,
         {
             "entity_id": "calendar.workday_sensor_calendar",
-            "end_date_time": dt_util.now() + timedelta(hours=1),
+            "start_date_time": dt_util.now(),
+            "end_date_time": dt_util.now() + timedelta(days=10, hours=1),
         },
         blocking=True,
         return_response=True,
     )
     assert {
-        "end": "2023-01-01",
-        "start": "2023-01-02",
+        "end": "2023-01-02",
+        "start": "2023-01-01",
         "summary": "Workday Sensor",
     } not in response["calendar.workday_sensor_calendar"]["events"]
     assert {
