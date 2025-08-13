@@ -143,4 +143,16 @@ DISCOVERY_SCHEMAS = [
         value_contains=clusters.ActivatedCarbonFilterMonitoring.Commands.ResetCondition.command_id,
         allow_multi=True,
     ),
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="SmokeCoAlarmSelfTestRequest",
+            translation_key="self_test_request",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            command=clusters.SmokeCoAlarm.Commands.SelfTestRequest,
+        ),
+        entity_class=MatterCommandButton,
+        required_attributes=(clusters.SmokeCoAlarm.Attributes.AcceptedCommandList,),
+        value_contains=clusters.SmokeCoAlarm.Commands.SelfTestRequest.command_id,
+    ),
 ]

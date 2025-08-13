@@ -28,9 +28,14 @@
       }),
       'genuine': '/images/genuine.png',
       'gps': dict({
+        'alt': None,
+        'dim': None,
+        'dop': None,
         'fix': 0,
         'lat': '**REDACTED**',
         'lon': '**REDACTED**',
+        'sats': None,
+        'time_synced': None,
       }),
       'host': dict({
         'cpuload': 10.10101,

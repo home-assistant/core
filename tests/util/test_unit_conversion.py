@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
+    UnitOfApparentPower,
     UnitOfArea,
     UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
@@ -39,6 +40,7 @@ from homeassistant.const import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import unit_conversion
 from homeassistant.util.unit_conversion import (
+    ApparentPowerConverter,
     AreaConverter,
     BaseUnitConverter,
     BloodGlucoseConcentrationConverter,
@@ -85,6 +87,7 @@ _ALL_CONVERTERS: dict[type[BaseUnitConverter], list[str | None]] = {
         EnergyConverter,
         InformationConverter,
         MassConverter,
+        ApparentPowerConverter,
         PowerConverter,
         PressureConverter,
         ReactiveEnergyConverter,
@@ -144,6 +147,10 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     ReactivePowerConverter: (
         UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE,
         UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+    ),
+    ApparentPowerConverter: (
+        UnitOfApparentPower.MILLIVOLT_AMPERE,
+        UnitOfApparentPower.VOLT_AMPERE,
         1000,
     ),
     PowerConverter: (UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
@@ -641,6 +648,14 @@ _CONVERTED_VALUE: dict[
             UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE,
             0.01,
             UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        ),
+    ],
+    ApparentPowerConverter: [
+        (
+            10,
+            UnitOfApparentPower.MILLIVOLT_AMPERE,
+            0.01,
+            UnitOfApparentPower.VOLT_AMPERE,
         ),
     ],
     PowerConverter: [
