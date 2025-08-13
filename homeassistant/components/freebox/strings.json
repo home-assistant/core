@@ -24,6 +24,19 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
+  "entity": {
+    "light": {
+      "led_strip": {
+        "name": "LED strip"
+      }
+    }
+  },
+  "issues": {
+    "led_strip_permissions": {
+      "title": "LED strip control requires additional permissions",
+      "description": "Your Home Assistant app needs additional permissions to control the LED strip on your Freebox Ultra (MAC: {mac}). To fix this:\n\n1. Open your web browser and go to your Freebox settings at http://mafreebox.freebox.fr or https://mafreebox.freebox.fr\n2. Navigate to **Paramètres de la Freebox** → **Gestion des accès** → **Applications**\n3. Find the **Home Assistant** application in the list\n4. Click on **Home Assistant** to open its permissions\n5. In the permissions list, find **Modification des réglages de la Freebox** and check the box to enable it\n6. Click **Sauvegarder** to save the changes\n7. Restart Home Assistant or reload the Freebox integration\n\nAfter granting this permission, you will be able to control the LED strip brightness and effects through Home Assistant."
+    }
+  },
   "services": {
     "reboot": {
       "name": "Reboot",

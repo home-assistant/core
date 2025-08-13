@@ -1,0 +1,7 @@
+{
+  "hide_status_led": false,
+  "hide_wifi_key": false,
+  "brightness": 100,
+  "orientation": 0,
+  "orientation_forced": false
+}
