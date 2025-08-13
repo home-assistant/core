@@ -3332,6 +3332,9 @@ async def test_fuzzy_matching(
     assert await async_setup_component(hass, "intent", {})
     await light_intent.async_setup_intents(hass)
 
+    agent = hass.data[DATA_DEFAULT_ENTITY]
+    agent.fuzzy_matching = fuzzy_matching
+
     area_office = area_registry.async_get_or_create("office_id")
     area_office = area_registry.async_update(area_office.id, name="office")
 
