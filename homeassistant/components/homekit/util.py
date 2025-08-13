@@ -17,6 +17,7 @@ import voluptuous as vol
 
 from homeassistant.components import (
     binary_sensor,
+    input_number,
     media_player,
     persistent_notification,
     sensor,
@@ -69,6 +70,8 @@ from .const import (
     CONF_LINKED_OBSTRUCTION_SENSOR,
     CONF_LINKED_PM25_SENSOR,
     CONF_LINKED_TEMPERATURE_SENSOR,
+    CONF_LINKED_VALVE_DURATION,
+    CONF_LINKED_VALVE_END_TIME,
     CONF_LOW_BATTERY_THRESHOLD,
     CONF_MAX_FPS,
     CONF_MAX_HEIGHT,
@@ -266,7 +269,9 @@ SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend(
                     TYPE_VALVE,
                 )
             ),
-        )
+        ),
+        vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(input_number.DOMAIN),
+        vol.Optional(CONF_LINKED_VALVE_END_TIME): cv.entity_domain(sensor.DOMAIN),
     }
 )
 
@@ -277,6 +282,12 @@ SENSOR_SCHEMA = BASIC_INFO_SCHEMA.extend(
     }
 )
 
+VALVE_SCHEMA = BASIC_INFO_SCHEMA.extend(
+    {
+        vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(input_number.DOMAIN),
+        vol.Optional(CONF_LINKED_VALVE_END_TIME): cv.entity_domain(sensor.DOMAIN),
+    }
+)
 
 HOMEKIT_CHAR_TRANSLATIONS = {
     0: " ",  # nul
@@ -359,6 +370,9 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
 
         elif domain == "sensor":
             config = SENSOR_SCHEMA(config)
+
+        elif domain == "valve":
+            config = VALVE_SCHEMA(config)
 
         else:
             config = BASIC_INFO_SCHEMA(config)

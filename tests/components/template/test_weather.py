@@ -5,6 +5,8 @@ from typing import Any
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components import template
+from homeassistant.components.template.const import CONF_PICTURE
 from homeassistant.components.weather import (
     ATTR_WEATHER_APPARENT_TEMPERATURE,
     ATTR_WEATHER_CLOUD_COVERAGE,
@@ -13,6 +15,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_OZONE,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
+    ATTR_WEATHER_UV_INDEX,
     ATTR_WEATHER_VISIBILITY,
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_GUST_SPEED,
@@ -21,11 +24,20 @@ from homeassistant.components.weather import (
     SERVICE_GET_FORECASTS,
     Forecast,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_ENTITY_PICTURE,
+    ATTR_ICON,
+    CONF_ICON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+
+from .conftest import ConfigurationStyle
 
 from tests.common import (
     assert_setup_component,
@@ -34,6 +46,80 @@ from tests.common import (
 )
 
 ATTR_FORECAST = "forecast"
+
+TEST_OBJECT_ID = "template_weather"
+TEST_WEATHER = f"weather.{TEST_OBJECT_ID}"
+TEST_STATE_ENTITY_ID = "weather.test_state"
+
+TEST_STATE_TRIGGER = {
+    "trigger": {
+        "trigger": "state",
+        "entity_id": [TEST_STATE_ENTITY_ID],
+    },
+    "variables": {"triggering_entity": "{{ trigger.entity_id }}"},
+    "action": [
+        {"event": "action_event", "event_data": {"what": "{{ triggering_entity }}"}}
+    ],
+}
+TEST_REQUIRED = {
+    "condition_template": "cloudy",
+    "temperature_template": "{{ 20 }}",
+    "humidity_template": "{{ 25 }}",
+}
+
+
+async def async_setup_modern_format(
+    hass: HomeAssistant, count: int, weather_config: dict[str, Any]
+) -> None:
+    """Do setup of weather integration via new format."""
+    config = {"template": {"weather": weather_config}}
+
+    with assert_setup_component(count, template.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            template.DOMAIN,
+            config,
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+
+async def async_setup_trigger_format(
+    hass: HomeAssistant, count: int, weather_config: dict[str, Any]
+) -> None:
+    """Do setup of weather integration via trigger format."""
+    config = {"template": {**TEST_STATE_TRIGGER, "weather": weather_config}}
+
+    with assert_setup_component(count, template.DOMAIN):
+        assert await async_setup_component(
+            hass,
+            template.DOMAIN,
+            config,
+        )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+
+@pytest.fixture
+async def setup_weather(
+    hass: HomeAssistant,
+    count: int,
+    style: ConfigurationStyle,
+    weather_config: dict[str, Any],
+) -> None:
+    """Do setup of weather integration."""
+    if style == ConfigurationStyle.MODERN:
+        await async_setup_modern_format(
+            hass, count, {"name": TEST_OBJECT_ID, **weather_config}
+        )
+    if style == ConfigurationStyle.TRIGGER:
+        await async_setup_trigger_format(
+            hass, count, {"name": TEST_OBJECT_ID, **weather_config}
+        )
 
 
 @pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
@@ -46,6 +132,7 @@ ATTR_FORECAST = "forecast"
                 {
                     "platform": "template",
                     "name": "test",
+                    "unique_id": "abc123",
                     "attribution_template": "{{ states('sensor.attribution') }}",
                     "condition_template": "sunny",
                     "temperature_template": "{{ states('sensor.temperature') | float }}",
@@ -523,6 +610,7 @@ SAVED_EXTRA_DATA = {
     "last_ozone": None,
     "last_pressure": None,
     "last_temperature": 20,
+    "last_uv_index": None,
     "last_visibility": None,
     "last_wind_bearing": None,
     "last_wind_gust_speed": None,
@@ -538,6 +626,7 @@ SAVED_EXTRA_DATA_WITH_FUTURE_KEY = {
     "last_ozone": None,
     "last_pressure": None,
     "last_temperature": 20,
+    "last_uv_index": None,
     "last_visibility": None,
     "last_wind_bearing": None,
     "last_wind_gust_speed": None,
@@ -705,6 +794,7 @@ async def test_trigger_action(hass: HomeAssistant) -> None:
                             "wind_speed_template": "{{ my_variable + 1 }}",
                             "wind_bearing_template": "{{ my_variable + 1 }}",
                             "ozone_template": "{{ my_variable + 1 }}",
+                            "uv_index_template": "{{ my_variable + 1 }}",
                             "visibility_template": "{{ my_variable + 1 }}",
                             "pressure_template": "{{ my_variable + 1 }}",
                             "wind_gust_speed_template": "{{ my_variable + 1 }}",
@@ -779,6 +869,7 @@ async def test_trigger_weather_services(
     assert state.attributes["wind_speed"] == 3.0
     assert state.attributes["wind_bearing"] == 3.0
     assert state.attributes["ozone"] == 3.0
+    assert state.attributes["uv_index"] == 3.0
     assert state.attributes["visibility"] == 3.0
     assert state.attributes["pressure"] == 3.0
     assert state.attributes["wind_gust_speed"] == 3.0
@@ -877,6 +968,7 @@ SAVED_EXTRA_DATA_MISSING_KEY = {
     "last_ozone": None,
     "last_pressure": None,
     "last_temperature": 20,
+    "last_uv_index": None,
     "last_visibility": None,
     "last_wind_bearing": None,
     "last_wind_gust_speed": None,
@@ -956,6 +1048,7 @@ async def test_new_style_template_state_text(hass: HomeAssistant) -> None:
                     "wind_speed_template": "{{ states('sensor.windspeed') }}",
                     "wind_bearing_template": "{{ states('sensor.windbearing') }}",
                     "ozone_template": "{{ states('sensor.ozone') }}",
+                    "uv_index_template": "{{ states('sensor.uv_index') }}",
                     "visibility_template": "{{ states('sensor.visibility') }}",
                     "wind_gust_speed_template": "{{ states('sensor.wind_gust_speed') }}",
                     "cloud_coverage_template": "{{ states('sensor.cloud_coverage') }}",
@@ -978,6 +1071,7 @@ async def test_new_style_template_state_text(hass: HomeAssistant) -> None:
         ("sensor.windspeed", ATTR_WEATHER_WIND_SPEED, 20),
         ("sensor.windbearing", ATTR_WEATHER_WIND_BEARING, 180),
         ("sensor.ozone", ATTR_WEATHER_OZONE, 25),
+        ("sensor.uv_index", ATTR_WEATHER_UV_INDEX, 3.7),
         ("sensor.visibility", ATTR_WEATHER_VISIBILITY, 4.6),
         ("sensor.wind_gust_speed", ATTR_WEATHER_WIND_GUST_SPEED, 30),
         ("sensor.cloud_coverage", ATTR_WEATHER_CLOUD_COVERAGE, 75),
@@ -990,3 +1084,48 @@ async def test_new_style_template_state_text(hass: HomeAssistant) -> None:
         assert state is not None
         assert state.state == "sunny"
         assert state.attributes.get(v_attr) == value
+
+
+@pytest.mark.parametrize("count", [1])
+@pytest.mark.parametrize(
+    ("style", "initial_expected_state"),
+    [(ConfigurationStyle.MODERN, ""), (ConfigurationStyle.TRIGGER, None)],
+)
+@pytest.mark.parametrize(
+    ("weather_config", "attribute", "expected"),
+    [
+        (
+            {
+                CONF_ICON: "{% if states.weather.test_state.state == 'sunny' %}mdi:check{% endif %}",
+                **TEST_REQUIRED,
+            },
+            ATTR_ICON,
+            "mdi:check",
+        ),
+        (
+            {
+                CONF_PICTURE: "{% if states.weather.test_state.state == 'sunny' %}check.jpg{% endif %}",
+                **TEST_REQUIRED,
+            },
+            ATTR_ENTITY_PICTURE,
+            "check.jpg",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("setup_weather")
+async def test_templated_optional_config(
+    hass: HomeAssistant,
+    attribute: str,
+    expected: str,
+    initial_expected_state: str | None,
+) -> None:
+    """Test optional config templates."""
+    state = hass.states.get(TEST_WEATHER)
+    assert state.attributes.get(attribute) == initial_expected_state
+
+    state = hass.states.async_set(TEST_STATE_ENTITY_ID, "sunny")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_WEATHER)
+
+    assert state.attributes[attribute] == expected

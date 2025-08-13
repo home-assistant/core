@@ -11,12 +11,12 @@ from homeassistant.components.music_assistant.actions import (
     SERVICE_SEARCH,
 )
 from homeassistant.components.music_assistant.const import (
-    ATTR_CONFIG_ENTRY_ID,
     ATTR_FAVORITE,
     ATTR_MEDIA_TYPE,
     ATTR_SEARCH_NAME,
-    DOMAIN as MASS_DOMAIN,
+    DOMAIN,
 )
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 
 from .common import create_library_albums_from_fixture, setup_integration_from_fixtures
@@ -36,7 +36,7 @@ async def test_search_action(
         )
     )
     response = await hass.services.async_call(
-        MASS_DOMAIN,
+        DOMAIN,
         SERVICE_SEARCH,
         {
             ATTR_CONFIG_ENTRY_ID: entry.entry_id,
@@ -69,7 +69,7 @@ async def test_get_library_action(
     """Test music assistant get_library action."""
     entry = await setup_integration_from_fixtures(hass, music_assistant_client)
     response = await hass.services.async_call(
-        MASS_DOMAIN,
+        DOMAIN,
         SERVICE_GET_LIBRARY,
         {
             ATTR_CONFIG_ENTRY_ID: entry.entry_id,

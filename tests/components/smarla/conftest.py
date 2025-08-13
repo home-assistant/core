@@ -6,6 +6,7 @@ from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 from pysmarlaapi.classes import AuthToken
+from pysmarlaapi.federwiege.classes import Property, Service
 import pytest
 
 from homeassistant.components.smarla.const import DOMAIN
@@ -60,4 +61,36 @@ def mock_federwiege(mock_connection: MagicMock) -> Generator[MagicMock]:
     ) as mock_federwiege:
         federwiege = mock_federwiege.return_value
         federwiege.serial_number = MOCK_SERIAL_NUMBER
+
+        mock_babywiege_service = MagicMock(spec=Service)
+        mock_babywiege_service.props = {
+            "swing_active": MagicMock(spec=Property),
+            "smart_mode": MagicMock(spec=Property),
+            "intensity": MagicMock(spec=Property),
+        }
+
+        mock_babywiege_service.props["swing_active"].get.return_value = False
+        mock_babywiege_service.props["smart_mode"].get.return_value = False
+        mock_babywiege_service.props["intensity"].get.return_value = 1
+
+        mock_analyser_service = MagicMock(spec=Service)
+        mock_analyser_service.props = {
+            "oscillation": MagicMock(spec=Property),
+            "activity": MagicMock(spec=Property),
+            "swing_count": MagicMock(spec=Property),
+        }
+
+        mock_analyser_service.props["oscillation"].get.return_value = [0, 0]
+        mock_analyser_service.props["activity"].get.return_value = 0
+        mock_analyser_service.props["swing_count"].get.return_value = 0
+
+        federwiege.services = {
+            "babywiege": mock_babywiege_service,
+            "analyser": mock_analyser_service,
+        }
+
+        federwiege.get_property = MagicMock(
+            side_effect=lambda service, prop: federwiege.services[service].props[prop]
+        )
+
         yield federwiege

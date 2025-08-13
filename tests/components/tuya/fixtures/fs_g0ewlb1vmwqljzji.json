@@ -1,0 +1,132 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Ceiling Fan With Light",
+  "category": "fs",
+  "product_id": "g0ewlb1vmwqljzji",
+  "product_name": "Ceiling Fan With Light",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2025-03-22T22:57:04+00:00",
+  "create_time": "2025-03-22T22:57:04+00:00",
+  "update_time": "2025-03-22T22:57:04+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["normal", "sleep", "nature"]
+      }
+    },
+    "fan_speed": {
+      "type": "Enum",
+      "value": {
+        "range": ["1", "2", "3", "4", "5", "6"]
+      }
+    },
+    "fan_direction": {
+      "type": "Enum",
+      "value": {
+        "range": ["forward", "reverse"]
+      }
+    },
+    "light": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "bright_value": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_value": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "countdown_set": {
+      "type": "Enum",
+      "value": {
+        "range": ["cancel", "1h", "2h", "4h", "8h"]
+      }
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["normal", "sleep", "nature"]
+      }
+    },
+    "fan_speed": {
+      "type": "Enum",
+      "value": {
+        "range": ["1", "2", "3", "4", "5", "6"]
+      }
+    },
+    "fan_direction": {
+      "type": "Enum",
+      "value": {
+        "range": ["forward", "reverse"]
+      }
+    },
+    "light": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "bright_value": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_value": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "countdown_set": {
+      "type": "Enum",
+      "value": {
+        "range": ["cancel", "1h", "2h", "4h", "8h"]
+      }
+    }
+  },
+  "status": {
+    "switch": true,
+    "mode": "normal",
+    "fan_speed": 1,
+    "fan_direction": "reverse",
+    "light": true,
+    "bright_value": 100,
+    "temp_value": 0,
+    "countdown_set": "off"
+  },
+  "set_up": true,
+  "support_local": true
+}

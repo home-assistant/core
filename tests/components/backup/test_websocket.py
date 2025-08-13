@@ -30,8 +30,6 @@ from homeassistant.components.backup.manager import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.backup import async_initialize_backup
-from homeassistant.setup import async_setup_component
 
 from .common import (
     LOCAL_AGENT_ID,
@@ -78,7 +76,7 @@ DEFAULT_STORAGE_DATA: dict[str, Any] = {
             "copies": None,
             "days": None,
         },
-        "schedule": {"days": [], "recurrence": "never", "state": "never", "time": None},
+        "schedule": {"days": [], "recurrence": "never", "time": None},
     },
 }
 DAILY = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
@@ -1011,7 +1009,6 @@ async def test_agents_info(
                         "schedule": {
                             "days": DAILY,
                             "recurrence": "custom_days",
-                            "state": "never",
                             "time": None,
                         },
                     },
@@ -1043,7 +1040,6 @@ async def test_agents_info(
                         "schedule": {
                             "days": [],
                             "recurrence": "never",
-                            "state": "never",
                             "time": None,
                         },
                     },
@@ -1075,7 +1071,6 @@ async def test_agents_info(
                         "schedule": {
                             "days": [],
                             "recurrence": "never",
-                            "state": "never",
                             "time": None,
                         },
                     },
@@ -1107,7 +1102,6 @@ async def test_agents_info(
                         "schedule": {
                             "days": ["mon"],
                             "recurrence": "custom_days",
-                            "state": "never",
                             "time": None,
                         },
                     },
@@ -1139,7 +1133,6 @@ async def test_agents_info(
                         "schedule": {
                             "days": [],
                             "recurrence": "never",
-                            "state": "never",
                             "time": None,
                         },
                     },
@@ -1171,7 +1164,6 @@ async def test_agents_info(
                         "schedule": {
                             "days": ["mon", "sun"],
                             "recurrence": "custom_days",
-                            "state": "never",
                             "time": None,
                         },
                     },
@@ -1206,7 +1198,6 @@ async def test_agents_info(
                         "schedule": {
                             "days": ["mon", "sun"],
                             "recurrence": "custom_days",
-                            "state": "never",
                             "time": None,
                         },
                     },
@@ -1238,7 +1229,6 @@ async def test_agents_info(
                         "schedule": {
                             "days": [],
                             "recurrence": "never",
-                            "state": "never",
                             "time": None,
                         },
                     },
@@ -1270,7 +1260,6 @@ async def test_agents_info(
                         "schedule": {
                             "days": [],
                             "recurrence": "never",
-                            "state": "never",
                             "time": None,
                         },
                     },
@@ -1311,7 +1300,6 @@ async def test_agents_info(
                         "schedule": {
                             "days": ["mon", "sun"],
                             "recurrence": "custom_days",
-                            "state": "never",
                             "time": None,
                         },
                     },
@@ -1962,7 +1950,6 @@ async def test_config_schedule_logic(
             "schedule": {
                 "days": [],
                 "recurrence": "daily",
-                "state": "never",
                 "time": None,
             },
         },
@@ -2872,7 +2859,6 @@ async def test_config_retention_copies_logic(
             "schedule": {
                 "days": [],
                 "recurrence": "daily",
-                "state": "never",
                 "time": None,
             },
         },
@@ -3151,7 +3137,6 @@ async def test_config_retention_copies_logic_manual_backup(
             "schedule": {
                 "days": [],
                 "recurrence": "daily",
-                "state": "never",
                 "time": None,
             },
         },
@@ -3816,7 +3801,6 @@ async def test_config_retention_days_logic(
             "schedule": {
                 "days": [],
                 "recurrence": "never",
-                "state": "never",
                 "time": None,
             },
         },
@@ -3888,7 +3872,6 @@ async def test_configured_agents_unavailable_repair(
                         "schedule": {
                             "days": ["mon"],
                             "recurrence": "custom_days",
-                            "state": "never",
                             "time": None,
                         },
                     },
@@ -4050,29 +4033,6 @@ async def test_subscribe_event(
     await client.send_json_auto_id({"type": "backup/subscribe_events"})
     assert await client.receive_json() == snapshot
     assert await client.receive_json() == snapshot
-
-    manager.async_on_backup_event(
-        CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS, reason=None)
-    )
-    assert await client.receive_json() == snapshot
-
-
-async def test_subscribe_event_early(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test subscribe event before backup integration has started."""
-    async_initialize_backup(hass)
-    await setup_backup_integration(hass, with_hassio=False)
-
-    client = await hass_ws_client(hass)
-    await client.send_json_auto_id({"type": "backup/subscribe_events"})
-    assert await client.receive_json() == snapshot
-
-    assert await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
-    manager = hass.data[DATA_MANAGER]
 
     manager.async_on_backup_event(
         CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS, reason=None)

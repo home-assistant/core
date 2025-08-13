@@ -156,6 +156,15 @@ class CameraWebRTCProvider(ABC):
         """Close the session."""
         return  ## This is an optional method so we need a default here.
 
+    async def async_get_image(
+        self,
+        camera: Camera,
+        width: int | None = None,
+        height: int | None = None,
+    ) -> bytes | None:
+        """Get an image from the camera."""
+        return None
+
 
 @callback
 def async_register_webrtc_provider(

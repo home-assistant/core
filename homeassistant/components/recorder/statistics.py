@@ -42,6 +42,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.collection import chunked_or_all
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.unit_conversion import (
+    ApparentPowerConverter,
     AreaConverter,
     BaseUnitConverter,
     BloodGlucoseConcentrationConverter,
@@ -193,6 +194,7 @@ QUERY_STATISTICS_SUMMARY_SUM = (
 
 
 STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
+    **dict.fromkeys(ApparentPowerConverter.VALID_UNITS, ApparentPowerConverter),
     **dict.fromkeys(AreaConverter.VALID_UNITS, AreaConverter),
     **dict.fromkeys(
         BloodGlucoseConcentrationConverter.VALID_UNITS,
@@ -2855,7 +2857,7 @@ def cleanup_statistics_timestamp_migration(instance: Recorder) -> bool:
                     # to indicate we need to run again
                     return False
 
-    from .migration import _drop_index  # pylint: disable=import-outside-toplevel
+    from .migration import _drop_index  # noqa: PLC0415
 
     for table in STATISTICS_TABLES:
         _drop_index(instance.get_session, table, f"ix_{table}_start")

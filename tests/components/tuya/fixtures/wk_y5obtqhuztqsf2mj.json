@@ -1,0 +1,74 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Term - Prizemi",
+  "category": "wk",
+  "product_id": "y5obtqhuztqsf2mj",
+  "product_name": "Smart",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2025-02-22T10:25:25+00:00",
+  "create_time": "2025-02-22T10:25:25+00:00",
+  "update_time": "2025-02-22T10:25:25+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": 5,
+        "max": 700,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": 5,
+        "max": 700,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "℃",
+        "min": 0,
+        "max": 900,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "switch": true,
+    "temp_set": 230,
+    "temp_current": 230,
+    "child_lock": false
+  },
+  "set_up": true,
+  "support_local": true
+}

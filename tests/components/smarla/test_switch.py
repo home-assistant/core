@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-from pysmarlaapi.federwiege.classes import Property
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -22,26 +21,28 @@ from . import setup_integration, update_property_listeners
 
 from tests.common import MockConfigEntry, snapshot_platform
 
+SWITCH_ENTITIES = [
+    {
+        "entity_id": "switch.smarla",
+        "service": "babywiege",
+        "property": "swing_active",
+    },
+    {
+        "entity_id": "switch.smarla_smart_mode",
+        "service": "babywiege",
+        "property": "smart_mode",
+    },
+]
 
-@pytest.fixture
-def mock_switch_property() -> MagicMock:
-    """Mock a switch property."""
-    mock = MagicMock(spec=Property)
-    mock.get.return_value = False
-    return mock
 
-
+@pytest.mark.usefixtures("mock_federwiege")
 async def test_entities(
     hass: HomeAssistant,
-    mock_federwiege: MagicMock,
-    mock_switch_property: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the Smarla entities."""
-    mock_federwiege.get_property.return_value = mock_switch_property
-
     with (
         patch("homeassistant.components.smarla.PLATFORMS", [Platform.SWITCH]),
     ):
@@ -59,45 +60,55 @@ async def test_entities(
         (SERVICE_TURN_OFF, False),
     ],
 )
+@pytest.mark.parametrize("entity_info", SWITCH_ENTITIES)
 async def test_switch_action(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_federwiege: MagicMock,
-    mock_switch_property: MagicMock,
+    entity_info: dict[str, str],
     service: str,
     parameter: bool,
 ) -> None:
     """Test Smarla Switch on/off behavior."""
-    mock_federwiege.get_property.return_value = mock_switch_property
-
     assert await setup_integration(hass, mock_config_entry)
+
+    mock_switch_property = mock_federwiege.get_property(
+        entity_info["service"], entity_info["property"]
+    )
+
+    entity_id = entity_info["entity_id"]
 
     # Turn on
     await hass.services.async_call(
         SWITCH_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "switch.smarla"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_switch_property.set.assert_called_once_with(parameter)
 
 
+@pytest.mark.parametrize("entity_info", SWITCH_ENTITIES)
 async def test_switch_state_update(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_federwiege: MagicMock,
-    mock_switch_property: MagicMock,
+    entity_info: dict[str, str],
 ) -> None:
     """Test Smarla Switch callback."""
-    mock_federwiege.get_property.return_value = mock_switch_property
-
     assert await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("switch.smarla").state == STATE_OFF
+    mock_switch_property = mock_federwiege.get_property(
+        entity_info["service"], entity_info["property"]
+    )
+
+    entity_id = entity_info["entity_id"]
+
+    assert hass.states.get(entity_id).state == STATE_OFF
 
     mock_switch_property.get.return_value = True
 
     await update_property_listeners(mock_switch_property)
     await hass.async_block_till_done()
 
-    assert hass.states.get("switch.smarla").state == STATE_ON
+    assert hass.states.get(entity_id).state == STATE_ON

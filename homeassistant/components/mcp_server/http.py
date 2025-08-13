@@ -88,7 +88,6 @@ class ModelContextProtocolSSEView(HomeAssistantView):
         context = llm.LLMContext(
             platform=DOMAIN,
             context=self.context(request),
-            user_prompt=None,
             language="*",
             assistant=conversation.DOMAIN,
             device_id=None,

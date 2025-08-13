@@ -6,18 +6,31 @@ from typing import Any
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import Store
+from homeassistant.helpers.typing import ConfigType
 
 from .account import IcloudAccount, IcloudConfigEntry
 from .const import (
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
     CONF_WITH_FAMILY,
+    DOMAIN,
     PLATFORMS,
     STORAGE_KEY,
     STORAGE_VERSION,
 )
-from .services import register_services
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up iCloud integration."""
+
+    async_setup_services(hass)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> bool:
@@ -50,8 +63,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> bo
     entry.runtime_data = account
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    register_services(hass)
 
     return True
 

@@ -190,15 +190,14 @@ def _print_deprecation_warning_internal_impl(
     *,
     log_when_no_integration_is_found: bool,
 ) -> None:
-    # pylint: disable=import-outside-toplevel
-    from homeassistant.core import async_get_hass_or_none
-    from homeassistant.loader import async_suggest_report_issue
+    from homeassistant.core import async_get_hass_or_none  # noqa: PLC0415
+    from homeassistant.loader import async_suggest_report_issue  # noqa: PLC0415
 
-    from .frame import MissingIntegrationFrame, get_integration_frame
+    from .frame import MissingIntegrationFrame, get_integration_frame  # noqa: PLC0415
 
     logger = logging.getLogger(module_name)
     if breaks_in_ha_version:
-        breaks_in = f" which will be removed in HA Core {breaks_in_ha_version}"
+        breaks_in = f" It will be removed in HA Core {breaks_in_ha_version}."
     else:
         breaks_in = ""
     try:
@@ -206,9 +205,10 @@ def _print_deprecation_warning_internal_impl(
     except MissingIntegrationFrame:
         if log_when_no_integration_is_found:
             logger.warning(
-                "%s is a deprecated %s%s. Use %s instead",
-                obj_name,
+                "The deprecated %s %s was %s.%s Use %s instead",
                 description,
+                obj_name,
+                verb,
                 breaks_in,
                 replacement,
             )
@@ -220,25 +220,22 @@ def _print_deprecation_warning_internal_impl(
                 module=integration_frame.module,
             )
             logger.warning(
-                (
-                    "%s was %s from %s, this is a deprecated %s%s. Use %s instead,"
-                    " please %s"
-                ),
+                ("The deprecated %s %s was %s from %s.%s Use %s instead, please %s"),
+                description,
                 obj_name,
                 verb,
                 integration_frame.integration,
-                description,
                 breaks_in,
                 replacement,
                 report_issue,
             )
         else:
             logger.warning(
-                "%s was %s from %s, this is a deprecated %s%s. Use %s instead",
+                "The deprecated %s %s was %s from %s.%s Use %s instead",
+                description,
                 obj_name,
                 verb,
                 integration_frame.integration,
-                description,
                 breaks_in,
                 replacement,
             )
