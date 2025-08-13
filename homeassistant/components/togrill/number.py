@@ -33,7 +33,7 @@ PARALLEL_UPDATES = 0
 
 
 @dataclass(kw_only=True, frozen=True)
-class ToGrillSensorEntityDescription(NumberEntityDescription):
+class ToGrillNumberEntityDescription(NumberEntityDescription):
     """Description of entity."""
 
     get_value: Callable[[ToGrillCoordinator], float | None]
@@ -41,7 +41,9 @@ class ToGrillSensorEntityDescription(NumberEntityDescription):
     entity_supported: Callable[[Mapping[str, Any]], bool] = lambda _: True
 
 
-def _get_temperature_target_description(probe_number: int):
+def _get_temperature_target_description(
+    probe_number: int,
+) -> ToGrillNumberEntityDescription:
     def _set_packet(value: float | None) -> PacketWrite:
         if value == 0.0:
             value = None
@@ -53,7 +55,7 @@ def _get_temperature_target_description(probe_number: int):
                 return packet.temperature_1
         return None
 
-    return ToGrillSensorEntityDescription(
+    return ToGrillNumberEntityDescription(
         key=f"temperature_target_{probe_number}",
         translation_key="temperature_target",
         translation_placeholders={"probe_number": f"{probe_number}"},
@@ -73,7 +75,7 @@ ENTITY_DESCRIPTIONS = (
         _get_temperature_target_description(probe_number)
         for probe_number in range(1, MAX_PROBE_COUNT + 1)
     ],
-    ToGrillSensorEntityDescription(
+    ToGrillNumberEntityDescription(
         key="alarm_interval",
         translation_key="alarm_interval",
         device_class=NumberDeviceClass.DURATION,
@@ -97,7 +99,7 @@ async def async_setup_entry(
     entry: ToGrillConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Gardena Bluetooth sensor based on a config entry."""
+    """Set up number based on a config entry."""
 
     coordinator = entry.runtime_data
 
@@ -109,16 +111,16 @@ async def async_setup_entry(
 
 
 class ToGrillNumber(ToGrillEntity, NumberEntity):
-    """Representation of a sensor."""
+    """Representation of a number."""
 
-    entity_description: ToGrillSensorEntityDescription
+    entity_description: ToGrillNumberEntityDescription
 
     def __init__(
         self,
         coordinator: ToGrillCoordinator,
-        entity_description: ToGrillSensorEntityDescription,
+        entity_description: ToGrillNumberEntityDescription,
     ) -> None:
-        """Initialize sensor."""
+        """Initialize."""
 
         super().__init__(coordinator)
         self.entity_description = entity_description
