@@ -88,7 +88,7 @@ class SwitchBotCloudCoverCurtain(SwitchBotCloudCover):
                 CurtainCommands.SET_POSITION,
                 parameters=f"{0},ff,{100 - position}",
             )
-            await asyncio.sleep(10)
+            await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
             await self.coordinator.async_request_refresh()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
@@ -128,7 +128,7 @@ class SwitchBotCloudCoverRollerShade(SwitchBotCloudCover):
             await self.send_api_command(
                 RollerShadeCommands.SET_POSITION, parameters=str(100 - position)
             )
-            await asyncio.sleep(10)
+            await asyncio.sleep(COVER_ENTITY_AFTER_COMMAND_REFRESH)
             await self.coordinator.async_request_refresh()
 
 
