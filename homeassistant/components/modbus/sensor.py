@@ -106,8 +106,6 @@ class ModbusRegisterSensor(BaseStructPlatform, RestoreSensor, SensorEntity):
 
     async def _async_update(self) -> None:
         """Update the state of the sensor."""
-        # remark "now" is a dummy parameter to avoid problems with
-        # async_track_time_interval
         self._cancel_call = None
         raw_result = await self._hub.async_pb_call(
             self._slave, self._address, self._count, self._input_type
