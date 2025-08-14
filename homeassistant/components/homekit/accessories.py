@@ -89,8 +89,10 @@ from .const import (
     TYPE_FAN,
     TYPE_FAUCET,
     TYPE_OUTLET,
+    TYPE_SET_TOP_BOX,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
+    TYPE_STREAMING_STICK,
     TYPE_SWITCH,
     TYPE_VALVE,
 )
@@ -206,6 +208,10 @@ def get_accessory(  # noqa: C901
             a_type = "ReceiverMediaPlayer"
         elif device_class == MediaPlayerDeviceClass.TV:
             a_type = "TelevisionMediaPlayer"
+        elif device_class == TYPE_SET_TOP_BOX:
+            a_type = "SetTopBoxMediaPlayer"
+        elif device_class == TYPE_STREAMING_STICK:
+            a_type = "StreamingStickMediaPlayer"
         elif validate_media_player_features(state, feature_list):
             a_type = "MediaPlayer"
 
