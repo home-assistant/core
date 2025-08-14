@@ -27,7 +27,6 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.unit_conversion import TemperatureConverter
 
@@ -105,11 +104,6 @@ DEFAULT_MIN_HUMIDITY = 30
 DEFAULT_MAX_HUMIDITY = 99
 
 CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE, ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH]
-
-# Can be removed in 2025.1 after deprecation period of the new feature flags
-CHECK_TURN_ON_OFF_FEATURE_FLAG = (
-    ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
-)
 
 SET_TEMPERATURE_SCHEMA = vol.All(
     cv.has_at_least_one_key(
@@ -261,7 +255,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     )
 
     entity_description: ClimateEntityDescription
-    _attr_current_humidity: int | None = None
+    _attr_current_humidity: float | None = None
     _attr_current_temperature: float | None = None
     _attr_fan_mode: str | None
     _attr_fan_modes: list[str] | None
@@ -535,26 +529,6 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return
         modes_str: str = ", ".join(modes) if modes else ""
         translation_key = f"not_valid_{mode_type}_mode"
-        if mode_type == "hvac":
-            report_issue = async_suggest_report_issue(
-                self.hass,
-                integration_domain=self.platform.platform_name,
-                module=type(self).__module__,
-            )
-            _LOGGER.warning(
-                (
-                    "%s::%s sets the hvac_mode %s which is not "
-                    "valid for this entity with modes: %s. "
-                    "This will stop working in 2025.4 and raise an error instead. "
-                    "Please %s"
-                ),
-                self.platform.platform_name,
-                self.__class__.__name__,
-                mode,
-                modes_str,
-                report_issue,
-            )
-            return
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key=translation_key,

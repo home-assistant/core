@@ -5,37 +5,37 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "incomplete_info": "Incomplete information to set up device, no host or token supplied.",
-      "not_xiaomi_miio": "Device is not (yet) supported by Xiaomi Miio.",
+      "not_xiaomi_miio": "Device is not (yet) supported by Xiaomi Home integration.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "wrong_token": "Checksum error, wrong token",
       "unknown_device": "The device model is not known, not able to set up the device using config flow.",
-      "cloud_no_devices": "No devices found in this Xiaomi Miio cloud account.",
-      "cloud_credentials_incomplete": "Cloud credentials incomplete, please fill in username, password and country",
-      "cloud_login_error": "Could not log in to Xiaomi Miio Cloud, check the credentials."
+      "cloud_no_devices": "No devices found in this Xiaomi Home account.",
+      "cloud_credentials_incomplete": "Credentials incomplete, please fill in username, password and server region",
+      "cloud_login_error": "Could not log in to Xiaomi Home, check the credentials."
     },
     "flow_title": "{name}",
     "step": {
       "reauth_confirm": {
-        "description": "The Xiaomi Miio integration needs to re-authenticate your account in order to update the tokens or add missing cloud credentials.",
+        "description": "The Xiaomi Home integration needs to re-authenticate your account in order to update the tokens or add missing credentials.",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
       "cloud": {
         "data": {
-          "cloud_username": "Cloud username",
-          "cloud_password": "Cloud password",
-          "cloud_country": "Cloud server country",
+          "cloud_username": "[%key:common::config_flow::data::username%]",
+          "cloud_password": "[%key:common::config_flow::data::password%]",
+          "cloud_country": "Server region",
           "manual": "Configure manually (not recommended)"
         },
-        "description": "Log in to the Xiaomi Miio cloud, see https://www.openhab.org/addons/bindings/miio/#country-servers for the cloud server to use."
+        "description": "Log in to Xiaomi Home, see https://www.openhab.org/addons/bindings/miio/#country-servers for the server region to use."
       },
       "select": {
         "data": {
-          "select_device": "Miio device"
+          "select_device": "[%key:common::config_flow::data::device%]"
         },
-        "description": "Select the Xiaomi Miio device to set up."
+        "description": "Select the Xiaomi Home device to set up."
       },
       "manual": {
         "data": {
@@ -58,7 +58,7 @@
     "step": {
       "init": {
         "data": {
-          "cloud_subdevices": "Use cloud to get connected subdevices"
+          "cloud_subdevices": "Use Xiaomi Home service to get connected subdevices"
         }
       }
     }
@@ -311,7 +311,7 @@
         "name": "Learn mode"
       },
       "auto_detect": {
-        "name": "Auto detect"
+        "name": "Autodetect"
       },
       "ionizer": {
         "name": "Ionizer"
@@ -331,7 +331,7 @@
       "fields": {
         "entity_id": {
           "name": "Entity ID",
-          "description": "Name of the Xiaomi Miio entity."
+          "description": "Name of the Xiaomi Home entity."
         }
       }
     },

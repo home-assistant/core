@@ -2,13 +2,32 @@
 # name: test_function_call
   list([
     dict({
+      'attachments': None,
       'content': 'Please call the test function',
       'role': 'user',
     }),
     dict({
-      'agent_id': 'conversation.openai',
+      'agent_id': 'conversation.openai_conversation',
       'content': None,
+      'native': None,
       'role': 'assistant',
+      'thinking_content': 'Thinking',
+      'tool_calls': None,
+    }),
+    dict({
+      'agent_id': 'conversation.openai_conversation',
+      'content': None,
+      'native': ResponseReasoningItem(id='rs_A', summary=[], type='reasoning', content=None, encrypted_content='AAABBB', status=None),
+      'role': 'assistant',
+      'thinking_content': 'Thinking more',
+      'tool_calls': None,
+    }),
+    dict({
+      'agent_id': 'conversation.openai_conversation',
+      'content': None,
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
       'tool_calls': list([
         dict({
           'id': 'call_call_1',
@@ -20,16 +39,18 @@
       ]),
     }),
     dict({
-      'agent_id': 'conversation.openai',
+      'agent_id': 'conversation.openai_conversation',
       'role': 'tool_result',
       'tool_call_id': 'call_call_1',
       'tool_name': 'test_tool',
       'tool_result': 'value1',
     }),
     dict({
-      'agent_id': 'conversation.openai',
+      'agent_id': 'conversation.openai_conversation',
       'content': None,
+      'native': None,
       'role': 'assistant',
+      'thinking_content': None,
       'tool_calls': list([
         dict({
           'id': 'call_call_2',
@@ -41,30 +62,86 @@
       ]),
     }),
     dict({
-      'agent_id': 'conversation.openai',
+      'agent_id': 'conversation.openai_conversation',
       'role': 'tool_result',
       'tool_call_id': 'call_call_2',
       'tool_name': 'test_tool',
       'tool_result': 'value2',
     }),
     dict({
-      'agent_id': 'conversation.openai',
+      'agent_id': 'conversation.openai_conversation',
+      'content': 'Cool',
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_function_call.1
+  list([
+    dict({
+      'content': 'Please call the test function',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'encrypted_content': 'AAABBB',
+      'id': 'rs_A',
+      'summary': list([
+        dict({
+          'text': 'Thinking',
+          'type': 'summary_text',
+        }),
+        dict({
+          'text': 'Thinking more',
+          'type': 'summary_text',
+        }),
+      ]),
+      'type': 'reasoning',
+    }),
+    dict({
+      'arguments': '{"param1": "call1"}',
+      'call_id': 'call_call_1',
+      'name': 'test_tool',
+      'type': 'function_call',
+    }),
+    dict({
+      'call_id': 'call_call_1',
+      'output': '"value1"',
+      'type': 'function_call_output',
+    }),
+    dict({
+      'arguments': '{"param1": "call2"}',
+      'call_id': 'call_call_2',
+      'name': 'test_tool',
+      'type': 'function_call',
+    }),
+    dict({
+      'call_id': 'call_call_2',
+      'output': '"value2"',
+      'type': 'function_call_output',
+    }),
+    dict({
       'content': 'Cool',
       'role': 'assistant',
-      'tool_calls': None,
+      'type': 'message',
     }),
   ])
 # ---
 # name: test_function_call_without_reasoning
   list([
     dict({
+      'attachments': None,
       'content': 'Please call the test function',
       'role': 'user',
     }),
     dict({
-      'agent_id': 'conversation.openai',
+      'agent_id': 'conversation.openai_conversation',
       'content': None,
+      'native': None,
       'role': 'assistant',
+      'thinking_content': None,
       'tool_calls': list([
         dict({
           'id': 'call_call_1',
@@ -76,16 +153,18 @@
       ]),
     }),
     dict({
-      'agent_id': 'conversation.openai',
+      'agent_id': 'conversation.openai_conversation',
       'role': 'tool_result',
       'tool_call_id': 'call_call_1',
       'tool_name': 'test_tool',
       'tool_result': 'value1',
     }),
     dict({
-      'agent_id': 'conversation.openai',
+      'agent_id': 'conversation.openai_conversation',
       'content': 'Cool',
+      'native': None,
       'role': 'assistant',
+      'thinking_content': None,
       'tool_calls': None,
     }),
   ])

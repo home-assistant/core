@@ -56,14 +56,18 @@ type Control4ConfigEntry = ConfigEntry[Control4RuntimeData]
 
 async def call_c4_api_retry(func, *func_args):
     """Call C4 API function and retry on failure."""
-    # Ruff doesn't understand this loop - the exception is always raised after the retries
-    for i in range(API_RETRY_TIMES):  # noqa: RET503
+    exc = None
+    for i in range(API_RETRY_TIMES):
         try:
             return await func(*func_args)
         except client_exceptions.ClientError as exception:
-            _LOGGER.error("Error connecting to Control4 account API: %s", exception)
-            if i == API_RETRY_TIMES - 1:
-                raise ConfigEntryNotReady(exception) from exception
+            _LOGGER.error(
+                "Try: %d, Error connecting to Control4 account API: %s",
+                i + 1,
+                exception,
+            )
+            exc = exception
+    raise ConfigEntryNotReady(exc) from exc
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> bool:
@@ -141,19 +145,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> 
         ui_configuration=ui_configuration,
     )
 
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
-
-
-async def update_listener(
-    hass: HomeAssistant, config_entry: Control4ConfigEntry
-) -> None:
-    """Update when config_entry options update."""
-    _LOGGER.debug("Config entry was updated, rerunning setup")
-    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: Control4ConfigEntry) -> bool:

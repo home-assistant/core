@@ -11,6 +11,7 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.helpers import config_validation as cv
 
@@ -49,6 +50,7 @@ async def _send_text_command(call: ServiceCall) -> ServiceResponse:
     return None
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Add the services for Google Assistant SDK."""
 
