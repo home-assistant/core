@@ -22,11 +22,13 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 type ComponentSetup = Callable[[], Awaitable[MockHinen]]
 
-CLIENT_ID = "W4lHyHTK"
+CLIENT_ID = "6liMmES7"
 CLIENT_SECRET = "test_client_secret"
 PAGE_LANGUAGE = "en_US"
-AUTH_URL = "https://dev-knowledge.celinksmart.cn/#/auth"
-TOKEN_URL = "https://dev-iot-api.celinksmart.cn/iot-global/open-platforms/auth/token"
+AUTH_URL = "https://global.knowledge.celinksmart.com/#/auth"
+TOKEN_URL = (
+    "https://global.iot-api.celinksmart.com/iot-global/open-platforms/auth/token"
+)
 REDIRECTION_URL = "https://example.com/auth/hinen/callback"
 REGION_CODE = "CN"
 HOST = "https://dev-iot-api.celinksmart.cn"
