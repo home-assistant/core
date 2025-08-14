@@ -360,52 +360,49 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        commands = []
         if ATTR_TEMPERATURE in kwargs:
             if TYPE_CHECKING:
                 # guarded by ClimateEntityFeature.TARGET_TEMPERATURE
                 assert self._set_temperature is not None
-            commands.append(
-                {
-                    "code": self._set_temperature.dpcode,
-                    "value": round(
-                        self._set_temperature.scale_value_back(kwargs[ATTR_TEMPERATURE])
-                    ),
-                }
+            self._send_command(
+                [
+                    {
+                        "code": self._set_temperature.dpcode,
+                        "value": round(
+                            self._set_temperature.scale_value_back(
+                                kwargs[ATTR_TEMPERATURE]
+                            )
+                        ),
+                    }
+                ]
             )
+            return
 
-        if ATTR_TARGET_TEMP_LOW in kwargs:
+        if ATTR_TARGET_TEMP_LOW in kwargs and ATTR_TARGET_TEMP_HIGH in kwargs:
             if TYPE_CHECKING:
                 # guarded by ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
                 assert self._set_temperature_lower is not None
-            commands.append(
-                {
-                    "code": self._set_temperature_lower.dpcode,
-                    "value": round(
-                        self._set_temperature_lower.scale_value_back(
-                            kwargs[ATTR_TARGET_TEMP_LOW]
-                        )
-                    ),
-                }
-            )
-
-        if ATTR_TARGET_TEMP_HIGH in kwargs:
-            if TYPE_CHECKING:
-                # guarded by ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
                 assert self._set_temperature_upper is not None
-            commands.append(
-                {
-                    "code": self._set_temperature_upper.dpcode,
-                    "value": round(
-                        self._set_temperature_upper.scale_value_back(
-                            kwargs[ATTR_TARGET_TEMP_HIGH]
-                        )
-                    ),
-                }
+            self._send_command(
+                [
+                    {
+                        "code": self._set_temperature_lower.dpcode,
+                        "value": round(
+                            self._set_temperature_lower.scale_value_back(
+                                kwargs[ATTR_TARGET_TEMP_LOW]
+                            )
+                        ),
+                    },
+                    {
+                        "code": self._set_temperature_upper.dpcode,
+                        "value": round(
+                            self._set_temperature_upper.scale_value_back(
+                                kwargs[ATTR_TARGET_TEMP_HIGH]
+                            )
+                        ),
+                    },
+                ]
             )
-
-        if commands:
-            self._send_command(commands)
 
     @property
     def current_temperature(self) -> float | None:
