@@ -10,6 +10,7 @@ from urllib.parse import urlparse
 from aioesphomeapi import (
     EntityInfo,
     MediaPlayerCommand,
+    MediaPlayerEntityFeature as EspMediaPlayerEntityFeature,
     MediaPlayerEntityState,
     MediaPlayerFormatPurpose,
     MediaPlayerInfo,
@@ -53,6 +54,31 @@ _STATES: EsphomeEnumMapper[EspMediaPlayerState, MediaPlayerState] = EsphomeEnumM
     }
 )
 
+_FEATURES = {
+    EspMediaPlayerEntityFeature.PAUSE: MediaPlayerEntityFeature.PAUSE,
+    EspMediaPlayerEntityFeature.SEEK: MediaPlayerEntityFeature.SEEK,
+    EspMediaPlayerEntityFeature.VOLUME_SET: MediaPlayerEntityFeature.VOLUME_SET,
+    EspMediaPlayerEntityFeature.VOLUME_MUTE: MediaPlayerEntityFeature.VOLUME_MUTE,
+    EspMediaPlayerEntityFeature.PREVIOUS_TRACK: MediaPlayerEntityFeature.PREVIOUS_TRACK,
+    EspMediaPlayerEntityFeature.NEXT_TRACK: MediaPlayerEntityFeature.NEXT_TRACK,
+    EspMediaPlayerEntityFeature.TURN_ON: MediaPlayerEntityFeature.TURN_ON,
+    EspMediaPlayerEntityFeature.TURN_OFF: MediaPlayerEntityFeature.TURN_OFF,
+    EspMediaPlayerEntityFeature.PLAY_MEDIA: MediaPlayerEntityFeature.PLAY_MEDIA,
+    EspMediaPlayerEntityFeature.VOLUME_STEP: MediaPlayerEntityFeature.VOLUME_STEP,
+    EspMediaPlayerEntityFeature.SELECT_SOURCE: MediaPlayerEntityFeature.SELECT_SOURCE,
+    EspMediaPlayerEntityFeature.STOP: MediaPlayerEntityFeature.STOP,
+    EspMediaPlayerEntityFeature.CLEAR_PLAYLIST: MediaPlayerEntityFeature.CLEAR_PLAYLIST,
+    EspMediaPlayerEntityFeature.PLAY: MediaPlayerEntityFeature.PLAY,
+    EspMediaPlayerEntityFeature.SHUFFLE_SET: MediaPlayerEntityFeature.SHUFFLE_SET,
+    EspMediaPlayerEntityFeature.SELECT_SOUND_MODE: MediaPlayerEntityFeature.SELECT_SOUND_MODE,
+    EspMediaPlayerEntityFeature.BROWSE_MEDIA: MediaPlayerEntityFeature.BROWSE_MEDIA,
+    EspMediaPlayerEntityFeature.REPEAT_SET: MediaPlayerEntityFeature.REPEAT_SET,
+    EspMediaPlayerEntityFeature.GROUPING: MediaPlayerEntityFeature.GROUPING,
+    EspMediaPlayerEntityFeature.MEDIA_ANNOUNCE: MediaPlayerEntityFeature.MEDIA_ANNOUNCE,
+    EspMediaPlayerEntityFeature.MEDIA_ENQUEUE: MediaPlayerEntityFeature.MEDIA_ENQUEUE,
+    EspMediaPlayerEntityFeature.SEARCH_MEDIA: MediaPlayerEntityFeature.SEARCH_MEDIA,
+}
+
 ATTR_BYPASS_PROXY = "bypass_proxy"
 
 
@@ -67,16 +93,12 @@ class EsphomeMediaPlayer(
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
-        flags = (
-            MediaPlayerEntityFeature.PLAY_MEDIA
-            | MediaPlayerEntityFeature.BROWSE_MEDIA
-            | MediaPlayerEntityFeature.STOP
-            | MediaPlayerEntityFeature.VOLUME_SET
-            | MediaPlayerEntityFeature.VOLUME_MUTE
-            | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
+        esp_flags = EspMediaPlayerEntityFeature(
+            self._static_info.feature_flags_compat(self._api_version)
         )
-        if self._static_info.supports_pause:
-            flags |= MediaPlayerEntityFeature.PAUSE | MediaPlayerEntityFeature.PLAY
+        flags = MediaPlayerEntityFeature(0)
+        for espflag in esp_flags:
+            flags |= _FEATURES[espflag]
         self._attr_supported_features = flags
         self._entry_data.media_player_formats[self.unique_id] = cast(
             MediaPlayerInfo, static_info
