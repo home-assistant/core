@@ -1,5 +1,7 @@
 """Diagnostics for the Nina integration."""
 
+from copy import deepcopy
+from dataclasses import asdict
 from typing import Any
 
 from homeassistant.core import HomeAssistant
@@ -12,7 +14,12 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
+    runtime_data_dict = {
+        region_key: [asdict(warning) for warning in region_data]
+        for region_key, region_data in deepcopy(entry.runtime_data.data).items()
+    }
+
     return {
         "entry_data": dict(entry.data),
-        "data": entry.runtime_data.data,
+        "data": runtime_data_dict,
     }
