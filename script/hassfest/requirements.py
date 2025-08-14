@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from collections import deque
+from collections.abc import Collection
 from functools import cache
-from importlib.metadata import metadata
+from importlib.metadata import files, metadata
 import json
 import os
 import re
@@ -300,6 +301,64 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
 }
 
+FORBIDDEN_PACKAGE_NAMES: set[str] = {
+    "test",
+    "tests",
+}
+FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
+    # In the form dict("domain": {"package": {"reason1", "reason2"}})
+    # - domain is the integration domain
+    # - package is the package (can be transitive) referencing the dependency
+    # - reasonX should be the name of the invalid dependency
+    # https://github.com/jaraco/jaraco.net
+    "abode": {"jaraco-abode": {"jaraco-net"}},
+    # https://github.com/coinbase/coinbase-advanced-py
+    "coinbase": {"homeassistant": {"coinbase-advanced-py"}},
+    # https://github.com/ggrammar/pizzapi
+    "dominos": {"homeassistant": {"pizzapi"}},
+    # https://github.com/u9n/dlms-cosem
+    "dsmr": {"dsmr-parser": {"dlms-cosem"}},
+    # https://github.com/ChrisMandich/PyFlume  # Fixed with >=0.7.1
+    "flume": {"homeassistant": {"pyflume"}},
+    # https://github.com/fortinet-solutions-cse/fortiosapi
+    "fortios": {"homeassistant": {"fortiosapi"}},
+    # https://github.com/manzanotti/geniushub-client
+    "geniushub": {"homeassistant": {"geniushub-client"}},
+    # https://github.com/basnijholt/aiokef
+    "kef": {"homeassistant": {"aiokef"}},
+    # https://github.com/danifus/pyzipper
+    "knx": {"xknxproject": {"pyzipper"}},
+    # https://github.com/hthiery/python-lacrosse
+    "lacrosse": {"homeassistant": {"pylacrosse"}},
+    # ???
+    "linode": {"homeassistant": {"linode-api"}},
+    # https://github.com/timmo001/aiolyric
+    "lyric": {"homeassistant": {"aiolyric"}},
+    # https://github.com/iloveicedgreentea/py-madvr  # Fixed with >=1.6.33
+    "madvr": {"homeassistant": {"py-madvr2"}},
+    # https://github.com/microBeesTech/pythonSDK/
+    "microbees": {"homeassistant": {"microbeespy"}},
+    # https://github.com/tiagocoutinho/async_modbus
+    "nibe_heatpump": {"nibe": {"async-modbus"}},
+    # https://github.com/ejpenney/pyobihai
+    "obihai": {"homeassistant": {"pyobihai"}},
+    # https://github.com/iamkubi/pydactyl
+    "pterodactyl": {"homeassistant": {"py-dactyl"}},
+    # https://github.com/markusressel/raspyrfm-client
+    "raspyrfm": {"homeassistant": {"raspyrfm-client"}},
+    # https://github.com/sstallion/sensorpush-api
+    "sensorpush_cloud": {
+        "homeassistant": {"sensorpush-api"},
+        "sensorpush-ha": {"sensorpush-api"},
+    },
+    # https://github.com/smappee/pysmappee
+    "smappee": {"homeassistant": {"pysmappee"}},
+    # https://github.com/watergate-ai/watergate-local-api-python
+    "watergate": {"homeassistant": {"watergate-local-api"}},
+    # https://github.com/markusressel/xs1-api-client
+    "xs1": {"homeassistant": {"xs1-api-client"}},
+}
+
 PYTHON_VERSION_CHECK_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # In the form dict("domain": {"package": {"dependency1", "dependency2"}})
     # - domain is the integration domain
@@ -310,6 +369,8 @@ PYTHON_VERSION_CHECK_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "homeassistant": {"restrictedpython"}
     },
 }
+
+_packages_checked_files_cache: dict[str, set[str]] = {}
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
@@ -476,6 +537,12 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
     )
     needs_forbidden_package_exceptions = False
 
+    packages_checked_files: set[str] = set()
+    forbidden_package_files_exceptions = FORBIDDEN_PACKAGE_FILES_EXCEPTIONS.get(
+        integration.domain, {}
+    )
+    needs_forbidden_package_files_exception = False
+
     package_version_check_exceptions = PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS.get(
         integration.domain, {}
     )
@@ -517,6 +584,17 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
                 f"({requires_python}) in {package}",
             )
 
+        # Check package names
+        if package not in packages_checked_files:
+            packages_checked_files.add(package)
+            if not check_dependency_files(
+                integration,
+                "homeassistant",
+                package,
+                forbidden_package_files_exceptions.get("homeassistant", ()),
+            ):
+                needs_forbidden_package_files_exception = True
+
         # Use inner loop to check dependencies
         # so we have access to the dependency parent (=current package)
         dependencies: dict[str, str] = item["dependencies"]
@@ -540,6 +618,17 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
             ):
                 needs_package_version_check_exception = True
 
+            # Check package names
+            if pkg not in packages_checked_files:
+                packages_checked_files.add(pkg)
+                if not check_dependency_files(
+                    integration,
+                    package,
+                    pkg,
+                    forbidden_package_files_exceptions.get(package, ()),
+                ):
+                    needs_forbidden_package_files_exception = True
+
         to_check.extend(dependencies)
 
     if forbidden_package_exceptions and not needs_forbidden_package_exceptions:
@@ -559,6 +648,15 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
             "requirements",
             f"Integration {integration.domain} version restrictions for Python have "
             "been resolved, please remove from `PYTHON_VERSION_CHECK_EXCEPTIONS`",
+        )
+    if (
+        forbidden_package_files_exceptions
+        and not needs_forbidden_package_files_exception
+    ):
+        integration.add_error(
+            "requirements",
+            f"Integration {integration.domain} runtime files dependency exceptions "
+            "have been resolved, please remove from `FORBIDDEN_PACKAGE_FILES_EXCEPTIONS`",
         )
 
     return all_requirements
@@ -632,6 +730,34 @@ def _is_dependency_version_range_valid(
             # e.g. ~=1.2 is allowed, but ~=1.2.3 is not
             return awesome.section(2) == 0
 
+    return False
+
+
+def check_dependency_files(
+    integration: Integration,
+    package: str,
+    pkg: str,
+    package_exceptions: Collection[str],
+) -> bool:
+    """Check dependency files for forbidden package names."""
+    if (results := _packages_checked_files_cache.get(pkg)) is None:
+        top_level: set[str] = set()
+        for file in files(pkg) or ():
+            top = file.parts[0].lower()
+            if top.endswith((".dist-info", ".py")):
+                continue
+            top_level.add(top)
+        results = FORBIDDEN_PACKAGE_NAMES.intersection(top_level)
+        _packages_checked_files_cache[pkg] = results
+    if not results:
+        return True
+
+    for dir_name in results:
+        integration.add_warning_or_error(
+            pkg in package_exceptions,
+            "requirements",
+            f"Package {pkg} has a forbidden top level directory {dir_name} in {package}",
+        )
     return False
 
 
