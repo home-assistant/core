@@ -45,6 +45,42 @@ def process_opening_status(module: Module) -> bool | None:
 def process_opening_category(netatmo_device: NetatmoDevice) -> BinarySensorDeviceClass:
     """Helper function to map Netatmo category to Home Assistant device class."""
 
+    # First, get the unique ID of the device we are processing.
+    device_id_to_find = netatmo_device.device.entity_id
+
+    # Get the raw data containing the full list of homes and modules.
+    raw_data = netatmo_device.data_handler.account.raw_data
+
+    # Iterate through each home in the raw data.
+    for home in raw_data["homes"]:
+        # Check if the modules list exists for the current home.
+        if "modules" in home:
+            # Iterate through each module to find a matching ID.
+            for module in home["modules"]:
+                if module["id"] == device_id_to_find:
+                    # We found the matching device. Get its category.
+                    category = module.get("category")
+
+                    _LOGGER.debug(
+                        "Processing category '%s' for device '%s'",
+                        category,
+                        netatmo_device.device.name,
+                    )
+
+                    # Use a specific device class if we have a match
+                    if category == "door":
+                        return BinarySensorDeviceClass.DOOR
+                    if category == "window":
+                        return BinarySensorDeviceClass.WINDOW
+                    if category == "garage":
+                        return BinarySensorDeviceClass.GARAGE_DOOR
+                    if category == "gate":
+                        return BinarySensorDeviceClass.OPENING
+                    if category == "furniture":
+                        return BinarySensorDeviceClass.OPENING
+                    if category == "other":
+                        return BinarySensorDeviceClass.OPENING
+
     # Return None if the device or category is not found in the raw data.
     _LOGGER.warning(
         "Category not found for device_id: %s in raw data",
