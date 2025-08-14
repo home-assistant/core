@@ -1636,7 +1636,7 @@ pyegps==0.2.5
 pyemoncms==0.1.2
 
 # homeassistant.components.enphase_envoy
-pyenphase==2.2.3
+pyenphase==2.3.0
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1783,7 +1783,7 @@ pymeteoclimatic==0.1.0
 pymicro-vad==1.0.1
 
 # homeassistant.components.miele
-pymiele==0.5.3
+pymiele==0.5.4
 
 # homeassistant.components.mochad
 pymochad==0.2.0
@@ -2077,7 +2077,7 @@ python-roborock==2.18.2
 python-smarttub==0.0.44
 
 # homeassistant.components.snoo
-python-snoo==0.8.1
+python-snoo==0.8.2
 
 # homeassistant.components.songpal
 python-songpal==0.16.2
