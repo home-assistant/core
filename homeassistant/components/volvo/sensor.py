@@ -35,12 +35,39 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import API_NONE_VALUE, DATA_BATTERY_CAPACITY
+from .const import (
+    API_DOOR_WARNING_VALUES,
+    API_NONE_VALUE,
+    API_OIL_LEVEL_WARNING_VALUES,
+    API_SERVICE_WARNING_VALUES,
+    API_TIRE_WARNING_VALUES,
+    API_WINDOW_WARNING_VALUES,
+    DATA_BATTERY_CAPACITY,
+)
 from .coordinator import VolvoBaseCoordinator, VolvoConfigEntry
 from .entity import VolvoEntity, VolvoEntityDescription, value_to_translation_key
 
 PARALLEL_UPDATES = 0
 _LOGGER = logging.getLogger(__name__)
+
+_CHARGING_POWER_STATUS_OPTIONS = [
+    "fault",
+    "power_available_but_not_activated",
+    "providing_power",
+    "no_power_available",
+]
+_DOOR_OPTIONS = [
+    *[value_to_translation_key(v) for v in API_DOOR_WARNING_VALUES],
+    "closed",
+]
+_TIRE_OPTIONS = [
+    *[value_to_translation_key(v) for v in API_TIRE_WARNING_VALUES],
+    "no_warning",
+]
+_WINDOW_OPTIONS = [
+    *[value_to_translation_key(v) for v in API_WINDOW_WARNING_VALUES],
+    "closed",
+]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -85,13 +112,6 @@ def _charging_power_status_value(field: VolvoCarsValue) -> str | None:
     )
     return None
 
-
-_CHARGING_POWER_STATUS_OPTIONS = [
-    "fault",
-    "power_available_but_not_activated",
-    "providing_power",
-    "no_power_available",
-]
 
 _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # command-accessibility endpoint
@@ -276,6 +296,38 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
     ),
+    # doors endpoint
+    VolvoSensorDescription(
+        key="door_front_left",
+        api_field="frontLeftDoor",
+        device_class=SensorDeviceClass.ENUM,
+        options=_DOOR_OPTIONS,
+        entity_registry_enabled_default=False,
+    ),
+    # doors endpoint
+    VolvoSensorDescription(
+        key="door_front_right",
+        api_field="frontRightDoor",
+        device_class=SensorDeviceClass.ENUM,
+        options=_DOOR_OPTIONS,
+        entity_registry_enabled_default=False,
+    ),
+    # doors endpoint
+    VolvoSensorDescription(
+        key="door_rear_left",
+        api_field="rearLeftDoor",
+        device_class=SensorDeviceClass.ENUM,
+        options=_DOOR_OPTIONS,
+        entity_registry_enabled_default=False,
+    ),
+    # doors endpoint
+    VolvoSensorDescription(
+        key="door_rear_right",
+        api_field="rearRightDoor",
+        device_class=SensorDeviceClass.ENUM,
+        options=_DOOR_OPTIONS,
+        entity_registry_enabled_default=False,
+    ),
     # diagnostics endpoint
     VolvoSensorDescription(
         key="engine_time_to_service",
@@ -301,6 +353,14 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
+    # doors endpoint
+    VolvoSensorDescription(
+        key="hood",
+        api_field="hood",
+        device_class=SensorDeviceClass.ENUM,
+        options=_DOOR_OPTIONS,
+        entity_registry_enabled_default=False,
+    ),
     # odometer endpoint
     VolvoSensorDescription(
         key="odometer",
@@ -309,6 +369,52 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=1,
+    ),
+    # engine endpoint
+    VolvoSensorDescription(
+        key="oil_level_warning",
+        api_field="oilLevelWarning",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            *[value_to_translation_key(v) for v in API_OIL_LEVEL_WARNING_VALUES],
+            "no_warning",
+        ],
+        entity_registry_enabled_default=False,
+    ),
+    # diagnostics endpoint
+    VolvoSensorDescription(
+        key="service_warning",
+        api_field="serviceWarning",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            *[value_to_translation_key(v) for v in API_SERVICE_WARNING_VALUES],
+            "no_warning",
+        ],
+        entity_registry_enabled_default=False,
+    ),
+    # windows endpoint
+    VolvoSensorDescription(
+        key="sunroof",
+        api_field="sunroof",
+        device_class=SensorDeviceClass.ENUM,
+        options=_WINDOW_OPTIONS,
+        entity_registry_enabled_default=False,
+    ),
+    # doors endpoint
+    VolvoSensorDescription(
+        key="tailgate",
+        api_field="tailgate",
+        device_class=SensorDeviceClass.ENUM,
+        options=_DOOR_OPTIONS,
+        entity_registry_enabled_default=False,
+    ),
+    # doors endpoint
+    VolvoSensorDescription(
+        key="tank_lid",
+        api_field="tankLid",
+        device_class=SensorDeviceClass.ENUM,
+        options=_DOOR_OPTIONS,
+        entity_registry_enabled_default=False,
     ),
     # energy state endpoint
     VolvoSensorDescription(
@@ -325,6 +431,38 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=_calculate_time_to_service,
+    ),
+    # tyres endpoint
+    VolvoSensorDescription(
+        key="tire_front_left",
+        api_field="frontLeft",
+        device_class=SensorDeviceClass.ENUM,
+        options=_TIRE_OPTIONS,
+        entity_registry_enabled_default=False,
+    ),
+    # tyres endpoint
+    VolvoSensorDescription(
+        key="tire_front_right",
+        api_field="frontRight",
+        device_class=SensorDeviceClass.ENUM,
+        options=_TIRE_OPTIONS,
+        entity_registry_enabled_default=False,
+    ),
+    # tyres endpoint
+    VolvoSensorDescription(
+        key="tire_rear_left",
+        api_field="rearLeft",
+        device_class=SensorDeviceClass.ENUM,
+        options=_TIRE_OPTIONS,
+        entity_registry_enabled_default=False,
+    ),
+    # tyres endpoint
+    VolvoSensorDescription(
+        key="tire_rear_right",
+        api_field="rearRight",
+        device_class=SensorDeviceClass.ENUM,
+        options=_TIRE_OPTIONS,
+        entity_registry_enabled_default=False,
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -343,6 +481,38 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=0,
+    ),
+    # windows endpoint
+    VolvoSensorDescription(
+        key="window_front_left",
+        api_field="frontLeftWindow",
+        device_class=SensorDeviceClass.ENUM,
+        options=_WINDOW_OPTIONS,
+        entity_registry_enabled_default=False,
+    ),
+    # windows endpoint
+    VolvoSensorDescription(
+        key="window_front_right",
+        api_field="frontRightWindow",
+        device_class=SensorDeviceClass.ENUM,
+        options=_WINDOW_OPTIONS,
+        entity_registry_enabled_default=False,
+    ),
+    # windows endpoint
+    VolvoSensorDescription(
+        key="window_rear_left",
+        api_field="rearLeftWindow",
+        device_class=SensorDeviceClass.ENUM,
+        options=_WINDOW_OPTIONS,
+        entity_registry_enabled_default=False,
+    ),
+    # windows endpoint
+    VolvoSensorDescription(
+        key="window_rear_right",
+        api_field="rearRightWindow",
+        device_class=SensorDeviceClass.ENUM,
+        options=_WINDOW_OPTIONS,
+        entity_registry_enabled_default=False,
     ),
 )
 

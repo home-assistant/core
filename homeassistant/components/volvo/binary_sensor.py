@@ -14,7 +14,14 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import API_NONE_VALUE
+from .const import (
+    API_DOOR_WARNING_VALUES,
+    API_NONE_VALUE,
+    API_OIL_LEVEL_WARNING_VALUES,
+    API_SERVICE_WARNING_VALUES,
+    API_TIRE_WARNING_VALUES,
+    API_WINDOW_WARNING_VALUES,
+)
 from .coordinator import VolvoBaseCoordinator, VolvoConfigEntry
 from .entity import VolvoEntity, VolvoEntityDescription, value_to_translation_key
 
@@ -37,7 +44,7 @@ class VolvoCarsDoorDescription(VolvoBinarySensorDescription):
     """Describes a Volvo door entity."""
 
     device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.DOOR
-    on_values: tuple[str, ...] = field(default=("OPEN", "AJAR"), init=False)
+    on_values: tuple[str, ...] = field(default=API_WINDOW_WARNING_VALUES, init=False)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -45,9 +52,7 @@ class VolvoCarsTireDescription(VolvoBinarySensorDescription):
     """Describes a Volvo tire entity."""
 
     device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.PROBLEM
-    on_values: tuple[str, ...] = field(
-        default=("VERY_LOW_PRESSURE", "LOW_PRESSURE", "HIGH_PRESSURE"), init=False
-    )
+    on_values: tuple[str, ...] = field(default=API_TIRE_WARNING_VALUES, init=False)
     api_value_in_attributes: bool = True
     api_value_attribute_name: str = "pressure"
 
@@ -57,7 +62,7 @@ class VolvoCarsWindowDescription(VolvoBinarySensorDescription):
     """Describes a Volvo window entity."""
 
     device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.WINDOW
-    on_values: tuple[str, ...] = field(default=("OPEN", "AJAR"), init=False)
+    on_values: tuple[str, ...] = field(default=API_DOOR_WARNING_VALUES, init=False)
 
 
 _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
@@ -66,18 +71,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         key="service_warning",
         api_field="serviceWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
-        on_values=(
-            "DISTANCE_DRIVEN_ALMOST_TIME_FOR_SERVICE",
-            "DISTANCE_DRIVEN_OVERDUE_FOR_SERVICE",
-            "DISTANCE_DRIVEN_TIME_FOR_SERVICE",
-            "ENGINE_HOURS_ALMOST_TIME_FOR_SERVICE",
-            "ENGINE_HOURS_OVERDUE_FOR_SERVICE",
-            "ENGINE_HOURS_TIME_FOR_SERVICE",
-            "REGULAR_MAINTENANCE_ALMOST_TIME_FOR_SERVICE",
-            "REGULAR_MAINTENANCE_OVERDUE_FOR_SERVICE",
-            "REGULAR_MAINTENANCE_TIME_FOR_SERVICE",
-            "UNKNOWN_WARNING",
-        ),
+        on_values=API_SERVICE_WARNING_VALUES,
         api_value_in_attributes=True,
         api_value_attribute_name="reason",
     ),
@@ -143,7 +137,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         key="oil_level_warning",
         api_field="oilLevelWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
-        on_values=("SERVICE_REQUIRED", "TOO_LOW", "TOO_HIGH"),
+        on_values=API_OIL_LEVEL_WARNING_VALUES,
         api_value_in_attributes=True,
         api_value_attribute_name="level",
     ),

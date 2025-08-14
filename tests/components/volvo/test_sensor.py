@@ -23,6 +23,7 @@ from tests.common import MockConfigEntry, snapshot_platform
         "xc90_petrol_2019",
     ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor(
     hass: HomeAssistant,
     setup_integration: Callable[[], Awaitable[bool]],

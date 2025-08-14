@@ -322,6 +322,30 @@
       "distance_to_service": {
         "default": "mdi:wrench-check"
       },
+      "door_front_left": {
+        "default": "mdi:car-door-lock-open",
+        "state": {
+          "closed": "mdi:car-door-lock"
+        }
+      },
+      "door_front_right": {
+        "default": "mdi:car-door-lock-open",
+        "state": {
+          "closed": "mdi:car-door-lock"
+        }
+      },
+      "door_rear_left": {
+        "default": "mdi:car-door-lock-open",
+        "state": {
+          "closed": "mdi:car-door-lock"
+        }
+      },
+      "door_rear_right": {
+        "default": "mdi:car-door-lock-open",
+        "state": {
+          "closed": "mdi:car-door-lock"
+        }
+      },
       "engine_time_to_service": {
         "default": "mdi:wrench-cog"
       },
@@ -331,8 +355,41 @@
       "fuel_amount": {
         "default": "mdi:fuel"
       },
+      "hood": {
+        "default": "mdi:car-door-lock-open",
+        "state": {
+          "closed": "mdi:car-door-lock"
+        }
+      },
       "odometer": {
         "default": "mdi:counter"
+      },
+      "oil_level_warning": {
+        "default": "mdi:oil-level"
+      },
+      "service_warning": {
+        "default": "mdi:wrench-clock",
+        "state": {
+          "no_warning": "mdi:wrench"
+        }
+      },
+      "sunroof": {
+        "default": "mdi:car-door-lock-open",
+        "state": {
+          "closed": "mdi:car-door-lock"
+        }
+      },
+      "tailgate": {
+        "default": "mdi:car-door-lock-open",
+        "state": {
+          "closed": "mdi:car-door-lock"
+        }
+      },
+      "tank_lid": {
+        "default": "mdi:car-door-lock-open",
+        "state": {
+          "closed": "mdi:car-door-lock"
+        }
       },
       "target_battery_charge_level": {
         "default": "mdi:battery-medium"
@@ -340,11 +397,59 @@
       "time_to_service": {
         "default": "mdi:wrench-clock"
       },
+      "tire_front_left": {
+        "default": "mdi:car-tire-alert",
+        "state": {
+          "no_warning": "mdi:tire"
+        }
+      },
+      "tire_front_right": {
+        "default": "mdi:car-tire-alert",
+        "state": {
+          "no_warning": "mdi:tire"
+        }
+      },
+      "tire_rear_left": {
+        "default": "mdi:car-tire-alert",
+        "state": {
+          "no_warning": "mdi:tire"
+        }
+      },
+      "tire_rear_right": {
+        "default": "mdi:car-tire-alert",
+        "state": {
+          "no_warning": "mdi:tire"
+        }
+      },
       "trip_meter_automatic": {
         "default": "mdi:map-marker-distance"
       },
       "trip_meter_manual": {
         "default": "mdi:map-marker-distance"
+      },
+      "window_front_left": {
+        "default": "mdi:car-door-lock-open",
+        "state": {
+          "closed": "mdi:car-door-lock"
+        }
+      },
+      "window_front_right": {
+        "default": "mdi:car-door-lock-open",
+        "state": {
+          "closed": "mdi:car-door-lock"
+        }
+      },
+      "window_rear_left": {
+        "default": "mdi:car-door-lock-open",
+        "state": {
+          "closed": "mdi:car-door-lock"
+        }
+      },
+      "window_rear_right": {
+        "default": "mdi:car-door-lock-open",
+        "state": {
+          "closed": "mdi:car-door-lock"
+        }
       }
     }
   }

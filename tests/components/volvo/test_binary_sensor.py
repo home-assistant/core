@@ -15,8 +15,15 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 @pytest.mark.parametrize(
     "full_model",
-    ["ex30_2024", "s90_diesel_2018", "xc40_electric_2024", "xc90_petrol_2019"],
+    [
+        "ex30_2024",
+        "s90_diesel_2018",
+        "xc40_electric_2024",
+        "xc60_phev_2020",
+        "xc90_petrol_2019",
+    ],
 )
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_binary_sensor(
     hass: HomeAssistant,
     setup_integration: Callable[[], Awaitable[bool]],
