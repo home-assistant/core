@@ -271,8 +271,6 @@ async def test_alarm_create_delete(
 
 async def test_alarm_change_device(
     hass: HomeAssistant,
-    async_setup_sonos,
-    soco: MockSoCo,
     alarm_clock: SonosMockService,
     alarm_clock_extended: SonosMockService,
     alarm_event: SonosMockEvent,
@@ -294,7 +292,7 @@ async def test_alarm_change_device(
     alarm_dict["CurrentAlarmList"] = alarm_dict["CurrentAlarmList"].replace(
         "RINCON_test", f"{soco_lr.uid}"
     )
-    alarm_dict["CurrentAlarmListVersion"] = f"{soco_lr.uid}:900"
+    alarm_dict["CurrentAlarmListVersion"] = "RINCON_test:900"
     soco_lr.alarmClock.ListAlarms.return_value = alarm_dict
     soco_br = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
     await async_setup_component(
@@ -327,7 +325,7 @@ async def test_alarm_change_device(
     alarm_clock.ListAlarms.return_value = alarm_update
 
     # Update the alarm_list_version so it gets processed.
-    alarm_event.variables["alarm_list_version"] = f"{soco_br.uid}:1000"
+    alarm_event.variables["alarm_list_version"] = "RINCON_test:1000"
     alarm_update["CurrentAlarmListVersion"] = alarm_event.increment_variable(
         "alarm_list_version"
     )
