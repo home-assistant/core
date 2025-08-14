@@ -3367,6 +3367,7 @@ async def test_migrate_of_incompatible_config_entry(
 async def test_subentry_configflow(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    mock_reload_after_entry_update: MagicMock,
     config_subentries_data: dict[str, Any],
     mock_device_user_input: dict[str, Any],
     mock_entity_user_input: dict[str, Any],
@@ -3501,6 +3502,10 @@ async def test_subentry_configflow(
         assert subentry_device_data[option] == value
 
     await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Assert the entry is reloaded to set up the entity
+    assert len(mock_reload_after_entry_update.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
@@ -3641,6 +3646,7 @@ async def test_subentry_reconfigure_remove_entity(
 async def test_subentry_reconfigure_edit_entity_multi_entitites(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    mock_reload_after_entry_update: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     user_input_mqtt: dict[str, Any],
@@ -3757,6 +3763,10 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
     assert new_components[object_list[0]] == components[object_list[0]]
     for key, value in user_input_mqtt.items():
         assert new_components[object_list[1]][key] == value
+
+    # Assert the entry is reloaded to set up the entity
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(mock_reload_after_entry_update.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
