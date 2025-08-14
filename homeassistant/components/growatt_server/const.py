@@ -4,6 +4,16 @@ from homeassistant.const import Platform
 
 CONF_PLANT_ID = "plant_id"
 
+
+# API key support
+CONF_API_KEY = "api_key"
+
+# Auth types for config flow
+AUTH_PASSWORD = "password"
+AUTH_API_TOKEN = "api_token"
+CONF_AUTH_TYPE = "auth_type"
+DEFAULT_AUTH_TYPE = AUTH_PASSWORD
+
 DEFAULT_PLANT_ID = "0"
 
 DEFAULT_NAME = "Growatt"
