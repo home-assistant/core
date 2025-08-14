@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from datetime import timedelta
 from ssl import SSLError
 from typing import Any
@@ -21,20 +22,12 @@ type DelugeConfigEntry = ConfigEntry[DelugeDataUpdateCoordinator]
 
 def count_states(data: dict[str, Any]) -> dict[str, int]:
     """Count the states of the provided torrents."""
-    downloading_count = 0
-    seeding_count = 0
 
-    for torrent in data.values():
-        state = torrent[b"state"].decode()
-
-        if state == "Downloading":
-            downloading_count += 1
-        elif state == "Seeding":
-            seeding_count += 1
+    counts = Counter(torrent[b"state"].decode() for torrent in data.values())
 
     return {
-        DelugeSensorType.DOWNLOADING_COUNT_SENSOR.value: downloading_count,
-        DelugeSensorType.SEEDING_COUNT_SENSOR.value: seeding_count,
+        DelugeSensorType.DOWNLOADING_COUNT_SENSOR.value: counts.get("Downloading", 0),
+        DelugeSensorType.SEEDING_COUNT_SENSOR.value: counts.get("Seeding", 0),
     }
 
 
