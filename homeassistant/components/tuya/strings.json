@@ -231,6 +231,12 @@
       },
       "maximum_liquid_depth": {
         "name": "Maximum liquid depth"
+      },
+      "lower_temperature": {
+        "name": "Lower temperature"
+      },
+      "upper_temperature": {
+        "name": "Upper temperature"
       }
     },
     "select": {
