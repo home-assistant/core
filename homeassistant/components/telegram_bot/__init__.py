@@ -71,6 +71,7 @@ from .const import (
     ATTR_URL,
     ATTR_USERNAME,
     ATTR_VERIFY_SSL,
+    CONF_ALLOW_ANY_RECEIVE,
     CONF_ALLOW_ANY_REPLY,
     CONF_ALLOWED_CHAT_IDS,
     CONF_BOT_COUNT,
@@ -117,7 +118,6 @@ CONFIG_SCHEMA = vol.Schema(
                         vol.Required(CONF_ALLOWED_CHAT_IDS): vol.All(
                             cv.ensure_list, [vol.Coerce(int)]
                         ),
-                        vol.Optional(CONF_ALLOW_ANY_REPLY, default=False): cv.boolean,
                         vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
                         vol.Optional(CONF_PROXY_URL): cv.string,
                         # webhooks
@@ -491,6 +491,9 @@ async def update_listener(hass: HomeAssistant, entry: TelegramBotConfigEntry) ->
     """Handle config changes."""
     entry.runtime_data.parse_mode = entry.options[ATTR_PARSER]
     entry.runtime_data.allow_any_reply = entry.options.get(CONF_ALLOW_ANY_REPLY, False)
+    entry.runtime_data.allow_any_receive = entry.options.get(
+        CONF_ALLOW_ANY_RECEIVE, False
+    )
 
     # reload entities
     await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

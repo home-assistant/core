@@ -75,6 +75,7 @@ from .const import (
     ATTR_USER_ID,
     ATTR_USERNAME,
     ATTR_VERIFY_SSL,
+    CONF_ALLOW_ANY_RECEIVE,
     CONF_ALLOW_ANY_REPLY,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
@@ -260,6 +261,7 @@ class TelegramNotificationService:
         self.hass = hass
         self._last_message_id: dict[int, int] = {}
         self.allow_any_reply = config.options.get(CONF_ALLOW_ANY_REPLY, False)
+        self.allow_any_receive = config.options.get(CONF_ALLOW_ANY_RECEIVE, False)
 
     def _get_allowed_chat_ids(self) -> list[int]:
         allowed_chat_ids: list[int] = [

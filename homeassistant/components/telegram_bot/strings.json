@@ -85,10 +85,12 @@
         "title": "Configure Telegram bot",
         "data": {
           "allow_any_reply": "Allow reply to any user or group",
+          "allow_any_receive": "Allow receive from any user or group",
           "parse_mode": "Parse mode"
         },
         "data_description": {
           "allow_any_reply": "Allow bot to reply to any user or group including those not in the allowed chat ID list.",
+          "allow_any_receive": "Allow bot to receive messages from any user or group including those not in the allowed chat ID list.",
           "parse_mode": "Default parse mode for messages if not explicit in message data."
         }
       }
