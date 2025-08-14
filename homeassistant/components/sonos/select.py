@@ -116,7 +116,7 @@ class SonosSelectEntity(SonosEntity, SelectEntity):
         option = getattr(self.speaker, self.attribute, None)
         if not isinstance(option, int) or not (0 <= option < len(self._attr_options)):
             _LOGGER.error(
-                "Invalid option index %s for %s on %s",
+                "Invalid current option %s for %s on %s",
                 option,
                 self.feature,
                 self.speaker.zone_name,
