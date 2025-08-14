@@ -22,7 +22,7 @@ from .coordinator import DelugeConfigEntry, DelugeDataUpdateCoordinator
 from .entity import DelugeEntity
 
 
-def get_count(data: dict[str, Any], key: str) -> float:
+def get_count(data: dict[str, Any], key: str) -> int:
     """Get current count of torrents by state."""
 
     downloading_count = 0
