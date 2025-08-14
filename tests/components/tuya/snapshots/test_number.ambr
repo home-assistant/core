@@ -116,65 +116,6 @@
     'state': '5.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.boiler_temperature_controller_lower_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 120.0,
-      'min': -40.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.boiler_temperature_controller_lower_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Lower temperature',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'lower_temperature',
-    'unique_id': 'tuya.zgiyrxflahjowpcckwlower_temp',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_platform_setup_and_discovery[number.boiler_temperature_controller_lower_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Boiler Temperature Controller Lower temperature',
-      'max': 120.0,
-      'min': -40.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.boiler_temperature_controller_lower_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '60.0',
-  })
-# ---
 # name: test_platform_setup_and_discovery[number.boiler_temperature_controller_temperature_correction-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -231,65 +172,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-0.8',
-  })
-# ---
-# name: test_platform_setup_and_discovery[number.boiler_temperature_controller_upper_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 120.0,
-      'min': -40.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.boiler_temperature_controller_upper_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Upper temperature',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'upper_temperature',
-    'unique_id': 'tuya.zgiyrxflahjowpcckwupper_temp',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_platform_setup_and_discovery[number.boiler_temperature_controller_upper_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Boiler Temperature Controller Upper temperature',
-      'max': 120.0,
-      'min': -40.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.1,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.boiler_temperature_controller_upper_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '58.5',
   })
 # ---
 # name: test_platform_setup_and_discovery[number.c9_volume-entry]
@@ -639,65 +521,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[number.el_termostato_de_la_cocina_upper_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 100.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 5.0,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.el_termostato_de_la_cocina_upper_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Upper temperature',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'upper_temperature',
-    'unique_id': 'tuya.LmLMc0ht1KW2zYAIkwupper_temp',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_platform_setup_and_discovery[number.el_termostato_de_la_cocina_upper_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'El termostato de la cocina Upper temperature',
-      'max': 100.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 5.0,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.el_termostato_de_la_cocina_upper_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '55.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[number.grillhomero_cooking_temperature-entry]
@@ -1815,65 +1638,6 @@
     'state': '-2.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.kabinet_upper_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 95.0,
-      'min': 35.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.5,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.kabinet_upper_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Upper temperature',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'upper_temperature',
-    'unique_id': 'tuya.dn7cjik6kwupper_temp',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_platform_setup_and_discovery[number.kabinet_upper_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'Кабінет Upper temperature',
-      'max': 95.0,
-      'min': 35.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.5,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.kabinet_upper_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '45.0',
-  })
-# ---
 # name: test_platform_setup_and_discovery[number.mirilla_puerta_volume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2459,65 +2223,6 @@
     'state': '10.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.smart_thermostats_lower_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 20.0,
-      'min': 5.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.smart_thermostats_lower_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Lower temperature',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'lower_temperature',
-    'unique_id': 'tuya.sb3zdertrw50bgogkwlower_temp',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_platform_setup_and_discovery[number.smart_thermostats_lower_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'smart thermostats Lower temperature',
-      'max': 20.0,
-      'min': 5.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.smart_thermostats_lower_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '5.0',
-  })
-# ---
 # name: test_platform_setup_and_discovery[number.smart_thermostats_temperature_correction-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2574,65 +2279,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-2.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[number.smart_thermostats_upper_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 90.0,
-      'min': 30.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.smart_thermostats_upper_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Upper temperature',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'upper_temperature',
-    'unique_id': 'tuya.sb3zdertrw50bgogkwupper_temp',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_platform_setup_and_discovery[number.smart_thermostats_upper_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'smart thermostats Upper temperature',
-      'max': 90.0,
-      'min': 30.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.smart_thermostats_upper_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '30.0',
   })
 # ---
 # name: test_platform_setup_and_discovery[number.smart_white_noise_machine_volume-entry]
@@ -2867,65 +2513,6 @@
     'state': '95.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.wifi_smart_gas_boiler_thermostat_lower_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 14.0,
-      'min': 5.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.5,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.wifi_smart_gas_boiler_thermostat_lower_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Lower temperature',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'lower_temperature',
-    'unique_id': 'tuya.j6mn1t4ut5end6ifkwlower_temp',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_platform_setup_and_discovery[number.wifi_smart_gas_boiler_thermostat_lower_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'WiFi Smart Gas Boiler Thermostat  Lower temperature',
-      'max': 14.0,
-      'min': 5.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.5,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.wifi_smart_gas_boiler_thermostat_lower_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '5.0',
-  })
-# ---
 # name: test_platform_setup_and_discovery[number.wifi_smart_gas_boiler_thermostat_temperature_correction-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2982,64 +2569,5 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-1.5',
-  })
-# ---
-# name: test_platform_setup_and_discovery[number.wifi_smart_gas_boiler_thermostat_upper_temperature-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 35.0,
-      'min': 15.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.5,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.wifi_smart_gas_boiler_thermostat_upper_temperature',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
-    'original_icon': None,
-    'original_name': 'Upper temperature',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'upper_temperature',
-    'unique_id': 'tuya.j6mn1t4ut5end6ifkwupper_temp',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-  })
-# ---
-# name: test_platform_setup_and_discovery[number.wifi_smart_gas_boiler_thermostat_upper_temperature-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'WiFi Smart Gas Boiler Thermostat  Upper temperature',
-      'max': 35.0,
-      'min': 15.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 0.5,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.wifi_smart_gas_boiler_thermostat_upper_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '35.0',
   })
 # ---

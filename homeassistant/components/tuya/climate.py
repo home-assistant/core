@@ -8,6 +8,9 @@ from typing import TYPE_CHECKING, Any
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.climate import (
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
+    ATTR_TEMPERATURE,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -116,6 +119,8 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     _hvac_to_tuya: dict[str, str]
     _set_humidity: IntegerTypeData | None = None
     _set_temperature: IntegerTypeData | None = None
+    _set_temperature_lower: IntegerTypeData | None = None
+    _set_temperature_upper: IntegerTypeData | None = None
     entity_description: TuyaClimateEntityDescription
     _attr_name = None
 
@@ -197,6 +202,18 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             self._attr_max_temp = self._set_temperature.max_scaled
             self._attr_min_temp = self._set_temperature.min_scaled
             self._attr_target_temperature_step = self._set_temperature.step_scaled
+
+        # Check for range
+        if (
+            lower_type := self.find_dpcode(DPCode.LOWER_TEMP, dptype=DPType.INTEGER)
+        ) and (
+            upper_type := self.find_dpcode(DPCode.UPPER_TEMP, dptype=DPType.INTEGER)
+        ):
+            self._attr_supported_features |= (
+                ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            )
+            self._set_temperature_lower = lower_type
+            self._set_temperature_upper = upper_type
 
         # Determine HVAC modes
         self._attr_hvac_modes: list[HVACMode] = []
@@ -343,20 +360,52 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if TYPE_CHECKING:
-            # guarded by ClimateEntityFeature.TARGET_TEMPERATURE
-            assert self._set_temperature is not None
-
-        self._send_command(
-            [
+        commands = []
+        if ATTR_TEMPERATURE in kwargs:
+            if TYPE_CHECKING:
+                # guarded by ClimateEntityFeature.TARGET_TEMPERATURE
+                assert self._set_temperature is not None
+            commands.append(
                 {
                     "code": self._set_temperature.dpcode,
                     "value": round(
                         self._set_temperature.scale_value_back(kwargs[ATTR_TEMPERATURE])
                     ),
                 }
-            ]
-        )
+            )
+
+        if ATTR_TARGET_TEMP_LOW in kwargs:
+            if TYPE_CHECKING:
+                # guarded by ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+                assert self._set_temperature_lower is not None
+            commands.append(
+                {
+                    "code": self._set_temperature_lower.dpcode,
+                    "value": round(
+                        self._set_temperature_lower.scale_value_back(
+                            kwargs[ATTR_TARGET_TEMP_LOW]
+                        )
+                    ),
+                }
+            )
+
+        if ATTR_TARGET_TEMP_HIGH in kwargs:
+            if TYPE_CHECKING:
+                # guarded by ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+                assert self._set_temperature_upper is not None
+            commands.append(
+                {
+                    "code": self._set_temperature_upper.dpcode,
+                    "value": round(
+                        self._set_temperature_upper.scale_value_back(
+                            kwargs[ATTR_TARGET_TEMP_HIGH]
+                        )
+                    ),
+                }
+            )
+
+        if commands:
+            self._send_command(commands)
 
     @property
     def current_temperature(self) -> float | None:
@@ -400,6 +449,30 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             return None
 
         return self._set_temperature.scale_value(temperature)
+
+    @property
+    def target_temperature_low(self) -> float | None:
+        """Return the lowbound target temperature we try to reach."""
+        if self._set_temperature_lower is None:
+            return None
+
+        temperature = self.device.status.get(self._set_temperature_lower.dpcode)
+        if temperature is None:
+            return None
+
+        return self._set_temperature_lower.scale_value(temperature)
+
+    @property
+    def target_temperature_high(self) -> float | None:
+        """Return the highbound target temperature we try to reach."""
+        if self._set_temperature_upper is None:
+            return None
+
+        temperature = self.device.status.get(self._set_temperature_upper.dpcode)
+        if temperature is None:
+            return None
+
+        return self._set_temperature_upper.scale_value(temperature)
 
     @property
     def target_humidity(self) -> int | None:
