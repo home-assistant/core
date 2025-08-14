@@ -14,6 +14,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
+    UnitOfApparentPower,
     UnitOfArea,
     UnitOfBloodGlucoseConcentration,
     UnitOfConductivity,
@@ -28,6 +29,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfReactiveEnergy,
+    UnitOfReactivePower,
     UnitOfSpeed,
     UnitOfTemperature,
     UnitOfTime,
@@ -382,6 +384,20 @@ class MassConverter(BaseUnitConverter):
     }
 
 
+class ApparentPowerConverter(BaseUnitConverter):
+    """Utility to convert apparent power values."""
+
+    UNIT_CLASS = "apparent_power"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfApparentPower.MILLIVOLT_AMPERE: 1 * 1000,
+        UnitOfApparentPower.VOLT_AMPERE: 1,
+    }
+    VALID_UNITS = {
+        UnitOfApparentPower.MILLIVOLT_AMPERE,
+        UnitOfApparentPower.VOLT_AMPERE,
+    }
+
+
 class PowerConverter(BaseUnitConverter):
     """Utility to convert power values."""
 
@@ -443,6 +459,22 @@ class ReactiveEnergyConverter(BaseUnitConverter):
         UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR: 1 / 1e3,
     }
     VALID_UNITS = set(UnitOfReactiveEnergy)
+
+
+class ReactivePowerConverter(BaseUnitConverter):
+    """Utility to convert reactive power values."""
+
+    UNIT_CLASS = "reactive_power"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE: 1 * 1000,
+        UnitOfReactivePower.VOLT_AMPERE_REACTIVE: 1,
+        UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 1 / 1000,
+    }
+    VALID_UNITS = {
+        UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE,
+        UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
+        UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
+    }
 
 
 class SpeedConverter(BaseUnitConverter):
