@@ -81,7 +81,7 @@ class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, str | int]]):
 
         try:
             data["battery_level"] = await self.mower.battery_level()
-            LOGGER.debug("battery_level" + str(data["battery_level"]))
+            LOGGER.debug("battery_level:" + str(data["battery_level"]))
             if data["battery_level"] is None:
                 await self._async_find_device()
                 raise UpdateFailed("Error getting data from device")
