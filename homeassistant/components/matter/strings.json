@@ -466,6 +466,9 @@
       },
       "rms_voltage": {
         "name": "Effective voltage"
+      },
+      "voltage": {
+        "name": "Voltage"
       }
     },
     "switch": {
