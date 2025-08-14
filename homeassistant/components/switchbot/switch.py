@@ -100,7 +100,7 @@ class SwitchbotMultiChannelSwitch(SwitchbotSwitchedEntity, SwitchEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{coordinator.base_unique_id}-channel-{channel}")},
             manufacturer="SwitchBot",
-            model="RelaySwitch2PM",
+            model_id="RelaySwitch2PM",
             name=f"{coordinator.device_name} Channel {channel}",
         )
 
