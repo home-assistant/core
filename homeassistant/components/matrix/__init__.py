@@ -305,7 +305,7 @@ class MatrixBot:
 
             self.hass.bus.async_fire(EVENT_MATRIX_COMMAND, message_data)
 
-    def _get_thread_parent(self, message: RoomMessageText) -> Any | None:
+    def _get_thread_parent(self, message: RoomMessageText) -> str | None:
         """Get the thread parent ID from a message, or None if not in a thread."""
         match message.source:
             case {
