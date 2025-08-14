@@ -87,11 +87,11 @@ class SonosSelectEntity(SonosEntity, SelectEntity):
     ) -> None:
         """Initialize the select entity."""
         super().__init__(speaker, config_entry)
-        self.feature = select_data.feature
-        self._attr_unique_id = f"{self.soco.uid}-select-{self.feature}"
-        self._attr_translation_key = self.feature
-        self.attribute = select_data.attribute
+        self._attr_unique_id = f"{self.soco.uid}-select-{select_data.feature}"
+        self._attr_translation_key = select_data.feature
         self._attr_options = select_data.options
+        self.attribute = select_data.attribute
+        self.feature = select_data.feature
         _LOGGER.debug(
             "Creating %s select entity on %s attribute %s",
             select_data.feature,
