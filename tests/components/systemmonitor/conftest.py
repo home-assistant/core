@@ -27,18 +27,23 @@ def mock_sys_platform() -> Generator[None]:
 class MockProcess(Process):
     """Mock a Process class."""
 
-    def __init__(self, name: str, ex: bool = False) -> None:
+    def __init__(self, name: str, ex: bool = False, num_fds: int = 3) -> None:
         """Initialize the process."""
         super().__init__(1)
         self._name = name
         self._ex = ex
         self._create_time = 1708700400
+        self._num_fds = num_fds
 
     def name(self):
         """Return a name."""
         if self._ex:
             raise NoSuchProcess(1, self._name)
         return self._name
+
+    def num_fds(self):
+        """Return open file descriptors."""
+        return self._num_fds
 
 
 @pytest.fixture
