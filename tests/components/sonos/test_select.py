@@ -155,11 +155,11 @@ async def test_select_dialog_level_poll(
 
     await async_setup_sonos()
 
-    soco.dialog_level = 3
+    soco.dialog_level = 4
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
     dialog_level_select = entity_registry.entities[SELECT_DIALOG_LEVEL_ENTITY]
     dialog_level_state = hass.states.get(dialog_level_select.entity_id)
-    assert dialog_level_state.state == "high"
+    assert dialog_level_state.state == "max"
