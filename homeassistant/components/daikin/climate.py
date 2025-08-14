@@ -313,7 +313,8 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
         # Only include zones that are ON (switch enabled)
         zone_temps = {}
         if zones:
-            for idx, (_, enabled) in enumerate(zones):
+            for idx, zone in enumerate(zones):
+                enabled = str(zone[-1])
                 if enabled != "1":
                     continue
                 if use_heating and idx < len(heating_temps):
