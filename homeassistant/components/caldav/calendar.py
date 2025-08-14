@@ -179,9 +179,7 @@ async def async_setup_entry(
 class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarEntity):
     """A device for getting the next Task from a WebDav Calendar."""
 
-    _attr_supported_features = (
-        CalendarEntityFeature.CREATE_EVENT | CalendarEntityFeature.DELETE_EVENT
-    )
+    _attr_supported_features = CalendarEntityFeature.CREATE_EVENT
 
     def __init__(
         self,
@@ -239,28 +237,6 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         await self.hass.async_add_executor_job(
             self.coordinator.calendar.add_event, ics_data
         )
-
-    async def async_delete_event(
-        self,
-        uid: str,
-        recurrence_id: str | None = None,
-        recurrence_range: str | None = None,
-    ) -> None:
-        """Delete an event on the calendar."""
-        _LOGGER.debug("Delete event: %s", uid)
-
-        def _delete_event() -> None:
-            """Search for an event and delete it."""
-            event = self.coordinator.calendar.search(uid=uid, event=True, expand=False)
-            if not isinstance(event, list):
-                _LOGGER.error("Expected a list of events, got %s", type(event))
-                return
-            assert len(event) <= 1, (
-                "Expected at most one event, got multiple. This should not happen."
-            )
-            event[0].delete()
-
-        await self.hass.async_add_executor_job(_delete_event)
 
     @callback
     def _handle_coordinator_update(self) -> None:
