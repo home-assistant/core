@@ -8,7 +8,7 @@ from typing import Any, TypeVar
 from aiohttp import ClientError, ClientResponse, ClientSession
 from yarl import URL
 
-from .const import PROPERTIES, WORK_MODE_SETTING
+from .const import PROPERTIES
 from .hinen_exception import (
     ForbiddenError,
     HinenAPIError,
@@ -207,21 +207,6 @@ class HinenOpen:
             HinenDeviceDetail,
         ):
             yield item  # type: ignore[misc]
-
-    async def set_device_work_mode(self, work_mode: int, device_id: str):
-        """Set device work mode."""
-        hinen_device_control = HinenDeviceControl(
-            deviceId=device_id, map={PROPERTIES[WORK_MODE_SETTING]: work_mode}
-        )
-
-        async for _ in self._build_generator(
-            "PUT",
-            "/iot-device/open-api/devices/property_set",
-            {},
-            None,
-            hinen_device_control.model_dump(by_alias=True),
-        ):
-            pass
 
     async def set_property(self, value: Any, device_id: str, key: str):
         """Set device work mode."""

@@ -23,11 +23,18 @@
         "data": {
           "redirection_url": "Redirect address",
           "page_language": "Certification page language"
+        },
+        "data_description": {
+          "page_language": "",
+          "redirection_url": ""
         }
       },
       "devices": {
         "data": {
           "devices": "Hinen devices"
+        },
+        "data_description": {
+          "devices": ""
         },
         "description": "Select the device you want to add."
       },
@@ -43,6 +50,9 @@
         "description": "[%key:component::hinen::config::step::devices::description%]",
         "data": {
           "devices": "[%key:component::hinen::config::step::devices::data::devices%]"
+        },
+        "data_description": {
+          "devices": ""
         }
       }
     }
@@ -86,19 +96,13 @@
     },
     "number": {
       "load_first_stop_soc": {
-        "name": "Looad first stop SOC"
+        "name": "Load first stop SOC"
       },
       "charge_stop_soc": {
         "name": "Charge Stop SOC"
       },
       "grid_first_stop_soc": {
         "name": "Grid First Stop SOC"
-      },
-      "charge_power_set": {
-        "name": "Charge Power Set"
-      },
-      "discharge_power_set": {
-        "name": "Discharge Power Set"
       },
       "cd_period_times_1_start": {
         "name": "CD Period 1 Start"

@@ -56,8 +56,6 @@ PROPERTIES = {
     LOAD_FIRST_STOP_SOC: "LoadFirstStopSOC",
     CHARGE_STOP_SOC: "ChargeStopSOC",
     GRID_FIRST_STOP_SOC: "GridFirstStopSOC",
-    CHARGE_POWER_SET: "ChargePowerSet",
-    DISCHARGE_POWER_SET: "DischargePowerSet",
     CD_PERIOD_TIMES2: "CDPeriodTimes2",
     WORK_MODE_SETTING: "WorkModeSetting",
     CUMULATIVE_CONSUMPTION: "CumulativeConsumption",

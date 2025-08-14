@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -90,10 +91,26 @@ class OAuth2FlowHandler(
             data_schema=vol.Schema(
                 {
                     vol.Required(ATTR_AUTH_LANGUAGE): vol.In(dict(SUPPORTED_LANGUAGES)),
-                    vol.Required(ATTR_REDIRECTION_URL): str,
+                    vol.Required(
+                        ATTR_REDIRECTION_URL, default="http://127.0.0.1:8123"
+                    ): str,
                 }
             ),
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauth dialog."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+        return await self.async_step_user()
 
     async def get_resource(self, token: str, host: str) -> HinenOpen:
         """Get Hinen Open resource async."""
@@ -118,6 +135,7 @@ class OAuth2FlowHandler(
                     reason="no_device",
                     description_placeholders={"support_url": CHANNEL_CREATION_HELP_URL},
                 )
+
         except ForbiddenError as ex:
             error = ex.args[0]
             return self.async_abort(
@@ -171,7 +189,7 @@ class OAuth2FlowHandler(
         selectable_devices = [
             SelectOptionDict(
                 value=str(device_info.id),
-                label=f"{device_info.device_name},{device_info.serial_number} (Your Device)",
+                label=f"{device_info.device_name},{device_info.serial_number}",
             )
             for device_info in device_infos
         ]
@@ -222,7 +240,7 @@ class HinenOpenFlowHandler(OptionsFlow):
         selectable_devices = [
             SelectOptionDict(
                 value=str(device_info.id),
-                label=f"{device_info.device_name},{device_info.serial_number} (Your Device)",
+                label=f"{device_info.device_name},{device_info.serial_number}",
             )
             for device_info in device_infos
         ]

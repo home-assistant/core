@@ -60,24 +60,6 @@ NUMBER_TYPES = [
         native_step=1,
         native_unit_of_measurement=PERCENTAGE,
     ),
-    HinenNumberEntityDescription(
-        key="charge_power_set",
-        translation_key="charge_power_set",
-        entity_category=EntityCategory.CONFIG,
-        native_min_value=0,
-        native_max_value=655340,
-        native_step=10,
-        native_unit_of_measurement="W",
-    ),
-    HinenNumberEntityDescription(
-        key="discharge_power_set",
-        translation_key="discharge_power_set",
-        entity_category=EntityCategory.CONFIG,
-        native_min_value=0,
-        native_max_value=655340,
-        native_step=10,
-        native_unit_of_measurement="W",
-    ),
 ]
 
 # Generate CD Period Times entity descriptions for 0-6 periods

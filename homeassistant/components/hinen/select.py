@@ -89,6 +89,8 @@ class HinenWorkModeSelect(HinenDeviceEntity, SelectEntity):
                 break
         _LOGGER.debug("mode_value: %s", mode_value)
         if mode_value is not None:
-            await self.hinen_open.set_device_work_mode(mode_value, self._device_id)
+            await self.hinen_open.set_property(
+                mode_value, self._device_id, WORK_MODE_SETTING
+            )
             self.coordinator.data[self._device_id][WORK_MODE_SETTING] = mode_value
             self.async_write_ha_state()
