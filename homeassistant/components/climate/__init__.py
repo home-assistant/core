@@ -255,7 +255,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     )
 
     entity_description: ClimateEntityDescription
-    _attr_current_humidity: int | None = None
+    _attr_current_humidity: float | None = None
     _attr_current_temperature: float | None = None
     _attr_fan_mode: str | None
     _attr_fan_modes: list[str] | None
