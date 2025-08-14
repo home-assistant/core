@@ -115,8 +115,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Optional("intents"): vol.Schema(
                     {cv.string: vol.All(cv.ensure_list, [cv.string])}
-                ),
-                vol.Optional("fuzzy_matching"): bool,
+                )
             }
         ),
     },
