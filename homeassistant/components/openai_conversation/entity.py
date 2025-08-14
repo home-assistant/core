@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import base64
-from collections.abc import AsyncGenerator, Callable
+from collections.abc import AsyncGenerator, Callable, Iterable
 import json
 from mimetypes import guess_file_type
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal
 
 import openai
 from openai._streaming import AsyncStream
@@ -29,14 +29,15 @@ from openai.types.responses import (
     ResponseOutputItemAddedEvent,
     ResponseOutputItemDoneEvent,
     ResponseOutputMessage,
-    ResponseOutputMessageParam,
     ResponseReasoningItem,
     ResponseReasoningItemParam,
+    ResponseReasoningSummaryTextDeltaEvent,
     ResponseStreamEvent,
     ResponseTextDeltaEvent,
     ToolParam,
     WebSearchToolParam,
 )
+from openai.types.responses.response_create_params import ResponseCreateParamsStreaming
 from openai.types.responses.response_input_param import FunctionCallOutput
 from openai.types.responses.tool_param import (
     CodeInterpreter,
@@ -61,6 +62,7 @@ from .const import (
     CONF_REASONING_EFFORT,
     CONF_TEMPERATURE,
     CONF_TOP_P,
+    CONF_VERBOSITY,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_CONTEXT_SIZE,
@@ -75,6 +77,7 @@ from .const import (
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
+    RECOMMENDED_VERBOSITY,
     RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
 )
 
@@ -141,70 +144,116 @@ def _format_tool(
 
 
 def _convert_content_to_param(
-    content: conversation.Content,
+    chat_content: Iterable[conversation.Content],
 ) -> ResponseInputParam:
     """Convert any native chat message for this agent to the native format."""
     messages: ResponseInputParam = []
-    if isinstance(content, conversation.ToolResultContent):
-        return [
-            FunctionCallOutput(
-                type="function_call_output",
-                call_id=content.tool_call_id,
-                output=json.dumps(content.tool_result),
-            )
-        ]
+    reasoning_summary: list[str] = []
 
-    if content.content:
-        role: Literal["user", "assistant", "system", "developer"] = content.role
-        if role == "system":
-            role = "developer"
-        messages.append(
-            EasyInputMessageParam(type="message", role=role, content=content.content)
-        )
-
-    if isinstance(content, conversation.AssistantContent) and content.tool_calls:
-        messages.extend(
-            ResponseFunctionToolCallParam(
-                type="function_call",
-                name=tool_call.tool_name,
-                arguments=json.dumps(tool_call.tool_args),
-                call_id=tool_call.id,
+    for content in chat_content:
+        if isinstance(content, conversation.ToolResultContent):
+            messages.append(
+                FunctionCallOutput(
+                    type="function_call_output",
+                    call_id=content.tool_call_id,
+                    output=json.dumps(content.tool_result),
+                )
             )
-            for tool_call in content.tool_calls
-        )
+            continue
+
+        if content.content:
+            role: Literal["user", "assistant", "system", "developer"] = content.role
+            if role == "system":
+                role = "developer"
+            messages.append(
+                EasyInputMessageParam(
+                    type="message", role=role, content=content.content
+                )
+            )
+
+        if isinstance(content, conversation.AssistantContent):
+            if content.tool_calls:
+                messages.extend(
+                    ResponseFunctionToolCallParam(
+                        type="function_call",
+                        name=tool_call.tool_name,
+                        arguments=json.dumps(tool_call.tool_args),
+                        call_id=tool_call.id,
+                    )
+                    for tool_call in content.tool_calls
+                )
+
+            if content.thinking_content:
+                reasoning_summary.append(content.thinking_content)
+
+            if isinstance(content.native, ResponseReasoningItem):
+                messages.append(
+                    ResponseReasoningItemParam(
+                        type="reasoning",
+                        id=content.native.id,
+                        summary=[
+                            {
+                                "type": "summary_text",
+                                "text": summary,
+                            }
+                            for summary in reasoning_summary
+                        ]
+                        if content.thinking_content
+                        else [],
+                        encrypted_content=content.native.encrypted_content,
+                    )
+                )
+                reasoning_summary = []
+
     return messages
 
 
 async def _transform_stream(
     chat_log: conversation.ChatLog,
-    result: AsyncStream[ResponseStreamEvent],
-    messages: ResponseInputParam,
+    stream: AsyncStream[ResponseStreamEvent],
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     """Transform an OpenAI delta stream into HA format."""
-    async for event in result:
+    last_summary_index = None
+
+    async for event in stream:
         LOGGER.debug("Received event: %s", event)
 
         if isinstance(event, ResponseOutputItemAddedEvent):
             if isinstance(event.item, ResponseOutputMessage):
                 yield {"role": event.item.role}
+                last_summary_index = None
             elif isinstance(event.item, ResponseFunctionToolCall):
                 # OpenAI has tool calls as individual events
                 # while HA puts tool calls inside the assistant message.
                 # We turn them into individual assistant content for HA
                 # to ensure that tools are called as soon as possible.
                 yield {"role": "assistant"}
+                last_summary_index = None
                 current_tool_call = event.item
         elif isinstance(event, ResponseOutputItemDoneEvent):
-            item = event.item.model_dump()
-            item.pop("status", None)
             if isinstance(event.item, ResponseReasoningItem):
-                messages.append(cast(ResponseReasoningItemParam, item))
-            elif isinstance(event.item, ResponseOutputMessage):
-                messages.append(cast(ResponseOutputMessageParam, item))
-            elif isinstance(event.item, ResponseFunctionToolCall):
-                messages.append(cast(ResponseFunctionToolCallParam, item))
+                yield {
+                    "native": ResponseReasoningItem(
+                        type="reasoning",
+                        id=event.item.id,
+                        summary=[],  # Remove summaries
+                        encrypted_content=event.item.encrypted_content,
+                    )
+                }
         elif isinstance(event, ResponseTextDeltaEvent):
             yield {"content": event.delta}
+        elif isinstance(event, ResponseReasoningSummaryTextDeltaEvent):
+            # OpenAI can output several reasoning summaries
+            # in a single ResponseReasoningItem. We split them as separate
+            # AssistantContent messages. Only last of them will have
+            # the reasoning `native` field set.
+            if (
+                last_summary_index is not None
+                and event.summary_index != last_summary_index
+            ):
+                yield {"role": "assistant"}
+            last_summary_index = event.summary_index
+            yield {"thinking_content": event.delta}
         elif isinstance(event, ResponseFunctionCallArgumentsDeltaEvent):
             current_tool_call.arguments += event.delta
         elif isinstance(event, ResponseFunctionCallArgumentsDoneEvent):
@@ -274,11 +323,13 @@ async def _transform_stream(
 class OpenAIBaseLLMEntity(Entity):
     """OpenAI conversation agent."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, entry: OpenAIConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the entity."""
         self.entry = entry
         self.subentry = subentry
-        self._attr_name = subentry.title
         self._attr_unique_id = subentry.subentry_id
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, subentry.subentry_id)},
@@ -331,33 +382,34 @@ class OpenAIBaseLLMEntity(Entity):
                 )
             )
 
-        model_args = {
-            "model": options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
-            "input": [],
-            "max_output_tokens": options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
-            "top_p": options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
-            "temperature": options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
-            "user": chat_log.conversation_id,
-            "store": False,
-            "stream": True,
-        }
+        messages = _convert_content_to_param(chat_log.content)
+
+        model_args = ResponseCreateParamsStreaming(
+            model=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
+            input=messages,
+            max_output_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
+            top_p=options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
+            temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
+            user=chat_log.conversation_id,
+            store=False,
+            stream=True,
+        )
         if tools:
             model_args["tools"] = tools
 
-        if model_args["model"].startswith("o"):
+        if model_args["model"].startswith(("o", "gpt-5")):
             model_args["reasoning"] = {
                 "effort": options.get(
                     CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
-                )
+                ),
+                "summary": "auto",
             }
-        else:
-            model_args["store"] = False
+            model_args["include"] = ["reasoning.encrypted_content"]
 
-        messages = [
-            m
-            for content in chat_log.content
-            for m in _convert_content_to_param(content)
-        ]
+        if model_args["model"].startswith("gpt-5"):
+            model_args["text"] = {
+                "verbosity": options.get(CONF_VERBOSITY, RECOMMENDED_VERBOSITY)
+            }
 
         last_content = chat_log.content[-1]
 
@@ -391,16 +443,19 @@ class OpenAIBaseLLMEntity(Entity):
 
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
-            model_args["input"] = messages
-
             try:
-                result = await client.responses.create(**model_args)
+                stream = await client.responses.create(**model_args)
 
-                async for content in chat_log.async_add_delta_content_stream(
-                    self.entity_id, _transform_stream(chat_log, result, messages)
-                ):
-                    if not isinstance(content, conversation.AssistantContent):
-                        messages.extend(_convert_content_to_param(content))
+                messages.extend(
+                    _convert_content_to_param(
+                        [
+                            content
+                            async for content in chat_log.async_add_delta_content_stream(
+                                self.entity_id, _transform_stream(chat_log, stream)
+                            )
+                        ]
+                    )
+                )
             except openai.RateLimitError as err:
                 LOGGER.error("Rate limited by OpenAI: %s", err)
                 raise HomeAssistantError("Rate limited or insufficient funds") from err

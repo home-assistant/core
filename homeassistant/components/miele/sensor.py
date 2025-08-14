@@ -745,7 +745,7 @@ class MielePlateSensor(MieleSensor):
                 )
             ).name
             if self.device.state_plate_step
-            else PlatePowerStep.plate_step_0
+            else PlatePowerStep.plate_step_0.name
         )
 
 

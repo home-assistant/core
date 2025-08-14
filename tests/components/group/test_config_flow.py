@@ -44,7 +44,8 @@ from tests.typing import WebSocketGenerator
             {},
         ),
         ("fan", "on", "on", {}, {}, {}, {}),
-        ("light", "on", "on", {}, {}, {}, {}),
+        ("light", "on", "on", {}, {}, {"all": False}, {}),
+        ("light", "on", "on", {}, {"all": True}, {"all": True}, {}),
         ("lock", "locked", "locked", {}, {}, {}, {}),
         ("notify", STATE_UNKNOWN, "2021-01-01T23:59:59.123+00:00", {}, {}, {}, {}),
         ("media_player", "on", "on", {}, {}, {}, {}),
@@ -57,7 +58,8 @@ from tests.typing import WebSocketGenerator
             {"type": "sum"},
             {},
         ),
-        ("switch", "on", "on", {}, {}, {}, {}),
+        ("switch", "on", "on", {}, {}, {"all": False}, {}),
+        ("switch", "on", "on", {}, {"all": True}, {"all": True}, {}),
     ],
 )
 async def test_config_flow(
@@ -315,11 +317,11 @@ async def test_options(
     ("group_type", "extra_options", "extra_options_after", "advanced"),
     [
         ("light", {"all": False}, {"all": False}, False),
-        ("light", {"all": True}, {"all": True}, False),
+        ("light", {"all": True}, {"all": False}, False),
         ("light", {"all": False}, {"all": False}, True),
         ("light", {"all": True}, {"all": False}, True),
         ("switch", {"all": False}, {"all": False}, False),
-        ("switch", {"all": True}, {"all": True}, False),
+        ("switch", {"all": True}, {"all": False}, False),
         ("switch", {"all": False}, {"all": False}, True),
         ("switch", {"all": True}, {"all": False}, True),
     ],

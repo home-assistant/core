@@ -45,6 +45,12 @@ rules:
 
 **When Reviewing/Creating Code**: Always check the integration's quality scale level and exemption status before applying rules.
 
+## Code Review Guidelines
+
+**When reviewing code, do NOT comment on:**
+- **Missing imports** - We use static analysis tooling to catch that
+- **Code formatting** - We have ruff as a formatting tool that will catch those if needed (unless specifically instructed otherwise in these instructions)
+
 ## Python Requirements
 
 - **Compatibility**: Python 3.13+
