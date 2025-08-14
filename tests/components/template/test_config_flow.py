@@ -306,7 +306,7 @@ async def test_config_flow(
         **extra_options,
         **availability,
     }
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 2
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert config_entry.data == {}
@@ -492,7 +492,7 @@ async def test_config_flow_device(
         **state_template,
         **extra_options,
     }
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 2
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert config_entry.data == {}

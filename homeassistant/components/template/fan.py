@@ -158,7 +158,6 @@ async def async_setup_platform(
         FAN_DOMAIN,
         config,
         StateFanEntity,
-        TriggerFanEntity,
         async_add_entities,
         discovery_info,
         LEGACY_FIELDS,
@@ -174,9 +173,11 @@ async def async_setup_entry(
     """Initialize config entry."""
     await async_setup_template_entry(
         hass,
+        FAN_DOMAIN,
         config_entry,
         async_add_entities,
         StateFanEntity,
+        TriggerFanEntity,
         FAN_CONFIG_ENTRY_SCHEMA,
     )
 
