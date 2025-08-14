@@ -17,6 +17,8 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from .const import MOCKED_EMAIL
+
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form."""
@@ -29,14 +31,14 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_EMAIL: "test@testdomain.com",
+            CONF_EMAIL: MOCKED_EMAIL,
             CONF_PASSWORD: "test-password",
         },
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "123456789"
+    assert result["title"] == MOCKED_EMAIL
     assert result["data"] == {
         CONF_USER_ID: 123456789,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
@@ -59,7 +61,7 @@ async def test_form_two_factor_success(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_EMAIL: "test@testdomain.com",
+            CONF_EMAIL: MOCKED_EMAIL,
             CONF_PASSWORD: "test-password",
         },
     )
@@ -78,7 +80,7 @@ async def test_form_two_factor_success(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "123456789"
+    assert result["title"] == MOCKED_EMAIL
     assert result["data"] == {
         CONF_USER_ID: 123456789,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
@@ -101,7 +103,7 @@ async def test_form_two_factor_bad_code(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_EMAIL: "test@testdomain.com",
+            CONF_EMAIL: MOCKED_EMAIL,
             CONF_PASSWORD: "test-password",
         },
     )
@@ -128,7 +130,7 @@ async def test_form_two_factor_bad_code(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_EMAIL: "test@testdomain.com",
+            CONF_EMAIL: MOCKED_EMAIL,
             CONF_PASSWORD: "test-password",
         },
     )
@@ -144,7 +146,7 @@ async def test_form_two_factor_bad_code(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "123456789"
+    assert result["title"] == MOCKED_EMAIL
     assert result["data"] == {
         CONF_USER_ID: 123456789,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
@@ -167,7 +169,7 @@ async def test_form_two_factor_cant_connect(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_EMAIL: "test@testdomain.com",
+            CONF_EMAIL: MOCKED_EMAIL,
             CONF_PASSWORD: "test-password",
         },
     )
@@ -194,7 +196,7 @@ async def test_form_two_factor_cant_connect(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_EMAIL: "test@testdomain.com",
+            CONF_EMAIL: MOCKED_EMAIL,
             CONF_PASSWORD: "test-password",
         },
     )
@@ -210,7 +212,7 @@ async def test_form_two_factor_cant_connect(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "123456789"
+    assert result["title"] == MOCKED_EMAIL
     assert result["data"] == {
         CONF_USER_ID: 123456789,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
@@ -233,7 +235,7 @@ async def test_form_two_factor_unknown_error(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_EMAIL: "test@testdomain.com",
+            CONF_EMAIL: MOCKED_EMAIL,
             CONF_PASSWORD: "test-password",
         },
     )
@@ -260,7 +262,7 @@ async def test_form_two_factor_unknown_error(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_EMAIL: "test@testdomain.com",
+            CONF_EMAIL: MOCKED_EMAIL,
             CONF_PASSWORD: "test-password",
         },
     )
@@ -276,7 +278,7 @@ async def test_form_two_factor_unknown_error(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "123456789"
+    assert result["title"] == MOCKED_EMAIL
     assert result["data"] == {
         CONF_USER_ID: 123456789,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
@@ -299,7 +301,7 @@ async def test_form_invalid_auth(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_EMAIL: "test@testdomain.com",
+            CONF_EMAIL: MOCKED_EMAIL,
             CONF_PASSWORD: "test-password",
         },
     )
@@ -314,14 +316,14 @@ async def test_form_invalid_auth(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_EMAIL: "test@testdomain.com",
+            CONF_EMAIL: MOCKED_EMAIL,
             CONF_PASSWORD: "test-password",
         },
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "123456789"
+    assert result["title"] == MOCKED_EMAIL
     assert result["data"] == {
         CONF_USER_ID: 123456789,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
@@ -344,7 +346,7 @@ async def test_form_cannot_connect(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_EMAIL: "test@testdomain.com",
+            CONF_EMAIL: MOCKED_EMAIL,
             CONF_PASSWORD: "test-password",
         },
     )
@@ -360,14 +362,14 @@ async def test_form_cannot_connect(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_EMAIL: "test@testdomain.com",
+            CONF_EMAIL: MOCKED_EMAIL,
             CONF_PASSWORD: "test-password",
         },
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "123456789"
+    assert result["title"] == MOCKED_EMAIL
     assert result["data"] == {
         CONF_USER_ID: 123456789,
         CONF_AUTHORIZE_STRING: "test_authorize_string",
@@ -390,7 +392,7 @@ async def test_form_unknown_error(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_EMAIL: "test@testdomain.com",
+            CONF_EMAIL: MOCKED_EMAIL,
             CONF_PASSWORD: "test-password",
         },
     )
@@ -406,14 +408,14 @@ async def test_form_unknown_error(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_EMAIL: "test@testdomain.com",
+            CONF_EMAIL: MOCKED_EMAIL,
             CONF_PASSWORD: "test-password",
         },
     )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "123456789"
+    assert result["title"] == MOCKED_EMAIL
     assert result["data"] == {
         CONF_USER_ID: 123456789,
         CONF_AUTHORIZE_STRING: "test_authorize_string",

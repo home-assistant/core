@@ -6,13 +6,7 @@ from unittest.mock import AsyncMock, create_autospec, patch
 import pycync
 import pytest
 
-MOCKED_USER = pycync.User(
-    "test_token",
-    "test_refresh_token",
-    "test_authorize_string",
-    123456789,
-    expires_at=3600,
-)
+from .const import MOCKED_EMAIL, MOCKED_USER
 
 
 @pytest.fixture(autouse=True)
@@ -20,6 +14,7 @@ def client():
     """Mock a pycync.Auth client."""
     client_mock = create_autospec(pycync.Auth, instance=True)
     client_mock.user = MOCKED_USER
+    client_mock.username = MOCKED_EMAIL
     client_mock.login = AsyncMock()
 
     with patch("homeassistant.components.cync.config_flow.Auth") as sc_class_mock:
