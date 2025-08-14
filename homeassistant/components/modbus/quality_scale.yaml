@@ -14,7 +14,7 @@ rules:
   config-flow:
     status: exempt
     comment: |
-      Modbus is a protocol implementation and do not support config_flow.
+      Modbus is a protocol implementation and thus is not required to implement a configuration flow as per ADR-0010.
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
