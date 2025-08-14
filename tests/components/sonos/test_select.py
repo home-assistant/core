@@ -1,5 +1,6 @@
 """Tests for the Sonos number platform."""
 
+import logging
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -14,7 +15,7 @@ from homeassistant.components.sonos.const import (
     MODEL_SONOS_ARC_ULTRA,
     SCAN_INTERVAL,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, Platform
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -62,6 +63,29 @@ async def test_select_dialog_level(
     dialog_level_select = entity_registry.entities[SELECT_DIALOG_LEVEL_ENTITY]
     dialog_level_state = hass.states.get(dialog_level_select.entity_id)
     assert dialog_level_state.state == result
+
+
+async def test_select_dialog_invalid_level(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    soco,
+    entity_registry: er.EntityRegistry,
+    speaker_info: dict[str, str],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test receiving an invalid level from the speaker."""
+
+    speaker_info["model_name"] = MODEL_SONOS_ARC_ULTRA.lower()
+    soco.get_speaker_info.return_value = speaker_info
+    soco.dialog_level = 10
+
+    with caplog.at_level(logging.WARNING):
+        await async_setup_sonos()
+    assert "Invalid option 10 for dialog_level" in caplog.text
+
+    dialog_level_select = entity_registry.entities[SELECT_DIALOG_LEVEL_ENTITY]
+    dialog_level_state = hass.states.get(dialog_level_select.entity_id)
+    assert dialog_level_state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
