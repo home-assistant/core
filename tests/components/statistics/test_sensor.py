@@ -6,7 +6,7 @@ from asyncio import Event as AsyncioEvent
 from collections.abc import Sequence
 from datetime import datetime, timedelta
 import statistics
-from threading import Event
+from threading import Event as ThreadingEvent
 from typing import Any
 from unittest.mock import patch
 
@@ -42,8 +42,9 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -1741,7 +1742,7 @@ async def test_update_before_load(recorder_mock: Recorder, hass: HomeAssistant) 
         # some synchronisation is needed to prevent that loading from the database finishes too soon
         # we want this to take long enough to be able to try to add a value BEFORE loading is done
         state_changes_during_period_called_evt = AsyncioEvent()
-        state_changes_during_period_stall_evt = Event()
+        state_changes_during_period_stall_evt = ThreadingEvent()
         real_state_changes_during_period = history.state_changes_during_period
 
         def mock_state_changes_during_period(*args, **kwargs):
@@ -1789,25 +1790,25 @@ async def test_update_before_load(recorder_mock: Recorder, hass: HomeAssistant) 
 
 @pytest.mark.parametrize("force_update", [True, False])
 @pytest.mark.parametrize(
-    ("values_attributes_and_times", "expected_state"),
+    ("values_attributes_and_times", "expected_states"),
     [
         (
             # Fires last reported events
             [(5.0, A1, 2), (10.0, A1, 1), (10.0, A1, 1), (10.0, A1, 2), (5.0, A1, 1)],
-            "8.33",
+            ["unavailable", "5.0", "7.5", "8.33", "8.75", "8.33"],
         ),
         (  # Fires state change events
             [(5.0, A1, 2), (10.0, A2, 1), (10.0, A1, 1), (10.0, A2, 2), (5.0, A1, 1)],
-            "8.33",
+            ["unavailable", "5.0", "7.5", "8.33", "8.75", "8.33"],
         ),
         (
             # Fires last reported events
             [(10.0, A1, 2), (10.0, A1, 1), (10.0, A1, 1), (10.0, A1, 2), (10.0, A1, 1)],
-            "10.0",
+            ["unavailable", "10.0", "10.0", "10.0", "10.0", "10.0"],
         ),
         (  # Fires state change events
             [(10.0, A1, 2), (10.0, A2, 1), (10.0, A1, 1), (10.0, A2, 2), (10.0, A1, 1)],
-            "10.0",
+            ["unavailable", "10.0", "10.0", "10.0", "10.0", "10.0"],
         ),
     ],
 )
@@ -1815,12 +1816,21 @@ async def test_average_linear_unevenly_timed(
     hass: HomeAssistant,
     force_update: bool,
     values_attributes_and_times: list[tuple[float, dict[str, Any], float]],
-    expected_state: str,
+    expected_states: list[str],
 ) -> None:
     """Test the average_linear state characteristic with unevenly distributed values.
 
     This also implicitly tests the correct timing of repeating values.
     """
+    events: list[Event[EventStateChangedData]] = []
+
+    @callback
+    def _capture_event(event: Event) -> None:
+        events.append(event)
+
+    async_track_state_change_event(
+        hass, "sensor.test_sensor_average_linear", _capture_event
+    )
 
     current_time = dt_util.utcnow()
 
@@ -1856,12 +1866,8 @@ async def test_average_linear_unevenly_timed(
 
         await hass.async_block_till_done()
 
-        state = hass.states.get("sensor.test_sensor_average_linear")
-        assert state is not None
-        assert state.state == expected_state, (
-            "value mismatch for characteristic 'sensor/average_linear' - "
-            f"assert {state.state} == {expected_state}"
-        )
+    await hass.async_block_till_done()
+    assert [event.data["new_state"].state for event in events] == expected_states
 
 
 async def test_sensor_unit_gets_removed(hass: HomeAssistant) -> None:

@@ -87,11 +87,6 @@ def remove_configured_db_url_if_not_needed(
     )
 
 
-async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update listener for options."""
-    await hass.config_entries.async_reload(entry.entry_id)
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up SQL from yaml config."""
     if (conf := config.get(DOMAIN)) is None:
@@ -114,8 +109,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     if entry.options.get(CONF_DB_URL) == get_instance(hass).db_url:
         remove_configured_db_url_if_not_needed(hass, entry)
-
-    entry.async_on_unload(entry.add_update_listener(async_update_listener))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -760,7 +760,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SELECT,
         hint="multilevel_switch",
         manufacturer_id={0x0084},
-        product_id={0x0107, 0x0108, 0x010B, 0x0205},
+        product_id={0x0107, 0x0108, 0x0109, 0x010B, 0x0205},
         product_type={0x0311, 0x0313, 0x0331, 0x0341, 0x0343},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         data_template=BaseDiscoverySchemaDataTemplate(
@@ -771,6 +771,35 @@ DISCOVERY_SCHEMAS = [
                 99: "Siren & Strobe FULL Alarm",
             },
         ),
+    ),
+    # ZWA-2, discover LED control as configuration, default disabled
+    ## Production firmware (1.0) -> Color Switch CC
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        manufacturer_id={0x0466},
+        product_id={0x0001},
+        product_type={0x0001},
+        hint="zwa2_led_color",
+        primary_value=COLOR_SWITCH_CURRENT_VALUE_SCHEMA,
+        absent_values=[
+            SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+            SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        ],
+        entity_category=EntityCategory.CONFIG,
+    ),
+    ## Day-1 firmware update (1.1) -> Binary Switch CC
+    ZWaveDiscoverySchema(
+        platform=Platform.LIGHT,
+        manufacturer_id={0x0466},
+        product_id={0x0001},
+        product_type={0x0001},
+        hint="zwa2_led_onoff",
+        primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
+        absent_values=[
+            COLOR_SWITCH_CURRENT_VALUE_SCHEMA,
+            SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        ],
+        entity_category=EntityCategory.CONFIG,
     ),
     # ====== START OF GENERIC MAPPING SCHEMAS =======
     # locks
