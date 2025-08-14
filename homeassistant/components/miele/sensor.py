@@ -30,6 +30,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
+    COFFEE_SYSTEM_PROFILE,
     DISABLED_TEMP_ENTITIES,
     DOMAIN,
     STATE_PROGRAM_ID,
@@ -61,6 +62,8 @@ PLATE_COUNT = {
     "KMX": 6,
 }
 
+ATTRIBUTE_PROFILE = "profile"
+
 
 def _get_plate_count(tech_type: str) -> int:
     """Get number of zones for hob."""
@@ -86,6 +89,15 @@ def _convert_temperature(
     if raw_value in DISABLED_TEMP_ENTITIES:
         return None
     return raw_value
+
+
+def _get_coffee_profile(value: MieleDevice) -> str | None:
+    """Get coffee profile from value."""
+    if value.state_program_id is not None:
+        for key_range, profile in COFFEE_SYSTEM_PROFILE.items():
+            if value.state_program_id in key_range:
+                return profile
+    return None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -158,7 +170,6 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             MieleAppliance.OVEN_MICROWAVE,
             MieleAppliance.STEAM_OVEN,
             MieleAppliance.MICROWAVE,
-            MieleAppliance.COFFEE_SYSTEM,
             MieleAppliance.ROBOT_VACUUM_CLEANER,
             MieleAppliance.WASHER_DRYER,
             MieleAppliance.STEAM_OVEN_COMBI,
@@ -171,8 +182,17 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             translation_key="program_id",
             device_class=SensorDeviceClass.ENUM,
             value_fn=lambda value: value.state_program_id,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(MieleAppliance.COFFEE_SYSTEM,),
+        description=MieleSensorDescription(
+            key="state_program_id",
+            translation_key="program_id",
+            device_class=SensorDeviceClass.ENUM,
+            value_fn=lambda value: value.state_program_id,
             extra_attributes={
-                "raw_value": lambda value: value.state_program_id,
+                ATTRIBUTE_PROFILE: _get_coffee_profile,
             },
         ),
     ),
@@ -805,6 +825,8 @@ class MielePhaseSensor(MieleSensor):
 
 class MieleProgramIdSensor(MieleSensor):
     """Representation of the program id sensor."""
+
+    _unrecorded_attributes = frozenset({ATTRIBUTE_PROFILE})
 
     @property
     def native_value(self) -> StateType:
