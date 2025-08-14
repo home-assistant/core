@@ -128,6 +128,8 @@ PIPELINE_FIELDS: VolDictType = {
     vol.Required("wake_word_entity"): vol.Any(str, None),
     vol.Required("wake_word_id"): vol.Any(str, None),
     vol.Optional("prefer_local_intents"): bool,
+    vol.Optional("acknowledge_same_area"): str,
+    vol.Optional("acknowledge_media_id"): str,
 }
 
 STORED_PIPELINE_RUNS = 10
@@ -1082,7 +1084,10 @@ class PipelineRun:
         device_id: str | None,
         conversation_extra_system_prompt: str | None,
     ) -> tuple[str, bool]:
-        """Run intent recognition portion of pipeline. Returns text to speak."""
+        """Run intent recognition portion of pipeline.
+
+        Returns (speech, can_acknowledge).
+        """
         if self.intent_agent is None or self._conversation_data is None:
             raise RuntimeError("Recognize intent was not prepared")
 
@@ -1129,7 +1134,7 @@ class PipelineRun:
 
             agent_id = self.intent_agent.id
             processed_locally = agent_id == conversation.HOME_ASSISTANT_AGENT
-            all_same_area = False
+            can_acknowledge = False
             intent_response: intent.IntentResponse | None = None
             if not processed_locally and not self._intent_agent_only:
                 # Sentence triggers override conversation agent
@@ -1159,8 +1164,7 @@ class PipelineRun:
 
                 # Try local intents
                 if (
-                    self.pipeline.acknowledge_same_area
-                    and intent_response is None
+                    intent_response is None
                     and self.pipeline.prefer_local_intents
                     and (
                         intent_response := await conversation.async_handle_intents(
@@ -1306,6 +1310,11 @@ class PipelineRun:
 
                     intent_response = conversation_result.response
                     device_registry = dr.async_get(self.hass)
+
+                    # Check if all targeted entities were in the same area as
+                    # the satellite device.
+                    # If so, the satellite can response with an acknowledge beep
+                    # instead of a full response.
                     if (
                         (
                             intent_response.response_type
@@ -1317,7 +1326,7 @@ class PipelineRun:
                         and device.area_id
                     ):
                         entity_registry = er.async_get(self.hass)
-                        all_same_area = True
+                        can_acknowledge = True
                         for state in intent_response.matched_states:
                             entity = entity_registry.async_get(state.entity_id)
                             if (
@@ -1336,10 +1345,8 @@ class PipelineRun:
                                     and entity_device.area_id != device.area_id
                                 )
                             ):
-                                all_same_area = False
+                                can_acknowledge = False
                                 break
-
-                    _LOGGER.error("All same area: %s", all_same_area)
 
         except Exception as src_error:
             _LOGGER.exception("Unexpected error during intent recognition")
@@ -1363,7 +1370,7 @@ class PipelineRun:
         if conversation_result.continue_conversation:
             self._conversation_data.continue_conversation_agent = agent_id
 
-        return speech, all_same_area
+        return (speech, can_acknowledge)
 
     async def prepare_text_to_speech(self) -> None:
         """Prepare text-to-speech."""
@@ -1432,6 +1439,7 @@ class PipelineRun:
         )
 
     async def acknowledge(self, media_id: str, tts_input: str | None) -> None:
+        """Respond with acknowledge media instead of text-to-speech."""
         self.process_event(
             PipelineEvent(
                 PipelineEventType.TTS_START,
@@ -1734,18 +1742,18 @@ class PipelineInput:
 
             if self.run.end_stage != PipelineStage.STT:
                 tts_input = self.tts_input
-                all_same_area = False
+                can_acknowledge = False
 
                 if current_stage == PipelineStage.INTENT:
                     # intent-recognition
                     assert intent_input is not None
-                    tts_input, all_same_area = await self.run.recognize_intent(
+                    tts_input, can_acknowledge = await self.run.recognize_intent(
                         intent_input,
                         self.session.conversation_id,
                         self.device_id,
                         self.conversation_extra_system_prompt,
                     )
-                    if all_same_area or tts_input.strip():
+                    if can_acknowledge or tts_input.strip():
                         current_stage = PipelineStage.TTS
                     else:
                         # Skip TTS
@@ -1754,7 +1762,8 @@ class PipelineInput:
                 if self.run.end_stage != PipelineStage.INTENT:
                     # text-to-speech
                     if current_stage == PipelineStage.TTS:
-                        if all_same_area and self.run.pipeline.acknowledge_media_id:
+                        if can_acknowledge and self.run.pipeline.acknowledge_media_id:
+                            # Use acknowledge media instead of full response
                             await self.run.acknowledge(
                                 self.run.pipeline.acknowledge_media_id, tts_input
                             )
