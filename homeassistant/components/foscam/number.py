@@ -18,7 +18,7 @@ from .entity import FoscamEntity
 
 @dataclass(frozen=True, kw_only=True)
 class FoscamNumberEntityDescription(NumberEntityDescription):
-    """A custom entity description that supports a turn_off function."""
+    """A custom entity description with adjustable features."""
 
     native_value_fn: Callable[..., int]
     set_value_fn: Callable[[FoscamCamera, float], Any]
@@ -51,7 +51,7 @@ async def async_setup_entry(
     config_entry: FoscamConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Reolink Smart AI number entities based on a config entry."""
+    """Set up foscam number from a config entry."""
     coordinator = config_entry.runtime_data
     await coordinator.async_config_entry_first_refresh()
     entities = []
@@ -64,7 +64,7 @@ async def async_setup_entry(
 
 
 class FoscamVolumeNumberEntity(FoscamEntity, NumberEntity):
-    """Representation of a Reolink Smart AI number entity."""
+    """Representation of a Foscam Smart AI number entity."""
 
     _attr_has_entity_name = True
     entity_description: FoscamNumberEntityDescription
@@ -74,7 +74,7 @@ class FoscamVolumeNumberEntity(FoscamEntity, NumberEntity):
         coordinator: FoscamCoordinator,
         description: FoscamNumberEntityDescription,
     ) -> None:
-        """Initialize the sensor."""
+        """Initialize the data."""
         entry_id = coordinator.config_entry.entry_id
         super().__init__(coordinator, entry_id)
 
