@@ -1,6 +1,5 @@
 """Diagnostics for the Nina integration."""
 
-from copy import deepcopy
 from dataclasses import asdict
 from typing import Any
 
@@ -16,7 +15,7 @@ async def async_get_config_entry_diagnostics(
 
     runtime_data_dict = {
         region_key: [asdict(warning) for warning in region_data]
-        for region_key, region_data in deepcopy(entry.runtime_data.data).items()
+        for region_key, region_data in entry.runtime_data.data.items()
     }
 
     return {
