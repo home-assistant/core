@@ -57,7 +57,8 @@
           "off": "Off",
           "low": "Low",
           "medium": "Medium",
-          "max": "Maximum"
+          "high": "High",
+          "max": "Max"
         }
       }
     },
