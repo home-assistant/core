@@ -11,7 +11,7 @@ import time
 from typing import Any, Literal, final
 
 from hassil import Intents, recognize
-from hassil.expression import Expression, ListReference, Sequence
+from hassil.expression import Expression, Group, ListReference
 from hassil.intents import WildcardSlotList
 
 from homeassistant.components import conversation, media_source, stt, tts
@@ -413,7 +413,7 @@ class AssistSatelliteEntity(entity.Entity):
         for intent in intents.intents.values():
             for intent_data in intent.data:
                 for sentence in intent_data.sentences:
-                    _collect_list_references(sentence, wildcard_names)
+                    _collect_list_references(sentence.expression, wildcard_names)
 
         for wildcard_name in wildcard_names:
             intents.slot_lists[wildcard_name] = WildcardSlotList(wildcard_name)
@@ -727,9 +727,9 @@ class AssistSatelliteEntity(entity.Entity):
 
 def _collect_list_references(expression: Expression, list_names: set[str]) -> None:
     """Collect list reference names recursively."""
-    if isinstance(expression, Sequence):
-        seq: Sequence = expression
-        for item in seq.items:
+    if isinstance(expression, Group):
+        grp: Group = expression
+        for item in grp.items:
             _collect_list_references(item, list_names)
     elif isinstance(expression, ListReference):
         # {list}

@@ -247,7 +247,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==38.2.1
+aioesphomeapi==39.0.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -528,7 +528,7 @@ arris-tg2492lg==2.2.0
 asmog==0.0.6
 
 # homeassistant.components.asuswrt
-asusrouter==1.18.1
+asusrouter==1.18.2
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
@@ -1140,7 +1140,7 @@ hass-splunk==0.1.1
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
-hassil==2.2.3
+hassil==3.1.0
 
 # homeassistant.components.jewish_calendar
 hdate[astral]==1.1.2
@@ -1960,7 +1960,7 @@ pyegps==0.2.5
 pyemoncms==0.1.2
 
 # homeassistant.components.enphase_envoy
-pyenphase==2.2.3
+pyenphase==2.3.0
 
 # homeassistant.components.envisalink
 pyenvisalink==4.7
@@ -2140,7 +2140,7 @@ pymeteoclimatic==0.1.0
 pymicro-vad==1.0.1
 
 # homeassistant.components.miele
-pymiele==0.5.3
+pymiele==0.5.4
 
 # homeassistant.components.xiaomi_tv
 pymitv==1.4.3
@@ -2506,7 +2506,7 @@ python-roborock==2.18.2
 python-smarttub==0.0.44
 
 # homeassistant.components.snoo
-python-snoo==0.7.0
+python-snoo==0.8.2
 
 # homeassistant.components.songpal
 python-songpal==0.16.2
@@ -2953,7 +2953,7 @@ tmb==0.0.4
 todoist-api-python==2.1.7
 
 # homeassistant.components.togrill
-togrill-bluetooth==0.4.0
+togrill-bluetooth==0.7.0
 
 # homeassistant.components.tolo
 tololib==1.2.2
