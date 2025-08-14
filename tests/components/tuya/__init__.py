@@ -41,11 +41,13 @@ DEVICE_MOCKS = [
     "cz_anwgf2xugjxpkfxb",  # https://github.com/orgs/home-assistant/discussions/539
     "cz_cuhokdii7ojyw8k2",  # https://github.com/home-assistant/core/issues/149704
     "cz_dntgh2ngvshfxpsz",  # https://github.com/home-assistant/core/issues/149704
+    "cz_fencxse0bnut96ig",  # https://github.com/home-assistant/core/issues/63978
     "cz_gbtxrqfy9xcsakyp",  #  https://github.com/home-assistant/core/issues/141278
     "cz_gjnozsaz",  # https://github.com/orgs/home-assistant/discussions/482
     "cz_hA2GsgMfTQFTz9JL",  #  https://github.com/home-assistant/core/issues/148347
     "cz_hj0a5c7ckzzexu8l",  # https://github.com/home-assistant/core/issues/149704
     "cz_ik9sbig3mthx9hjz",  #  https://github.com/home-assistant/core/issues/141278
+    "cz_ipabufmlmodje1ws",  # https://github.com/home-assistant/core/issues/63978
     "cz_jnbbxsb84gvvyfg5",  # https://github.com/tuya/tuya-home-assistant/issues/754
     "cz_n8iVBAPLFKAAAszH",  #  https://github.com/home-assistant/core/issues/146164
     "cz_nkb0fmtlfyqosnvk",  # https://github.com/orgs/home-assistant/discussions/482
