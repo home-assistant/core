@@ -22,6 +22,30 @@ from .coordinator import DelugeConfigEntry, DelugeDataUpdateCoordinator
 from .entity import DelugeEntity
 
 
+def get_count(data: dict[str, Any], key: str) -> float:
+    """Get current count of torrents by state."""
+
+    downloading_count = 0
+    seeding_count = 0
+
+    for torrent in data["states"].values():
+        torrent = {k.decode(): v for k, v in torrent.items()}
+        state = torrent["state"].decode()
+
+        if state == "Downloading":
+            downloading_count += 1
+        elif state == "Seeding":
+            seeding_count += 1
+
+    count = 0
+    if key == DelugeSensorType.DOWNLOADING_COUNT_SENSOR:
+        count = downloading_count
+    elif key == DelugeSensorType.SEEDING_COUNT_SENSOR:
+        count = seeding_count
+
+    return count
+
+
 def get_state(data: dict[str, float], key: str) -> str | float:
     """Get current download/upload state."""
     upload = data[DelugeGetSessionStatusKeys.UPLOAD_RATE.value]
@@ -109,6 +133,22 @@ SENSOR_TYPES: tuple[DelugeSensorEntityDescription, ...] = (
         value=lambda data: get_state(
             data, DelugeSensorType.PROTOCOL_TRAFFIC_DOWNLOAD_SPEED_SENSOR.value
         ),
+    ),
+    DelugeSensorEntityDescription(
+        key=DelugeSensorType.DOWNLOADING_COUNT_SENSOR.value,
+        translation_key=DelugeSensorType.DOWNLOADING_COUNT_SENSOR.value,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:download",
+        value=lambda data: get_count(
+            data, DelugeSensorType.DOWNLOADING_COUNT_SENSOR.value
+        ),
+    ),
+    DelugeSensorEntityDescription(
+        key=DelugeSensorType.SEEDING_COUNT_SENSOR.value,
+        translation_key=DelugeSensorType.SEEDING_COUNT_SENSOR.value,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:upload",
+        value=lambda data: get_count(data, DelugeSensorType.SEEDING_COUNT_SENSOR.value),
     ),
 )
 

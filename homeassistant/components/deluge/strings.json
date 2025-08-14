@@ -36,6 +36,9 @@
           "idle": "[%key:common::state::idle%]"
         }
       },
+      "downloading_count": {
+        "name": "Downloading count"
+      },
       "download_speed": {
         "name": "Download speed"
       },
@@ -44,6 +47,9 @@
       },
       "protocol_traffic_upload_speed": {
         "name": "Protocol traffic upload speed"
+      },
+      "seeding_count": {
+        "name": "Seeding count"
       },
       "upload_speed": {
         "name": "Upload speed"
