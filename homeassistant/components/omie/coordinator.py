@@ -30,12 +30,27 @@ _SCHEDULE_MAX_DELAY = timedelta(seconds=10)
 class OMIECoordinator(DataUpdateCoordinator[Mapping[date, OMIEResults[SpotData]]]):
     """Coordinator that manages OMIE data for yesterday, today, and tomorrow."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        *,
+        spot_price_fetcher=None,
+        timezone_provider=None,
+        current_time_provider=None,
+    ) -> None:
         """Initialize OMIE coordinator."""
         super().__init__(hass, _LOGGER, name=f"{DOMAIN}", config_entry=config_entry)
         self.data: Mapping[date, OMIEResults[SpotData]] = {}
         self._client_session = async_get_clientsession(hass)
         self._unavailable_logged = False
+
+        # Dependency injection for testing
+        self._spot_price_fetcher = spot_price_fetcher or pyomie.spot_price
+        self._timezone_provider = timezone_provider or (
+            lambda: ZoneInfo(hass.config.time_zone)
+        )
+        self._current_time_provider = current_time_provider or utcnow
 
         # Random delay to avoid thundering herd
         delay_micros = random.randint(0, _SCHEDULE_MAX_DELAY.seconds * 10**6)
@@ -49,9 +64,8 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[date, OMIEResults[SpotData]]
 
     async def _async_update_data(self) -> Mapping[date, OMIEResults[SpotData]]:
         """Update OMIE data, fetching data as needed and available."""
-        tzinfo = ZoneInfo(self.hass.config.time_zone)
-        now = datetime.now(tz=tzinfo)
-        relevant_dates = _get_market_dates(tzinfo, now)
+        now = self._current_time_provider()
+        relevant_dates = _get_market_dates(self._timezone_provider(), now)
         published_dates = {date for date in relevant_dates if _is_published(date, now)}
 
         # seed new data with previously-fetched days. these are immutable once fetched.
@@ -65,7 +79,7 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[date, OMIEResults[SpotData]]
             # off to OMIE for anything that's still missing
             for d in {pd for pd in published_dates if pd not in data}:
                 _LOGGER.debug("Fetching data for %s", d)
-                if results := await pyomie.spot_price(self._client_session, d):
+                if results := await self._spot_price_fetcher(self._client_session, d):
                     data.update({d: results})
         except Exception as error:
             if not self._unavailable_logged:
@@ -111,11 +125,13 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[date, OMIEResults[SpotData]]
         )
 
 
-def _get_market_dates(local_tz: ZoneInfo, local_time: datetime) -> set[date]:
+def _get_market_dates(local_tz: ZoneInfo, now_time: datetime) -> set[date]:
     """Returns the intraday market date(s) whose data we need to fetch."""
     min_max = [time.min, time.max]
     return {
-        datetime.combine(local_time, t, tzinfo=local_tz).astimezone(CET).date()
+        datetime.combine(now_time.astimezone(local_tz), t, tzinfo=local_tz)
+        .astimezone(CET)
+        .date()
         for t in min_max
     }
 
