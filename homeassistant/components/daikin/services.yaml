@@ -1,13 +1,10 @@
 set_zone_temperature:
-  name: Set Zone Temperature
-  description: "Set a zone's temperature on a compatible Daikin device. The temperature must be within +/- 2 degrees of the main system's target temperature."
   target:
     entity:
       domain: climate
   fields:
     zone_id:
       required: true
-      description: "ID of the zone (0-10) to set the temperature for"
       selector:
         number:
           min: 0
@@ -16,7 +13,6 @@ set_zone_temperature:
           step: 1
     temperature:
       required: true
-      description: "Temperature to set (in Celsius). Must be within +/- 2 degrees of the main system's target temperature."
       selector:
         number:
           min: 0

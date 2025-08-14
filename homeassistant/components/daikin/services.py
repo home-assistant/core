@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_SET_ZONE_TEMPERATURE = "set_zone_temperature"
 
 # Track service registration per hass instance
-_services_registered = WeakKeyDictionary()
+_services_registered: WeakKeyDictionary[HomeAssistant, bool] = WeakKeyDictionary()
 
 
 @dataclass(slots=True)

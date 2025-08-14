@@ -289,7 +289,7 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return extra state attributes, mapping zone IDs to set temperatures for ON zones only, for the current mode."""
-        attrs = super().extra_state_attributes or {}
+        attrs = dict(super().extra_state_attributes or {})
         lztemp_h = self.device.values.get("lztemp_h")
         lztemp_c = self.device.values.get("lztemp_c")
         zones = getattr(self.device, "zones", None)
@@ -300,23 +300,26 @@ class DaikinClimate(DaikinEntity, ClimateEntity):
             try:
                 decoded = unquote(val)
                 return [float(x) for x in decoded.split(";")]
-            except (ValueError, TypeError):
+            except (ValueError, TypeError) as err:
+                _LOGGER.debug("Invalid zone temperature data '%s': %s", val, err)
                 return []
 
         heating_temps = parse_zone_temps(lztemp_h)
         cooling_temps = parse_zone_temps(lztemp_c)
         # Determine current mode
         mode = self.hvac_mode
-        use_heating = mode == "heat"
-        use_cooling = mode == "cool"
+        use_heating = mode == HVACMode.HEAT
+        use_cooling = mode == HVACMode.COOL
         # Only include zones that are ON (switch enabled)
         zone_temps = {}
         if zones:
-            on_indices = [i for i, z in enumerate(zones) if z[1] == "1"]
-            for i in on_indices:
-                if use_heating and i < len(heating_temps):
-                    zone_temps[i] = heating_temps[i]
-                elif use_cooling and i < len(cooling_temps):
-                    zone_temps[i] = cooling_temps[i]
+            for idx, zone in enumerate(zones):
+                enabled = str(zone[-1])
+                if enabled != "1":
+                    continue
+                if use_heating and idx < len(heating_temps):
+                    zone_temps[idx] = heating_temps[idx]
+                elif use_cooling and idx < len(cooling_temps):
+                    zone_temps[idx] = cooling_temps[idx]
         attrs["zone_temps"] = zone_temps
         return attrs

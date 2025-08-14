@@ -22,5 +22,10 @@
         "default": "mdi:power"
       }
     }
+  },
+  "services": {
+    "set_zone_temperature": {
+      "service": "mdi:thermometer"
+    }
   }
 }
