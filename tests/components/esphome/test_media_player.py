@@ -27,6 +27,8 @@ from homeassistant.components.media_player import (
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_STOP,
     SERVICE_PLAY_MEDIA,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     STATE_PLAYING,
@@ -57,8 +59,8 @@ async def test_media_player_entity(
             key=1,
             name="my media_player",
             supports_pause=True,
-            # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
-            feature_flags=1200653,
+            # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY,TURN_OFF,TURN_ON
+            feature_flags=1201037,
         )
     ]
     states = [
@@ -155,6 +157,31 @@ async def test_media_player_entity(
     )
     mock_client.media_player_command.assert_has_calls(
         [call(1, command=MediaPlayerCommand.STOP, device_id=0)]
+    )
+    mock_client.media_player_command.reset_mock()
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_TURN_OFF,
+        {
+            ATTR_ENTITY_ID: "media_player.test_my_media_player",
+        },
+        blocking=True,
+    )
+    mock_client.media_player_command.assert_has_calls(
+        [call(1, command=MediaPlayerCommand.TURN_OFF, device_id=0)]
+    )
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "media_player.test_my_media_player",
+        },
+        blocking=True,
+    )
+    mock_client.media_player_command.assert_has_calls(
+        [call(1, command=MediaPlayerCommand.TURN_ON, device_id=0)]
     )
     mock_client.media_player_command.reset_mock()
 
