@@ -57,5 +57,21 @@
         "name": "Power"
       }
     }
+  },
+  "services": {
+    "set_zone_temperature": {
+      "name": "Set zone temperature",
+      "description": "Set a zone's temperature on a compatible Daikin device. The temperature must be within ±2°C of the main system's target temperature.",
+      "fields": {
+        "zone_id": {
+          "name": "Zone ID",
+          "description": "ID of the zone (0-10) to set the temperature for"
+        },
+        "temperature": {
+          "name": "Temperature",
+          "description": "Temperature to set in °C. Must be within ±2°C of the main system's target temperature."
+        }
+      }
+    }
   }
 }
