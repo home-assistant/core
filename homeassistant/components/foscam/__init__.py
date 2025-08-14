@@ -29,6 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FoscamConfigEntry) -> bo
         entry.data[CONF_PASSWORD],
         verbose=False,
     )
+
     coordinator = FoscamCoordinator(hass, entry, session)
     await coordinator.async_config_entry_first_refresh()
 

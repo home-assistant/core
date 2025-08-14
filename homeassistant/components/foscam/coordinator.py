@@ -120,6 +120,7 @@ class FoscamCoordinator(DataUpdateCoordinator[FoscamDeviceInfo]):
             is_open_hdr = bool(int(mode))
 
         ret_sw, swCapbilities_val = self.session.getSWCapabilities()
+
         supports_speak_volume_adjustment_val = (
             int(swCapbilities_val.get("swCapabilities1")) & 32 if ret_sw == 0 else 0
         )
