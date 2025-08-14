@@ -45,19 +45,19 @@ VALID_ENERGY_UNITS: set[str] = set(UnitOfEnergy)
 
 VALID_ENERGY_UNITS_GAS = {
     UnitOfVolume.CENTUM_CUBIC_FEET,
-    UnitOfVolume.MILLE_CUBIC_FEET,
     UnitOfVolume.CUBIC_FEET,
     UnitOfVolume.CUBIC_METERS,
     UnitOfVolume.LITERS,
+    UnitOfVolume.MILLE_CUBIC_FEET,
     *VALID_ENERGY_UNITS,
 }
 VALID_VOLUME_UNITS_WATER: set[str] = {
     UnitOfVolume.CENTUM_CUBIC_FEET,
-    UnitOfVolume.MILLE_CUBIC_FEET,
     UnitOfVolume.CUBIC_FEET,
     UnitOfVolume.CUBIC_METERS,
     UnitOfVolume.GALLONS,
     UnitOfVolume.LITERS,
+    UnitOfVolume.MILLE_CUBIC_FEET,
 }
 _LOGGER = logging.getLogger(__name__)
 
