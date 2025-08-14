@@ -63,21 +63,13 @@ async def async_setup_entry(
         return features
 
     async def _async_create_entities(speaker: SonosSpeaker) -> None:
-        entities = []
-
         available_features = await hass.async_add_executor_job(
             available_soco_attributes, speaker
         )
-
-        for select_data in available_features:
-            _LOGGER.debug(
-                "Creating %s select control on %s attribute %s",
-                select_data.feature,
-                speaker.zone_name,
-                select_data.attribute,
-            )
-            entities.append(SonosSelectEntity(speaker, config_entry, select_data))
-        async_add_entities(entities)
+        async_add_entities(
+            SonosSelectEntity(speaker, config_entry, select_data)
+            for select_data in available_features
+        )
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SONOS_CREATE_SELECTS, _async_create_entities)
@@ -100,6 +92,12 @@ class SonosSelectEntity(SonosEntity, SelectEntity):
         self._attr_translation_key = self.feature
         self.attribute = select_data.attribute
         self._attr_options = select_data.options
+        _LOGGER.debug(
+            "Creating %s select entity on %s attribute %s",
+            select_data.feature,
+            speaker.zone_name,
+            select_data.attribute,
+        )
 
     async def _async_fallback_poll(self) -> None:
         """Poll the value if subscriptions are not working."""
