@@ -36,10 +36,9 @@ SELECTOR_MAPPINGS: tuple[YoLinkSelectEntityDescription, ...] = (
         key="model",
         options=["auto", "manual", "off"],
         translation_key="sprinkler_mode",
-        icon="mdi:auto-mode",
-        value=lambda data: data.get("mode")
-        if data is not None
-        else None,  # watering state report will missing state field
+        value=lambda data: (
+            data.get("mode") if data is not None else None
+        ),  # watering state report will missing state field
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_SPRINKLER,
         should_update_entity=lambda value: value is not None,
     ),
@@ -53,14 +52,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up YoLink select from a config entry."""
     device_coordinators = hass.data[DOMAIN][config_entry.entry_id].device_coordinators
-    selector_device_coordinators = [
-        device_coordinator
-        for device_coordinator in device_coordinators.values()
-        if device_coordinator.device.device_type in [ATTR_DEVICE_SPRINKLER]
-    ]
     async_add_entities(
         YoLinkSelectEntity(config_entry, selector_device_coordinator, description)
-        for selector_device_coordinator in selector_device_coordinators
+        for selector_device_coordinator in device_coordinators.values()
+        if selector_device_coordinator.device.device_type in [ATTR_DEVICE_SPRINKLER]
         for description in SELECTOR_MAPPINGS
         if description.exists_fn(selector_device_coordinator.device)
     )

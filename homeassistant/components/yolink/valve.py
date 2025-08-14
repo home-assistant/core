@@ -87,8 +87,7 @@ DEVICE_TYPES: tuple[YoLinkValveEntityDescription, ...] = (
     ),
     YoLinkValveEntityDescription(
         key="valve",
-        translation_key="valve",
-        icon="mdi:sprinkler-variant",
+        translation_key="sprinkler_valve",
         device_class=ValveDeviceClass.WATER,
         value=lambda value: value is False if value is not None else None,
         exists_fn=lambda device: device.device_type
