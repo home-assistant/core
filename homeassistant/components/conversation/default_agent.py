@@ -1124,6 +1124,19 @@ class DefaultAgent(ConversationEntity):
             )
 
         # Load fuzzy
+        fuzzy_info = get_fuzzy_language(language_variant, json_load=json_load)
+        if fuzzy_info is None:
+            _LOGGER.debug(
+                "Fuzzy matching not available for language: %s", language_variant
+            )
+            return LanguageIntents(
+                intents,
+                intents_dict,
+                intent_responses,
+                error_responses,
+                language_variant,
+            )
+
         if self._fuzzy_config is None:
             # Load shared config
             self._fuzzy_config = get_fuzzy_config(json_load=json_load)
@@ -1134,49 +1147,42 @@ class DefaultAgent(ConversationEntity):
         fuzzy_matcher: FuzzyNgramMatcher | None = None
         fuzzy_responses: FuzzyLanguageResponses | None = None
 
-        if fuzzy_info := get_fuzzy_language(language_variant, json_load=json_load):
-            start_time = time.monotonic()
-            fuzzy_responses = fuzzy_info.responses
-            fuzzy_matcher = FuzzyNgramMatcher(
-                intents=intents,
-                intent_models={
-                    intent_name: Sqlite3NgramModel(
-                        order=fuzzy_model.order,
-                        words={
-                            word: str(word_id)
-                            for word, word_id in fuzzy_model.words.items()
-                        },
-                        database_path=fuzzy_model.database_path,
-                    )
-                    for intent_name, fuzzy_model in fuzzy_info.ngram_models.items()
-                },
-                intent_slot_list_names=self._fuzzy_config.slot_list_names,
-                slot_combinations={
-                    intent_name: {
-                        combo_key: [
-                            SlotCombinationInfo(
-                                name_domains=(
-                                    set(name_domains) if name_domains else None
-                                )
-                            )
-                        ]
-                        for combo_key, name_domains in intent_combos.items()
-                    }
-                    for intent_name, intent_combos in self._fuzzy_config.slot_combinations.items()
-                },
-                domain_keywords=fuzzy_info.domain_keywords,
-                stop_words=fuzzy_info.stop_words,
-            )
-            _LOGGER.debug(
-                "Loaded fuzzy matcher in %s second(s): language=%s, intents=%s",
-                time.monotonic() - start_time,
-                language_variant,
-                sorted(fuzzy_matcher.intent_models.keys()),
-            )
-        else:
-            _LOGGER.debug(
-                "Fuzzy matching not available for language: %s", language_variant
-            )
+        start_time = time.monotonic()
+        fuzzy_responses = fuzzy_info.responses
+        fuzzy_matcher = FuzzyNgramMatcher(
+            intents=intents,
+            intent_models={
+                intent_name: Sqlite3NgramModel(
+                    order=fuzzy_model.order,
+                    words={
+                        word: str(word_id)
+                        for word, word_id in fuzzy_model.words.items()
+                    },
+                    database_path=fuzzy_model.database_path,
+                )
+                for intent_name, fuzzy_model in fuzzy_info.ngram_models.items()
+            },
+            intent_slot_list_names=self._fuzzy_config.slot_list_names,
+            slot_combinations={
+                intent_name: {
+                    combo_key: [
+                        SlotCombinationInfo(
+                            name_domains=(set(name_domains) if name_domains else None)
+                        )
+                    ]
+                    for combo_key, name_domains in intent_combos.items()
+                }
+                for intent_name, intent_combos in self._fuzzy_config.slot_combinations.items()
+            },
+            domain_keywords=fuzzy_info.domain_keywords,
+            stop_words=fuzzy_info.stop_words,
+        )
+        _LOGGER.debug(
+            "Loaded fuzzy matcher in %s second(s): language=%s, intents=%s",
+            time.monotonic() - start_time,
+            language_variant,
+            sorted(fuzzy_matcher.intent_models.keys()),
+        )
 
         return LanguageIntents(
             intents,
@@ -1721,10 +1727,8 @@ def _get_match_error_response(
 def _collect_list_references(expression: Expression, list_names: set[str]) -> None:
     """Collect list reference names recursively."""
     if isinstance(expression, Group):
-        grp: Group = expression
-        for item in grp.items:
+        for item in expression.items:
             _collect_list_references(item, list_names)
     elif isinstance(expression, ListReference):
         # {list}
-        list_ref: ListReference = expression
-        list_names.add(list_ref.slot_name)
+        list_names.add(expression.slot_name)
