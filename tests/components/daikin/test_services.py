@@ -32,7 +32,7 @@ import voluptuous as vol
 
 from homeassistant.components.daikin import services
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
+from homeassistant.exceptions import HomeAssistantError
 
 
 class FakeDevice:
@@ -120,6 +120,7 @@ class FakeCoordinator:
     async def async_request_refresh(self) -> None:
         """Simulate coordinator refresh."""
 
+
 @pytest.fixture
 def setup_integration(hass: HomeAssistant):
     """Set up a fake integration with a FakeDevice and FakeCoordinator."""
@@ -191,7 +192,7 @@ async def test_service_entry_filter(setup_integration) -> None:
 @pytest.mark.asyncio
 async def test_service_missing_device(hass: HomeAssistant) -> None:
     """Test service call when device is missing."""
-    
+
     class NoDeviceCoordinator:
         pass
 
