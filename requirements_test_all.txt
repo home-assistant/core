@@ -2033,7 +2033,7 @@ python-linkplay==0.2.12
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==8.0.0
+python-matter-server==8.1.0
 
 # homeassistant.components.melcloud
 python-melcloud==0.1.0
