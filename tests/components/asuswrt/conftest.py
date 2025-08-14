@@ -222,7 +222,7 @@ def mock_controller_connect_http_sens_fail(connect_http):
 def mock_controller_connect_http_sens_detect():
     """Mock a successful sensor detection using http library."""
 
-    def _get_sensors_side_effect(datatype):
+    async def _get_sensors_side_effect(datatype):
         if datatype == AsusData.TEMPERATURE:
             return list(MOCK_TEMPERATURES_HTTP)
         if datatype == AsusData.CPU:
