@@ -243,6 +243,12 @@
       },
       "inverter_output_power_limit": {
         "name": "Inverter output power limit"
+      },
+      "lower_temperature": {
+        "name": "Lower temperature"
+      },
+      "upper_temperature": {
+        "name": "Upper temperature"
       }
     },
     "select": {
