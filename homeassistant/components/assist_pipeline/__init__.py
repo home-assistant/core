@@ -142,7 +142,12 @@ async def async_pipeline_from_audio_stream(
         await pipeline_input.execute()
 
 
+# -----------------------------------------------------------------------------
+
+
 class DefaultSoundsView(http.HomeAssistantView):
+    """HTTP view to host default sounds."""
+
     url = f"/api/{DOMAIN}/sounds/{{filename}}"
     name = f"api:{DOMAIN}:sounds"
     requires_auth = False
@@ -151,7 +156,8 @@ class DefaultSoundsView(http.HomeAssistantView):
         self.hass = hass
         self.base_dir = Path(__file__).parent / "sounds"
 
-    async def get(self, request: web.Request, filename: str):
+    async def get(self, request: web.Request, filename: str) -> web.StreamResponse:
+        """Get data for sound file."""
         if filename not in ("acknowledge.mp3",):
             return web.Response(body="Invalid filename", status=HTTPStatus.BAD_REQUEST)
 
