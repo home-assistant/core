@@ -451,6 +451,24 @@
       },
       "window_covering_target_position": {
         "name": "Target opening position"
+      },
+      "apparent_current": {
+        "name": "Apparent current"
+      },
+      "apparent_power": {
+        "name": "Apparent power"
+      },
+      "reactive_current": {
+        "name": "Reactive current"
+      },
+      "reactive_power": {
+        "name": "Reactive power"
+      },
+      "rms_current": {
+        "name": "Effective current"
+      },
+      "rms_voltage": {
+        "name": "Effective voltage"
       }
     },
     "switch": {
