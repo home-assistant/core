@@ -66,80 +66,12 @@ class VolvoCarsWindowDescription(VolvoBinarySensorDescription):
 
 
 _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
-    # diagnostics endpoint
-    VolvoBinarySensorDescription(
-        key="service_warning",
-        api_field="serviceWarning",
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        on_values=API_SERVICE_WARNING_VALUES,
-        api_value_in_attributes=True,
-        api_value_attribute_name="reason",
-    ),
-    # diagnostics endpoint
-    VolvoBinarySensorDescription(
-        key="washer_fluid_level_warning",
-        api_field="washerFluidLevelWarning",
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        on_values=("TOO_LOW",),
-    ),
     # brakes endpoint
     VolvoBinarySensorDescription(
         key="brake_fluid_level_warning",
         api_field="brakeFluidLevelWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("TOO_LOW",),
-    ),
-    # doors endpoint
-    VolvoCarsDoorDescription(
-        key="door_front_left",
-        api_field="frontLeftDoor",
-    ),
-    VolvoCarsDoorDescription(
-        key="door_front_right",
-        api_field="frontRightDoor",
-    ),
-    VolvoCarsDoorDescription(
-        key="door_rear_left",
-        api_field="rearLeftDoor",
-    ),
-    VolvoCarsDoorDescription(
-        key="door_rear_right",
-        api_field="rearRightDoor",
-    ),
-    VolvoCarsDoorDescription(
-        key="hood",
-        api_field="hood",
-    ),
-    VolvoCarsDoorDescription(
-        key="tailgate",
-        api_field="tailgate",
-    ),
-    VolvoCarsDoorDescription(
-        key="tank_lid",
-        api_field="tankLid",
-    ),
-    # engine endpoint
-    VolvoBinarySensorDescription(
-        key="coolant_level_warning",
-        api_field="engineCoolantLevelWarning",
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        on_values=("TOO_LOW",),
-    ),
-    # engine-status endpoint
-    VolvoBinarySensorDescription(
-        key="engine_status",
-        api_field="engineStatus",
-        device_class=BinarySensorDeviceClass.RUNNING,
-        on_values=("RUNNING",),
-    ),
-    # engine endpoint
-    VolvoBinarySensorDescription(
-        key="oil_level_warning",
-        api_field="oilLevelWarning",
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        on_values=API_OIL_LEVEL_WARNING_VALUES,
-        api_value_in_attributes=True,
-        api_value_attribute_name="level",
     ),
     # warnings endpoint
     VolvoBinarySensorDescription(
@@ -162,6 +94,13 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
     ),
+    # engine endpoint
+    VolvoBinarySensorDescription(
+        key="coolant_level_warning",
+        api_field="engineCoolantLevelWarning",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        on_values=("TOO_LOW",),
+    ),
     # warnings endpoint
     VolvoBinarySensorDescription(
         key="daytime_running_light_left_warning",
@@ -175,6 +114,33 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="daytimeRunningLightRightWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+    ),
+    # doors endpoint
+    VolvoCarsDoorDescription(
+        key="door_front_left",
+        api_field="frontLeftDoor",
+    ),
+    # doors endpoint
+    VolvoCarsDoorDescription(
+        key="door_front_right",
+        api_field="frontRightDoor",
+    ),
+    # doors endpoint
+    VolvoCarsDoorDescription(
+        key="door_rear_left",
+        api_field="rearLeftDoor",
+    ),
+    # doors endpoint
+    VolvoCarsDoorDescription(
+        key="door_rear_right",
+        api_field="rearRightDoor",
+    ),
+    # engine-status endpoint
+    VolvoBinarySensorDescription(
+        key="engine_status",
+        api_field="engineStatus",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        on_values=("RUNNING",),
     ),
     # warnings endpoint
     VolvoBinarySensorDescription(
@@ -211,6 +177,11 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
     ),
+    # doors endpoint
+    VolvoCarsDoorDescription(
+        key="hood",
+        api_field="hood",
+    ),
     # warnings endpoint
     VolvoBinarySensorDescription(
         key="low_beam_left_warning",
@@ -224,6 +195,15 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="lowBeamRightWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+    ),
+    # engine endpoint
+    VolvoBinarySensorDescription(
+        key="oil_level_warning",
+        api_field="oilLevelWarning",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        on_values=API_OIL_LEVEL_WARNING_VALUES,
+        api_value_in_attributes=True,
+        api_value_attribute_name="level",
     ),
     # warnings endpoint
     VolvoBinarySensorDescription(
@@ -267,12 +247,56 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
     ),
+    # diagnostics endpoint
+    VolvoBinarySensorDescription(
+        key="service_warning",
+        api_field="serviceWarning",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        on_values=API_SERVICE_WARNING_VALUES,
+        api_value_in_attributes=True,
+        api_value_attribute_name="reason",
+    ),
     # warnings endpoint
     VolvoBinarySensorDescription(
         key="side_mark_lights_warning",
         api_field="sideMarkLightsWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+    ),
+    # windows endpoint
+    VolvoCarsWindowDescription(
+        key="sunroof",
+        api_field="sunroof",
+    ),
+    # doors endpoint
+    VolvoCarsDoorDescription(
+        key="tailgate",
+        api_field="tailgate",
+    ),
+    # doors endpoint
+    VolvoCarsDoorDescription(
+        key="tank_lid",
+        api_field="tankLid",
+    ),
+    # tyres endpoint
+    VolvoCarsTireDescription(
+        key="tire_front_left",
+        api_field="frontLeft",
+    ),
+    # tyres endpoint
+    VolvoCarsTireDescription(
+        key="tire_front_right",
+        api_field="frontRight",
+    ),
+    # tyres endpoint
+    VolvoCarsTireDescription(
+        key="tire_rear_left",
+        api_field="rearLeft",
+    ),
+    # tyres endpoint
+    VolvoCarsTireDescription(
+        key="tire_rear_right",
+        api_field="rearRight",
     ),
     # warnings endpoint
     VolvoBinarySensorDescription(
@@ -302,46 +326,32 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
     ),
-    # tyres endpoint
-    VolvoCarsTireDescription(
-        key="tire_front_left",
-        api_field="frontLeft",
-    ),
-    # tyres endpoint
-    VolvoCarsTireDescription(
-        key="tire_front_right",
-        api_field="frontRight",
-    ),
-    # tyres endpoint
-    VolvoCarsTireDescription(
-        key="tire_rear_left",
-        api_field="rearLeft",
-    ),
-    # tyres endpoint
-    VolvoCarsTireDescription(
-        key="tire_rear_right",
-        api_field="rearRight",
+    # diagnostics endpoint
+    VolvoBinarySensorDescription(
+        key="washer_fluid_level_warning",
+        api_field="washerFluidLevelWarning",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        on_values=("TOO_LOW",),
     ),
     # windows endpoint
     VolvoCarsWindowDescription(
         key="window_front_left",
         api_field="frontLeftWindow",
     ),
+    # windows endpoint
     VolvoCarsWindowDescription(
         key="window_front_right",
         api_field="frontRightWindow",
     ),
+    # windows endpoint
     VolvoCarsWindowDescription(
         key="window_rear_left",
         api_field="rearLeftWindow",
     ),
+    # windows endpoint
     VolvoCarsWindowDescription(
         key="window_rear_right",
         api_field="rearRightWindow",
-    ),
-    VolvoCarsWindowDescription(
-        key="sunroof",
-        api_field="sunroof",
     ),
 )
 

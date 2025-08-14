@@ -268,7 +268,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # statistics endpoint
     # We're not using `electricRange` from the energy state endpoint because
     # the official app seems to use `distanceToEmptyBattery`.
-    # In issue #150213, a user described to behavior as follows:
+    # In issue #150213, a user described the behavior as follows:
     # - For a `distanceToEmptyBattery` of 250km, the `electricRange` was 150mi
     # - For a `distanceToEmptyBattery` of 260km, the `electricRange` was 160mi
     VolvoSensorDescription(
