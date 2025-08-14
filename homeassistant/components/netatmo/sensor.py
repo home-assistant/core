@@ -407,6 +407,7 @@ NETATMO_SENSOR_DESCRIPTIONS: Final[list[NetatmoSensorEntityDescription]] = [
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=process_rf,
+        icon="mdi:signal",
     ),
 ]
 
@@ -526,6 +527,17 @@ async def async_setup_entry(
         if not isinstance(netatmo_device.device, Module):
             return
 
+        if netatmo_device.device.device_category is None:
+            _LOGGER.warning(
+                "Device %s is missing a device_category, cannot create sensors",
+                netatmo_device.device.name,
+            )
+            return
+
+        # Check if the device category is in the DEVICE_CATEGORY_SENSORS (skip if is - means new device)
+        if netatmo_device.device.device_category in DEVICE_CATEGORY_SENSORS:
+            return
+
         _LOGGER.debug(
             "Adding %s sensor %s",
             netatmo_device.device.device_category,
@@ -638,10 +650,16 @@ async def async_setup_entry(
         if netatmo_device.device.device_category not in DEVICE_CATEGORY_SENSORS:
             return
 
-        # We create only sensors for the device category (new definitions)
-        descriptions_to_add = NETATMO_SENSOR_DESCRIPTIONS + DEVICE_CATEGORY_SENSORS.get(
+        # We add specific sensors for the device category (new definitions)
+        descriptions_to_add = DEVICE_CATEGORY_SENSORS.get(
             netatmo_device.device.device_category, []
         )
+
+        # Only add the generic descriptions if the specific list is not empty
+        if descriptions_to_add:
+            descriptions_to_add += NETATMO_SENSOR_DESCRIPTIONS
+        else:
+            descriptions_to_add = NETATMO_SENSOR_DESCRIPTIONS
 
         entities: list[NetatmoCommonSensor] = []
 
