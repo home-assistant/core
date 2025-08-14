@@ -126,7 +126,7 @@ async def test_set_humidity(
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cs_vmxuxszzjwp5smli"],
+    ["cs_zibqa9dutqyaxym2"],
 )
 async def test_turn_on_unsupported(
     hass: HomeAssistant,
@@ -135,6 +135,11 @@ async def test_turn_on_unsupported(
     mock_device: CustomerDevice,
 ) -> None:
     """Test turn on service (not supported by this device)."""
+    # Remove switch control - but keep other functionality
+    mock_device.status.pop("switch")
+    mock_device.function.pop("switch")
+    mock_device.status_range.pop("switch")
+
     entity_id = "humidifier.dehumidifier"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
@@ -150,13 +155,13 @@ async def test_turn_on_unsupported(
     assert err.value.translation_key == "action_dpcode_not_found"
     assert err.value.translation_placeholders == {
         "expected": "['switch', 'switch_spray']",
-        "available": ("[]"),
+        "available": ("['child_lock', 'countdown_set', 'dehumidify_set_value']"),
     }
 
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cs_vmxuxszzjwp5smli"],
+    ["cs_zibqa9dutqyaxym2"],
 )
 async def test_turn_off_unsupported(
     hass: HomeAssistant,
@@ -165,6 +170,11 @@ async def test_turn_off_unsupported(
     mock_device: CustomerDevice,
 ) -> None:
     """Test turn off service (not supported by this device)."""
+    # Remove switch control - but keep other functionality
+    mock_device.status.pop("switch")
+    mock_device.function.pop("switch")
+    mock_device.status_range.pop("switch")
+
     entity_id = "humidifier.dehumidifier"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
@@ -180,13 +190,13 @@ async def test_turn_off_unsupported(
     assert err.value.translation_key == "action_dpcode_not_found"
     assert err.value.translation_placeholders == {
         "expected": "['switch', 'switch_spray']",
-        "available": ("[]"),
+        "available": ("['child_lock', 'countdown_set', 'dehumidify_set_value']"),
     }
 
 
 @pytest.mark.parametrize(
     "mock_device_code",
-    ["cs_vmxuxszzjwp5smli"],
+    ["cs_zibqa9dutqyaxym2"],
 )
 async def test_set_humidity_unsupported(
     hass: HomeAssistant,
@@ -195,6 +205,11 @@ async def test_set_humidity_unsupported(
     mock_device: CustomerDevice,
 ) -> None:
     """Test set humidity service (not supported by this device)."""
+    # Remove set humidity control - but keep other functionality
+    mock_device.status.pop("dehumidify_set_value")
+    mock_device.function.pop("dehumidify_set_value")
+    mock_device.status_range.pop("dehumidify_set_value")
+
     entity_id = "humidifier.dehumidifier"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
@@ -213,5 +228,5 @@ async def test_set_humidity_unsupported(
     assert err.value.translation_key == "action_dpcode_not_found"
     assert err.value.translation_placeholders == {
         "expected": "['dehumidify_set_value']",
-        "available": ("[]"),
+        "available": ("['child_lock', 'countdown_set', 'switch']"),
     }
