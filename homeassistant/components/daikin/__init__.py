@@ -23,6 +23,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.util.ssl import client_context_no_verify
 
+from . import services
 from .const import DOMAIN, KEY_MAC, TIMEOUT
 from .coordinator import DaikinConfigEntry, DaikinCoordinator
 
@@ -71,8 +72,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bo
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Register Daikin custom services
-    from . import services
-
     await services.async_setup_services(hass)
 
     return True

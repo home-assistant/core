@@ -25,6 +25,8 @@ if "pydaikin.factory" not in sys.modules:
     fake_factory.DaikinFactory = DaikinFactory
     sys.modules["pydaikin.factory"] = fake_factory
 
+import urllib.parse
+
 import pytest
 import voluptuous as vol
 
@@ -81,8 +83,6 @@ class FakeDevice:
         # Simulate set_zone_setting: update lztemp_h and lztemp_c dicts from values
         if path.startswith("aircon/set_zone_setting"):
             # Parse params from the path
-            import urllib.parse
-
             parsed = urllib.parse.urlparse(path)
             params = urllib.parse.parse_qs(parsed.query)
             lztemp_h_str = params.get("lztemp_h", [""])[0]
@@ -243,7 +243,7 @@ async def test_service_multiple_calls(setup_integration) -> None:
     """Test multiple service calls in quick succession."""
     hass, coordinator = setup_integration
     await services.async_setup_services(hass)
-    for temp in [22, 23, 21]:
+    for temp in (22, 23, 21):
         service_data = {"zone_id": 0, "temperature": temp}
         await hass.services.async_call(
             "daikin", services.SERVICE_SET_ZONE_TEMPERATURE, service_data, blocking=True
