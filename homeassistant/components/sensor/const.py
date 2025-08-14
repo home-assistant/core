@@ -64,6 +64,7 @@ from homeassistant.util.unit_conversion import (
     PowerConverter,
     PressureConverter,
     ReactiveEnergyConverter,
+    ReactivePowerConverter,
     SpeedConverter,
     TemperatureConverter,
     UnitlessRatioConverter,
@@ -370,7 +371,7 @@ class SensorDeviceClass(StrEnum):
     REACTIVE_POWER = "reactive_power"
     """Reactive power.
 
-    Unit of measurement: `var`, `kvar`
+    Unit of measurement: `mvar`, `var`, `kvar`
     """
 
     SIGNAL_STRENGTH = "signal_strength"
@@ -550,6 +551,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.PRECIPITATION_INTENSITY: SpeedConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
     SensorDeviceClass.REACTIVE_ENERGY: ReactiveEnergyConverter,
+    SensorDeviceClass.REACTIVE_POWER: ReactivePowerConverter,
     SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: MassVolumeConcentrationConverter,

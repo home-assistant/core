@@ -2978,7 +2978,6 @@ def test_device_class_converters_are_complete() -> None:
         SensorDeviceClass.PM1,
         SensorDeviceClass.PM10,
         SensorDeviceClass.PM25,
-        SensorDeviceClass.REACTIVE_POWER,
         SensorDeviceClass.SIGNAL_STRENGTH,
         SensorDeviceClass.SOUND_PRESSURE,
         SensorDeviceClass.SULPHUR_DIOXIDE,
