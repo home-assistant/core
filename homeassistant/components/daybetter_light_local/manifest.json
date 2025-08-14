@@ -1,0 +1,10 @@
+{
+  "domain": "daybetter_light_local",
+  "name": "daybetter lights lhaocal",
+  "codeowners": ["@THDayBetter"],
+  "config_flow": true,
+  "dependencies": ["network"],
+  "documentation": "https://www.home-assistant.io/integrations/daybetter_light_local",
+  "iot_class": "local_push",
+  "requirements": ["daybetter-local-api==1.0.6"]
+}

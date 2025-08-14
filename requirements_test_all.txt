@@ -664,6 +664,9 @@ crownstone-uart==2.1.0
 # homeassistant.components.datadog
 datadog==0.52.0
 
+# homeassistant.components.daybetter_light_local
+daybetter-local-api==1.0.6
+
 # homeassistant.components.metoffice
 datapoint==0.12.1
 
