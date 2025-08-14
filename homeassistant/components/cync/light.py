@@ -13,7 +13,7 @@ from homeassistant.components.light import (
     LightEntity,
     filter_supported_color_modes,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.color import value_to_brightness
 from homeassistant.util.scaling import scale_ranged_value_to_int_range
@@ -29,8 +29,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Cync lights from a config entry."""
 
-    cync_data = entry.runtime_data
-    coordinator = cync_data.coordinator
+    coordinator = entry.runtime_data
     cync = coordinator.cync
 
     entities_to_add = []
@@ -52,13 +51,15 @@ async def async_setup_entry(
                 ]
                 entities_to_add.extend(group_lights)
 
-    async_add_entities(entities_to_add, update_before_add=True)
+    async_add_entities(entities_to_add)
 
 
 class CyncLightEntity(CyncBaseEntity, LightEntity):
     """Representation of a Cync light."""
 
     _attr_color_mode = ColorMode.ONOFF
+    _attr_min_color_temp_kelvin = 2000
+    _attr_max_color_temp_kelvin = 7000
     _attr_translation_key = "light"
     _attr_name = None
 
@@ -74,11 +75,11 @@ class CyncLightEntity(CyncBaseEntity, LightEntity):
         super().__init__(device, coordinator, room_name)
 
         supported_color_modes = {ColorMode.ONOFF}
-        if self._device.supports_capability(CyncCapability.CCT_COLOR):
+        if device.supports_capability(CyncCapability.CCT_COLOR):
             supported_color_modes.add(ColorMode.COLOR_TEMP)
-        if self._device.supports_capability(CyncCapability.DIMMING):
+        if device.supports_capability(CyncCapability.DIMMING):
             supported_color_modes.add(ColorMode.BRIGHTNESS)
-        if self._device.supports_capability(CyncCapability.RGB_COLOR):
+        if device.supports_capability(CyncCapability.RGB_COLOR):
             supported_color_modes.add(ColorMode.RGB)
         self._attr_supported_color_modes = filter_supported_color_modes(
             supported_color_modes
@@ -93,16 +94,6 @@ class CyncLightEntity(CyncBaseEntity, LightEntity):
     def brightness(self) -> int:
         """Provide the light's current brightness."""
         return value_to_brightness(self.BRIGHTNESS_SCALE, self._device.brightness)
-
-    @property
-    def max_color_temp_kelvin(self) -> int:
-        """Return maximum supported color temperature."""
-        return 7000
-
-    @property
-    def min_color_temp_kelvin(self) -> int:
-        """Return minimum supported color temperature."""
-        return 2000
 
     @property
     def color_temp_kelvin(self) -> int:
@@ -182,11 +173,18 @@ class CyncLightEntity(CyncBaseEntity, LightEntity):
             return scaled_kelvin
         return None
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        update_data = self.coordinator.data
+    @property
+    def _device(self) -> CyncLight:
+        """Fetch the reference to the backing Cync light for this device."""
 
-        if update_data and self._device.device_id in update_data:
-            self._device = update_data.get(self._device.device_id)
-            self.async_write_ha_state()
+        return self.coordinator.data[self._cync_device_id]
+
+    @property
+    def available(self) -> bool:
+        """Determines whether this device is currently available."""
+
+        return (
+            super().available
+            and self.coordinator.data is not None
+            and self._cync_device_id in self.coordinator.data
+        )

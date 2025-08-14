@@ -52,12 +52,12 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
             )
 
+        self.cync_auth = Auth(
+            async_get_clientsession(self.hass),
+            username=user_input[CONF_EMAIL],
+            password=user_input[CONF_PASSWORD],
+        )
         try:
-            self.cync_auth = Auth(
-                async_get_clientsession(self.hass),
-                username=user_input[CONF_EMAIL],
-                password=user_input[CONF_PASSWORD],
-            )
             await self.cync_auth.login()
         except AuthFailedError:
             errors["base"] = "invalid_auth"
@@ -69,19 +69,7 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            cync_user = self.cync_auth.user
-            config_unique_id = str(cync_user.user_id)
-            await self.async_set_unique_id(config_unique_id)
-            self._abort_if_unique_id_configured()
-
-            config = {
-                CONF_USER_ID: cync_user.user_id,
-                CONF_AUTHORIZE_STRING: cync_user.authorize,
-                CONF_EXPIRES_AT: cync_user.expires_at,
-                CONF_ACCESS_TOKEN: cync_user.access_token,
-                CONF_REFRESH_TOKEN: cync_user.refresh_token,
-            }
-            return self.async_create_entry(title=config_unique_id, data=config)
+            return await self._create_config_entry(self.cync_auth.username)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -107,20 +95,24 @@ class CyncConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            cync_user = self.cync_auth.user
-            config_unique_id = str(cync_user.user_id)
-            await self.async_set_unique_id(config_unique_id)
-            self._abort_if_unique_id_configured()
-
-            config = {
-                CONF_USER_ID: cync_user.user_id,
-                CONF_AUTHORIZE_STRING: cync_user.authorize,
-                CONF_EXPIRES_AT: cync_user.expires_at,
-                CONF_ACCESS_TOKEN: cync_user.access_token,
-                CONF_REFRESH_TOKEN: cync_user.refresh_token,
-            }
-            return self.async_create_entry(title=config_unique_id, data=config)
+            return await self._create_config_entry(self.cync_auth.username)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
+
+    async def _create_config_entry(self, user_email: str) -> ConfigFlowResult:
+        """Create the Cync config entry using input user data."""
+
+        cync_user = self.cync_auth.user
+        await self.async_set_unique_id(user_email)
+        self._abort_if_unique_id_configured()
+
+        config = {
+            CONF_USER_ID: cync_user.user_id,
+            CONF_AUTHORIZE_STRING: cync_user.authorize,
+            CONF_EXPIRES_AT: cync_user.expires_at,
+            CONF_ACCESS_TOKEN: cync_user.access_token,
+            CONF_REFRESH_TOKEN: cync_user.refresh_token,
+        }
+        return self.async_create_entry(title=user_email, data=config)

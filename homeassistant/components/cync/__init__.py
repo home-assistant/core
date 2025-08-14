@@ -16,7 +16,7 @@ from .const import (
     CONF_REFRESH_TOKEN,
     CONF_USER_ID,
 )
-from .coordinator import CyncConfigEntry, CyncCoordinator, CyncData
+from .coordinator import CyncConfigEntry, CyncCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.LIGHT]
 
@@ -43,7 +43,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool
 
     cync.set_update_callback(devices_coordinator.on_data_update)
 
-    entry.runtime_data = CyncData(devices_coordinator)
+    entry.runtime_data = devices_coordinator
+    await devices_coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
@@ -52,6 +53,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistant, entry: CyncConfigEntry) -> bool:
     """Unload a config entry."""
-    cync = entry.runtime_data.coordinator.cync
+    cync = entry.runtime_data.cync
     await cync.shut_down()
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
