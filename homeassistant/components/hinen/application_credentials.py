@@ -19,7 +19,7 @@ async def async_get_auth_implementation(
         auth_domain,
         credential,
         AuthorizationServer(
-            authorize_url="https://dev-knowledge.celinksmart.cn/#/auth",
-            token_url="https://dev-iot-api.celinksmart.cn/iot-global/open-platforms/auth/token",
+            authorize_url="https://global.knowledge.celinksmart.com/#/auth",
+            token_url="https://global.iot-api.celinksmart.com/iot-global/open-platforms/auth/token",
         ),
     )

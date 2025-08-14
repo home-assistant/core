@@ -45,6 +45,8 @@ class HinenOpen:
         self.host = host
         self.app_id = app_id
         self.app_secret = app_secret
+        if session is None:
+            session = ClientSession()
         self.session = session
         self.session_timeout = session_timeout
 

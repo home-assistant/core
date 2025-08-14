@@ -30,7 +30,6 @@ from .auth_config import HinenOAuth2AuthorizeCallbackView
 from .const import (
     ATTR_AUTH_LANGUAGE,
     ATTR_REDIRECTION_URL,
-    CHANNEL_CREATION_HELP_URL,
     CLIENT_ID,
     CONF_DEVICES,
     DOMAIN,
@@ -131,10 +130,7 @@ class OAuth2FlowHandler(
                 device_info async for device_info in hinen_open.get_device_infos()
             ]
             if not device_infos:
-                return self.async_abort(
-                    reason="no_device",
-                    description_placeholders={"support_url": CHANNEL_CREATION_HELP_URL},
-                )
+                return self.async_abort(reason="no_device")
 
         except ForbiddenError as ex:
             error = ex.args[0]
@@ -175,17 +171,10 @@ class OAuth2FlowHandler(
             self._data[CONF_TOKEN][CONF_ACCESS_TOKEN], self._data[CONF_TOKEN][HOST]
         )
 
-        # Get user's own devices
         device_infos = [
             device_info async for device_info in hinen_open.get_device_infos()
         ]
-        if not device_infos:
-            return self.async_abort(
-                reason="no_device",
-                description_placeholders={"support_url": CHANNEL_CREATION_HELP_URL},
-            )
 
-        # Start with user's device
         selectable_devices = [
             SelectOptionDict(
                 value=str(device_info.id),
@@ -194,8 +183,6 @@ class OAuth2FlowHandler(
             for device_info in device_infos
         ]
 
-        if not selectable_devices:
-            return self.async_abort(reason="no_device")
         return self.async_show_form(
             step_id="devices",
             data_schema=vol.Schema(
@@ -220,10 +207,11 @@ class HinenOpenFlowHandler(OptionsFlow):
                 title=self.config_entry.title,
                 data=user_input,
             )
-        async_get_clientsession(self.hass)
-        hinen_open = HinenOpen()
+
+        hinen_open = HinenOpen(self.config_entry.data[CONF_TOKEN][HOST])
         await hinen_open.set_user_authentication(
-            self.config_entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]
+            self.config_entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN],
+            self.config_entry.data[CONF_TOKEN]["refresh_token"],
         )
 
         # Get user's own devices
@@ -233,7 +221,6 @@ class HinenOpenFlowHandler(OptionsFlow):
         if not device_infos:
             return self.async_abort(
                 reason="no_device",
-                description_placeholders={"support_url": CHANNEL_CREATION_HELP_URL},
             )
 
         # Start with user's own channels

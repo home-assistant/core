@@ -2,10 +2,8 @@
 
 import logging
 
-DEFAULT_ACCESS = ["https://www.googleapis.com/auth/youtube.readonly"]
 DOMAIN = "hinen"
 MANUFACTURER = "hinen"
-CHANNEL_CREATION_HELP_URL = "https://support.google.com/youtube/answer/1646861"
 
 CONF_DEVICES = "devices"
 COORDINATOR = "coordinator"
@@ -69,4 +67,4 @@ ATTR_AUTH_LANGUAGE = "page_language"
 ATTR_REDIRECTION_URL = "redirection_url"
 SUPPORTED_LANGUAGES = [("en_US", "English"), ("zh_CN", "简体中文")]
 
-CLIENT_ID = "W4lHyHTK"
+CLIENT_ID = "6liMmES7"
