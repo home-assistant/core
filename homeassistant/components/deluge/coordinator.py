@@ -48,7 +48,16 @@ class DelugeDataUpdateCoordinator(
                 "core.get_session_status",
                 [iter_member.value for iter_member in list(DelugeGetSessionStatusKeys)],
             )
+
+            _states = await self.hass.async_add_executor_job(
+                self.api.call, "core.get_torrents_status", {}, ["state"]
+            )
+
             data[Platform.SENSOR] = {k.decode(): v for k, v in _data.items()}
+            data[Platform.SENSOR]["states"] = {
+                k.decode(): v for k, v in _states.items()
+            }
+
             data[Platform.SWITCH] = await self.hass.async_add_executor_job(
                 self.api.call, "core.get_torrents_status", {}, ["paused"]
             )
