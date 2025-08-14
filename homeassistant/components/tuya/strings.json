@@ -585,9 +585,6 @@
       "battery_soc": {
         "name": "Battery SOC"
       },
-      "battery_capacity": {
-        "name": "Battery capacity"
-      },
       "battery_power": {
         "name": "Battery power (+ discharge, - charge)"
       },

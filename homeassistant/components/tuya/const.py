@@ -122,7 +122,6 @@ class DPCode(StrEnum):
     BASIC_PRIVATE = "basic_private"
     BASIC_WDR = "basic_wdr"
     BATTERY = "battery"  # Used by non-standard contact sensor implementations
-    BATTERY_CAPACITY = "battery_capacity"
     BATTERY_PERCENTAGE = "battery_percentage"  # Battery percentage
     BATTERY_POWER = "battery_power"
     BATTERY_STATE = "battery_state"  # Battery state

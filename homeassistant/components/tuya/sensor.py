@@ -1411,12 +1411,6 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.TOTAL_INCREASING,
             suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         ),
-        TuyaSensorEntityDescription(
-            key=DPCode.BATTERY_CAPACITY,
-            translation_key="battery_capacity",
-            device_class=SensorDeviceClass.ENERGY,
-            entity_category=EntityCategory.DIAGNOSTIC,
-        ),
     ),
     # https://developer.tuya.com/en/docs/iot/categoryylcg?id=Kaiuz3kc2e4gm
     "ylcg": (
