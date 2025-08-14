@@ -24,7 +24,7 @@ if TYPE_CHECKING:
 
 APPLICATION_NAME: Final = "HomeAssistant"
 MAJOR_VERSION: Final = 2025
-MINOR_VERSION: Final = 8
+MINOR_VERSION: Final = 9
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -245,6 +245,7 @@ CONF_PLATFORM: Final = "platform"
 CONF_PORT: Final = "port"
 CONF_PREFIX: Final = "prefix"
 CONF_PROFILE_NAME: Final = "profile_name"
+CONF_PROMPT: Final = "prompt"
 CONF_PROTOCOL: Final = "protocol"
 CONF_PROXY_SSL: Final = "proxy_ssl"
 CONF_QUOTE: Final = "quote"
@@ -468,6 +469,9 @@ ATTR_NAME: Final = "name"
 # Contains one string or a list of strings, each being an entity id
 ATTR_ENTITY_ID: Final = "entity_id"
 
+# Contains one string, the config entry ID
+ATTR_CONFIG_ENTRY_ID: Final = "config_entry_id"
+
 # Contains one string or a list of strings, each being an area id
 ATTR_AREA_ID: Final = "area_id"
 
@@ -584,6 +588,7 @@ ATTR_PERSONS: Final = "persons"
 class UnitOfApparentPower(StrEnum):
     """Apparent power units."""
 
+    MILLIVOLT_AMPERE = "mVA"
     VOLT_AMPERE = "VA"
 
 
@@ -604,6 +609,7 @@ class UnitOfPower(StrEnum):
 class UnitOfReactivePower(StrEnum):
     """Reactive power units."""
 
+    MILLIVOLT_AMPERE_REACTIVE = "mvar"
     VOLT_AMPERE_REACTIVE = "var"
     KILO_VOLT_AMPERE_REACTIVE = "kvar"
 
@@ -910,6 +916,7 @@ class UnitOfPrecipitationDepth(StrEnum):
 
 
 # Concentration units
+CONCENTRATION_GRAMS_PER_CUBIC_METER: Final = "g/m³"
 CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
 CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = "mg/m³"
 CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = "μg/ft³"

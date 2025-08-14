@@ -35,6 +35,8 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 
@@ -774,7 +776,7 @@ async def test_hmip_absolute_humidity_sensor(
         hass, mock_hap, entity_id, entity_name, device_model
     )
 
-    assert ha_state.state == "6098"
+    assert ha_state.state == "6099.0"
 
 
 async def test_hmip_absolute_humidity_sensor_invalid_value(
@@ -796,3 +798,66 @@ async def test_hmip_absolute_humidity_sensor_invalid_value(
     ha_state = hass.states.get(entity_id)
 
     assert ha_state.state == STATE_UNKNOWN
+
+
+async def test_hmip_water_valve_current_water_flow(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test HomematicipCurrentWaterFlow."""
+    entity_id = "sensor.bewaesserungsaktor_currentwaterflow"
+    entity_name = "Bewaesserungsaktor currentWaterFlow"
+    device_model = "ELV-SH-WSM"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Bewaesserungsaktor"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == "12.0"
+    assert (
+        ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT]
+        == UnitOfVolumeFlowRate.LITERS_PER_MINUTE
+    )
+    assert ha_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+
+
+async def test_hmip_water_valve_water_volume(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test HomematicipWaterVolume."""
+    entity_id = "sensor.bewaesserungsaktor_watervolume"
+    entity_name = "Bewaesserungsaktor waterVolume"
+    device_model = "ELV-SH-WSM"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Bewaesserungsaktor"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == "455.0"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfVolume.LITERS
+    assert ha_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL_INCREASING
+
+
+async def test_hmip_water_valve_water_volume_since_open(
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory
+) -> None:
+    """Test HomematicipWaterVolumeSinceOpen."""
+    entity_id = "sensor.bewaesserungsaktor_watervolumesinceopen"
+    entity_name = "Bewaesserungsaktor waterVolumeSinceOpen"
+    device_model = "ELV-SH-WSM"
+    mock_hap = await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Bewaesserungsaktor"]
+    )
+
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+
+    assert ha_state.state == "67.0"
+    assert ha_state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfVolume.LITERS
+    assert ha_state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL_INCREASING

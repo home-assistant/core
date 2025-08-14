@@ -11,7 +11,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import callback
@@ -221,7 +221,7 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class EmoncmsOptionsFlow(OptionsFlow):
+class EmoncmsOptionsFlow(OptionsFlowWithReload):
     """Emoncms Options flow handler."""
 
     def __init__(self, config_entry: ConfigEntry) -> None:

@@ -29,6 +29,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
+    STATE_PLAYING,
     BrowseMedia,
     MediaClass,
     MediaType,
@@ -55,8 +56,9 @@ async def test_media_player_entity(
             object_id="mymedia_player",
             key=1,
             name="my media_player",
-            unique_id="my_media_player",
             supports_pause=True,
+            # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
+            feature_flags=1200653,
         )
     ]
     states = [
@@ -85,7 +87,7 @@ async def test_media_player_entity(
         blocking=True,
     )
     mock_client.media_player_command.assert_has_calls(
-        [call(1, command=MediaPlayerCommand.MUTE)]
+        [call(1, command=MediaPlayerCommand.MUTE, device_id=0)]
     )
     mock_client.media_player_command.reset_mock()
 
@@ -99,7 +101,7 @@ async def test_media_player_entity(
         blocking=True,
     )
     mock_client.media_player_command.assert_has_calls(
-        [call(1, command=MediaPlayerCommand.MUTE)]
+        [call(1, command=MediaPlayerCommand.MUTE, device_id=0)]
     )
     mock_client.media_player_command.reset_mock()
 
@@ -112,7 +114,9 @@ async def test_media_player_entity(
         },
         blocking=True,
     )
-    mock_client.media_player_command.assert_has_calls([call(1, volume=0.5)])
+    mock_client.media_player_command.assert_has_calls(
+        [call(1, volume=0.5, device_id=0)]
+    )
     mock_client.media_player_command.reset_mock()
 
     await hass.services.async_call(
@@ -124,7 +128,7 @@ async def test_media_player_entity(
         blocking=True,
     )
     mock_client.media_player_command.assert_has_calls(
-        [call(1, command=MediaPlayerCommand.PAUSE)]
+        [call(1, command=MediaPlayerCommand.PAUSE, device_id=0)]
     )
     mock_client.media_player_command.reset_mock()
 
@@ -137,7 +141,7 @@ async def test_media_player_entity(
         blocking=True,
     )
     mock_client.media_player_command.assert_has_calls(
-        [call(1, command=MediaPlayerCommand.PLAY)]
+        [call(1, command=MediaPlayerCommand.PLAY, device_id=0)]
     )
     mock_client.media_player_command.reset_mock()
 
@@ -150,9 +154,91 @@ async def test_media_player_entity(
         blocking=True,
     )
     mock_client.media_player_command.assert_has_calls(
-        [call(1, command=MediaPlayerCommand.STOP)]
+        [call(1, command=MediaPlayerCommand.STOP, device_id=0)]
     )
     mock_client.media_player_command.reset_mock()
+
+
+async def test_media_player_entity_with_undefined_flags(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test that media_player handles undefined feature flags gracefully."""
+    # Include existing flags (PAUSE=1, PLAY=16384, VOLUME_SET=4)
+    # plus undefined bits (bit 6=64, bit 23=8388608)
+    # Total: 1 + 16384 + 4 + 64 + 8388608 = 8405061
+    entity_info = [
+        MediaPlayerInfo(
+            object_id="mymedia_player_undefined",
+            key=1,
+            name="my media_player undefined",
+            supports_pause=True,
+            # PAUSE,PLAY,VOLUME_SET + undefined bits 6 and 23
+            feature_flags=8405061,
+        )
+    ]
+    states = [
+        MediaPlayerEntityState(
+            key=1, volume=50, muted=False, state=MediaPlayerState.PLAYING
+        )
+    ]
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+    )
+
+    # Verify entity is created successfully despite undefined flags
+    state = hass.states.get("media_player.test_my_media_player_undefined")
+    assert state is not None
+    assert state.state == STATE_PLAYING
+
+    # Verify supported features only include known flags
+    # Should have PAUSE, PLAY, and VOLUME_SET
+    supported_features = state.attributes.get("supported_features", 0)
+    # PAUSE=1, VOLUME_SET=4, PLAY=16384 = 16389
+    assert supported_features == 16389
+
+    # Verify entity works correctly with known features
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_PLAY,
+        {
+            ATTR_ENTITY_ID: "media_player.test_my_media_player_undefined",
+        },
+        blocking=True,
+    )
+    mock_client.media_player_command.assert_has_calls(
+        [call(1, command=MediaPlayerCommand.PLAY, device_id=0)]
+    )
+    mock_client.media_player_command.reset_mock()
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_MEDIA_PAUSE,
+        {
+            ATTR_ENTITY_ID: "media_player.test_my_media_player_undefined",
+        },
+        blocking=True,
+    )
+    mock_client.media_player_command.assert_has_calls(
+        [call(1, command=MediaPlayerCommand.PAUSE, device_id=0)]
+    )
+    mock_client.media_player_command.reset_mock()
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_SET,
+        {
+            ATTR_ENTITY_ID: "media_player.test_my_media_player_undefined",
+            ATTR_MEDIA_VOLUME_LEVEL: 0.7,
+        },
+        blocking=True,
+    )
+    mock_client.media_player_command.assert_has_calls(
+        [call(1, volume=0.7, device_id=0)]
+    )
 
 
 async def test_media_player_entity_with_source(
@@ -200,8 +286,9 @@ async def test_media_player_entity_with_source(
             object_id="mymedia_player",
             key=1,
             name="my media_player",
-            unique_id="my_media_player",
             supports_pause=True,
+            # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
+            feature_flags=1200653,
         )
     ]
     states = [
@@ -257,7 +344,14 @@ async def test_media_player_entity_with_source(
         )
 
     mock_client.media_player_command.assert_has_calls(
-        [call(1, media_url="http://www.example.com/xy.mp3", announcement=None)]
+        [
+            call(
+                1,
+                media_url="http://www.example.com/xy.mp3",
+                announcement=None,
+                device_id=0,
+            )
+        ]
     )
 
     client = await hass_ws_client()
@@ -284,7 +378,14 @@ async def test_media_player_entity_with_source(
     )
 
     mock_client.media_player_command.assert_has_calls(
-        [call(1, media_url="media-source://tts?message=hello", announcement=True)]
+        [
+            call(
+                1,
+                media_url="media-source://tts?message=hello",
+                announcement=True,
+                device_id=0,
+            )
+        ]
     )
 
 
@@ -302,8 +403,9 @@ async def test_media_player_proxy(
                 object_id="mymedia_player",
                 key=1,
                 name="my media_player",
-                unique_id="my_media_player",
                 supports_pause=True,
+                # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
+                feature_flags=1200653,
                 supported_formats=[
                     MediaPlayerSupportedFormat(
                         format="flac",
@@ -461,8 +563,9 @@ async def test_media_player_formats_reload_preserves_data(
                 object_id="test_media_player",
                 key=1,
                 name="Test Media Player",
-                unique_id="test_unique_id",
                 supports_pause=True,
+                # PLAY_MEDIA,BROWSE_MEDIA,STOP,VOLUME_SET,VOLUME_MUTE,MEDIA_ANNOUNCE,PAUSE,PLAY
+                feature_flags=1200653,
                 supported_formats=supported_formats,
             )
         ],
