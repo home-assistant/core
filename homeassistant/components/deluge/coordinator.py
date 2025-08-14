@@ -14,9 +14,28 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER, DelugeGetSessionStatusKeys
+from .const import LOGGER, DelugeGetSessionStatusKeys, DelugeSensorType
 
 type DelugeConfigEntry = ConfigEntry[DelugeDataUpdateCoordinator]
+
+
+def count_states(data: dict[str, Any]) -> dict[str, int]:
+    """Count the states of the provided torrents."""
+    downloading_count = 0
+    seeding_count = 0
+
+    for torrent in data.values():
+        state = torrent[b"state"].decode()
+
+        if state == "Downloading":
+            downloading_count += 1
+        elif state == "Seeding":
+            seeding_count += 1
+
+    return {
+        DelugeSensorType.DOWNLOADING_COUNT_SENSOR.value: downloading_count,
+        DelugeSensorType.SEEDING_COUNT_SENSOR.value: seeding_count,
+    }
 
 
 class DelugeDataUpdateCoordinator(
@@ -54,9 +73,7 @@ class DelugeDataUpdateCoordinator(
             )
 
             data[Platform.SENSOR] = {k.decode(): v for k, v in _data.items()}
-            data[Platform.SENSOR]["states"] = {
-                k.decode(): v for k, v in _states.items()
-            }
+            data[Platform.SENSOR].update(count_states(_states))
 
             data[Platform.SWITCH] = await self.hass.async_add_executor_job(
                 self.api.call, "core.get_torrents_status", {}, ["paused"]

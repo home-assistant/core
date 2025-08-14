@@ -1,23 +1,9 @@
 """Test Deluge sensor.py methods."""
 
 from homeassistant.components.deluge.const import DelugeSensorType
-from homeassistant.components.deluge.sensor import get_count, get_state
+from homeassistant.components.deluge.sensor import get_state
 
-from . import GET_TORRENT_STATES_RESPONSE, GET_TORRENT_STATUS_RESPONSE
-
-
-def test_get_count() -> None:
-    """Tests get_count() with different keys."""
-
-    downloading_count = get_count(
-        GET_TORRENT_STATES_RESPONSE, DelugeSensorType.DOWNLOADING_COUNT_SENSOR
-    )
-    assert downloading_count == 1
-
-    seeding_count = get_count(
-        GET_TORRENT_STATES_RESPONSE, DelugeSensorType.SEEDING_COUNT_SENSOR
-    )
-    assert seeding_count == 2
+from . import GET_TORRENT_STATUS_RESPONSE
 
 
 def test_get_state() -> None:
