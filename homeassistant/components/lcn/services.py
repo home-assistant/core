@@ -330,8 +330,9 @@ class SendKeys(LcnServiceCall):
         if (delay_time := service.data[CONF_TIME]) != 0:
             hit = pypck.lcn_defs.SendKeyCommand.HIT
             if pypck.lcn_defs.SendKeyCommand[service.data[CONF_STATE]] != hit:
-                raise ValueError(
-                    "Only hit command is allowed when sending deferred keys."
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_send_keys_action",
                 )
             delay_unit = pypck.lcn_defs.TimeUnit.parse(service.data[CONF_TIME_UNIT])
             await device_connection.send_keys_hit_deferred(keys, delay_time, delay_unit)
@@ -368,8 +369,9 @@ class LockKeys(LcnServiceCall):
 
         if (delay_time := service.data[CONF_TIME]) != 0:
             if table_id != 0:
-                raise ValueError(
-                    "Only table A is allowed when locking keys for a specific time."
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_lock_keys_table",
                 )
             delay_unit = pypck.lcn_defs.TimeUnit.parse(service.data[CONF_TIME_UNIT])
             await device_connection.lock_keys_tab_a_temporary(

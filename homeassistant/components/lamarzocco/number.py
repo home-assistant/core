@@ -58,10 +58,6 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
                 CoffeeBoiler, machine.dashboard.config[WidgetType.CM_COFFEE_BOILER]
             ).target_temperature
         ),
-        available_fn=(
-            lambda coordinator: WidgetType.CM_COFFEE_BOILER
-            in coordinator.device.dashboard.config
-        ),
     ),
     LaMarzoccoNumberEntityDescription(
         key="smart_standby_time",

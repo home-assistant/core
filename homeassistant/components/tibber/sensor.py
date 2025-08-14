@@ -280,7 +280,7 @@ async def async_setup_entry(
         except TimeoutError as err:
             _LOGGER.error("Timeout connecting to Tibber home: %s ", err)
             raise PlatformNotReady from err
-        except aiohttp.ClientError as err:
+        except (tibber.RetryableHttpExceptionError, aiohttp.ClientError) as err:
             _LOGGER.error("Error connecting to Tibber home: %s ", err)
             raise PlatformNotReady from err
 
@@ -299,7 +299,10 @@ async def async_setup_entry(
             )
             await home.rt_subscribe(
                 TibberRtDataCoordinator(
-                    entity_creator.add_sensors, home, hass
+                    hass,
+                    entry,
+                    entity_creator.add_sensors,
+                    home,
                 ).async_set_updated_data
             )
 
@@ -613,15 +616,17 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-en
 
     def __init__(
         self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
         add_sensor_callback: Callable[[TibberRtDataCoordinator, Any], None],
         tibber_home: tibber.TibberHome,
-        hass: HomeAssistant,
     ) -> None:
         """Initialize the data handler."""
         self._add_sensor_callback = add_sensor_callback
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=tibber_home.info["viewer"]["home"]["address"].get(
                 "address1", "Tibber"
             ),

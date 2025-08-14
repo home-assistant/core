@@ -96,12 +96,16 @@ def get_consumption_data(obj_uuid: str | None = None) -> dict[str, Any]:
                     {
                         "type": "heating",
                         "value": "35",
+                        "unit": "Einheiten",
                         "additionalValue": "38,0",
+                        "additionalUnit": "kWh",
                     },
                     {
                         "type": "warmwater",
                         "value": "1,0",
+                        "unit": "m³",
                         "additionalValue": "57,0",
+                        "additionalUnit": "kWh",
                     },
                     {
                         "type": "water",
@@ -115,16 +119,21 @@ def get_consumption_data(obj_uuid: str | None = None) -> dict[str, Any]:
                     {
                         "type": "heating",
                         "value": "104",
+                        "unit": "Einheiten",
                         "additionalValue": "113,0",
+                        "additionalUnit": "kWh",
                     },
                     {
                         "type": "warmwater",
                         "value": "1,1",
+                        "unit": "m³",
                         "additionalValue": "61,1",
+                        "additionalUnit": "kWh",
                     },
                     {
                         "type": "water",
                         "value": "6,8",
+                        "unit": "m³",
                     },
                 ],
             },
@@ -200,16 +209,21 @@ def extend_statistics(obj_uuid: str | None = None) -> dict[str, Any]:
                 {
                     "type": "heating",
                     "value": "9000",
+                    "unit": "Einheiten",
                     "additionalValue": "9000,0",
+                    "additionalUnit": "kWh",
                 },
                 {
                     "type": "warmwater",
                     "value": "9999,0",
+                    "unit": "m³",
                     "additionalValue": "90000,0",
+                    "additionalUnit": "kWh",
                 },
                 {
                     "type": "water",
                     "value": "9000,0",
+                    "unit": "m³",
                 },
             ],
         },

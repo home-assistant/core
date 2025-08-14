@@ -19,6 +19,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_SOURCE,
     CONF_URL,
+    Platform,
 )
 from homeassistant.core import (
     HomeAssistant,
@@ -29,6 +30,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
+    HomeAssistantError,
     ServiceValidationError,
 )
 from homeassistant.helpers import config_validation as cv
@@ -290,6 +292,8 @@ MODULES: dict[str, ModuleType] = {
     PLATFORM_WEBHOOKS: webhooks,
 }
 
+PLATFORMS: list[Platform] = [Platform.NOTIFY]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telegram bot component."""
@@ -390,9 +394,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         elif msgtype == SERVICE_DELETE_MESSAGE:
             await notify_service.delete_message(context=service.context, **kwargs)
         elif msgtype == SERVICE_LEAVE_CHAT:
-            messages = await notify_service.leave_chat(
-                context=service.context, **kwargs
-            )
+            await notify_service.leave_chat(context=service.context, **kwargs)
         elif msgtype == SERVICE_SET_MESSAGE_REACTION:
             await notify_service.set_message_reaction(context=service.context, **kwargs)
         else:
@@ -400,12 +402,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 msgtype, context=service.context, **kwargs
             )
 
-        if service.return_response and messages:
+        if service.return_response and messages is not None:
+            target: list[int] | None = service.data.get(ATTR_TARGET)
+            if not target:
+                target = notify_service.get_target_chat_ids(None)
+
+            failed_chat_ids = [chat_id for chat_id in target if chat_id not in messages]
+            if failed_chat_ids:
+                raise HomeAssistantError(
+                    f"Failed targets: {failed_chat_ids}",
+                    translation_domain=DOMAIN,
+                    translation_key="failed_chat_ids",
+                    translation_placeholders={
+                        "chat_ids": ", ".join([str(i) for i in failed_chat_ids]),
+                        "bot_name": config_entry.title,
+                    },
+                )
+
             return {
                 "chats": [
                     {"chat_id": cid, "message_id": mid} for cid, mid in messages.items()
                 ]
             }
+
         return None
 
     # Register notification services
@@ -461,14 +480,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) 
     )
     entry.runtime_data = notify_service
 
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 
 
 async def update_listener(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> None:
-    """Handle options update."""
+    """Handle config changes."""
     entry.runtime_data.parse_mode = entry.options[ATTR_PARSER]
+
+    # reload entities
+    await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
 
 async def async_unload_entry(
@@ -478,4 +503,5 @@ async def async_unload_entry(
     # broadcast platform has no app
     if entry.runtime_data.app:
         await entry.runtime_data.app.shutdown()
-    return True
+
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

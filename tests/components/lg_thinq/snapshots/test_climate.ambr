@@ -18,6 +18,7 @@
       'max_temp': 86,
       'min_temp': 64,
       'preset_modes': list([
+        'none',
         'air_clean',
       ]),
       'swing_horizontal_modes': list([
@@ -78,8 +79,9 @@
       ]),
       'max_temp': 86,
       'min_temp': 64,
-      'preset_mode': None,
+      'preset_mode': 'none',
       'preset_modes': list([
+        'none',
         'air_clean',
       ]),
       'supported_features': <ClimateEntityFeature: 955>,

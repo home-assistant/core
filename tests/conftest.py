@@ -1724,7 +1724,7 @@ async def async_test_recorder(
             wait_recorder: bool = True,
             wait_recorder_setup: bool = True,
         ) -> AsyncGenerator[recorder.Recorder]:
-            """Setup and return recorder instance."""  # noqa: D401
+            """Setup and return recorder instance."""
             await _async_init_recorder_component(
                 hass,
                 config,
@@ -1817,6 +1817,7 @@ async def mock_enable_bluetooth(
 def mock_bluetooth_adapters() -> Generator[None]:
     """Fixture to mock bluetooth adapters."""
     with (
+        patch("habluetooth.util.recover_adapter"),
         patch("bluetooth_auto_recovery.recover_adapter"),
         patch("bluetooth_adapters.systems.platform.system", return_value="Linux"),
         patch("bluetooth_adapters.systems.linux.LinuxAdapters.refresh"),
