@@ -998,7 +998,7 @@ hass-nabucasa==1.0.0
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
-hassil==2.2.3
+hassil==3.1.0
 
 # homeassistant.components.jewish_calendar
 hdate[astral]==1.1.2
@@ -1635,7 +1635,7 @@ pyegps==0.2.5
 pyemoncms==0.1.2
 
 # homeassistant.components.enphase_envoy
-pyenphase==2.2.3
+pyenphase==2.3.0
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1782,7 +1782,7 @@ pymeteoclimatic==0.1.0
 pymicro-vad==1.0.1
 
 # homeassistant.components.miele
-pymiele==0.5.3
+pymiele==0.5.4
 
 # homeassistant.components.mochad
 pymochad==0.2.0
@@ -2076,7 +2076,7 @@ python-roborock==2.18.2
 python-smarttub==0.0.44
 
 # homeassistant.components.snoo
-python-snoo==0.8.1
+python-snoo==0.8.2
 
 # homeassistant.components.songpal
 python-songpal==0.16.2
@@ -2430,7 +2430,7 @@ tilt-pi==0.2.1
 todoist-api-python==2.1.7
 
 # homeassistant.components.togrill
-togrill-bluetooth==0.4.0
+togrill-bluetooth==0.7.0
 
 # homeassistant.components.tolo
 tololib==1.2.2
