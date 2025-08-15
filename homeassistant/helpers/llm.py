@@ -216,8 +216,7 @@ class APIInstance:
 
     async def async_call_tool(self, tool_input: ToolInput) -> JsonObjectType:
         """Call a LLM tool, validate args and return the response."""
-        # pylint: disable=import-outside-toplevel
-        from homeassistant.components.conversation import (
+        from homeassistant.components.conversation import (  # noqa: PLC0415
             ConversationTraceEventType,
             async_conversation_trace_append,
         )
@@ -316,10 +315,23 @@ class IntentTool(Tool):
             assistant=llm_context.assistant,
             device_id=llm_context.device_id,
         )
-        response = intent_response.as_dict()
-        del response["language"]
-        del response["card"]
-        return response
+        return IntentResponseDict(intent_response)
+
+
+class IntentResponseDict(dict):
+    """Dictionary to represent an intent response resulting from a tool call."""
+
+    def __init__(self, intent_response: Any) -> None:
+        """Initialize the dictionary."""
+        if not isinstance(intent_response, intent.IntentResponse):
+            super().__init__(intent_response)
+            return
+
+        result = intent_response.as_dict()
+        del result["language"]
+        del result["card"]
+        super().__init__(result)
+        self.original = intent_response
 
 
 class NamespacedTool(Tool):
@@ -332,7 +344,7 @@ class NamespacedTool(Tool):
     def __init__(self, namespace: str, tool: Tool) -> None:
         """Init the class."""
         self.namespace = namespace
-        self.name = f"{namespace}.{tool.name}"
+        self.name = f"{namespace}__{tool.name}"
         self.description = tool.description
         self.parameters = tool.parameters
         self.tool = tool
@@ -459,7 +471,7 @@ class AssistAPI(API):
             api_prompt=self._async_get_api_prompt(llm_context, exposed_entities),
             llm_context=llm_context,
             tools=self._async_get_tools(llm_context, exposed_entities),
-            custom_serializer=_selector_serializer,
+            custom_serializer=selector_serializer,
         )
 
     @callback
@@ -702,7 +714,7 @@ def _get_exposed_entities(
     return data
 
 
-def _selector_serializer(schema: Any) -> Any:  # noqa: C901
+def selector_serializer(schema: Any) -> Any:  # noqa: C901
     """Convert selectors into OpenAPI schema."""
     if not isinstance(schema, selector.Selector):
         return UNSUPPORTED
@@ -778,7 +790,29 @@ def _selector_serializer(schema: Any) -> Any:  # noqa: C901
         return result
 
     if isinstance(schema, selector.ObjectSelector):
-        return {"type": "object", "additionalProperties": True}
+        result = {"type": "object"}
+        if fields := schema.config.get("fields"):
+            properties = {}
+            required = []
+            for field, field_schema in fields.items():
+                properties[field] = convert(
+                    selector.selector(field_schema["selector"]),
+                    custom_serializer=selector_serializer,
+                )
+                if field_schema.get("required"):
+                    required.append(field)
+            result["properties"] = properties
+
+            if required:
+                result["required"] = required
+        else:
+            result["additionalProperties"] = True
+        if schema.config.get("multiple"):
+            result = {
+                "type": "array",
+                "items": result,
+            }
+        return result
 
     if isinstance(schema, selector.SelectSelector):
         options = [
@@ -900,7 +934,13 @@ class ActionTool(Tool):
         """Init the class."""
         self._domain = domain
         self._action = action
-        self.name = f"{domain}.{action}"
+        self.name = f"{domain}__{action}"
+        # Note: _get_cached_action_parameters only works for services which
+        # add their description directly to the service description cache.
+        # This is not the case for most services, but it is for scripts.
+        # If we want to use `ActionTool` for services other than scripts, we
+        # need to add a coroutine function to fetch the non-cached description
+        # and schema.
         self.description, self.parameters = _get_cached_action_parameters(
             hass, domain, action
         )

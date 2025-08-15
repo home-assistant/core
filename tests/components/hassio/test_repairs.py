@@ -471,7 +471,6 @@ async def test_mount_failed_repair_flow_error(
         "flow_id": flow_id,
         "handler": "hassio",
         "reason": "apply_suggestion_fail",
-        "result": None,
         "description_placeholders": None,
     }
 

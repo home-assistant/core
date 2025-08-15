@@ -43,7 +43,12 @@ from homeassistant.components.plex.services import process_plex_payload
 from homeassistant.const import ATTR_TIME
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_platform, service
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_platform,
+    entity_registry as er,
+    service,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
@@ -880,13 +885,28 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     async def async_join_players(self, group_members: list[str]) -> None:
         """Join `group_members` as a player group with the current player."""
         speakers = []
+
+        entity_registry = er.async_get(self.hass)
         for entity_id in group_members:
-            if speaker := self.config_entry.runtime_data.entity_id_mappings.get(
-                entity_id
+            if not (entity_reg_entry := entity_registry.async_get(entity_id)):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="entity_not_found",
+                    translation_placeholders={"entity_id": entity_id},
+                )
+            if not (
+                speaker
+                := self.config_entry.runtime_data.unique_id_speaker_mappings.get(
+                    entity_reg_entry.unique_id
+                )
             ):
-                speakers.append(speaker)
-            else:
-                raise HomeAssistantError(f"Not a known Sonos entity_id: {entity_id}")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="speaker_not_found",
+                    translation_placeholders={"entity_id": entity_id},
+                )
+
+            speakers.append(speaker)
 
         await SonosSpeaker.join_multi(
             self.hass, self.config_entry, self.speaker, speakers

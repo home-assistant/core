@@ -2,11 +2,49 @@
   "entity": {
     "binary_sensor": {
       "bluetooth": {
-        "default": "mdi:bluetooth",
+        "default": "mdi:bluetooth-off",
         "state": {
-          "off": "mdi:bluetooth-off"
+          "on": "mdi:bluetooth"
+        }
+      },
+      "baby_cry_detection": {
+        "default": "mdi:account-voice-off",
+        "state": {
+          "on": "mdi:account-voice"
+        }
+      },
+      "beeping_appliance_detection": {
+        "default": "mdi:bell-off",
+        "state": {
+          "on": "mdi:bell-ring"
+        }
+      },
+      "cough_detection": {
+        "default": "mdi:blur-off",
+        "state": {
+          "on": "mdi:blur"
+        }
+      },
+      "dog_bark_detection": {
+        "default": "mdi:dog-side-off",
+        "state": {
+          "on": "mdi:dog-side"
+        }
+      },
+      "water_sounds_detection": {
+        "default": "mdi:water-pump-off",
+        "state": {
+          "on": "mdi:water-pump"
         }
       }
+    }
+  },
+  "services": {
+    "send_sound": {
+      "service": "mdi:cast-audio"
+    },
+    "send_text_command": {
+      "service": "mdi:microphone-message"
     }
   }
 }

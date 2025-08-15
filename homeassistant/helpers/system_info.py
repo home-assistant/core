@@ -21,12 +21,29 @@ from .singleton import singleton
 _LOGGER = logging.getLogger(__name__)
 
 _DATA_MAC_VER = "system_info_mac_ver"
+_DATA_CONTAINER_ARCH = "system_info_container_arch"
 
 
 @singleton(_DATA_MAC_VER)
 async def async_get_mac_ver(hass: HomeAssistant) -> str:
     """Return the macOS version."""
     return (await hass.async_add_executor_job(platform.mac_ver))[0]
+
+
+@singleton(_DATA_CONTAINER_ARCH)
+async def async_get_container_arch(hass: HomeAssistant) -> str:
+    """Return the container architecture."""
+
+    def _read_arch_file() -> str:
+        """Read the architecture from /etc/apk/arch."""
+        with open("/etc/apk/arch", encoding="utf-8") as arch_file:
+            return arch_file.read().strip()
+
+    try:
+        raw_arch = await hass.async_add_executor_job(_read_arch_file)
+    except FileNotFoundError:
+        return "unknown"
+    return {"x86": "i386", "x86_64": "amd64"}.get(raw_arch, raw_arch)
 
 
 # Cache the result of getuser() because it can call getpwuid() which
@@ -42,8 +59,7 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
     # may not be loaded yet and we don't want to
     # do blocking I/O in the event loop to import it.
     if TYPE_CHECKING:
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components import hassio
+        from homeassistant.components import hassio  # noqa: PLC0415
     else:
         hassio = await async_import_module(hass, "homeassistant.components.hassio")
 
@@ -80,6 +96,7 @@ async def async_get_system_info(hass: HomeAssistant) -> dict[str, Any]:
     if info_object["docker"]:
         if info_object["user"] == "root" and is_official_image():
             info_object["installation_type"] = "Home Assistant Container"
+            info_object["container_arch"] = await async_get_container_arch(hass)
         else:
             info_object["installation_type"] = "Unsupported Third Party Container"
 

@@ -6,6 +6,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 from zigpy.profiles import zha
+from zigpy.types import EUI64, NWK
 from zigpy.zcl.clusters import security
 
 from homeassistant.components.zha.helpers import (
@@ -71,6 +72,10 @@ async def test_diagnostics_for_config_entry(
 
     gateway.application_controller.energy_scan.side_effect = None
     gateway.application_controller.energy_scan.return_value = scan
+    gateway.application_controller.state.network_info.nwk_addresses = {
+        EUI64.convert("11:22:33:44:55:66:77:88"): NWK(0x1234)
+    }
+
     diagnostics_data = await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
     )

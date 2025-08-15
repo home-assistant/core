@@ -12,7 +12,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_LOCALE, DOMAIN, PLATFORMS
 from .renault_hub import RenaultHub
-from .services import setup_services
+from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 type RenaultConfigEntry = ConfigEntry[RenaultHub]
@@ -20,7 +20,7 @@ type RenaultConfigEntry = ConfigEntry[RenaultHub]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Renault component."""
-    setup_services(hass)
+    async_setup_services(hass)
     return True
 
 

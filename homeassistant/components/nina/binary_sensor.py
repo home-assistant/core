@@ -52,10 +52,14 @@ async def async_setup_entry(
     )
 
 
+PARALLEL_UPDATES = 0
+
+
 class NINAMessage(CoordinatorEntity[NINADataUpdateCoordinator], BinarySensorEntity):
     """Representation of an NINA warning."""
 
     _attr_device_class = BinarySensorDeviceClass.SAFETY
+    _attr_has_entity_name = True
 
     def __init__(
         self,
