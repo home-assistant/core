@@ -778,17 +778,18 @@ class HomeWizardUptimeSensorEntity(HomeWizardSensorEntity):
 
     def _get_timestamp(self, system: System) -> datetime | None:
         """Get the locked uptime timestamp, recalculating only on reload or reset."""
-        if uptime_s := system.uptime_s:
-            # On reload or reset (>5 min earlier), recalculate
-            if (
-                self._last_uptime_s is None
-                or abs(uptime_s - self._last_uptime_s) > 300
-                or self._timestamp is None
-            ):
-                self._update_timestamp(uptime_s)
-            return self._timestamp
+        if system.uptime_s is None:
+            return None
 
-        return None
+        # On reload or reset (>5 min earlier), recalculate
+        if (
+            self._last_uptime_s is None
+            or abs(system.uptime_s - self._last_uptime_s) > 300
+            or self._timestamp is None
+        ):
+            self._update_timestamp(system.uptime_s)
+
+        return self._timestamp
 
 
 class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
