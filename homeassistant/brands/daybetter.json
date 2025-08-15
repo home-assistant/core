@@ -1,5 +1,0 @@
-{
-  "domain": "daybetter",
-  "name": "DayBetter",
-  "integrations": ["daybetter_light_local"]
-}
