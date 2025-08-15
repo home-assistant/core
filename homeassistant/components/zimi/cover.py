@@ -28,6 +28,10 @@ async def async_setup_entry(
 
     api = config_entry.runtime_data
 
+    blinds = [ZimiCover(device, api) for device in api.blinds]
+
+    async_add_entities(blinds)
+
     doors = [ZimiCover(device, api) for device in api.doors]
 
     async_add_entities(doors)
@@ -81,9 +85,11 @@ class ZimiCover(ZimiEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Open the cover/door to a specified percentage."""
-        if position := kwargs.get("position"):
-            _LOGGER.debug("Sending set_cover_position(%d) for %s", position, self.name)
-            await self._device.open_to_percentage(position)
+        position = kwargs.get("position")
+        if position is None:
+            position = 0
+        _LOGGER.debug("Sending set_cover_position(%d) for %s", position, self.name)
+        await self._device.open_to_percentage(position)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
