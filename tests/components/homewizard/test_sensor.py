@@ -1039,7 +1039,7 @@ async def test_uptime_sensor_unavailable(
     hass: HomeAssistant,
     mock_homewizardenergy: MagicMock,
 ) -> None:
-    """Test that the uptime sensor updates its timestamp on reboot."""
+    """Test that the uptime sensor reports unavailable when uptime is None."""
     entity_id = "sensor.device_uptime"
 
     mock_homewizardenergy.combined.return_value = CombinedModels(
