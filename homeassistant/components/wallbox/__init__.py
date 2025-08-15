@@ -4,13 +4,17 @@ from __future__ import annotations
 
 from wallbox import Wallbox
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .const import UPDATE_INTERVAL
-from .coordinator import InvalidAuth, WallboxCoordinator, async_validate_input
+from .coordinator import (
+    InvalidAuth,
+    WallboxConfigEntry,
+    WallboxCoordinator,
+    async_validate_input,
+)
 
 PLATFORMS = [
     Platform.LOCK,
@@ -19,8 +23,6 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
-
-type WallboxConfigEntry = ConfigEntry[WallboxCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WallboxConfigEntry) -> bool:
@@ -45,6 +47,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WallboxConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WallboxConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
