@@ -1,11 +1,14 @@
 # Describes the format for available Snoo services
 log_diaper_change:
   fields:
-    baby_id:
+    baby_device_id:
       required: true
-      example: "35235211235dfasdf32523"
+      example: "91aa039a2fb6e0b9f9ec7eb219a6b7d2"
       selector:
-        text:
+        device:
+          filter:
+            integration: snoo
+            model: Baby
     diaper_types:
       required: true
       example: ["wet", "dirty"]
@@ -13,8 +16,8 @@ log_diaper_change:
         select:
           multiple: true
           options:
-            - "[%key:component::snoo::services::log_diaper_change::fields::diaper_types::options::wet%]"
-            - "[%key:component::snoo::services::log_diaper_change::fields::diaper_types::options::dirty%]"
+            - "wet"
+            - "dirty"
     note:
       required: false
       example: "Logged via Home Assistant"
