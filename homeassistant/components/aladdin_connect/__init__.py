@@ -15,6 +15,7 @@ from homeassistant.helpers import (
 from . import api
 from .const import CONFIG_FLOW_MINOR_VERSION, CONFIG_FLOW_VERSION, DOMAIN
 from .coordinator import AladdinConnectConfigEntry, AladdinConnectCoordinator
+from .model import GarageDoor
 
 PLATFORMS: list[Platform] = [Platform.COVER, Platform.SENSOR]
 
@@ -35,7 +36,22 @@ async def async_setup_entry(
         api.AsyncConfigEntryAuth(aiohttp_client.async_get_clientsession(hass), session)
     )
 
-    doors = await client.get_doors()
+    sdk_doors = await client.get_doors()
+
+    # Convert SDK GarageDoor objects to integration GarageDoor objects
+    doors = [
+        GarageDoor(
+            {
+                "device_id": door.device_id,
+                "door_number": door.door_number,
+                "name": door.name,
+                "status": door.status,
+                "link_status": door.link_status,
+                "battery_level": door.battery_level,
+            }
+        )
+        for door in sdk_doors
+    ]
 
     entry.runtime_data = {
         door.unique_id: AladdinConnectCoordinator(hass, entry, client, door)
