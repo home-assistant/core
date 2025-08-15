@@ -26,6 +26,7 @@ TEMPLATE_ENTITY_BASE_SCHEMA = vol.Schema(
         vol.Optional(CONF_NAME): cv.template,
         vol.Optional(CONF_PICTURE): cv.template,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
+        vol.Optional(CONF_OBJECT_ID): cv.string,
     }
 )
 
