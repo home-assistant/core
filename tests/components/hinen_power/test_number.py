@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.hinen.const import LOAD_FIRST_STOP_SOC
+from homeassistant.components.hinen_power.const import LOAD_FIRST_STOP_SOC
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 

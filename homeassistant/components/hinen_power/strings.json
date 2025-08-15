@@ -50,9 +50,9 @@
     },
     "step": {
       "init": {
-        "description": "[%key:component::hinen::config::step::devices::description%]",
+        "description": "[%key:component::hinen_power::config::step::devices::description%]",
         "data": {
-          "devices": "[%key:component::hinen::config::step::devices::data::devices%]"
+          "devices": "[%key:component::hinen_power::config::step::devices::data::devices%]"
         },
         "data_description": {
           "devices": ""

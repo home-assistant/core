@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.hinen.const import (
+from homeassistant.components.hinen_power.const import (
     WORK_MODE_BATTERY_PRIORITY,
     WORK_MODE_OPTIONS,
     WORK_MODE_SETTING,

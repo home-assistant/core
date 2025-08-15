@@ -5,8 +5,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.hinen import delete_devices
-from homeassistant.components.hinen.const import AUTH, COORDINATOR, DOMAIN
+from homeassistant.components.hinen_power import delete_devices
+from homeassistant.components.hinen_power.const import AUTH, COORDINATOR, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -25,15 +25,15 @@ async def test_async_setup_entry_success(
     config_entry.add_to_hass(hass)
     with (
         patch(
-            "homeassistant.components.hinen.HinenDataUpdateCoordinator.async_config_entry_first_refresh",
+            "homeassistant.components.hinen_power.HinenDataUpdateCoordinator.async_config_entry_first_refresh",
             return_value=None,
         ),
         patch(
-            "homeassistant.components.hinen.AsyncConfigEntryAuth.check_and_refresh_token",
+            "homeassistant.components.hinen_power.AsyncConfigEntryAuth.check_and_refresh_token",
             return_value=None,
         ),
         patch(
-            "homeassistant.components.hinen.delete_devices",
+            "homeassistant.components.hinen_power.delete_devices",
             return_value=None,
         ),
     ):
@@ -73,7 +73,7 @@ async def test_expired_token_refresh_success(
 
     service = MockHinen(hass)
     with patch(
-        "homeassistant.components.hinen.AsyncConfigEntryAuth.get_resource",
+        "homeassistant.components.hinen_power.AsyncConfigEntryAuth.get_resource",
         return_value=service,
     ):
         await setup_integration()
@@ -93,15 +93,15 @@ async def test_async_unload_entry(
 
     with (
         patch(
-            "homeassistant.components.hinen.HinenDataUpdateCoordinator.async_config_entry_first_refresh",
+            "homeassistant.components.hinen_power.HinenDataUpdateCoordinator.async_config_entry_first_refresh",
             return_value=None,
         ),
         patch(
-            "homeassistant.components.hinen.AsyncConfigEntryAuth.check_and_refresh_token",
+            "homeassistant.components.hinen_power.AsyncConfigEntryAuth.check_and_refresh_token",
             return_value=None,
         ),
         patch(
-            "homeassistant.components.hinen.delete_devices",
+            "homeassistant.components.hinen_power.delete_devices",
             return_value=None,
         ),
     ):
@@ -125,18 +125,19 @@ async def test_delete_devices(
     device1 = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "device_1")},
-        manufacturer="Hinen",
+        manufacturer="Hinen Power",
         name="Test Device 1",
     )
     device2 = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "device_3")},  # Different device ID
-        manufacturer="Hinen",
+        manufacturer="Hinen Power",
         name="Test Device 2",
     )
 
     with patch(
-        "homeassistant.components.hinen.dr.async_get", return_value=device_registry
+        "homeassistant.components.hinen_power.dr.async_get",
+        return_value=device_registry,
     ):
         await delete_devices(hass, config_entry, mock_coordinator)
 
@@ -158,11 +159,12 @@ async def test_delete_devices_empty_coordinator_data(
     device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "device_1")},
-        manufacturer="Hinen",
+        manufacturer="Hinen Power",
         name="Test Device",
     )
     with patch(
-        "homeassistant.components.hinen.dr.async_get", return_value=device_registry
+        "homeassistant.components.hinen_power.dr.async_get",
+        return_value=device_registry,
     ):
         await delete_devices(hass, config_entry, mock_coordinator)
 

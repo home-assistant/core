@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.hinen.const import CD_PERIOD_TIMES2
+from homeassistant.components.hinen_power.const import CD_PERIOD_TIMES2
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 

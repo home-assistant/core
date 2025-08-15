@@ -1,6 +1,6 @@
 {
-  "domain": "hinen",
-  "name": "Hinen",
+  "domain": "hinen_power",
+  "name": "Hinen Power",
   "codeowners": ["@Weifeng-31"],
   "config_flow": true,
   "dependencies": ["application_credentials"],

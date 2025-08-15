@@ -5,13 +5,16 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.hinen.const import (
+from homeassistant.components.hinen_power.const import (
     ATTR_AUTH_LANGUAGE,
     ATTR_REDIRECTION_URL,
     CONF_DEVICES,
     DOMAIN,
 )
-from homeassistant.components.hinen.hinen_exception import ForbiddenError, HinenAPIError
+from homeassistant.components.hinen_power.hinen_exception import (
+    ForbiddenError,
+    HinenAPIError,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -39,7 +42,7 @@ async def test_full_flow(
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
-        "hinen", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -72,10 +75,10 @@ async def test_full_flow(
 
     with (
         patch(
-            "homeassistant.components.hinen.async_setup_entry", return_value=True
+            "homeassistant.components.hinen_power.async_setup_entry", return_value=True
         ) as mock_setup,
         patch(
-            "homeassistant.components.hinen.config_flow.HinenOpen",
+            "homeassistant.components.hinen_power.config_flow.HinenOpen",
             return_value=MockHinen(hass),
         ),
     ):
@@ -110,7 +113,7 @@ async def test_flow_abort_without_device(
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
-        "hinen", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -143,9 +146,12 @@ async def test_flow_abort_without_device(
 
     service = MockHinen(hass, devices_fixture="get_no_device.json")
     with (
-        patch("homeassistant.components.hinen.async_setup_entry", return_value=True),
         patch(
-            "homeassistant.components.hinen.config_flow.HinenOpen", return_value=service
+            "homeassistant.components.hinen_power.async_setup_entry", return_value=True
+        ),
+        patch(
+            "homeassistant.components.hinen_power.config_flow.HinenOpen",
+            return_value=service,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -160,7 +166,7 @@ async def test_flow_with_forbidden_error(
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
-        "hinen", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -199,9 +205,12 @@ async def test_flow_with_forbidden_error(
     service.get_device_infos = mock_get_device_infos
 
     with (
-        patch("homeassistant.components.hinen.async_setup_entry", return_value=True),
         patch(
-            "homeassistant.components.hinen.config_flow.HinenOpen", return_value=service
+            "homeassistant.components.hinen_power.async_setup_entry", return_value=True
+        ),
+        patch(
+            "homeassistant.components.hinen_power.config_flow.HinenOpen",
+            return_value=service,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -216,7 +225,7 @@ async def test_flow_with_unknown_error(
 ) -> None:
     """Check full flow."""
     result = await hass.config_entries.flow.async_init(
-        "hinen", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -255,9 +264,12 @@ async def test_flow_with_unknown_error(
     service.get_device_infos = mock_get_device_infos
 
     with (
-        patch("homeassistant.components.hinen.async_setup_entry", return_value=True),
         patch(
-            "homeassistant.components.hinen.config_flow.HinenOpen", return_value=service
+            "homeassistant.components.hinen_power.async_setup_entry", return_value=True
+        ),
+        patch(
+            "homeassistant.components.hinen_power.config_flow.HinenOpen",
+            return_value=service,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -275,7 +287,7 @@ async def test_options_flow(
     await setup_integration()
 
     with patch(
-        "homeassistant.components.hinen.config_flow.HinenOpen",
+        "homeassistant.components.hinen_power.config_flow.HinenOpen",
         return_value=MockHinen(hass),
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -351,9 +363,12 @@ async def test_unique_id_mismatch_during_reauth(
     # Mock a service with a different device ID to trigger unique ID mismatch
     service = MockHinen(hass, devices_fixture="get_different_device.json")
     with (
-        patch("homeassistant.components.hinen.async_setup_entry", return_value=True),
         patch(
-            "homeassistant.components.hinen.config_flow.HinenOpen", return_value=service
+            "homeassistant.components.hinen_power.async_setup_entry", return_value=True
+        ),
+        patch(
+            "homeassistant.components.hinen_power.config_flow.HinenOpen",
+            return_value=service,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -368,7 +383,7 @@ async def test_no_device_during_oauth_create_entry(
 ) -> None:
     """Test no device during OAuth create entry."""
     result = await hass.config_entries.flow.async_init(
-        "hinen", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
@@ -395,9 +410,12 @@ async def test_no_device_during_oauth_create_entry(
 
     service = MockHinen(hass, devices_fixture="get_no_device.json")
     with (
-        patch("homeassistant.components.hinen.async_setup_entry", return_value=True),
         patch(
-            "homeassistant.components.hinen.config_flow.HinenOpen", return_value=service
+            "homeassistant.components.hinen_power.async_setup_entry", return_value=True
+        ),
+        patch(
+            "homeassistant.components.hinen_power.config_flow.HinenOpen",
+            return_value=service,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -416,7 +434,7 @@ async def test_no_device_during_options_flow(
 
     service = MockHinen(hass, devices_fixture="get_no_device.json")
     with patch(
-        "homeassistant.components.hinen.config_flow.HinenOpen",
+        "homeassistant.components.hinen_power.config_flow.HinenOpen",
         return_value=service,
     ):
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
@@ -469,9 +487,12 @@ async def test_reauth_update_entry(
     # Mock Hinen service with device info that matches the existing entry
     service = MockHinen(hass)
     with (
-        patch("homeassistant.components.hinen.async_setup_entry", return_value=True),
         patch(
-            "homeassistant.components.hinen.config_flow.HinenOpen", return_value=service
+            "homeassistant.components.hinen_power.async_setup_entry", return_value=True
+        ),
+        patch(
+            "homeassistant.components.hinen_power.config_flow.HinenOpen",
+            return_value=service,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])

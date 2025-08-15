@@ -2,7 +2,7 @@
 
 import logging
 
-DOMAIN = "hinen"
+DOMAIN = "hinen_power"
 MANUFACTURER = "hinen"
 
 CONF_DEVICES = "devices"

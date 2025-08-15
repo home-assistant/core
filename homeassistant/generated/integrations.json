@@ -2654,8 +2654,8 @@
         }
       }
     },
-    "hinen": {
-      "name": "Hinen",
+    "hinen_power": {
+      "name": "Hinen Power",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"

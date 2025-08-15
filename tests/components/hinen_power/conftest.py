@@ -11,7 +11,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.hinen.const import DOMAIN
+from homeassistant.components.hinen_power.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -33,7 +33,7 @@ REDIRECTION_URL = "https://example.com/auth/hinen/callback"
 REGION_CODE = "CN"
 HOST = "https://dev-iot-api.celinksmart.cn"
 TITLE = "Test Hinen Device"
-TOKEN = "homeassistant.components.hinen.api.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid"
+TOKEN = "homeassistant.components.hinen_power.api.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid"
 
 
 @pytest.fixture(autouse=True)
@@ -118,11 +118,11 @@ async def mock_setup_integration(
         mock = MockHinen(hass)
         with (
             patch(
-                "homeassistant.components.hinen.AsyncConfigEntryAuth.get_resource",
+                "homeassistant.components.hinen_power.AsyncConfigEntryAuth.get_resource",
                 return_value=mock,
             ),
             patch(
-                "homeassistant.components.hinen.AsyncConfigEntryAuth.hinen_open",
+                "homeassistant.components.hinen_power.AsyncConfigEntryAuth.hinen_open",
                 new=mock,
             ),
         ):

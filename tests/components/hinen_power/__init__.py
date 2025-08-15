@@ -4,8 +4,8 @@ from collections.abc import AsyncGenerator
 import json
 from typing import Any
 
-from homeassistant.components.hinen.const import DOMAIN, PROPERTIES
-from homeassistant.components.hinen.models import (
+from homeassistant.components.hinen_power.const import DOMAIN, PROPERTIES
+from homeassistant.components.hinen_power.models import (
     HinenDeviceControl,
     HinenDeviceDetail,
     HinenDeviceInfo,
