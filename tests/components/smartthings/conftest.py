@@ -112,6 +112,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "centralite",
         "da_ref_normal_000001",
         "da_ref_normal_01011",
+        "da_ref_normal_01011_onedoor",
         "da_ref_normal_01001",
         "vd_network_audio_002s",
         "vd_network_audio_003s",

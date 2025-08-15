@@ -69,7 +69,7 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an entry for the flow."""
-        self._config_data |= data
+        self._config_data |= (self.init_data or {}) | data
         return await self.async_step_api_key()
 
     async def async_step_reauth(self, _: Mapping[str, Any]) -> ConfigFlowResult:
@@ -77,7 +77,7 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         return await self.async_step_reauth_confirm()
 
     async def async_step_reconfigure(
-        self, _: dict[str, Any] | None = None
+        self, data: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Reconfigure the entry."""
         return await self.async_step_api_key()
@@ -121,7 +121,7 @@ class VolvoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         if user_input is None:
             if self.source == SOURCE_REAUTH:
-                user_input = self._config_data = dict(self._get_reauth_entry().data)
+                user_input = self._config_data
                 api = _create_volvo_cars_api(
                     self.hass,
                     self._config_data[CONF_TOKEN][CONF_ACCESS_TOKEN],

@@ -2795,6 +2795,42 @@ async def test_optimistic_option(hass: HomeAssistant) -> None:
     assert state.state == STATE_OFF
 
 
+@pytest.mark.parametrize(
+    ("count", "light_config"),
+    [
+        (
+            1,
+            {
+                "name": TEST_OBJECT_ID,
+                "state": "{{ is_state('light.test_state', 'on') }}",
+                "turn_on": [],
+                "turn_off": [],
+                "optimistic": False,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    ("style", "expected"),
+    [
+        (ConfigurationStyle.MODERN, STATE_OFF),
+        (ConfigurationStyle.TRIGGER, STATE_UNKNOWN),
+    ],
+)
+@pytest.mark.usefixtures("setup_light")
+async def test_not_optimistic(hass: HomeAssistant, expected: str) -> None:
+    """Test optimistic yaml option set to false."""
+    await hass.services.async_call(
+        light.DOMAIN,
+        "turn_on",
+        {"entity_id": TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == expected
+
+
 async def test_setup_config_entry(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,

@@ -102,7 +102,7 @@ TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA = vol.Schema(
 
 
 TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA = {
-    vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
+    vol.Optional(CONF_OPTIMISTIC): cv.boolean,
 }
 
 

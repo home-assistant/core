@@ -427,6 +427,12 @@ def fortrezz_ssa1_siren_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("fortrezz_ssa1_siren_state.json", DOMAIN)
 
 
+@pytest.fixture(name="fortrezz_ssa2_siren_state", scope="package")
+def fortrezz_ssa2_siren_state_fixture() -> dict[str, Any]:
+    """Load the fortrezz ssa2 siren node state fixture data."""
+    return load_json_object_fixture("fortrezz_ssa2_siren_state.json", DOMAIN)
+
+
 @pytest.fixture(name="fortrezz_ssa3_siren_state", scope="package")
 def fortrezz_ssa3_siren_state_fixture() -> dict[str, Any]:
     """Load the fortrezz ssa3 siren node state fixture data."""
@@ -1214,6 +1220,14 @@ def lock_popp_electric_strike_lock_control_fixture(
 def fortrezz_ssa1_siren_fixture(client, fortrezz_ssa1_siren_state) -> Node:
     """Mock a fortrezz ssa1 siren node."""
     node = Node(client, copy.deepcopy(fortrezz_ssa1_siren_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="fortrezz_ssa2_siren")
+def fortrezz_ssa2_siren_fixture(client, fortrezz_ssa2_siren_state) -> Node:
+    """Mock a fortrezz ssa2 siren node."""
+    node = Node(client, copy.deepcopy(fortrezz_ssa2_siren_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
