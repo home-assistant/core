@@ -220,7 +220,7 @@ aiobotocore==2.21.1
 aiocomelit==0.12.3
 
 # homeassistant.components.dhcp
-aiodhcpwatcher==1.2.0
+aiodhcpwatcher==1.2.1
 
 # homeassistant.components.dhcp
 aiodiscover==2.7.1
@@ -438,7 +438,7 @@ aiowatttime==0.1.1
 aiowebdav2==0.4.6
 
 # homeassistant.components.webostv
-aiowebostv==0.7.4
+aiowebostv==0.7.5
 
 # homeassistant.components.withings
 aiowithings==3.1.6
@@ -453,7 +453,7 @@ airgradient==0.9.2
 airly==1.1.0
 
 # homeassistant.components.airos
-airos==0.2.7
+airos==0.2.11
 
 # homeassistant.components.airthings_ble
 airthings-ble==0.9.2
@@ -625,7 +625,7 @@ bizkaibus==0.1.1
 bleak-esphome==3.1.0
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==4.0.0
+bleak-retry-connector==4.0.1
 
 # homeassistant.components.bluetooth
 bleak==1.0.1
@@ -743,7 +743,7 @@ connect-box==0.3.1
 construct==2.10.68
 
 # homeassistant.components.cookidoo
-cookidoo-api==0.12.2
+cookidoo-api==0.14.0
 
 # homeassistant.components.backup
 # homeassistant.components.utility_meter
@@ -1127,7 +1127,7 @@ ha-philipsjs==3.2.2
 ha-silabs-firmware-client==0.2.0
 
 # homeassistant.components.habitica
-habiticalib==0.4.1
+habiticalib==0.4.2
 
 # homeassistant.components.bluetooth
 habluetooth==4.0.2
@@ -1594,7 +1594,7 @@ ondilo==0.5.0
 onedrive-personal-sdk==0.0.14
 
 # homeassistant.components.onvif
-onvif-zeep-async==4.0.2
+onvif-zeep-async==4.0.3
 
 # homeassistant.components.opengarage
 open-garage==0.2.0
@@ -2146,7 +2146,7 @@ pymeteoclimatic==0.1.0
 pymicro-vad==1.0.1
 
 # homeassistant.components.miele
-pymiele==0.5.2
+pymiele==0.5.4
 
 # homeassistant.components.xiaomi_tv
 pymitv==1.4.3
@@ -2512,7 +2512,7 @@ python-roborock==2.18.2
 python-smarttub==0.0.44
 
 # homeassistant.components.snoo
-python-snoo==0.6.6
+python-snoo==0.8.3
 
 # homeassistant.components.songpal
 python-songpal==0.16.2
@@ -3004,7 +3004,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.20.0
+uiprotect==7.21.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
