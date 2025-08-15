@@ -517,6 +517,27 @@ async def test_tool_call_exception(
                 ]
             },
         ],
+        # With thinking content
+        [
+            {"role": "assistant"},
+            {"thinking_content": "Test Thinking"},
+        ],
+        # With content and thinking content
+        [
+            {"role": "assistant"},
+            {"content": "Test"},
+            {"thinking_content": "Test Thinking"},
+        ],
+        # With native content
+        [
+            {"role": "assistant"},
+            {"native": {"type": "test", "value": "Test Native"}},
+        ],
+        # With native object content
+        [
+            {"role": "assistant"},
+            {"native": object()},
+        ],
     ],
 )
 async def test_add_delta_content_stream(
@@ -547,7 +568,8 @@ async def test_add_delta_content_stream(
         """Yield deltas."""
         for d in deltas:
             yield d
-            expected_delta.append(d)
+            if filtered_delta := {k: v for k, v in d.items() if k != "native"}:
+                expected_delta.append(filtered_delta)
 
     captured_deltas = []
 
@@ -633,6 +655,20 @@ async def test_add_delta_content_stream_errors(
                     stream([{"role": role}]),
                 ):
                     pass
+
+        # Second native content
+        with pytest.raises(RuntimeError):
+            async for _tool_result_content in chat_log.async_add_delta_content_stream(
+                "mock-agent-id",
+                stream(
+                    [
+                        {"role": "assistant"},
+                        {"native": "Test Native"},
+                        {"native": "Test Native 2"},
+                    ]
+                ),
+            ):
+                pass
 
 
 async def test_chat_log_reuse(

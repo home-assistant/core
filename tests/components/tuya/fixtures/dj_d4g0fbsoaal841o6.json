@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "bf671413db4cee1f9bqdcx",
   "name": "WC D1",
   "category": "dj",
   "product_id": "d4g0fbsoaal841o6",

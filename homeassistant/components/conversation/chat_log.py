@@ -161,7 +161,9 @@ class AssistantContent:
     role: Literal["assistant"] = field(init=False, default="assistant")
     agent_id: str
     content: str | None = None
+    thinking_content: str | None = None
     tool_calls: list[llm.ToolInput] | None = None
+    native: Any = None
 
 
 @dataclass(frozen=True)
@@ -183,7 +185,9 @@ class AssistantContentDeltaDict(TypedDict, total=False):
 
     role: Literal["assistant"]
     content: str | None
+    thinking_content: str | None
     tool_calls: list[llm.ToolInput] | None
+    native: Any
 
 
 @dataclass
@@ -306,6 +310,8 @@ class ChatLog:
         The keys content and tool_calls will be concatenated if they appear multiple times.
         """
         current_content = ""
+        current_thinking_content = ""
+        current_native: Any = None
         current_tool_calls: list[llm.ToolInput] = []
         tool_call_tasks: dict[str, asyncio.Task] = {}
 
@@ -316,6 +322,14 @@ class ChatLog:
             if "role" not in delta:
                 if delta_content := delta.get("content"):
                     current_content += delta_content
+                if delta_thinking_content := delta.get("thinking_content"):
+                    current_thinking_content += delta_thinking_content
+                if delta_native := delta.get("native"):
+                    if current_native is not None:
+                        raise RuntimeError(
+                            "Native content already set, cannot overwrite"
+                        )
+                    current_native = delta_native
                 if delta_tool_calls := delta.get("tool_calls"):
                     if self.llm_api is None:
                         raise ValueError("No LLM API configured")
@@ -328,7 +342,12 @@ class ChatLog:
                             name=f"llm_tool_{tool_call.id}",
                         )
                 if self.delta_listener:
-                    self.delta_listener(self, delta)  # type: ignore[arg-type]
+                    if filtered_delta := {
+                        k: v for k, v in delta.items() if k != "native"
+                    }:
+                        # We do not want to send the native content to the listener
+                        # as it is not JSON serializable
+                        self.delta_listener(self, filtered_delta)
                 continue
 
             # Starting a new message
@@ -337,11 +356,18 @@ class ChatLog:
                 raise ValueError(f"Only assistant role expected. Got {delta['role']}")
 
             # Yield the previous message if it has content
-            if current_content or current_tool_calls:
+            if (
+                current_content
+                or current_thinking_content
+                or current_tool_calls
+                or current_native
+            ):
                 content = AssistantContent(
                     agent_id=agent_id,
                     content=current_content or None,
+                    thinking_content=current_thinking_content or None,
                     tool_calls=current_tool_calls or None,
+                    native=current_native,
                 )
                 yield content
                 async for tool_result in self.async_add_assistant_content(
@@ -352,16 +378,25 @@ class ChatLog:
                         self.delta_listener(self, asdict(tool_result))
 
             current_content = delta.get("content") or ""
+            current_thinking_content = delta.get("thinking_content") or ""
             current_tool_calls = delta.get("tool_calls") or []
+            current_native = delta.get("native")
 
             if self.delta_listener:
                 self.delta_listener(self, delta)  # type: ignore[arg-type]
 
-        if current_content or current_tool_calls:
+        if (
+            current_content
+            or current_thinking_content
+            or current_tool_calls
+            or current_native
+        ):
             content = AssistantContent(
                 agent_id=agent_id,
                 content=current_content or None,
+                thinking_content=current_thinking_content or None,
                 tool_calls=current_tool_calls or None,
+                native=current_native,
             )
             yield content
             async for tool_result in self.async_add_assistant_content(

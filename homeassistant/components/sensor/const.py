@@ -46,6 +46,7 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.util.unit_conversion import (
+    ApparentPowerConverter,
     AreaConverter,
     BaseUnitConverter,
     BloodGlucoseConcentrationConverter,
@@ -63,6 +64,7 @@ from homeassistant.util.unit_conversion import (
     PowerConverter,
     PressureConverter,
     ReactiveEnergyConverter,
+    ReactivePowerConverter,
     SpeedConverter,
     TemperatureConverter,
     UnitlessRatioConverter,
@@ -117,7 +119,7 @@ class SensorDeviceClass(StrEnum):
     APPARENT_POWER = "apparent_power"
     """Apparent power.
 
-    Unit of measurement: `VA`
+    Unit of measurement: `mVA`, `VA`
     """
 
     AQI = "aqi"
@@ -369,7 +371,7 @@ class SensorDeviceClass(StrEnum):
     REACTIVE_POWER = "reactive_power"
     """Reactive power.
 
-    Unit of measurement: `var`, `kvar`
+    Unit of measurement: `mvar`, `var`, `kvar`
     """
 
     SIGNAL_STRENGTH = "signal_strength"
@@ -528,6 +530,7 @@ STATE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(SensorStateClass))
 STATE_CLASSES: Final[list[str]] = [cls.value for cls in SensorStateClass]
 
 UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] = {
+    SensorDeviceClass.APPARENT_POWER: ApparentPowerConverter,
     SensorDeviceClass.ABSOLUTE_HUMIDITY: MassVolumeConcentrationConverter,
     SensorDeviceClass.AREA: AreaConverter,
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: PressureConverter,
@@ -548,6 +551,7 @@ UNIT_CONVERTERS: dict[SensorDeviceClass | str | None, type[BaseUnitConverter]] =
     SensorDeviceClass.PRECIPITATION_INTENSITY: SpeedConverter,
     SensorDeviceClass.PRESSURE: PressureConverter,
     SensorDeviceClass.REACTIVE_ENERGY: ReactiveEnergyConverter,
+    SensorDeviceClass.REACTIVE_POWER: ReactivePowerConverter,
     SensorDeviceClass.SPEED: SpeedConverter,
     SensorDeviceClass.TEMPERATURE: TemperatureConverter,
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: MassVolumeConcentrationConverter,
