@@ -151,11 +151,11 @@ class NetatmoModuleEntity(NetatmoDeviceEntity):
     """Netatmo module entity base class."""
 
     device: Module
-    _attr_configuration_url: str
+    _attr_configuration_url: str | None
 
     def __init__(self, device: NetatmoDevice) -> None:
         """Set up a Netatmo module entity."""
-        super().__init__(device.data_handler, device.device)
+        super().__init__(device.data_handler, cast(Module, device.device))
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.device.entity_id)},
             name=device.device.name,
