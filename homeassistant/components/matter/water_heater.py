@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any, cast
 
 from chip.clusters import Objects as clusters
@@ -26,7 +27,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import MatterEntity
+from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
@@ -48,6 +49,13 @@ async def async_setup_entry(
     """Set up Matter WaterHeater platform from Config Entry."""
     matter = get_matter(hass)
     matter.register_platform_handler(Platform.WATER_HEATER, async_add_entities)
+
+
+@dataclass(frozen=True)
+class MatterWatterHeaterEntityDescription(
+    WaterHeaterEntityDescription, MatterEntityDescription
+):
+    """Describe Matter Water Heater entities."""
 
 
 class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
@@ -171,7 +179,7 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.WATER_HEATER,
-        entity_description=WaterHeaterEntityDescription(
+        entity_description=MatterWatterHeaterEntityDescription(
             key="MatterWaterHeater",
             name=None,
         ),
