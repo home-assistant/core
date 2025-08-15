@@ -2941,7 +2941,7 @@ thinqconnect==1.0.7
 tikteck==0.4
 
 # homeassistant.components.tilt_ble
-tilt-ble==0.2.3
+tilt-ble==0.3.1
 
 # homeassistant.components.tilt_pi
 tilt-pi==0.2.1
