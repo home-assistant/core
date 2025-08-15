@@ -12,15 +12,16 @@ import voluptuous as vol
 from homeassistant.components.light import ATTR_TRANSITION
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PLATFORM, SERVICE_TURN_ON, STATE_UNAVAILABLE
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
+from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
 
 DOMAIN: Final = "scene"
-DATA_COMPONENT: HassKey[EntityComponent[Scene]] = HassKey(DOMAIN)
+DATA_COMPONENT: HassKey[EntityComponent[BaseScene]] = HassKey(DOMAIN)
 STATES: Final = "states"
 
 
@@ -62,7 +63,7 @@ PLATFORM_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the scenes."""
-    component = hass.data[DATA_COMPONENT] = EntityComponent[Scene](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[BaseScene](
         logging.getLogger(__name__), DOMAIN, hass
     )
 
@@ -93,11 +94,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
-class Scene(RestoreEntity):
-    """A scene is a group of entities and the states we want them to be."""
+class BaseScene(RestoreEntity):
+    """Base type for scenes."""
 
     _attr_should_poll = False
-    _auto_set_last_activated = True
     __last_activated: str | None = None
 
     @property
@@ -108,20 +108,15 @@ class Scene(RestoreEntity):
             return None
         return self.__last_activated
 
-    async def _async_activate(self, **kwargs: Any) -> None:
-        """Activate scene."""
-        if self._auto_set_last_activated:
-            self._set_activated()
-        await self.async_activate(**kwargs)
+    @final
+    def _record_activation(self) -> None:
+        run_callback_threadsafe(self.hass.loop, self._async_record_activation).result()
 
     @final
-    def _set_activated(self) -> None:
-        """Call when the scene has been activated.
-
-        Should not be overridden, handle setting last press timestamp.
-        """
+    @callback
+    def _async_record_activation(self) -> None:
+        """Handle setting last press timestamp."""
         self.__last_activated = dt_util.utcnow().isoformat()
-        self.async_write_ha_state()
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the scene is added to hass."""
@@ -143,3 +138,17 @@ class Scene(RestoreEntity):
         task = self.hass.async_add_executor_job(ft.partial(self.activate, **kwargs))
         if task:
             await task
+
+
+class Scene(BaseScene):
+    """A scene is a group of entities and the states we want them to be."""
+
+    @final
+    async def _async_activate(self, **kwargs: Any) -> None:
+        """Activate scene.
+
+        Should not be overridden, handle setting last press timestamp.
+        """
+        self._async_record_activation()
+        self.async_write_ha_state()
+        await self.async_activate(**kwargs)
