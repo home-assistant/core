@@ -1343,7 +1343,7 @@ lektricowifi==0.1
 letpot==0.6.1
 
 # homeassistant.components.foscam
-libpyfoscamcgi==0.0.6
+libpyfoscamcgi==0.0.7
 
 # homeassistant.components.vivotek
 libpyvivotek==0.4.0

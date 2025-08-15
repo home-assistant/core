@@ -62,6 +62,14 @@
       "wdr_switch": {
         "name": "WDR"
       }
+    },
+    "number": {
+      "device_volume_entity": {
+        "name": "Device volume"
+      },
+      "speak_volume_entity": {
+        "name": "Speak volume"
+      }
     }
   },
   "services": {
