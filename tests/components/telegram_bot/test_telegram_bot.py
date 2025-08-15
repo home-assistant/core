@@ -48,8 +48,10 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_URL,
     ATTR_USERNAME,
     ATTR_VERIFY_SSL,
+    CONF_ALLOW_ANY_REPLY,
     CONF_CONFIG_ENTRY_ID,
     DOMAIN,
+    PARSER_MD,
     PARSER_PLAIN_TEXT,
     PLATFORM_BROADCAST,
     SECTION_ADVANCED_SETTINGS,
@@ -1204,3 +1206,51 @@ async def test_set_message_reaction(
         is_big=True,
         read_timeout=None,
     )
+
+
+async def test_allow_any_reply(
+    hass: HomeAssistant,
+    mock_webhooks_config_entry: MockConfigEntry,
+    mock_register_webhook: None,
+    mock_external_calls: None,
+    mock_generate_secret_token: str,
+) -> None:
+    """Fixture for setting up the webhooks platform using appropriate config and mocks."""
+
+    mock_webhooks_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_webhooks_config_entry,
+        options={CONF_ALLOW_ANY_REPLY: True, ATTR_PARSER: PARSER_MD},
+    )
+    await hass.config_entries.async_setup(mock_webhooks_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # test: no target
+
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_MESSAGE: "test message",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert err.value.args[0] == "Target is required."
+
+    # test: target not in allowlist
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {
+            ATTR_TARGET: 999999,
+            ATTR_MESSAGE: "test message",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response["chats"][0]["message_id"] == 12345
