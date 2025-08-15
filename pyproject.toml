@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "homeassistant"
-version = "2025.8.1"
+version = "2025.8.2"
 license = "Apache-2.0"
 license-files = ["LICENSE*", "homeassistant/backports/LICENSE*"]
 description = "Open-source home automation platform running on Python 3."
@@ -74,7 +74,7 @@ dependencies = [
   "typing-extensions>=4.14.0,<5.0",
   "ulid-transform==1.4.0",
   "urllib3>=2.0",
-  "uv==0.7.1",
+  "uv==0.8.9",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.6.0",
   "voluptuous-openapi==0.1.0",
