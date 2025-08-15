@@ -211,6 +211,9 @@
     },
     "timeout_join": {
       "message": "Timeout while waiting for Sonos player to join the group {group_description}"
+    },
+    "invalid_alarm_id": {
+      "message": "Alarm Id {alarm_id} does not exist and cannot be updated."
     }
   }
 }
