@@ -67,7 +67,6 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
     """Representation of a Bravia TV Coordinator."""
 
     config_entry: BraviaTVConfigEntry
-    system_info: dict[str, str]
 
     def __init__(
         self,
@@ -82,6 +81,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.use_psk = config_entry.data.get(CONF_USE_PSK, False)
         self.client_id = config_entry.data.get(CONF_CLIENT_ID, LEGACY_CLIENT_ID)
         self.nickname = config_entry.data.get(CONF_NICKNAME, NICKNAME_PREFIX)
+        self.system_info: dict[str, str] | None = None
         self.source: str | None = None
         self.source_list: list[str] = []
         self.source_map: dict[str, dict] = {}
