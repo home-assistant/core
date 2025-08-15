@@ -27,9 +27,19 @@
         "default": "mdi:gauge"
       }
     },
+    "select": {
+      "sprinkler_mode": {
+        "default": "mdi:auto-mode"
+      }
+    },
     "switch": {
       "manipulator_state": {
         "default": "mdi:pipe"
+      }
+    },
+    "valve": {
+      "sprinkler_valve": {
+        "default": "mdi:sprinkler-variant"
       }
     }
   },
