@@ -153,7 +153,7 @@ class SunCondition(Condition):
 
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "sun": SunCondition,
+    "_": SunCondition,
 }
 
 

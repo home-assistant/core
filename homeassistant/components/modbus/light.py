@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from homeassistant.components.light import (
@@ -35,7 +34,6 @@ from .entity import BaseSwitch
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(

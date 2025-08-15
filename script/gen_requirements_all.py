@@ -170,7 +170,7 @@ iso4217!=1.10.20220401
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==6.31.1
+protobuf==6.32.0
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
@@ -238,6 +238,14 @@ multidict>=6.4.2
 # rpds-py frequently updates cargo causing build failures
 # No wheels upstream available for armhf & armv7
 rpds-py==0.26.0
+
+# Constraint num2words to 0.5.14 as 0.5.15 and 0.5.16 were removed from PyPI
+num2words==0.5.14
+
+# pymodbus does not follow SemVer, and it keeps getting
+# downgraded or upgraded by custom components
+# This ensures all use the same version
+pymodbus==3.11.1
 """
 
 GENERATED_MESSAGE = (
