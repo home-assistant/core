@@ -1427,6 +1427,14 @@ RPC_SENSORS: Final = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_class=RpcBluTrvSensor,
     ),
+    "illuminance_0": RpcSensorDescription(
+        key="illuminance",
+        sub_key="illumination",
+        name="Illuminance",
+        translation_key="illuminance_0",
+        device_class=SensorDeviceClass.ENUM,
+        options=["dark", "twilight", "bright"],
+    ),
 }
 
 
