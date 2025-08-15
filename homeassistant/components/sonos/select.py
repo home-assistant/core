@@ -92,12 +92,6 @@ class SonosSelectEntity(SonosEntity, SelectEntity):
         self._attr_options = select_data.options
         self.attribute = select_data.attribute
         self.feature = select_data.feature
-        _LOGGER.debug(
-            "Creating %s select entity on %s attribute %s",
-            select_data.feature,
-            speaker.zone_name,
-            select_data.attribute,
-        )
 
     async def _async_fallback_poll(self) -> None:
         """Poll the value if subscriptions are not working."""
