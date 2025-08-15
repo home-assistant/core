@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import logging
 from typing import Any
 
@@ -45,52 +44,15 @@ async def async_setup_entry(
     await router.update_lcd_config()
 
     # Log the LCD config for diagnostics
-    lcd_config = getattr(router, "lcd_config", None)
+    lcd_config = router.lcd_config
     if not router or not lcd_config or not isinstance(lcd_config, dict):
-        try:
-            router_json = json.dumps(
-                {
-                    "name": getattr(router, "name", None),
-                    "mac": getattr(router, "mac", None),
-                    "lcd_config": lcd_config,
-                },
-                default=str,
-                indent=2,
-            )
-        except (TypeError, ValueError) as err:
-            router_json = f"<failed to serialize router: {err}>"
-
-        _LOGGER.warning(
-            "[freebox.light] No valid lcd_config found on router '%s' (mac=%s); LED strip entity will not be created. Router object: %s",
-            getattr(router, "name", "unknown"),
-            getattr(router, "mac", "unknown"),
-            router_json,
-        )
         return
-
-    _log_lcd_config_diagnostics(router.lcd_config)
 
     # Check if the router has LCD configuration with LED strip attributes
     if not _has_led_strip_support(router.lcd_config):
-        missing = _missing_led_attrs(router.lcd_config)
-        _LOGGER.warning(
-            "[freebox.light] LED strip not supported for router '%s' (mac=%s). "
-            "Missing attributes: %s; keys=%s",
-            getattr(router, "name", "unknown"),
-            getattr(router, "mac", "unknown"),
-            missing,
-            list(router.lcd_config.keys())
-            if isinstance(router.lcd_config, dict)
-            else "not dict",
-        )
         return
 
     async_add_entities([FreeboxLEDStripLight(router)], True)
-    _LOGGER.info(
-        "[freebox.light] LED strip entity scheduled for addition for router '%s' (mac=%s)",
-        getattr(router, "name", "unknown"),
-        getattr(router, "mac", "unknown"),
-    )
 
 
 def _has_led_strip_support(lcd_config: dict[str, Any]) -> bool:
@@ -112,20 +74,6 @@ def _missing_led_attrs(lcd_config: dict[str, Any]) -> list[str]:
     if not isinstance(lcd_config, dict):
         return required_attributes
     return [attr for attr in required_attributes if attr not in lcd_config]
-
-
-def _log_lcd_config_diagnostics(lcd_config: dict[str, Any]) -> None:
-    """Log detailed diagnostics about the lcd_config for troubleshooting."""
-    config_type = type(lcd_config).__name__
-    keys = list(lcd_config.keys()) if isinstance(lcd_config, dict) else None
-    missing = _missing_led_attrs(lcd_config)
-
-    _LOGGER.debug(
-        "[freebox.light] lcd_config: type=%s, keys=%s, missing_required=%s",
-        config_type,
-        keys,
-        missing,
-    )
 
 
 def _create_permission_repair_issue(hass: HomeAssistant, router_mac: str) -> None:
@@ -181,14 +129,12 @@ class FreeboxLEDStripLight(LightEntity):
     @property
     def is_on(self) -> bool:
         """Return if the light is on."""
-        if not _has_led_strip_support(self._router.lcd_config):
-            return False
         return self._router.lcd_config.get("led_strip_enabled", False)
 
     @property
     def brightness(self) -> int | None:
         """Return the brightness of the light."""
-        if not self.is_on or not _has_led_strip_support(self._router.lcd_config):
+        if not self.is_on:
             return None
 
         brightness_pct = self._router.lcd_config.get("led_strip_brightness", 100)
@@ -198,22 +144,17 @@ class FreeboxLEDStripLight(LightEntity):
     @property
     def effect(self) -> str | None:
         """Return the current effect."""
-        if not self.is_on or not _has_led_strip_support(self._router.lcd_config):
+        if not self.is_on:
             return None
         return self._router.lcd_config.get("led_strip_animation")
 
     @property
     def effect_list(self) -> list[str] | None:
         """Return list of available effects."""
-        if not _has_led_strip_support(self._router.lcd_config):
-            return None
         return self._router.lcd_config.get("available_led_strip_animations")
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        if not _has_led_strip_support(self._router.lcd_config):
-            _LOGGER.warning("LED strip not supported on this Freebox model")
-            return
 
         # Build config with only values to change
         config: dict[str, Any] = {"led_strip_enabled": True}
@@ -259,9 +200,6 @@ class FreeboxLEDStripLight(LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        if not _has_led_strip_support(self._router.lcd_config):
-            _LOGGER.warning("LED strip not supported on this Freebox model")
-            return
 
         # Send only the value to change (only this part can raise exceptions)
         config: dict[str, Any] = {"led_strip_enabled": False}
