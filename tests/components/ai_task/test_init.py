@@ -1,5 +1,6 @@
 """Test initialization of the AI Task component."""
 
+from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
@@ -89,6 +90,7 @@ async def test_generate_data_service(
         return_value=media_source.PlayMedia(
             url="http://example.com/media.mp4",
             mime_type="video/mp4",
+            path=Path("media.mp4"),
         ),
     ):
         result = await hass.services.async_call(
@@ -115,12 +117,9 @@ async def test_generate_data_service(
     for msg_attachment, attachment in zip(
         msg_attachments, task.attachments or [], strict=False
     ):
-        assert attachment.url == "http://example.com/media.mp4"
         assert attachment.mime_type == "video/mp4"
         assert attachment.media_content_id == msg_attachment["media_content_id"]
-        assert (
-            str(attachment) == f"<PlayMediaWithId {msg_attachment['media_content_id']}>"
-        )
+        assert attachment.path == Path("media.mp4")
 
 
 async def test_generate_data_service_structure_fields(

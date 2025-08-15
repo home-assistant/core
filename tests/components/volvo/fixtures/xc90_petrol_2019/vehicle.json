@@ -1,0 +1,16 @@
+{
+  "vin": "YV1ABCDEFG1234567",
+  "modelYear": 2019,
+  "gearbox": "AUTOMATIC",
+  "fuelType": "PETROL",
+  "externalColour": "Passion Red Solid",
+  "images": {
+    "exteriorImageUrl": "https://cas.volvocars.com/image/vbsnext-v4/exterior/MY17_0000/123/_/default.png?market=se&client=public-api-engineering&angle=1&bg=00000000&w=1920",
+    "internalImageUrl": "https://cas.volvocars.com/image/vbsnext-v4/interior/MY17_0000/123/_/default.jpg?market=se&client=public-api-engineering&angle=0&w=1920"
+  },
+  "descriptions": {
+    "model": "XC90",
+    "upholstery": "CHARCOAL/LEABR/CHARC/S",
+    "steering": "LEFT"
+  }
+}

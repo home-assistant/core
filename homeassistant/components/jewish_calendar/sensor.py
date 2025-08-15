@@ -17,16 +17,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.helpers import event
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import dt as dt_util
+import homeassistant.util.dt as dt_util
 
-from .entity import (
-    JewishCalendarConfigEntry,
-    JewishCalendarDataResults,
-    JewishCalendarEntity,
-)
+from .entity import JewishCalendarConfigEntry, JewishCalendarEntity
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
@@ -217,7 +212,7 @@ async def async_setup_entry(
     config_entry: JewishCalendarConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Jewish calendar sensors ."""
+    """Set up the Jewish calendar sensors."""
     sensors: list[JewishCalendarBaseSensor] = [
         JewishCalendarSensor(config_entry, description) for description in INFO_SENSORS
     ]
@@ -231,79 +226,28 @@ async def async_setup_entry(
 class JewishCalendarBaseSensor(JewishCalendarEntity, SensorEntity):
     """Base class for Jewish calendar sensors."""
 
-    _attr_should_poll = False
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _update_unsub: CALLBACK_TYPE | None = None
 
     entity_description: JewishCalendarBaseSensorDescription
 
-    async def async_added_to_hass(self) -> None:
-        """Call when entity is added to hass."""
-        await super().async_added_to_hass()
-        self._schedule_update()
+    def _update_times(self, zmanim: Zmanim) -> list[dt.datetime | None]:
+        """Return a list of times to update the sensor."""
+        if self.entity_description.next_update_fn is None:
+            return []
+        return [self.entity_description.next_update_fn(zmanim)]
 
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        if self._update_unsub:
-            self._update_unsub()
-            self._update_unsub = None
-        return await super().async_will_remove_from_hass()
-
-    def _schedule_update(self) -> None:
-        """Schedule the next update of the sensor."""
-        now = dt_util.now()
-        zmanim = self.make_zmanim(now.date())
-        update = None
-        if self.entity_description.next_update_fn:
-            update = self.entity_description.next_update_fn(zmanim)
-        next_midnight = dt_util.start_of_local_day() + dt.timedelta(days=1)
-        if update is None or now > update:
-            update = next_midnight
-        if self._update_unsub:
-            self._update_unsub()
-        self._update_unsub = event.async_track_point_in_time(
-            self.hass, self._update_data, update
-        )
-
-    @callback
-    def _update_data(self, now: dt.datetime | None = None) -> None:
-        """Update the sensor data."""
-        self._update_unsub = None
-        self._schedule_update()
-        self.create_results(now)
-        self.async_write_ha_state()
-
-    def create_results(self, now: dt.datetime | None = None) -> None:
-        """Create the results for the sensor."""
-        if now is None:
-            now = dt_util.now()
-
-        _LOGGER.debug("Now: %s Location: %r", now, self.data.location)
-
-        today = now.date()
-        zmanim = self.make_zmanim(today)
-        dateinfo = HDateInfo(today, diaspora=self.data.diaspora)
-        self.data.results = JewishCalendarDataResults(dateinfo, zmanim)
-
-    def get_dateinfo(self, now: dt.datetime | None = None) -> HDateInfo:
+    def get_dateinfo(self) -> HDateInfo:
         """Get the next date info."""
-        if self.data.results is None:
-            self.create_results()
-        assert self.data.results is not None, "Results should be available"
-
-        if now is None:
-            now = dt_util.now()
-
-        today = now.date()
-        zmanim = self.make_zmanim(today)
+        now = dt_util.now()
         update = None
-        if self.entity_description.next_update_fn:
-            update = self.entity_description.next_update_fn(zmanim)
 
-        _LOGGER.debug("Today: %s, update: %s", today, update)
+        if self.entity_description.next_update_fn:
+            update = self.entity_description.next_update_fn(self.coordinator.zmanim)
+
+        _LOGGER.debug("Today: %s, update: %s", now.date(), update)
         if update is not None and now >= update:
-            return self.data.results.dateinfo.next_day
-        return self.data.results.dateinfo
+            return self.coordinator.dateinfo.next_day
+        return self.coordinator.dateinfo
 
 
 class JewishCalendarSensor(JewishCalendarBaseSensor):
@@ -320,7 +264,9 @@ class JewishCalendarSensor(JewishCalendarBaseSensor):
         super().__init__(config_entry, description)
         # Set the options for enumeration sensors
         if self.entity_description.options_fn is not None:
-            self._attr_options = self.entity_description.options_fn(self.data.diaspora)
+            self._attr_options = self.entity_description.options_fn(
+                self.coordinator.data.diaspora
+            )
 
     @property
     def native_value(self) -> str | int | dt.datetime | None:
@@ -344,9 +290,8 @@ class JewishCalendarTimeSensor(JewishCalendarBaseSensor):
     @property
     def native_value(self) -> dt.datetime | None:
         """Return the state of the sensor."""
-        if self.data.results is None:
-            self.create_results()
-        assert self.data.results is not None, "Results should be available"
         if self.entity_description.value_fn is None:
-            return self.data.results.zmanim.zmanim[self.entity_description.key].local
-        return self.entity_description.value_fn(self.get_dateinfo(), self.make_zmanim)
+            return self.coordinator.zmanim.zmanim[self.entity_description.key].local
+        return self.entity_description.value_fn(
+            self.get_dateinfo(), self.coordinator.make_zmanim
+        )

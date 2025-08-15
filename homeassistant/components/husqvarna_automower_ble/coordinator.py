@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
-class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
+class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, str | int]]):
     """Class to manage fetching data."""
 
     def __init__(
@@ -67,11 +67,11 @@ class HusqvarnaCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
         except BleakError as err:
             raise UpdateFailed("Failed to connect") from err
 
-    async def _async_update_data(self) -> dict[str, bytes]:
+    async def _async_update_data(self) -> dict[str, str | int]:
         """Poll the device."""
         LOGGER.debug("Polling device")
 
-        data: dict[str, bytes] = {}
+        data: dict[str, str | int] = {}
 
         try:
             if not self.mower.is_connected():

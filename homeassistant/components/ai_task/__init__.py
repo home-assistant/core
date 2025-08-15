@@ -33,7 +33,7 @@ from .const import (
 )
 from .entity import AITaskEntity
 from .http import async_setup as async_setup_http
-from .task import GenDataTask, GenDataTaskResult, PlayMediaWithId, async_generate_data
+from .task import GenDataTask, GenDataTaskResult, async_generate_data
 
 __all__ = [
     "DOMAIN",
@@ -41,7 +41,6 @@ __all__ = [
     "AITaskEntityFeature",
     "GenDataTask",
     "GenDataTaskResult",
-    "PlayMediaWithId",
     "async_generate_data",
     "async_setup",
     "async_setup_entry",
