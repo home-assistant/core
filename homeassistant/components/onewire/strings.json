@@ -37,6 +37,9 @@
   },
   "entity": {
     "binary_sensor": {
+      "sensed": {
+        "name": "Sensed"
+      },
       "sensed_id": {
         "name": "Sensed {id}"
       },
