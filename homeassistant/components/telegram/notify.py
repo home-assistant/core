@@ -63,7 +63,7 @@ async def async_get_service(
         is_fixable=False,
         translation_key="migrate_notify",
         severity=ir.IssueSeverity.WARNING,
-        learn_more_url="https://todo",
+        learn_more_url="https://github.com/home-assistant/core/pull/150720",
     )
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
