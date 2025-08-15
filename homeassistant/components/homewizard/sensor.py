@@ -746,7 +746,9 @@ class HomeWizardUptimeSensorEntity(HomeWizardSensorEntity):
     when the sensor is reloaded or reset.
     """
 
-    UPTIME_RESET_THRESHOLD_SECONDS = 300
+# Threshold (in seconds) for detecting device reboot/reset.
+# If the difference in uptime is greater than 5 minutes (300 seconds), we assume a reload or reset.
+UPTIME_RESET_THRESHOLD_SECONDS = 300
 
     def __init__(self, coordinator: HWEnergyDeviceUpdateCoordinator) -> None:
         """Initialize the uptime sensor."""
