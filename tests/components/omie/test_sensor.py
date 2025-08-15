@@ -248,14 +248,14 @@ async def test_coordinator_unavailability_logging(
         await coordinator.async_refresh()
 
         # Check that error was logged
-        assert "Unable to fetch OMIE data: Connection timeout" in caplog.text
+        assert "Error fetching omie data: Connection timeout" in caplog.text
 
         # Clear logs to test log-once behavior
         caplog.clear()
 
         # Second failure should not log again
         await coordinator.async_refresh()
-        assert "Unable to fetch OMIE data" not in caplog.text  # Should not log again
+        assert "Error fetching omie data" not in caplog.text  # Should not log again
 
         # Mock API recovery
         mock_spot_price.side_effect = None
@@ -265,4 +265,4 @@ async def test_coordinator_unavailability_logging(
         await coordinator.async_refresh()
 
         # Check recovery message was logged
-        assert "OMIE data is available again" in caplog.text
+        assert "Fetching omie data recovered" in caplog.text

@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HassJob, HassJobType, HomeAssistant, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import utcnow
 
 from .const import CET, DOMAIN
@@ -82,14 +82,7 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[date, OMIEResults[SpotData]]
                 if results := await self._spot_price_fetcher(self._client_session, d):
                     data.update({d: results})
         except Exception as error:
-            if not self._unavailable_logged:
-                _LOGGER.error("Unable to fetch OMIE data: %s", error)
-                self._unavailable_logged = True
-            raise
-        else:
-            if self._unavailable_logged:
-                _LOGGER.info("OMIE data is available again")
-                self._unavailable_logged = False
+            raise UpdateFailed(str(error)) from error
 
         _LOGGER.debug("_async_update_data: %s", data)
         return data
