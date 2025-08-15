@@ -453,7 +453,7 @@ airgradient==0.9.2
 airly==1.1.0
 
 # homeassistant.components.airos
-airos==0.2.8
+airos==0.2.11
 
 # homeassistant.components.airthings_ble
 airthings-ble==0.9.2
@@ -1133,7 +1133,7 @@ habiticalib==0.4.2
 habluetooth==5.0.1
 
 # homeassistant.components.cloud
-hass-nabucasa==0.111.2
+hass-nabucasa==1.0.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1591,7 +1591,7 @@ ondilo==0.5.0
 onedrive-personal-sdk==0.0.14
 
 # homeassistant.components.onvif
-onvif-zeep-async==4.0.2
+onvif-zeep-async==4.0.3
 
 # homeassistant.components.opengarage
 open-garage==0.2.0
@@ -1764,7 +1764,7 @@ py-dormakaba-dkey==1.0.6
 py-improv-ble-client==1.0.3
 
 # homeassistant.components.madvr
-py-madvr2==1.6.32
+py-madvr2==1.6.40
 
 # homeassistant.components.melissa
 py-melissa-climate==2.1.4
@@ -2460,7 +2460,7 @@ python-linkplay==0.2.12
 # python-lirc==1.2.3
 
 # homeassistant.components.matter
-python-matter-server==8.0.0
+python-matter-server==8.1.0
 
 # homeassistant.components.melcloud
 python-melcloud==0.1.0
@@ -2506,7 +2506,7 @@ python-roborock==2.18.2
 python-smarttub==0.0.44
 
 # homeassistant.components.snoo
-python-snoo==0.8.2
+python-snoo==0.8.3
 
 # homeassistant.components.songpal
 python-songpal==0.16.2
@@ -3001,7 +3001,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.20.0
+uiprotect==7.21.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
