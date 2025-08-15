@@ -746,6 +746,8 @@ class HomeWizardUptimeSensorEntity(HomeWizardSensorEntity):
     when the sensor is reloaded or reset.
     """
 
+    UPTIME_RESET_THRESHOLD_SECONDS = 300
+
     def __init__(self, coordinator: HWEnergyDeviceUpdateCoordinator) -> None:
         """Initialize the uptime sensor."""
 
@@ -785,7 +787,8 @@ class HomeWizardUptimeSensorEntity(HomeWizardSensorEntity):
         # On reload or reset (>5 min earlier), recalculate
         if (
             self._last_uptime_s is None
-            or abs(system.uptime_s - self._last_uptime_s) > 300
+            or abs(system.uptime_s - self._last_uptime_s)
+            > self.UPTIME_RESET_THRESHOLD_SECONDS
             or self._timestamp is None
         ):
             self._update_timestamp(system.uptime_s)
