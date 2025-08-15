@@ -230,6 +230,12 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
         all_lights = self.controller.get_lights(self.resource.id)
         lights_in_colortemp_mode = 0
         lights_in_dynamic_mode = 0
+        # accumulate color values
+        xy_total_x = 0.0
+        xy_total_y = 0.0
+        xy_count = 0
+        temp_total = 0.0
+        temp_count = 0
         # loop through all lights to find capabilities
         for light in all_lights:
             if color_temp := light.color_temperature:
@@ -252,10 +258,21 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
                 )
                 if color_temp.mirek is not None and color_temp.mirek_valid:
                     lights_in_colortemp_mode += 1
+                    # accumulate temp color values
+                    if light.on.on:
+                        temp_total += color_util.color_temperature_mired_to_kelvin(
+                            color_temp.mirek
+                        )
+                        temp_count += 1
             if color := light.color:
                 lights_with_color_support += 1
-                # we assume xy values from the first capable light
+                # default to xy values from the first capable light
                 self._attr_xy_color = (color.xy.x, color.xy.y)
+                # accumulate xy color values
+                if light.on.on:
+                    xy_total_x += color.xy.x
+                    xy_total_y += color.xy.y
+                    xy_count += 1
             if dimming := light.dimming:
                 lights_with_dimming_support += 1
                 total_brightness += dimming.brightness
@@ -266,9 +283,10 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
                 lights_in_dynamic_mode += 1
 
         # this is a bit hacky because light groups may contain lights
-        # of different capabilities. We set a colormode as supported
-        # if any of the lights support it
-        # this means that the state is derived from only some of the lights
+        # of different capabilities. We set a colormode by the majority of lights
+        # that are on. If no lights are on, set the color mode to temp if just
+        # one light supports it.
+        # This means that the state is derived from only some of the lights
         # and will never be 100% accurate but it will be close
         if lights_with_color_support > 0:
             supported_color_modes.add(ColorMode.XY)
@@ -286,8 +304,19 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             supported_color_modes.add(ColorMode.ONOFF)
         self._dynamic_mode_active = lights_in_dynamic_mode > 0
         self._attr_supported_color_modes = supported_color_modes
-        # pick a winner for the current colormode
-        if lights_with_color_temp_support > 0 and lights_in_colortemp_mode > 0:
+        # pick a winner for the current colormode based on the majority of on lights
+        if temp_count > xy_count and temp_count > 0:
+            self._attr_color_mode = ColorMode.COLOR_TEMP
+            # set the group temp color as an average of the lights that are on
+            avg_temp = temp_total / temp_count
+            self._attr_color_temp_kelvin = round(avg_temp)
+        elif xy_count > 0:
+            self._attr_color_mode = ColorMode.XY
+            # set the group xy color as an average of the lights that are on
+            avg_x = round(xy_total_x / xy_count, 3)
+            avg_y = round(xy_total_y / xy_count, 3)
+            self._attr_xy_color = (avg_x, avg_y)
+        elif lights_with_color_temp_support > 0 and lights_in_colortemp_mode > 0:
             self._attr_color_mode = ColorMode.COLOR_TEMP
         elif lights_with_color_support > 0:
             self._attr_color_mode = ColorMode.XY
