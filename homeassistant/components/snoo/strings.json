@@ -32,6 +32,30 @@
       "message": "Turning {name} off failed"
     }
   },
+  "services": {
+    "log_diaper_change": {
+      "name": "Log Diaper Change",
+      "description": "Log a diaper change for a Snoo baby",
+      "fields": {
+        "baby_device_id": {
+          "name": "Baby",
+          "description": "Baby device to log the diaper change for"
+        },
+        "diaper_types": {
+          "name": "Diaper Types",
+          "description": "What was in the diaper"
+        },
+        "note": {
+          "name": "Note",
+          "description": "Optional note about the diaper change"
+        },
+        "start_time": {
+          "name": "Start Time",
+          "description": "Date and time for the diaper change (defaults to current time, uses local timezone)"
+        }
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
       "left_clip": {
@@ -39,6 +63,18 @@
       },
       "right_clip": {
         "name": "Right safety clip"
+      },
+      "disabled_limiter": {
+        "name": "Disabled Limiter"
+      },
+      "car_ride_mode": {
+        "name": "Car Ride Mode"
+      },
+      "motion_limiter": {
+        "name": "Motion Limiter"
+      },
+      "weaning": {
+        "name": "Weaning"
       }
     },
     "event": {
@@ -79,6 +115,24 @@
       },
       "time_left": {
         "name": "Time left"
+      },
+      "status": {
+        "name": "Status"
+      },
+      "last_activity": {
+        "name": "Last Activity"
+      },
+      "sleep_duration": {
+        "name": "Sleep Duration"
+      },
+      "minimal_level": {
+        "name": "Minimal Level"
+      },
+      "minimal_level_volume": {
+        "name": "Minimal Level Volume"
+      },
+      "responsiveness_level": {
+        "name": "Responsiveness Level"
       }
     },
     "select": {
