@@ -125,9 +125,6 @@ async def test_websocket_core_update(hass: HomeAssistant, client) -> None:
     with (
         patch("homeassistant.util.dt.set_default_time_zone") as mock_set_tz,
         patch(
-            "homeassistant.components.config.core.async_update_number_units"
-        ) as mock_update_number_units,
-        patch(
             "homeassistant.components.config.core.async_update_suggested_units"
         ) as mock_update_sensor_units,
     ):
@@ -152,7 +149,6 @@ async def test_websocket_core_update(hass: HomeAssistant, client) -> None:
 
         msg = await client.receive_json()
 
-        mock_update_number_units.assert_not_called()
         mock_update_sensor_units.assert_not_called()
 
     assert msg["id"] == 5
@@ -176,9 +172,6 @@ async def test_websocket_core_update(hass: HomeAssistant, client) -> None:
     with (
         patch("homeassistant.util.dt.set_default_time_zone") as mock_set_tz,
         patch(
-            "homeassistant.components.config.core.async_update_number_units"
-        ) as mock_update_number_units,
-        patch(
             "homeassistant.components.config.core.async_update_suggested_units"
         ) as mock_update_sensor_units,
     ):
@@ -193,7 +186,6 @@ async def test_websocket_core_update(hass: HomeAssistant, client) -> None:
 
         msg = await client.receive_json()
 
-        mock_update_number_units.assert_called_once()
         mock_update_sensor_units.assert_called_once()
 
 
