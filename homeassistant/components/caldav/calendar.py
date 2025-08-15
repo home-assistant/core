@@ -4,14 +4,18 @@ from __future__ import annotations
 
 from datetime import datetime
 import logging
+from typing import Any
+import uuid
 
 import caldav
+from icalendar import Calendar, Event
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA as CALENDAR_PLATFORM_SCHEMA,
     CalendarEntity,
+    CalendarEntityFeature,
     CalendarEvent,
     is_offset_reached,
 )
@@ -175,6 +179,8 @@ async def async_setup_entry(
 class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarEntity):
     """A device for getting the next Task from a WebDav Calendar."""
 
+    _attr_supported_features = CalendarEntityFeature.CREATE_EVENT
+
     def __init__(
         self,
         name: str | None,
@@ -202,6 +208,35 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
         return await self.coordinator.async_get_events(hass, start_date, end_date)
+
+    async def async_create_event(self, **kwargs: Any) -> None:
+        """Create a new event in the calendar."""
+        _LOGGER.debug("Event: %s", kwargs)
+
+        event = Event()
+        event.add("summary", kwargs.get("summary"))
+        event.add("dtstart", kwargs.get("dtstart"))
+        event.add("dtend", kwargs.get("dtend"))
+        event.add("dtstamp", datetime.now(kwargs.get("tzinfo")))
+        event.add("description", kwargs.get("description"))
+        event.add("uid", str(uuid.uuid4()))
+
+        _rrule = kwargs.get("rrule")
+        if _rrule is not None and _rrule != "":
+            # If rrule is set as "" or None, icalendar errors out.
+            event.add("rrule", _rrule)
+
+        cal = Calendar()
+        cal.add("prodid", "-//homeassistant.io//CALDAV//EN")
+        cal.add("version", "2.0")
+        cal.add_component(event)
+        ics_data = cal.to_ical().decode("utf-8")
+
+        _LOGGER.debug("ICS data %s", ics_data)
+
+        await self.hass.async_add_executor_job(
+            self.coordinator.calendar.add_event, ics_data
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
