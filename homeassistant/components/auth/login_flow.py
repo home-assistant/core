@@ -268,7 +268,7 @@ class LoginFlowBaseView(HomeAssistantView):
         result.pop("data")
         result.pop("context")
 
-        result_obj: Credentials = result.pop("result")
+        result_obj = result.pop("result")
 
         # Result can be None if credential was never linked to a user before.
         user = await hass.auth.async_get_user_by_credentials(result_obj)
@@ -281,7 +281,8 @@ class LoginFlowBaseView(HomeAssistantView):
             )
 
         process_success_login(request)
-        result["result"] = self._store_result(client_id, result_obj)
+        # We overwrite the Credentials object with the string code to retrieve it.
+        result["result"] = self._store_result(client_id, result_obj)  # type: ignore[typeddict-item]
 
         return self.json(result)
 

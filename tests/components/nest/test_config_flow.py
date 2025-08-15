@@ -995,6 +995,10 @@ async def test_dhcp_discovery(
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "oauth_discovery"
+
+    result = await oauth.async_configure(result, {})
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "create_cloud_project"
 
     result = await oauth.async_configure(result, {})
@@ -1032,6 +1036,10 @@ async def test_dhcp_discovery_with_creds(
         data=FAKE_DHCP_DATA,
     )
     await hass.async_block_till_done()
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "oauth_discovery"
+
+    result = await oauth.async_configure(result, {})
     assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "cloud_project"
 

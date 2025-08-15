@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 from pyotgw.vars import OTGW_MODE_RESET
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.opentherm_gw import DOMAIN as OPENTHERM_DOMAIN
+from homeassistant.components.opentherm_gw import DOMAIN
 from homeassistant.components.opentherm_gw.const import OpenThermDeviceIdentifier
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ID
 from homeassistant.core import HomeAssistant
@@ -33,7 +33,7 @@ async def test_cancel_room_setpoint_override_button(
     assert (
         button_entity_id := entity_registry.async_get_entity_id(
             BUTTON_DOMAIN,
-            OPENTHERM_DOMAIN,
+            DOMAIN,
             f"{mock_config_entry.data[CONF_ID]}-{OpenThermDeviceIdentifier.THERMOSTAT}-cancel_room_setpoint_override",
         )
     ) is not None
@@ -67,7 +67,7 @@ async def test_restart_button(
     assert (
         button_entity_id := entity_registry.async_get_entity_id(
             BUTTON_DOMAIN,
-            OPENTHERM_DOMAIN,
+            DOMAIN,
             f"{mock_config_entry.data[CONF_ID]}-{OpenThermDeviceIdentifier.GATEWAY}-restart_button",
         )
     ) is not None

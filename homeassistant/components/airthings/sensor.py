@@ -19,6 +19,7 @@ from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     EntityCategory,
     UnitOfPressure,
+    UnitOfSoundPressure,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -36,24 +37,35 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="radonShortTermAvg",
         native_unit_of_measurement="Bq/m³",
         translation_key="radon",
+        suggested_display_precision=0,
     ),
     "temp": SensorEntityDescription(
         key="temp",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     "humidity": SensorEntityDescription(
         key="humidity",
         device_class=SensorDeviceClass.HUMIDITY,
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     "pressure": SensorEntityDescription(
         key="pressure",
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         native_unit_of_measurement=UnitOfPressure.MBAR,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+    ),
+    "sla": SensorEntityDescription(
+        key="sla",
+        device_class=SensorDeviceClass.SOUND_PRESSURE,
+        native_unit_of_measurement=UnitOfSoundPressure.WEIGHTED_DECIBEL_A,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     "battery": SensorEntityDescription(
         key="battery",
@@ -61,40 +73,47 @@ SENSORS: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     "co2": SensorEntityDescription(
         key="co2",
         device_class=SensorDeviceClass.CO2,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     "voc": SensorEntityDescription(
         key="voc",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     "light": SensorEntityDescription(
         key="light",
         native_unit_of_measurement=PERCENTAGE,
         translation_key="light",
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     "lux": SensorEntityDescription(
         key="lux",
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     "virusRisk": SensorEntityDescription(
         key="virusRisk",
         translation_key="virus_risk",
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     "mold": SensorEntityDescription(
         key="mold",
         translation_key="mold",
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     "rssi": SensorEntityDescription(
         key="rssi",
@@ -103,18 +122,21 @@ SENSORS: dict[str, SensorEntityDescription] = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     "pm1": SensorEntityDescription(
         key="pm1",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM1,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
     "pm25": SensorEntityDescription(
         key="pm25",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
     ),
 }
 
@@ -128,7 +150,7 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
     entities = [
-        AirthingsHeaterEnergySensor(
+        AirthingsDeviceSensor(
             coordinator,
             airthings_device,
             SENSORS[sensor_types],
@@ -140,7 +162,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AirthingsHeaterEnergySensor(
+class AirthingsDeviceSensor(
     CoordinatorEntity[AirthingsDataUpdateCoordinator], SensorEntity
 ):
     """Representation of a Airthings Sensor device."""

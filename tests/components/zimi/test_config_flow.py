@@ -63,6 +63,10 @@ async def test_user_discovery_success(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["context"] == {
+        "source": config_entries.SOURCE_USER,
+        "unique_id": INPUT_MAC,
+    }
     assert result["data"] == {
         "host": INPUT_HOST,
         "port": INPUT_PORT,

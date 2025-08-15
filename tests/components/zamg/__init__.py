@@ -1,13 +1,13 @@
 """Tests for the ZAMG component."""
 
 from homeassistant import config_entries
-from homeassistant.components.zamg.const import CONF_STATION_ID, DOMAIN as ZAMG_DOMAIN
+from homeassistant.components.zamg.const import CONF_STATION_ID, DOMAIN
 
 from .conftest import TEST_STATION_ID, TEST_STATION_NAME
 
 FIXTURE_CONFIG_ENTRY = {
     "entry_id": "1",
-    "domain": ZAMG_DOMAIN,
+    "domain": DOMAIN,
     "title": TEST_STATION_NAME,
     "data": {
         CONF_STATION_ID: TEST_STATION_ID,

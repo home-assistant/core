@@ -10,7 +10,6 @@ from homeassistant.const import Platform
 UPNP_ST = "urn:schemas-upnp-org:device:ZonePlayer:1"
 
 DOMAIN = "sonos"
-DATA_SONOS = "sonos_media_player"
 DATA_SONOS_DISCOVERY_MANAGER = "sonos_discovery_manager"
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -187,6 +186,9 @@ MODELS_TV_ONLY = (
     "ULTRA",
 )
 MODELS_LINEIN_AND_TV = ("AMP",)
+MODEL_SONOS_ARC_ULTRA = "SONOS ARC ULTRA"
+
+ATTR_SPEECH_ENHANCEMENT_ENABLED = "speech_enhance_enabled"
 
 AVAILABILITY_CHECK_INTERVAL = datetime.timedelta(minutes=1)
 AVAILABILITY_TIMEOUT = AVAILABILITY_CHECK_INTERVAL.total_seconds() * 4.5
