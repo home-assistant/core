@@ -49,7 +49,7 @@ class HomeWizardSensorEntityDescription(SensorEntityDescription):
     """Class describing HomeWizard sensor entities."""
 
     enabled_fn: Callable[[CombinedModels], bool] = lambda x: True
-    has_fn: Callable[[CombinedModels], bool] = lambda _: True
+    has_fn: Callable[[CombinedModels], bool]
     value_fn: Callable[[CombinedModels], StateType | datetime]
 
 
@@ -755,6 +755,7 @@ class HomeWizardUptimeSensorEntity(HomeWizardSensorEntity):
             device_class=SensorDeviceClass.TIMESTAMP,
             entity_category=EntityCategory.DIAGNOSTIC,
             entity_registry_enabled_default=False,
+            has_fn=lambda _: True,
             value_fn=(
                 lambda data: self._get_timestamp(data.system) if data.system else None
             ),
