@@ -99,7 +99,7 @@ async def test_rest_data_with_incorrect_charset_in_header(
     caplog: pytest.LogCaptureFixture,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that no warning is logged for 200 status with wrong content."""
+    """Test that we can handle sites which provides an incorrect charset."""
     aioclient_mock.get(
         "http://example.com/api",
         status=200,
