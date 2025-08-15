@@ -2421,7 +2421,7 @@ thermopro-ble==0.13.1
 thinqconnect==1.0.7
 
 # homeassistant.components.tilt_ble
-tilt-ble==0.2.3
+tilt-ble==0.3.1
 
 # homeassistant.components.tilt_pi
 tilt-pi==0.2.1
