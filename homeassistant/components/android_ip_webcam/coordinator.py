@@ -32,7 +32,7 @@ class AndroidIPCamDataUpdateCoordinator(DataUpdateCoordinator[None]):
         """Initialize the Android IP Webcam."""
         self.cam = cam
         super().__init__(
-            self.hass,
+            hass,
             _LOGGER,
             config_entry=config_entry,
             name=f"{DOMAIN} {config_entry.data[CONF_HOST]}",
