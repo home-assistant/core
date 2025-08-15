@@ -42,24 +42,14 @@
         'name': 'carbon monoxide',
         'value': 251.874,
       }),
-      'no': dict({
-        'id': 664,
-        'index': None,
-        'name': 'nitrogen monoxide',
-        'value': 5.1,
-      }),
+      'no': None,
       'no2': dict({
         'id': 665,
         'index': 'good',
         'name': 'nitrogen dioxide',
         'value': 7.13411,
       }),
-      'nox': dict({
-        'id': 666,
-        'index': None,
-        'name': 'nitrogen oxides',
-        'value': 5.5,
-      }),
+      'nox': None,
       'o3': dict({
         'id': 667,
         'index': 'good',
