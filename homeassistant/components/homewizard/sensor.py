@@ -690,7 +690,7 @@ async def async_setup_entry(
 
     # Add stable uptime sensor
     data = entry.runtime_data.data
-    if data.system is not None and getattr(data.system, "uptime_s", None) is not None:
+    if data.system is not None and data.system.uptime_s is not None:
         entities.append(HomeWizardUptimeSensorEntity(entry.runtime_data))
 
     # Initialize external devices
