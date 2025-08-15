@@ -302,6 +302,8 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
 }
 
 FORBIDDEN_PACKAGE_NAMES: set[str] = {
+    "doc",
+    "docs",
     "test",
     "tests",
 }
@@ -334,8 +336,6 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     "linode": {"homeassistant": {"linode-api"}},
     # https://github.com/timmo001/aiolyric
     "lyric": {"homeassistant": {"aiolyric"}},
-    # https://github.com/iloveicedgreentea/py-madvr  # Fixed with >=1.6.33
-    "madvr": {"homeassistant": {"py-madvr2"}},
     # https://github.com/microBeesTech/pythonSDK/
     "microbees": {"homeassistant": {"microbeespy"}},
     # https://github.com/tiagocoutinho/async_modbus
