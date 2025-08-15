@@ -166,6 +166,7 @@ SERV_SWITCH = "Switch"
 SERV_TELEVISION = "Television"
 SERV_TELEVISION_SPEAKER = "TelevisionSpeaker"
 SERV_TEMPERATURE_SENSOR = "TemperatureSensor"
+SERV_HEATER_COOLER = "HeaterCooler"
 SERV_THERMOSTAT = "Thermostat"
 SERV_VALVE = "Valve"
 SERV_WINDOW = "Window"
@@ -262,6 +263,10 @@ CHAR_VOC_DENSITY = "VOCDensity"
 CHAR_VOLUME = "Volume"
 CHAR_VOLUME_SELECTOR = "VolumeSelector"
 CHAR_VOLUME_CONTROL_TYPE = "VolumeControlType"
+CHAR_CURRENT_HEATER_COOLER_STATE = "CurrentHeaterCoolerState"
+CHAR_TARGET_HEATER_COOLER_STATE = "TargetHeaterCoolerState"
+CHAR_COOLING_THRESHOLD_TEMPERATURE = "CoolingThresholdTemperature"
+CHAR_HEATING_THRESHOLD_TEMPERATURE = "HeatingThresholdTemperature"
 
 
 # #### Properties ####
