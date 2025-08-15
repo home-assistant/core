@@ -112,6 +112,7 @@ class DPCode(StrEnum):
     ARM_DOWN_PERCENT = "arm_down_percent"
     ARM_UP_PERCENT = "arm_up_percent"
     ATMOSPHERIC_PRESSTURE = "atmospheric_pressture"  # Typo is in Tuya API
+    BACKUP_RESERVE = "backup_reserve"
     BASIC_ANTI_FLICKER = "basic_anti_flicker"
     BASIC_DEVICE_VOLUME = "basic_device_volume"
     BASIC_FLIP = "basic_flip"
@@ -122,6 +123,7 @@ class DPCode(StrEnum):
     BASIC_WDR = "basic_wdr"
     BATTERY = "battery"  # Used by non-standard contact sensor implementations
     BATTERY_PERCENTAGE = "battery_percentage"  # Battery percentage
+    BATTERY_POWER = "battery_power"
     BATTERY_STATE = "battery_state"  # Battery state
     BATTERY_VALUE = "battery_value"  # Battery value
     BRIGHT_CONTROLLER = "bright_controller"
@@ -179,11 +181,17 @@ class DPCode(StrEnum):
     COUNTDOWN_LEFT = "countdown_left"
     COUNTDOWN_SET = "countdown_set"  # Countdown setting
     CRY_DETECTION_SWITCH = "cry_detection_switch"
+    CUML_E_EXPORT_OFFGRID1 = "cuml_e_export_offgrid1"
+    CUMULATIVE_ENERGY_CHARGED = "cumulative_energy_charged"
+    CUMULATIVE_ENERGY_DISCHARGED = "cumulative_energy_discharged"
+    CUMULATIVE_ENERGY_GENERATED_PV = "cumulative_energy_generated_pv"
+    CUMULATIVE_ENERGY_OUTPUT_INV = "cumulative_energy_output_inv"
     CUP_NUMBER = "cup_number"  # NUmber of cups
     CUR_CURRENT = "cur_current"  # Actual current
     CUR_NEUTRAL = "cur_neutral"  # Total reverse energy
     CUR_POWER = "cur_power"  # Actual power
     CUR_VOLTAGE = "cur_voltage"  # Actual voltage
+    CURRENT_SOC = "current_soc"
     DECIBEL_SENSITIVITY = "decibel_sensitivity"
     DECIBEL_SWITCH = "decibel_switch"
     DEHUMIDITY_SET_ENUM = "dehumidify_set_enum"
@@ -212,6 +220,7 @@ class DPCode(StrEnum):
     FAULT = "fault"
     FEED_REPORT = "feed_report"
     FEED_STATE = "feed_state"
+    FEEDIN_POWER_LIMIT_ENABLE = "feedin_power_limit_enable"
     FILTER = "filter"
     FILTER_DURATION = "filter_life"  # Filter duration (hours)
     FILTER_LIFE = "filter"  # Filter life (percentage)
@@ -234,6 +243,7 @@ class DPCode(StrEnum):
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
     INSTALLATION_HEIGHT = "installation_height"
+    INVERTER_OUTPUT_POWER = "inverter_output_power"
     IPC_WORK_MODE = "ipc_work_mode"
     LED_TYPE_1 = "led_type_1"
     LED_TYPE_2 = "led_type_2"
@@ -266,6 +276,7 @@ class DPCode(StrEnum):
     MUFFLING = "muffling"  # Muffling
     NEAR_DETECTION = "near_detection"
     OPPOSITE = "opposite"
+    OUTPUT_POWER_LIMIT = "output_power_limit"
     OXYGEN = "oxygen"  # Oxygen bar
     PAUSE = "pause"
     PERCENT_CONTROL = "percent_control"
@@ -297,6 +308,9 @@ class DPCode(StrEnum):
     PUMP = "pump"
     PUMP_RESET = "pump_reset"  # Water pump reset
     PUMP_TIME = "pump_time"  # Water pump duration
+    PV_POWER_CHANNEL_1 = "pv_power_channel_1"
+    PV_POWER_CHANNEL_2 = "pv_power_channel_2"
+    PV_POWER_TOTAL = "pv_power_total"
     RAIN_24H = "rain_24h"  # Total daily rainfall in mm
     RAIN_RATE = "rain_rate"  # Rain intensity in mm/h
     RECORD_MODE = "record_mode"
