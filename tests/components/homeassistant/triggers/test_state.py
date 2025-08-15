@@ -10,6 +10,7 @@ from homeassistant.components import automation
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_RESTORED,
     ENTITY_MATCH_ALL,
     SERVICE_TURN_OFF,
     STATE_UNAVAILABLE,
@@ -1769,3 +1770,148 @@ async def test_variables_priority(
     await hass.async_block_till_done()
     assert len(service_calls) == 2
     assert service_calls[1].data["some"] == "test.entity_2 - 0:00:10"
+
+
+async def test_if_not_fires_on_entity_with_restored_attribute(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test for not firing on entity change with restored attribute."""
+    context = Context()
+    hass.states.async_set("test.entity", "hello")
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "state", "entity_id": "test.entity"},
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Set state with restored attribute - should not trigger
+    hass.states.async_set(
+        "test.entity", "world", attributes={ATTR_RESTORED: True}, context=context
+    )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Set state without restored attribute - should trigger
+    hass.states.async_set("test.entity", "universe", context=context)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+
+async def test_if_not_fires_on_entity_with_restored_attribute_to_filter(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test for not firing on entity change with restored attribute and to filter."""
+    hass.states.async_set("test.entity", "hello")
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "test.entity",
+                    "to": "world",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Set to "world" with restored attribute - should not trigger
+    hass.states.async_set("test.entity", "world", attributes={ATTR_RESTORED: True})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Reset to hello
+    hass.states.async_set("test.entity", "hello")
+    await hass.async_block_till_done()
+
+    # Set to "world" without restored attribute - should trigger
+    hass.states.async_set("test.entity", "world")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+
+async def test_if_not_fires_on_entity_with_restored_attribute_from_filter(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test for not firing on entity change with restored attribute and from filter."""
+    hass.states.async_set("test.entity", "hello")
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "test.entity",
+                    "from": "hello",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Change from "hello" to "world" with restored attribute - should not trigger
+    hass.states.async_set("test.entity", "world", attributes={ATTR_RESTORED: True})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Reset to hello
+    hass.states.async_set("test.entity", "hello")
+    await hass.async_block_till_done()
+
+    # Change from "hello" to "world" without restored attribute - should trigger
+    hass.states.async_set("test.entity", "world")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+
+async def test_if_not_fires_on_attribute_change_with_restored(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test for not firing on attribute change with restored flag."""
+    hass.states.async_set("test.entity", "state", {"test_attr": "hello"})
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "test.entity",
+                    "attribute": "test_attr",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Change attribute with restored flag - should not trigger
+    hass.states.async_set(
+        "test.entity", "state", {"test_attr": "world", ATTR_RESTORED: True}
+    )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Change attribute without restored flag - should trigger
+    hass.states.async_set("test.entity", "state", {"test_attr": "universe"})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
