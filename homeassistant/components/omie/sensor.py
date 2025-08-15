@@ -13,9 +13,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CURRENCY_EURO, UnitOfEnergy
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
@@ -66,27 +67,20 @@ async def async_setup_entry(
     def hass_tzinfo() -> ZoneInfo:
         return ZoneInfo(hass.config.time_zone)
 
-    class OMIEPriceEntity(SensorEntity):
+    class OMIEPriceEntity(CoordinatorEntity[OMIECoordinator], SensorEntity):
         def __init__(self, key: str) -> None:
             """Initialize the sensor."""
+            super().__init__(coordinator)
             self.entity_description = OMIEPriceEntityDescription(key)
             self._attr_device_info = device_info
             self._attr_unique_id = slugify(f"{key}")
             self._attr_should_poll = False
             self._attr_attribution = _ATTRIBUTION
 
-        async def async_added_to_hass(self) -> None:
-            """Register callbacks."""
-
-            @callback
-            def update() -> None:
-                """Update this sensor's state from the coordinator results."""
-                value = self._get_current_hour_value()
-                self._attr_available = value is not None
-                self._attr_native_value = value
-                self.async_schedule_update_ha_state()
-
-            self.async_on_remove(coordinator.async_add_listener(update))
+        def _handle_coordinator_update(self) -> None:
+            """Update this sensor's state from the coordinator results."""
+            self._attr_native_value = self._get_current_hour_value()
+            super()._handle_coordinator_update()
 
         def _get_current_hour_value(self) -> float | None:
             """Get current hour's price value from coordinator data."""
