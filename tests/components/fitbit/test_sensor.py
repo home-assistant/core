@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from typing import Any
+from unittest.mock import patch
 
 import pytest
 from requests.exceptions import ConnectionError as RequestsConnectionError
@@ -532,6 +533,27 @@ async def test_nutrition_scope_config_entry(
     assert state
     assert (state.state, state.attributes) == snapshot
 
+@pytest.mark.parametrize(
+    ("scopes", "unit_system"),
+    [(["nutrition"], METRIC_SYSTEM), (["nutrition"], US_CUSTOMARY_SYSTEM)],
+)
+async def test_nutrition_scope_config_entry_missing_key(
+    hass: HomeAssistant,
+    setup_credentials: None,
+    integration_setup: Callable[[], Awaitable[bool]],
+    unit_system: UnitSystem,
+) -> None:
+    """API to return unexpected key so integration raises KeyError."""
+    hass.config.units = unit_system
+
+    with (
+        patch(
+            "homeassistant.components.fitbit.api.Fitbit.time_series",
+            return_value={"someotherkey": []},
+        ),
+        pytest.raises(KeyError),
+    ):
+        await integration_setup()
 
 @pytest.mark.parametrize(
     ("scopes"),
