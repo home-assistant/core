@@ -533,7 +533,7 @@ DISCOVERY_SCHEMAS = [
             device_class=SensorDeviceClass.ENUM,
             native_unit_of_measurement=None,
             options=[x for x in EVE_CLUSTER_WEATHER_MAP.values() if x is not None],
-            measurement_to_ha=EVE_CLUSTER_WEATHER_MAP.get,
+            device_to_ha=EVE_CLUSTER_WEATHER_MAP.get,
         ),
         entity_class=MatterSensor,
         required_attributes=(EveCluster.Attributes.WeatherTrend,),
