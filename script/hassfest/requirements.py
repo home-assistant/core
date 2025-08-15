@@ -747,7 +747,7 @@ def check_dependency_files(
             if top.endswith((".dist-info", ".py")):
                 continue
             top_level.add(top)
-        results = FORBIDDEN_PACKAGE_NAMES.intersection(top_level)
+        results = FORBIDDEN_PACKAGE_NAMES & top_level
         _packages_checked_files_cache[pkg] = results
     if not results:
         return True
