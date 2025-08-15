@@ -223,15 +223,6 @@
           "dark": "Dark",
           "twilight": "Twilight",
           "bright": "Bright"
-        },
-        "state_attributes": {
-          "options": {
-            "state": {
-              "dark": "[%key:component::shelly::entity::sensor::illuminance_0::state::dark%]",
-              "twilight": "[%key:component::shelly::entity::sensor::illuminance_0::state::twilight%]",
-              "bright": "[%key:component::shelly::entity::sensor::illuminance_0::state::bright%]"
-            }
-          }
         }
       }
     }
