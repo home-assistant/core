@@ -249,7 +249,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'e44d4e5c-45ea-498f-a653-f5d0c3d97bb8_main_fineDustSensor_fineDustLevel_formaldehydeLevel',
+    'unique_id': 'e44d4e5c-45ea-498f-a653-f5d0c3d97bb8_main_fineDustSensor_fineDustLevel_fineDustLevel',
     'unit_of_measurement': 'µg/m³',
   })
 # ---
