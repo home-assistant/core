@@ -34,4 +34,5 @@ class AirVisualProEntity(CoordinatorEntity):
             name=self.coordinator.data["settings"]["node_name"],
             hw_version=self.coordinator.data["status"]["system_version"],
             sw_version=self.coordinator.data["status"]["app_version"],
+            serial_number=self.coordinator.data["status"]["serial_number"],
         )
