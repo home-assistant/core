@@ -2527,9 +2527,6 @@ voip-utils==0.3.4
 # homeassistant.components.volvo
 volvocarsapi==0.4.1
 
-# homeassistant.components.volvooncall
-volvooncall==0.10.3
-
 # homeassistant.components.verisure
 vsure==2.6.7
 
