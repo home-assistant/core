@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Final
 
-from homewizard_energy.models import CombinedModels, ExternalDevice
+from homewizard_energy.models import CombinedModels, ExternalDevice, System
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS,
@@ -49,7 +49,7 @@ class HomeWizardSensorEntityDescription(SensorEntityDescription):
     """Class describing HomeWizard sensor entities."""
 
     enabled_fn: Callable[[CombinedModels], bool] = lambda x: True
-    has_fn: Callable[[CombinedModels], bool]
+    has_fn: Callable[[CombinedModels], bool] = lambda _: True
     value_fn: Callable[[CombinedModels], StateType | datetime]
 
 
@@ -637,19 +637,6 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         has_fn=lambda data: data.measurement.cycles is not None,
         value_fn=lambda data: data.measurement.cycles,
     ),
-    HomeWizardSensorEntityDescription(
-        key="uptime",
-        translation_key="uptime",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        has_fn=(
-            lambda data: data.system is not None and data.system.uptime_s is not None
-        ),
-        value_fn=(
-            lambda data: time_to_datetime(data.system.uptime_s) if data.system else None
-        ),
-    ),
 )
 
 
@@ -701,6 +688,11 @@ async def async_setup_entry(
         if description.has_fn(entry.runtime_data.data)
     ]
 
+    # Add stable uptime sensor
+    data = entry.runtime_data.data
+    if data.system is not None and getattr(data.system, "uptime_s", None) is not None:
+        entities.append(HomeWizardUptimeSensorEntity(entry.runtime_data))
+
     # Initialize external devices
     measurement = entry.runtime_data.data.measurement
     if measurement.external_devices is not None:
@@ -744,6 +736,59 @@ class HomeWizardSensorEntity(HomeWizardEntity, SensorEntity):
     def available(self) -> bool:
         """Return availability of meter."""
         return super().available and self.native_value is not None
+
+
+class HomeWizardUptimeSensorEntity(HomeWizardSensorEntity):
+    """Stable uptime sensor that locks timestamp and only updates on reload or reset.
+
+    The raw value returns seconds since the device started, but as we are not really in sync this sensor gets
+    quite unstable. Instead we lock the timestamp when the sensor is created and only update it
+    when the sensor is reloaded or reset.
+    """
+
+    def __init__(self, coordinator: HWEnergyDeviceUpdateCoordinator) -> None:
+        """Initialize the uptime sensor."""
+
+        description = HomeWizardSensorEntityDescription(
+            key="uptime",
+            translation_key="uptime",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            entity_registry_enabled_default=False,
+            value_fn=(
+                lambda data: self._get_timestamp(data.system) if data.system else None
+            ),
+        )
+
+        super().__init__(coordinator, description)
+        self._last_uptime_s: int | None = None
+        self._timestamp: datetime | None = None
+
+        if (
+            coordinator.data.system is not None
+            and coordinator.data.system.uptime_s is not None
+        ):
+            self._update_timestamp(coordinator.data.system.uptime_s)
+
+    def _update_timestamp(self, uptime_s: int) -> None:
+        """Update the locked timestamp based on current uptime value."""
+        now = utcnow().replace(microsecond=0)
+        self._timestamp = now - timedelta(seconds=uptime_s)
+        self._last_uptime_s = uptime_s
+
+    def _get_timestamp(self, system: System) -> datetime | None:
+        """Get the locked uptime timestamp, recalculating only on reload or reset."""
+        if uptime_s := system.uptime_s:
+            # On reload or reset (>5 min earlier), recalculate
+            if (
+                self._last_uptime_s is None
+                or abs(uptime_s - self._last_uptime_s) > 300
+                or self._timestamp is None
+            ):
+                self._update_timestamp(uptime_s)
+            return self._timestamp
+
+        return None
 
 
 class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
