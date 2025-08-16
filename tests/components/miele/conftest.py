@@ -1,6 +1,7 @@
 """Test helpers for Miele."""
 
 from collections.abc import AsyncGenerator, Generator
+from datetime import UTC, datetime
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -163,6 +164,14 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.miele.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         yield mock_setup_entry
+
+
+@pytest.fixture
+def mock_now() -> Generator[MagicMock]:
+    """Fixture to mock homeassistant.util.dt.now()."""
+    fixed_now = datetime(2025, 5, 31, 12, 30, tzinfo=UTC)
+    with patch("homeassistant.util.dt.now", return_value=fixed_now) as mock:
+        yield mock
 
 
 @pytest.fixture
