@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 from automower_ble.mower import Mower
+from automower_ble.protocol import ResponseResult
 from bleak import BleakError
 from bleak_retry_connector import close_stale_connections_by_address, get_device
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, Platform
+from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_PIN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import LOGGER
 from .coordinator import HusqvarnaCoordinator
@@ -25,10 +26,14 @@ PLATFORMS = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) -> bool:
     """Set up Husqvarna Autoconnect Bluetooth from a config entry."""
+    if CONF_PIN not in entry.data:
+        raise ConfigEntryAuthFailed
+
     address = entry.data[CONF_ADDRESS]
+    pin = entry.data[CONF_PIN]
     channel_id = entry.data[CONF_CLIENT_ID]
 
-    mower = Mower(channel_id, address)
+    mower = Mower(channel_id, address, pin)
 
     await close_stale_connections_by_address(address)
 
@@ -37,12 +42,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) ->
         device = bluetooth.async_ble_device_from_address(
             hass, address, connectable=True
         ) or await get_device(address)
-        if not await mower.connect(device):
-            raise ConfigEntryNotReady
+        response_result = await mower.connect(device)
+        if response_result == ResponseResult.INVALID_PIN:
+            raise ConfigEntryAuthFailed(f"Unable to connect to device {address}")
+        if response_result != ResponseResult.OK:
+            raise ConfigEntryNotReady(
+                f"Unable to connect to device {address}, mower returned {response_result}"
+            )
     except (TimeoutError, BleakError) as exception:
         raise ConfigEntryNotReady(
             f"Unable to connect to device {address} due to {exception}"
         ) from exception
+
     LOGGER.debug("connected and paired")
 
     model = await mower.get_model()
