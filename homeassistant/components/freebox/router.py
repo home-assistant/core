@@ -16,7 +16,11 @@ from freebox_api import Freepybox
 from freebox_api.api.call import Call
 from freebox_api.api.home import Home
 from freebox_api.api.wifi import Wifi
-from freebox_api.exceptions import HttpRequestError, NotOpenError
+from freebox_api.exceptions import (
+    HttpRequestError,
+    InsufficientPermissionsError,
+    NotOpenError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -38,7 +42,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-type FreeboxConfigEntry = ConfigEntry[FreeboxRouter]
+type FreeboxConfigEntry = ConfigEntry["FreeboxRouter"]
 
 
 def is_json(json_str: str) -> bool:
@@ -131,6 +135,7 @@ class FreeboxRouter:
         self.call_list: list[dict[str, Any]] = []
         self.home_granted = True
         self.home_devices: dict[str, Any] = {}
+        self.lcd_config: dict[str, Any] = {}
         self.listeners: list[Callable[[], None]] = []
 
     async def update_all(self, now: datetime | None = None) -> None:
@@ -138,6 +143,7 @@ class FreeboxRouter:
         await self.update_device_trackers()
         await self.update_sensors()
         await self.update_home_devices()
+        await self.update_lcd_config()
 
     async def update_device_trackers(self) -> None:
         """Update Freebox devices."""
@@ -266,6 +272,43 @@ class FreeboxRouter:
         if new_device:
             async_dispatcher_send(self.hass, self.signal_home_device_new)
 
+    async def update_lcd_config(self) -> None:
+        """Update LCD configuration."""
+        try:
+            # Use the LCD API module (returns direct format)
+            response = await self._api.lcd.get_configuration()
+
+            # Store response directly - no wrapper needed
+            if (
+                response
+                and isinstance(response, dict)
+                and "led_strip_brightness" in response
+            ):
+                self.lcd_config = response
+                async_dispatcher_send(self.hass, self.signal_lcd_update)
+            else:
+                _LOGGER.debug(
+                    "Invalid LCD API response for router '%s' (mac=%s). Response: %s",
+                    self.name,
+                    self.mac,
+                    response,
+                )
+        except (HttpRequestError, InsufficientPermissionsError, AttributeError) as err:
+            # LCD API might not be available on all Freebox models
+            # or insufficient permissions to access LCD configuration
+            _LOGGER.debug(
+                "LCD config API not available for router '%s' (mac=%s): %s",
+                self.name,
+                self.mac,
+                err,
+            )
+
+    async def set_lcd_config(self, config: dict[str, Any]) -> None:
+        """Set LCD configuration."""
+        # Send config directly to API (no wrapper needed)
+        await self._api.lcd.set_configuration(config)
+        await self.update_lcd_config()
+
     async def reboot(self) -> None:
         """Reboot the Freebox."""
         await self._api.system.reboot()
@@ -314,6 +357,11 @@ class FreeboxRouter:
     def signal_home_device_update(self) -> str:
         """Event specific per Freebox entry to signal update in home devices."""
         return f"{DOMAIN}-{self._host}-home-device-update"
+
+    @property
+    def signal_lcd_update(self) -> str:
+        """Event specific per Freebox entry to signal update in LCD config."""
+        return f"{DOMAIN}-{self._host}-lcd-update"
 
     @property
     def sensors(self) -> dict[str, Any]:

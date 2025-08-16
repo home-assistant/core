@@ -51,3 +51,7 @@ DATA_HOME_ALARM_GET_VALUE = load_json_object_fixture(
 # Home
 # Set a node value with success
 DATA_HOME_SET_VALUE = load_json_object_fixture("freebox/home_set_value.json")
+
+# LCD
+DATA_LCD_GET_CONFIG = load_json_object_fixture("freebox/lcd_get_config.json")
+DATA_LCD_GET_CONFIG_NO_LED = load_json_object_fixture("freebox/lcd_get_config_no_led.json")
