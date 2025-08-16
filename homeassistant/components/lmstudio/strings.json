@@ -61,7 +61,7 @@
         "title": "LM Studio options",
         "description": "Update your LM Studio configuration",
         "data": {
-          "model": "Default Model"
+          "model": "Default model"
         },
         "data_description": {
           "model": "The default model to use for new conversations and AI tasks"
