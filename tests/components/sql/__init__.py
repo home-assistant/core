@@ -292,7 +292,7 @@ YAML_CONFIG_ALL_TEMPLATES = {
 }
 
 
-async def init_integration(  # pylint: disable=W0102
+async def init_integration(  # pylint: disable=dangerous-default-value
     hass: HomeAssistant,
     *,
     title: str = "Select value SQL query",
