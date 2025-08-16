@@ -56,9 +56,8 @@ async def test_form(
         "api_key": "test-key",
         "model": "test-model",
     }
-    assert len(result3["subentries"]) == 2
+    assert len(result3["subentries"]) == 1
     assert result3["subentries"][0]["subentry_type"] == "conversation"
-    assert result3["subentries"][1]["subentry_type"] == "ai_task_data"
 
 
 async def test_form_invalid_auth(hass: HomeAssistant) -> None:

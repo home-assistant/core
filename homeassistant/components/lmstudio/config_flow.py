@@ -41,7 +41,6 @@ from .const import (
     CONF_PROMPT,
     CONF_TEMPERATURE,
     CONF_TOP_P,
-    DEFAULT_AI_TASK_NAME,
     DEFAULT_API_KEY,
     DEFAULT_BASE_URL,
     DEFAULT_CONVERSATION_NAME,
@@ -143,12 +142,6 @@ class LMStudioConfigFlow(ConfigFlow, domain=DOMAIN):
                         "title": self._connection_data["base_url"],
                         "unique_id": None,
                     },
-                    {
-                        "data": {},
-                        "subentry_type": "ai_task_data",
-                        "title": self._connection_data["base_url"],
-                        "unique_id": None,
-                    },
                 ],
             )
 
@@ -185,7 +178,6 @@ class LMStudioConfigFlow(ConfigFlow, domain=DOMAIN):
         """Return subentries supported by this handler."""
         return {
             "conversation": ConversationFlowHandler,
-            "ai_task_data": AITaskDataFlowHandler,
         }
 
 
@@ -228,21 +220,33 @@ class LMStudioSubentryFlowHandler(ConfigSubentryFlow):
 class ConversationFlowHandler(LMStudioSubentryFlowHandler):
     """Handle conversation subentry flow."""
 
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Handle the user step (entry point for subentry flow)."""
+        return await self.async_step_init(user_input)
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Handle conversation configuration."""
         if user_input is not None:
-            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
+            # Create title with model information
+            model_name = user_input.get(CONF_MODEL, "Unknown Model")
+            title = f"Chat: {user_input[CONF_NAME]} ({model_name})"
+            return self.async_create_entry(title=title, data=user_input)
 
         models = await self._get_available_models()
 
         # Use parent config entry's model as default if available
         default_model = self.config_entry.data.get(CONF_MODEL, DEFAULT_MODEL)
 
+        # Create default name with Chat prefix
+        default_name = f"Chat - {DEFAULT_CONVERSATION_NAME}"
+
         schema = vol.Schema(
             {
-                vol.Required(CONF_NAME, default=DEFAULT_CONVERSATION_NAME): str,
+                vol.Required(CONF_NAME, default=default_name): str,
                 vol.Optional(CONF_MODEL, default=default_model): SelectSelector(
                     SelectSelectorConfig(
                         options=models,
@@ -265,50 +269,6 @@ class ConversationFlowHandler(LMStudioSubentryFlowHandler):
                     )
                 ),
                 vol.Optional(CONF_TOP_P, default=DEFAULT_TOP_P): NumberSelector(
-                    NumberSelectorConfig(
-                        mode=NumberSelectorMode.SLIDER, min=0.0, max=1.0, step=0.05
-                    )
-                ),
-            }
-        )
-
-        return self.async_show_form(step_id="init", data_schema=schema)
-
-
-class AITaskDataFlowHandler(LMStudioSubentryFlowHandler):
-    """Handle AI task data subentry flow."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """Handle AI task configuration."""
-        if user_input is not None:
-            return self.async_create_entry(title=user_input[CONF_NAME], data=user_input)
-
-        models = await self._get_available_models()
-
-        # Use parent config entry's model as default if available
-        default_model = self.config_entry.data.get(CONF_MODEL, DEFAULT_MODEL)
-
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_NAME, default=DEFAULT_AI_TASK_NAME): str,
-                vol.Optional(CONF_MODEL, default=default_model): SelectSelector(
-                    SelectSelectorConfig(
-                        options=models,
-                        mode=SelectSelectorMode.DROPDOWN,
-                        custom_value=True,
-                    )
-                ),
-                vol.Optional(CONF_MAX_TOKENS, default=500): NumberSelector(
-                    NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=8192)
-                ),
-                vol.Optional(CONF_TEMPERATURE, default=0.3): NumberSelector(
-                    NumberSelectorConfig(
-                        mode=NumberSelectorMode.SLIDER, min=0.0, max=2.0, step=0.1
-                    )
-                ),
-                vol.Optional(CONF_TOP_P, default=0.95): NumberSelector(
                     NumberSelectorConfig(
                         mode=NumberSelectorMode.SLIDER, min=0.0, max=1.0, step=0.05
                     )

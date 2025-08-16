@@ -67,19 +67,6 @@ def mock_config_entry() -> MockConfigEntry:
                 subentry_type="conversation",
                 unique_id="conversation_1",
             ),
-            ConfigSubentryData(
-                title="LM Studio AI",
-                data={
-                    CONF_NAME: "LM Studio AI",
-                    "model": "test-model",
-                    "max_tokens": 500,
-                    "temperature": 0.3,
-                    "top_p": 0.95,
-                },
-                subentry_id="ai_task_1",
-                subentry_type="ai_task_data",
-                unique_id="ai_task_1",
-            ),
         ],
     )
 
