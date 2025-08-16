@@ -27,23 +27,20 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.util import dt as dt_util
+from homeassistant.util.ssl import SSLCipherList
 
-from ...helpers.aiohttp_client import async_create_clientsession
-from ...util.ssl import SSLCipherList
-from .const import (
-    CONF_CONSIDER_HOME,
-    DEFAULT_CONSIDER_HOME,
-    DOMAIN,
-    MODE_ROUTER,
-    MODELS_V2,
-)
+from .const import CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME, DOMAIN, MODELS_V2
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class NetgearRouter:
     """Representation of a Netgear router."""
+
+    _info: DeviceInfo = None
+    api: NetgearClient = None
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize a Netgear router."""
@@ -55,12 +52,11 @@ class NetgearRouter:
         self._host: str = entry.data[CONF_HOST]
         self._port: int = entry.data[CONF_PORT]
         self._ssl: bool = entry.data[CONF_SSL]
-        self._username = entry.data.get(CONF_USERNAME)
-        self._password = entry.data[CONF_PASSWORD]
+        self._username: str = entry.data.get(CONF_USERNAME)
+        self._password: str = entry.data[CONF_PASSWORD]
 
-        self._info: DeviceInfo = None
         self.model = ""
-        self.mode = MODE_ROUTER
+        self.mode = DeviceMode.ROUTER
         self.device_name = ""
         self.firmware_version = ""
         self.hardware_version = ""
@@ -72,8 +68,6 @@ class NetgearRouter:
             CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
         )
         self._consider_home = timedelta(seconds=consider_home_int)
-
-        self.api: NetgearClient = None
 
         self.devices: dict[str, dict[str, Any]] = {}
 
@@ -160,7 +154,6 @@ class NetgearRouter:
                     "conn_ap_mac": None,
                     "allow_or_block": None,
                 }
-
         return True
 
     async def async_get_attached_devices(self) -> list[AttachedDevice]:
@@ -186,8 +179,7 @@ class NetgearRouter:
         if ntg_devices is None:
             return new_device
 
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug("Netgear scan result: \n%s", ntg_devices)
+        _LOGGER.debug("Netgear scan result: \n%s", ntg_devices)
 
         for ntg_device in ntg_devices:
             if ntg_device.mac_address is None:

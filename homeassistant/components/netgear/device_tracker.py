@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DEVICE_ICONS, DOMAIN, KEY_COORDINATOR, KEY_ROUTER
+from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER
 from .entity import NetgearDeviceEntity
 from .router import NetgearRouter
 
@@ -25,7 +25,7 @@ async def async_setup_entry(
     """Set up device tracker for Netgear component."""
     router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]
     coordinator = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR]
-    tracked = set()
+    tracked: set[str] = set()
 
     @callback
     def new_device_callback() -> None:
@@ -47,6 +47,7 @@ async def async_setup_entry(
     entry.async_on_unload(coordinator.async_add_listener(new_device_callback))
 
     new_device_callback()
+    coordinator.data = True
 
 
 class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
@@ -60,12 +61,12 @@ class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
         """Initialize a Netgear device."""
         super().__init__(coordinator, router, device)
         self._hostname = self.get_hostname()
-        self._icon = DEVICE_ICONS.get(device["device_type"], "mdi:help-network")
+        # self._icon = DEVICE_ICONS.get(device["device_type"], "mdi:help-network")
         self._attr_name = self._device_name
 
     def get_hostname(self) -> str | None:
         """Return the hostname of the given device or None if we don't know."""
-        if (hostname := self._device["name"]) == "--":
+        if (hostname := self._device["hostname"]) == "--":
             return None
 
         return hostname
@@ -75,7 +76,7 @@ class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
         """Update the Netgear device."""
         self._device = self._router.devices[self._mac]
         self._active = self._device["active"]
-        self._icon = DEVICE_ICONS.get(self._device["device_type"], "mdi:help-network")
+        # self._icon = DEVICE_ICONS.get(self._device["device_type"], "mdi:help-network")
 
     @property
     def is_connected(self) -> bool:
@@ -85,7 +86,7 @@ class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
     @property
     def ip_address(self) -> str:
         """Return the IP address."""
-        return self._device["ip"]
+        return self._device["ip_address"]
 
     @property
     def mac_address(self) -> str:
@@ -97,7 +98,7 @@ class NetgearScannerEntity(NetgearDeviceEntity, ScannerEntity):
         """Return the hostname."""
         return self._hostname
 
-    @property
-    def icon(self) -> str:
-        """Return the icon."""
-        return self._icon
+    # @property
+    # def icon(self) -> str:
+    #     """Return the icon."""
+    #     return self._icon

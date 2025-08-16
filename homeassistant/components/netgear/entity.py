@@ -30,20 +30,19 @@ class NetgearDeviceEntity(CoordinatorEntity):
         super().__init__(coordinator)
         self._router = router
         self._device = device
-        self._mac = device["mac"]
+        self._mac = device["mac_address"]
         self._device_name = self.get_device_name()
         self._active = device["active"]
         self._attr_unique_id = self._mac
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, self._mac)},
             default_name=self._device_name,
-            default_model=device["device_model"],
             via_device=(DOMAIN, router.unique_id),
         )
 
     def get_device_name(self):
         """Return the name of the given device or the MAC if we don't know."""
-        name = self._device["name"]
+        name = self._device["hostname"]
         if not name or name == "--":
             name = self._mac
 
