@@ -47,7 +47,15 @@ async def async_setup_entry(
 
     hub = DeconzHub(hass, config_entry, api)
     config_entry.runtime_data = hub
-    await hub.async_update_device_registry()
+    # Delay device registry update until after API starts
+    api.start()
+    if hub.api.config.mac:
+        await hub.async_update_device_registry()
+    else:
+        async def _register_when_ready():
+            if hub.api.config.mac:
+                await hub.async_update_device_registry()
+        hass.loop.call_later(2, lambda: hass.async_create_task(_register_when_ready()))
 
     config_entry.async_on_unload(
         config_entry.add_update_listener(hub.async_config_entry_updated)
@@ -56,7 +64,6 @@ async def async_setup_entry(
     await async_setup_events(hub)
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    api.start()
 
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, hub.shutdown)
