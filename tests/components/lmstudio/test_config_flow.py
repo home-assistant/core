@@ -67,7 +67,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.lmstudio.config_flow.validate_input",
+        "homeassistant.components.lmstudio.config_flow._fetch_available_models",
         side_effect=openai.AuthenticationError(
             response=httpx.Response(
                 status_code=401, request=httpx.Request(method="GET", url="test")
@@ -95,7 +95,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.lmstudio.config_flow.validate_input",
+        "homeassistant.components.lmstudio.config_flow._fetch_available_models",
         side_effect=openai.APIConnectionError(
             request=httpx.Request(method="GET", url="test")
         ),
@@ -119,7 +119,7 @@ async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.lmstudio.config_flow.validate_input",
+        "homeassistant.components.lmstudio.config_flow._fetch_available_models",
         side_effect=Exception("Unexpected error"),
     ):
         result2 = await hass.config_entries.flow.async_configure(

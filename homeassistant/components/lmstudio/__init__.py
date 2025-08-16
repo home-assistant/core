@@ -9,7 +9,7 @@ import openai
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.httpx_client import get_async_client
 
@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LMStudioConfigEntry) -> 
         await client.with_options(timeout=10.0).models.list()
     except openai.AuthenticationError as err:
         _LOGGER.error("Authentication failed: %s", err)
-        return False
+        raise ConfigEntryAuthFailed(f"Authentication failed: {err}") from err
     except openai.OpenAIError as err:
         raise ConfigEntryNotReady(f"Failed to connect to LM Studio: {err}") from err
 

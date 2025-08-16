@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import httpx
 import openai
 import voluptuous as vol
 
@@ -48,8 +49,17 @@ from .const import (
     DEFAULT_MODEL,
     DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
+    DEFAULT_TIMEOUT,
     DEFAULT_TOP_P,
     DOMAIN,
+    MAX_MAX_TOKENS,
+    MAX_TEMPERATURE,
+    MAX_TOP_P,
+    MIN_MAX_TOKENS,
+    MIN_TEMPERATURE,
+    MIN_TOP_P,
+    TEMPERATURE_STEP,
+    TOP_P_STEP,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,7 +87,7 @@ async def _fetch_available_models(
         http_client=get_async_client(hass),
     )
 
-    models_response = await client.with_options(timeout=10.0).models.list()
+    models_response = await client.with_options(timeout=DEFAULT_TIMEOUT).models.list()
     return [
         SelectOptionDict(value=model.id, label=model.id)
         for model in models_response.data
@@ -198,9 +208,29 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> list[str]:
     """Validate the user input allows us to connect and return available models."""
     # Test connection by listing models and return model list
-    models = await _fetch_available_models(
+    # Use the same error handling as the config flow for consistency
+    models, errors = await _safe_fetch_models_with_errors(
         hass, data[CONF_BASE_URL], data[CONF_API_KEY]
     )
+    if errors:
+        if errors["base"] == "invalid_auth":
+            raise openai.AuthenticationError(
+                response=httpx.Response(
+                    status_code=401,
+                    request=httpx.Request(method="GET", url=data[CONF_BASE_URL]),
+                ),
+                body=None,
+                message="Invalid API key",
+            )
+        if errors["base"] == "unknown":
+            raise openai.APIError(
+                request=httpx.Request(method="GET", url=data[CONF_BASE_URL]),
+                body=None,
+                message="Unknown error",
+            )
+        raise openai.APIConnectionError(
+            request=httpx.Request(method="GET", url=data[CONF_BASE_URL])
+        )
     return [model["value"] for model in models]
 
 
@@ -402,7 +432,11 @@ class ConversationFlowHandler(LMStudioSubentryFlowHandler):
                         CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS
                     ),
                 ): NumberSelector(
-                    NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=8192)
+                    NumberSelectorConfig(
+                        mode=NumberSelectorMode.BOX,
+                        min=MIN_MAX_TOKENS,
+                        max=MAX_MAX_TOKENS,
+                    )
                 ),
                 vol.Optional(
                     CONF_TEMPERATURE,
@@ -411,7 +445,10 @@ class ConversationFlowHandler(LMStudioSubentryFlowHandler):
                     ),
                 ): NumberSelector(
                     NumberSelectorConfig(
-                        mode=NumberSelectorMode.SLIDER, min=0.0, max=2.0, step=0.1
+                        mode=NumberSelectorMode.SLIDER,
+                        min=MIN_TEMPERATURE,
+                        max=MAX_TEMPERATURE,
+                        step=TEMPERATURE_STEP,
                     )
                 ),
                 vol.Optional(
@@ -419,7 +456,10 @@ class ConversationFlowHandler(LMStudioSubentryFlowHandler):
                     default=self._existing_data.get(CONF_TOP_P, DEFAULT_TOP_P),
                 ): NumberSelector(
                     NumberSelectorConfig(
-                        mode=NumberSelectorMode.SLIDER, min=0.0, max=1.0, step=0.05
+                        mode=NumberSelectorMode.SLIDER,
+                        min=MIN_TOP_P,
+                        max=MAX_TOP_P,
+                        step=TOP_P_STEP,
                     )
                 ),
             }
