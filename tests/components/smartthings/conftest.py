@@ -96,6 +96,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
 
 @pytest.fixture(
     params=[
+        "aq_sensor_3_ikea",
         "da_ac_airsensor_01001",
         "da_ac_rac_000001",
         "da_ac_rac_000003",
