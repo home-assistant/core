@@ -234,9 +234,12 @@ class SQLConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.debug("Invalid query: %s", err)
                 errors["query"] = "query_invalid"
 
-            for k, v in user_input[CONF_ADVANCED_OPTIONS].items():
-                if not v:
-                    user_input[CONF_ADVANCED_OPTIONS].pop(k)
+            mod_advanced_options = {
+                k: v
+                for k, v in user_input[CONF_ADVANCED_OPTIONS].items()
+                if v is not None
+            }
+            user_input[CONF_ADVANCED_OPTIONS] = mod_advanced_options
 
             if not errors:
                 name = self.data[CONF_NAME]
@@ -297,9 +300,12 @@ class SQLOptionsFlowHandler(OptionsFlowWithReload):
                     recorder_db,
                 )
 
-                for k, v in user_input[CONF_ADVANCED_OPTIONS].items():
-                    if not v:
-                        user_input[CONF_ADVANCED_OPTIONS].pop(k)
+                mod_advanced_options = {
+                    k: v
+                    for k, v in user_input[CONF_ADVANCED_OPTIONS].items()
+                    if v is not None
+                }
+                user_input[CONF_ADVANCED_OPTIONS] = mod_advanced_options
 
                 return self.async_create_entry(
                     data=user_input,
