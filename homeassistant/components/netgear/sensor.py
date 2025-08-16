@@ -70,7 +70,7 @@ SENSOR_TYPES = {
 }
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class NetgearSensorEntityDescription(SensorEntityDescription):
     """Class describing Netgear sensor entities."""
 
@@ -384,3 +384,7 @@ class NetgearRouterSensorEntity(NetgearRouterCoordinatorEntity, RestoreSensor):
     def native_value(self):
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+    @callback
+    def async_update_device(self) -> None:
+        """Update the Netgear device."""
