@@ -108,7 +108,6 @@ async def async_setup_platform(
         SWITCH_DOMAIN,
         config,
         StateSwitchEntity,
-        TriggerSwitchEntity,
         async_add_entities,
         discovery_info,
         LEGACY_FIELDS,
@@ -124,9 +123,11 @@ async def async_setup_entry(
     """Initialize config entry."""
     await async_setup_template_entry(
         hass,
+        SWITCH_DOMAIN,
         config_entry,
         async_add_entities,
         StateSwitchEntity,
+        TriggerSwitchEntity,
         SWITCH_CONFIG_ENTRY_SCHEMA,
         True,
     )

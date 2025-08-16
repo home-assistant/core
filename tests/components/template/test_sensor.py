@@ -612,7 +612,7 @@ async def test_no_template_match_all(
     assert hass.states.get("sensor.invalid_attribute").state == "hello"
 
 
-@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
+@pytest.mark.parametrize(("count", "domain"), [(1, "sensor")])
 @pytest.mark.parametrize(
     "config",
     [

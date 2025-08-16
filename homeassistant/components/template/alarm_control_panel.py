@@ -157,9 +157,11 @@ async def async_setup_entry(
     """Initialize config entry."""
     await async_setup_template_entry(
         hass,
+        ALARM_CONTROL_PANEL_DOMAIN,
         config_entry,
         async_add_entities,
         StateAlarmControlPanelEntity,
+        TriggerAlarmControlPanelEntity,
         ALARM_CONTROL_PANEL_CONFIG_ENTRY_SCHEMA,
         True,
     )
@@ -177,7 +179,6 @@ async def async_setup_platform(
         ALARM_CONTROL_PANEL_DOMAIN,
         config,
         StateAlarmControlPanelEntity,
-        TriggerAlarmControlPanelEntity,
         async_add_entities,
         discovery_info,
         LEGACY_FIELDS,

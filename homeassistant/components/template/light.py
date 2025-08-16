@@ -223,7 +223,6 @@ async def async_setup_platform(
         LIGHT_DOMAIN,
         config,
         StateLightEntity,
-        TriggerLightEntity,
         async_add_entities,
         discovery_info,
         LEGACY_FIELDS,
@@ -239,9 +238,11 @@ async def async_setup_entry(
     """Initialize config entry."""
     await async_setup_template_entry(
         hass,
+        LIGHT_DOMAIN,
         config_entry,
         async_add_entities,
         StateLightEntity,
+        TriggerLightEntity,
         LIGHT_CONFIG_ENTRY_SCHEMA,
         True,
     )

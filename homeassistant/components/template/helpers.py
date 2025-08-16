@@ -8,7 +8,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import blueprint
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_FRIENDLY_NAME,
@@ -21,9 +21,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import template
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -40,6 +38,8 @@ from .const import (
     CONF_AVAILABILITY_TEMPLATE,
     CONF_OBJECT_ID,
     CONF_PICTURE,
+    DATA_HASS_COORDINATORS,
+    DATA_PLATFORMS,
     DOMAIN,
 )
 from .entity import AbstractTemplateEntity
@@ -161,30 +161,11 @@ def rewrite_legacy_to_modern_configs(
     return entities
 
 
-@callback
-def async_create_template_tracking_entities(
-    entity_cls: type[Entity],
-    async_add_entities: AddEntitiesCallback,
-    hass: HomeAssistant,
-    definitions: list[dict],
-    unique_id_prefix: str | None,
-) -> None:
-    """Create the template tracking entities."""
-    entities: list[Entity] = []
-    for definition in definitions:
-        unique_id = definition.get(CONF_UNIQUE_ID)
-        if unique_id and unique_id_prefix:
-            unique_id = f"{unique_id_prefix}-{unique_id}"
-        entities.append(entity_cls(hass, definition, unique_id))  # type: ignore[call-arg]
-    async_add_entities(entities)
-
-
 async def async_setup_template_platform(
     hass: HomeAssistant,
     domain: str,
     config: ConfigType,
     state_entity_cls: type[TemplateEntity],
-    trigger_entity_cls: type[TriggerEntity] | None,
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None,
     legacy_fields: dict[str, str] | None = None,
@@ -195,71 +176,88 @@ async def async_setup_template_platform(
         # Legacy Configuration
         if legacy_fields is not None:
             if legacy_key:
-                configs = rewrite_legacy_to_modern_configs(
+                definitions = rewrite_legacy_to_modern_configs(
                     hass, config[legacy_key], legacy_fields
                 )
             else:
-                configs = [rewrite_legacy_to_modern_config(hass, config, legacy_fields)]
-            async_create_template_tracking_entities(
-                state_entity_cls,
-                async_add_entities,
-                hass,
-                configs,
-                None,
+                definitions = [
+                    rewrite_legacy_to_modern_config(hass, config, legacy_fields)
+                ]
+            async_add_entities(
+                [
+                    state_entity_cls(hass, definition, definition.get(CONF_UNIQUE_ID))
+                    for definition in definitions
+                ]
             )
+
         else:
             _LOGGER.warning(
                 "Template %s entities can only be configured under template:", domain
             )
-        return
-
-    # Trigger Configuration
-    if "coordinator" in discovery_info:
-        if trigger_entity_cls:
-            entities = [
-                trigger_entity_cls(hass, discovery_info["coordinator"], config)
-                for config in discovery_info["entities"]
-            ]
-            async_add_entities(entities)
-        else:
-            raise PlatformNotReady(
-                f"The template {domain} platform doesn't support trigger entities"
-            )
-        return
-
-    # Modern Configuration
-    async_create_template_tracking_entities(
-        state_entity_cls,
-        async_add_entities,
-        hass,
-        discovery_info["entities"],
-        discovery_info["unique_id"],
-    )
 
 
 async def async_setup_template_entry(
     hass: HomeAssistant,
+    domain: str,
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     state_entity_cls: type[TemplateEntity],
-    config_schema: vol.Schema | vol.All,
+    trigger_entity_cls: type[TriggerEntity] | None,
+    config_entry_schema: vol.Schema | vol.All,
     replace_value_template: bool = False,
 ) -> None:
     """Setup the Template from a config entry."""
-    options = dict(config_entry.options)
-    options.pop("template_type")
 
-    if advanced_options := options.pop(CONF_ADVANCED_OPTIONS, None):
-        options = {**options, **advanced_options}
+    if config_entry.source == SOURCE_IMPORT:
+        # Entities from modern and trigger yaml configurations.
+        if (platforms := hass.data[DATA_PLATFORMS]) and (
+            definitions := platforms.get(domain)
+        ):
+            entities: list[TemplateEntity | TriggerEntity] = []
+            for definition in definitions:
+                # Trigger based configuration
+                if (
+                    (coordinator_id := definition.get("coordinator"))
+                    and trigger_entity_cls
+                    and (coordinators := hass.data[DATA_HASS_COORDINATORS])
+                    and (coordinator := coordinators.get(coordinator_id))
+                ):
+                    entities.append(
+                        trigger_entity_cls(
+                            hass,
+                            coordinator,
+                            definition["config"],
+                        )
+                    )
 
-    if replace_value_template and CONF_VALUE_TEMPLATE in options:
-        options[CONF_STATE] = options.pop(CONF_VALUE_TEMPLATE)
+                # Modern state based configuration
+                elif coordinator_id is None:
+                    entity_config: ConfigType = definition["config"]
+                    unique_id = entity_config.get(CONF_UNIQUE_ID)
+                    if unique_id and (
+                        unique_id_prefix := definition.get(CONF_UNIQUE_ID)
+                    ):
+                        unique_id = f"{unique_id_prefix}-{unique_id}"
+                    entities.append(state_entity_cls(hass, entity_config, unique_id))
 
-    validated_config = config_schema(options)
+            if entities:
+                async_add_entities(entities)
 
-    async_add_entities(
-        [state_entity_cls(hass, validated_config, config_entry.entry_id)]
-    )
+    else:
+        options = dict(config_entry.options)
+        options.pop("template_type")
+
+        if advanced_options := options.pop(CONF_ADVANCED_OPTIONS, None):
+            options = {**options, **advanced_options}
+
+        if replace_value_template and CONF_VALUE_TEMPLATE in options:
+            options[CONF_STATE] = options.pop(CONF_VALUE_TEMPLATE)
+
+        validated_config = config_entry_schema(options)
+
+        async_add_entities(
+            [state_entity_cls(hass, validated_config, config_entry.entry_id)]
+        )
 
 
 def async_setup_template_preview[T: TemplateEntity](

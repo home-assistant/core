@@ -17,16 +17,12 @@ from homeassistant.const import CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import TriggerUpdateCoordinator
 from .const import CONF_PICTURE
-from .helpers import async_setup_template_entry, async_setup_template_platform
+from .helpers import async_setup_template_entry
 from .template_entity import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TemplateEntity,
@@ -56,24 +52,6 @@ IMAGE_CONFIG_ENTRY_SCHEMA = vol.Schema(
 ).extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema)
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the template image."""
-    await async_setup_template_platform(
-        hass,
-        IMAGE_DOMAIN,
-        config,
-        StateImageEntity,
-        TriggerImageEntity,
-        async_add_entities,
-        discovery_info,
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -82,9 +60,11 @@ async def async_setup_entry(
     """Initialize config entry."""
     await async_setup_template_entry(
         hass,
+        IMAGE_DOMAIN,
         config_entry,
         async_add_entities,
         StateImageEntity,
+        TriggerImageEntity,
         IMAGE_CONFIG_ENTRY_SCHEMA,
     )
 

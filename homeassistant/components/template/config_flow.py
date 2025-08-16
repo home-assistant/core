@@ -19,6 +19,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_DEVICE_ID,
@@ -357,7 +358,7 @@ config_schema = partial(generate_schema, flow_type="config")
 
 async def choose_options_step(options: dict[str, Any]) -> str:
     """Return next step_id for options flow according to template_type."""
-    return cast(str, options["template_type"])
+    return cast(str, options.get("template_type", "import"))
 
 
 def _validate_unit(options: dict[str, Any]) -> None:
@@ -522,6 +523,7 @@ CONFIG_FLOW = {
 
 
 OPTIONS_FLOW = {
+    "import": SchemaFlowFormStep(schema=None),
     "init": SchemaFlowFormStep(next_step=choose_options_step),
     Platform.ALARM_CONTROL_PANEL: SchemaFlowFormStep(
         options_schema(Platform.ALARM_CONTROL_PANEL),
@@ -622,6 +624,10 @@ class TemplateConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     async def async_setup_preview(hass: HomeAssistant) -> None:
         """Set up preview WS API."""
         websocket_api.async_register_command(hass, ws_start_preview)
+
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
+        """Handle import from configuration.yaml."""
+        return self.async_create_entry(data={CONF_NAME: "configuration.yaml"})
 
 
 @websocket_api.websocket_command(

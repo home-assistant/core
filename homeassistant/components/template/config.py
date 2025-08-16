@@ -235,7 +235,7 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
     if DOMAIN not in config:
         return config
 
-    config_sections = []
+    config_sections: list[TemplateConfig] = []
 
     for cfg in cv.ensure_list(config[DOMAIN]):
         try:

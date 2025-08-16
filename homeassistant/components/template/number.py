@@ -20,20 +20,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_STATE, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 
 from . import TriggerUpdateCoordinator
 from .const import CONF_MAX, CONF_MIN, CONF_STEP, DOMAIN
 from .entity import AbstractTemplateEntity
-from .helpers import (
-    async_setup_template_entry,
-    async_setup_template_platform,
-    async_setup_template_preview,
-)
+from .helpers import async_setup_template_entry, async_setup_template_preview
 from .template_entity import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
@@ -69,24 +62,6 @@ NUMBER_CONFIG_ENTRY_SCHEMA = NUMBER_COMMON_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the template number."""
-    await async_setup_template_platform(
-        hass,
-        NUMBER_DOMAIN,
-        config,
-        StateNumberEntity,
-        TriggerNumberEntity,
-        async_add_entities,
-        discovery_info,
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -95,9 +70,11 @@ async def async_setup_entry(
     """Initialize config entry."""
     await async_setup_template_entry(
         hass,
+        NUMBER_DOMAIN,
         config_entry,
         async_add_entities,
         StateNumberEntity,
+        TriggerNumberEntity,
         NUMBER_CONFIG_ENTRY_SCHEMA,
     )
 

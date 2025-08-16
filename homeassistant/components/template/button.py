@@ -17,14 +17,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_PRESS, DOMAIN
-from .helpers import async_setup_template_entry, async_setup_template_platform
+from .helpers import async_setup_template_entry
 from .template_entity import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TemplateEntity,
@@ -51,24 +47,6 @@ BUTTON_CONFIG_ENTRY_SCHEMA = vol.Schema(
 ).extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema)
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the template button."""
-    await async_setup_template_platform(
-        hass,
-        BUTTON_DOMAIN,
-        config,
-        StateButtonEntity,
-        None,
-        async_add_entities,
-        discovery_info,
-    )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -77,9 +55,11 @@ async def async_setup_entry(
     """Initialize config entry."""
     await async_setup_template_entry(
         hass,
+        BUTTON_DOMAIN,
         config_entry,
         async_add_entities,
         StateButtonEntity,
+        None,
         BUTTON_CONFIG_ENTRY_SCHEMA,
     )
 

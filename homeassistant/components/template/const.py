@@ -1,10 +1,14 @@
 """Constants for the Template Platform Components."""
 
+from dataclasses import dataclass
+
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ICON, CONF_NAME, CONF_UNIQUE_ID, Platform
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
 CONF_ADVANCED_OPTIONS = "advanced_options"
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
@@ -19,6 +23,9 @@ CONF_PRESS = "press"
 CONF_STEP = "step"
 CONF_TURN_OFF = "turn_off"
 CONF_TURN_ON = "turn_on"
+
+DATA_HASS_COORDINATORS = "template_coordinators"
+DATA_PLATFORMS: HassKey[dict[str, list[ConfigType]]] = HassKey("template_platforms")
 
 TEMPLATE_ENTITY_BASE_SCHEMA = vol.Schema(
     {
@@ -56,3 +63,11 @@ class TemplateConfig(dict):
 
     raw_config: ConfigType | None = None
     raw_blueprint_inputs: ConfigType | None = None
+
+
+@dataclass
+class TemplateModule:
+    """List of template platforms."""
+
+    platforms: tuple[str, ...]
+    entry: ConfigEntry
