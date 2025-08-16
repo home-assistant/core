@@ -198,6 +198,9 @@
       "pir_occupied_to_unoccupied_delay": {
         "name": "Occupied to unoccupied delay"
       },
+      "occupancy_sensing_hold_time": {
+        "name": "Occupied to unoccupied delay"
+      },
       "auto_relock_timer": {
         "name": "Autorelock time"
       },
