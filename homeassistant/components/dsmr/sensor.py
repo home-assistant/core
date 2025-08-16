@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntEnum
 from functools import partial
+import statistics  # Added for averaging
 
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
 from dsmr_parser.clients.rfxtrx_protocol import (
@@ -34,6 +35,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     EntityCategory,
     UnitOfEnergy,
+    UnitOfPower,  # Added for W/kW check
     UnitOfVolume,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
@@ -710,6 +712,10 @@ async def async_setup_entry(
     initialized: bool = False
     add_entities_handler: Callable[[], None] | None
 
+    min_time_between_updates = timedelta(
+        seconds=entry.options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
+    )
+
     @callback
     def init_async_add_entities(telegram: Telegram) -> None:
         """Add the sensor entities after the first telegram was received."""
@@ -741,17 +747,24 @@ async def async_setup_entry(
     add_entities_handler = async_dispatcher_connect(
         hass, EVENT_FIRST_TELEGRAM.format(entry.entry_id), init_async_add_entities
     )
-    min_time_between_updates = timedelta(
-        seconds=entry.options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
-    )
 
     @Throttle(min_time_between_updates)
-    def update_entities_telegram(telegram: Telegram | None) -> None:
-        """Update entities with latest telegram and trigger state update."""
-        nonlocal initialized
-        # Make all device entities aware of new telegram
+    @callback
+    def _publish_updates() -> None:
+        """Process accumulated data and update Home Assistant."""
         for entity in entities:
-            entity.update_data(telegram)
+            entity.calculate_value()
+            if entity.hass:
+                entity.async_write_ha_state()
+
+    @callback
+    def _receive_telegram(telegram: Telegram | None) -> None:
+        """Handle every new telegram, accumulate data, and schedule update."""
+        nonlocal initialized
+
+        # Make all device entities aware of new telegram and accumulate
+        for entity in entities:
+            entity.accumulate_data(telegram)
 
         entry.runtime_data.telegram = telegram
 
@@ -761,8 +774,13 @@ async def async_setup_entry(
                 hass, EVENT_FIRST_TELEGRAM.format(entry.entry_id), telegram
             )
 
+        # Schedule the throttled update.
+        # It's a callback, so it runs in the event loop.
+        # Throttle ensures it only runs periodically.
+        _publish_updates()
+
     # Creates an asyncio.Protocol factory for reading DSMR telegrams from
-    # serial and calls update_entities_telegram to update entities on arrival
+    # serial and calls _receive_telegram to update entities on arrival
     protocol = entry.data.get(CONF_PROTOCOL, DSMR_PROTOCOL)
     if CONF_HOST in entry.data:
         if protocol == DSMR_PROTOCOL:
@@ -774,7 +792,7 @@ async def async_setup_entry(
             entry.data[CONF_HOST],
             entry.data[CONF_PORT],
             dsmr_version,
-            update_entities_telegram,
+            _receive_telegram,  # Changed to _receive_telegram
             loop=hass.loop,
             keep_alive_interval=60,
         )
@@ -787,7 +805,7 @@ async def async_setup_entry(
             create_reader,
             entry.data[CONF_PORT],
             dsmr_version,
-            update_entities_telegram,
+            _receive_telegram,  # Changed to _receive_telegram
             loop=hass.loop,
         )
 
@@ -795,17 +813,19 @@ async def async_setup_entry(
         """Connect to DSMR and keep reconnecting until Home Assistant stops."""
         stop_listener = None
         transport = None
-        protocol = None
+        protocol_instance = None  # Renamed from 'protocol'
 
         while hass.state is CoreState.not_running or hass.is_running:
             # Start DSMR asyncio.Protocol reader
 
             # Reflect connected state in devices state by setting an
             # empty telegram resulting in `unknown` states
-            update_entities_telegram({})
+            _receive_telegram({})  # Changed to _receive_telegram
 
             try:
-                transport, protocol = await hass.loop.create_task(reader_factory())
+                transport, protocol_instance = await hass.loop.create_task(
+                    reader_factory()
+                )
 
                 if transport:
                     # Register listener to close transport on HA shutdown
@@ -821,18 +841,18 @@ async def async_setup_entry(
                     )
 
                     # Wait for reader to close
-                    await protocol.wait_closed()
+                    await protocol_instance.wait_closed()
 
                     # Unexpected disconnect
                     if hass.state is CoreState.not_running or hass.is_running:
                         stop_listener()
 
                 transport = None
-                protocol = None
+                protocol_instance = None
 
                 # Reflect disconnect state in devices state by setting an
                 # None telegram resulting in `unavailable` states
-                update_entities_telegram(None)
+                _receive_telegram(None)  # Changed to _receive_telegram
 
                 # throttle reconnect attempts
                 await asyncio.sleep(DEFAULT_RECONNECT_INTERVAL)
@@ -842,18 +862,18 @@ async def async_setup_entry(
                 # connection wait
                 LOGGER.exception("Error connecting to DSMR")
                 transport = None
-                protocol = None
+                protocol_instance = None
 
                 # Reflect disconnect state in devices state by setting an
                 # None telegram resulting in `unavailable` states
-                update_entities_telegram(None)
+                _receive_telegram(None)  # Changed to _receive_telegram
 
                 # throttle reconnect attempts
                 await asyncio.sleep(DEFAULT_RECONNECT_INTERVAL)
             except CancelledError:
                 # Reflect disconnect state in devices state by setting an
                 # None telegram resulting in `unavailable` states
-                update_entities_telegram(None)
+                _receive_telegram(None)  # Changed to _receive_telegram
 
                 if stop_listener and (
                     hass.state is CoreState.not_running or hass.is_running
@@ -863,8 +883,8 @@ async def async_setup_entry(
                 if transport:
                     transport.close()
 
-                if protocol:
-                    await protocol.wait_closed()
+                if protocol_instance:
+                    await protocol_instance.wait_closed()
 
                 return
 
@@ -897,8 +917,8 @@ class DSMREntity(SensorEntity):
         self,
         entity_description: DSMRSensorEntityDescription,
         entry: ConfigEntry,
-        telegram: Telegram,
-        device_class: SensorDeviceClass,
+        telegram: Telegram,  # Keep for initial setup
+        device_class: SensorDeviceClass | None,
         native_unit_of_measurement: str | None,
         serial_id: str = "",
         mbus_id: int = 0,
@@ -908,7 +928,17 @@ class DSMREntity(SensorEntity):
         self._attr_device_class = device_class
         self._attr_native_unit_of_measurement = native_unit_of_measurement
         self._entry = entry
-        self.telegram: Telegram | None = telegram
+        self._telegram: Telegram | None = telegram  # Stores the latest telegram
+        self._obis_reference = entity_description.obis_reference
+        self._dsmr_version = entry.data[CONF_DSMR_VERSION]
+        self._value: StateType = None  # Stores the value to report
+
+        # Check if this sensor measures power (W or kW)
+        self._is_power_sensor = self.native_unit_of_measurement in {
+            UnitOfPower.WATT,
+            UnitOfPower.KILO_WATT,
+        }
+        self._raw_values: list[float] = []  # Stores raw values for averaging
 
         device_serial = entry.data[CONF_SERIAL_ID]
         device_name = DEVICE_NAME_ELECTRICITY
@@ -942,54 +972,85 @@ class DSMREntity(SensorEntity):
         else:
             self._attr_unique_id = f"{device_serial}_{entity_description.key}"
 
+        # Calculate initial value
+        self.accumulate_data(telegram)
+        self.calculate_value()
+
     @callback
-    def update_data(self, telegram: Telegram | None) -> None:
-        """Update data."""
-        self.telegram = telegram
-        if self.hass and (
-            telegram is None
-            or get_dsmr_object(
-                telegram, self._mbus_id, self.entity_description.obis_reference
-            )
-        ):
-            self.async_write_ha_state()
+    def accumulate_data(self, telegram: Telegram | None) -> None:
+        """Store telegram and accumulate power values."""
+        self._telegram = telegram
 
-    def get_dsmr_object_attr(self, attribute: str) -> str | None:
-        """Read attribute from last received telegram for this DSMR object."""
-        # Get the object
+        if not telegram:
+            self._raw_values = []  # Clear values on disconnect
+            return
+
         dsmr_object = get_dsmr_object(
-            self.telegram, self._mbus_id, self.entity_description.obis_reference
+            telegram, self._mbus_id, self.entity_description.obis_reference
         )
-        if dsmr_object is None:
-            return None
 
-        # Get the attribute value if the object has it
-        attr: str | None = getattr(dsmr_object, attribute)
-        return attr
+        if dsmr_object and dsmr_object.value is not None:
+            if self._is_power_sensor:
+                try:
+                    self._raw_values.append(float(dsmr_object.value))
+                except (ValueError, TypeError):
+                    LOGGER.debug(
+                        "Could not convert %s value %s to float for averaging",
+                        self.entity_description.key,
+                        dsmr_object.value,
+                    )
+            # For non-power sensors, we don't need to accumulate,
+            # calculate_value will use the latest _telegram.
 
-    @property
-    def available(self) -> bool:
-        """Entity is only available if there is a telegram."""
-        return self.telegram is not None
+    @callback
+    def calculate_value(self) -> None:
+        """Calculate the value to report based on accumulated data."""
+        if self._telegram is None:
+            self._value = None
+            self._raw_values = []  # Ensure clear on disconnect
+            return
 
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of sensor, if available, translate if needed."""
-        value: StateType
-        if (value := self.get_dsmr_object_attr("value")) is None:
-            return None
+        dsmr_object = get_dsmr_object(
+            self._telegram, self._mbus_id, self.entity_description.obis_reference
+        )
+
+        if self._is_power_sensor:
+            if self._raw_values:
+                avg_value = statistics.mean(self._raw_values)
+                self._value = round(avg_value, DEFAULT_PRECISION)
+            # If no raw values, keep the previous value unless disconnected (handled above)
+            self._raw_values = []  # Always clear after processing
+            return
+
+        # Logic for non-power sensors (use latest value)
+        if dsmr_object is None or dsmr_object.value is None:
+            self._value = None
+            return
+
+        value = dsmr_object.value
 
         if self.entity_description.obis_reference == "ELECTRICITY_ACTIVE_TARIFF":
-            return self.translate_tariff(value, self._entry.data[CONF_DSMR_VERSION])
+            self._value = self.translate_tariff(value, self._dsmr_version)
+            return
 
-        with suppress(TypeError):
+        with suppress(TypeError, ValueError):
             value = round(float(value), DEFAULT_PRECISION)
 
         # Make sure we do not return a zero value for an energy sensor
         if not value and self.state_class == SensorStateClass.TOTAL_INCREASING:
-            return None
+            self._value = None
+        else:
+            self._value = value
 
-        return value
+    @property
+    def available(self) -> bool:
+        """Entity is only available if there is a telegram."""
+        return self._telegram is not None
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the calculated state of sensor."""
+        return self._value
 
     @staticmethod
     def translate_tariff(value: str, dsmr_version: str) -> str | None:
