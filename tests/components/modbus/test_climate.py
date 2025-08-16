@@ -860,6 +860,75 @@ async def test_hvac_onoff_coil_transition_update(
 
 
 @pytest.mark.parametrize(
+    (
+        "do_config",
+        "result_before",
+        "register_value_before",
+        "result_after",
+        "register_value_after",
+    ),
+    [
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_HVAC_ONOFF_REGISTER: 11,
+                    },
+                ]
+            },
+            HVACMode.OFF,
+            [0x00],
+            HVACMode.AUTO,
+            [0x01],
+        ),
+    ],
+)
+async def test_hvac_onoff_register_transition_update(
+    hass: HomeAssistant,
+    mock_modbus_ha,
+    result_before,
+    register_value_before,
+    result_after,
+    register_value_after,
+) -> None:
+    """Test climate update based on On/Off register values without hvacmode register."""
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(
+        register_value_before
+    )
+
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == result_before
+
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(
+        register_value_after
+    )
+
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == result_after
+
+
+@pytest.mark.parametrize(
     ("do_config", "result", "register_words"),
     [
         (
