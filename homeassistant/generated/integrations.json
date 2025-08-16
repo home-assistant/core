@@ -1174,6 +1174,17 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "daybetter": {
+      "name": "DayBetter",
+      "integrations": {
+        "daybetter_light_local": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "local_push",
+          "name": "DayBetter lights local"
+        }
+      }
+    },
     "ddwrt": {
       "name": "DD-WRT",
       "integration_type": "hub",
