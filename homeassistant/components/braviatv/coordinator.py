@@ -81,6 +81,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.use_psk = config_entry.data.get(CONF_USE_PSK, False)
         self.client_id = config_entry.data.get(CONF_CLIENT_ID, LEGACY_CLIENT_ID)
         self.nickname = config_entry.data.get(CONF_NICKNAME, NICKNAME_PREFIX)
+        self.system_info: dict[str, str] | None = None
         self.source: str | None = None
         self.source_list: list[str] = []
         self.source_map: dict[str, dict] = {}
@@ -157,6 +158,8 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 await self.async_update_sources()
             await self.async_update_volume()
             await self.async_update_playing()
+            if not self.system_info:
+                self.system_info = await self.client.get_system_info()
         except BraviaNotFound as err:
             if self.skipped_updates < 10:
                 self.connected = False
