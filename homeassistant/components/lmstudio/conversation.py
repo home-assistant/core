@@ -21,19 +21,15 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up conversation entities."""
-    for subentry in config_entry.subentries.values():
-        if subentry.subentry_type != "conversation":
-            continue
-
-        async_add_entities(
-            [
-                LMStudioConversationEntity(
-                    config_entry,
-                    subentry,
-                    config_subentry_id=subentry.subentry_id,
-                )
-            ]
+    async_add_entities(
+        LMStudioConversationEntity(
+            config_entry,
+            subentry,
+            config_subentry_id=subentry.subentry_id,
         )
+        for subentry in config_entry.subentries.values()
+        if subentry.subentry_type == "conversation"
+    )
 
 
 class LMStudioConversationEntity(

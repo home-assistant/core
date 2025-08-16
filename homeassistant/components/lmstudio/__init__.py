@@ -12,7 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_BASE_URL, DOMAIN
 
@@ -22,11 +21,6 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = (Platform.CONVERSATION,)
 
 type LMStudioConfigEntry = ConfigEntry[openai.AsyncOpenAI]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up LM Studio."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LMStudioConfigEntry) -> bool:

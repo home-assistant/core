@@ -12,7 +12,7 @@ from openai.types.chat import ChatCompletion, ChatCompletionChunk
 from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
-from homeassistant.components.conversation import AssistantContent
+from homeassistant.components.conversation import AssistantContent, Content
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.exceptions import HomeAssistantError
@@ -38,6 +38,60 @@ def _format_tool(
         tool_spec["description"] = tool.description
 
     return {"type": "function", "function": tool_spec}
+
+
+def _convert_message_to_openai(message: Content) -> dict[str, Any]:
+    """Convert a Home Assistant chat message to OpenAI format."""
+    match message.role:
+        case "system":
+            return {"role": "system", "content": message.content}
+
+        case "user":
+            if isinstance(message.content, str):
+                return {"role": "user", "content": message.content}
+            # Handle multipart content (text + images)
+            content = []
+            for part in message.content:
+                match part.type:
+                    case "text":
+                        content.append({"type": "text", "text": part.text})
+                    case "image":
+                        content.append(
+                            {
+                                "type": "image_url",
+                                "image_url": {"url": part.image_url},
+                            }
+                        )
+            return {"role": "user", "content": content}
+
+        case "assistant":
+            msg_content: dict[str, Any] = {
+                "role": "assistant",
+                "content": message.content,
+            }
+            if message.tool_calls:
+                msg_content["tool_calls"] = [
+                    {
+                        "id": tool_call.id,
+                        "type": "function",
+                        "function": {
+                            "name": tool_call.tool_name,
+                            "arguments": json.dumps(tool_call.tool_args),
+                        },
+                    }
+                    for tool_call in message.tool_calls
+                ]
+            return msg_content
+
+        case "tool_result":
+            return {
+                "role": "tool",
+                "tool_call_id": message.tool_call_id,
+                "content": json.dumps(message.tool_result),
+            }
+
+        case _:
+            raise ValueError(f"Unsupported message role: {message.role}")
 
 
 async def _transform_stream(
@@ -100,67 +154,19 @@ class LMStudioBaseLLMEntity(Entity):
         client = self.entry.runtime_data
         options = {**self.entry.data, **self.subentry.data}
 
-        model = options.get(CONF_MODEL, "")
-        if model is None or model == "":
-            # If no model specified, use the first available model
+        model = options.get(CONF_MODEL)
+        if not model:
+            # If no model specified, get available models and use the first one
             try:
                 models_response = await client.with_options(timeout=10.0).models.list()
-                if models_response.data:
-                    model = models_response.data[0].id
-                else:
+                if not models_response.data:
                     raise HomeAssistantError("No models available on LM Studio server")
+                model = models_response.data[0].id
             except openai.OpenAIError as err:
                 raise HomeAssistantError(f"Failed to get models: {err}") from err
 
         # Build the messages from the chat log
-        messages: list[dict[str, Any]] = []
-
-        for message in chat_log.content:
-            if message.role == "system":
-                messages.append({"role": "system", "content": message.content})
-            elif message.role == "user":
-                if isinstance(message.content, str):
-                    messages.append({"role": "user", "content": message.content})
-                else:
-                    # Handle multipart content (text + images)
-                    content = []
-                    for part in message.content:
-                        if part.type == "text":
-                            content.append({"type": "text", "text": part.text})
-                        elif part.type == "image":
-                            content.append(
-                                {
-                                    "type": "image_url",
-                                    "image_url": {"url": part.image_url},
-                                }
-                            )
-                    messages.append({"role": "user", "content": content})
-            elif message.role == "assistant":
-                msg_content: dict[str, Any] = {
-                    "role": "assistant",
-                    "content": message.content,
-                }
-                if message.tool_calls:
-                    msg_content["tool_calls"] = [
-                        {
-                            "id": tool_call.id,
-                            "type": "function",
-                            "function": {
-                                "name": tool_call.tool_name,
-                                "arguments": json.dumps(tool_call.tool_args),
-                            },
-                        }
-                        for tool_call in message.tool_calls
-                    ]
-                messages.append(msg_content)
-            elif message.role == "tool_result":
-                messages.append(
-                    {
-                        "role": "tool",
-                        "tool_call_id": message.tool_call_id,
-                        "content": json.dumps(message.tool_result),
-                    }
-                )
+        messages = [_convert_message_to_openai(message) for message in chat_log.content]
 
         # Prepare request parameters
         request_params = {
