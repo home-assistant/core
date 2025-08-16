@@ -355,6 +355,19 @@ class ConversationFlowHandler(LMStudioSubentryFlowHandler):
             # Create title with model information
             model_name = user_input.get(CONF_MODEL, "Unknown Model")
             title = f"Conversation - {model_name}"
+
+            # Check if we're in a reconfigure flow
+            if self.source == "reconfigure":
+                # Update existing subentry
+                subentry = self._get_reconfigure_subentry()
+                return self.async_update_and_abort(
+                    entry=self.config_entry,
+                    subentry=subentry,
+                    title=title,
+                    data=user_input,
+                )
+
+            # Create new subentry
             return self.async_create_entry(title=title, data=user_input)
 
         models = await self._get_available_models()
