@@ -1,0 +1,18 @@
+{
+  "domain": "anki",
+  "name": "Anki flashcards",
+  "codeowners": [
+    "@lfavole"
+  ],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/anki",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": [
+    "anki==25.7.2"
+  ],
+  "ssdp": [],
+  "zeroconf": []
+}
