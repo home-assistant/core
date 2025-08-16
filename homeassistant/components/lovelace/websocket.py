@@ -117,26 +117,26 @@ async def websocket_lovelace_config(
     config: LovelaceConfig,
 ) -> json_fragment:
     """Send Lovelace UI config over WebSocket connection."""
-    config = await config.async_json(msg["force"])
+    result = await config.async_json(msg["force"])
 
     if not connection.user.is_admin:
-        deserialized_config = orjson.loads(orjson.dumps(config))
+        deserialized_result = orjson.loads(orjson.dumps(result))
 
         """Filter to include only views visible to the current non-admin user."""
-        deserialized_config["views"] = list(
+        deserialized_result["views"] = list(
             filter(
                 lambda view: any(
                     user["user"] == connection.user.id for user in view["visible"]
                 )
                 if "visible" in view
-                else True,
-                deserialized_config["views"],
+                else True,  # views that do not have the "visible" key are visible for all
+                deserialized_result["views"],
             )
         )
 
-        return json_fragment(orjson.dumps(deserialized_config))
+        return json_fragment(orjson.dumps(deserialized_result))
 
-    return config
+    return result
 
 
 @websocket_api.require_admin
