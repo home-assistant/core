@@ -253,7 +253,6 @@ class ModbusHub:
         self._client: (
             AsyncModbusSerialClient | AsyncModbusTcpClient | AsyncModbusUdpClient | None
         ) = None
-        self._in_error = False
         self._lock = asyncio.Lock()
         self.event_connected = asyncio.Event()
         self.hass = hass
@@ -408,7 +407,6 @@ class ModbusHub:
             error = f"Error: device: {slave} address: {address} -> pymodbus returned isError True"
             self._log_error(error)
             return None
-        self._in_error = False
         return result
 
     async def async_pb_call(
