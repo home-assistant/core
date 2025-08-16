@@ -1,10 +1,10 @@
 """Support for VeSync numeric entities."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
 
-from pyvesync.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import rgetattr
+from .common import is_fan, is_humidifier
 from .const import (
     DOMAIN,
     FAN_NIGHT_LIGHT_LEVEL_DIM,
@@ -24,6 +24,7 @@ from .const import (
     VS_COORDINATOR,
     VS_DEVICES,
     VS_DISCOVERY,
+    VS_MANAGER,
 )
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -47,7 +48,7 @@ class VeSyncSelectEntityDescription(SelectEntityDescription):
 
     exists_fn: Callable[[VeSyncBaseDevice], bool]
     current_option_fn: Callable[[VeSyncBaseDevice], str]
-    select_option_fn: Callable[[VeSyncBaseDevice, str], bool]
+    select_option_fn: Callable[[VeSyncBaseDevice, str], Awaitable[bool]]
 
 
 SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
@@ -57,15 +58,15 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
         translation_key="night_light_level",
         options=list(VS_TO_HA_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.values()),
         icon="mdi:brightness-6",
-        exists_fn=lambda device: rgetattr(device, "set_night_light_brightness"),
+        exists_fn=lambda device: device.supports_nightlight and is_humidifier(device),
         # The select_option service framework ensures that only options specified are
         # accepted. ServiceValidationError gets raised for invalid value.
-        select_option_fn=lambda device, value: device.set_night_light_brightness(
+        select_option_fn=lambda device, value: device.set_nightlight_brightness(
             HA_TO_VS_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.get(value, 0)
         ),
         # Reporting "off" as the choice for unhandled level.
         current_option_fn=lambda device: VS_TO_HA_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.get(
-            device.details.get("night_light_brightness"),
+            device.state.nightlight_brightness,
             HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF,
         ),
     ),
@@ -79,10 +80,10 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
             FAN_NIGHT_LIGHT_LEVEL_ON,
         ],
         icon="mdi:brightness-6",
-        exists_fn=lambda device: rgetattr(device, "set_night_light"),
-        select_option_fn=lambda device, value: device.set_night_light(value),
+        exists_fn=lambda device: device.supports_nightlight and is_fan(device),
+        select_option_fn=lambda device, value: device.set_nightlight_mode(value),
         current_option_fn=lambda device: VS_TO_HA_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.get(
-            device.details.get("night_light"),
+            device.state.get("night_light"),
             FAN_NIGHT_LIGHT_LEVEL_OFF,
         ),
     ),
@@ -107,7 +108,9 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, VS_DISCOVERY.format(VS_DEVICES), discover)
     )
 
-    _setup_entities(hass.data[DOMAIN][VS_DEVICES], async_add_entities, coordinator)
+    _setup_entities(
+        hass.data[DOMAIN][VS_MANAGER].devices, async_add_entities, coordinator
+    )
 
 
 @callback
@@ -149,7 +152,5 @@ class VeSyncSelectEntity(VeSyncBaseEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Set an option."""
-        if await self.hass.async_add_executor_job(
-            self.entity_description.select_option_fn, self.device, option
-        ):
+        if await self.entity_description.select_option_fn(self.device, option):
             await self.coordinator.async_request_refresh()

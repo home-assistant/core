@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 from pyvesync import VeSync
-from pyvesync.vesyncbulb import VeSyncBulb
-from pyvesync.vesyncfan import VeSyncAirBypass, VeSyncHumid200300S
-from pyvesync.vesyncoutlet import VeSyncOutlet
-from pyvesync.vesyncswitch import VeSyncSwitch
+from pyvesync.base_devices.bulb_base import VeSyncBulb
+from pyvesync.base_devices.fan_base import VeSyncFanBase
+from pyvesync.base_devices.outlet_base import VeSyncOutlet
+from pyvesync.base_devices.switch_base import VeSyncSwitch
 import requests_mock
 
 from homeassistant.components.vesync import DOMAIN
@@ -21,6 +21,13 @@ from homeassistant.helpers.typing import ConfigType
 from .common import mock_multiple_device_responses
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def patch_vesync_login():
+    """Patch VeSync.login to always be an AsyncMock."""
+    with patch("pyvesync.vesync.VeSync.login", new=AsyncMock(return_value=True)):
+        yield
 
 
 @pytest.fixture(name="config_entry")
@@ -45,18 +52,30 @@ def config_fixture() -> ConfigType:
 def manager_fixture() -> VeSync:
     """Create a mock VeSync manager fixture."""
 
-    outlets = []
-    switches = []
-    fans = []
-    bulbs = []
+    devices = set()
+    outlets = set()
+    switches = set()
+    fans = set()
+    bulbs = set()
+    humidifers = set()
+
+    # If you need to support .outlets, .switches, etc. on devices, use a MagicMock
+    devices_container = MagicMock()
+    devices_container.__iter__.side_effect = lambda: iter(devices)
+    devices_container.__contains__.side_effect = devices.__contains__
+    devices_container.__len__.side_effect = devices.__len__
+    devices_container.add.side_effect = devices.add
+    devices_container.discard.side_effect = devices.discard
+    devices_container.outlets = outlets
+    devices_container.switches = switches
+    devices_container.fans = fans
+    devices_container.bulbs = bulbs
+    devices_container.humidifers = humidifers
 
     mock_vesync = Mock(VeSync)
-    mock_vesync.login = Mock(return_value=True)
-    mock_vesync.update = Mock()
-    mock_vesync.outlets = outlets
-    mock_vesync.switches = switches
-    mock_vesync.fans = fans
-    mock_vesync.bulbs = bulbs
+    mock_vesync.login = AsyncMock(return_value=True)
+    mock_vesync.update = AsyncMock()
+    mock_vesync.devices = devices_container
     mock_vesync._dev_list = {
         "fans": fans,
         "outlets": outlets,
@@ -65,16 +84,15 @@ def manager_fixture() -> VeSync:
     }
     mock_vesync.account_id = "account_id"
     mock_vesync.time_zone = "America/New_York"
-    mock = Mock(return_value=mock_vesync)
 
-    with patch("homeassistant.components.vesync.VeSync", new=mock):
+    with patch("homeassistant.components.vesync.VeSync", return_value=mock_vesync):
         yield mock_vesync
 
 
 @pytest.fixture(name="fan")
 def fan_fixture():
     """Create a mock VeSync fan fixture."""
-    return Mock(VeSyncAirBypass)
+    return Mock(VeSyncFanBase)
 
 
 @pytest.fixture(name="bulb")
@@ -109,7 +127,7 @@ def outlet_fixture():
 def humidifier_fixture():
     """Create a mock VeSync Classic200S humidifier fixture."""
     return Mock(
-        VeSyncHumid200300S,
+        VeSyncFanBase,
         cid="200s-humidifier",
         config={
             "auto_target_humidity": 40,
@@ -139,7 +157,7 @@ def humidifier_fixture():
 def humidifier_300s_fixture():
     """Create a mock VeSync Classic300S humidifier fixture."""
     return Mock(
-        VeSyncHumid200300S,
+        VeSyncFanBase,
         cid="300s-humidifier",
         config={
             "auto_target_humidity": 40,

@@ -1,11 +1,11 @@
 """Tests for the init module."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, patch
 
 from pyvesync import VeSync
 
 from homeassistant.components.vesync import SERVICE_UPDATE_DEVS, async_setup_entry
-from homeassistant.components.vesync.const import DOMAIN, VS_DEVICES, VS_MANAGER
+from homeassistant.components.vesync.const import DOMAIN, VS_MANAGER
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -20,7 +20,7 @@ async def test_async_setup_entry__not_login(
     manager: VeSync,
 ) -> None:
     """Test setup does not create config entry when not logged in."""
-    manager.login = Mock(return_value=False)
+    manager.login = AsyncMock(return_value=False)
 
     assert not await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -54,7 +54,7 @@ async def test_async_setup_entry__no_devices(
 
     assert manager.login.call_count == 1
     assert hass.data[DOMAIN][VS_MANAGER] == manager
-    assert not hass.data[DOMAIN][VS_DEVICES]
+    assert not hass.data[DOMAIN][VS_MANAGER].devices
 
 
 async def test_async_setup_entry__loads_fans(
@@ -85,7 +85,7 @@ async def test_async_setup_entry__loads_fans(
         ]
     assert manager.login.call_count == 1
     assert hass.data[DOMAIN][VS_MANAGER] == manager
-    assert hass.data[DOMAIN][VS_DEVICES] == [fan]
+    assert hass.data[DOMAIN][VS_MANAGER].devices == [fan]
 
 
 async def test_async_new_device_discovery(
@@ -97,7 +97,7 @@ async def test_async_new_device_discovery(
     # Assert platforms loaded
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
-    assert not hass.data[DOMAIN][VS_DEVICES]
+    assert not hass.data[DOMAIN][VS_MANAGER].devices
 
     # Mock discovery of new fan which would get added to VS_DEVICES.
     with patch(
@@ -108,7 +108,7 @@ async def test_async_new_device_discovery(
 
         assert manager.login.call_count == 1
         assert hass.data[DOMAIN][VS_MANAGER] == manager
-        assert hass.data[DOMAIN][VS_DEVICES] == [fan]
+        assert hass.data[DOMAIN][VS_MANAGER].devices == [fan]
 
     # Mock discovery of new humidifier which would invoke discovery in all platforms.
     # The mocked humidifier needs to have all properties populated for correct processing.
@@ -120,7 +120,7 @@ async def test_async_new_device_discovery(
 
         assert manager.login.call_count == 1
         assert hass.data[DOMAIN][VS_MANAGER] == manager
-        assert hass.data[DOMAIN][VS_DEVICES] == [fan, humidifier]
+        assert hass.data[DOMAIN][VS_MANAGER].devices == [fan, humidifier]
 
 
 async def test_migrate_config_entry(
