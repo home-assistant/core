@@ -49,7 +49,7 @@
       'repeat': <RepeatMode.OFF: 'off'>,
       'shuffle': False,
       'supported_features': <MediaPlayerEntityFeature: 8320959>,
-      'volume_level': 1.0,
+      'volume_level': 0.01,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.test_player',
