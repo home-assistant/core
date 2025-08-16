@@ -6,6 +6,7 @@ from collections.abc import Awaitable, Callable
 from functools import wraps
 from typing import TYPE_CHECKING, Any
 
+import orjson
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -116,7 +117,26 @@ async def websocket_lovelace_config(
     config: LovelaceConfig,
 ) -> json_fragment:
     """Send Lovelace UI config over WebSocket connection."""
-    return await config.async_json(msg["force"])
+    result = await config.async_json(msg["force"])
+
+    if not connection.user.is_admin:
+        deserialized_result = orjson.loads(orjson.dumps(result))
+
+        """Filter to include only views visible to the current non-admin user."""
+        deserialized_result["views"] = list(
+            filter(
+                lambda view: any(
+                    user["user"] == connection.user.id for user in view["visible"]
+                )
+                if "visible" in view
+                else True,  # views that do not have the "visible" key are visible for all
+                deserialized_result["views"],
+            )
+        )
+
+        return json_fragment(orjson.dumps(deserialized_result))
+
+    return result
 
 
 @websocket_api.require_admin
