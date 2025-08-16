@@ -100,7 +100,7 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[int, Packet]]):
             config_entry_id=config_entry.entry_id,
             connections={(CONNECTION_BLUETOOTH, self.address)},
             name=config_entry.data[CONF_MODEL],
-            model=config_entry.data[CONF_MODEL],
+            model_id=config_entry.data[CONF_MODEL],
             sw_version=get_version_string(packet_a0),
         )
 
