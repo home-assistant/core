@@ -224,7 +224,9 @@ RESET_ACCESSORY_SERVICE_SCHEMA = vol.Schema(
 )
 
 
-UNPAIR_SERVICE_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): str})
+UNPAIR_SERVICE_SCHEMA = vol.Schema(
+    {vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [str])}
+)
 
 
 @callback

@@ -11,4 +11,5 @@ unpair:
       required: true
       selector:
         device:
+          multiple: true
           integration: homekit
