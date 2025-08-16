@@ -67,5 +67,10 @@
         "default": "mdi:star"
       }
     }
+  },
+  "services": {
+    "publish": {
+      "service": "mdi:send"
+    }
   }
 }
