@@ -13,6 +13,7 @@ from homeassistant.components.miele.services import (
     ATTR_DURATION,
     ATTR_PROGRAM_ID,
     SERVICE_GET_PROGRAMS,
+    SERVICE_GET_ROOMS,
     SERVICE_SET_PROGRAM,
     SERVICE_SET_PROGRAM_OVEN,
 )
@@ -96,12 +97,14 @@ async def test_services_oven(
     )
 
 
+@pytest.mark.parametrize("service", [SERVICE_GET_PROGRAMS, SERVICE_GET_ROOMS])
 async def test_services_with_response(
     hass: HomeAssistant,
     device_registry: DeviceRegistry,
     mock_miele_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
+    service: str,
 ) -> None:
     """Tests that the custom services that returns a response are correct."""
 
@@ -109,7 +112,7 @@ async def test_services_with_response(
     device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_APPLIANCE)})
     assert snapshot == await hass.services.async_call(
         DOMAIN,
-        SERVICE_GET_PROGRAMS,
+        service,
         {
             ATTR_DEVICE_ID: device.id,
         },
@@ -172,6 +175,29 @@ async def test_get_service_api_errors(
             return_response=True,
         )
     mock_miele_client.get_programs.assert_called_once()
+
+
+async def test_get_rooms_api_errors(
+    hass: HomeAssistant,
+    device_registry: DeviceRegistry,
+    mock_miele_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test get_rooms service api errors."""
+    await setup_integration(hass, mock_config_entry)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_APPLIANCE)})
+
+    # Test http error
+    mock_miele_client.get_rooms.side_effect = ClientResponseError("TestInfo", "test")
+    with pytest.raises(HomeAssistantError, match="'Get rooms' action failed"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_ROOMS,
+            {ATTR_DEVICE_ID: device.id},
+            blocking=True,
+            return_response=True,
+        )
+    mock_miele_client.get_rooms.assert_called_once()
 
 
 async def test_service_validation_errors(
