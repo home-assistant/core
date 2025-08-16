@@ -407,4 +407,19 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.DishwasherAlarm.Attributes.State,),
         allow_multi=True,
     ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="RefrigeratorAlarmDoorOpen",
+            translation_key="refrigerator_alarm_door_open",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_to_ha=lambda x: (
+                x == clusters.RefrigeratorAlarm.Bitmaps.AlarmBitmap.kDoorOpen
+            ),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.RefrigeratorAlarm.Attributes.State,),
+        allow_multi=True,
+    ),
 ]
