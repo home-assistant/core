@@ -127,6 +127,53 @@ def _create_model_selector(
     )
 
 
+def _create_max_tokens_selector() -> NumberSelector:
+    """Create a NumberSelector for max tokens configuration.
+
+    Returns:
+        NumberSelector configured for max tokens input
+    """
+    return NumberSelector(
+        NumberSelectorConfig(
+            mode=NumberSelectorMode.BOX,
+            min=MIN_MAX_TOKENS,
+            max=MAX_MAX_TOKENS,
+        )
+    )
+
+
+def _create_temperature_selector() -> NumberSelector:
+    """Create a NumberSelector for temperature configuration.
+
+    Returns:
+        NumberSelector configured for temperature input
+    """
+    return NumberSelector(
+        NumberSelectorConfig(
+            mode=NumberSelectorMode.SLIDER,
+            min=MIN_TEMPERATURE,
+            max=MAX_TEMPERATURE,
+            step=TEMPERATURE_STEP,
+        )
+    )
+
+
+def _create_top_p_selector() -> NumberSelector:
+    """Create a NumberSelector for top_p configuration.
+
+    Returns:
+        NumberSelector configured for top_p input
+    """
+    return NumberSelector(
+        NumberSelectorConfig(
+            mode=NumberSelectorMode.SLIDER,
+            min=MIN_TOP_P,
+            max=MAX_TOP_P,
+            step=TOP_P_STEP,
+        )
+    )
+
+
 async def _safe_fetch_models_with_errors(
     hass: HomeAssistant,
     base_url: str,
@@ -431,37 +478,17 @@ class ConversationFlowHandler(LMStudioSubentryFlowHandler):
                     default=self._existing_data.get(
                         CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS
                     ),
-                ): NumberSelector(
-                    NumberSelectorConfig(
-                        mode=NumberSelectorMode.BOX,
-                        min=MIN_MAX_TOKENS,
-                        max=MAX_MAX_TOKENS,
-                    )
-                ),
+                ): _create_max_tokens_selector(),
                 vol.Optional(
                     CONF_TEMPERATURE,
                     default=self._existing_data.get(
                         CONF_TEMPERATURE, DEFAULT_TEMPERATURE
                     ),
-                ): NumberSelector(
-                    NumberSelectorConfig(
-                        mode=NumberSelectorMode.SLIDER,
-                        min=MIN_TEMPERATURE,
-                        max=MAX_TEMPERATURE,
-                        step=TEMPERATURE_STEP,
-                    )
-                ),
+                ): _create_temperature_selector(),
                 vol.Optional(
                     CONF_TOP_P,
                     default=self._existing_data.get(CONF_TOP_P, DEFAULT_TOP_P),
-                ): NumberSelector(
-                    NumberSelectorConfig(
-                        mode=NumberSelectorMode.SLIDER,
-                        min=MIN_TOP_P,
-                        max=MAX_TOP_P,
-                        step=TOP_P_STEP,
-                    )
-                ),
+                ): _create_top_p_selector(),
             }
         )
 
