@@ -199,7 +199,7 @@ async def test_config_flow_failures_code_login(
 
 
 async def test_options_flow_drawables(
-    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
+    hass: HomeAssistant, bypass_api_fixture, mock_roborock_entry: MockConfigEntry
 ) -> None:
     """Test that the options flow works."""
     with patch("homeassistant.components.roborock.roborock_storage"):

@@ -94,6 +94,7 @@ async def test_generate_image_service(
 
     with patch(
         "openai.resources.images.AsyncImages.generate",
+        new_callable=AsyncMock,
         return_value=ImagesResponse(
             created=1700000000,
             data=[
@@ -130,6 +131,7 @@ async def test_generate_image_service_error(
     with (
         patch(
             "openai.resources.images.AsyncImages.generate",
+            new_callable=AsyncMock,
             side_effect=RateLimitError(
                 response=httpx.Response(
                     status_code=500, request=httpx.Request(method="GET", url="")
@@ -154,6 +156,7 @@ async def test_generate_image_service_error(
     with (
         patch(
             "openai.resources.images.AsyncImages.generate",
+            new_callable=AsyncMock,
             return_value=ImagesResponse(
                 created=1700000000,
                 data=[
