@@ -326,7 +326,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         if self._player.volume is not None:
-            return int(float(self._player.volume)) / 100.0
+            return float(self._player.volume) / 100.0
 
         return None
 
@@ -435,7 +435,7 @@ class SqueezeBoxMediaPlayerEntity(SqueezeboxEntity, MediaPlayerEntity):
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        volume_percent = str(int(volume * 100))
+        volume_percent = str(round(volume * 100))
         await self._player.async_set_volume(volume_percent)
         await self.coordinator.async_refresh()
 
