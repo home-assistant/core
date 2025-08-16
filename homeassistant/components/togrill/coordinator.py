@@ -4,11 +4,17 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import TypeVar
 
 from bleak.exc import BleakError
 from togrill_bluetooth.client import Client
 from togrill_bluetooth.exceptions import DecodeError
-from togrill_bluetooth.packets import Packet, PacketA0Notify, PacketA1Notify
+from togrill_bluetooth.packets import (
+    Packet,
+    PacketA0Notify,
+    PacketA1Notify,
+    PacketA8Write,
+)
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -25,10 +31,14 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import CONF_PROBE_COUNT
+
 type ToGrillConfigEntry = ConfigEntry[ToGrillCoordinator]
 
 SCAN_INTERVAL = timedelta(seconds=30)
 LOGGER = logging.getLogger(__name__)
+
+PacketType = TypeVar("PacketType", bound=Packet)
 
 
 def get_version_string(packet: PacketA0Notify) -> str:
@@ -44,7 +54,7 @@ class DeviceFailed(UpdateFailed):
     """Update failed due to device disconnected."""
 
 
-class ToGrillCoordinator(DataUpdateCoordinator[dict[int, Packet]]):
+class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Packet]]):
     """Class to manage fetching data."""
 
     config_entry: ToGrillConfigEntry
@@ -86,7 +96,12 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[int, Packet]]):
         if not device:
             raise DeviceNotFound("Unable to find device")
 
-        client = await Client.connect(device, self._notify_callback)
+        try:
+            client = await Client.connect(device, self._notify_callback)
+        except BleakError as exc:
+            self.logger.debug("Connection failed", exc_info=True)
+            raise DeviceNotFound("Unable to connect to device") from exc
+
         try:
             packet_a0 = await client.read(PacketA0Notify)
         except (BleakError, DecodeError) as exc:
@@ -123,16 +138,29 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[int, Packet]]):
         self.client = await self._connect_and_update_registry()
         return self.client
 
+    def get_packet(
+        self, packet_type: type[PacketType], probe=None
+    ) -> PacketType | None:
+        """Get a cached packet of a certain type."""
+
+        if packet := self.data.get((packet_type.type, probe)):
+            assert isinstance(packet, packet_type)
+            return packet
+        return None
+
     def _notify_callback(self, packet: Packet):
-        self.data[packet.type] = packet
+        probe = getattr(packet, "probe", None)
+        self.data[(packet.type, probe)] = packet
         self.async_update_listeners()
 
-    async def _async_update_data(self) -> dict[int, Packet]:
+    async def _async_update_data(self) -> dict[tuple[int, int | None], Packet]:
         """Poll the device."""
         client = await self._get_connected_client()
         try:
             await client.request(PacketA0Notify)
             await client.request(PacketA1Notify)
+            for probe in range(1, self.config_entry.data[CONF_PROBE_COUNT] + 1):
+                await client.write(PacketA8Write(probe=probe))
         except BleakError as exc:
             raise DeviceFailed(f"Device failed {exc}") from exc
         return self.data
