@@ -19,11 +19,24 @@ import wave
 import hass_nabucasa
 import voluptuous as vol
 
-from homeassistant.components import conversation, stt, tts, wake_word, websocket_api
+from homeassistant.components import (
+    conversation,
+    media_source,
+    stt,
+    tts,
+    wake_word,
+    websocket_api,
+)
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import chat_session, intent
+from homeassistant.helpers import (
+    chat_session,
+    device_registry as dr,
+    entity_registry as er,
+    intent,
+    network,
+)
 from homeassistant.helpers.collection import (
     CHANGE_UPDATED,
     CollectionError,
@@ -91,6 +104,8 @@ KEY_PIPELINE_CONVERSATION_DATA: HassKey[dict[str, PipelineConversationData]] = H
 # Number of response parts to handle before streaming the response
 STREAM_RESPONSE_CHARS = 60
 
+DEFAULT_ACKNOWLEDGE_MEDIA_ID = f"/api/{DOMAIN}/sounds/acknowledge.mp3"
+
 
 def validate_language(data: dict[str, Any]) -> Any:
     """Validate language settings."""
@@ -113,6 +128,8 @@ PIPELINE_FIELDS: VolDictType = {
     vol.Required("wake_word_entity"): vol.Any(str, None),
     vol.Required("wake_word_id"): vol.Any(str, None),
     vol.Optional("prefer_local_intents"): bool,
+    vol.Optional("acknowledge_same_area"): str,
+    vol.Optional("acknowledge_media_id"): str,
 }
 
 STORED_PIPELINE_RUNS = 10
@@ -412,6 +429,8 @@ class Pipeline:
     wake_word_entity: str | None
     wake_word_id: str | None
     prefer_local_intents: bool = False
+    acknowledge_same_area: bool = True
+    acknowledge_media_id: str | None = None
 
     id: str = field(default_factory=ulid_util.ulid_now)
 
@@ -436,6 +455,10 @@ class Pipeline:
             wake_word_entity=data["wake_word_entity"],
             wake_word_id=data["wake_word_id"],
             prefer_local_intents=data.get("prefer_local_intents", False),
+            acknowledge_same_area=data.get("acknowledge_same_area", True),
+            acknowledge_media_id=data.get(
+                "acknowledge_media_id", DEFAULT_ACKNOWLEDGE_MEDIA_ID
+            ),
         )
 
     def to_json(self) -> dict[str, Any]:
@@ -454,6 +477,7 @@ class Pipeline:
             "wake_word_entity": self.wake_word_entity,
             "wake_word_id": self.wake_word_id,
             "prefer_local_intents": self.prefer_local_intents,
+            "acknowledge_media_id": self.acknowledge_media_id,
         }
 
 
@@ -1059,8 +1083,11 @@ class PipelineRun:
         conversation_id: str,
         device_id: str | None,
         conversation_extra_system_prompt: str | None,
-    ) -> str:
-        """Run intent recognition portion of pipeline. Returns text to speak."""
+    ) -> tuple[str, bool]:
+        """Run intent recognition portion of pipeline.
+
+        Returns (speech, can_acknowledge).
+        """
         if self.intent_agent is None or self._conversation_data is None:
             raise RuntimeError("Recognize intent was not prepared")
 
@@ -1107,6 +1134,7 @@ class PipelineRun:
 
             agent_id = self.intent_agent.id
             processed_locally = agent_id == conversation.HOME_ASSISTANT_AGENT
+            can_acknowledge = False
             intent_response: intent.IntentResponse | None = None
             if not processed_locally and not self._intent_agent_only:
                 # Sentence triggers override conversation agent
@@ -1280,6 +1308,46 @@ class PipelineRun:
                     if tts_input_stream and self._streamed_response_text:
                         tts_input_stream.put_nowait(None)
 
+                    intent_response = conversation_result.response
+                    device_registry = dr.async_get(self.hass)
+
+                    # Check if all targeted entities were in the same area as
+                    # the satellite device.
+                    # If so, the satellite can response with an acknowledge beep
+                    # instead of a full response.
+                    if (
+                        (
+                            intent_response.response_type
+                            == intent.IntentResponseType.ACTION_DONE
+                        )
+                        and intent_response.matched_states
+                        and device_id
+                        and (device := device_registry.async_get(device_id))
+                        and device.area_id
+                    ):
+                        entity_registry = er.async_get(self.hass)
+                        can_acknowledge = True
+                        for state in intent_response.matched_states:
+                            entity = entity_registry.async_get(state.entity_id)
+                            if (
+                                (not entity)
+                                or (
+                                    entity.area_id
+                                    and (entity.area_id != device.area_id)
+                                )
+                                or (
+                                    entity.device_id
+                                    and (
+                                        entity_device := device_registry.async_get(
+                                            entity.device_id
+                                        )
+                                    )
+                                    and entity_device.area_id != device.area_id
+                                )
+                            ):
+                                can_acknowledge = False
+                                break
+
         except Exception as src_error:
             _LOGGER.exception("Unexpected error during intent recognition")
             raise IntentRecognitionError(
@@ -1302,7 +1370,7 @@ class PipelineRun:
         if conversation_result.continue_conversation:
             self._conversation_data.continue_conversation_agent = agent_id
 
-        return speech
+        return (speech, can_acknowledge)
 
     async def prepare_text_to_speech(self) -> None:
         """Prepare text-to-speech."""
@@ -1365,6 +1433,31 @@ class PipelineRun:
             "url": self.tts_stream.url,
             "mime_type": self.tts_stream.content_type,
         }
+
+        self.process_event(
+            PipelineEvent(PipelineEventType.TTS_END, {"tts_output": tts_output})
+        )
+
+    async def acknowledge(self, media_id: str, tts_input: str | None) -> None:
+        """Respond with acknowledge media instead of text-to-speech."""
+        self.process_event(
+            PipelineEvent(
+                PipelineEventType.TTS_START,
+                {
+                    "language": self.pipeline.tts_language,
+                    "voice": self.pipeline.tts_voice,
+                    "tts_input": tts_input or "",
+                },
+            )
+        )
+
+        if media_source.is_media_source_id(media_id):
+            media = await media_source.async_resolve_media(self.hass, media_id, None)
+            media_id = media.url
+        else:
+            media_id = network.get_url(self.hass) + media_id
+
+        tts_output = {"url": media_id}
 
         self.process_event(
             PipelineEvent(PipelineEventType.TTS_END, {"tts_output": tts_output})
@@ -1649,17 +1742,18 @@ class PipelineInput:
 
             if self.run.end_stage != PipelineStage.STT:
                 tts_input = self.tts_input
+                can_acknowledge = False
 
                 if current_stage == PipelineStage.INTENT:
                     # intent-recognition
                     assert intent_input is not None
-                    tts_input = await self.run.recognize_intent(
+                    tts_input, can_acknowledge = await self.run.recognize_intent(
                         intent_input,
                         self.session.conversation_id,
                         self.device_id,
                         self.conversation_extra_system_prompt,
                     )
-                    if tts_input.strip():
+                    if can_acknowledge or tts_input.strip():
                         current_stage = PipelineStage.TTS
                     else:
                         # Skip TTS
@@ -1668,8 +1762,14 @@ class PipelineInput:
                 if self.run.end_stage != PipelineStage.INTENT:
                     # text-to-speech
                     if current_stage == PipelineStage.TTS:
-                        assert tts_input is not None
-                        await self.run.text_to_speech(tts_input)
+                        if can_acknowledge and self.run.pipeline.acknowledge_media_id:
+                            # Use acknowledge media instead of full response
+                            await self.run.acknowledge(
+                                self.run.pipeline.acknowledge_media_id, tts_input
+                            )
+                        else:
+                            assert tts_input is not None
+                            await self.run.text_to_speech(tts_input)
 
         except PipelineError as err:
             self.run.process_event(
