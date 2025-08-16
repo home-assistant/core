@@ -60,61 +60,6 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'max_humidity': 100,
-      'min_humidity': 0,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'humidifier',
-    'entity_category': None,
-    'entity_id': 'humidifier.dehumidifier',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'tuya.ilms5pwjzzsxuxmvscswitch',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[humidifier.dehumidifier-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'dehumidifier',
-      'friendly_name': 'Dehumidifier ',
-      'max_humidity': 100,
-      'min_humidity': 0,
-      'supported_features': <HumidifierEntityFeature: 0>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'humidifier.dehumidifier',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
-# name: test_platform_setup_and_discovery[humidifier.dehumidifier_2-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
       'max_humidity': 70,
       'min_humidity': 35,
     }),
@@ -125,7 +70,7 @@
     'disabled_by': None,
     'domain': 'humidifier',
     'entity_category': None,
-    'entity_id': 'humidifier.dehumidifier_2',
+    'entity_id': 'humidifier.dehumidifier',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -147,7 +92,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[humidifier.dehumidifier_2-state]
+# name: test_platform_setup_and_discovery[humidifier.dehumidifier-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_humidity': 47,
@@ -159,65 +104,10 @@
       'supported_features': <HumidifierEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'humidifier.dehumidifier_2',
+    'entity_id': 'humidifier.dehumidifier',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
-  })
-# ---
-# name: test_platform_setup_and_discovery[humidifier.dryfix-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max_humidity': 100,
-      'min_humidity': 0,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'humidifier',
-    'entity_category': None,
-    'entity_id': 'humidifier.dryfix',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
-    'original_icon': None,
-    'original_name': None,
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'tuya.hz4pau766eavmxhqscswitch',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_platform_setup_and_discovery[humidifier.dryfix-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'dehumidifier',
-      'friendly_name': 'DryFix',
-      'max_humidity': 100,
-      'min_humidity': 0,
-      'supported_features': <HumidifierEntityFeature: 0>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'humidifier.dryfix',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
   })
 # ---

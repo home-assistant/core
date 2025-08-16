@@ -17,6 +17,9 @@
       },
       "stop": {
         "default": "mdi:stop"
+      },
+      "self_test_request": {
+        "default": "mdi:refresh-auto"
       }
     },
     "fan": {
