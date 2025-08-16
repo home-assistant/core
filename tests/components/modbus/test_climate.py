@@ -38,6 +38,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.components.modbus.const import (
     CONF_CLIMATES,
+    CONF_CURRENT_TEMP_SCALE,
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_FAN_MODE_AUTO,
@@ -74,6 +75,7 @@ from homeassistant.components.modbus.const import (
     CONF_HVAC_ONOFF_REGISTER,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
+    CONF_SCALE,
     CONF_SWING_MODE_REGISTER,
     CONF_SWING_MODE_SWING_BOTH,
     CONF_SWING_MODE_SWING_HORIZ,
@@ -92,6 +94,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_ADDRESS,
     CONF_NAME,
+    CONF_OFFSET,
     CONF_PLATFORM,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
@@ -792,6 +795,80 @@ async def test_hvac_onoff_coil_update(
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == result
+
+
+@pytest.mark.parametrize(
+    ("do_config", "result", "register_words"),
+    [
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                    },
+                ]
+            },
+            17,
+            [0, 17],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_CURRENT_TEMP_SCALE: 0.01,
+                        CONF_SCALE: 10,
+                        CONF_OFFSET: 20,
+                    },
+                ]
+            },
+            25,
+            [2520],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_CURRENT_TEMP_SCALE: 0.01,
+                        CONF_SCALE: 10,
+                    },
+                ]
+            },
+            19,
+            [1900],
+        ),
+    ],
+)
+async def test_config_current_temp_scale(
+    hass: HomeAssistant, mock_modbus_ha, result, register_words
+) -> None:
+    """Test behavior with different configurations for temperature scaling."""
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(register_words)
+
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes.get("current_temperature") == result
 
 
 @pytest.mark.parametrize(
