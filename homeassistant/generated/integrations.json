@@ -3577,6 +3577,12 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "lmstudio": {
+      "name": "LM Studio",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "local_calendar": {
       "integration_type": "hub",
       "config_flow": true,
