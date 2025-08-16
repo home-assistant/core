@@ -9,7 +9,6 @@ import sqlalchemy
 from sqlalchemy.engine import Result
 from sqlalchemy.exc import MultipleResultsFound, NoSuchColumnError, SQLAlchemyError
 from sqlalchemy.orm import Session, scoped_session, sessionmaker
-import sqlparse
 from sqlparse.exceptions import SQLParseError
 import voluptuous as vol
 
@@ -31,11 +30,11 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import callback
+from homeassistant.core import async_get_hass, callback
 from homeassistant.helpers import selector
 
 from .const import CONF_COLUMN_NAME, CONF_QUERY, DOMAIN
-from .util import resolve_db_url
+from .util import check_and_render_sql_query, resolve_db_url
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +49,7 @@ OPTIONS_SCHEMA: vol.Schema = vol.Schema(
         ): selector.TextSelector(),
         vol.Required(
             CONF_QUERY,
-        ): selector.TextSelector(selector.TextSelectorConfig(multiline=True)),
+        ): selector.TemplateSelector(),
         vol.Optional(
             CONF_UNIT_OF_MEASUREMENT,
         ): selector.TextSelector(),
@@ -89,14 +88,20 @@ CONFIG_SCHEMA: vol.Schema = vol.Schema(
 
 def validate_sql_select(value: str) -> str:
     """Validate that value is a SQL SELECT query."""
-    if len(query := sqlparse.parse(value.lstrip().lstrip(";"))) > 1:
-        raise MultipleResultsFound
-    if len(query) == 0 or (query_type := query[0].get_type()) == "UNKNOWN":
-        raise ValueError
-    if query_type != "SELECT":
-        _LOGGER.debug("The SQL query %s is of type %s", query, query_type)
-        raise SQLParseError
-    return str(query[0])
+    hass = async_get_hass()
+    try:
+        return check_and_render_sql_query(hass, value)
+    except ValueError as err:
+        err_text = err.args[0]
+        _LOGGER.debug("Invalid query '%s' results in '%s'", value, err_text)
+        if err_text == "Multiple SQL statements are not allowed":
+            raise MultipleResultsFound from err
+        if err_text in (
+            "SQL query must be of type SELECT",
+            "SQL query must start with SELECT",
+        ):
+            raise SQLParseError from err
+        raise
 
 
 def validate_query(db_url: str, query: str, column: str) -> bool:
@@ -155,12 +160,12 @@ class SQLConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             db_url = user_input.get(CONF_DB_URL)
-            query = user_input[CONF_QUERY]
+            user_query = user_input[CONF_QUERY]
             column = user_input[CONF_COLUMN_NAME]
             db_url_for_validation = None
 
             try:
-                query = validate_sql_select(query)
+                query = validate_sql_select(user_query)
                 db_url_for_validation = resolve_db_url(self.hass, db_url)
                 await self.hass.async_add_executor_job(
                     validate_query, db_url_for_validation, query, column
@@ -179,7 +184,7 @@ class SQLConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["query"] = "query_invalid"
 
             options = {
-                CONF_QUERY: query,
+                CONF_QUERY: user_query,
                 CONF_COLUMN_NAME: column,
                 CONF_NAME: user_input[CONF_NAME],
             }
@@ -221,12 +226,12 @@ class SQLOptionsFlowHandler(OptionsFlowWithReload):
 
         if user_input is not None:
             db_url = user_input.get(CONF_DB_URL)
-            query = user_input[CONF_QUERY]
+            user_query = user_input[CONF_QUERY]
             column = user_input[CONF_COLUMN_NAME]
             name = self.config_entry.options.get(CONF_NAME, self.config_entry.title)
 
             try:
-                query = validate_sql_select(query)
+                query = validate_sql_select(user_query)
                 db_url_for_validation = resolve_db_url(self.hass, db_url)
                 await self.hass.async_add_executor_job(
                     validate_query, db_url_for_validation, query, column
@@ -253,7 +258,7 @@ class SQLOptionsFlowHandler(OptionsFlowWithReload):
                 )
 
                 options = {
-                    CONF_QUERY: query,
+                    CONF_QUERY: user_query,
                     CONF_COLUMN_NAME: column,
                     CONF_NAME: name,
                 }
