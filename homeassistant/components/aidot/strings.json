@@ -1,0 +1,24 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "The account in the current region has already been configured"
+    },
+    "error": {
+      "invalid_auth": "Authentication failed, please ensure that the network is functioning properly and the account password is correct."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "country": "Country",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "country": "The country selected by Aidot app when logging in",
+          "username": "Account logged in through Aidot app",
+          "password": "Password for logging in through Aidot app"
+        }
+      }
+    }
+  }
+}
