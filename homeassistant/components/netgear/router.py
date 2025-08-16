@@ -2,12 +2,20 @@
 
 from __future__ import annotations
 
-import asyncio
+from dataclasses import asdict
 from datetime import timedelta
 import logging
 from typing import Any
 
-from pynetgear import Netgear
+from aiohttp import CookieJar
+from netgearpy import NetgearClient
+from netgearpy.models import (
+    AttachedDevice,
+    DeviceInfo,
+    DeviceMode,
+    SystemInfo,
+    TrafficMeterStatistics,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -21,33 +29,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
+from ...helpers.aiohttp_client import async_create_clientsession
+from ...util.ssl import SSLCipherList
 from .const import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
-    DEFAULT_NAME,
     DOMAIN,
     MODE_ROUTER,
     MODELS_V2,
 )
-from .errors import CannotLoginException
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def get_api(
-    password: str,
-    host: str | None = None,
-    username: str | None = None,
-    port: int | None = None,
-    ssl: bool = False,
-) -> Netgear:
-    """Get the Netgear API and login to it."""
-    api: Netgear = Netgear(password, host, username, port, ssl)
-
-    if not api.login_try_port():
-        raise CannotLoginException
-
-    return api
 
 
 class NetgearRouter:
@@ -66,7 +58,7 @@ class NetgearRouter:
         self._username = entry.data.get(CONF_USERNAME)
         self._password = entry.data[CONF_PASSWORD]
 
-        self._info = None
+        self._info: DeviceInfo = None
         self.model = ""
         self.mode = MODE_ROUTER
         self.device_name = ""
@@ -81,38 +73,38 @@ class NetgearRouter:
         )
         self._consider_home = timedelta(seconds=consider_home_int)
 
-        self.api: Netgear = None
-        self.api_lock = asyncio.Lock()
+        self.api: NetgearClient = None
 
-        self.devices: dict[str, Any] = {}
+        self.devices: dict[str, dict[str, Any]] = {}
 
-    def _setup(self) -> bool:
+    async def _setup(self) -> bool:
         """Set up a Netgear router sync portion."""
-        self.api = get_api(
-            self._password,
+        self.api = NetgearClient(
             self._host,
-            self._username,
-            self._port,
-            self._ssl,
+            async_create_clientsession(
+                self.hass,
+                ssl_cipher=SSLCipherList.INSECURE,
+                verify_ssl=False,
+                cookie_jar=CookieJar(unsafe=True),
+            ),
         )
+        await self.api.login(self._username, self._password)
 
-        self._info = self.api.get_info()
-        if self._info is None:
-            return False
+        self._info = await self.api.get_device_info()
 
-        self.device_name = self._info.get("DeviceName", DEFAULT_NAME)
-        self.model = self._info.get("ModelName")
-        self.firmware_version = self._info.get("Firmwareversion")
-        self.hardware_version = self._info.get("Hardwareversion")
-        self.serial_number = self._info["SerialNumber"]
-        self.mode = self._info.get("DeviceMode", MODE_ROUTER)
+        self.device_name = self._info.device_name
+        self.model = self._info.model
+        self.firmware_version = self._info.firmware_version
+        self.hardware_version = self._info.hardware_version
+        self.serial_number = self._info.serial_number
+        self.mode = self._info.device_mode
 
         enabled_entries = [
             entry
             for entry in self.hass.config_entries.async_entries(DOMAIN)
             if entry.disabled_by is None
         ]
-        self.track_devices = self.mode == MODE_ROUTER or len(enabled_entries) == 1
+        self.track_devices = self.mode == DeviceMode.ROUTER or len(enabled_entries) == 1
         _LOGGER.debug(
             "Netgear track_devices = '%s', device mode '%s'",
             self.track_devices,
@@ -123,24 +115,22 @@ class NetgearRouter:
             if self.model.startswith(model):
                 self.method_version = 2
 
-        if self.method_version == 2 and self.track_devices:
-            if not self.api.get_attached_devices_2():
-                _LOGGER.error(
-                    (
-                        "Netgear Model '%s' in MODELS_V2 list, but failed to get"
-                        " attached devices using V2"
-                    ),
-                    self.model,
-                )
-                self.method_version = 1
+        # if self.method_version == 2 and self.track_devices:
+        #     if not self.api.get_attached_devices_2():
+        #         _LOGGER.error(
+        #             (
+        #                 "Netgear Model '%s' in MODELS_V2 list, but failed to get"
+        #                 " attached devices using V2"
+        #             ),
+        #             self.model,
+        #         )
+        #         self.method_version = 1
 
         return True
 
     async def async_setup(self) -> bool:
         """Set up a Netgear router."""
-        async with self.api_lock:
-            if not await self.hass.async_add_executor_job(self._setup):
-                return False
+        await self._setup()
 
         # set already known devices to away instead of unavailable
         if self.track_devices:
@@ -173,18 +163,19 @@ class NetgearRouter:
 
         return True
 
-    async def async_get_attached_devices(self) -> list:
+    async def async_get_attached_devices(self) -> list[AttachedDevice]:
         """Get the devices connected to the router."""
-        if self.method_version == 1:
-            async with self.api_lock:
-                return await self.hass.async_add_executor_job(
-                    self.api.get_attached_devices
-                )
-
-        async with self.api_lock:
-            return await self.hass.async_add_executor_job(
-                self.api.get_attached_devices_2
-            )
+        return await self.api.get_attached_devices()
+        # if self.method_version == 1:
+        #     async with self.api_lock:
+        #         return await self.hass.async_add_executor_job(
+        #             self.api.get_attached_devices
+        #         )
+        #
+        # async with self.api_lock:
+        #     return await self.hass.async_add_executor_job(
+        #         self.api.get_attached_devices_2
+        #     )
 
     async def async_update_device_trackers(self, now=None) -> bool:
         """Update Netgear devices."""
@@ -199,16 +190,16 @@ class NetgearRouter:
             _LOGGER.debug("Netgear scan result: \n%s", ntg_devices)
 
         for ntg_device in ntg_devices:
-            if ntg_device.mac is None:
+            if ntg_device.mac_address is None:
                 continue
 
-            device_mac = dr.format_mac(ntg_device.mac)
+            device_mac = dr.format_mac(ntg_device.mac_address)
 
             if not self.devices.get(device_mac):
                 new_device = True
 
             # ntg_device is a namedtuple from the collections module that needs conversion to a dict through ._asdict method
-            self.devices[device_mac] = ntg_device._asdict()
+            self.devices[device_mac] = asdict(ntg_device)
             self.devices[device_mac]["mac"] = device_mac
             self.devices[device_mac]["last_seen"] = now
 
@@ -226,56 +217,53 @@ class NetgearRouter:
 
         return new_device
 
-    async def async_get_traffic_meter(self) -> dict[str, Any] | None:
+    async def async_get_traffic_meter(self) -> TrafficMeterStatistics:
         """Get the traffic meter data of the router."""
-        async with self.api_lock:
-            return await self.hass.async_add_executor_job(self.api.get_traffic_meter)
+        return await self.api.get_traffic_meter_statistics()
 
-    async def async_get_speed_test(self) -> dict[str, Any] | None:
-        """Perform a speed test and get the results from the router."""
-        async with self.api_lock:
-            return await self.hass.async_add_executor_job(
-                self.api.get_new_speed_test_result
-            )
+    # async def async_get_speed_test(self) -> dict[str, Any] | None:
+    #     """Perform a speed test and get the results from the router."""
+    #     async with self.api_lock:
+    #         return await self.hass.async_add_executor_job(
+    #             self.api.get_new_speed_test_result
+    #         )
 
-    async def async_get_link_status(self) -> dict[str, Any] | None:
+    async def async_get_link_status(self) -> str:
         """Check the ethernet link status of the router."""
-        async with self.api_lock:
-            return await self.hass.async_add_executor_job(self.api.check_ethernet_link)
+        return await self.api.get_ethernet_link_status()
 
-    async def async_allow_block_device(self, mac: str, allow_block: str) -> None:
-        """Allow or block a device connected to the router."""
-        async with self.api_lock:
-            await self.hass.async_add_executor_job(
-                self.api.allow_block_device, mac, allow_block
-            )
+    # async def async_allow_block_device(self, mac: str, allow_block: str) -> None:
+    #     """Allow or block a device connected to the router."""
+    #     async with self.api_lock:
+    #         await self.hass.async_add_executor_job(
+    #             self.api.allow_block_device, mac, allow_block
+    #         )
 
-    async def async_get_utilization(self) -> dict[str, Any] | None:
+    async def async_get_utilization(self) -> SystemInfo:
         """Get the system information about utilization of the router."""
-        async with self.api_lock:
-            return await self.hass.async_add_executor_job(self.api.get_system_info)
+        return await self.api.get_system_info()
 
-    async def async_reboot(self) -> None:
-        """Reboot the router."""
-        async with self.api_lock:
-            await self.hass.async_add_executor_job(self.api.reboot)
+    # async def async_reboot(self) -> None:
+    #     """Reboot the router."""
+    #     async with self.api_lock:
+    #         await self.hass.async_add_executor_job(self.api.reboot)
 
-    async def async_check_new_firmware(self) -> dict[str, Any] | None:
-        """Check for new firmware of the router."""
-        async with self.api_lock:
-            return await self.hass.async_add_executor_job(self.api.check_new_firmware)
+    # async def async_check_new_firmware(self) -> dict[str, Any] | None:
+    #     """Check for new firmware of the router."""
+    #     async with self.api_lock:
+    #         return await self.hass.async_add_executor_job(self.api.check_new_firmware)
 
-    async def async_update_new_firmware(self) -> None:
-        """Update the router to the latest firmware."""
-        async with self.api_lock:
-            await self.hass.async_add_executor_job(self.api.update_new_firmware)
+    # async def async_update_new_firmware(self) -> None:
+    #     """Update the router to the latest firmware."""
+    #     async with self.api_lock:
+    #         await self.hass.async_add_executor_job(self.api.update_new_firmware)
 
-    @property
-    def port(self) -> int:
-        """Port used by the API."""
-        return self.api.port
-
-    @property
-    def ssl(self) -> bool:
-        """SSL used by the API."""
-        return self.api.ssl
+    # @property
+    # def port(self) -> int:
+    #     """Port used by the API."""
+    #     return self.api.port
+    #
+    # @property
+    # def ssl(self) -> bool:
+    #     """SSL used by the API."""
+    #     return self.api.ssl

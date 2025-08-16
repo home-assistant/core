@@ -46,7 +46,6 @@ async def async_setup_entry(
 
     entry.async_on_unload(coordinator.async_add_listener(new_device_callback))
 
-    coordinator.data = True
     new_device_callback()
 
 
