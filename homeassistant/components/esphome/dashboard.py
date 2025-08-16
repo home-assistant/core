@@ -62,7 +62,7 @@ class ESPHomeDashboardManager:
         self._data = await self._store.async_load()
         if not (data := self._data) or not (info := data.get("info")):
             return
-        if is_hassio(self._hass):
+        if is_hassio(self._hass) and not info.get("external", False):
             from homeassistant.components.hassio import get_addons_info  # noqa: PLC0415
 
             if (addons := get_addons_info(self._hass)) is not None and info[
@@ -74,9 +74,7 @@ class ESPHomeDashboardManager:
                 _LOGGER.debug("Addon %s is no longer installed", info["addon_slug"])
                 return
 
-        await self.async_set_dashboard_info(
-            info["addon_slug"], info["host"], info["port"]
-        )
+        await self.async_set_dashboard_info(info)
 
     @callback
     def async_get(self) -> ESPHomeDashboardCoordinator | None:
@@ -84,10 +82,27 @@ class ESPHomeDashboardManager:
         return self._current_dashboard
 
     async def async_set_dashboard_info(
-        self, addon_slug: str, host: str, port: int
+        self,
+        info: dict[str, Any],
     ) -> None:
         """Set the dashboard info."""
-        url = f"http://{host}:{port}"
+        url: str | None = info.get("url")
+        host: str | None = info.get("host")
+        port: int | None = info.get("port")
+        if url is None:
+            if host is None or port is None:
+                _LOGGER.error("Dashboard info requires host:port or url: %s", info)
+                return
+            url = f"http://{host}:{port}"
+        elif host or port:
+            _LOGGER.warning(
+                "Both 'url' and 'host:port' are set in dashboard info, using 'url': %s",
+                url,
+            )
+        addon_slug: str | None = info.get("addon_slug")
+        if addon_slug is None:
+            _LOGGER.error("Dashboard info requires addon_slug: %s", info)
+            return
         hass = self._hass
 
         if cur_dashboard := self._current_dashboard:
@@ -113,7 +128,7 @@ class ESPHomeDashboardManager:
             EVENT_HOMEASSISTANT_STOP, on_hass_stop
         )
 
-        new_data = {"info": {"addon_slug": addon_slug, "host": host, "port": port}}
+        new_data = {"info": info}
         if self._data != new_data:
             await self._store.async_save(new_data)
 
@@ -162,4 +177,6 @@ async def async_set_dashboard_info(
 ) -> None:
     """Set the dashboard info."""
     manager = await async_get_or_create_dashboard_manager(hass)
-    await manager.async_set_dashboard_info(addon_slug, host, port)
+    await manager.async_set_dashboard_info(
+        {"addon_slug": addon_slug, "host": host, "port": port}
+    )
