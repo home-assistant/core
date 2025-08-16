@@ -1,0 +1,22 @@
+set_zone_temperature:
+  target:
+    entity:
+      domain: climate
+  fields:
+    zone_id:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 10
+          mode: box
+          step: 1
+    temperature:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 50
+          mode: box
+          step: 0.5
+          unit_of_measurement: °C
