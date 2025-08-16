@@ -156,16 +156,57 @@ HANDLE_INFO = Info(
         )
     ]
 )
+
 SATELLITE_INFO = Info(
     satellite=Satellite(
+        area="Office",
         name="Test Satellite",
         description="Test Satellite",
         installed=True,
         attribution=TEST_ATTR,
-        area="Office",
-        version=None,
-    )
+        version="1.0.0",
+    ),
+    asr=[
+        AsrProgram(
+            name="Test ASR",
+            description="Test ASR",
+            installed=True,
+            attribution=TEST_ATTR,
+            version="1.0.0",
+            models=[
+                AsrModel(
+                    name="Test Model",
+                    description="Test Model",
+                    installed=True,
+                    attribution=TEST_ATTR,
+                    languages=["en-US"],
+                    version="1.0.0",
+                )
+            ],
+        )
+    ],
+    tts=[
+        TtsProgram(
+            name="Test TTS",
+            description="Test TTS",
+            installed=True,
+            attribution=TEST_ATTR,
+            version="1.0.0",
+            voices=[
+                TtsVoice(
+                    name="Test Voice",
+                    description="Test Voice",
+                    installed=True,
+                    attribution=TEST_ATTR,
+                    languages=["en-US"],
+                    version="1.0.0",
+                )
+            ],
+        )
+    ],
 )
+
+
 EMPTY_INFO = Info()
 
 
