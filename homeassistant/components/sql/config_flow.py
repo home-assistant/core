@@ -161,7 +161,7 @@ def validate_query(db_url: str, query: str, column: str) -> bool:
 class SQLConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SQL integration."""
 
-    VERSION = 1
+    VERSION = 2
 
     data: dict[str, Any]
 

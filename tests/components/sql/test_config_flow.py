@@ -321,6 +321,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
                 CONF_STATE_CLASS: SensorStateClass.TOTAL,
             },
         },
+        version=2,
     )
     entry.add_to_hass(hass)
 
@@ -371,6 +372,7 @@ async def test_options_flow_name_previously_removed(hass: HomeAssistant) -> None
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
             },
         },
+        version=2,
         title="Get Value Title",
     )
     entry.add_to_hass(hass)
@@ -417,6 +419,7 @@ async def test_options_flow_fails_db_url(hass: HomeAssistant) -> None:
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
             },
         },
+        version=2,
     )
     entry.add_to_hass(hass)
 
@@ -455,6 +458,7 @@ async def test_options_flow_fails_invalid_query(hass: HomeAssistant) -> None:
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
             },
         },
+        version=2,
     )
     entry.add_to_hass(hass)
 
@@ -556,6 +560,7 @@ async def test_options_flow_fails_invalid_column_name(hass: HomeAssistant) -> No
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
             },
         },
+        version=2,
     )
     entry.add_to_hass(hass)
 
@@ -607,6 +612,7 @@ async def test_options_flow_db_url_empty(hass: HomeAssistant) -> None:
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
             },
         },
+        version=2,
     )
     entry.add_to_hass(hass)
 
@@ -722,6 +728,7 @@ async def test_device_state_class(hass: HomeAssistant) -> None:
                 CONF_UNIT_OF_MEASUREMENT: "MiB",
             },
         },
+        version=2,
     )
     entry.add_to_hass(hass)
 
