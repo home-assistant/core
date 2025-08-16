@@ -1,0 +1,100 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Västtrafik",
+        "description": "Configure Västtrafik integration or add a departure board."
+      },
+      "credentials": {
+        "title": "Set up Västtrafik API",
+        "description": "Enter your Västtrafik API credentials. You can get these from the Västtrafik developer portal.",
+        "data": {
+          "key": "API Key",
+          "secret": "API Secret"
+        },
+        "data_description": {
+          "key": "Your Västtrafik API key",
+          "secret": "Your Västtrafik API secret"
+        }
+      },
+      "departure_board": {
+        "title": "Add departure board",
+        "description": "Search for a station to add as a departure board",
+        "data": {
+          "search_query": "Station name"
+        },
+        "data_description": {
+          "search_query": "Enter at least 2 characters to search for stations (e.g. 'Central', 'Götaplatsen', 'Frölunda')"
+        }
+      },
+      "select_departure_station": {
+        "title": "Select station",
+        "description": "Choose a station from the search results",
+        "data": {
+          "station": "Station"
+        },
+        "data_description": {
+          "station": "Select the station for your departure board"
+        }
+      },
+      "configure_departure_sensor": {
+        "title": "Configure departure board",
+        "description": "Configure departure board for {station_name}",
+        "data": {
+          "name": "Board name (optional)",
+          "heading": "Direction filter (optional)",
+          "lines": "Line numbers (optional)",
+          "tracks": "Track/Platform filter (optional)",
+          "delay": "Time offset in minutes"
+        },
+        "data_description": {
+          "name": "Custom name for this departure board",
+          "heading": "Filter departures to this destination only",
+          "lines": "Enter line numbers separated by commas (e.g. 1, 2, 55)",
+          "tracks": "Enter track/platform numbers separated by commas (e.g. A, B, 1, 2)",
+          "delay": "Show departures starting from this many minutes in the future (0 = now)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to Västtrafik API",
+      "invalid_auth": "Invalid API credentials",
+      "unknown": "Unexpected error occurred",
+      "search_required": "Please enter a search query",
+      "search_too_short": "Search query must be at least 2 characters",
+      "no_stations_found": "No stations found matching your search",
+      "station_required": "Please select a station",
+      "api_error": "API error occurred. Please try again or check your credentials."
+    },
+    "abort": {
+      "already_configured": "This departure board is already configured",
+      "no_main_integration": "Main Västtrafik integration not found. Please set up Västtrafik API first.",
+      "not_configurable": "Only departure boards can be reconfigured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure departure board",
+        "description": "Update settings for departure board at {station_name}",
+        "data": {
+          "name": "Board name (optional)",
+          "heading": "Destination filter (optional)",
+          "lines": "Line numbers (optional)",
+          "tracks": "Track/Platform filter (optional)",
+          "delay": "Time offset in minutes"
+        },
+        "data_description": {
+          "name": "Custom name for this departure board",
+          "heading": "Filter departures to this destination only",
+          "lines": "Enter line numbers separated by commas (e.g. 1, 2, 55)",
+          "tracks": "Enter track/platform numbers separated by commas (e.g. A, B, 1, 2)",
+          "delay": "Show departures starting from this many minutes in the future (0 = now)"
+        }
+      }
+    },
+    "abort": {
+      "not_configurable": "Only departure boards can be reconfigured"
+    }
+  }
+}
