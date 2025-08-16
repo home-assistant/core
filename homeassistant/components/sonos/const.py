@@ -191,6 +191,7 @@ MODELS_LINEIN_AND_TV = ("AMP",)
 MODEL_SONOS_ARC_ULTRA = "SONOS ARC ULTRA"
 
 ATTR_SPEECH_ENHANCEMENT_ENABLED = "speech_enhance_enabled"
+SPEECH_DIALOG_LEVEL = "speech_dialog_level"
 ATTR_DIALOG_LEVEL = "dialog_level"
 ATTR_DIALOG_LEVEL_ENUM = "dialog_level_enum"
 

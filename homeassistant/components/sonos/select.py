@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
-from homeassistant.components.select import SelectEntity
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -15,31 +15,32 @@ from .const import (
     ATTR_DIALOG_LEVEL_ENUM,
     MODEL_SONOS_ARC_ULTRA,
     SONOS_CREATE_SELECTS,
+    SPEECH_DIALOG_LEVEL,
 )
 from .entity import SonosEntity
 from .helpers import SonosConfigEntry, soco_error
 from .speaker import SonosSpeaker
 
 
-@dataclass(frozen=True)
-class SonosSelectType:
-    """Data class for Sonos select types."""
+@dataclass(frozen=True, kw_only=True)
+class SonosSelectEntityDescription(SelectEntityDescription):
+    """Describes AirGradient select entity."""
 
-    feature: str
-    attribute: str
-    model: str
-    options: list[str]
+    soco_attribute: str
+    speaker_attribute: str
+    speaker_model: str
 
 
-SELECT_TYPES: list[SonosSelectType] = [
-    SonosSelectType(
-        feature=ATTR_DIALOG_LEVEL,
-        attribute=ATTR_DIALOG_LEVEL_ENUM,
-        model=MODEL_SONOS_ARC_ULTRA,
+SELECT_TYPES: list[SonosSelectEntityDescription] = [
+    SonosSelectEntityDescription(
+        key=SPEECH_DIALOG_LEVEL,
+        translation_key=SPEECH_DIALOG_LEVEL,
+        soco_attribute=ATTR_DIALOG_LEVEL,
+        speaker_attribute=ATTR_DIALOG_LEVEL_ENUM,
+        speaker_model=MODEL_SONOS_ARC_ULTRA,
         options=["off", "low", "medium", "high", "max"],
     ),
 ]
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,14 +52,16 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Sonos select platform from a config entry."""
 
-    def available_soco_attributes(speaker: SonosSpeaker) -> list[SonosSelectType]:
-        features: list[SonosSelectType] = []
+    def available_soco_attributes(
+        speaker: SonosSpeaker,
+    ) -> list[SonosSelectEntityDescription]:
+        features: list[SonosSelectEntityDescription] = []
         for select_data in SELECT_TYPES:
-            if select_data.model == speaker.model_name.upper():
+            if select_data.speaker_model == speaker.model_name.upper():
                 if (
-                    state := getattr(speaker.soco, select_data.feature, None)
+                    state := getattr(speaker.soco, select_data.soco_attribute, None)
                 ) is not None:
-                    setattr(speaker, select_data.attribute, state)
+                    setattr(speaker, select_data.speaker_attribute, state)
                     features.append(select_data)
         return features
 
@@ -83,15 +86,16 @@ class SonosSelectEntity(SonosEntity, SelectEntity):
         self,
         speaker: SonosSpeaker,
         config_entry: SonosConfigEntry,
-        select_data: SonosSelectType,
+        select_data: SonosSelectEntityDescription,
     ) -> None:
         """Initialize the select entity."""
         super().__init__(speaker, config_entry)
-        self._attr_unique_id = f"{self.soco.uid}-select-{select_data.feature}"
-        self._attr_translation_key = select_data.feature
+        self._attr_unique_id = f"{self.soco.uid}-{select_data.key}"
+        self._attr_translation_key = select_data.translation_key
+        assert select_data.options is not None
         self._attr_options = select_data.options
-        self.attribute = select_data.attribute
-        self.feature = select_data.feature
+        self.speaker_attribute = select_data.speaker_attribute
+        self.soco_attribute = select_data.soco_attribute
 
     async def _async_fallback_poll(self) -> None:
         """Poll the value if subscriptions are not working."""
@@ -101,18 +105,18 @@ class SonosSelectEntity(SonosEntity, SelectEntity):
     @soco_error()
     def poll_state(self) -> None:
         """Poll the device for the current state."""
-        state = getattr(self.soco, self.feature)
-        setattr(self.speaker, self.attribute, state)
+        state = getattr(self.soco, self.soco_attribute)
+        setattr(self.speaker, self.speaker_attribute, state)
 
     @property
     def current_option(self) -> str | None:
         """Return the current option for the entity."""
-        option = getattr(self.speaker, self.attribute, None)
+        option = getattr(self.speaker, self.speaker_attribute, None)
         if not isinstance(option, int) or not (0 <= option < len(self._attr_options)):
             _LOGGER.error(
                 "Invalid option %s for %s on %s",
                 option,
-                self.feature,
+                self.soco_attribute,
                 self.speaker.zone_name,
             )
             return None
@@ -122,4 +126,4 @@ class SonosSelectEntity(SonosEntity, SelectEntity):
     def select_option(self, option: str) -> None:
         """Set a new value."""
         dialog_level = self._attr_options.index(option)
-        setattr(self.soco, self.feature, dialog_level)
+        setattr(self.soco, self.soco_attribute, dialog_level)

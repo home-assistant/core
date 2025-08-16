@@ -51,13 +51,13 @@
       }
     },
     "select": {
-      "dialog_level": {
+      "speech_dialog_level": {
         "name": "Dialog level",
         "state": {
-          "off": "Off",
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High",
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]",
           "max": "Max"
         }
       }
