@@ -1,4 +1,40 @@
 {
+  "common": {
+    "ajar": "Ajar",
+    "distance_driven_almost_time_for_service": "Almost time for distance service",
+    "distance_driven_overdue_for_service": "Distance service overdue",
+    "distance_driven_time_for_service": "Time for distance service",
+    "door_front_left": "Door front left",
+    "door_front_right": "Door front right",
+    "door_rear_left": "Door rear left",
+    "door_rear_right": "Door rear right",
+    "engine_hours_almost_time_for_service": "Almost time for engine service",
+    "engine_hours_overdue_for_service": "Engine service overdue",
+    "engine_hours_time_for_service": "Time for engine service",
+    "hood": "Hood",
+    "no_warning": "No warning",
+    "oil_level": "Oil level",
+    "pressure": "Pressure",
+    "regular_maintenance_almost_time_for_service": "Almost time for service",
+    "regular_maintenance_overdue_for_service": "Service overdue",
+    "regular_maintenance_time_for_service": "Time for service",
+    "service": "Service",
+    "service_required": "Service required",
+    "sunroof": "Sunroof",
+    "tailgate": "Tailgate",
+    "tank_lid": "Tank lid",
+    "tire_front_left": "Tire front left",
+    "tire_front_right": "Tire front right",
+    "tire_rear_left": "Tire rear left",
+    "tire_rear_right": "Tire rear right",
+    "too_high": "Too high",
+    "too_low": "Too low",
+    "unknown_warning": "Unknown warning",
+    "window_front_left": "Window front left",
+    "window_front_right": "Window front right",
+    "window_rear_left": "Window rear left",
+    "window_rear_right": "Window rear right"
+  },
   "config": {
     "step": {
       "pick_implementation": {
@@ -50,6 +86,216 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "brake_fluid_level_warning": {
+        "name": "Brake fluid"
+      },
+      "brake_light_center_warning": {
+        "name": "Brake light center"
+      },
+      "brake_light_left_warning": {
+        "name": "Brake light left"
+      },
+      "brake_light_right_warning": {
+        "name": "Brake light right"
+      },
+      "coolant_level_warning": {
+        "name": "Coolant level"
+      },
+      "daytime_running_light_left_warning": {
+        "name": "Daytime running light left"
+      },
+      "daytime_running_light_right_warning": {
+        "name": "Daytime running light right"
+      },
+      "door_front_left": {
+        "name": "[%key:component::volvo::common::door_front_left%]"
+      },
+      "door_front_right": {
+        "name": "[%key:component::volvo::common::door_front_right%]"
+      },
+      "door_rear_left": {
+        "name": "[%key:component::volvo::common::door_rear_left%]"
+      },
+      "door_rear_right": {
+        "name": "[%key:component::volvo::common::door_rear_right%]"
+      },
+      "engine_status": {
+        "name": "Engine status"
+      },
+      "fog_light_front_warning": {
+        "name": "Fog light front"
+      },
+      "fog_light_rear_warning": {
+        "name": "Fog light rear"
+      },
+      "hazard_lights_warning": {
+        "name": "Hazard lights"
+      },
+      "high_beam_left_warning": {
+        "name": "High beam left"
+      },
+      "high_beam_right_warning": {
+        "name": "High beam right"
+      },
+      "hood": {
+        "name": "[%key:component::volvo::common::hood%]"
+      },
+      "low_beam_left_warning": {
+        "name": "Low beam left"
+      },
+      "low_beam_right_warning": {
+        "name": "Low beam right"
+      },
+      "oil_level_warning": {
+        "name": "[%key:component::volvo::common::oil_level%]",
+        "state_attributes": {
+          "level": {
+            "name": "Level",
+            "state": {
+              "no_warning": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "service_required": "[%key:component::volvo::common::service_required%]",
+              "too_high": "[%key:component::volvo::common::too_high%]",
+              "too_low": "[%key:component::volvo::common::too_low%]"
+            }
+          }
+        }
+      },
+      "position_light_front_left_warning": {
+        "name": "Position light front left"
+      },
+      "position_light_front_right_warning": {
+        "name": "Position light front right"
+      },
+      "position_light_rear_left_warning": {
+        "name": "Position light rear left"
+      },
+      "position_light_rear_right_warning": {
+        "name": "Position light rear right"
+      },
+      "registration_plate_light_warning": {
+        "name": "Registration plate light"
+      },
+      "reverse_lights_warning": {
+        "name": "Reverse lights"
+      },
+      "service_warning": {
+        "name": "[%key:component::volvo::common::service%]",
+        "state_attributes": {
+          "reason": {
+            "name": "Reason",
+            "state": {
+              "distance_driven_almost_time_for_service": "[%key:component::volvo::common::distance_driven_almost_time_for_service%]",
+              "distance_driven_overdue_for_service": "[%key:component::volvo::common::distance_driven_overdue_for_service%]",
+              "distance_driven_time_for_service": "[%key:component::volvo::common::distance_driven_time_for_service%]",
+              "engine_hours_almost_time_for_service": "[%key:component::volvo::common::engine_hours_almost_time_for_service%]",
+              "engine_hours_overdue_for_service": "[%key:component::volvo::common::engine_hours_overdue_for_service%]",
+              "engine_hours_time_for_service": "[%key:component::volvo::common::engine_hours_time_for_service%]",
+              "no_warning": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "regular_maintenance_almost_time_for_service": "[%key:component::volvo::common::regular_maintenance_almost_time_for_service%]",
+              "regular_maintenance_overdue_for_service": "[%key:component::volvo::common::regular_maintenance_overdue_for_service%]",
+              "regular_maintenance_time_for_service": "[%key:component::volvo::common::regular_maintenance_time_for_service%]",
+              "unknown_warning": "[%key:component::volvo::common::unknown_warning%]"
+            }
+          }
+        }
+      },
+      "side_mark_lights_warning": {
+        "name": "Side mark lights"
+      },
+      "sunroof": {
+        "name": "[%key:component::volvo::common::sunroof%]"
+      },
+      "tailgate": {
+        "name": "[%key:component::volvo::common::tailgate%]"
+      },
+      "tank_lid": {
+        "name": "[%key:component::volvo::common::tank_lid%]"
+      },
+      "turn_indication_front_left_warning": {
+        "name": "Turn indication front left"
+      },
+      "turn_indication_front_right_warning": {
+        "name": "Turn indication front right"
+      },
+      "turn_indication_rear_left_warning": {
+        "name": "Turn indication rear left"
+      },
+      "turn_indication_rear_right_warning": {
+        "name": "Turn indication rear right"
+      },
+      "tire_front_left": {
+        "name": "[%key:component::volvo::common::tire_front_left%]",
+        "state_attributes": {
+          "pressure": {
+            "name": "[%key:component::volvo::common::pressure%]",
+            "state": {
+              "high_pressure": "[%key:common::state::high%]",
+              "low_pressure": "[%key:common::state::low%]",
+              "no_warning": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "very_low_pressure": "[%key:common::state::very_low%]"
+            }
+          }
+        }
+      },
+      "tire_front_right": {
+        "name": "[%key:component::volvo::common::tire_front_right%]",
+        "state_attributes": {
+          "pressure": {
+            "name": "[%key:component::volvo::common::pressure%]",
+            "state": {
+              "high_pressure": "[%key:common::state::high%]",
+              "low_pressure": "[%key:common::state::low%]",
+              "no_warning": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "very_low_pressure": "[%key:common::state::very_low%]"
+            }
+          }
+        }
+      },
+      "tire_rear_left": {
+        "name": "[%key:component::volvo::common::tire_rear_left%]",
+        "state_attributes": {
+          "pressure": {
+            "name": "[%key:component::volvo::common::pressure%]",
+            "state": {
+              "high_pressure": "[%key:common::state::high%]",
+              "low_pressure": "[%key:common::state::low%]",
+              "no_warning": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "very_low_pressure": "[%key:common::state::very_low%]"
+            }
+          }
+        }
+      },
+      "tire_rear_right": {
+        "name": "[%key:component::volvo::common::tire_rear_right%]",
+        "state_attributes": {
+          "pressure": {
+            "name": "[%key:component::volvo::common::pressure%]",
+            "state": {
+              "high_pressure": "[%key:common::state::high%]",
+              "low_pressure": "[%key:common::state::low%]",
+              "no_warning": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
+              "very_low_pressure": "[%key:common::state::very_low%]"
+            }
+          }
+        }
+      },
+      "washer_fluid_level_warning": {
+        "name": "Washer fluid"
+      },
+      "window_front_left": {
+        "name": "[%key:component::volvo::common::window_front_left%]"
+      },
+      "window_front_right": {
+        "name": "[%key:component::volvo::common::window_front_right%]"
+      },
+      "window_rear_left": {
+        "name": "[%key:component::volvo::common::window_rear_left%]"
+      },
+      "window_rear_right": {
+        "name": "[%key:component::volvo::common::window_rear_right%]"
+      }
+    },
     "sensor": {
       "availability": {
         "name": "Car connection",
@@ -140,6 +386,38 @@
       "distance_to_service": {
         "name": "Distance to service"
       },
+      "door_front_left": {
+        "name": "[%key:component::volvo::common::door_front_left%]",
+        "state": {
+          "ajar": "[%key:component::volvo::common::ajar%]",
+          "closed": "[%key:common::state::closed%]",
+          "open": "[%key:common::state::open%]"
+        }
+      },
+      "door_front_right": {
+        "name": "[%key:component::volvo::common::door_front_right%]",
+        "state": {
+          "ajar": "[%key:component::volvo::common::ajar%]",
+          "closed": "[%key:common::state::closed%]",
+          "open": "[%key:common::state::open%]"
+        }
+      },
+      "door_rear_left": {
+        "name": "[%key:component::volvo::common::door_rear_left%]",
+        "state": {
+          "ajar": "[%key:component::volvo::common::ajar%]",
+          "closed": "[%key:common::state::closed%]",
+          "open": "[%key:common::state::open%]"
+        }
+      },
+      "door_rear_right": {
+        "name": "[%key:component::volvo::common::door_rear_right%]",
+        "state": {
+          "ajar": "[%key:component::volvo::common::ajar%]",
+          "closed": "[%key:common::state::closed%]",
+          "open": "[%key:common::state::open%]"
+        }
+      },
       "engine_time_to_service": {
         "name": "Time to engine service"
       },
@@ -149,8 +427,65 @@
       "fuel_amount": {
         "name": "Fuel amount"
       },
+      "hood": {
+        "name": "[%key:component::volvo::common::hood%]",
+        "state": {
+          "ajar": "[%key:component::volvo::common::ajar%]",
+          "closed": "[%key:common::state::closed%]",
+          "open": "[%key:common::state::open%]"
+        }
+      },
       "odometer": {
         "name": "Odometer"
+      },
+      "oil_level_warning": {
+        "name": "[%key:component::volvo::common::oil_level%]",
+        "state": {
+          "no_warning": "[%key:component::volvo::common::no_warning%]",
+          "service_required": "[%key:component::volvo::common::service_required%]",
+          "too_high": "[%key:component::volvo::common::too_high%]",
+          "too_low": "[%key:component::volvo::common::too_low%]"
+        }
+      },
+      "service_warning": {
+        "name": "[%key:component::volvo::common::service%]",
+        "state": {
+          "distance_driven_almost_time_for_service": "[%key:component::volvo::common::distance_driven_almost_time_for_service%]",
+          "distance_driven_overdue_for_service": "[%key:component::volvo::common::distance_driven_overdue_for_service%]",
+          "distance_driven_time_for_service": "[%key:component::volvo::common::distance_driven_time_for_service%]",
+          "engine_hours_almost_time_for_service": "[%key:component::volvo::common::engine_hours_almost_time_for_service%]",
+          "engine_hours_overdue_for_service": "[%key:component::volvo::common::engine_hours_overdue_for_service%]",
+          "engine_hours_time_for_service": "[%key:component::volvo::common::engine_hours_time_for_service%]",
+          "no_warning": "[%key:component::volvo::common::no_warning%]",
+          "regular_maintenance_almost_time_for_service": "[%key:component::volvo::common::regular_maintenance_almost_time_for_service%]",
+          "regular_maintenance_overdue_for_service": "[%key:component::volvo::common::regular_maintenance_overdue_for_service%]",
+          "regular_maintenance_time_for_service": "[%key:component::volvo::common::regular_maintenance_time_for_service%]",
+          "unknown_warning": "[%key:component::volvo::common::unknown_warning%]"
+        }
+      },
+      "sunroof": {
+        "name": "[%key:component::volvo::common::sunroof%]",
+        "state": {
+          "ajar": "[%key:component::volvo::common::ajar%]",
+          "closed": "[%key:common::state::closed%]",
+          "open": "[%key:common::state::open%]"
+        }
+      },
+      "tailgate": {
+        "name": "[%key:component::volvo::common::tailgate%]",
+        "state": {
+          "ajar": "[%key:component::volvo::common::ajar%]",
+          "closed": "[%key:common::state::closed%]",
+          "open": "[%key:common::state::open%]"
+        }
+      },
+      "tank_lid": {
+        "name": "[%key:component::volvo::common::tank_lid%]",
+        "state": {
+          "ajar": "[%key:component::volvo::common::ajar%]",
+          "closed": "[%key:common::state::closed%]",
+          "open": "[%key:common::state::open%]"
+        }
       },
       "target_battery_charge_level": {
         "name": "Target battery charge level"
@@ -158,11 +493,79 @@
       "time_to_service": {
         "name": "Time to service"
       },
+      "tire_front_left": {
+        "name": "[%key:component::volvo::common::tire_front_left%]",
+        "state": {
+          "high_pressure": "[%key:common::state::high%]",
+          "low_pressure": "[%key:common::state::low%]",
+          "no_warning": "[%key:component::volvo::common::no_warning%]",
+          "very_low_pressure": "[%key:common::state::very_low%]"
+        }
+      },
+      "tire_front_right": {
+        "name": "[%key:component::volvo::common::tire_front_right%]",
+        "state": {
+          "high_pressure": "[%key:common::state::high%]",
+          "low_pressure": "[%key:common::state::low%]",
+          "no_warning": "[%key:component::volvo::common::no_warning%]",
+          "very_low_pressure": "[%key:common::state::very_low%]"
+        }
+      },
+      "tire_rear_left": {
+        "name": "[%key:component::volvo::common::tire_rear_left%]",
+        "state": {
+          "high_pressure": "[%key:common::state::high%]",
+          "low_pressure": "[%key:common::state::low%]",
+          "no_warning": "[%key:component::volvo::common::no_warning%]",
+          "very_low_pressure": "[%key:common::state::very_low%]"
+        }
+      },
+      "tire_rear_right": {
+        "name": "[%key:component::volvo::common::tire_rear_right%]",
+        "state": {
+          "high_pressure": "[%key:common::state::high%]",
+          "low_pressure": "[%key:common::state::low%]",
+          "no_warning": "[%key:component::volvo::common::no_warning%]",
+          "very_low_pressure": "[%key:common::state::very_low%]"
+        }
+      },
       "trip_meter_automatic": {
         "name": "Trip automatic distance"
       },
       "trip_meter_manual": {
         "name": "Trip manual distance"
+      },
+      "window_front_left": {
+        "name": "[%key:component::volvo::common::window_front_left%]",
+        "state": {
+          "ajar": "[%key:component::volvo::common::ajar%]",
+          "closed": "[%key:common::state::closed%]",
+          "open": "[%key:common::state::open%]"
+        }
+      },
+      "window_front_right": {
+        "name": "[%key:component::volvo::common::window_front_right%]",
+        "state": {
+          "ajar": "[%key:component::volvo::common::ajar%]",
+          "closed": "[%key:common::state::closed%]",
+          "open": "[%key:common::state::open%]"
+        }
+      },
+      "window_rear_left": {
+        "name": "[%key:component::volvo::common::window_rear_left%]",
+        "state": {
+          "ajar": "[%key:component::volvo::common::ajar%]",
+          "closed": "[%key:common::state::closed%]",
+          "open": "[%key:common::state::open%]"
+        }
+      },
+      "window_rear_right": {
+        "name": "[%key:component::volvo::common::window_rear_right%]",
+        "state": {
+          "ajar": "[%key:component::volvo::common::ajar%]",
+          "closed": "[%key:common::state::closed%]",
+          "open": "[%key:common::state::open%]"
+        }
       }
     }
   },

@@ -25,6 +25,7 @@ from .api import VolvoAuth
 from .const import CONF_VIN, DOMAIN, PLATFORMS
 from .coordinator import (
     VolvoConfigEntry,
+    VolvoFastIntervalCoordinator,
     VolvoMediumIntervalCoordinator,
     VolvoSlowIntervalCoordinator,
     VolvoVerySlowIntervalCoordinator,
@@ -39,6 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> boo
 
     # Order is important! Faster intervals must come first.
     coordinators = (
+        VolvoFastIntervalCoordinator(hass, entry, api, vehicle),
         VolvoMediumIntervalCoordinator(hass, entry, api, vehicle),
         VolvoSlowIntervalCoordinator(hass, entry, api, vehicle),
         VolvoVerySlowIntervalCoordinator(hass, entry, api, vehicle),

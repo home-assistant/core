@@ -532,6 +532,246 @@
     'state': '29000',
   })
 # ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_door_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_door_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door front left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_front_left',
+    'unique_id': 'yv1abcdefg1234567_door_front_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_door_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo EX30 Door front left',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_door_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_door_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_door_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door front right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_front_right',
+    'unique_id': 'yv1abcdefg1234567_door_front_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_door_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo EX30 Door front right',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_door_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_door_rear_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_door_rear_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door rear left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_rear_left',
+    'unique_id': 'yv1abcdefg1234567_door_rear_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_door_rear_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo EX30 Door rear left',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_door_rear_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_door_rear_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_door_rear_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door rear right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_rear_right',
+    'unique_id': 'yv1abcdefg1234567_door_rear_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_door_rear_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo EX30 Door rear right',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_door_rear_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_estimated_charging_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -588,6 +828,66 @@
     'state': '2',
   })
 # ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_hood-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_hood',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Hood',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hood',
+    'unique_id': 'yv1abcdefg1234567_hood',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_hood-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo EX30 Hood',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_hood',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_odometer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -642,6 +942,324 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30000',
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_oil_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'service_required',
+        'too_low',
+        'too_high',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_oil_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Oil level',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'oil_level_warning',
+    'unique_id': 'yv1abcdefg1234567_oil_level_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_oil_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo EX30 Oil level',
+      'options': list([
+        'service_required',
+        'too_low',
+        'too_high',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_oil_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_warning',
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'service_warning',
+    'unique_id': 'yv1abcdefg1234567_service_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo EX30 Service',
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_warning',
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_sunroof-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_sunroof',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Sunroof',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sunroof',
+    'unique_id': 'yv1abcdefg1234567_sunroof',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_sunroof-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo EX30 Sunroof',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_sunroof',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_tailgate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_tailgate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tailgate',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tailgate',
+    'unique_id': 'yv1abcdefg1234567_tailgate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_tailgate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo EX30 Tailgate',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_tailgate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_tank_lid-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_tank_lid',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tank lid',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tank_lid',
+    'unique_id': 'yv1abcdefg1234567_tank_lid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_tank_lid-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo EX30 Tank lid',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_tank_lid',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
   })
 # ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_target_battery_charge_level-entry]
@@ -806,6 +1424,254 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '690',
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_tire_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_tire_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tire front left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tire_front_left',
+    'unique_id': 'yv1abcdefg1234567_tire_front_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_tire_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo EX30 Tire front left',
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_tire_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_tire_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_tire_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tire front right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tire_front_right',
+    'unique_id': 'yv1abcdefg1234567_tire_front_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_tire_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo EX30 Tire front right',
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_tire_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_tire_rear_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_tire_rear_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tire rear left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tire_rear_left',
+    'unique_id': 'yv1abcdefg1234567_tire_rear_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_tire_rear_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo EX30 Tire rear left',
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_tire_rear_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_tire_rear_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_tire_rear_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tire rear right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tire_rear_right',
+    'unique_id': 'yv1abcdefg1234567_tire_rear_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_tire_rear_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo EX30 Tire rear right',
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_tire_rear_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_trip_automatic_average_speed-entry]
@@ -1087,6 +1953,246 @@
     'state': '3822.9',
   })
 # ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_window_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_window_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Window front left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_front_left',
+    'unique_id': 'yv1abcdefg1234567_window_front_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_window_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo EX30 Window front left',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_window_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_window_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_window_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Window front right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_front_right',
+    'unique_id': 'yv1abcdefg1234567_window_front_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_window_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo EX30 Window front right',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_window_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_window_rear_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_window_rear_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Window rear left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_rear_left',
+    'unique_id': 'yv1abcdefg1234567_window_rear_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_window_rear_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo EX30 Window rear left',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_window_rear_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_window_rear_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_window_rear_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Window rear right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_rear_right',
+    'unique_id': 'yv1abcdefg1234567_window_rear_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_window_rear_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo EX30 Window rear right',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_window_rear_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
 # name: test_sensor[s90_diesel_2018][sensor.volvo_s90_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1319,6 +2425,246 @@
     'state': '29000',
   })
 # ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_door_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_door_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door front left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_front_left',
+    'unique_id': 'yv1abcdefg1234567_door_front_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_door_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo S90 Door front left',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_door_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_door_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_door_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door front right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_front_right',
+    'unique_id': 'yv1abcdefg1234567_door_front_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_door_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo S90 Door front right',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_door_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_door_rear_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_door_rear_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door rear left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_rear_left',
+    'unique_id': 'yv1abcdefg1234567_door_rear_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_door_rear_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo S90 Door rear left',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_door_rear_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_door_rear_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_door_rear_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door rear right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_rear_right',
+    'unique_id': 'yv1abcdefg1234567_door_rear_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_door_rear_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo S90 Door rear right',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_door_rear_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
 # name: test_sensor[s90_diesel_2018][sensor.volvo_s90_fuel_amount-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1375,6 +2721,66 @@
     'state': '47.3',
   })
 # ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_hood-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_hood',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Hood',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hood',
+    'unique_id': 'yv1abcdefg1234567_hood',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_hood-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo S90 Hood',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_hood',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
 # name: test_sensor[s90_diesel_2018][sensor.volvo_s90_odometer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1429,6 +2835,324 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30000',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_oil_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'service_required',
+        'too_low',
+        'too_high',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_oil_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Oil level',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'oil_level_warning',
+    'unique_id': 'yv1abcdefg1234567_oil_level_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_oil_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo S90 Oil level',
+      'options': list([
+        'service_required',
+        'too_low',
+        'too_high',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_oil_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_warning',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'service_warning',
+    'unique_id': 'yv1abcdefg1234567_service_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo S90 Service',
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_warning',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_sunroof-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_sunroof',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Sunroof',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sunroof',
+    'unique_id': 'yv1abcdefg1234567_sunroof',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_sunroof-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo S90 Sunroof',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_sunroof',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_tailgate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_tailgate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tailgate',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tailgate',
+    'unique_id': 'yv1abcdefg1234567_tailgate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_tailgate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo S90 Tailgate',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_tailgate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_tank_lid-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_tank_lid',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tank lid',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tank_lid',
+    'unique_id': 'yv1abcdefg1234567_tank_lid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_tank_lid-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo S90 Tank lid',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_tank_lid',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
   })
 # ---
 # name: test_sensor[s90_diesel_2018][sensor.volvo_s90_time_to_engine_service-entry]
@@ -1541,6 +3265,254 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '17',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_tire_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_tire_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tire front left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tire_front_left',
+    'unique_id': 'yv1abcdefg1234567_tire_front_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_tire_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo S90 Tire front left',
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_tire_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_tire_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_tire_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tire front right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tire_front_right',
+    'unique_id': 'yv1abcdefg1234567_tire_front_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_tire_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo S90 Tire front right',
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_tire_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_tire_rear_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_tire_rear_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tire rear left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tire_rear_left',
+    'unique_id': 'yv1abcdefg1234567_tire_rear_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_tire_rear_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo S90 Tire rear left',
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_tire_rear_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_tire_rear_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_tire_rear_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tire rear right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tire_rear_right',
+    'unique_id': 'yv1abcdefg1234567_tire_rear_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_tire_rear_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo S90 Tire rear right',
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_tire_rear_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor[s90_diesel_2018][sensor.volvo_s90_trip_automatic_average_speed-entry]
@@ -1820,6 +3792,246 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3822.9',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_window_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_window_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Window front left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_front_left',
+    'unique_id': 'yv1abcdefg1234567_window_front_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_window_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo S90 Window front left',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_window_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_window_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_window_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Window front right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_front_right',
+    'unique_id': 'yv1abcdefg1234567_window_front_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_window_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo S90 Window front right',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_window_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_window_rear_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_window_rear_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Window rear left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_rear_left',
+    'unique_id': 'yv1abcdefg1234567_window_rear_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_window_rear_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo S90 Window rear left',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_window_rear_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_window_rear_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_s90_window_rear_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Window rear right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_rear_right',
+    'unique_id': 'yv1abcdefg1234567_window_rear_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[s90_diesel_2018][sensor.volvo_s90_window_rear_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo S90 Window rear right',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_s90_window_rear_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
   })
 # ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_battery-entry]
@@ -2467,6 +4679,246 @@
     'state': '29000',
   })
 # ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_door_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_door_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door front left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_front_left',
+    'unique_id': 'yv1abcdefg1234567_door_front_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_door_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC40 Door front left',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_door_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_door_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_door_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door front right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_front_right',
+    'unique_id': 'yv1abcdefg1234567_door_front_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_door_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC40 Door front right',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_door_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_door_rear_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_door_rear_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door rear left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_rear_left',
+    'unique_id': 'yv1abcdefg1234567_door_rear_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_door_rear_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC40 Door rear left',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_door_rear_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_door_rear_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_door_rear_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door rear right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_rear_right',
+    'unique_id': 'yv1abcdefg1234567_door_rear_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_door_rear_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC40 Door rear right',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_door_rear_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_estimated_charging_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2523,6 +4975,66 @@
     'state': '1440',
   })
 # ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_hood-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_hood',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Hood',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hood',
+    'unique_id': 'yv1abcdefg1234567_hood',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_hood-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC40 Hood',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_hood',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_odometer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2577,6 +5089,324 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30000',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_oil_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'service_required',
+        'too_low',
+        'too_high',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_oil_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Oil level',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'oil_level_warning',
+    'unique_id': 'yv1abcdefg1234567_oil_level_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_oil_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC40 Oil level',
+      'options': list([
+        'service_required',
+        'too_low',
+        'too_high',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_oil_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_warning',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'service_warning',
+    'unique_id': 'yv1abcdefg1234567_service_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC40 Service',
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_warning',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_sunroof-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_sunroof',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Sunroof',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sunroof',
+    'unique_id': 'yv1abcdefg1234567_sunroof',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_sunroof-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC40 Sunroof',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_sunroof',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_tailgate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_tailgate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tailgate',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tailgate',
+    'unique_id': 'yv1abcdefg1234567_tailgate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_tailgate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC40 Tailgate',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_tailgate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_tank_lid-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_tank_lid',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tank lid',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tank_lid',
+    'unique_id': 'yv1abcdefg1234567_tank_lid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_tank_lid-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC40 Tank lid',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_tank_lid',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
   })
 # ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_target_battery_charge_level-entry]
@@ -2741,6 +5571,254 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '690',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_tire_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_tire_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tire front left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tire_front_left',
+    'unique_id': 'yv1abcdefg1234567_tire_front_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_tire_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC40 Tire front left',
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_tire_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_tire_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_tire_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tire front right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tire_front_right',
+    'unique_id': 'yv1abcdefg1234567_tire_front_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_tire_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC40 Tire front right',
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_tire_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_tire_rear_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_tire_rear_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tire rear left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tire_rear_left',
+    'unique_id': 'yv1abcdefg1234567_tire_rear_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_tire_rear_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC40 Tire rear left',
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_tire_rear_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_tire_rear_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_tire_rear_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tire rear right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tire_rear_right',
+    'unique_id': 'yv1abcdefg1234567_tire_rear_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_tire_rear_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC40 Tire rear right',
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_tire_rear_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_trip_automatic_average_speed-entry]
@@ -3020,6 +6098,246 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3822.9',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_window_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_window_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Window front left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_front_left',
+    'unique_id': 'yv1abcdefg1234567_window_front_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_window_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC40 Window front left',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_window_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_window_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_window_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Window front right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_front_right',
+    'unique_id': 'yv1abcdefg1234567_window_front_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_window_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC40 Window front right',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_window_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_window_rear_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_window_rear_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Window rear left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_rear_left',
+    'unique_id': 'yv1abcdefg1234567_window_rear_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_window_rear_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC40 Window rear left',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_window_rear_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_window_rear_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc40_window_rear_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Window rear right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_rear_right',
+    'unique_id': 'yv1abcdefg1234567_window_rear_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_window_rear_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC40 Window rear right',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc40_window_rear_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
   })
 # ---
 # name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_battery-entry]
@@ -3489,6 +6807,246 @@
     'state': '29000',
   })
 # ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_door_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_door_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door front left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_front_left',
+    'unique_id': 'yv1abcdefg1234567_door_front_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_door_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC60 Door front left',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_door_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_door_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_door_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door front right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_front_right',
+    'unique_id': 'yv1abcdefg1234567_door_front_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_door_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC60 Door front right',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_door_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_door_rear_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_door_rear_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door rear left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_rear_left',
+    'unique_id': 'yv1abcdefg1234567_door_rear_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_door_rear_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC60 Door rear left',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_door_rear_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_door_rear_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_door_rear_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door rear right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_rear_right',
+    'unique_id': 'yv1abcdefg1234567_door_rear_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_door_rear_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC60 Door rear right',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_door_rear_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
 # name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_fuel_amount-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3545,6 +7103,66 @@
     'state': '47.3',
   })
 # ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_hood-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_hood',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Hood',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hood',
+    'unique_id': 'yv1abcdefg1234567_hood',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_hood-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC60 Hood',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_hood',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
 # name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_odometer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3599,6 +7217,324 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30000',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_oil_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'service_required',
+        'too_low',
+        'too_high',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_oil_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Oil level',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'oil_level_warning',
+    'unique_id': 'yv1abcdefg1234567_oil_level_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_oil_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC60 Oil level',
+      'options': list([
+        'service_required',
+        'too_low',
+        'too_high',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_oil_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_warning',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'service_warning',
+    'unique_id': 'yv1abcdefg1234567_service_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC60 Service',
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_warning',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_sunroof-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_sunroof',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Sunroof',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sunroof',
+    'unique_id': 'yv1abcdefg1234567_sunroof',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_sunroof-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC60 Sunroof',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_sunroof',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_tailgate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_tailgate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tailgate',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tailgate',
+    'unique_id': 'yv1abcdefg1234567_tailgate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_tailgate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC60 Tailgate',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_tailgate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_tank_lid-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_tank_lid',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tank lid',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tank_lid',
+    'unique_id': 'yv1abcdefg1234567_tank_lid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_tank_lid-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC60 Tank lid',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_tank_lid',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
   })
 # ---
 # name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_time_to_engine_service-entry]
@@ -3711,6 +7647,254 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '690',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_tire_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_tire_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tire front left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tire_front_left',
+    'unique_id': 'yv1abcdefg1234567_tire_front_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_tire_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC60 Tire front left',
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_tire_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_tire_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_tire_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tire front right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tire_front_right',
+    'unique_id': 'yv1abcdefg1234567_tire_front_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_tire_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC60 Tire front right',
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_tire_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_tire_rear_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_tire_rear_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tire rear left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tire_rear_left',
+    'unique_id': 'yv1abcdefg1234567_tire_rear_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_tire_rear_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC60 Tire rear left',
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_tire_rear_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_tire_rear_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_tire_rear_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tire rear right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tire_rear_right',
+    'unique_id': 'yv1abcdefg1234567_tire_rear_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_tire_rear_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC60 Tire rear right',
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_tire_rear_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_trip_automatic_distance-entry]
@@ -3934,6 +8118,246 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '219.7',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_window_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_window_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Window front left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_front_left',
+    'unique_id': 'yv1abcdefg1234567_window_front_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_window_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC60 Window front left',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_window_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_window_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_window_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Window front right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_front_right',
+    'unique_id': 'yv1abcdefg1234567_window_front_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_window_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC60 Window front right',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_window_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_window_rear_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_window_rear_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Window rear left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_rear_left',
+    'unique_id': 'yv1abcdefg1234567_window_rear_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_window_rear_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC60 Window rear left',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_window_rear_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_window_rear_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_window_rear_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Window rear right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_rear_right',
+    'unique_id': 'yv1abcdefg1234567_window_rear_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_window_rear_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC60 Window rear right',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_window_rear_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
   })
 # ---
 # name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_battery-entry]
@@ -4168,6 +8592,246 @@
     'state': '29000',
   })
 # ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_door_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_door_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door front left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_front_left',
+    'unique_id': 'yv1abcdefg1234567_door_front_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_door_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Door front left',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_door_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_door_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_door_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door front right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_front_right',
+    'unique_id': 'yv1abcdefg1234567_door_front_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_door_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Door front right',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_door_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_door_rear_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_door_rear_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door rear left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_rear_left',
+    'unique_id': 'yv1abcdefg1234567_door_rear_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_door_rear_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Door rear left',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_door_rear_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_door_rear_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_door_rear_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Door rear right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'door_rear_right',
+    'unique_id': 'yv1abcdefg1234567_door_rear_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_door_rear_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Door rear right',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_door_rear_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
 # name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_fuel_amount-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4224,6 +8888,66 @@
     'state': '47.3',
   })
 # ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_hood-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_hood',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Hood',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hood',
+    'unique_id': 'yv1abcdefg1234567_hood',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_hood-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Hood',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_hood',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
 # name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_odometer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4278,6 +9002,324 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30000',
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_oil_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'service_required',
+        'too_low',
+        'too_high',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_oil_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Oil level',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'oil_level_warning',
+    'unique_id': 'yv1abcdefg1234567_oil_level_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_oil_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Oil level',
+      'options': list([
+        'service_required',
+        'too_low',
+        'too_high',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_oil_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_warning',
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_service-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_service',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Service',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'service_warning',
+    'unique_id': 'yv1abcdefg1234567_service_warning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_service-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Service',
+      'options': list([
+        'distance_driven_almost_time_for_service',
+        'distance_driven_overdue_for_service',
+        'distance_driven_time_for_service',
+        'engine_hours_almost_time_for_service',
+        'engine_hours_overdue_for_service',
+        'engine_hours_time_for_service',
+        'regular_maintenance_almost_time_for_service',
+        'regular_maintenance_overdue_for_service',
+        'regular_maintenance_time_for_service',
+        'unknown_warning',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_service',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no_warning',
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_sunroof-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_sunroof',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Sunroof',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sunroof',
+    'unique_id': 'yv1abcdefg1234567_sunroof',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_sunroof-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Sunroof',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_sunroof',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_tailgate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_tailgate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tailgate',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tailgate',
+    'unique_id': 'yv1abcdefg1234567_tailgate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_tailgate-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Tailgate',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_tailgate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_tank_lid-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_tank_lid',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tank lid',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tank_lid',
+    'unique_id': 'yv1abcdefg1234567_tank_lid',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_tank_lid-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Tank lid',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_tank_lid',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
   })
 # ---
 # name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_time_to_engine_service-entry]
@@ -4390,6 +9432,254 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '690',
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_tire_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_tire_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tire front left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tire_front_left',
+    'unique_id': 'yv1abcdefg1234567_tire_front_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_tire_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Tire front left',
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_tire_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_tire_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_tire_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tire front right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tire_front_right',
+    'unique_id': 'yv1abcdefg1234567_tire_front_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_tire_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Tire front right',
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_tire_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_tire_rear_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_tire_rear_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tire rear left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tire_rear_left',
+    'unique_id': 'yv1abcdefg1234567_tire_rear_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_tire_rear_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Tire rear left',
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_tire_rear_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_tire_rear_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_tire_rear_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Tire rear right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tire_rear_right',
+    'unique_id': 'yv1abcdefg1234567_tire_rear_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_tire_rear_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Tire rear right',
+      'options': list([
+        'very_low_pressure',
+        'low_pressure',
+        'high_pressure',
+        'no_warning',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_tire_rear_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_trip_automatic_average_speed-entry]
@@ -4669,5 +9959,245 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '178.9',
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_window_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_window_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Window front left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_front_left',
+    'unique_id': 'yv1abcdefg1234567_window_front_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_window_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Window front left',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_window_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_window_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_window_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Window front right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_front_right',
+    'unique_id': 'yv1abcdefg1234567_window_front_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_window_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Window front right',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_window_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_window_rear_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_window_rear_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Window rear left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_rear_left',
+    'unique_id': 'yv1abcdefg1234567_window_rear_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_window_rear_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Window rear left',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_window_rear_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_window_rear_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc90_window_rear_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Window rear right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'window_rear_right',
+    'unique_id': 'yv1abcdefg1234567_window_rear_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[xc90_petrol_2019][sensor.volvo_xc90_window_rear_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Volvo XC90 Window rear right',
+      'options': list([
+        'open',
+        'ajar',
+        'closed',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc90_window_rear_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
   })
 # ---
