@@ -164,13 +164,18 @@ async def test_validate_input_success(
     hass: HomeAssistant, mock_openai_client_config_flow: AsyncMock
 ) -> None:
     """Test validate_input function success."""
-    await validate_input(
+    models = await validate_input(
         hass,
         {
             "base_url": "http://localhost:1234/v1",
             "api_key": "test-key",
         },
     )
+
+    # Check that models list is returned
+    assert isinstance(models, list)
+    assert len(models) > 0
+    assert all(isinstance(model, str) for model in models)
 
     mock_openai_client_config_flow.with_options.assert_called_once_with(timeout=10.0)
     mock_openai_client_config_flow.with_options.return_value.models.list.assert_called_once()
@@ -206,6 +211,7 @@ async def test_options_flow(
             "base_url": "http://localhost:1234/v1",
             "api_key": "test-key",
             "model": "old-model",
+            "available_models": ["old-model", "new-model", "another-model"],
         },
     )
     entry.add_to_hass(hass)
@@ -222,4 +228,9 @@ async def test_options_flow(
     )
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["data"] == {"model": "new-model"}
+    assert result2["data"] == {}
+
+    # Check that the config entry data was updated
+    assert entry.data["model"] == "new-model"
+    assert entry.data["base_url"] == "http://localhost:1234/v1"  # Unchanged
+    assert entry.data["api_key"] == "test-key"  # Unchanged

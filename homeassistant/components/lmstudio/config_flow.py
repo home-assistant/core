@@ -50,8 +50,6 @@ from .const import (
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_P,
     DOMAIN,
-    RECOMMENDED_AI_TASK_OPTIONS,
-    RECOMMENDED_CONVERSATION_OPTIONS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,16 +64,17 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
-    """Validate the user input allows us to connect."""
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> list[str]:
+    """Validate the user input allows us to connect and return available models."""
     client = openai.AsyncOpenAI(
         base_url=data[CONF_BASE_URL],
         api_key=data[CONF_API_KEY],
         http_client=get_async_client(hass),
     )
 
-    # Test connection by listing models
-    await client.with_options(timeout=10.0).models.list()
+    # Test connection by listing models and return model list
+    models_response = await client.with_options(timeout=10.0).models.list()
+    return [model.id for model in models_response.data]
 
 
 class LMStudioConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -88,6 +87,7 @@ class LMStudioConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         super().__init__()
         self._connection_data: dict[str, Any] = {}
+        self._available_models: list[str] = []
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -104,7 +104,7 @@ class LMStudioConfigFlow(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_BASE_URL: user_input[CONF_BASE_URL]})
 
         try:
-            await validate_input(self.hass, user_input)
+            self._available_models = await validate_input(self.hass, user_input)
         except openai.APIConnectionError:
             errors["base"] = "cannot_connect"
         except openai.AuthenticationError:
@@ -132,33 +132,37 @@ class LMStudioConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # Combine connection data with model selection
             data = {**self._connection_data, **user_input}
+
             return self.async_create_entry(
-                title=self._connection_data[CONF_BASE_URL],
+                title=self._connection_data["base_url"],
                 data=data,
                 subentries=[
                     {
+                        "data": {},
                         "subentry_type": "conversation",
-                        "data": RECOMMENDED_CONVERSATION_OPTIONS,
-                        "title": DEFAULT_CONVERSATION_NAME,
+                        "title": self._connection_data["base_url"],
                         "unique_id": None,
                     },
                     {
+                        "data": {},
                         "subentry_type": "ai_task_data",
-                        "data": RECOMMENDED_AI_TASK_OPTIONS,
-                        "title": DEFAULT_AI_TASK_NAME,
+                        "title": self._connection_data["base_url"],
                         "unique_id": None,
                     },
                 ],
             )
 
-        # Get available models
-        models = await self._get_available_models()
+        # Create model selection options from available models
+        model_options = [
+            SelectOptionDict(value=model, label=model)
+            for model in self._available_models
+        ]
 
         schema = vol.Schema(
             {
                 vol.Optional(CONF_MODEL, default=DEFAULT_MODEL): SelectSelector(
                     SelectSelectorConfig(
-                        options=models,
+                        options=model_options,
                         mode=SelectSelectorMode.DROPDOWN,
                         custom_value=True,
                     )
@@ -167,23 +171,6 @@ class LMStudioConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(step_id="model", data_schema=schema)
-
-    async def _get_available_models(self) -> list[SelectOptionDict]:
-        """Get available models from the LM Studio server."""
-        try:
-            client = openai.AsyncOpenAI(
-                base_url=self._connection_data[CONF_BASE_URL],
-                api_key=self._connection_data[CONF_API_KEY],
-                http_client=get_async_client(self.hass),
-            )
-            models = await client.with_options(timeout=10.0).models.list()
-            return [
-                SelectOptionDict(value=model.id, label=model.id)
-                for model in models.data
-            ]
-        except Exception:
-            _LOGGER.exception("Failed to fetch models")
-            return []
 
     @staticmethod
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
@@ -340,9 +327,25 @@ class OptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Handle options flow."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            # Update the config entry data instead of options
+            new_data = self.config_entry.data.copy()
+            new_data.update(user_input)
 
-        models = await self._get_available_models()
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, data=new_data
+            )
+            return self.async_create_entry(title="", data={})
+
+        # Get available models from stored data (from initial setup)
+        available_models = self.config_entry.data.get("available_models", [])
+
+        # Convert to SelectOptionDict format if needed
+        if available_models and isinstance(available_models[0], str):
+            models = [
+                SelectOptionDict(value=model, label=model) for model in available_models
+            ]
+        else:
+            models = available_models
 
         schema = vol.Schema(
             {
@@ -363,20 +366,3 @@ class OptionsFlowHandler(OptionsFlow):
             step_id="init",
             data_schema=schema,
         )
-
-    async def _get_available_models(self) -> list[SelectOptionDict]:
-        """Get available models from the LM Studio server."""
-        try:
-            client = openai.AsyncOpenAI(
-                base_url=self.config_entry.data[CONF_BASE_URL],
-                api_key=self.config_entry.data[CONF_API_KEY],
-                http_client=get_async_client(self.hass),
-            )
-            models = await client.with_options(timeout=10.0).models.list()
-            return [
-                SelectOptionDict(value=model.id, label=model.id)
-                for model in models.data
-            ]
-        except Exception:
-            _LOGGER.exception("Failed to fetch models")
-            return []
