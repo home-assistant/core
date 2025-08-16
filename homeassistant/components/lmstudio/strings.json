@@ -58,7 +58,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "LM Studio Options",
+        "title": "LM Studio options",
         "description": "Update your LM Studio configuration",
         "data": {
           "model": "Default Model"
