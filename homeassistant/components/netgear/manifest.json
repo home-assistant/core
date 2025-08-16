@@ -5,8 +5,8 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/netgear",
   "iot_class": "local_polling",
-  "loggers": ["pynetgear"],
-  "requirements": ["pynetgear==0.10.10"],
+  "loggers": ["netgearpy"],
+  "requirements": ["netgearpy==0.1.0"],
   "ssdp": [
     {
       "manufacturer": "NETGEAR, Inc.",

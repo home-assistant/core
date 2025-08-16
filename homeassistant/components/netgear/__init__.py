@@ -6,6 +6,8 @@ from datetime import timedelta
 import logging
 from typing import Any
 
+from netgearpy.models import SystemInfo, TrafficMeterStatistics
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, CONF_SSL
 from homeassistant.core import HomeAssistant
@@ -43,21 +45,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except CannotLoginException as ex:
         raise ConfigEntryNotReady from ex
 
-    port = entry.data.get(CONF_PORT)
-    ssl = entry.data.get(CONF_SSL)
-    if port != router.port or ssl != router.ssl:
-        data = {**entry.data, CONF_PORT: router.port, CONF_SSL: router.ssl}
-        hass.config_entries.async_update_entry(entry, data=data)
-        _LOGGER.warning(
-            (
-                "Netgear port-SSL combination updated from (%i, %r) to (%i, %r), "
-                "this should only occur after a firmware update"
-            ),
-            port,
-            ssl,
-            router.port,
-            router.ssl,
-        )
+    # port = entry.data.get(CONF_PORT)
+    # ssl = entry.data.get(CONF_SSL)
+    # if port != router.port or ssl != router.ssl:
+    #     data = {**entry.data, CONF_PORT: router.port, CONF_SSL: router.ssl}
+    #     hass.config_entries.async_update_entry(entry, data=data)
+    #     _LOGGER.warning(
+    #         (
+    #             "Netgear port-SSL combination updated from (%i, %r) to (%i, %r), "
+    #             "this should only occur after a firmware update"
+    #         ),
+    #         port,
+    #         ssl,
+    #         router.port,
+    #         router.ssl,
+    #     )
 
     hass.data.setdefault(DOMAIN, {})
 
@@ -67,23 +69,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return await router.async_update_device_trackers()
         return False
 
-    async def async_update_traffic_meter() -> dict[str, Any] | None:
+    async def async_update_traffic_meter() -> TrafficMeterStatistics:
         """Fetch data from the router."""
         return await router.async_get_traffic_meter()
 
-    async def async_update_speed_test() -> dict[str, Any] | None:
-        """Fetch data from the router."""
-        return await router.async_get_speed_test()
+    # async def async_update_speed_test() -> dict[str, Any] | None:
+    #     """Fetch data from the router."""
+    #     return await router.async_get_speed_test()
 
-    async def async_check_firmware() -> dict[str, Any] | None:
-        """Check for new firmware of the router."""
-        return await router.async_check_new_firmware()
+    # async def async_check_firmware() -> dict[str, Any] | None:
+    #     """Check for new firmware of the router."""
+    #     return await router.async_check_new_firmware()
 
-    async def async_update_utilization() -> dict[str, Any] | None:
+    async def async_update_utilization() -> SystemInfo:
         """Fetch data from the router."""
         return await router.async_get_utilization()
 
-    async def async_check_link_status() -> dict[str, Any] | None:
+    async def async_check_link_status() -> str:
         """Fetch data from the router."""
         return await router.async_get_link_status()
 
@@ -104,22 +106,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_method=async_update_traffic_meter,
         update_interval=SCAN_INTERVAL,
     )
-    coordinator_speed_test = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=entry,
-        name=f"{router.device_name} Speed test",
-        update_method=async_update_speed_test,
-        update_interval=SPEED_TEST_INTERVAL,
-    )
-    coordinator_firmware = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=entry,
-        name=f"{router.device_name} Firmware",
-        update_method=async_check_firmware,
-        update_interval=SCAN_INTERVAL_FIRMWARE,
-    )
+    # coordinator_speed_test = DataUpdateCoordinator(
+    #     hass,
+    #     _LOGGER,
+    #     config_entry=entry,
+    #     name=f"{router.device_name} Speed test",
+    #     update_method=async_update_speed_test,
+    #     update_interval=SPEED_TEST_INTERVAL,
+    # )
+    # coordinator_firmware = DataUpdateCoordinator(
+    #     hass,
+    #     _LOGGER,
+    #     config_entry=entry,
+    #     name=f"{router.device_name} Firmware",
+    #     update_method=async_check_firmware,
+    #     update_interval=SCAN_INTERVAL_FIRMWARE,
+    # )
     coordinator_utilization = DataUpdateCoordinator(
         hass,
         _LOGGER,
@@ -140,7 +142,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if router.track_devices:
         await coordinator.async_config_entry_first_refresh()
     await coordinator_traffic_meter.async_config_entry_first_refresh()
-    await coordinator_firmware.async_config_entry_first_refresh()
+    # await coordinator_firmware.async_config_entry_first_refresh()
     await coordinator_utilization.async_config_entry_first_refresh()
     await coordinator_link.async_config_entry_first_refresh()
 
@@ -148,8 +150,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         KEY_ROUTER: router,
         KEY_COORDINATOR: coordinator,
         KEY_COORDINATOR_TRAFFIC: coordinator_traffic_meter,
-        KEY_COORDINATOR_SPEED: coordinator_speed_test,
-        KEY_COORDINATOR_FIRMWARE: coordinator_firmware,
+        # KEY_COORDINATOR_SPEED: coordinator_speed_test,
+        # KEY_COORDINATOR_FIRMWARE: coordinator_firmware,
         KEY_COORDINATOR_UTIL: coordinator_utilization,
         KEY_COORDINATOR_LINK: coordinator_link,
     }
