@@ -115,7 +115,7 @@ class BaseScene(RestoreEntity):
     @final
     @callback
     def _async_record_activation(self) -> None:
-        """Handle setting last press timestamp."""
+        """Update the activation timestamp."""
         self.__last_activated = dt_util.utcnow().isoformat()
 
     async def async_internal_added_to_hass(self) -> None:
@@ -128,6 +128,10 @@ class BaseScene(RestoreEntity):
             and state.state != STATE_UNAVAILABLE
         ):
             self.__last_activated = state.state
+
+    async def _async_activate(self, **kwargs: Any) -> None:
+        """Activate scene."""
+        raise NotImplementedError
 
     def activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
