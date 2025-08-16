@@ -83,6 +83,107 @@ async def _fetch_available_models(
     ]
 
 
+def _create_model_options(models: list[str]) -> list[SelectOptionDict]:
+    """Create SelectOptionDict list from model names.
+
+    Args:
+        models: List of model names
+
+    Returns:
+        List of SelectOptionDict for use in selectors
+    """
+    return [SelectOptionDict(value=model, label=model) for model in models]
+
+
+def _create_model_selector(
+    models: list[SelectOptionDict], default_model: str = DEFAULT_MODEL
+) -> SelectSelector:
+    """Create a model selection selector.
+
+    Args:
+        models: List of available models as SelectOptionDict
+        default_model: Default model to select
+
+    Returns:
+        SelectSelector configured for model selection
+    """
+    return SelectSelector(
+        SelectSelectorConfig(
+            options=models,
+            mode=SelectSelectorMode.DROPDOWN,
+            custom_value=True,
+        )
+    )
+
+
+async def _safe_fetch_models_with_errors(
+    hass: HomeAssistant,
+    base_url: str,
+    api_key: str,
+) -> tuple[list[SelectOptionDict], dict[str, str]]:
+    """Safely fetch models with error handling for config flows.
+
+    Args:
+        hass: HomeAssistant instance
+        base_url: LM Studio server base URL
+        api_key: API key for authentication
+
+    Returns:
+        Tuple of (models list, errors dict)
+    """
+    errors: dict[str, str] = {}
+    models: list[SelectOptionDict] = []
+
+    try:
+        models = await _fetch_available_models(hass, base_url, api_key)
+    except openai.APIConnectionError:
+        errors["base"] = "cannot_connect"
+    except openai.AuthenticationError:
+        errors["base"] = "invalid_auth"
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
+        errors["base"] = "unknown"
+
+    return models, errors
+
+
+async def _safe_fetch_models(
+    hass: HomeAssistant,
+    base_url: str,
+    api_key: str,
+    cached_models: list[str] | None = None,
+) -> list[SelectOptionDict]:
+    """Safely get models with fallback to cached models.
+
+    Args:
+        hass: HomeAssistant instance
+        base_url: LM Studio server base URL
+        api_key: API key for authentication
+        cached_models: Optional cached models to use as fallback
+
+    Returns:
+        List of SelectOptionDict for model selection
+    """
+    # Convert cached models if provided
+    if cached_models:
+        if isinstance(cached_models[0], str):
+            models = _create_model_options(cached_models)
+        else:
+            models = cached_models
+    else:
+        models = []
+
+    # Try to fetch fresh models if no cached models or cache empty
+    if not models:
+        try:
+            models = await _fetch_available_models(hass, base_url, api_key)
+        except Exception:
+            _LOGGER.exception("Failed to fetch models")
+            models = []
+
+    return models
+
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_BASE_URL, default=DEFAULT_BASE_URL): TextSelector(
@@ -112,7 +213,7 @@ class LMStudioConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         super().__init__()
         self._connection_data: dict[str, Any] = {}
-        self._available_models: list[str] = []
+        self._available_models: list[SelectOptionDict] = []
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -123,21 +224,15 @@ class LMStudioConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        errors: dict[str, str] = {}
-
         # Prevent duplicate entries for the same base URL
         self._async_abort_entries_match({CONF_BASE_URL: user_input[CONF_BASE_URL]})
 
-        try:
-            self._available_models = await validate_input(self.hass, user_input)
-        except openai.APIConnectionError:
-            errors["base"] = "cannot_connect"
-        except openai.AuthenticationError:
-            errors["base"] = "invalid_auth"
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
+        # Use the safe fetch helper
+        self._available_models, errors = await _safe_fetch_models_with_errors(
+            self.hass, user_input[CONF_BASE_URL], user_input[CONF_API_KEY]
+        )
+
+        if not errors:
             # Store connection data and move to model selection
             self._connection_data = user_input
             return await self.async_step_model()
@@ -171,20 +266,11 @@ class LMStudioConfigFlow(ConfigFlow, domain=DOMAIN):
                 ],
             )
 
-        # Create model selection options from available models
-        model_options = [
-            SelectOptionDict(value=model, label=model)
-            for model in self._available_models
-        ]
-
+        # Use helper function to create model selector
         schema = vol.Schema(
             {
-                vol.Optional(CONF_MODEL, default=DEFAULT_MODEL): SelectSelector(
-                    SelectSelectorConfig(
-                        options=model_options,
-                        mode=SelectSelectorMode.DROPDOWN,
-                        custom_value=True,
-                    )
+                vol.Optional(CONF_MODEL, default=DEFAULT_MODEL): _create_model_selector(
+                    self._available_models
                 ),
             }
         )
@@ -227,15 +313,11 @@ class LMStudioSubentryFlowHandler(ConfigSubentryFlow):
 
     async def _get_available_models(self) -> list[SelectOptionDict]:
         """Get available models from the LM Studio server."""
-        try:
-            return await _fetch_available_models(
-                self.hass,
-                self.config_entry.data[CONF_BASE_URL],
-                self.config_entry.data[CONF_API_KEY],
-            )
-        except Exception:
-            _LOGGER.exception("Failed to fetch models")
-            return []
+        return await _safe_fetch_models(
+            self.hass,
+            self.config_entry.data[CONF_BASE_URL],
+            self.config_entry.data[CONF_API_KEY],
+        )
 
 
 class ConversationFlowHandler(LMStudioSubentryFlowHandler):
@@ -291,13 +373,7 @@ class ConversationFlowHandler(LMStudioSubentryFlowHandler):
                 vol.Optional(
                     CONF_MODEL,
                     default=self._existing_data.get(CONF_MODEL, default_model),
-                ): SelectSelector(
-                    SelectSelectorConfig(
-                        options=models,
-                        mode=SelectSelectorMode.DROPDOWN,
-                        custom_value=True,
-                    )
-                ),
+                ): _create_model_selector(models),
                 vol.Optional(
                     CONF_PROMPT, default=self._existing_data.get(CONF_PROMPT, "")
                 ): TemplateSelector(),
@@ -354,41 +430,20 @@ class OptionsFlowHandler(OptionsFlow):
             )
             return self.async_create_entry(title="", data={})
 
-        # Get available models from stored data (from initial setup)
-        available_models = self.config_entry.data.get("available_models", [])
-
-        # Convert to SelectOptionDict format if needed
-        if available_models and isinstance(available_models[0], str):
-            models = [
-                SelectOptionDict(value=model, label=model) for model in available_models
-            ]
-        else:
-            models = available_models
-
-        # If no stored models, try to fetch them dynamically
-        if not models:
-            try:
-                models = await _fetch_available_models(
-                    self.hass,
-                    self.config_entry.data[CONF_BASE_URL],
-                    self.config_entry.data[CONF_API_KEY],
-                )
-            except Exception:
-                _LOGGER.exception("Failed to fetch models for options")
-                models = []
+        # Get available models using helper function
+        models = await _safe_fetch_models(
+            self.hass,
+            self.config_entry.data[CONF_BASE_URL],
+            self.config_entry.data[CONF_API_KEY],
+            self.config_entry.data.get("available_models"),
+        )
 
         schema = vol.Schema(
             {
                 vol.Optional(
                     CONF_MODEL,
                     default=self.config_entry.data.get(CONF_MODEL, DEFAULT_MODEL),
-                ): SelectSelector(
-                    SelectSelectorConfig(
-                        options=models,
-                        mode=SelectSelectorMode.DROPDOWN,
-                        custom_value=True,
-                    )
-                ),
+                ): _create_model_selector(models),
             }
         )
 
