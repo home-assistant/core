@@ -1,0 +1,73 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup EVT800 device",
+        "description": "Enter your EVT800 device information.",
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "type": "EVT800 local server mode"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "timestamp": {
+        "name": "Timestamp"
+      },
+      "mptt_id_1": {
+        "name": "MPTT ID 1"
+      },
+      "mptt_id_2": {
+        "name": "MPTT ID 2"
+      },
+      "software_version": {
+        "name": "Software Version"
+      },
+      "input_voltage_1": {
+        "name": "DC Voltage MPPT 1"
+      },
+      "input_voltage_2": {
+        "name": "DC Voltage MPPT 2"
+      },
+      "power_1": {
+        "name": "DC Power MPPT 1"
+      },
+      "power_2": {
+        "name": "DC Power MPPT 2"
+      },
+      "current_1": {
+        "name": "DC Current MPPT 1"
+      },
+      "current_2": {
+        "name": "DC Current MPPT 2"
+      },
+      "ac_frequency_1": {
+        "name": "AC Frequency MPPT 1"
+      },
+      "ac_frequency_2": {
+        "name": "AC Frequency MPPT 2"
+      },
+      "ac_voltage_1": {
+        "name": "AC Voltage MPPT 1"
+      },
+      "ac_voltage_2": {
+        "name": "AC Voltage MPPT 2"
+      },
+      "temperature_1": {
+        "name": "Temperature MPPT 1"
+      },
+      "temperature_2": {
+        "name": "Temperature MPPT 2"
+      },
+      "total_energy_1": {
+        "name": "Total Energy MPPT 1"
+      },
+      "total_energy_2": {
+        "name": "Total Energy MPPT 2"
+      }
+    }
+  }
+}
