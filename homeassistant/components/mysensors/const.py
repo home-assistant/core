@@ -89,7 +89,13 @@ BINARY_SENSOR_TYPES: dict[SensorType, set[ValueType]] = {
 CLIMATE_TYPES: dict[SensorType, set[ValueType]] = {"S_HVAC": {"V_HVAC_FLOW_STATE"}}
 
 COVER_TYPES: dict[SensorType, set[ValueType]] = {
-    "S_COVER": {"V_DIMMER", "V_PERCENTAGE", "V_LIGHT", "V_STATUS"}
+    "S_COVER": {
+        "V_DIMMER",
+        "V_PERCENTAGE",
+        "V_LIGHT",
+        "V_STATUS",
+        "V_TILT",
+    }
 }
 
 DEVICE_TRACKER_TYPES: dict[SensorType, set[ValueType]] = {"S_GPS": {"V_POSITION"}}

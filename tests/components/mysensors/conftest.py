@@ -120,7 +120,7 @@ async def serial_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
         domain=DOMAIN,
         data={
             CONF_GATEWAY_TYPE: CONF_GATEWAY_TYPE_SERIAL,
-            CONF_VERSION: "2.3",
+            CONF_VERSION: "2.4",
             CONF_DEVICE: "/test/device",
             CONF_BAUD_RATE: DEFAULT_BAUD_RATE,
         },
@@ -227,12 +227,27 @@ def cover_node_percentage_state_fixture() -> dict:
     return load_nodes_state("cover_node_percentage_state.json")
 
 
+@pytest.fixture(name="cover_node_tilt_state", scope="package")
+def cover_node_tilt_state_fixture() -> dict:
+    """Load the cover tilt node state."""
+    return load_nodes_state("cover_node_tilt_state.json")
+
+
 @pytest.fixture
 def cover_node_percentage(
     gateway_nodes: dict[int, Sensor], cover_node_percentage_state: dict
 ) -> Sensor:
     """Load the cover child node."""
     nodes = update_gateway_nodes(gateway_nodes, deepcopy(cover_node_percentage_state))
+    return nodes[1]
+
+
+@pytest.fixture
+def cover_node_tilt(
+    gateway_nodes: dict[int, Sensor], cover_node_tilt_state: dict
+) -> Sensor:
+    """Load the cover tilt child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(cover_node_tilt_state))
     return nodes[1]
 
 
