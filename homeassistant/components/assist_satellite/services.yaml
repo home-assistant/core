@@ -105,7 +105,7 @@ ask_question:
           translation_key: answers
           fields:
             id:
-              required: true
+              required: false
               selector:
                 text:
             sentences:
@@ -113,3 +113,7 @@ ask_question:
               selector:
                 text:
                   multiple: true
+            actions:
+              required: false
+              selector:
+                action:

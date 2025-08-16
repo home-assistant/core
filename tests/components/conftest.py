@@ -41,6 +41,7 @@ from homeassistant.data_entry_flow import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.script import ScriptRun
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.util import yaml as yaml_util
 
@@ -953,6 +954,7 @@ async def check_translations(
         context: Context | None = None,
         target: dict[str, Any] | None = None,
         return_response: bool = False,
+        script_run: ScriptRun | None = None,
     ) -> ServiceResponse:
         try:
             return await _original_service_registry_async_call(
@@ -964,6 +966,7 @@ async def check_translations(
                 context,
                 target,
                 return_response,
+                script_run,
             )
         except HomeAssistantError as err:
             translation_coros.add(
