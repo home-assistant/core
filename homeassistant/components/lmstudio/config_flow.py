@@ -46,6 +46,7 @@ from .const import (
     DEFAULT_CONVERSATION_NAME,
     DEFAULT_MAX_TOKENS,
     DEFAULT_MODEL,
+    DEFAULT_PROMPT,
     DEFAULT_TEMPERATURE,
     DEFAULT_TOP_P,
     DOMAIN,
@@ -388,11 +389,12 @@ class ConversationFlowHandler(LMStudioSubentryFlowHandler):
                     default=self._existing_data.get(CONF_MODEL, default_model),
                 ): _create_model_selector(models),
                 vol.Optional(
-                    CONF_PROMPT, default=self._existing_data.get(CONF_PROMPT, "")
+                    CONF_PROMPT,
+                    default=self._existing_data.get(CONF_PROMPT, DEFAULT_PROMPT),
                 ): TemplateSelector(),
                 vol.Optional(
                     CONF_LLM_HASS_API,
-                    default=self._existing_data.get(CONF_LLM_HASS_API, False),
+                    default=self._existing_data.get(CONF_LLM_HASS_API, True),
                 ): BooleanSelector(),
                 vol.Optional(
                     CONF_MAX_TOKENS,
