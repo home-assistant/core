@@ -9,8 +9,23 @@ import openai
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.lmstudio.config_flow import validate_input
-from homeassistant.components.lmstudio.const import DOMAIN
+from homeassistant.components.lmstudio.config_flow import (
+    _create_max_tokens_selector,
+    _create_temperature_selector,
+    _create_top_p_selector,
+    validate_input,
+)
+from homeassistant.components.lmstudio.const import (
+    DOMAIN,
+    MAX_MAX_TOKENS,
+    MAX_TEMPERATURE,
+    MAX_TOP_P,
+    MIN_MAX_TOKENS,
+    MIN_TEMPERATURE,
+    MIN_TOP_P,
+    TEMPERATURE_STEP,
+    TOP_P_STEP,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -233,3 +248,26 @@ async def test_options_flow(
     assert entry.data["model"] == "new-model"
     assert entry.data["base_url"] == "http://localhost:1234/v1"  # Unchanged
     assert entry.data["api_key"] == "test-key"  # Unchanged
+
+
+def test_helper_functions() -> None:
+    """Test NumberSelector helper functions."""
+    # Test max tokens selector
+    max_tokens_selector = _create_max_tokens_selector()
+    assert max_tokens_selector.config["mode"] == "box"
+    assert max_tokens_selector.config["min"] == MIN_MAX_TOKENS
+    assert max_tokens_selector.config["max"] == MAX_MAX_TOKENS
+
+    # Test temperature selector
+    temperature_selector = _create_temperature_selector()
+    assert temperature_selector.config["mode"] == "slider"
+    assert temperature_selector.config["min"] == MIN_TEMPERATURE
+    assert temperature_selector.config["max"] == MAX_TEMPERATURE
+    assert temperature_selector.config["step"] == TEMPERATURE_STEP
+
+    # Test top_p selector
+    top_p_selector = _create_top_p_selector()
+    assert top_p_selector.config["mode"] == "slider"
+    assert top_p_selector.config["min"] == MIN_TOP_P
+    assert top_p_selector.config["max"] == MAX_TOP_P
+    assert top_p_selector.config["step"] == TOP_P_STEP
