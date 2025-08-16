@@ -127,7 +127,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         new_data = {}
         new_options: dict[str, Any] = {}
 
-        if (db_url := old_options.get(CONF_DB_URL)) != get_instance(hass).db_url:
+        if (db_url := old_options.get(CONF_DB_URL)) and db_url != get_instance(
+            hass
+        ).db_url:
             new_data[CONF_DB_URL] = db_url
 
         new_options[CONF_COLUMN_NAME] = old_options.get(CONF_COLUMN_NAME)
