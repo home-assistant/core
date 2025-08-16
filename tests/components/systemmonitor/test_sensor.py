@@ -18,6 +18,8 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from .conftest import MockProcess
+
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
@@ -453,7 +455,7 @@ async def test_remove_obsolete_entities(
                 mock_added_config_entry.entry_id
             )
         )
-        == 37
+        == 38
     )
 
     entity_registry.async_update_entity(
@@ -494,7 +496,7 @@ async def test_remove_obsolete_entities(
                 mock_added_config_entry.entry_id
             )
         )
-        == 38
+        == 39
     )
 
     assert (
@@ -544,3 +546,56 @@ async def test_no_duplicate_disk_entities(
     assert disk_sensor.state == "60.0"
 
     assert "Platform systemmonitor does not generate unique IDs." not in caplog.text
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_python3_num_fds(
+    hass: HomeAssistant,
+    mock_psutil: Mock,
+    mock_os: Mock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test python3 open file descriptors sensor."""
+    mock_config_entry = MockConfigEntry(
+        title="System Monitor",
+        domain=DOMAIN,
+        data={},
+        options={
+            "resources": [
+                "disk_use_percent_/",
+                "disk_use_percent_/home/notexist/",
+                "memory_free_",
+                "network_out_eth0",
+                "process_python3",
+            ],
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    num_fds_sensor = hass.states.get(
+        "sensor.system_monitor_python3_open_file_descriptors"
+    )
+    assert num_fds_sensor is not None
+    assert num_fds_sensor.state == "3"
+    assert num_fds_sensor.attributes == {
+        "state_class": "measurement",
+        "friendly_name": "System Monitor Python3 open file descriptors",
+    }
+
+    _process = MockProcess("python3", num_fds=5)
+    assert _process.num_fds() == 5
+    mock_psutil.process_iter.return_value = [_process]
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    num_fds_sensor = hass.states.get(
+        "sensor.system_monitor_python3_open_file_descriptors"
+    )
+    assert num_fds_sensor is not None
+    assert num_fds_sensor.state == "5"

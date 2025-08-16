@@ -118,6 +118,17 @@ def get_ip_address(
     return None
 
 
+def get_python3_num_fds(
+    entity: SystemMonitorSensor,
+) -> int | None:
+    """Return num_fds from python3 process."""
+    processes = entity.coordinator.data.processes
+    for proc in processes:
+        if proc.name() == "python3":
+            return proc.num_fds()
+    return None
+
+
 @dataclass(frozen=True, kw_only=True)
 class SysMonitorSensorEntityDescription(SensorEntityDescription):
     """Describes System Monitor sensor entities."""
@@ -369,6 +380,13 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         value_fn=lambda entity: entity.coordinator.data.swap.percent,
         add_to_update=lambda entity: ("swap", ""),
     ),
+    "python3_num_fds": SysMonitorSensorEntityDescription(
+        key="python3_num_fds",
+        translation_key="python3_num_fds",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=get_python3_num_fds,
+        add_to_update=lambda entity: ("processes", ""),
+    ),
 }
 
 
@@ -564,6 +582,18 @@ async def async_setup_entry(
                     entry.entry_id,
                     argument,
                     is_enabled,
+                )
+            )
+        if _type == "python3_num_fds":
+            argument = ""
+            loaded_resources.add(slugify(f"{_type}_{argument}"))
+            entities.append(
+                SystemMonitorSensor(
+                    coordinator,
+                    sensor_description,
+                    entry.entry_id,
+                    argument,
+                    True,  # Enabled by default
                 )
             )
 
