@@ -183,6 +183,7 @@ class ToolInput:
     tool_args: dict[str, Any]
     # Using lambda for default to allow patching in tests
     id: str = dc_field(default_factory=lambda: ulid_now())  # pylint: disable=unnecessary-lambda
+    external: bool = False
 
 
 class Tool:

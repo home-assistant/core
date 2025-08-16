@@ -39,6 +39,7 @@ SETTINGS = Settings(
     ai_threat_detection=True,
     allow_affiliate=True,
     anonymized_ecs=True,
+    bav=True,
     block_bypass_methods=True,
     block_csam=True,
     block_ddns=True,

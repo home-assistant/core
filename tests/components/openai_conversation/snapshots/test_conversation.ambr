@@ -30,6 +30,7 @@
       'thinking_content': None,
       'tool_calls': list([
         dict({
+          'external': False,
           'id': 'call_call_1',
           'tool_args': dict({
             'param1': 'call1',
@@ -53,6 +54,7 @@
       'thinking_content': None,
       'tool_calls': list([
         dict({
+          'external': False,
           'id': 'call_call_2',
           'tool_args': dict({
             'param1': 'call2',
@@ -144,6 +146,7 @@
       'thinking_content': None,
       'tool_calls': list([
         dict({
+          'external': False,
           'id': 'call_call_1',
           'tool_args': dict({
             'param1': 'call1',
