@@ -566,6 +566,7 @@ FLOWS = {
         "senz",
         "seventeentrack",
         "sfr_box",
+        "sftp_storage",
         "sharkiq",
         "shelly",
         "shopping_list",
