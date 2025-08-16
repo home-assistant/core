@@ -11,8 +11,11 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.lmstudio.config_flow import (
     _create_max_tokens_selector,
+    _create_model_options,
+    _create_model_selector,
     _create_temperature_selector,
     _create_top_p_selector,
+    _safe_fetch_models,
     validate_input,
 )
 from homeassistant.components.lmstudio.const import (
@@ -28,6 +31,7 @@ from homeassistant.components.lmstudio.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import selector
 
 from tests.common import MockConfigEntry
 
@@ -271,3 +275,51 @@ def test_helper_functions() -> None:
     assert top_p_selector.config["min"] == MIN_TOP_P
     assert top_p_selector.config["max"] == MAX_TOP_P
     assert top_p_selector.config["step"] == TOP_P_STEP
+
+
+async def test_safe_fetch_models_fetch_error(hass: HomeAssistant) -> None:
+    """Test _safe_fetch_models when model fetching fails."""
+    # Test with no cached models and fetch error - should return empty list
+    with patch(
+        "homeassistant.components.lmstudio.config_flow._fetch_available_models",
+        side_effect=Exception("API Error"),
+    ):
+        models = await _safe_fetch_models(hass, "http://localhost:1234", "test-key", [])
+        assert models == []
+
+
+def test_create_model_options() -> None:
+    """Test _create_model_options function."""
+    # Test with empty list
+    result = _create_model_options([])
+    assert result == []
+
+    # Test with single model
+    result = _create_model_options(["gpt-4"])
+    expected = [{"value": "gpt-4", "label": "gpt-4"}]
+    assert result == expected
+
+    # Test with multiple models
+    result = _create_model_options(["gpt-4", "gpt-3.5-turbo", "claude-3"])
+    expected = [
+        {"value": "gpt-4", "label": "gpt-4"},
+        {"value": "gpt-3.5-turbo", "label": "gpt-3.5-turbo"},
+        {"value": "claude-3", "label": "claude-3"},
+    ]
+    assert result == expected
+
+
+def test_create_model_selector() -> None:
+    """Test _create_model_selector function."""
+    # Test with default model
+    models = [{"value": "gpt-4", "label": "gpt-4"}]
+    result = _create_model_selector(models)
+    assert isinstance(result, selector.SelectSelector)
+    assert result.config["options"] == models
+    assert result.config["mode"] == "dropdown"
+    assert result.config["custom_value"] is True
+
+    # Test with custom default model
+    result = _create_model_selector(models, "custom-model")
+    assert isinstance(result, selector.SelectSelector)
+    assert result.config["options"] == models
