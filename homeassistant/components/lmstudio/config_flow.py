@@ -53,6 +53,36 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
+async def _fetch_available_models(
+    hass: HomeAssistant, base_url: str, api_key: str
+) -> list[SelectOptionDict]:
+    """Fetch available models from LM Studio server.
+
+    Args:
+        hass: HomeAssistant instance
+        base_url: LM Studio server base URL
+        api_key: API key for authentication
+
+    Returns:
+        List of SelectOptionDict with available models
+
+    Raises:
+        Exception: If unable to fetch models from server
+    """
+    client = openai.AsyncOpenAI(
+        base_url=base_url,
+        api_key=api_key,
+        http_client=get_async_client(hass),
+    )
+
+    models_response = await client.with_options(timeout=10.0).models.list()
+    return [
+        SelectOptionDict(value=model.id, label=model.id)
+        for model in models_response.data
+    ]
+
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_BASE_URL, default=DEFAULT_BASE_URL): TextSelector(
@@ -65,15 +95,11 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> list[str]:
     """Validate the user input allows us to connect and return available models."""
-    client = openai.AsyncOpenAI(
-        base_url=data[CONF_BASE_URL],
-        api_key=data[CONF_API_KEY],
-        http_client=get_async_client(hass),
-    )
-
     # Test connection by listing models and return model list
-    models_response = await client.with_options(timeout=10.0).models.list()
-    return [model.id for model in models_response.data]
+    models = await _fetch_available_models(
+        hass, data[CONF_BASE_URL], data[CONF_API_KEY]
+    )
+    return [model["value"] for model in models]
 
 
 class LMStudioConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -202,16 +228,11 @@ class LMStudioSubentryFlowHandler(ConfigSubentryFlow):
     async def _get_available_models(self) -> list[SelectOptionDict]:
         """Get available models from the LM Studio server."""
         try:
-            client = openai.AsyncOpenAI(
-                base_url=self.config_entry.data[CONF_BASE_URL],
-                api_key=self.config_entry.data[CONF_API_KEY],
-                http_client=get_async_client(self.hass),
+            return await _fetch_available_models(
+                self.hass,
+                self.config_entry.data[CONF_BASE_URL],
+                self.config_entry.data[CONF_API_KEY],
             )
-            models = await client.with_options(timeout=10.0).models.list()
-            return [
-                SelectOptionDict(value=model.id, label=model.id)
-                for model in models.data
-            ]
         except Exception:
             _LOGGER.exception("Failed to fetch models")
             return []
@@ -347,16 +368,11 @@ class OptionsFlowHandler(OptionsFlow):
         # If no stored models, try to fetch them dynamically
         if not models:
             try:
-                client = openai.AsyncOpenAI(
-                    base_url=self.config_entry.data[CONF_BASE_URL],
-                    api_key=self.config_entry.data[CONF_API_KEY],
-                    http_client=get_async_client(self.hass),
+                models = await _fetch_available_models(
+                    self.hass,
+                    self.config_entry.data[CONF_BASE_URL],
+                    self.config_entry.data[CONF_API_KEY],
                 )
-                models_response = await client.with_options(timeout=10.0).models.list()
-                models = [
-                    SelectOptionDict(value=model.id, label=model.id)
-                    for model in models_response.data
-                ]
             except Exception:
                 _LOGGER.exception("Failed to fetch models for options")
                 models = []
