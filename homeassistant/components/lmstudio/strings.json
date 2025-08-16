@@ -14,7 +14,7 @@
         }
       },
       "model": {
-        "title": "Select Default Model",
+        "title": "Select default model",
         "description": "Choose a default model for your LM Studio integration",
         "data": {
           "model": "Model"
