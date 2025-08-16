@@ -292,22 +292,29 @@ YAML_CONFIG_ALL_TEMPLATES = {
 }
 
 
-async def init_integration(
+async def init_integration(  # pylint: disable=W0102
     hass: HomeAssistant,
-    config: dict[str, Any] | None = None,
+    *,
+    title: str = "Select value SQL query",
+    config: dict[str, Any] = {},
+    options: dict[str, Any] | None = None,
     entry_id: str = "1",
     source: str = SOURCE_USER,
 ) -> MockConfigEntry:
     """Set up the SQL integration in Home Assistant."""
-    if not config:
-        config = ENTRY_CONFIG
+    if not options:
+        options = ENTRY_CONFIG
+    if CONF_ADVANCED_OPTIONS not in options:
+        options[CONF_ADVANCED_OPTIONS] = {}
 
     config_entry = MockConfigEntry(
+        title=title,
         domain=DOMAIN,
         source=source,
-        data={},
-        options=config,
+        data=config,
+        options=options,
         entry_id=entry_id,
+        version=2,
     )
 
     config_entry.add_to_hass(hass)
