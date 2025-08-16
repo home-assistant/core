@@ -139,7 +139,7 @@ class LMStudioConfigFlow(ConfigFlow, domain=DOMAIN):
                     {
                         "data": {},
                         "subentry_type": "conversation",
-                        "title": self._connection_data["base_url"],
+                        "title": f"Conversation - {user_input[CONF_MODEL]}",
                         "unique_id": None,
                     },
                 ],
@@ -220,10 +220,28 @@ class LMStudioSubentryFlowHandler(ConfigSubentryFlow):
 class ConversationFlowHandler(LMStudioSubentryFlowHandler):
     """Handle conversation subentry flow."""
 
+    def __init__(self) -> None:
+        """Initialize conversation flow handler."""
+        super().__init__()
+        self._existing_data: dict[str, Any] = {}
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Handle the user step (entry point for subentry flow)."""
+        return await self.async_step_init(user_input)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Handle reconfiguration of a conversation subentry."""
+        # Get the existing subentry data for editing
+        subentry = self._get_reconfigure_subentry()
+        if subentry:
+            # Pre-populate with existing data
+            self._existing_data = subentry.data.copy()
+        else:
+            self._existing_data = {}
         return await self.async_step_init(user_input)
 
     async def async_step_init(
@@ -233,7 +251,7 @@ class ConversationFlowHandler(LMStudioSubentryFlowHandler):
         if user_input is not None:
             # Create title with model information
             model_name = user_input.get(CONF_MODEL, "Unknown Model")
-            title = f"Chat: {user_input[CONF_NAME]} ({model_name})"
+            title = f"Conversation - {model_name}"
             return self.async_create_entry(title=title, data=user_input)
 
         models = await self._get_available_models()
@@ -241,34 +259,53 @@ class ConversationFlowHandler(LMStudioSubentryFlowHandler):
         # Use parent config entry's model as default if available
         default_model = self.config_entry.data.get(CONF_MODEL, DEFAULT_MODEL)
 
-        # Create default name with Chat prefix
-        default_name = f"Chat - {DEFAULT_CONVERSATION_NAME}"
+        # Create default name with Chat prefix, or use existing data
+        default_name = self._existing_data.get(
+            CONF_NAME, f"Chat - {DEFAULT_CONVERSATION_NAME}"
+        )
 
         schema = vol.Schema(
             {
                 vol.Required(CONF_NAME, default=default_name): str,
-                vol.Optional(CONF_MODEL, default=default_model): SelectSelector(
+                vol.Optional(
+                    CONF_MODEL,
+                    default=self._existing_data.get(CONF_MODEL, default_model),
+                ): SelectSelector(
                     SelectSelectorConfig(
                         options=models,
                         mode=SelectSelectorMode.DROPDOWN,
                         custom_value=True,
                     )
                 ),
-                vol.Optional(CONF_PROMPT): TemplateSelector(),
-                vol.Optional(CONF_LLM_HASS_API, default=False): BooleanSelector(),
                 vol.Optional(
-                    CONF_MAX_TOKENS, default=DEFAULT_MAX_TOKENS
+                    CONF_PROMPT, default=self._existing_data.get(CONF_PROMPT, "")
+                ): TemplateSelector(),
+                vol.Optional(
+                    CONF_LLM_HASS_API,
+                    default=self._existing_data.get(CONF_LLM_HASS_API, False),
+                ): BooleanSelector(),
+                vol.Optional(
+                    CONF_MAX_TOKENS,
+                    default=self._existing_data.get(
+                        CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS
+                    ),
                 ): NumberSelector(
                     NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=8192)
                 ),
                 vol.Optional(
-                    CONF_TEMPERATURE, default=DEFAULT_TEMPERATURE
+                    CONF_TEMPERATURE,
+                    default=self._existing_data.get(
+                        CONF_TEMPERATURE, DEFAULT_TEMPERATURE
+                    ),
                 ): NumberSelector(
                     NumberSelectorConfig(
                         mode=NumberSelectorMode.SLIDER, min=0.0, max=2.0, step=0.1
                     )
                 ),
-                vol.Optional(CONF_TOP_P, default=DEFAULT_TOP_P): NumberSelector(
+                vol.Optional(
+                    CONF_TOP_P,
+                    default=self._existing_data.get(CONF_TOP_P, DEFAULT_TOP_P),
+                ): NumberSelector(
                     NumberSelectorConfig(
                         mode=NumberSelectorMode.SLIDER, min=0.0, max=1.0, step=0.05
                     )
@@ -306,6 +343,23 @@ class OptionsFlowHandler(OptionsFlow):
             ]
         else:
             models = available_models
+
+        # If no stored models, try to fetch them dynamically
+        if not models:
+            try:
+                client = openai.AsyncOpenAI(
+                    base_url=self.config_entry.data[CONF_BASE_URL],
+                    api_key=self.config_entry.data[CONF_API_KEY],
+                    http_client=get_async_client(self.hass),
+                )
+                models_response = await client.with_options(timeout=10.0).models.list()
+                models = [
+                    SelectOptionDict(value=model.id, label=model.id)
+                    for model in models_response.data
+                ]
+            except Exception:
+                _LOGGER.exception("Failed to fetch models for options")
+                models = []
 
         schema = vol.Schema(
             {

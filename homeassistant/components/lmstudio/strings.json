@@ -55,6 +55,39 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   },
+  "config_subentries": {
+    "conversation": {
+      "initiate_flow": {
+        "user": "Add conversation",
+        "reconfigure": "Reconfigure conversation"
+      },
+      "entry_type": "Conversation",
+      "step": {
+        "init": {
+          "title": "Configure conversation",
+          "description": "Configure your LM Studio conversation",
+          "data": {
+            "name": "Name",
+            "model": "Model",
+            "prompt": "Prompt",
+            "llm_hass_api": "Use Home Assistant API",
+            "max_tokens": "Maximum tokens",
+            "temperature": "Temperature",
+            "top_p": "Top P"
+          },
+          "data_description": {
+            "name": "A name for this conversation",
+            "model": "The model to use for this conversation",
+            "prompt": "Custom system prompt (optional)",
+            "llm_hass_api": "Allow the model to control Home Assistant",
+            "max_tokens": "Maximum number of tokens in the response",
+            "temperature": "Controls randomness (0.0 = deterministic, 1.0 = creative)",
+            "top_p": "Controls diversity via nucleus sampling"
+          }
+        }
+      }
+    }
+  },
   "options": {
     "step": {
       "init": {
@@ -64,7 +97,7 @@
           "model": "Default model"
         },
         "data_description": {
-          "model": "The default model to use for new conversations and AI tasks"
+          "model": "The default model to use for new conversations"
         }
       }
     }
