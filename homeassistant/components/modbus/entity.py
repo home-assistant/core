@@ -28,7 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, ToggleEntity
-from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -116,13 +116,19 @@ class BasePlatform(Entity):
 
     async def async_update(self, now: datetime | None = None) -> None:
         """Update the entity state."""
-        async with self._update_lock:
-            await self._async_update()
+        await self._async_update()
+        self.async_write_ha_state()
+        if self._scan_interval > 0:
+            self._cancel_call = async_call_later(
+                self.hass, timedelta(seconds=self._scan_interval), self.async_update
+            )
 
     async def _async_update_write_state(self) -> None:
         """Update the entity state and write it to the state machine."""
+        if self._cancel_call:
+            self._cancel_call()
+            self._cancel_call = None
         await self.async_update()
-        self.async_write_ha_state()
 
     async def _async_update_if_not_in_progress(
         self, now: datetime | None = None
@@ -138,12 +144,9 @@ class BasePlatform(Entity):
         """Remote start entity."""
         self._async_cancel_update_polling()
         self._async_schedule_future_update(0.1)
-        if self._scan_interval > 0:
-            self._cancel_timer = async_track_time_interval(
-                self.hass,
-                self._async_update_if_not_in_progress,
-                timedelta(seconds=self._scan_interval),
-            )
+        self._cancel_call = async_call_later(
+            self.hass, timedelta(seconds=0.1), self.async_update
+        )
         self._attr_available = True
         self.async_write_ha_state()
 
