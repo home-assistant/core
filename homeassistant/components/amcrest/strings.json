@@ -126,5 +126,40 @@
       },
       "name": "Stop tour"
     }
+  },
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up Amcrest camera",
+        "description": "Enter the connection details for your Amcrest camera.",
+        "data": {
+          "host": "Host",
+          "username": "Username",
+          "password": "Password",
+          "name": "Name",
+          "port": "Port"
+        }
+      },
+      "options": {
+        "title": "Amcrest camera options",
+        "description": "Configure additional options for your Amcrest camera.",
+        "data": {
+          "authentication": "Authentication type",
+          "resolution": "Resolution",
+          "stream_source": "Stream source",
+          "ffmpeg_arguments": "FFmpeg arguments",
+          "control_light": "Enable light control",
+          "scan_interval": "Scan interval (seconds)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the camera",
+      "invalid_auth": "Invalid authentication credentials",
+      "unknown": "Unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "Camera is already configured"
+    }
   }
 }
