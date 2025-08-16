@@ -23,6 +23,17 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
+    mock_door = AsyncMock()
+    mock_door.device_id = "test_device_id"
+    mock_door.door_number = 1
+    mock_door.name = "Test Door"
+    mock_door.status = "closed"
+    mock_door.link_status = "connected"
+    mock_door.battery_level = 100
+
+    mock_client = AsyncMock()
+    mock_client.get_doors.return_value = [mock_door]
+
     with (
         patch(
             "homeassistant.components.aladdin_connect.config_entry_oauth2_flow.async_get_config_entry_implementation",
@@ -33,12 +44,12 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             return_value=AsyncMock(),
         ),
         patch(
-            "homeassistant.components.aladdin_connect.async_setup_entry",
-            return_value=True,
+            "homeassistant.components.aladdin_connect.AladdinConnectClient",
+            return_value=mock_client,
         ),
         patch(
-            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-            return_value=True,
+            "homeassistant.components.aladdin_connect.api.AsyncConfigEntryAuth",
+            return_value=AsyncMock(),
         ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -61,6 +72,19 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     )
     config_entry.add_to_hass(hass)
 
+    # Mock door data
+    mock_door = AsyncMock()
+    mock_door.device_id = "test_device_id"
+    mock_door.door_number = 1
+    mock_door.name = "Test Door"
+    mock_door.status = "closed"
+    mock_door.link_status = "connected"
+    mock_door.battery_level = 100
+
+    # Mock client
+    mock_client = AsyncMock()
+    mock_client.get_doors.return_value = [mock_door]
+
     with (
         patch(
             "homeassistant.components.aladdin_connect.config_entry_oauth2_flow.async_get_config_entry_implementation",
@@ -71,8 +95,12 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
             return_value=AsyncMock(),
         ),
         patch(
-            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-            return_value=True,
+            "homeassistant.components.aladdin_connect.AladdinConnectClient",
+            return_value=mock_client,
+        ),
+        patch(
+            "homeassistant.components.aladdin_connect.api.AsyncConfigEntryAuth",
+            return_value=AsyncMock(),
         ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -80,11 +108,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
-        return_value=True,
-    ):
-        await hass.config_entries.async_unload(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
