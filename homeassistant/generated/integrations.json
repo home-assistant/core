@@ -7214,6 +7214,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "vitrea": {
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "vivotek": {
       "name": "VIVOTEK",
       "integration_type": "hub",
@@ -7956,6 +7961,7 @@
     "utility_meter",
     "vegehub",
     "version",
+    "vitrea",
     "waze_travel_time",
     "workday",
     "zodiac"

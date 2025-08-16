@@ -697,6 +697,7 @@ FLOWS = {
         "vesync",
         "vicare",
         "vilfo",
+        "vitrea",
         "vizio",
         "vlc_telnet",
         "vodafone_station",

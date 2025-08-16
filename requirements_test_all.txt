@@ -2524,6 +2524,9 @@ venstarcolortouch==0.21
 # homeassistant.components.vilfo
 vilfo-api-client==0.5.0
 
+# homeassistant.components.vitrea
+vitreaclient==0.1.7
+
 # homeassistant.components.voip
 voip-utils==0.3.3
 
