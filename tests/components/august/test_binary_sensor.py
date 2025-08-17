@@ -4,7 +4,7 @@ import datetime
 from unittest.mock import Mock
 
 from freezegun.api import FrozenDateTimeFactory
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from yalexs.pubnub_async import AugustPubNub
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN

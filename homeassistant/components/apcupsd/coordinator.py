@@ -113,4 +113,7 @@ class APCUPSdCoordinator(DataUpdateCoordinator[APCUPSdData]):
                 data = await aioapcaccess.request_status(self._host, self._port)
                 return APCUPSdData(data)
             except (OSError, asyncio.IncompleteReadError) as error:
-                raise UpdateFailed(error) from error
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_connect",
+                ) from error

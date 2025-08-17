@@ -146,8 +146,9 @@ def _prepare_config_flow_result_json(
         return prepare_result_json(result)
 
     data = result.copy()
-    entry: config_entries.ConfigEntry = data["result"]
-    data["result"] = entry.as_json_fragment
+    entry: config_entries.ConfigEntry = data["result"]  # type: ignore[typeddict-item]
+    # We overwrite the ConfigEntry object with its json representation.
+    data["result"] = entry.as_json_fragment  # type: ignore[typeddict-unknown-key]
     data.pop("data")
     data.pop("context")
     return data
@@ -165,9 +166,7 @@ class ConfigManagerFlowIndexView(
         """Not implemented."""
         raise aiohttp.web_exceptions.HTTPMethodNotAllowed("GET", ["POST"])
 
-    @require_admin(
-        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
-    )
+    @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission="add")
     @RequestDataValidator(
         vol.Schema(
             {
@@ -218,16 +217,12 @@ class ConfigManagerFlowResourceView(
     url = "/api/config/config_entries/flow/{flow_id}"
     name = "api:config:config_entries:flow:resource"
 
-    @require_admin(
-        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
-    )
+    @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission="add")
     async def get(self, request: web.Request, /, flow_id: str) -> web.Response:
         """Get the current state of a data_entry_flow."""
         return await super().get(request, flow_id)
 
-    @require_admin(
-        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission="add")
-    )
+    @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission="add")
     async def post(self, request: web.Request, flow_id: str) -> web.Response:
         """Handle a POST request."""
         return await super().post(request, flow_id)
@@ -262,9 +257,7 @@ class OptionManagerFlowIndexView(
     url = "/api/config/config_entries/options/flow"
     name = "api:config:config_entries:option:flow"
 
-    @require_admin(
-        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
-    )
+    @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
     async def post(self, request: web.Request) -> web.Response:
         """Handle a POST request.
 
@@ -281,16 +274,12 @@ class OptionManagerFlowResourceView(
     url = "/api/config/config_entries/options/flow/{flow_id}"
     name = "api:config:config_entries:options:flow:resource"
 
-    @require_admin(
-        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
-    )
+    @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
     async def get(self, request: web.Request, /, flow_id: str) -> web.Response:
         """Get the current state of a data_entry_flow."""
         return await super().get(request, flow_id)
 
-    @require_admin(
-        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
-    )
+    @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
     async def post(self, request: web.Request, flow_id: str) -> web.Response:
         """Handle a POST request."""
         return await super().post(request, flow_id)
@@ -304,9 +293,7 @@ class SubentryManagerFlowIndexView(
     url = "/api/config/config_entries/subentries/flow"
     name = "api:config:config_entries:subentries:flow"
 
-    @require_admin(
-        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
-    )
+    @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
     @RequestDataValidator(
         vol.Schema(
             {
@@ -341,16 +328,12 @@ class SubentryManagerFlowResourceView(
     url = "/api/config/config_entries/subentries/flow/{flow_id}"
     name = "api:config:config_entries:subentries:flow:resource"
 
-    @require_admin(
-        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
-    )
+    @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
     async def get(self, request: web.Request, /, flow_id: str) -> web.Response:
         """Get the current state of a data_entry_flow."""
         return await super().get(request, flow_id)
 
-    @require_admin(
-        error=Unauthorized(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
-    )
+    @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
     async def post(self, request: web.Request, flow_id: str) -> web.Response:
         """Handle a POST request."""
         return await super().post(request, flow_id)

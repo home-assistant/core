@@ -2,6 +2,8 @@
 
 from pysmartthings import Attribute, Capability, Category
 
+from homeassistant.const import UnitOfTemperature
+
 DOMAIN = "smartthings"
 
 SCOPES = [
@@ -118,3 +120,5 @@ INVALID_SWITCH_CATEGORIES = {
     Category.MICROWAVE,
     Category.DISHWASHER,
 }
+
+UNIT_MAP = {"C": UnitOfTemperature.CELSIUS, "F": UnitOfTemperature.FAHRENHEIT}

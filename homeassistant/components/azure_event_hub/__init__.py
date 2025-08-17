@@ -3,11 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import datetime
 import json
 import logging
-from types import MappingProxyType
 from typing import Any
 
 from azure.eventhub import EventData, EventDataBatch
@@ -179,7 +178,7 @@ class AzureEventHub:
         await self.async_send(None)
         await self._queue.join()
 
-    def update_options(self, new_options: MappingProxyType[str, Any]) -> None:
+    def update_options(self, new_options: Mapping[str, Any]) -> None:
         """Update options."""
         self._send_interval = new_options[CONF_SEND_INTERVAL]
 

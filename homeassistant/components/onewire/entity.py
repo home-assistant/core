@@ -10,9 +10,8 @@ from pyownet import protocol
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
-from homeassistant.helpers.typing import StateType
 
-from .const import READ_MODE_BOOL, READ_MODE_INT
+from .const import READ_MODE_INT
 
 
 @dataclass(frozen=True)
@@ -45,7 +44,7 @@ class OneWireEntity(Entity):
         self._attr_unique_id = f"/{device_id}/{description.key}"
         self._attr_device_info = device_info
         self._device_file = device_file
-        self._state: StateType = None
+        self._state: int | float | None = None
         self._value_raw: float | None = None
         self._owproxy = owproxy
 
@@ -54,8 +53,6 @@ class OneWireEntity(Entity):
         """Return the state attributes of the entity."""
         return {
             "device_file": self._device_file,
-            # raw_value attribute is deprecated and can be removed in 2025.8
-            "raw_value": self._value_raw,
         }
 
     def _read_value(self) -> str:
@@ -82,7 +79,5 @@ class OneWireEntity(Entity):
                 _LOGGER.debug("Fetching %s data recovered", self.name)
             if self.entity_description.read_mode == READ_MODE_INT:
                 self._state = int(self._value_raw)
-            elif self.entity_description.read_mode == READ_MODE_BOOL:
-                self._state = int(self._value_raw) == 1
             else:
                 self._state = self._value_raw

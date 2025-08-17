@@ -7,7 +7,7 @@ from unittest.mock import patch
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import calendar
+from homeassistant.components import calendar, todo
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.components.script.config import ScriptConfig
@@ -36,7 +36,6 @@ def llm_context() -> llm.LLMContext:
     return llm.LLMContext(
         platform="",
         context=None,
-        user_prompt=None,
         language=None,
         assistant=None,
         device_id=None,
@@ -162,7 +161,6 @@ async def test_assist_api(
     llm_context = llm.LLMContext(
         platform="test_platform",
         context=test_context,
-        user_prompt="test_text",
         language="*",
         assistant="conversation",
         device_id=None,
@@ -237,7 +235,7 @@ async def test_assist_api(
             "area": {"value": "kitchen"},
             "floor": {"value": "ground_floor"},
         },
-        text_input="test_text",
+        text_input=None,
         context=test_context,
         language="*",
         assistant="conversation",
@@ -296,7 +294,7 @@ async def test_assist_api(
             "preferred_area_id": {"value": area.id},
             "preferred_floor_id": {"value": floor.floor_id},
         },
-        text_input="test_text",
+        text_input=None,
         context=test_context,
         language="*",
         assistant="conversation",
@@ -412,7 +410,6 @@ async def test_assist_api_prompt(
     llm_context = llm.LLMContext(
         platform="test_platform",
         context=context,
-        user_prompt="test_text",
         language="*",
         assistant="conversation",
         device_id=None,
@@ -760,7 +757,6 @@ async def test_script_tool(
     llm_context = llm.LLMContext(
         platform="test_platform",
         context=context,
-        user_prompt="test_text",
         language="*",
         assistant="conversation",
         device_id=None,
@@ -961,7 +957,6 @@ async def test_script_tool_name(hass: HomeAssistant) -> None:
     llm_context = llm.LLMContext(
         platform="test_platform",
         context=context,
-        user_prompt="test_text",
         language="*",
         assistant="conversation",
         device_id=None,
@@ -1130,7 +1125,7 @@ async def test_selector_serializer(
             "media_content_type": {"type": "string"},
             "metadata": {"type": "object", "additionalProperties": True},
         },
-        "required": ["entity_id", "media_content_id", "media_content_type"],
+        "required": ["media_content_id", "media_content_type"],
     }
     assert selector_serializer(selector.NumberSelector({"mode": "box"})) == {
         "type": "number"
@@ -1143,6 +1138,61 @@ async def test_selector_serializer(
     assert selector_serializer(selector.ObjectSelector()) == {
         "type": "object",
         "additionalProperties": True,
+    }
+    assert selector_serializer(
+        selector.ObjectSelector(
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"text": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {"min": 30, "max": 100}},
+                    },
+                },
+                "multiple": False,
+                "label_field": "name",
+            },
+        )
+    ) == {
+        "type": "object",
+        "properties": {
+            "name": {"type": "string"},
+            "percentage": {"type": "number", "minimum": 30, "maximum": 100},
+        },
+        "required": ["name"],
+    }
+    assert selector_serializer(
+        selector.ObjectSelector(
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"text": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {"min": 30, "max": 100}},
+                    },
+                },
+                "multiple": True,
+                "label_field": "name",
+            },
+        )
+    ) == {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "percentage": {
+                    "type": "number",
+                    "minimum": 30,
+                    "maximum": 100,
+                },
+            },
+            "required": ["name"],
+        },
     }
     assert selector_serializer(
         selector.SelectSelector(
@@ -1241,7 +1291,6 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
     llm_context = llm.LLMContext(
         platform="test_platform",
         context=context,
-        user_prompt="test_text",
         language="*",
         assistant="conversation",
         device_id=None,
@@ -1332,6 +1381,117 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
     }
 
 
+async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
+    """Test the todo get items tool."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "todo", {})
+    hass.states.async_set(
+        "todo.test_list", "0", {"friendly_name": "Mock Todo List Name"}
+    )
+    async_expose_entity(hass, "conversation", "todo.test_list", True)
+    context = Context()
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=context,
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    tool = next((tool for tool in api.tools if tool.name == "todo_get_items"), None)
+    assert tool is not None
+    assert tool.parameters.schema["todo_list"].container == ["Mock Todo List Name"]
+
+    calls = async_mock_service(
+        hass,
+        domain=todo.DOMAIN,
+        service=todo.TodoServices.GET_ITEMS,
+        schema=cv.make_entity_service_schema(todo.TODO_SERVICE_GET_ITEMS_SCHEMA),
+        response={
+            "todo.test_list": {
+                "items": [
+                    {
+                        "uid": "1234",
+                        "summary": "Buy milk",
+                        "status": "needs_action",
+                    },
+                    {
+                        "uid": "5678",
+                        "summary": "Call mom",
+                        "status": "needs_action",
+                        "due": "2025-09-17",
+                        "description": "Remember birthday",
+                    },
+                ]
+            }
+        },
+    )
+
+    # Test without status filter (defaults to needs_action)
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput("todo_get_items", {"todo_list": "Mock Todo List Name"}),
+        llm_context,
+    )
+
+    assert len(calls) == 1
+    assert calls[0].data == {
+        "entity_id": ["todo.test_list"],
+        "status": ["needs_action"],
+    }
+    assert result == {
+        "success": True,
+        "result": [
+            {
+                "uid": "1234",
+                "status": "needs_action",
+                "summary": "Buy milk",
+            },
+            {
+                "uid": "5678",
+                "status": "needs_action",
+                "summary": "Call mom",
+                "due": "2025-09-17",
+                "description": "Remember birthday",
+            },
+        ],
+    }
+
+    # Test that the status filter is passed correctly to the service call.
+    # We don't assert on the response since it is fixed above.
+    calls.clear()
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            "todo_get_items",
+            {"todo_list": "Mock Todo List Name", "status": "completed"},
+        ),
+        llm_context,
+    )
+    assert len(calls) == 1
+    assert calls[0].data == {
+        "entity_id": ["todo.test_list"],
+        "status": ["completed"],
+    }
+
+    # Test that the status filter is passed correctly to the service call.
+    # We don't assert on the response since it is fixed above.
+    calls.clear()
+    result = await tool.async_call(
+        hass,
+        llm.ToolInput(
+            "todo_get_items",
+            {"todo_list": "Mock Todo List Name", "status": "all"},
+        ),
+        llm_context,
+    )
+    assert len(calls) == 1
+    assert calls[0].data == {
+        "entity_id": ["todo.test_list"],
+        "status": ["needs_action", "completed"],
+    }
+
+
 async def test_no_tools_exposed(hass: HomeAssistant) -> None:
     """Test that tools are not exposed when no entities are exposed."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -1339,7 +1499,6 @@ async def test_no_tools_exposed(hass: HomeAssistant) -> None:
     llm_context = llm.LLMContext(
         platform="test_platform",
         context=context,
-        user_prompt="test_text",
         language="*",
         assistant="conversation",
         device_id=None,
@@ -1385,18 +1544,18 @@ This is prompt 2
 """
     )
     assert [(tool.name, tool.description) for tool in instance.tools] == [
-        ("api-1.Tool_1", "Description 1"),
-        ("api-2.Tool_2", "Description 2"),
+        ("api-1__Tool_1", "Description 1"),
+        ("api-2__Tool_2", "Description 2"),
     ]
 
     # The test tool returns back the provided arguments so we can verify
     # the original tool is invoked with the correct tool name and args.
     result = await instance.async_call_tool(
-        llm.ToolInput(tool_name="api-1.Tool_1", tool_args={"arg1": "value1"})
+        llm.ToolInput(tool_name="api-1__Tool_1", tool_args={"arg1": "value1"})
     )
     assert result == {"result": {"Tool_1": {"arg1": "value1"}}}
 
     result = await instance.async_call_tool(
-        llm.ToolInput(tool_name="api-2.Tool_2", tool_args={"arg2": "value2"})
+        llm.ToolInput(tool_name="api-2__Tool_2", tool_args={"arg2": "value2"})
     )
     assert result == {"result": {"Tool_2": {"arg2": "value2"}}}

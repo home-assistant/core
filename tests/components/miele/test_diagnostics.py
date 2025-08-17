@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import MagicMock
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
 
 from homeassistant.components.miele.const import DOMAIN

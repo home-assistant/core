@@ -3,10 +3,8 @@
 from datetime import timedelta
 import logging
 
-from httpx import HTTPError, InvalidURL
+from httpx import HTTPError, InvalidURL, TimeoutException
 from ical.calendar import Calendar
-from ical.calendar_stream import IcsCalendarStream
-from ical.exceptions import CalendarParseError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
@@ -14,7 +12,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .client import get_calendar
 from .const import DOMAIN
+from .ics import InvalidIcsException, parse_calendar
 
 type RemoteCalendarConfigEntry = ConfigEntry[RemoteCalendarDataUpdateCoordinator]
 
@@ -37,8 +37,9 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
         super().__init__(
             hass,
             _LOGGER,
-            name=DOMAIN,
+            name=f"{DOMAIN}_{config_entry.title}",
             update_interval=SCAN_INTERVAL,
+            config_entry=config_entry,
             always_update=True,
         )
         self._client = get_async_client(hass)
@@ -47,23 +48,24 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
     async def _async_update_data(self) -> Calendar:
         """Update data from the url."""
         try:
-            res = await self._client.get(self._url, follow_redirects=True)
+            res = await get_calendar(self._client, self._url)
             res.raise_for_status()
+        except TimeoutException as err:
+            _LOGGER.debug("%s: %s", self._url, str(err) or type(err).__name__)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="timeout",
+            ) from err
         except (HTTPError, InvalidURL) as err:
+            _LOGGER.debug("%s: %s", self._url, str(err) or type(err).__name__)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="unable_to_fetch",
-                translation_placeholders={"err": str(err)},
             ) from err
         try:
-            # calendar_from_ics will dynamically load packages
-            # the first time it is called, so we need to do it
-            # in a separate thread to avoid blocking the event loop
             self.ics = res.text
-            return await self.hass.async_add_executor_job(
-                IcsCalendarStream.calendar_from_ics, self.ics
-            )
-        except CalendarParseError as err:
+            return await parse_calendar(self.hass, res.text)
+        except InvalidIcsException as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="unable_to_parse",

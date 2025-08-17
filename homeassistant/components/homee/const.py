@@ -20,6 +20,11 @@ from homeassistant.const import (
 # General
 DOMAIN = "homee"
 
+# Error strings
+RESULT_CANNOT_CONNECT = "cannot_connect"
+RESULT_INVALID_AUTH = "invalid_auth"
+RESULT_UNKNOWN_ERROR = "unknown"
+
 # Sensor mappings
 HOMEE_UNIT_TO_HA_UNIT = {
     "": None,
@@ -96,5 +101,7 @@ LIGHT_PROFILES = [
     NodeProfile.WIFI_ON_OFF_DIMMABLE_METERING_SWITCH,
 ]
 
-# Climate Presets
+# Preset modes
+PRESET_AUTO = "auto"
 PRESET_MANUAL = "manual"
+PRESET_SUMMER = "summer"

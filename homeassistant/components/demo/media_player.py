@@ -5,13 +5,18 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
+from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    BrowseMedia,
+    MediaClass,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
     RepeatMode,
+    SearchMedia,
+    SearchMediaQuery,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -392,6 +397,15 @@ class DemoBrowsePlayer(AbstractDemoPlayer):
 
     _attr_supported_features = BROWSE_PLAYER_SUPPORT
 
+    async def async_browse_media(
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
+    ) -> BrowseMedia:
+        """Implement the websocket media browsing helper."""
+
+        return await media_source.async_browse_media(self.hass, media_content_id)
+
 
 class DemoGroupPlayer(AbstractDemoPlayer):
     """A Demo media player that supports grouping."""
@@ -407,3 +421,18 @@ class DemoSearchPlayer(AbstractDemoPlayer):
     """A Demo media player that supports searching."""
 
     _attr_supported_features = SEARCH_PLAYER_SUPPORT
+
+    async def async_search_media(self, query: SearchMediaQuery) -> SearchMedia:
+        """Demo implementation of search media."""
+        return SearchMedia(
+            result=[
+                BrowseMedia(
+                    title="Search result",
+                    media_class=MediaClass.MOVIE,
+                    media_content_type=MediaType.MOVIE,
+                    media_content_id="search_result_id",
+                    can_play=True,
+                    can_expand=False,
+                )
+            ]
+        )

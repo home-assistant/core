@@ -1,12 +1,12 @@
 """Test the Whirlpool Sensor domain."""
 
 from datetime import UTC, datetime, timedelta
-from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
-from whirlpool.washerdryer import MachineState
+from syrupy.assertion import SnapshotAssertion
+from whirlpool.dryer import MachineState as DryerMachineState
+from whirlpool.washer import MachineState as WasherMachineState
 
 from homeassistant.components.whirlpool.sensor import SCAN_INTERVAL
 from homeassistant.const import STATE_UNKNOWN, Platform
@@ -14,23 +14,12 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import as_timestamp, utc_from_timestamp, utcnow
 
-from . import init_integration, snapshot_whirlpool_entities
+from . import init_integration, snapshot_whirlpool_entities, trigger_attr_callback
 
 from tests.common import async_fire_time_changed, mock_restore_cache_with_extra_data
 
 WASHER_ENTITY_ID_BASE = "sensor.washer"
 DRYER_ENTITY_ID_BASE = "sensor.dryer"
-
-
-async def trigger_attr_callback(
-    hass: HomeAssistant, mock_api_instance: MagicMock
-) -> None:
-    """Simulate an update trigger from the API."""
-
-    for call in mock_api_instance.register_attr_callback.call_args_list:
-        update_ha_state_cb = call[0][0]
-        update_ha_state_cb()
-    await hass.async_block_till_done()
 
 
 # Freeze time for WasherDryerTimeSensor
@@ -75,7 +64,7 @@ async def test_washer_dryer_time_sensor(
     )
 
     mock_instance = request.getfixturevalue(mock_fixture)
-    mock_instance.get_machine_state.return_value = MachineState.Pause
+    mock_instance.get_machine_state.return_value = WasherMachineState.Pause
     await init_integration(hass)
 
     # Test restored state.
@@ -89,7 +78,15 @@ async def test_washer_dryer_time_sensor(
     assert state.state == restored_datetime.isoformat()
 
     # Test new time when machine starts a cycle.
-    mock_instance.get_machine_state.return_value = MachineState.RunningMainCycle
+    if "washer" in entity_id:
+        mock_instance.get_machine_state.return_value = (
+            WasherMachineState.RunningMainCycle
+        )
+    else:
+        mock_instance.get_machine_state.return_value = (
+            DryerMachineState.RunningMainCycle
+        )
+
     mock_instance.get_time_remaining.return_value = 60
     await trigger_attr_callback(hass, mock_instance)
 
@@ -139,7 +136,10 @@ async def test_washer_dryer_time_sensor_no_restore(
     now = utcnow()
 
     mock_instance = request.getfixturevalue(mock_fixture)
-    mock_instance.get_machine_state.return_value = MachineState.Pause
+    if "washer" in entity_id:
+        mock_instance.get_machine_state.return_value = WasherMachineState.Pause
+    else:
+        mock_instance.get_machine_state.return_value = DryerMachineState.Pause
     await init_integration(hass)
 
     state = hass.states.get(entity_id)
@@ -152,7 +152,14 @@ async def test_washer_dryer_time_sensor_no_restore(
     assert state.state == STATE_UNKNOWN
 
     # Test new time when machine starts a cycle.
-    mock_instance.get_machine_state.return_value = MachineState.RunningMainCycle
+    if "washer" in entity_id:
+        mock_instance.get_machine_state.return_value = (
+            WasherMachineState.RunningMainCycle
+        )
+    else:
+        mock_instance.get_machine_state.return_value = (
+            DryerMachineState.RunningMainCycle
+        )
     mock_instance.get_time_remaining.return_value = 60
     await trigger_attr_callback(hass, mock_instance)
 
@@ -162,62 +169,86 @@ async def test_washer_dryer_time_sensor_no_restore(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "mock_fixture"),
-    [
-        ("sensor.washer_state", "mock_washer_api"),
-        ("sensor.dryer_state", "mock_dryer_api"),
-    ],
-)
-@pytest.mark.parametrize(
     ("machine_state", "expected_state"),
     [
-        (MachineState.Standby, "standby"),
-        (MachineState.Setting, "setting"),
-        (MachineState.DelayCountdownMode, "delay_countdown"),
-        (MachineState.DelayPause, "delay_paused"),
-        (MachineState.SmartDelay, "smart_delay"),
-        (MachineState.SmartGridPause, "smart_grid_pause"),
-        (MachineState.Pause, "pause"),
-        (MachineState.RunningMainCycle, "running_maincycle"),
-        (MachineState.RunningPostCycle, "running_postcycle"),
-        (MachineState.Exceptions, "exception"),
-        (MachineState.Complete, "complete"),
-        (MachineState.PowerFailure, "power_failure"),
-        (MachineState.ServiceDiagnostic, "service_diagnostic_mode"),
-        (MachineState.FactoryDiagnostic, "factory_diagnostic_mode"),
-        (MachineState.LifeTest, "life_test"),
-        (MachineState.CustomerFocusMode, "customer_focus_mode"),
-        (MachineState.DemoMode, "demo_mode"),
-        (MachineState.HardStopOrError, "hard_stop_or_error"),
-        (MachineState.SystemInit, "system_initialize"),
+        (WasherMachineState.Standby, "standby"),
+        (WasherMachineState.Setting, "setting"),
+        (WasherMachineState.DelayCountdownMode, "delay_countdown"),
+        (WasherMachineState.DelayPause, "delay_paused"),
+        (WasherMachineState.SmartDelay, "smart_delay"),
+        (WasherMachineState.SmartGridPause, "smart_grid_pause"),
+        (WasherMachineState.Pause, "pause"),
+        (WasherMachineState.RunningMainCycle, "running_maincycle"),
+        (WasherMachineState.RunningPostCycle, "running_postcycle"),
+        (WasherMachineState.Exceptions, "exception"),
+        (WasherMachineState.Complete, "complete"),
+        (WasherMachineState.PowerFailure, "power_failure"),
+        (WasherMachineState.ServiceDiagnostic, "service_diagnostic_mode"),
+        (WasherMachineState.FactoryDiagnostic, "factory_diagnostic_mode"),
+        (WasherMachineState.LifeTest, "life_test"),
+        (WasherMachineState.CustomerFocusMode, "customer_focus_mode"),
+        (WasherMachineState.DemoMode, "demo_mode"),
+        (WasherMachineState.HardStopOrError, "hard_stop_or_error"),
+        (WasherMachineState.SystemInit, "system_initialize"),
     ],
 )
-async def test_washer_dryer_machine_states(
+async def test_washer_machine_states(
     hass: HomeAssistant,
-    entity_id: str,
-    mock_fixture: str,
-    machine_state: MachineState,
+    machine_state: WasherMachineState,
     expected_state: str,
-    request: pytest.FixtureRequest,
+    mock_washer_api,
 ) -> None:
-    """Test Washer/Dryer machine states."""
-    mock_instance = request.getfixturevalue(mock_fixture)
+    """Test Washer machine states."""
     await init_integration(hass)
 
-    mock_instance.get_machine_state.return_value = machine_state
-    await trigger_attr_callback(hass, mock_instance)
-    state = hass.states.get(entity_id)
+    mock_washer_api.get_machine_state.return_value = machine_state
+    await trigger_attr_callback(hass, mock_washer_api)
+    state = hass.states.get("sensor.washer_state")
     assert state is not None
     assert state.state == expected_state
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "mock_fixture"),
+    ("machine_state", "expected_state"),
     [
-        ("sensor.washer_state", "mock_washer_api"),
-        ("sensor.dryer_state", "mock_dryer_api"),
+        (DryerMachineState.Standby, "standby"),
+        (DryerMachineState.Setting, "setting"),
+        (DryerMachineState.DelayCountdownMode, "delay_countdown"),
+        (DryerMachineState.DelayPause, "delay_paused"),
+        (DryerMachineState.SmartDelay, "smart_delay"),
+        (DryerMachineState.SmartGridPause, "smart_grid_pause"),
+        (DryerMachineState.Pause, "pause"),
+        (DryerMachineState.RunningMainCycle, "running_maincycle"),
+        (DryerMachineState.RunningPostCycle, "running_postcycle"),
+        (DryerMachineState.Exceptions, "exception"),
+        (DryerMachineState.Complete, "complete"),
+        (DryerMachineState.PowerFailure, "power_failure"),
+        (DryerMachineState.ServiceDiagnostic, "service_diagnostic_mode"),
+        (DryerMachineState.FactoryDiagnostic, "factory_diagnostic_mode"),
+        (DryerMachineState.LifeTest, "life_test"),
+        (DryerMachineState.CustomerFocusMode, "customer_focus_mode"),
+        (DryerMachineState.DemoMode, "demo_mode"),
+        (DryerMachineState.HardStopOrError, "hard_stop_or_error"),
+        (DryerMachineState.SystemInit, "system_initialize"),
+        (DryerMachineState.Cancelled, "cancelled"),
     ],
 )
+async def test_dryer_machine_states(
+    hass: HomeAssistant,
+    machine_state: DryerMachineState,
+    expected_state: str,
+    mock_dryer_api,
+) -> None:
+    """Test Dryer machine states."""
+    await init_integration(hass)
+
+    mock_dryer_api.get_machine_state.return_value = machine_state
+    await trigger_attr_callback(hass, mock_dryer_api)
+    state = hass.states.get("sensor.dryer_state")
+    assert state is not None
+    assert state.state == expected_state
+
+
 @pytest.mark.parametrize(
     (
         "filling",
@@ -237,10 +268,8 @@ async def test_washer_dryer_machine_states(
         (False, False, False, False, False, True, "cycle_washing"),
     ],
 )
-async def test_washer_dryer_running_states(
+async def test_washer_running_states(
     hass: HomeAssistant,
-    entity_id: str,
-    mock_fixture: str,
     filling: bool,
     rinsing: bool,
     sensing: bool,
@@ -248,54 +277,61 @@ async def test_washer_dryer_running_states(
     spinning: bool,
     washing: bool,
     expected_state: str,
-    request: pytest.FixtureRequest,
+    mock_washer_api,
 ) -> None:
-    """Test Washer/Dryer machine states for RunningMainCycle."""
-    mock_instance = request.getfixturevalue(mock_fixture)
+    """Test Washer machine states for RunningMainCycle."""
     await init_integration(hass)
 
-    mock_instance.get_machine_state.return_value = MachineState.RunningMainCycle
-    mock_instance.get_cycle_status_filling.return_value = filling
-    mock_instance.get_cycle_status_rinsing.return_value = rinsing
-    mock_instance.get_cycle_status_sensing.return_value = sensing
-    mock_instance.get_cycle_status_soaking.return_value = soaking
-    mock_instance.get_cycle_status_spinning.return_value = spinning
-    mock_instance.get_cycle_status_washing.return_value = washing
+    mock_washer_api.get_machine_state.return_value = WasherMachineState.RunningMainCycle
+    mock_washer_api.get_cycle_status_filling.return_value = filling
+    mock_washer_api.get_cycle_status_rinsing.return_value = rinsing
+    mock_washer_api.get_cycle_status_sensing.return_value = sensing
+    mock_washer_api.get_cycle_status_soaking.return_value = soaking
+    mock_washer_api.get_cycle_status_spinning.return_value = spinning
+    mock_washer_api.get_cycle_status_washing.return_value = washing
 
-    await trigger_attr_callback(hass, mock_instance)
-    state = hass.states.get(entity_id)
+    await trigger_attr_callback(hass, mock_washer_api)
+    state = hass.states.get("sensor.washer_state")
     assert state is not None
     assert state.state == expected_state
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "mock_fixture"),
+    ("entity_id", "mock_fixture", "mock_method_name", "values"),
     [
-        ("sensor.washer_state", "mock_washer_api"),
-        ("sensor.dryer_state", "mock_dryer_api"),
+        (
+            "sensor.washer_detergent_level",
+            "mock_washer_api",
+            "get_dispense_1_level",
+            [
+                (0, STATE_UNKNOWN),
+                (1, "empty"),
+                (2, "25"),
+                (3, "50"),
+                (4, "100"),
+                (5, "active"),
+            ],
+        ),
     ],
 )
-async def test_washer_dryer_door_open_state(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_simple_enum_sensors(
     hass: HomeAssistant,
     entity_id: str,
     mock_fixture: str,
+    mock_method_name: str,
+    values: list[tuple[int, str]],
     request: pytest.FixtureRequest,
 ) -> None:
-    """Test Washer/Dryer machine state when door is open."""
-    mock_instance = request.getfixturevalue(mock_fixture)
+    """Test simple enum sensors where state maps directly from a single API value."""
     await init_integration(hass)
 
-    state = hass.states.get(entity_id)
-    assert state.state == "running_maincycle"
+    mock_instance = request.getfixturevalue(mock_fixture)
+    mock_method = getattr(mock_instance, mock_method_name)
+    for raw_value, expected_state in values:
+        mock_method.return_value = raw_value
 
-    mock_instance.get_door_open.return_value = True
-
-    await trigger_attr_callback(hass, mock_instance)
-    state = hass.states.get(entity_id)
-    assert state.state == "door_open"
-
-    mock_instance.get_door_open.return_value = False
-
-    await trigger_attr_callback(hass, mock_instance)
-    state = hass.states.get(entity_id)
-    assert state.state == "running_maincycle"
+        await trigger_attr_callback(hass, mock_instance)
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == expected_state

@@ -15,6 +15,7 @@ from aiocomelit.api import (
 )
 from aiocomelit.const import BRIDGE, VEDO
 from aiocomelit.exceptions import CannotAuthenticate, CannotConnect, CannotRetrieveData
+from aiohttp import ClientSession
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -95,9 +96,16 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
             await self.api.login()
             return await self._async_update_system_data()
         except (CannotConnect, CannotRetrieveData) as err:
-            raise UpdateFailed(repr(err)) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": repr(err)},
+            ) from err
         except CannotAuthenticate as err:
-            raise ConfigEntryAuthFailed from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_authenticate",
+            ) from err
 
     @abstractmethod
     async def _async_update_system_data(self) -> T:
@@ -119,9 +127,10 @@ class ComelitSerialBridge(
         host: str,
         port: int,
         pin: int,
+        session: ClientSession,
     ) -> None:
         """Initialize the scanner."""
-        self.api = ComeliteSerialBridgeApi(host, port, pin)
+        self.api = ComeliteSerialBridgeApi(host, port, pin, session)
         super().__init__(hass, entry, BRIDGE, host)
 
     async def _async_update_system_data(
@@ -144,9 +153,10 @@ class ComelitVedoSystem(ComelitBaseCoordinator[AlarmDataObject]):
         host: str,
         port: int,
         pin: int,
+        session: ClientSession,
     ) -> None:
         """Initialize the scanner."""
-        self.api = ComelitVedoApi(host, port, pin)
+        self.api = ComelitVedoApi(host, port, pin, session)
         super().__init__(hass, entry, VEDO, host)
 
     async def _async_update_system_data(

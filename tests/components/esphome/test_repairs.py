@@ -3,18 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock
 
-from aioesphomeapi import (
-    APIClient,
-    BinarySensorInfo,
-    BinarySensorState,
-    DeviceInfo,
-    EntityInfo,
-    EntityState,
-    UserService,
-)
+from aioesphomeapi import APIClient, BinarySensorInfo, BinarySensorState, DeviceInfo
 import pytest
 
 from homeassistant.components.esphome import repairs
@@ -29,7 +20,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 
-from .conftest import MockESPHomeDevice
+from .conftest import MockESPHomeDeviceType
 
 from tests.common import MockConfigEntry
 from tests.components.repairs import (
@@ -64,10 +55,13 @@ async def test_device_conflict_manual(
         disconnect_done.set_result(None)
 
     mock_client.disconnect = async_disconnect
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(
-            mac_address="1122334455ab", name="test", model="esp32-iso-poe"
-        )
+    device_info = DeviceInfo(
+        mac_address="1122334455ab", name="test", model="esp32-iso-poe"
+    )
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -79,8 +73,7 @@ async def test_device_conflict_manual(
 
     issues = await get_repairs(hass, hass_ws_client)
     assert issues
-    assert len(issues) == 1
-    assert any(True for issue in issues if issue["issue_id"] == issue_id)
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
     await async_process_repairs_platforms(hass)
     client = await hass_client()
@@ -112,10 +105,13 @@ async def test_device_conflict_manual(
     assert data["type"] == FlowResultType.FORM
     assert data["step_id"] == "manual"
 
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(
-            mac_address="11:22:33:44:55:aa", name="test", model="esp32-iso-poe"
-        )
+    device_info = DeviceInfo(
+        mac_address="11:22:33:44:55:aa", name="test", model="esp32-iso-poe"
+    )
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
     caplog.clear()
     data = await process_repair_fix_flow(client, flow_id)
@@ -135,10 +131,7 @@ async def test_device_conflict_migration(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
-    mock_esphome_device: Callable[
-        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
-        Awaitable[MockESPHomeDevice],
-    ],
+    mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test migrating existing configuration to new hardware."""
     entity_info = [
@@ -146,24 +139,23 @@ async def test_device_conflict_migration(
             object_id="mybinary_sensor",
             key=1,
             name="my binary_sensor",
-            unique_id="my_binary_sensor",
             is_status_binary_sensor=True,
         )
     ]
     states = [BinarySensorState(key=1, state=None)]
     user_service = []
-    device: MockESPHomeDevice = await mock_esphome_device(
+    device = await mock_esphome_device(
         mock_client=mock_client,
         entity_info=entity_info,
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("binary_sensor.test_mybinary_sensor")
+    state = hass.states.get("binary_sensor.test_my_binary_sensor")
     assert state is not None
     assert state.state == STATE_ON
     mock_config_entry = device.entry
 
-    ent_reg_entry = entity_registry.async_get("binary_sensor.test_mybinary_sensor")
+    ent_reg_entry = entity_registry.async_get("binary_sensor.test_my_binary_sensor")
     assert ent_reg_entry
     assert ent_reg_entry.unique_id == "11:22:33:44:55:AA-binary_sensor-mybinary_sensor"
     entries = er.async_entries_for_config_entry(
@@ -183,6 +175,11 @@ async def test_device_conflict_migration(
         mac_address="11:22:33:44:55:AB", name="test", model="esp32-iso-poe"
     )
     mock_client.device_info = AsyncMock(return_value=new_device_info)
+    # Keep the same entity_info when reloading
+    mock_client.list_entities_services = AsyncMock(return_value=(entity_info, []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(new_device_info, entity_info, [])
+    )
     device.device_info = new_device_info
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -194,8 +191,7 @@ async def test_device_conflict_migration(
 
     issues = await get_repairs(hass, hass_ws_client)
     assert issues
-    assert len(issues) == 1
-    assert any(True for issue in issues if issue["issue_id"] == issue_id)
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
     await async_process_repairs_platforms(hass)
     client = await hass_client()
@@ -236,7 +232,7 @@ async def test_device_conflict_migration(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
     assert mock_config_entry.unique_id == "11:22:33:44:55:ab"
-    ent_reg_entry = entity_registry.async_get("binary_sensor.test_mybinary_sensor")
+    ent_reg_entry = entity_registry.async_get("binary_sensor.test_my_binary_sensor")
     assert ent_reg_entry
     assert ent_reg_entry.unique_id == "11:22:33:44:55:AB-binary_sensor-mybinary_sensor"
 

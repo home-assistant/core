@@ -6,7 +6,6 @@ from abc import abstractmethod
 import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
-import logging
 import struct
 from typing import Any, cast
 
@@ -33,6 +32,7 @@ from homeassistant.helpers.event import async_call_later, async_track_time_inter
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
+    _LOGGER,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
@@ -67,8 +67,6 @@ from .const import (
     DataType,
 )
 from .modbus import ModbusHub
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class BasePlatform(Entity):
@@ -285,10 +283,10 @@ class BaseStructPlatform(BasePlatform, RestoreEntity):
             v_result = []
             for entry in val:
                 v_temp = self.__process_raw_value(entry)
-                if v_temp is None:
-                    v_result.append("0")
-                else:
+                if self._data_type != DataType.CUSTOM:
                     v_result.append(str(v_temp))
+                else:
+                    v_result.append(str(v_temp) if v_temp is not None else "0")
             return ",".join(map(str, v_result))
 
         # Apply scale, precision, limits to floats and ints
@@ -382,8 +380,6 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
 
     async def _async_update(self) -> None:
         """Update the entity state."""
-        # remark "now" is a dummy parameter to avoid problems with
-        # async_track_time_interval
         if not self._verify_active:
             self._attr_available = True
             return

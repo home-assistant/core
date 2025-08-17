@@ -1,6 +1,7 @@
 """Constants used in modbus integration."""
 
 from enum import Enum
+import logging
 
 from homeassistant.const import (
     CONF_ADDRESS,
@@ -16,6 +17,8 @@ from homeassistant.const import (
 CONF_BAUDRATE = "baudrate"
 CONF_BYTESIZE = "bytesize"
 CONF_CLIMATES = "climates"
+CONF_BRIGHTNESS_REGISTER = "brightness_address"
+CONF_COLOR_TEMP_REGISTER = "color_temp_address"
 CONF_DATA_TYPE = "data_type"
 CONF_DEVICE_ADDRESS = "device_address"
 CONF_FANS = "fans"
@@ -94,6 +97,7 @@ CONF_VIRTUAL_COUNT = "virtual_count"
 CONF_WRITE_TYPE = "write_type"
 CONF_ZERO_SUPPRESS = "zero_suppress"
 
+DEVICE_ID = "device_id"
 RTUOVERTCP = "rtuovertcp"
 SERIAL = "serial"
 TCP = "tcp"
@@ -167,3 +171,13 @@ PLATFORMS = (
     (Platform.SENSOR, CONF_SENSORS),
     (Platform.SWITCH, CONF_SWITCHES),
 )
+
+LIGHT_DEFAULT_MIN_KELVIN = 2000
+LIGHT_DEFAULT_MAX_KELVIN = 7000
+LIGHT_MIN_BRIGHTNESS = 0
+LIGHT_MAX_BRIGHTNESS = 255
+LIGHT_MODBUS_SCALE_MIN = 0
+LIGHT_MODBUS_SCALE_MAX = 100
+LIGHT_MODBUS_INVALID_VALUE = 0xFFFF
+
+_LOGGER = logging.getLogger(__package__)

@@ -48,6 +48,7 @@
     'original_name': 'Battery',
     'platform': 'elgato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'GW24L1A02987_battery',
@@ -76,7 +77,6 @@
         'GW24L1A02987',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Elgato',
@@ -86,7 +86,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
-    'suggested_area': None,
     'sw_version': '1.0.4 (229)',
     'via_device_id': None,
   })
@@ -143,6 +142,7 @@
     'original_name': 'Battery voltage',
     'platform': 'elgato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage',
     'unique_id': 'GW24L1A02987_voltage',
@@ -171,7 +171,6 @@
         'GW24L1A02987',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Elgato',
@@ -181,7 +180,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
-    'suggested_area': None,
     'sw_version': '1.0.4 (229)',
     'via_device_id': None,
   })
@@ -238,6 +236,7 @@
     'original_name': 'Charging current',
     'platform': 'elgato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'input_charge_current',
     'unique_id': 'GW24L1A02987_input_charge_current',
@@ -266,7 +265,6 @@
         'GW24L1A02987',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Elgato',
@@ -276,7 +274,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
-    'suggested_area': None,
     'sw_version': '1.0.4 (229)',
     'via_device_id': None,
   })
@@ -330,6 +327,7 @@
     'original_name': 'Charging power',
     'platform': 'elgato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'charge_power',
     'unique_id': 'GW24L1A02987_charge_power',
@@ -358,7 +356,6 @@
         'GW24L1A02987',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Elgato',
@@ -368,7 +365,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
-    'suggested_area': None,
     'sw_version': '1.0.4 (229)',
     'via_device_id': None,
   })
@@ -425,6 +421,7 @@
     'original_name': 'Charging voltage',
     'platform': 'elgato',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'input_charge_voltage',
     'unique_id': 'GW24L1A02987_input_charge_voltage',
@@ -453,7 +450,6 @@
         'GW24L1A02987',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Elgato',
@@ -463,7 +459,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'GW24L1A02987',
-    'suggested_area': None,
     'sw_version': '1.0.4 (229)',
     'via_device_id': None,
   })

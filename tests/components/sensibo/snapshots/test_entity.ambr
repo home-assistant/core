@@ -22,7 +22,6 @@
           'ABC999111',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Sensibo',
@@ -32,7 +31,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': '1234567890',
-      'suggested_area': 'Hallway',
       'sw_version': 'SKY30046',
       'via_device_id': None,
     }),
@@ -57,7 +55,6 @@
           'AAZZAAZZ',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Sensibo',
@@ -67,7 +64,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': '0987654321',
-      'suggested_area': 'Kitchen',
       'sw_version': 'PUR00111',
       'via_device_id': None,
     }),
@@ -92,7 +88,6 @@
           'BBZZBBZZ',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Sensibo',
@@ -102,7 +97,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': '0987654329',
-      'suggested_area': 'Bedroom',
       'sw_version': 'PUR00111',
       'via_device_id': None,
     }),
@@ -123,7 +117,6 @@
           'AABBCC',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Sensibo',
@@ -133,7 +126,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': 'V17',
       'via_device_id': <ANY>,
     }),

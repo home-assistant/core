@@ -95,6 +95,12 @@ TODO_ITEM_FIELD_SCHEMA = {
     vol.Optional(desc.service_field): desc.validation for desc in TODO_ITEM_FIELDS
 }
 TODO_ITEM_FIELD_VALIDATIONS = [cv.has_at_most_one_key(ATTR_DUE_DATE, ATTR_DUE_DATETIME)]
+TODO_SERVICE_GET_ITEMS_SCHEMA = {
+    vol.Optional(ATTR_STATUS): vol.All(
+        cv.ensure_list,
+        [vol.In({TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED})],
+    ),
+}
 
 
 def _validate_supported_features(
@@ -177,14 +183,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         TodoServices.GET_ITEMS,
-        cv.make_entity_service_schema(
-            {
-                vol.Optional(ATTR_STATUS): vol.All(
-                    cv.ensure_list,
-                    [vol.In({TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED})],
-                ),
-            }
-        ),
+        cv.make_entity_service_schema(TODO_SERVICE_GET_ITEMS_SCHEMA),
         _async_get_todo_items,
         supports_response=SupportsResponse.ONLY,
     )

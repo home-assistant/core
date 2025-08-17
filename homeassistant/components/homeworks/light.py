@@ -8,14 +8,13 @@ from typing import Any
 from pyhomeworks.pyhomeworks import HW_LIGHT_CHANGED, Homeworks
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HomeworksData
+from . import HomeworksConfigEntry
 from .const import CONF_ADDR, CONF_CONTROLLER_ID, CONF_DIMMERS, CONF_RATE, DOMAIN
 from .entity import HomeworksEntity
 
@@ -24,12 +23,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: HomeworksConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Homeworks lights."""
-    data: HomeworksData = hass.data[DOMAIN][entry.entry_id]
-    controller = data.controller
+    controller = entry.runtime_data.controller
     controller_id = entry.options[CONF_CONTROLLER_ID]
     entities = []
     for dimmer in entry.options.get(CONF_DIMMERS, []):

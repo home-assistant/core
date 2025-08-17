@@ -43,8 +43,6 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
     """Set up roborock from a config entry."""
 
-    entry.async_on_unload(entry.add_update_listener(update_listener))
-
     user_data = UserData.from_dict(entry.data[CONF_USER_DATA])
     api_client = RoborockApiClient(
         entry.data[CONF_USERNAME],
@@ -53,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     )
     _LOGGER.debug("Getting home data")
     try:
-        home_data = await api_client.get_home_data_v2(user_data)
+        home_data = await api_client.get_home_data_v3(user_data)
     except RoborockInvalidCredentials as err:
         raise ConfigEntryAuthFailed(
             "Invalid credentials",
@@ -334,12 +332,6 @@ async def setup_device_a01(
 async def async_unload_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> bool:
     """Handle removal of an entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def update_listener(hass: HomeAssistant, entry: RoborockConfigEntry) -> None:
-    """Handle options update."""
-    # Reload entry to update data
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_remove_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> None:

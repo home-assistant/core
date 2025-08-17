@@ -1,5 +1,6 @@
 """Test the moehlenhoff_alpha2 config flow."""
 
+from functools import partialmethod
 from unittest.mock import patch
 
 from homeassistant import config_entries
@@ -24,7 +25,7 @@ async def test_form(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.moehlenhoff_alpha2.config_flow.Alpha2Base.update_data",
-            mock_update_data,
+            partialmethod(mock_update_data, hass),
         ),
         patch(
             "homeassistant.components.moehlenhoff_alpha2.async_setup_entry",
@@ -54,7 +55,10 @@ async def test_form_duplicate_error(hass: HomeAssistant) -> None:
 
     assert config_entry.data["host"] == MOCK_BASE_HOST
 
-    with patch("moehlenhoff_alpha2.Alpha2Base.update_data", mock_update_data):
+    with patch(
+        "moehlenhoff_alpha2.Alpha2Base.update_data",
+        partialmethod(mock_update_data, hass),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             data={"host": MOCK_BASE_HOST},

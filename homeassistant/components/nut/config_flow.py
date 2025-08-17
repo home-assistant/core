@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from types import MappingProxyType
 from typing import Any
 
 from aionut import NUTError, NUTLoginError
@@ -19,7 +18,6 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -34,17 +32,19 @@ PASSWORD_NOT_CHANGED = "__**password_not_changed**__"
 
 
 def _base_schema(
-    nut_config: dict[str, Any] | MappingProxyType[str, Any],
+    nut_config: Mapping[str, Any],
     use_password_not_changed: bool = False,
 ) -> vol.Schema:
     """Generate base schema."""
     base_schema = {
         vol.Optional(CONF_HOST, default=nut_config.get(CONF_HOST) or DEFAULT_HOST): str,
         vol.Optional(CONF_PORT, default=nut_config.get(CONF_PORT) or DEFAULT_PORT): int,
-        vol.Optional(CONF_USERNAME, default=nut_config.get(CONF_USERNAME) or ""): str,
+        vol.Optional(
+            CONF_USERNAME, default=nut_config.get(CONF_USERNAME, vol.UNDEFINED)
+        ): str,
         vol.Optional(
             CONF_PASSWORD,
-            default=PASSWORD_NOT_CHANGED if use_password_not_changed else "",
+            default=PASSWORD_NOT_CHANGED if use_password_not_changed else vol.UNDEFINED,
         ): str,
     }
 
@@ -56,7 +56,7 @@ def _ups_schema(ups_list: dict[str, str]) -> vol.Schema:
     return vol.Schema({vol.Required(CONF_ALIAS): vol.In(ups_list)})
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+async def validate_input(data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
     Data has the keys from _base_schema with values provided by the user.
@@ -303,7 +303,7 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
         info: dict[str, Any] = {}
         description_placeholders: dict[str, str] = {}
         try:
-            info = await validate_input(self.hass, config)
+            info = await validate_input(config)
         except NUTLoginError:
             errors[CONF_PASSWORD] = "invalid_auth"
         except NUTError as ex:
@@ -320,8 +320,6 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth."""
-        entry_id = self.context["entry_id"]
-        self.reauth_entry = self.hass.config_entries.async_get_entry(entry_id)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -330,17 +328,16 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reauth input."""
 
         errors: dict[str, str] = {}
-        existing_entry = self.reauth_entry
-        assert existing_entry
-        existing_data = existing_entry.data
+        reauth_entry = self._get_reauth_entry()
+        reauth_data = reauth_entry.data
         description_placeholders: dict[str, str] = {
-            CONF_HOST: existing_data[CONF_HOST],
-            CONF_PORT: existing_data[CONF_PORT],
+            CONF_HOST: reauth_data[CONF_HOST],
+            CONF_PORT: reauth_data[CONF_PORT],
         }
 
         if user_input is not None:
             new_config = {
-                **existing_data,
+                **reauth_data,
                 # Username/password are optional and some servers
                 # use ip based authentication and will fail if
                 # username/password are provided
@@ -349,9 +346,7 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
             }
             _, errors, placeholders = await self._async_validate_or_error(new_config)
             if not errors:
-                return self.async_update_reload_and_abort(
-                    existing_entry, data=new_config
-                )
+                return self.async_update_reload_and_abort(reauth_entry, data=new_config)
             description_placeholders.update(placeholders)
 
         return self.async_show_form(

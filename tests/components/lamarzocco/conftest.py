@@ -1,7 +1,7 @@
 """Lamarzocco session fixtures."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from bleak.backends.device import BLEDevice
 from pylamarzocco.const import ModelName
@@ -10,6 +10,7 @@ from pylamarzocco.models import (
     ThingDashboardConfig,
     ThingSchedulingSettings,
     ThingSettings,
+    ThingStatistics,
 )
 import pytest
 
@@ -23,15 +24,6 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.lamarzocco.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
-
-
-@pytest.fixture
 def mock_config_entry(
     hass: HomeAssistant, mock_lamarzocco: MagicMock
 ) -> MockConfigEntry:
@@ -42,7 +34,7 @@ def mock_config_entry(
         version=3,
         data=USER_INPUT
         | {
-            CONF_ADDRESS: "00:00:00:00:00:00",
+            CONF_ADDRESS: "000000000000",
             CONF_TOKEN: "token",
         },
         unique_id=mock_lamarzocco.serial_number,
@@ -100,6 +92,7 @@ def mock_lamarzocco(device_fixture: ModelName) -> Generator[MagicMock]:
         config = load_json_object_fixture("config_gs3.json", DOMAIN)
     schedule = load_json_object_fixture("schedule.json", DOMAIN)
     settings = load_json_object_fixture("settings.json", DOMAIN)
+    statistics = load_json_object_fixture("statistics.json", DOMAIN)
 
     with (
         patch(
@@ -113,6 +106,7 @@ def mock_lamarzocco(device_fixture: ModelName) -> Generator[MagicMock]:
         machine_mock.dashboard = ThingDashboardConfig.from_dict(config)
         machine_mock.schedule = ThingSchedulingSettings.from_dict(schedule)
         machine_mock.settings = ThingSettings.from_dict(settings)
+        machine_mock.statistics = ThingStatistics.from_dict(statistics)
         machine_mock.dashboard.model_name = device_fixture
         machine_mock.to_dict.return_value = {
             "serial_number": machine_mock.serial_number,
@@ -134,3 +128,13 @@ def mock_ble_device() -> BLEDevice:
     return BLEDevice(
         "00:00:00:00:00:00", "GS_GS012345", details={"path": "path"}, rssi=50
     )
+
+
+@pytest.fixture
+def mock_websocket_terminated() -> Generator[bool]:
+    """Mock websocket terminated."""
+    with patch(
+        "homeassistant.components.lamarzocco.coordinator.LaMarzoccoUpdateCoordinator.websocket_terminated",
+        new=False,
+    ) as mock_websocket_terminated:
+        yield mock_websocket_terminated
