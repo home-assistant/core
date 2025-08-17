@@ -39,8 +39,8 @@ _LOGGER = logging.getLogger(__name__)
 class NetgearRouter:
     """Representation of a Netgear router."""
 
-    _info: DeviceInfo = None
-    api: NetgearClient = None
+    _info: DeviceInfo
+    api: NetgearClient
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize a Netgear router."""
@@ -52,7 +52,7 @@ class NetgearRouter:
         self._host: str = entry.data[CONF_HOST]
         self._port: int = entry.data[CONF_PORT]
         self._ssl: bool = entry.data[CONF_SSL]
-        self._username: str = entry.data.get(CONF_USERNAME)
+        self._username: str = entry.data[CONF_USERNAME]
         self._password: str = entry.data[CONF_PASSWORD]
 
         self.model = ""
@@ -140,19 +140,19 @@ class NetgearRouter:
                 if device_mac is None:
                     continue
                 self.devices[device_mac] = {
-                    "mac": device_mac,
-                    "name": device_entry.name,
+                    "mac_address": device_mac,
+                    "hostname": device_entry.name,
                     "active": False,
                     "last_seen": dt_util.utcnow() - timedelta(days=365),
                     "device_model": None,
                     "device_type": None,
                     "type": None,
-                    "link_rate": None,
-                    "signal": None,
-                    "ip": None,
+                    "link_speed": None,
+                    "signal_strength": None,
+                    "ip_address": None,
                     "ssid": None,
                     "conn_ap_mac": None,
-                    "allow_or_block": None,
+                    "blocked": None,
                 }
         return True
 
@@ -192,15 +192,15 @@ class NetgearRouter:
 
             # ntg_device is a namedtuple from the collections module that needs conversion to a dict through ._asdict method
             self.devices[device_mac] = asdict(ntg_device)
-            self.devices[device_mac]["mac"] = device_mac
+            self.devices[device_mac]["mac_address"] = device_mac
             self.devices[device_mac]["last_seen"] = now
 
         for device in self.devices.values():
             device["active"] = now - device["last_seen"] <= self._consider_home
             if not device["active"]:
-                device["link_rate"] = None
-                device["signal"] = None
-                device["ip"] = None
+                device["link_speed"] = None
+                device["signal_strength"] = None
+                device["ip_address"] = None
                 device["ssid"] = None
                 device["conn_ap_mac"] = None
 
