@@ -317,11 +317,18 @@ class ModbusHub:
             try:
                 await self._client.connect()  # type: ignore[union-attr]
             except ModbusException as exception_error:
-                err = f"{self.name} connect failed, retry in pymodbus  ({exception_error!s})"
-                self._log_error(err)
+                self._log_error(
+                    f"{self.name} connect failed, please check your configuration ({exception_error!s})"
+                )
                 return
             message = f"modbus {self.name} communication open"
             _LOGGER.info(message)
+
+        # Start counting down to allow modbus requests.
+        if self._config_delay:
+            self._async_cancel_listener = async_call_later(
+                self.hass, self._config_delay, self.async_end_delay
+            )
 
     async def async_setup(self) -> bool:
         """Set up pymodbus client."""
@@ -340,12 +347,6 @@ class ModbusHub:
         self._connect_task = self.hass.async_create_background_task(
             self.async_pb_connect(), "modbus-connect"
         )
-
-        # Start counting down to allow modbus requests.
-        if self._config_delay:
-            self._async_cancel_listener = async_call_later(
-                self.hass, self._config_delay, self.async_end_delay
-            )
         return True
 
     @callback
