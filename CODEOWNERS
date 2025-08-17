@@ -67,6 +67,8 @@ build.json @home-assistant/supervisor
 /tests/components/airly/ @bieniu
 /homeassistant/components/airnow/ @asymworks
 /tests/components/airnow/ @asymworks
+/homeassistant/components/airos/ @CoMPaTech
+/tests/components/airos/ @CoMPaTech
 /homeassistant/components/airq/ @Sibgatulin @dl2080
 /tests/components/airq/ @Sibgatulin @dl2080
 /homeassistant/components/airthings/ @danielhiversen @LaStrada
@@ -154,8 +156,8 @@ build.json @home-assistant/supervisor
 /tests/components/assist_pipeline/ @balloob @synesthesiam
 /homeassistant/components/assist_satellite/ @home-assistant/core @synesthesiam
 /tests/components/assist_satellite/ @home-assistant/core @synesthesiam
-/homeassistant/components/asuswrt/ @kennedyshead @ollo69
-/tests/components/asuswrt/ @kennedyshead @ollo69
+/homeassistant/components/asuswrt/ @kennedyshead @ollo69 @Vaskivskyi
+/tests/components/asuswrt/ @kennedyshead @ollo69 @Vaskivskyi
 /homeassistant/components/atag/ @MatsNL
 /tests/components/atag/ @MatsNL
 /homeassistant/components/aten_pe/ @mtdcr
@@ -860,8 +862,6 @@ build.json @home-assistant/supervisor
 /tests/components/lifx/ @Djelibeybi
 /homeassistant/components/light/ @home-assistant/core
 /tests/components/light/ @home-assistant/core
-/homeassistant/components/linear_garage_door/ @IceBotYT
-/tests/components/linear_garage_door/ @IceBotYT
 /homeassistant/components/linkplay/ @Velleman
 /tests/components/linkplay/ @Velleman
 /homeassistant/components/linux_battery/ @fabaff
@@ -1415,6 +1415,8 @@ build.json @home-assistant/supervisor
 /tests/components/skybell/ @tkdrob
 /homeassistant/components/slack/ @tkdrob @fletcherau
 /tests/components/slack/ @tkdrob @fletcherau
+/homeassistant/components/sleep_as_android/ @tr4nt0r
+/tests/components/sleep_as_android/ @tr4nt0r
 /homeassistant/components/sleepiq/ @mfugate1 @kbickar
 /tests/components/sleepiq/ @mfugate1 @kbickar
 /homeassistant/components/slide/ @ualex73
@@ -1597,6 +1599,8 @@ build.json @home-assistant/supervisor
 /tests/components/todo/ @home-assistant/core
 /homeassistant/components/todoist/ @boralyl
 /tests/components/todoist/ @boralyl
+/homeassistant/components/togrill/ @elupus
+/tests/components/togrill/ @elupus
 /homeassistant/components/tolo/ @MatthiasLohr
 /tests/components/tolo/ @MatthiasLohr
 /homeassistant/components/tomorrowio/ @raman325 @lymanepp
@@ -1611,8 +1615,6 @@ build.json @home-assistant/supervisor
 /tests/components/tplink_omada/ @MarkGodwin
 /homeassistant/components/traccar/ @ludeeus
 /tests/components/traccar/ @ludeeus
-/homeassistant/components/traccar_server/ @ludeeus
-/tests/components/traccar_server/ @ludeeus
 /homeassistant/components/trace/ @home-assistant/core
 /tests/components/trace/ @home-assistant/core
 /homeassistant/components/tractive/ @Danielhiversen @zhulik @bieniu
@@ -1706,6 +1708,8 @@ build.json @home-assistant/supervisor
 /tests/components/voip/ @balloob @synesthesiam @jaminh
 /homeassistant/components/volumio/ @OnFreund
 /tests/components/volumio/ @OnFreund
+/homeassistant/components/volvo/ @thomasddn
+/tests/components/volvo/ @thomasddn
 /homeassistant/components/volvooncall/ @molobrakos
 /tests/components/volvooncall/ @molobrakos
 /homeassistant/components/vulcan/ @Antoni-Czaplicki
