@@ -5,6 +5,7 @@ import datetime
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock, Mock
+import uuid
 
 from caldav.objects import Event
 from freezegun import freeze_time
@@ -1162,34 +1163,93 @@ async def test_config_entry_supported_components(
     assert not state
 
 
+@pytest.mark.parametrize(
+    ("service_data", "expected_ics_fields"),
+    [
+        # Basic event with all fields
+        (
+            {
+                "summary": "Test Event",
+                "start_date_time": datetime.datetime(2025, 8, 6, 10, 0, 0),
+                "end_date_time": datetime.datetime(2025, 8, 6, 11, 0, 0),
+                "description": "Test Description",
+                "location": "Test Location",
+            },
+            [
+                "SUMMARY:Test Event",
+                "DTSTART:20250806T100000",
+                "DTEND:20250806T110000",
+                "DESCRIPTION:Test Description",
+                "LOCATION:Test Location",
+                "PRODID:-//homeassistant.io//CALDAV//EN",
+            ],
+        ),
+        # Event with only required fields
+        (
+            {
+                "summary": "Required Only",
+                "start_date_time": datetime.datetime(2025, 8, 7, 9, 0, 0),
+                "end_date_time": datetime.datetime(2025, 8, 7, 10, 0, 0),
+            },
+            [
+                "SUMMARY:Required Only",
+                "DTSTART:20250807T090000",
+                "DTEND:20250807T100000",
+                "PRODID:-//homeassistant.io//CALDAV//EN",
+            ],
+        ),
+        # All-day event (date only)
+        (
+            {
+                "summary": "All Day Event",
+                "start_date": datetime.date(2025, 8, 8),
+                "end_date": datetime.date(2025, 8, 9),
+            },
+            [
+                "SUMMARY:All Day Event",
+                "DTSTART;VALUE=DATE:20250808",
+                "DTEND;VALUE=DATE:20250809",
+                "PRODID:-//homeassistant.io//CALDAV//EN",
+            ],
+        ),
+        # Rrule is not supported in API (async_call) calls.
+    ],
+)
 @pytest.mark.parametrize("tz", [UTC])
 async def test_add_vevent(
     hass: HomeAssistant,
     setup_platform_cb: Callable[[], Awaitable[None]],
     calendars: list[Mock],
+    service_data: dict,
+    expected_ics_fields: list[str],
 ) -> None:
     """Test adding a VEVENT to the calendar."""
     await setup_platform_cb()
-    called = {}
 
-    def fake_add_event(ics_data: str) -> None:
-        called["ics_data"] = ics_data
-
-    calendars[0].add_event = fake_add_event
+    calendars[0].add_event = MagicMock(return_value=[])
     await hass.services.async_call(
         "calendar",
         "create_event",
-        {
-            "summary": "Test Event",
-            "start_date_time": datetime.datetime(2025, 8, 6, 10, 0, 0),
-            "end_date_time": datetime.datetime(2025, 8, 6, 11, 0, 0),
-            "description": "Test Description",
-        },
+        service_data,
         target={"entity_id": TEST_ENTITY},
         blocking=True,
     )
     await hass.async_block_till_done()
 
-    assert "ics_data" in called
-    assert "SUMMARY:Test Event" in called["ics_data"]
-    assert "DESCRIPTION:Test Description" in called["ics_data"]
+    calendars[0].add_event.assert_called_once()
+    assert calendars[0].add_event.call_args
+    resulting_ics = calendars[0].add_event.call_args[0][0]
+
+    missing_fields = [
+        field for field in expected_ics_fields if field not in resulting_ics
+    ]
+    assert not missing_fields
+
+    for field in expected_ics_fields:
+        assert field in resulting_ics
+
+        if field.startswith("UID:"):
+            try:
+                uuid.UUID(field.split(":", 1)[1])
+            except ValueError:
+                pytest.fail("Invalid UUID in ICS data")
