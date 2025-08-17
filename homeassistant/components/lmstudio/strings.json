@@ -95,15 +95,15 @@
         "description": "Update your LM Studio configuration",
         "data": {
           "model": "Default model",
-          "max_tokens": "Maximum tokens",
-          "temperature": "Temperature",
-          "top_p": "Top P"
+          "max_tokens": "[%key:component::lmstudio::config::step::init::data::max_tokens%]",
+          "temperature": "[%key:component::lmstudio::config::step::init::data::temperature%]",
+          "top_p": "[%key:component::lmstudio::config::step::init::data::top_p%]"
         },
         "data_description": {
           "model": "The default model to use for new conversations",
-          "max_tokens": "Maximum number of tokens in the response",
-          "temperature": "Controls randomness (0.0 = deterministic, 1.0 = creative)",
-          "top_p": "Controls diversity via nucleus sampling"
+          "max_tokens": "[%key:component::lmstudio::config::step::init::data_description::max_tokens%]",
+          "temperature": "[%key:component::lmstudio::config::step::init::data_description::temperature%]",
+          "top_p": "[%key:component::lmstudio::config::step::init::data_description::top_p%]"
         }
       }
     }
