@@ -21,7 +21,7 @@ from .coordinator import DevoloDataUpdateCoordinator, DevoloHomeNetworkConfigEnt
 type _DataType = (
     LogicalNetwork
     | DataRate
-    | list[ConnectedStationInfo]
+    | dict[str, ConnectedStationInfo]
     | list[NeighborAPInfo]
     | WifiGuestAccessGet
     | bool

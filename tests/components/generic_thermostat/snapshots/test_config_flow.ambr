@@ -39,7 +39,6 @@
 # ---
 # name: test_options[create_entry]
   FlowResultSnapshot({
-    'result': True,
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
   })
 # ---
