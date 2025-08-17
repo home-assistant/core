@@ -248,7 +248,7 @@ num2words==0.5.14
 pymodbus==3.11.1
 
 # Some packages don't support gql 4.0.0 yet
-gql==3.5.3
+gql<4.0.0
 """
 
 GENERATED_MESSAGE = (
