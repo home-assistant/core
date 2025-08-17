@@ -151,6 +151,9 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             self.is_on = power_status == "active"
             self.skipped_updates = 0
 
+            if not self.system_info:
+                self.system_info = await self.client.get_system_info()
+
             if self.is_on is False:
                 return
 
@@ -158,8 +161,6 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 await self.async_update_sources()
             await self.async_update_volume()
             await self.async_update_playing()
-            if not self.system_info:
-                self.system_info = await self.client.get_system_info()
         except BraviaNotFound as err:
             if self.skipped_updates < 10:
                 self.connected = False
