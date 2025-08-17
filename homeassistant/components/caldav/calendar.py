@@ -35,6 +35,7 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+import homeassistant.util.dt as dt_util
 
 from . import CalDavConfigEntry
 from .api import async_get_calendars
@@ -217,7 +218,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         event.add("summary", kwargs.get("summary"))
         event.add("dtstart", kwargs.get("dtstart"))
         event.add("dtend", kwargs.get("dtend"))
-        event.add("dtstamp", datetime.now(kwargs.get("tzinfo")))
+        event.add("dtstamp", dt_util.utcnow())
         event.add("description", kwargs.get("description"))
         event.add("location", kwargs.get("location"))
         event.add("uid", str(uuid.uuid4()))
