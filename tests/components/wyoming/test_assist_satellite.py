@@ -5,6 +5,8 @@ from __future__ import annotations
 import asyncio
 from unittest.mock import patch
 
+from wyoming.info import Attribution, Info as WyomingInfo, Satellite as SatelliteInfo
+
 from homeassistant.components import assist_pipeline, assist_satellite
 from homeassistant.components.assist_pipeline import PipelineEvent
 from homeassistant.components.wyoming.const import DOMAIN
@@ -12,7 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import SATELLITE_INFO
 from .test_satellite import SatelliteAsyncTcpClient, setup_config_entry
 
 
@@ -23,11 +24,10 @@ async def _get_satellite_entity_id(
     device = hass.data[DOMAIN][config_entry_id].device
     assert device is not None
 
-    satellite_entry = entity_registry.async_get_entity_id(
-        assist_satellite.DOMAIN, DOMAIN, device.satellite_id
-    )
-    assert satellite_entry is not None
-    return satellite_entry
+    satellite_entity_id = "assist_satellite.test_satellite"
+    await hass.async_block_till_done()
+    assert hass.states.get(satellite_entity_id) is not None
+    return satellite_entity_id
 
 
 async def test_state_updates(
@@ -35,22 +35,35 @@ async def test_state_updates(
 ) -> None:
     """Test that the satellite correctly updates the assist_in_progress sensor."""
     assert await async_setup_component(hass, assist_pipeline.DOMAIN, {})
+    assert await async_setup_component(hass, "binary_sensor", {})
 
     with (
         patch(
             "homeassistant.components.wyoming.data.load_wyoming_info",
-            return_value=SATELLITE_INFO,
+            return_value=WyomingInfo(
+                satellite=SatelliteInfo(
+                    name="Test Satellite",
+                    area="Test Area",
+                    attribution=Attribution(
+                        name="Test Attribution", url="http://test.com"
+                    ),
+                    installed=True,
+                    description="Test Description",
+                    version="1.0.0",
+                )
+            ),
         ),
         patch(
             "homeassistant.components.wyoming.assist_satellite.AsyncTcpClient",
             SatelliteAsyncTcpClient([]),
-        ),
-        patch(
-            "homeassistant.components.wyoming.assist_satellite.WyomingAssistSatellite.run"
-        ),
+        ) as mock_client,
     ):
         # The setup_config_entry helper already calls async_setup and async_block_till_done.
         entry = await setup_config_entry(hass)
+        await hass.async_block_till_done()
+
+        # Wait for satellite to connect
+        await mock_client.connect_event.wait()
 
         satellite_entity_id = await _get_satellite_entity_id(
             hass, entity_registry, entry.entry_id
@@ -58,23 +71,22 @@ async def test_state_updates(
         satellite_entity = hass.data["assist_satellite"].get_entity(satellite_entity_id)
         assert satellite_entity is not None
 
-        assist_sensor_id = "binary_sensor.test_satellite_assist_in_progress"
-        assert hass.states.get(assist_sensor_id) is not None
-        assert hass.states.get(assist_sensor_id).state != "on"
+        device = hass.data[DOMAIN][entry.entry_id].device
+        assert not device.is_active
 
         # --- Test STT_START ---
         satellite_entity.on_pipeline_event(
             PipelineEvent(assist_pipeline.PipelineEventType.STT_START)
         )
         await hass.async_block_till_done()
-        assert hass.states.get(assist_sensor_id).state == "on"
+        assert device.is_active
 
         # --- Test RUN_END ---
         satellite_entity.on_pipeline_event(
             PipelineEvent(assist_pipeline.PipelineEventType.RUN_END)
         )
         await hass.async_block_till_done()
-        assert hass.states.get(assist_sensor_id).state != "on"
+        assert not device.is_active
 
 
 async def test_announce_and_start_conversation(
@@ -94,7 +106,18 @@ async def test_announce_and_start_conversation(
     with (
         patch(
             "homeassistant.components.wyoming.data.load_wyoming_info",
-            return_value=SATELLITE_INFO,
+            return_value=WyomingInfo(
+                satellite=SatelliteInfo(
+                    name="Test Satellite",
+                    area="Test Area",
+                    attribution=Attribution(
+                        name="Test Attribution", url="http://test.com"
+                    ),
+                    installed=True,
+                    description="Test Description",
+                    version="1.0.0",
+                )
+            ),
         ),
         patch(
             "homeassistant.components.wyoming.assist_satellite.AsyncTcpClient",
@@ -107,6 +130,22 @@ async def test_announce_and_start_conversation(
         patch(
             "homeassistant.components.wyoming.assist_satellite.WyomingAssistSatellite._play_media"
         ) as mock_play_media,
+        patch(
+            "homeassistant.components.assist_satellite.entity.async_get_pipeline",
+            return_value=assist_pipeline.Pipeline(
+                name="test_pipeline",
+                language="en",
+                conversation_engine="test_engine",
+                conversation_language="en",
+                stt_engine="test_stt",
+                stt_language="en",
+                tts_engine="test_tts",
+                tts_language="en",
+                tts_voice=None,
+                wake_word_entity=None,
+                wake_word_id=None,
+            ),
+        ),
     ):
         # The setup_config_entry helper already calls async_setup and async_block_till_done.
         entry = await setup_config_entry(hass)

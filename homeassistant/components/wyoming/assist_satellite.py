@@ -41,6 +41,7 @@ from homeassistant.components.assist_satellite import (
     AssistSatelliteEntity,
     AssistSatelliteEntityDescription,
     AssistSatelliteEntityFeature,
+    AssistSatelliteState,
 )
 from homeassistant.components.media_player import async_process_play_media_url
 from homeassistant.config_entries import ConfigEntry
@@ -282,6 +283,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
 
         if event.type == assist_pipeline.PipelineEventType.STT_START:
             self.device.set_is_active(True)
+            self._set_state(AssistSatelliteState.LISTENING)
 
         if event.type == assist_pipeline.PipelineEventType.INTENT_PROGRESS:
             if (
