@@ -5,7 +5,7 @@ from __future__ import annotations
 import datetime
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from soco import SoCo, alarms
 from soco.core import (
@@ -101,6 +101,7 @@ SERVICE_UPDATE_ALARM = "update_alarm"
 SERVICE_PLAY_QUEUE = "play_queue"
 SERVICE_REMOVE_FROM_QUEUE = "remove_from_queue"
 SERVICE_GET_QUEUE = "get_queue"
+SERVICE_SET_GROUP_VOLUME = "set_group_volume"
 
 ATTR_SLEEP_TIME = "sleep_time"
 ATTR_ALARM_ID = "alarm_id"
@@ -210,6 +211,15 @@ async def async_setup_entry(
         supports_response=SupportsResponse.ONLY,
     )
 
+    platform.async_register_entity_service(
+        SERVICE_SET_GROUP_VOLUME,
+        {
+            vol.Required("volume_level"): vol.All(
+                vol.Coerce(float), vol.Range(min=0.0, max=1.0)
+            )
+        },
+        "async_set_group_volume",
+    )
 
 class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     """Representation of a Sonos entity."""
@@ -241,6 +251,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Initialize the media player entity."""
         super().__init__(speaker, config_entry)
         self._attr_unique_id = self.soco.uid
+        self._group_volume_level: Optional[float] = None
 
     async def async_added_to_hass(self) -> None:
         """Handle common setup when added to hass."""
@@ -308,6 +319,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         assert favorites.async_poll
         await favorites.async_poll()
         await self.hass.async_add_executor_job(self._update)
+        await self._async_update_group_volume()
 
     def _update(self) -> None:
         """Retrieve latest state by polling."""
@@ -315,6 +327,15 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self.speaker.update_volume()
         if self.speaker.is_coordinator:
             self.media.poll_media()
+
+    async def _async_update_group_volume(self) -> None:
+        def _get() -> Optional[int]:
+            try:
+                return self.soco.group.volume
+            except Exception:  # noqa: BLE001
+                return None
+        gv = await self.hass.async_add_executor_job(_get)
+        self._group_volume_level = gv / 100.0 if isinstance(gv, int) else None
 
     @property
     def volume_level(self) -> float | None:
@@ -834,6 +855,16 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             for track in queue
         ]
 
+    async def async_set_group_volume(self, volume_level: float) -> None:
+        level = max(0.0, min(1.0, float(volume_level)))
+
+        def _set() -> None:
+            self.soco.group.volume = int(round(level * 100))
+
+        await self.hass.async_add_executor_job(_set)
+        self._group_volume_level = level
+        self.async_write_ha_state()
+
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return entity specific state attributes."""
@@ -847,6 +878,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         if self.source:
             attributes[ATTR_INPUT_SOURCE] = self.source
+            
+        if self._group_volume_level is not None:
+            attributes["group_volume_level"] = self._group_volume_level
 
         return attributes
 
