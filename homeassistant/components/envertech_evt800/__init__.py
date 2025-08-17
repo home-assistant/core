@@ -6,21 +6,14 @@ import logging
 import pyenvertechevt800
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_IP_ADDRESS,
-    CONF_PORT,
-    CONF_SCAN_INTERVAL,
-    EVENT_HOMEASSISTANT_STOP,
-)
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     ENVERTECH_EVT800_COORDINATOR,
-    ENVERTECH_EVT800_DEVICE_INFO,
     ENVERTECH_EVT800_OBJECT,
     ENVERTECH_EVT800_REMOVE_LISTENER,
     PLATFORMS,
@@ -47,25 +40,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     evt800.start()
 
-    device_info = DeviceInfo(
-        identifiers={
-            (
-                DOMAIN,
-                entry.unique_id
-                or f"{entry.data[CONF_IP_ADDRESS]}-{entry.data[CONF_PORT]}",
-            )
-        },
-        configuration_url=f"http://{entry.data[CONF_IP_ADDRESS]}/",
-        manufacturer="Envertech",
-        model="EVT800",
-        name="Envertech EVT800",
-        sw_version="1.0.0",
-        serial_number=evt800.serial_number,
-    )
-
-    interval = timedelta(
-        seconds=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-    )
+    interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 
     coordinator = DataUpdateCoordinator(
         hass,
@@ -79,20 +54,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await coordinator.async_config_entry_first_refresh()
 
-    async def async_close_session(event):
+    async def async_close_session():
         """Close the session."""
         await evt800.stop()
 
-    remove_stop_listener = hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, async_close_session
-    )
+    entry.async_on_unload(async_close_session)
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = {
         ENVERTECH_EVT800_OBJECT: evt800,
         ENVERTECH_EVT800_COORDINATOR: coordinator,
-        ENVERTECH_EVT800_REMOVE_LISTENER: remove_stop_listener,
-        ENVERTECH_EVT800_DEVICE_INFO: device_info,
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

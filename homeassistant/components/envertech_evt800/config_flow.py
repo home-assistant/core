@@ -6,7 +6,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_TYPE
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 
 from .const import DEFAULT_PORT, DOMAIN, TYPE_TCP_SERVER_MODE
@@ -64,8 +63,3 @@ class EnvertecFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=SCHEMA_DEVICE,
             errors=errors,
         )
-
-
-async def _async_has_devices(hass: HomeAssistant) -> bool:
-    """Return if there are devices that can be discovered."""
-    return False

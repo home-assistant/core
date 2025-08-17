@@ -17,14 +17,11 @@
       "timestamp": {
         "name": "Timestamp"
       },
-      "mptt_id_1": {
-        "name": "MPTT ID 1"
+      "mppt_id_1": {
+        "name": "MPPT ID 1"
       },
-      "mptt_id_2": {
-        "name": "MPTT ID 2"
-      },
-      "software_version": {
-        "name": "Software Version"
+      "mppt_id_2": {
+        "name": "MPPT ID 2"
       },
       "input_voltage_1": {
         "name": "DC Voltage MPPT 1"

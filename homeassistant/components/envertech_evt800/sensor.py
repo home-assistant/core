@@ -20,19 +20,11 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import (
-    DOMAIN,
-    ENVERTECH_EVT800_COORDINATOR,
-    ENVERTECH_EVT800_DEVICE_INFO,
-    ENVERTECH_EVT800_OBJECT,
-)
+from .const import DOMAIN, ENVERTECH_EVT800_COORDINATOR, ENVERTECH_EVT800_OBJECT
+from .entity import EnvertechEVT800Entity
 
 SENSORS: dict[str, SensorEntityDescription] = {
     "timestamp": SensorEntityDescription(
@@ -47,19 +39,13 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="id_1",
         entity_registry_enabled_default=False,
         entity_registry_visible_default=True,
-        translation_key="mptt_id_1",
+        translation_key="mppt_id_1",
     ),
     "id_2": SensorEntityDescription(
         key="id_2",
         entity_registry_enabled_default=False,
         entity_registry_visible_default=True,
-        translation_key="mptt_id_2",
-    ),
-    "sw-version": SensorEntityDescription(
-        key="sw-version",
-        entity_registry_enabled_default=False,
-        entity_registry_visible_default=True,
-        translation_key="software_version",
+        translation_key="mppt_id_2",
     ),
     "input_voltage_1": SensorEntityDescription(
         key="input_voltage_1",
@@ -186,59 +172,50 @@ async def async_setup_entry(
 
     evt800: pyenvertechevt800.EnvertechEVT800 = envertech_data[ENVERTECH_EVT800_OBJECT]
     coordinator: DataUpdateCoordinator = envertech_data[ENVERTECH_EVT800_COORDINATOR]
-    device_info: DeviceInfo = envertech_data[ENVERTECH_EVT800_DEVICE_INFO]
 
-    async_add_entities(
-        EnvertechEVT800Sensor(
-            evt800,
-            coordinator,
-            config_entry.unique_id or f"{evt800.ip_address}-{evt800.port}",
-            SENSORS.get(name),
-            device_info,
-            name,
-            value,
+    entities = []
+    for name, description in SENSORS.items():
+        data = evt800.data.get(name)
+        entities.append(
+            EnvertechEVT800Sensor(
+                evt800,
+                coordinator,
+                config_entry,
+                description,
+                name,
+                data,
+            )
         )
-        for name, value in evt800.data.items()
-    )
+    if entities:
+        async_add_entities(entities)
 
 
-class EnvertechEVT800Sensor(CoordinatorEntity, SensorEntity):
+class EnvertechEVT800Sensor(EnvertechEVT800Entity, SensorEntity):
     """Representation of a Envertech EVT800 sensor."""
 
     def __init__(
         self,
-        device: pyenvertechevt800.EnvertechEVT800,
+        evt800: pyenvertechevt800.EnvertechEVT800,
         coordinator: DataUpdateCoordinator,
-        config_entry_unique_id: str,
+        config_entry: ConfigEntry[Any],
         description: SensorEntityDescription | None,
-        device_info: DeviceInfo,
         name: str,
         value: Any,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
+        super().__init__(evt800, coordinator, config_entry)
         if description is not None:
             self.entity_description = description
         else:
             self._attr_name = name
 
         self._value = value
-        self._device = device
+        self._device = evt800
         self._key = name
 
-        self._attr_device_info = device_info
-        self._attr_unique_id = f"{config_entry_unique_id}-{name}"
+        self._attr_has_entity_name = True
+        self._attr_unique_id = f"{config_entry.unique_id}-{name}"
         self._attr_native_value = self._device.data[self._key]
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor prefixed with the device name."""
-        if self._attr_device_info is None or not (
-            name_prefix := self._attr_device_info.get("name")
-        ):
-            name_prefix = "ENVERTECH EVT800"
-
-        return f"{name_prefix} {super().name}"
 
     @callback
     def _handle_coordinator_update(self) -> None:
