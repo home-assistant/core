@@ -22,7 +22,9 @@ PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,  # pylint: disable=hass-argument-type
 ) -> None:
     """Set up switch entities from a config entry."""
     # Register the set_timer service only for timer switches
@@ -64,8 +66,7 @@ def _handle_switch_event(entry: ConfigEntry, event: Any) -> None:
 
     if entity:
         _LOGGER.debug("Updating state for %s to %s", entity_id, state)
-        # Access the attribute directly since set_switch_state is our custom method
-        entity.is_on = state
+        entity.set_switch_state(state)
         entity.async_write_ha_state()
         if hasattr(entity, "timer") and entity.timer:
             _LOGGER.debug("Updating timer for %s to %s minutes", entity_id, event.data)
@@ -118,10 +119,6 @@ class VitreaSwitch(SwitchEntity):
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return bool(self._attr_is_on)
-
-    @is_on.setter
-    def is_on(self, value):
-        self._attr_is_on = value
 
     @property
     def assumed_state(self) -> bool:

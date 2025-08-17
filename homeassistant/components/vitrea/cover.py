@@ -19,7 +19,9 @@ PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,  # pylint: disable=hass-argument-type
 ) -> None:
     """Set up cover entities from a config entry."""
     if len(entry.runtime_data.covers) > 0:

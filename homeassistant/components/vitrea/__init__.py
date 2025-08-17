@@ -104,7 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VitreaConfigEntry) -> bo
 
         # Vitrea sends slowly the status response for each node/key
         # we wait as long as entities are being discovered, assuming that
-        # a pause of 10 seconds means that no more entities are being discovered
+        # a lack of change in 10 seconds means that no more entities are being discovered
         entity_count = 0
         while True:
             await asyncio.sleep(10)

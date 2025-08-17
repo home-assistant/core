@@ -21,7 +21,9 @@ PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,  # pylint: disable=hass-argument-type
 ) -> None:
     """Set up number entities from a config entry."""
     if len(entry.runtime_data.timers) > 0:
@@ -92,7 +94,9 @@ class VitreaTimerControl(NumberEntity):
             self._attr_native_value = 0.0
 
         # Store the last set value as default
-        self._default_value: float = self._attr_native_value
+        self._default_value: float = (
+            self._attr_native_value if self._attr_native_value > 0 else 60
+        )
 
         # Debug information to help verify entity is created
         _LOGGER.debug(

@@ -1,0 +1,182 @@
+A precise protocol spec should define:
+
+**1. Message Structure**
+- Each message is a binary buffer with the following format:
+  - `direction` (1 byte): Indicates INCOMING or OUTGOING.
+  - `commandID` (1 byte): Identifies the request/response type.
+  - `messageID` (1 byte): Unique per message, used for matching requests and responses.
+  - `dataLength` (1 byte): Number of bytes in the data section.
+  - `data` (N bytes): Payload, format depends on `commandID`.
+  - `checksum` (1 byte): Integrity check, usually sum or CRC of previous bytes.
+
+**2. Requests**
+- Sent from client to server.
+- Example requests:
+  - `NodeCount`: `commandID = 0x01`, no data.
+  - `GetNodeInfo`: `commandID = 0x02`, data = `[nodeID]`.
+  - `SetConfig`: `commandID = 0x03`, data = `[configKey, configValue]`.
+- All requests follow the message structure above.
+
+**3. Responses**
+- Sent from server to client.
+- Must echo `messageID` from the request.
+- `direction` is INCOMING.
+- `commandID` matches the request or uses a response-specific value.
+- `data` contains result or error code.
+
+**4. Example**
+- Request: `[OUTGOING, 0x01, 0x10, 0x00, checksum]` (NodeCount)
+- Response: `[INCOMING, 0x01, 0x10, 0x01, nodeCount, checksum]`
+
+**5. Error Handling**
+- If an error occurs, response `data` contains error code and optional message.
+
+**6. Checksum**
+- Last byte, calculated over all previous bytes.
+
+**7. Extensibility**
+- New `commandID` values can be added for new features.
+
+**Summary Table**
+
+| Field        | Size (bytes) | Description                |
+|--------------|--------------|----------------------------|
+| direction    | 1            | INCOMING/OUTGOING          |
+| commandID    | 1            | Request/response type      |
+| messageID    | 1            | Unique per message         |
+| dataLength   | 1            | Length of data             |
+| data         | N            | Payload                    |
+| checksum     | 1            | Integrity check            |
+
+All messages strictly follow this format. Specific request/response types are defined by their `commandID` and data payload.
+
+
+Here are some common `commandID` values and their corresponding data formats based on the protocol spec:
+
+| `commandID` | Request Name        | Data Format                                              |
+|-------------|--------------------|----------------------------------------------------------|
+| `0x01`      | NodeCount          | No data (`[]`)                                           |
+| `0x02`      | GetNodeInfo        | `[nodeID]`                                               |
+| `0x03`      | SetConfig          | `[configKey, configValue]`                               |
+| `0x04`      | Ping               | No data (`[]`)                                           |
+| `0x05`      | ResetNode          | `[nodeID]`                                               |
+| `0x06`      | GetStatus          | No data (`[]`)                                           |
+| `0x28`      | ToggleKeyStatus    | `[nodeID, keyID, status, dimmerRatio, timerHighByte, timerLowByte]` |
+
+
+
+Each request follows the standard message structure, with the `data` field containing the payload specific to the `commandID`.
+
+Here is the purpose of each request in detail:
+
+1. **`NodeCount` (`commandID = 0x01`)**  
+   Retrieves the total number of nodes in the network. Useful for determining the size of the system.
+
+2. **`GetNodeInfo` (`commandID = 0x02`)**  
+   Requests detailed information about a specific node, identified by `nodeID`. This may include metadata like node type, capabilities, or status.
+
+3. **`SetConfig` (`commandID = 0x03`)**  
+   Updates a configuration setting on a node. The `configKey` specifies the setting, and `configValue` provides the new value.
+
+4. **`Ping` (`commandID = 0x04`)**  
+   Verifies communication with a node or the system. It is a simple request to check if the system is responsive.
+
+5. **`ResetNode` (`commandID = 0x05`)**  
+   Resets a specific node, identified by `nodeID`. This is typically used to restart or reinitialize a node.
+
+6. **`GetStatus` (`commandID = 0x06`)**  
+   Retrieves the current status of the system or a node. This is useful for monitoring purposes.
+
+7. **`ToggleKeyStatus` (`commandID = 0x28`)**  
+   Toggles the status of a specific key on a node. It allows setting the power status, dimmer ratio, and an optional timer for automatic toggling.
+
+Here are the expected responses for each request:
+
+1. **`NodeCount` (`commandID = 0x01`)**  
+   **Response:** Total number of nodes in the network (`[nodeCount]`).
+
+2. **`GetNodeInfo` (`commandID = 0x02`)**  
+   **Response:** Detailed information about the node (`[nodeType, capabilities, status, ...additionalData]`).
+
+3. **`SetConfig` (`commandID = 0x03`)**  
+   **Response:** Acknowledgment of success or failure (`[statusCode]`).
+
+4. **`Ping` (`commandID = 0x04`)**  
+   **Response:** Acknowledgment (`[statusCode]`), typically indicating success.
+
+5. **`ResetNode` (`commandID = 0x05`)**  
+   **Response:** Acknowledgment of reset completion (`[statusCode]`).
+
+6. **`GetStatus` (`commandID = 0x06`)**  
+   **Response:** Current system or node status (`[statusCode, ...statusDetails]`).
+
+7. **`ToggleKeyStatus` (`commandID = 0x28`)**  
+   **Response:** Acknowledgment of the toggle operation (`[statusCode]`). Optionally, it may include the updated key status.
+
+
+Here are some best practices for handling errors in the described protocol:
+
+1. **Define Standard Error Codes**  
+   Use a predefined set of error codes in the `data` field of responses to indicate specific issues (e.g., `0x01` for invalid command, `0x02` for checksum failure).
+
+2. **Validate Incoming Messages**  
+   - Check the `checksum` to ensure data integrity.
+   - Verify `dataLength` matches the actual payload size.
+   - Ensure `commandID` is valid and supported.
+
+3. **Respond with Error Messages**  
+   If a request is invalid, send a response with:
+   - `direction` set to `INCOMING`.
+   - The same `messageID` as the request.
+   - An appropriate error `commandID` or error code in the `data` field.
+
+4. **Log Errors**  
+   Log all errors with details like `messageID`, `commandID`, and the reason for failure to aid debugging.
+
+5. **Timeout Handling**  
+   Implement timeouts for requests. If no response is received within the timeout, treat it as a failure and retry or notify the user.
+
+6. **Graceful Degradation**  
+   If a non-critical error occurs, continue processing other requests instead of halting the system.
+
+7. **Retry Mechanism**  
+   For transient errors (e.g., network issues), implement a retry mechanism with exponential backoff.
+
+8. **Fallback for Unknown Commands**  
+   If an unknown `commandID` is received, respond with a generic error code and ignore the request.
+
+9. **Use Exception Handling in Code**  
+   Wrap critical sections in try-catch blocks to handle unexpected runtime errors gracefully.
+
+10. **Test Error Scenarios**  
+    Simulate various error conditions (e.g., corrupted data, invalid commands) during development to ensure robust error handling.
+
+
+ToggleKeyStatus is a request with commandID = 0x28.
+Its data format is: [nodeID, keyID, status, dimmerRatio, timerHighByte, timerLowByte].
+
+
+nodeID: Target node (1 byte)
+keyID: Key to toggle (1 byte)
+status: Power status (1 byte, from KeyPowerStatus enum)
+dimmerRatio: Dimmer value (0-100, 1 byte)
+timer: Duration in seconds (2 bytes, big-endian: high byte, low byte)
+
+
+=== Blind parameters  15 1 ===
+Emitting event: data::2b-07 with args: (<vitrea_client.responses.key_parameters_v2.KeyParametersV2 object at 0x107a38e10>,) and kwargs: {}
+Key Category: 255
+Dimmer Ratio: 3
+Key Name: N15-1 Pair
+Data List: [15, 1, 255, 3, 0, 15, 15, 0, 0, 0, 0, 0, 20, 78, 0, 49, 0, 53, 0, 45, 0, 49, 0, 32, 0, 80, 0, 97, 0, 105, 0, 114, 0]
+Data List: [15, 1, 255, 3, 0, 15, 15, 0, 0, 0, 0, 0, 20, 78, 0, 49, 0, 53, 0, 45, 0, 49, 0, 32, 0, 80, 0, 97, 0, 105, 0, 114, 0]
+
+=== Blind parameters solange office  20 1 ===
+Emitting event: data::2b-07 with args: (<vitrea_client.responses.key_parameters_v2.KeyParametersV2 object at 0x105e94f50>,) and kwargs: {}
+Key Category: 255
+Dimmer Ratio: 3
+Key Name: N20-1 Pair
+Data List: [20, 1, 255, 3, 5, 14, 14, 0, 0, 0, 0, 0, 20, 78, 0, 50, 0, 48, 0, 45, 0, 49, 0, 32, 0, 80, 0, 97, 0, 105, 0, 114, 0]
+Data List: [20, 1, 255, 3, 5, 14, 14, 0, 0, 0, 0, 0, 20, 78, 0, 50, 0, 48, 0, 45, 0, 49, 0, 32, 0, 80, 0, 97, 0, 105, 0, 114, 0]
+
+
