@@ -792,7 +792,7 @@ async def async_setup_entry(
             entry.data[CONF_HOST],
             entry.data[CONF_PORT],
             dsmr_version,
-            _receive_telegram,  # Changed to _receive_telegram
+            _receive_telegram,
             loop=hass.loop,
             keep_alive_interval=60,
         )
@@ -805,7 +805,7 @@ async def async_setup_entry(
             create_reader,
             entry.data[CONF_PORT],
             dsmr_version,
-            _receive_telegram,  # Changed to _receive_telegram
+            _receive_telegram,
             loop=hass.loop,
         )
 
@@ -820,7 +820,7 @@ async def async_setup_entry(
 
             # Reflect connected state in devices state by setting an
             # empty telegram resulting in `unknown` states
-            _receive_telegram({})  # Changed to _receive_telegram
+            _receive_telegram({})
 
             try:
                 transport, protocol = await hass.loop.create_task(
@@ -852,7 +852,7 @@ async def async_setup_entry(
 
                 # Reflect disconnect state in devices state by setting an
                 # None telegram resulting in `unavailable` states
-                _receive_telegram(None)  # Changed to _receive_telegram
+                _receive_telegram(None)
 
                 # throttle reconnect attempts
                 await asyncio.sleep(DEFAULT_RECONNECT_INTERVAL)
@@ -866,14 +866,14 @@ async def async_setup_entry(
 
                 # Reflect disconnect state in devices state by setting an
                 # None telegram resulting in `unavailable` states
-                _receive_telegram(None)  # Changed to _receive_telegram
+                _receive_telegram(None)
 
                 # throttle reconnect attempts
                 await asyncio.sleep(DEFAULT_RECONNECT_INTERVAL)
             except CancelledError:
                 # Reflect disconnect state in devices state by setting an
                 # None telegram resulting in `unavailable` states
-                _receive_telegram(None)  # Changed to _receive_telegram
+                _receive_telegram(None)
 
                 if stop_listener and (
                     hass.state is CoreState.not_running or hass.is_running
@@ -917,7 +917,7 @@ class DSMREntity(SensorEntity):
         self,
         entity_description: DSMRSensorEntityDescription,
         entry: ConfigEntry,
-        telegram: Telegram,  # Keep for initial setup
+        telegram: Telegram,
         device_class: SensorDeviceClass | None,
         native_unit_of_measurement: str | None,
         serial_id: str = "",
