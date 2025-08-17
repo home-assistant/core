@@ -71,7 +71,38 @@ class AmcrestConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                # Use the MAC address or serial number as unique ID if available
+                # Check if we're in reconfigure mode
+                if self.source == "reconfigure":
+                    reconfigure_entry = self._get_reconfigure_entry()
+
+                    # Check if unique ID has changed (different camera)
+                    unique_id = None
+                    try:
+                        unique_id = await self.hass.async_add_executor_job(
+                            _get_unique_id,
+                            user_input[CONF_HOST],
+                            user_input[CONF_PORT],
+                            user_input[CONF_USERNAME],
+                            user_input[CONF_PASSWORD],
+                        )
+
+                        # If we got a unique ID and it's different, ensure it's not already configured
+                        if unique_id and unique_id != reconfigure_entry.unique_id:
+                            await self.async_set_unique_id(unique_id)
+                            self._abort_if_unique_id_mismatch(reason="wrong_device")
+
+                    except (AmcrestError, AttributeError, KeyError, TypeError):
+                        # If we can't get unique ID, continue anyway
+                        pass
+
+                    # Update the config entry with new data
+                    return self.async_update_reload_and_abort(
+                        reconfigure_entry,
+                        data_updates=user_input,
+                        reason="reconfigure_successful",
+                    )
+
+                # Normal setup flow - check for unique ID to prevent duplicates
                 unique_id = None
                 try:
                     # Try to get a unique identifier from the camera
@@ -96,9 +127,44 @@ class AmcrestConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=user_input,
                 )
 
+        # Determine the schema to use
+        if self.source == "reconfigure":
+            # Pre-populate with existing values for reconfigure
+            reconfigure_entry = self._get_reconfigure_entry()
+            current_data = reconfigure_entry.data
+            data_schema = vol.Schema(
+                {
+                    vol.Required(
+                        CONF_HOST, default=current_data.get(CONF_HOST, "")
+                    ): cv.string,
+                    vol.Required(
+                        CONF_USERNAME, default=current_data.get(CONF_USERNAME, "")
+                    ): cv.string,
+                    vol.Required(
+                        CONF_PASSWORD, default=current_data.get(CONF_PASSWORD, "")
+                    ): cv.string,
+                    vol.Optional(
+                        CONF_NAME, default=current_data.get(CONF_NAME, DEFAULT_NAME)
+                    ): cv.string,
+                    vol.Optional(
+                        CONF_PORT, default=current_data.get(CONF_PORT, DEFAULT_PORT)
+                    ): cv.port,
+                }
+            )
+        else:
+            # Use default schema for normal setup
+            data_schema = STEP_USER_DATA_SCHEMA
+
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=data_schema, errors=errors
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of existing camera."""
+        # Simply redirect to the user step, which will handle reconfigure logic
+        return await self.async_step_user(user_input)
 
     @staticmethod
     @callback
