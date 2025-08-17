@@ -1,6 +1,8 @@
 **[ANNOUNCEMENT] Grid Connect Integration for Home Assistant!**
 
-https://discord.gg/Z4Kj4vhzGD
+[Join The Discord Server](https://discord.gg/Z4Kj4vhzGD)
+
+[Support Me On Patreon](https://patreon.com/lawsonlocaldev?utm_medium=unknown&utm_source=join_link&utm_campaign=creatorshare_creator&utm_content=copyLink)
 
 ⚠️ **Note:** This project is still a work in progress! There may be bugs, and certain features may not be fully implemented yet. Your patience and feedback are greatly appreciated as I continue to develop and improve the integration.
 
