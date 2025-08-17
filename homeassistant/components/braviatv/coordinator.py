@@ -81,7 +81,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.use_psk = config_entry.data.get(CONF_USE_PSK, False)
         self.client_id = config_entry.data.get(CONF_CLIENT_ID, LEGACY_CLIENT_ID)
         self.nickname = config_entry.data.get(CONF_NICKNAME, NICKNAME_PREFIX)
-        self.system_info: dict[str, str]
+        self.system_info: dict[str, str] = {}
         self.source: str | None = None
         self.source_list: list[str] = []
         self.source_map: dict[str, dict] = {}
