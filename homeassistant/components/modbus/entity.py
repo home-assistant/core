@@ -92,7 +92,6 @@ class BasePlatform(Entity):
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
         self._cancel_timer: Callable[[], None] | None = None
         self._cancel_call: Callable[[], None] | None = None
-        self._cancel_delay: Callable[[], None] | None = None
         self._attr_unique_id = entry.get(CONF_UNIQUE_ID)
         self._attr_name = entry[CONF_NAME]
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
@@ -168,9 +167,6 @@ class BasePlatform(Entity):
         if self._cancel_timer:
             self._cancel_timer()
             self._cancel_timer = None
-        if self._cancel_delay:
-            self._cancel_delay()
-            self._cancel_delay = None
 
     @callback
     def async_hold(self) -> None:
@@ -187,10 +183,12 @@ class BasePlatform(Entity):
 
     async def async_base_added_to_hass(self) -> None:
         """Handle entity which will be added."""
-        self._cancel_delay = async_call_later(
-            self.hass,
-            self._hub.config_delay + 0.1,
-            self.async_await_connection,
+        self.async_on_remove(
+            async_call_later(
+                self.hass,
+                self._hub.config_delay + 0.1,
+                self.async_await_connection,
+            )
         )
         self.async_on_remove(
             async_dispatcher_connect(self.hass, SIGNAL_STOP_ENTITY, self.async_hold)
