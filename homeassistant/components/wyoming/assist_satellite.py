@@ -50,7 +50,15 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.ulid import ulid_now
 
-from .const import DOMAIN, SAMPLE_CHANNELS, SAMPLE_RATE, SAMPLE_WIDTH
+from .const import (
+    DOMAIN,
+    STT_SAMPLE_CHANNELS,
+    STT_SAMPLE_RATE,
+    STT_SAMPLE_WIDTH,
+    TTS_SAMPLE_CHANNELS,
+    TTS_SAMPLE_RATE,
+    TTS_SAMPLE_WIDTH,
+)
 from .data import WyomingService
 from .devices import SatelliteDevice
 from .entity import WyomingSatelliteEntity
@@ -123,7 +131,9 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         self.is_running = True
 
         self._client: AsyncTcpClient | None = None
-        self._chunk_converter = AudioChunkConverter(rate=16000, width=2, channels=1)
+        self._chunk_converter = AudioChunkConverter(
+            rate=STT_SAMPLE_RATE, width=STT_SAMPLE_WIDTH, channels=STT_SAMPLE_CHANNELS
+        )
         self._is_pipeline_running = False
         self._pipeline_ended_event = asyncio.Event()
         self._audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue()
@@ -167,9 +177,9 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         """Return options for text-to-speech."""
         return {
             tts.ATTR_PREFERRED_FORMAT: "wav",
-            tts.ATTR_PREFERRED_SAMPLE_RATE: SAMPLE_RATE,
-            tts.ATTR_PREFERRED_SAMPLE_CHANNELS: SAMPLE_CHANNELS,
-            tts.ATTR_PREFERRED_SAMPLE_BYTES: SAMPLE_WIDTH,
+            tts.ATTR_PREFERRED_SAMPLE_RATE: TTS_SAMPLE_RATE,
+            tts.ATTR_PREFERRED_SAMPLE_CHANNELS: TTS_SAMPLE_CHANNELS,
+            tts.ATTR_PREFERRED_SAMPLE_BYTES: TTS_SAMPLE_WIDTH,
         }
 
     async def async_added_to_hass(self) -> None:
@@ -343,9 +353,9 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
             try:
                 await self._client.write_event(
                     AudioStart(
-                        rate=SAMPLE_RATE,
-                        width=SAMPLE_WIDTH,
-                        channels=SAMPLE_CHANNELS,
+                        rate=TTS_SAMPLE_RATE,
+                        width=TTS_SAMPLE_WIDTH,
+                        channels=TTS_SAMPLE_CHANNELS,
                         timestamp=0,
                     ).event()
                 )
@@ -357,9 +367,9 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                     "-f",
                     "s16le",
                     "-ac",
-                    str(SAMPLE_CHANNELS),
+                    str(TTS_SAMPLE_CHANNELS),
                     "-ar",
-                    str(SAMPLE_RATE),
+                    str(TTS_SAMPLE_RATE),
                     "-nostats",
                     "pipe:",
                     stdout=asyncio.subprocess.PIPE,
@@ -380,9 +390,9 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                                 break  # Pipe closed
 
                             chunk = AudioChunk(
-                                rate=SAMPLE_RATE,
-                                width=SAMPLE_WIDTH,
-                                channels=SAMPLE_CHANNELS,
+                                rate=TTS_SAMPLE_RATE,
+                                width=TTS_SAMPLE_WIDTH,
+                                channels=TTS_SAMPLE_CHANNELS,
                                 audio=chunk_bytes,
                                 timestamp=timestamp,
                             )
