@@ -1188,7 +1188,6 @@ async def test_add_vevent(
         target={"entity_id": TEST_ENTITY},
         blocking=True,
     )
-    # Ensure data is written to disk
     await hass.async_block_till_done()
 
     assert "ics_data" in called
