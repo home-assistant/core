@@ -181,7 +181,17 @@ class VitreaSwitch(SwitchEntity):
     async def async_set_timer(self, minutes: int) -> None:
         """Set timer service for switches with timer functionality."""
         if self.timer:
-            await self.timer.async_set_native_value(float(minutes))
+            if isinstance(self.timer, TimerProtocol):
+                await self.timer.async_set_native_value(float(minutes))
+            else:
+                _LOGGER.error(
+                    "Timer object for switch %s/%s does not implement async_set_native_value",
+                    self._node,
+                    self._key,
+                )
+                raise HomeAssistantError(
+                    f"Timer object for switch {self._node}/{self._key} does not implement async_set_native_value"
+                )
         else:
             _LOGGER.warning(
                 "Timer not available for switch %s/%s", self._node, self._key
