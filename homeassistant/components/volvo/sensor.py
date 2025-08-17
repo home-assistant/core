@@ -107,6 +107,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
             "power_saving_mode",
         ],
         value_fn=_availability_status,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -114,6 +115,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         api_field="averageEnergyConsumption",
         native_unit_of_measurement=UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -121,6 +123,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         api_field="averageEnergyConsumptionAutomatic",
         native_unit_of_measurement=UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -128,6 +131,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         api_field="averageEnergyConsumptionSinceCharge",
         native_unit_of_measurement=UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -135,6 +139,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         api_field="averageFuelConsumption",
         native_unit_of_measurement="L/100 km",
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -142,6 +147,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         api_field="averageFuelConsumptionAutomatic",
         native_unit_of_measurement="L/100 km",
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     # statistics endpoint
     VolvoSensorDescription(

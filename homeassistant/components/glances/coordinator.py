@@ -29,7 +29,6 @@ class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self, hass: HomeAssistant, entry: GlancesConfigEntry, api: Glances
     ) -> None:
         """Initialize the Glances data."""
-        self.hass = hass
         self.host: str = entry.data[CONF_HOST]
         self.api = api
         super().__init__(

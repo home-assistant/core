@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_MODEL_ID,
     ATTR_NAME,
     ATTR_SUGGESTED_AREA,
     ATTR_SW_VERSION,
@@ -55,12 +56,12 @@ async def async_setup_devices(bridge: HueBridge):
                 else None,
             )
         # Register a Hue device resource as device in HA device registry.
-        model = f"{hue_resource.product_data.product_name} ({hue_resource.product_data.model_id})"
         params = {
             ATTR_IDENTIFIERS: {(DOMAIN, hue_resource.id)},
             ATTR_SW_VERSION: hue_resource.product_data.software_version,
             ATTR_NAME: hue_resource.metadata.name,
-            ATTR_MODEL: model,
+            ATTR_MODEL: hue_resource.product_data.product_name,
+            ATTR_MODEL_ID: hue_resource.product_data.model_id,
             ATTR_MANUFACTURER: hue_resource.product_data.manufacturer_name,
         }
         if room := dev_controller.get_room(hue_resource.id):
