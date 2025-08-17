@@ -167,6 +167,17 @@ async def async_autosetup_sonos(async_setup_sonos):
     await async_setup_sonos()
 
 
+def reset_sonos_alarms(alarm_event: SonosMockEvent) -> None:
+    """Reset the Sonos alarms to a known state."""
+    sonos_alarms = Alarms()
+    sonos_alarms.alarms = {}
+    sonos_alarms._last_zone_used = None
+    sonos_alarms._last_alarm_list_version = None
+    sonos_alarms.last_uid = None
+    sonos_alarms.last_id = 0
+    alarm_event.variables["alarm_list_version"] = "RINCON_test:0"
+
+
 @pytest.fixture
 def async_setup_sonos(
     hass: HomeAssistant, config_entry: MockConfigEntry, fire_zgs_event, alarm_event
@@ -175,9 +186,7 @@ def async_setup_sonos(
 
     async def _wrapper():
         config_entry.add_to_hass(hass)
-        sonos_alarms = Alarms()
-        sonos_alarms.last_alarm_list_version = "RINCON_test:0"
-        alarm_event.variables["alarm_list_version"] = "RINCON_test:0"
+        reset_sonos_alarms(alarm_event)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
         await fire_zgs_event()
@@ -851,11 +860,15 @@ def zgs_event_fixture(
 
 @pytest.fixture(name="sonos_setup_two_speakers")
 async def sonos_setup_two_speakers(
-    hass: HomeAssistant, soco_factory: SoCoMockFactory
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    alarm_event: SonosMockEvent,
 ) -> list[MockSoCo]:
     """Set up home assistant with two Sonos Speakers."""
     soco_lr = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
     soco_br = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+    reset_sonos_alarms(alarm_event)
+
     await async_setup_component(
         hass,
         DOMAIN,
