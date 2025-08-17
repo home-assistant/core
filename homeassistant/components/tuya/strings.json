@@ -63,6 +63,9 @@
       "defrost": {
         "name": "Defrost"
       },
+      "valve": {
+        "name": "Valve"
+      },
       "wet": {
         "name": "Wet"
       }
@@ -145,6 +148,9 @@
       "heat_preservation_time": {
         "name": "Heat preservation time"
       },
+      "indexed_irrigation_duration": {
+        "name": "Irrigation duration {index}"
+      },
       "feed": {
         "name": "Feed"
       },
@@ -213,6 +219,18 @@
       },
       "siren_duration": {
         "name": "Siren duration"
+      },
+      "alarm_maximum": {
+        "name": "Alarm maximum"
+      },
+      "alarm_minimum": {
+        "name": "Alarm minimum"
+      },
+      "installation_height": {
+        "name": "Installation height"
+      },
+      "maximum_liquid_depth": {
+        "name": "Maximum liquid depth"
       }
     },
     "select": {
@@ -460,7 +478,7 @@
       },
       "blanket_level": {
         "state": {
-          "level_1": "Low",
+          "level_1": "[%key:common::state::low%]",
           "level_2": "Level 2",
           "level_3": "Level 3",
           "level_4": "Level 4",
@@ -469,7 +487,7 @@
           "level_7": "Level 7",
           "level_8": "Level 8",
           "level_9": "Level 9",
-          "level_10": "High"
+          "level_10": "[%key:common::state::high%]"
         }
       },
       "odor_elimination_mode": {
@@ -502,8 +520,32 @@
       "temperature_external": {
         "name": "Probe temperature"
       },
+      "indexed_temperature_external": {
+        "name": "Probe temperature channel {index}"
+      },
       "humidity": {
         "name": "[%key:component::sensor::entity_component::humidity::name%]"
+      },
+      "humidity_outdoor": {
+        "name": "Outdoor humidity"
+      },
+      "indexed_humidity_outdoor": {
+        "name": "Outdoor humidity channel {index}"
+      },
+      "air_pressure": {
+        "name": "Air pressure"
+      },
+      "precipitation_today": {
+        "name": "Total precipitation today"
+      },
+      "precipitation_intensity": {
+        "name": "[%key:component::sensor::entity_component::precipitation_intensity::name%]"
+      },
+      "uv_index": {
+        "name": "UV index"
+      },
+      "wind_direction": {
+        "name": "[%key:component::sensor::entity_component::wind_direction::name%]"
       },
       "pm25": {
         "name": "[%key:component::sensor::entity_component::pm25::name%]"
@@ -699,6 +741,23 @@
           "charging": "[%key:common::state::charging%]",
           "charge_done": "Charge done"
         }
+      },
+      "liquid_state": {
+        "name": "Liquid state",
+        "state": {
+          "normal": "[%key:common::state::normal%]",
+          "lower_alarm": "[%key:common::state::low%]",
+          "upper_alarm": "[%key:common::state::high%]"
+        }
+      },
+      "liquid_depth": {
+        "name": "Liquid depth"
+      },
+      "liquid_level": {
+        "name": "Liquid level"
+      },
+      "supply_frequency": {
+        "name": "Supply frequency"
       }
     },
     "switch": {
@@ -854,6 +913,14 @@
       },
       "siren": {
         "name": "Siren"
+      },
+      "frost_protection": {
+        "name": "Frost protection"
+      }
+    },
+    "valve": {
+      "indexed_valve": {
+        "name": "Valve {index}"
       }
     }
   },
