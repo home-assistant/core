@@ -1596,7 +1596,7 @@ pycsspeechtts==1.0.8
 # pycups==2.0.4
 
 # homeassistant.components.daikin
-pydaikin==2.15.0
+pydaikin==2.16.0
 
 # homeassistant.components.deako
 pydeako==0.6.0
