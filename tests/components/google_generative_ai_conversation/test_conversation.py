@@ -195,10 +195,13 @@ async def test_function_call(
             "response": {
                 "result": "Test response",
             },
+            "scheduling": None,
+            "will_continue": None,
         },
         "inline_data": None,
         "text": None,
         "thought": None,
+        "thought_signature": None,
         "video_metadata": None,
     }
 
