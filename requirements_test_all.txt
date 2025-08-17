@@ -492,7 +492,7 @@ aranet4==2.5.1
 arcam-fmj==1.8.2
 
 # homeassistant.components.asuswrt
-asusrouter==1.18.2
+asusrouter==1.19.0
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
@@ -601,7 +601,7 @@ bond-async==0.2.1
 bosch-alarm-mode2==0.4.6
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.2.91
+boschshcpy==0.2.107
 
 # homeassistant.components.aws
 botocore==1.37.1
@@ -2371,10 +2371,7 @@ surepy==0.9.0
 switchbot-api==2.7.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==4.1.5
-
-# homeassistant.components.system_bridge
-systembridgemodels==4.2.4
+systembridgeconnector==4.1.10
 
 # homeassistant.components.tailscale
 tailscale==0.6.2
