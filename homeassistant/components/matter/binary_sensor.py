@@ -415,11 +415,14 @@ DISCOVERY_SCHEMAS = [
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
             device_to_ha=lambda x: (
-                x == clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kBlocked
+                x
+                == clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kBlocked
             ),
         ),
         entity_class=MatterBinarySensor,
-        required_attributes=(clusters.ValveConfigurationAndControl.Attributes.ValveFault,),
+        required_attributes=(
+            clusters.ValveConfigurationAndControl.Attributes.ValveFault,
+        ),
         allow_multi=True,
     ),
     MatterDiscoverySchema(
@@ -430,11 +433,14 @@ DISCOVERY_SCHEMAS = [
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
             device_to_ha=lambda x: (
-                x == clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kLeaking
+                x
+                == clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kLeaking
             ),
         ),
         entity_class=MatterBinarySensor,
-        required_attributes=(clusters.ValveConfigurationAndControl.Attributes.ValveFault,),
+        required_attributes=(
+            clusters.ValveConfigurationAndControl.Attributes.ValveFault,
+        ),
         allow_multi=True,
     ),
 ]
