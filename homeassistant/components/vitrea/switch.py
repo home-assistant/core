@@ -16,6 +16,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import VitreaTimerControl
+
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
@@ -181,7 +183,7 @@ class VitreaSwitch(SwitchEntity):
     async def async_set_timer(self, minutes: int) -> None:
         """Set timer service for switches with timer functionality."""
         if self.timer:
-            if isinstance(self.timer, TimerProtocol):
+            if isinstance(self.timer, VitreaTimerControl):
                 await self.timer.async_set_native_value(float(minutes))
             else:
                 _LOGGER.error(
