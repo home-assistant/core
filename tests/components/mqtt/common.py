@@ -90,6 +90,7 @@ MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_LOCAL_CODE = {
         "payload_arm_vacation": "ARM_VACATION",
         "payload_trigger": "TRIGGER",
         "supported_features": ["arm_home", "arm_away", "trigger"],
+        "retain": False,
         "entity_picture": "https://example.com/4b06357ef8654e8d9c54cee5bb0e9391",
     },
 }
@@ -113,6 +114,7 @@ MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_REMOTE_CODE = {
         "payload_arm_vacation": "ARM_VACATION",
         "payload_trigger": "TRIGGER",
         "supported_features": ["arm_home", "arm_away", "arm_custom_bypass"],
+        "retain": False,
         "entity_picture": "https://example.com/4b06357ef8654e8d9c54cee5bb0e9392",
     },
 }
@@ -136,6 +138,7 @@ MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_REMOTE_CODE_TEXT = {
         "payload_arm_vacation": "ARM_VACATION",
         "payload_trigger": "TRIGGER",
         "supported_features": ["arm_home", "arm_away", "arm_vacation"],
+        "retain": False,
         "entity_picture": "https://example.com/4b06357ef8654e8d9c54cee5bb0e9393",
     },
 }

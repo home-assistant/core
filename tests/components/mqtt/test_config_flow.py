@@ -2687,6 +2687,7 @@ async def test_migrate_of_incompatible_config_entry(
                 "code_arm_required": True,
                 "code_disarm_required": True,
                 "code_trigger_required": True,
+                "retain": False,
                 "alarm_control_panel_payload_settings": {
                     "payload_arm_away": "ARM_AWAY",
                     "payload_arm_custom_bypass": "ARM_CUSTOM_BYPASS",
@@ -2732,6 +2733,7 @@ async def test_migrate_of_incompatible_config_entry(
                 "code_arm_required": True,
                 "code_disarm_required": True,
                 "code_trigger_required": True,
+                "retain": False,
                 "alarm_control_panel_payload_settings": {
                     "payload_arm_away": "ARM_AWAY",
                     "payload_arm_custom_bypass": "ARM_CUSTOM_BYPASS",
@@ -2762,6 +2764,7 @@ async def test_migrate_of_incompatible_config_entry(
                 "code_arm_required": True,
                 "code_disarm_required": True,
                 "code_trigger_required": True,
+                "retain": False,
                 "alarm_control_panel_payload_settings": {
                     "payload_arm_away": "ARM_AWAY",
                     "payload_arm_custom_bypass": "ARM_CUSTOM_BYPASS",

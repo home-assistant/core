@@ -1287,6 +1287,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             required=True,
             default=True,
         ),
+        CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
         CONF_PAYLOAD_ARM_HOME: PlatformField(
             selector=TEXT_SELECTOR,
             required=False,
