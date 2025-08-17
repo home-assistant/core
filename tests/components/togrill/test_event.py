@@ -1,4 +1,4 @@
-"""Test sensors for ToGrill integration."""
+"""Test events for ToGrill integration."""
 
 from unittest.mock import Mock
 
@@ -33,7 +33,7 @@ async def test_setup(
     mock_client: Mock,
     packets,
 ) -> None:
-    """Test the sensors."""
+    """Test standard events."""
 
     inject_bluetooth_service_info(hass, TOGRILL_SERVICE_INFO)
 
@@ -58,7 +58,7 @@ async def test_events(
     mock_client: Mock,
     message,
 ) -> None:
-    """Test the sensors."""
+    """Test all possible events."""
 
     inject_bluetooth_service_info(hass, TOGRILL_SERVICE_INFO)
 
