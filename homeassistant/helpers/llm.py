@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field as dc_field
 from datetime import timedelta
 from decimal import Decimal
@@ -613,7 +613,7 @@ class AssistAPI(API):
             )
 
         if exposed_domains:
-            tools.append(GetLiveContextTool())
+            tools.append(async_get_live_context_tool)
 
         return tools
 
@@ -1141,42 +1141,72 @@ class TodoGetItemsTool(Tool):
         return {"success": True, "result": items}
 
 
-class GetLiveContextTool(Tool):
-    """Tool for getting the current state of exposed entities.
+class PythonTool(Tool):
+    """Tool for executing Python code snippets."""
 
-    This returns state for all entities that have been exposed to
-    the assistant. This is different than the GetState intent, which
-    returns state for entities based on intent parameters.
-    """
+    def __init__(
+        self,
+        *,
+        name: str,
+        description: str,
+        parameters: vol.Schema | None = None,
+        tool_func: Callable[
+            [HomeAssistant, ToolInput, LLMContext], Awaitable[JsonObjectType]
+        ],
+    ) -> None:
+        """Initialize the Python tool."""
+        self.name = name
+        self.description = description
+        self.parameters = parameters or vol.Schema({})
+        self.tool_func = tool_func
 
-    name = "GetLiveContext"
-    description = (
-        "Provides real-time information about the CURRENT state, value, or mode of devices, sensors, entities, or areas. "
-        "Use this tool for: "
-        "1. Answering questions about current conditions (e.g., 'Is the light on?'). "
-        "2. As the first step in conditional actions (e.g., 'If the weather is rainy, turn off sprinklers' requires checking the weather first)."
-    )
+    @classmethod
+    def define(cls, name: str, parameters: vol.Schema | None = None) -> Callable:
+        """Decorator to create a tool from a function."""
+
+        def decorator(func: Callable) -> PythonTool:
+            """Decorate the function to create a tool."""
+            return cls(
+                name=name,
+                description=func.__doc__ or "",
+                parameters=parameters,
+                tool_func=func,
+            )
+
+        return decorator
 
     async def async_call(
-        self,
-        hass: HomeAssistant,
-        tool_input: ToolInput,
-        llm_context: LLMContext,
+        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
     ) -> JsonObjectType:
-        """Get the current state of exposed entities."""
-        if llm_context.assistant is None:
-            # Note this doesn't happen in practice since this tool won't be
-            # exposed if no assistant is configured.
-            return {"success": False, "error": "No assistant configured"}
+        """Call the Python function."""
+        return await self.tool_func(hass, tool_input, llm_context)
 
-        exposed_entities = _get_exposed_entities(hass, llm_context.assistant)
-        if not exposed_entities["entities"]:
-            return {"success": False, "error": NO_ENTITIES_PROMPT}
-        prompt = [
-            "Live Context: An overview of the areas and the devices in this smart home:",
-            yaml_util.dump(list(exposed_entities["entities"].values())),
-        ]
-        return {
-            "success": True,
-            "result": "\n".join(prompt),
-        }
+
+@PythonTool.define("GetLiveContext")
+async def async_get_live_context_tool(
+    hass: HomeAssistant,
+    tool_input: ToolInput,
+    llm_context: LLMContext,
+) -> JsonObjectType:
+    """Provides real-time information about the CURRENT state, value, or mode of devices, sensors, entities, or areas.
+
+    Use this tool for:
+    1. Answering questions about current conditions (e.g., 'Is the light on?').
+    2. As the first step in conditional actions (e.g., 'If the weather is rainy, turn off sprinklers' requires checking the weather first).
+    """
+    if llm_context.assistant is None:
+        # Note this doesn't happen in practice since this tool won't be
+        # exposed if no assistant is configured.
+        return {"success": False, "error": "No assistant configured"}
+
+    exposed_entities = _get_exposed_entities(hass, llm_context.assistant)
+    if not exposed_entities["entities"]:
+        return {"success": False, "error": NO_ENTITIES_PROMPT}
+    prompt = [
+        "Live Context: An overview of the areas and the devices in this smart home:",
+        yaml_util.dump(list(exposed_entities["entities"].values())),
+    ]
+    return {
+        "success": True,
+        "result": "\n".join(prompt),
+    }
