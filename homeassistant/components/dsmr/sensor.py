@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntEnum
 from functools import partial
-import statistics  # Added for averaging
+import statistics
 
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
 from dsmr_parser.clients.rfxtrx_protocol import (
@@ -35,7 +35,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     EntityCategory,
     UnitOfEnergy,
-    UnitOfPower,  # Added for W/kW check
+    UnitOfPower,
     UnitOfVolume,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
@@ -813,7 +813,7 @@ async def async_setup_entry(
         """Connect to DSMR and keep reconnecting until Home Assistant stops."""
         stop_listener = None
         transport = None
-        protocol_instance = None  # Renamed from 'protocol'
+        protocol = None
 
         while hass.state is CoreState.not_running or hass.is_running:
             # Start DSMR asyncio.Protocol reader
@@ -823,7 +823,7 @@ async def async_setup_entry(
             _receive_telegram({})  # Changed to _receive_telegram
 
             try:
-                transport, protocol_instance = await hass.loop.create_task(
+                transport, protocol = await hass.loop.create_task(
                     reader_factory()
                 )
 
@@ -841,14 +841,14 @@ async def async_setup_entry(
                     )
 
                     # Wait for reader to close
-                    await protocol_instance.wait_closed()
+                    await protocol.wait_closed()
 
                     # Unexpected disconnect
                     if hass.state is CoreState.not_running or hass.is_running:
                         stop_listener()
 
                 transport = None
-                protocol_instance = None
+                protocol = None
 
                 # Reflect disconnect state in devices state by setting an
                 # None telegram resulting in `unavailable` states
@@ -862,7 +862,7 @@ async def async_setup_entry(
                 # connection wait
                 LOGGER.exception("Error connecting to DSMR")
                 transport = None
-                protocol_instance = None
+                protocol = None
 
                 # Reflect disconnect state in devices state by setting an
                 # None telegram resulting in `unavailable` states
@@ -883,8 +883,8 @@ async def async_setup_entry(
                 if transport:
                     transport.close()
 
-                if protocol_instance:
-                    await protocol_instance.wait_closed()
+                if protocol:
+                    await protocol.wait_closed()
 
                 return
 
@@ -934,7 +934,7 @@ class DSMREntity(SensorEntity):
         self._value: StateType = None  # Stores the value to report
 
         # Check if this sensor measures power (W or kW)
-        self._is_power_sensor = self.native_unit_of_measurement in {
+        self._is_averaged_sensor = self.native_unit_of_measurement in {
             UnitOfPower.WATT,
             UnitOfPower.KILO_WATT,
         }
@@ -990,7 +990,7 @@ class DSMREntity(SensorEntity):
         )
 
         if dsmr_object and dsmr_object.value is not None:
-            if self._is_power_sensor:
+            if self._is_averaged_sensor:
                 try:
                     self._raw_values.append(float(dsmr_object.value))
                 except (ValueError, TypeError):
@@ -1014,7 +1014,7 @@ class DSMREntity(SensorEntity):
             self._telegram, self._mbus_id, self.entity_description.obis_reference
         )
 
-        if self._is_power_sensor:
+        if self._is_averaged_sensor:
             if self._raw_values:
                 avg_value = statistics.mean(self._raw_values)
                 self._value = round(avg_value, DEFAULT_PRECISION)
