@@ -206,6 +206,9 @@
       },
       "led_indicator_intensity_on": {
         "name": "LED on intensity"
+      },
+      "valve_configuration_and_control_default_open_duration": {
+        "name": "Default open duration"
       }
     },
     "light": {
