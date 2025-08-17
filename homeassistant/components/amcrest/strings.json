@@ -159,10 +159,11 @@
       "unknown": "Unexpected error occurred"
     },
     "abort": {
-      "already_configured": "Camera is already configured"
+      "already_configured": "Camera is already configured",
+      "reconfigure_successful": "Camera reconfigured successfully",
+      "wrong_device": "The credentials provided are for a different camera"
     }
   },
-
   "options": {
     "step": {
       "options": {
