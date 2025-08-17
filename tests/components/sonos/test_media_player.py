@@ -1319,14 +1319,14 @@ async def test_service_update_alarm_dne(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Alarm Id 16 does not exist and cannot be updated",
+        match="Alarm 99 does not exist and cannot be updated",
     ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_UPDATE_ALARM,
             {
                 ATTR_ENTITY_ID: "media_player.zone_a",
-                ATTR_ALARM_ID: 14,
+                ATTR_ALARM_ID: 99,
                 ATTR_TIME: "07:15:00",
                 ATTR_VOLUME: 0.25,
                 ATTR_INCLUDE_LINKED_ZONES: True,
