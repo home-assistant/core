@@ -52,7 +52,7 @@
     },
     "select": {
       "speech_dialog_level": {
-        "name": "Dialog level",
+        "name": "Speech enhancement",
         "state": {
           "off": "[%key:common::state::off%]",
           "low": "[%key:common::state::low%]",
