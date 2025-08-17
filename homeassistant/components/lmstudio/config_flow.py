@@ -19,6 +19,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import selector
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -127,50 +128,56 @@ def _create_model_selector(
     )
 
 
-def _create_max_tokens_selector() -> NumberSelector:
-    """Create a NumberSelector for max tokens configuration.
+def _create_number_selector(
+    mode: NumberSelectorMode,
+    min_val: float,
+    max_val: float,
+    step: float | None = None,
+) -> NumberSelector:
+    """Create a NumberSelector with specified parameters.
+
+    Args:
+        mode: The selector mode (BOX or SLIDER)
+        min_val: Minimum allowed value
+        max_val: Maximum allowed value
+        step: Step size for sliders (optional)
 
     Returns:
-        NumberSelector configured for max tokens input
+        NumberSelector configured with the specified parameters
     """
-    return NumberSelector(
-        NumberSelectorConfig(
-            mode=NumberSelectorMode.BOX,
-            min=MIN_MAX_TOKENS,
-            max=MAX_MAX_TOKENS,
+    config = NumberSelectorConfig(
+        mode=mode,
+        min=min_val,
+        max=max_val,
+    )
+    if step is not None:
+        config = NumberSelectorConfig(
+            mode=mode,
+            min=min_val,
+            max=max_val,
+            step=step,
         )
+    return NumberSelector(config)
+
+
+def _create_max_tokens_selector() -> NumberSelector:
+    """Create a NumberSelector for max tokens configuration."""
+    return _create_number_selector(
+        NumberSelectorMode.BOX, MIN_MAX_TOKENS, MAX_MAX_TOKENS
     )
 
 
 def _create_temperature_selector() -> NumberSelector:
-    """Create a NumberSelector for temperature configuration.
-
-    Returns:
-        NumberSelector configured for temperature input
-    """
-    return NumberSelector(
-        NumberSelectorConfig(
-            mode=NumberSelectorMode.SLIDER,
-            min=MIN_TEMPERATURE,
-            max=MAX_TEMPERATURE,
-            step=TEMPERATURE_STEP,
-        )
+    """Create a NumberSelector for temperature configuration."""
+    return _create_number_selector(
+        NumberSelectorMode.SLIDER, MIN_TEMPERATURE, MAX_TEMPERATURE, TEMPERATURE_STEP
     )
 
 
 def _create_top_p_selector() -> NumberSelector:
-    """Create a NumberSelector for top_p configuration.
-
-    Returns:
-        NumberSelector configured for top_p input
-    """
-    return NumberSelector(
-        NumberSelectorConfig(
-            mode=NumberSelectorMode.SLIDER,
-            min=MIN_TOP_P,
-            max=MAX_TOP_P,
-            step=TOP_P_STEP,
-        )
+    """Create a NumberSelector for top_p configuration."""
+    return _create_number_selector(
+        NumberSelectorMode.SLIDER, MIN_TOP_P, MAX_TOP_P, TOP_P_STEP
     )
 
 
@@ -453,46 +460,86 @@ class ConversationFlowHandler(LMStudioSubentryFlowHandler):
         # Use parent config entry's model as default if available
         default_model = self.config_entry.data.get(CONF_MODEL, DEFAULT_MODEL)
 
-        # Create default name with Chat prefix, or use existing data
-        default_name = self._existing_data.get(
-            CONF_NAME, f"Chat - {DEFAULT_CONVERSATION_NAME}"
-        )
-
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_NAME, default=default_name): str,
-                vol.Optional(
-                    CONF_MODEL,
-                    default=self._existing_data.get(CONF_MODEL, default_model),
-                ): _create_model_selector(models),
-                vol.Optional(
-                    CONF_PROMPT,
-                    default=self._existing_data.get(CONF_PROMPT, DEFAULT_PROMPT),
-                ): TemplateSelector(),
-                vol.Optional(
-                    CONF_LLM_HASS_API,
-                    default=self._existing_data.get(CONF_LLM_HASS_API, True),
-                ): BooleanSelector(),
-                vol.Optional(
-                    CONF_MAX_TOKENS,
-                    default=self._existing_data.get(
-                        CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS
-                    ),
-                ): _create_max_tokens_selector(),
-                vol.Optional(
-                    CONF_TEMPERATURE,
-                    default=self._existing_data.get(
-                        CONF_TEMPERATURE, DEFAULT_TEMPERATURE
-                    ),
-                ): _create_temperature_selector(),
-                vol.Optional(
-                    CONF_TOP_P,
-                    default=self._existing_data.get(CONF_TOP_P, DEFAULT_TOP_P),
-                ): _create_top_p_selector(),
-            }
+        schema = _create_conversation_schema(
+            models=models,
+            existing_data=self._existing_data,
+            default_model=default_model,
         )
 
         return self.async_show_form(step_id="init", data_schema=schema)
+
+
+def _create_conversation_schema(
+    models: list[SelectOptionDict],
+    existing_data: dict[str, Any] | None = None,
+    default_model: str = DEFAULT_MODEL,
+    include_name: bool = True,
+    include_prompt: bool = True,
+    include_llm_api: bool = True,
+) -> vol.Schema:
+    """Create a conversation configuration schema.
+
+    Args:
+        models: Available models for selection
+        existing_data: Existing configuration data for defaults
+        default_model: Default model if no existing data
+        include_name: Whether to include name field
+        include_prompt: Whether to include prompt field
+        include_llm_api: Whether to include LLM API field
+
+    Returns:
+        Schema for conversation configuration
+    """
+    existing_data = existing_data or {}
+    schema_dict: dict[vol.Marker, type | selector.Selector] = {}
+
+    if include_name:
+        default_name = existing_data.get(
+            CONF_NAME, f"Chat - {DEFAULT_CONVERSATION_NAME}"
+        )
+        schema_dict[vol.Required(CONF_NAME, default=default_name)] = str
+
+    schema_dict[
+        vol.Optional(
+            CONF_MODEL,
+            default=existing_data.get(CONF_MODEL, default_model),
+        )
+    ] = _create_model_selector(models)
+
+    if include_prompt:
+        schema_dict[
+            vol.Optional(
+                CONF_PROMPT,
+                default=existing_data.get(CONF_PROMPT, DEFAULT_PROMPT),
+            )
+        ] = TemplateSelector()
+
+    if include_llm_api:
+        schema_dict[
+            vol.Optional(
+                CONF_LLM_HASS_API,
+                default=existing_data.get(CONF_LLM_HASS_API, True),
+            )
+        ] = BooleanSelector()
+
+    schema_dict.update(
+        {
+            vol.Optional(
+                CONF_MAX_TOKENS,
+                default=existing_data.get(CONF_MAX_TOKENS, DEFAULT_MAX_TOKENS),
+            ): _create_max_tokens_selector(),
+            vol.Optional(
+                CONF_TEMPERATURE,
+                default=existing_data.get(CONF_TEMPERATURE, DEFAULT_TEMPERATURE),
+            ): _create_temperature_selector(),
+            vol.Optional(
+                CONF_TOP_P,
+                default=existing_data.get(CONF_TOP_P, DEFAULT_TOP_P),
+            ): _create_top_p_selector(),
+        }
+    )
+
+    return vol.Schema(schema_dict)
 
 
 class OptionsFlowHandler(OptionsFlow):

@@ -94,10 +94,16 @@
         "title": "LM Studio options",
         "description": "Update your LM Studio configuration",
         "data": {
-          "model": "Default model"
+          "model": "Default model",
+          "max_tokens": "Maximum tokens",
+          "temperature": "Temperature",
+          "top_p": "Top P"
         },
         "data_description": {
-          "model": "The default model to use for new conversations"
+          "model": "The default model to use for new conversations",
+          "max_tokens": "Maximum number of tokens in the response",
+          "temperature": "Controls randomness (0.0 = deterministic, 1.0 = creative)",
+          "top_p": "Controls diversity via nucleus sampling"
         }
       }
     }

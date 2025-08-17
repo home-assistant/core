@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from homeassistant.const import CONF_LLM_HASS_API
+
 DOMAIN = "lmstudio"
 
 # Default configuration
@@ -60,4 +62,13 @@ RECOMMENDED_CONVERSATION_OPTIONS = {
     CONF_MAX_TOKENS: DEFAULT_MAX_TOKENS,
     CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
     CONF_TOP_P: DEFAULT_TOP_P,
+}
+
+# Default conversation configuration
+DEFAULT_CONVERSATION_CONFIG = {
+    CONF_LLM_HASS_API: True,
+    CONF_MAX_TOKENS: DEFAULT_MAX_TOKENS,
+    CONF_TEMPERATURE: DEFAULT_TEMPERATURE,
+    CONF_TOP_P: DEFAULT_TOP_P,
+    CONF_PROMPT: DEFAULT_PROMPT,
 }
