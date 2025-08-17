@@ -219,6 +219,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         event.add("dtend", kwargs.get("dtend"))
         event.add("dtstamp", datetime.now(kwargs.get("tzinfo")))
         event.add("description", kwargs.get("description"))
+        event.add("location", kwargs.get("location"))
         event.add("uid", str(uuid.uuid4()))
 
         if rrule := kwargs.get("rrule"):
