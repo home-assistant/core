@@ -1,0 +1,474 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "V20",
+  "category": "sd",
+  "product_id": "lr33znaodtyarrrz",
+  "product_name": "V20",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2025-03-23T16:37:02+00:00",
+  "create_time": "2025-03-23T16:37:02+00:00",
+  "update_time": "2025-03-23T16:37:02+00:00",
+  "function": {
+    "power_go": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "pause": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_charge": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["smart", "zone", "pose", "part"]
+      }
+    },
+    "suction": {
+      "type": "Enum",
+      "value": {
+        "range": ["gentle", "normal", "strong"]
+      }
+    },
+    "cistern": {
+      "type": "Enum",
+      "value": {
+        "range": ["low", "middle", "high"]
+      }
+    },
+    "seek": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "direction_control": {
+      "type": "Enum",
+      "value": {
+        "range": ["forward", "turn_left", "turn_right", "stop"]
+      }
+    },
+    "reset_map": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "path_data": {
+      "type": "Raw",
+      "value": {}
+    },
+    "command_trans": {
+      "type": "Raw",
+      "value": {}
+    },
+    "request": {
+      "type": "Enum",
+      "value": {
+        "range": ["get_map", "get_path", "get_both"]
+      }
+    },
+    "reset_edge_brush": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "reset_roll_brush": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "reset_filter": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "reset_duster_cloth": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_disturb": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "volume_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "break_clean": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "device_timer": {
+      "type": "Raw",
+      "value": {}
+    },
+    "disturb_time_set": {
+      "type": "Raw",
+      "value": {}
+    },
+    "voice_data": {
+      "type": "Raw",
+      "value": {}
+    },
+    "language": {
+      "type": "Enum",
+      "value": {
+        "range": [
+          "chinese_simplified",
+          "chinese_traditional",
+          "english",
+          "german",
+          "french",
+          "russian",
+          "spanish",
+          "korean",
+          "latin",
+          "portuguese",
+          "japanese",
+          "italian"
+        ]
+      }
+    },
+    "customize_mode_switch": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "power_go": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "pause": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_charge": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["smart", "zone", "pose", "part"]
+      }
+    },
+    "status": {
+      "type": "Enum",
+      "value": {
+        "range": [
+          "standby",
+          "zone_clean",
+          "part_clean",
+          "cleaning",
+          "paused",
+          "goto_pos",
+          "pos_arrived",
+          "pos_unarrive",
+          "goto_charge",
+          "charging",
+          "charge_done",
+          "sleep"
+        ]
+      }
+    },
+    "clean_time": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 0,
+        "max": 9999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "clean_area": {
+      "type": "Integer",
+      "value": {
+        "unit": "㎡",
+        "min": 0,
+        "max": 9999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "electricity_left": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "suction": {
+      "type": "Enum",
+      "value": {
+        "range": ["closed", "gentle", "normal", "strong"]
+      }
+    },
+    "cistern": {
+      "type": "Enum",
+      "value": {
+        "range": ["closed", "low", "middle", "high"]
+      }
+    },
+    "seek": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "direction_control": {
+      "type": "Enum",
+      "value": {
+        "range": ["forward", "turn_left", "turn_right", "stop"]
+      }
+    },
+    "reset_map": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "path_data": {
+      "type": "Raw",
+      "value": {}
+    },
+    "command_trans": {
+      "type": "Raw",
+      "value": {}
+    },
+    "request": {
+      "type": "Enum",
+      "value": {
+        "range": ["get_map", "get_path", "get_both"]
+      }
+    },
+    "edge_brush": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 0,
+        "max": 9000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "reset_edge_brush": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "roll_brush": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 0,
+        "max": 18000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "reset_roll_brush": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "filter": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 0,
+        "max": 9000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "reset_filter": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "duster_cloth": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 0,
+        "max": 9000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "reset_duster_cloth": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_disturb": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "volume_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "break_clean": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "fault": {
+      "type": "Bitmap",
+      "value": {
+        "label": [
+          "low_power",
+          "poweroff",
+          "wheel_trap",
+          "cannot_upgrade",
+          "collision_stuck",
+          "dust_station_full",
+          "tile_error",
+          "lidar_speed_err",
+          "lidar_cover",
+          "lidar_point_err",
+          "front_wall_dirty",
+          "psd_dirty",
+          "middle_sweep",
+          "side_sweep",
+          "fan_speed",
+          "dustbox_out",
+          "dustbox_full",
+          "no_dust_box",
+          "dustbox_fullout",
+          "trapped",
+          "pick_up",
+          "no_dust_water_box",
+          "water_box_empty",
+          "forbid_area",
+          "land_check",
+          "findcharge_fail",
+          "battery_err",
+          "kit_wheel",
+          "kit_lidar",
+          "kit_water_pump"
+        ]
+      }
+    },
+    "total_clean_area": {
+      "type": "Integer",
+      "value": {
+        "unit": "㎡",
+        "min": 0,
+        "max": 99999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "total_clean_count": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 99999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "total_clean_time": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 0,
+        "max": 99999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "device_timer": {
+      "type": "Raw",
+      "value": {}
+    },
+    "disturb_time_set": {
+      "type": "Raw",
+      "value": {}
+    },
+    "device_info": {
+      "type": "Raw",
+      "value": {}
+    },
+    "voice_data": {
+      "type": "Raw",
+      "value": {}
+    },
+    "language": {
+      "type": "Enum",
+      "value": {
+        "range": [
+          "chinese_simplified",
+          "chinese_traditional",
+          "english",
+          "german",
+          "french",
+          "russian",
+          "spanish",
+          "korean",
+          "latin",
+          "portuguese",
+          "japanese",
+          "italian"
+        ]
+      }
+    },
+    "customize_mode_switch": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "power_go": false,
+    "pause": false,
+    "switch_charge": false,
+    "mode": "goto_charge",
+    "status": "charge_done",
+    "clean_time": 0,
+    "clean_area": 0,
+    "electricity_left": 100,
+    "suction": "strong",
+    "cistern": "middle",
+    "seek": false,
+    "direction_control": "forward",
+    "reset_map": false,
+    "path_data": "",
+    "command_trans": "qgABFxc=",
+    "request": "get_map",
+    "edge_brush": 8944,
+    "reset_edge_brush": false,
+    "roll_brush": 17948,
+    "reset_roll_brush": false,
+    "filter": 8956,
+    "reset_filter": false,
+    "duster_cloth": 9000,
+    "reset_duster_cloth": false,
+    "switch_disturb": false,
+    "volume_set": 95,
+    "break_clean": true,
+    "fault": 0,
+    "total_clean_area": 24,
+    "total_clean_count": 1,
+    "total_clean_time": 42,
+    "device_timer": "qgADMQEAMg==",
+    "disturb_time_set": "qgAIMwEWAAAIAABS",
+    "device_info": "eyJEZXZpY2VfU04iOiJJRlYyMDI1MDExNTAyMDIwMiIsIkZpcm13YXJlX1ZlcnNpb24iOiIxLjQuMyIsIklQIjoiMTkyLjE2OC4wLjIwMyIsIk1DVV9WZXJzaW9uIjoiMC4zMTQxLjEwNyIsIk1hYyI6IjM0OjE3OjM2OkU1OjAyOjc4IiwiTW9kdWxlX1VVSUQiOiJ6ZjExYjJmNzQ4Mzg5ZTY5ZDk4NiIsIlJTU0kiOiItNTAiLCJXaUZpX05hbWUiOiJGcnl0a2lfemFfZGFybW8ifQ==",
+    "voice_data": "qwAAAAAHNQAAAAADZJw=",
+    "language": "chinese_simplified",
+    "customize_mode_switch": false
+  },
+  "set_up": true,
+  "support_local": true
+}

@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components import datadog
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.issue_registry as ir
@@ -22,7 +22,7 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
         mock_dogstatsd.return_value = mock_instance
 
         result = await hass.config_entries.flow.async_init(
-            datadog.DOMAIN, context={"source": "user"}
+            datadog.DOMAIN, context={"source": SOURCE_USER}
         )
         assert result["type"] == FlowResultType.FORM
 
@@ -42,7 +42,7 @@ async def test_user_flow_retry_after_connection_fail(hass: HomeAssistant) -> Non
         side_effect=OSError("Connection failed"),
     ):
         result = await hass.config_entries.flow.async_init(
-            datadog.DOMAIN, context={"source": "user"}
+            datadog.DOMAIN, context={"source": SOURCE_USER}
         )
 
         result2 = await hass.config_entries.flow.async_configure(
@@ -60,6 +60,34 @@ async def test_user_flow_retry_after_connection_fail(hass: HomeAssistant) -> Non
         assert result3["type"] == FlowResultType.CREATE_ENTRY
         assert result3["data"] == MOCK_DATA
         assert result3["options"] == MOCK_OPTIONS
+
+
+async def test_user_flow_abort_already_configured_service(
+    hass: HomeAssistant,
+) -> None:
+    """Abort user-initiated config flow if the same host/port is already configured."""
+    existing_entry = MockConfigEntry(
+        domain=datadog.DOMAIN,
+        data=MOCK_DATA,
+        options=MOCK_OPTIONS,
+    )
+    existing_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        datadog.DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=MOCK_CONFIG
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_options_flow_cannot_connect(hass: HomeAssistant) -> None:
@@ -221,9 +249,9 @@ async def test_import_flow_abort_already_configured_service(
 
     result = await hass.config_entries.flow.async_init(
         datadog.DOMAIN,
-        context={"source": "import"},
+        context={"source": SOURCE_IMPORT},
         data=MOCK_CONFIG,
     )
 
-    assert result["type"] == "abort"
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"

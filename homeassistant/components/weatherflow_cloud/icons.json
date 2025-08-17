@@ -34,6 +34,60 @@
       "lightning_strike_last_epoch": {
         "default": "mdi:lightning-bolt"
       },
+
+      "precip_accum_local_day": {
+        "default": "mdi:umbrella-closed",
+        "range": {
+          "0.01": "mdi:umbrella"
+        }
+      },
+      "precip_accum_local_day_final": {
+        "default": "mdi:umbrella-closed",
+        "range": {
+          "0.01": "mdi:umbrella"
+        }
+      },
+      "precip_accum_local_yesterday": {
+        "default": "mdi:umbrella-closed",
+        "range": {
+          "0.01": "mdi:umbrella"
+        }
+      },
+      "precip_accum_local_yesterday_final": {
+        "default": "mdi:umbrella-closed",
+        "range": {
+          "0.01": "mdi:umbrella"
+        }
+      },
+
+      "precip_minutes_local_day": {
+        "default": "mdi:umbrella-closed",
+        "range": {
+          "1": "mdi:umbrella"
+        }
+      },
+      "precip_minutes_local_yesterday": {
+        "default": "mdi:umbrella-closed",
+        "range": {
+          "1": "mdi:umbrella"
+        }
+      },
+      "precip_minutes_local_yesterday_final": {
+        "default": "mdi:umbrella-closed",
+        "range": {
+          "1": "mdi:umbrella"
+        }
+      },
+
+      "precip_analysis_type_yesterday": {
+        "default": "mdi:radar",
+        "state": {
+          "rain": "mdi:weather-rainy",
+          "snow": "mdi:weather-snowy",
+          "rain_snow": "mdi:weather-snoy-rainy",
+          "lightning": "mdi:weather-lightning-rainy"
+        }
+      },
       "sea_level_pressure": {
         "default": "mdi:gauge"
       },
@@ -49,6 +103,7 @@
       "wind_chill": {
         "default": "mdi:snowflake-thermometer"
       },
+
       "wind_direction": {
         "default": "mdi:compass",
         "range": {

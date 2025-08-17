@@ -54,7 +54,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     CONNECTION_UPNP,
@@ -83,11 +83,15 @@ async def test_device_registry(
     assert reg_device.manufacturer == "Sonos"
     assert reg_device.name == "Zone A"
     # Default device provides battery info, area should not be suggested
-    assert reg_device.suggested_area is None
+    assert reg_device.area_id is None
 
 
 async def test_device_registry_not_portable(
-    hass: HomeAssistant, device_registry: DeviceRegistry, async_setup_sonos, soco
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: DeviceRegistry,
+    async_setup_sonos,
+    soco,
 ) -> None:
     """Test non-portable sonos device registered in the device registry to ensure area suggested."""
     soco.get_battery_info.return_value = {}
@@ -97,7 +101,7 @@ async def test_device_registry_not_portable(
         identifiers={("sonos", "RINCON_test")}
     )
     assert reg_device is not None
-    assert reg_device.suggested_area == "Zone A"
+    assert reg_device.area_id == area_registry.async_get_area_by_name("Zone A").id
 
 
 async def test_entity_basic(
