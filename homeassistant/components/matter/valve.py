@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
 
@@ -19,6 +21,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
+
+ATTR_FAULT_GENERAL = "fault_general"
+ATTR_FAULT_BLOCKED = "fault_blocked"
+ATTR_FAULT_LEAKING = "fault_leaking"
 
 ValveConfigurationAndControl = clusters.ValveConfigurationAndControl
 
@@ -38,6 +44,9 @@ async def async_setup_entry(
 class MatterValve(MatterEntity, ValveEntity):
     """Representation of a Matter Valve."""
 
+    _attr_fault_general: bool = False
+    _attr_fault_blocked: bool = False
+    _attr_fault_leaking: bool = False
     _feature_map: int | None = None
     entity_description: ValveEntityDescription
     _platform_translation_key = "valve"
@@ -56,6 +65,15 @@ class MatterValve(MatterEntity, ValveEntity):
             ValveConfigurationAndControl.Commands.Open(targetLevel=position)
         )
 
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the state attributes of the entity."""
+        return {
+            ATTR_FAULT_GENERAL: self._attr_fault_general,
+            ATTR_FAULT_BLOCKED: self._attr_fault_blocked,
+            ATTR_FAULT_LEAKING: self._attr_fault_leaking,
+        }
+
     @callback
     def _update_from_device(self) -> None:
         """Update from device."""
@@ -64,6 +82,27 @@ class MatterValve(MatterEntity, ValveEntity):
         current_state = self.get_matter_attribute_value(
             ValveConfigurationAndControl.Attributes.CurrentState
         )
+        fault = self.get_matter_attribute_value(
+            ValveConfigurationAndControl.Attributes.ValveFault
+        )
+        # handle optional fault
+        if fault != 0:
+            if (
+                fault
+                == ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kGeneralFault
+            ):
+                self._attr_fault_general = True
+            else:
+                self._attr_fault_general = False
+            if fault == ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kBlocked:
+                self._attr_fault_blocked = True
+            else:
+                self._attr_fault_blocked = False
+            if fault == ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kLeaking:
+                self._attr_fault_leaking = True
+            else:
+                self._attr_fault_leaking = False
+
         target_state: int
         target_state = self.get_matter_attribute_value(
             ValveConfigurationAndControl.Attributes.TargetState
@@ -136,7 +175,10 @@ DISCOVERY_SCHEMAS = [
             ValveConfigurationAndControl.Attributes.CurrentState,
             ValveConfigurationAndControl.Attributes.TargetState,
         ),
-        optional_attributes=(ValveConfigurationAndControl.Attributes.CurrentLevel,),
+        optional_attributes=(
+            ValveConfigurationAndControl.Attributes.CurrentLevel,
+            ValveConfigurationAndControl.Attributes.ValveFault,
+        ),
         device_type=(device_types.WaterValve,),
     ),
 ]
