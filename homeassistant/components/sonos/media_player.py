@@ -221,6 +221,7 @@ async def async_setup_entry(
         "async_set_group_volume",
     )
 
+
 class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     """Representation of a Sonos entity."""
 
@@ -329,6 +330,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             self.media.poll_media()
 
     async def _async_update_group_volume(self) -> None:
+        """Refresh cached group volume level from SoCo."""
         def _get() -> Optional[int]:
             try:
                 return self.soco.group.volume
@@ -856,6 +858,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         ]
 
     async def async_set_group_volume(self, volume_level: float) -> None:
+        """Set the volume for the Sonos group (0.0–1.0)."""
         level = max(0.0, min(1.0, float(volume_level)))
 
         def _set() -> None:
@@ -878,7 +881,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         if self.source:
             attributes[ATTR_INPUT_SOURCE] = self.source
-            
+
         if self._group_volume_level is not None:
             attributes["group_volume_level"] = self._group_volume_level
 
