@@ -201,13 +201,15 @@ async def _safe_fetch_models_with_errors(
 
     try:
         models = await _fetch_available_models(hass, base_url, api_key)
-    except openai.APIConnectionError:
-        errors["base"] = "cannot_connect"
-    except openai.AuthenticationError:
-        errors["base"] = "invalid_auth"
-    except Exception:
-        _LOGGER.exception("Unexpected exception")
-        errors["base"] = "unknown"
+    except Exception as exc:
+        match exc:
+            case openai.APIConnectionError():
+                errors["base"] = "cannot_connect"
+            case openai.AuthenticationError():
+                errors["base"] = "invalid_auth"
+            case _:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
 
     return models, errors
 
@@ -267,24 +269,26 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> list[str]
         hass, data[CONF_BASE_URL], data[CONF_API_KEY]
     )
     if errors:
-        if errors["base"] == "invalid_auth":
-            raise openai.AuthenticationError(
-                response=httpx.Response(
-                    status_code=401,
+        match errors["base"]:
+            case "invalid_auth":
+                raise openai.AuthenticationError(
+                    response=httpx.Response(
+                        status_code=401,
+                        request=httpx.Request(method="GET", url=data[CONF_BASE_URL]),
+                    ),
+                    body=None,
+                    message="Invalid API key",
+                )
+            case "unknown":
+                raise openai.APIError(
                     request=httpx.Request(method="GET", url=data[CONF_BASE_URL]),
-                ),
-                body=None,
-                message="Invalid API key",
-            )
-        if errors["base"] == "unknown":
-            raise openai.APIError(
-                request=httpx.Request(method="GET", url=data[CONF_BASE_URL]),
-                body=None,
-                message="Unknown error",
-            )
-        raise openai.APIConnectionError(
-            request=httpx.Request(method="GET", url=data[CONF_BASE_URL])
-        )
+                    body=None,
+                    message="Unknown error",
+                )
+            case _:
+                raise openai.APIConnectionError(
+                    request=httpx.Request(method="GET", url=data[CONF_BASE_URL])
+                )
     return [model["value"] for model in models]
 
 
@@ -441,19 +445,20 @@ class ConversationFlowHandler(LMStudioSubentryFlowHandler):
             model_name = user_input.get(CONF_MODEL, "Unknown Model")
             title = f"Conversation - {model_name}"
 
-            # Check if we're in a reconfigure flow
-            if self.source == "reconfigure":
-                # Update existing subentry
-                subentry = self._get_reconfigure_subentry()
-                return self.async_update_and_abort(
-                    entry=self.config_entry,
-                    subentry=subentry,
-                    title=title,
-                    data=user_input,
-                )
-
-            # Create new subentry
-            return self.async_create_entry(title=title, data=user_input)
+            # Handle flow type with match/case
+            match self.source:
+                case "reconfigure":
+                    # Update existing subentry
+                    subentry = self._get_reconfigure_subentry()
+                    return self.async_update_and_abort(
+                        entry=self.config_entry,
+                        subentry=subentry,
+                        title=title,
+                        data=user_input,
+                    )
+                case _:
+                    # Create new subentry
+                    return self.async_create_entry(title=title, data=user_input)
 
         models = await self._get_available_models()
 
