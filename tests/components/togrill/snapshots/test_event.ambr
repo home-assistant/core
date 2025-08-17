@@ -1,0 +1,721 @@
+# serializer version: 1
+# name: test_events[0][event.pro_05_probe_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'probe_acknowledge',
+        'probe_alarm',
+        'probe_disconnected',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.pro_05_probe_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Probe 1',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'event',
+    'unique_id': '00000000-0000-0000-0000-000000000001_event_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[0][event.pro_05_probe_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': 'probe_acknowledge',
+      'event_types': list([
+        'probe_acknowledge',
+        'probe_alarm',
+        'probe_disconnected',
+      ]),
+      'friendly_name': 'Pro-05 Probe 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.pro_05_probe_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-10-21T00:00:00.000+00:00',
+  })
+# ---
+# name: test_events[0][event.pro_05_probe_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'probe_acknowledge',
+        'probe_alarm',
+        'probe_disconnected',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.pro_05_probe_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Probe 2',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'event',
+    'unique_id': '00000000-0000-0000-0000-000000000001_event_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[0][event.pro_05_probe_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': 'probe_acknowledge',
+      'event_types': list([
+        'probe_acknowledge',
+        'probe_alarm',
+        'probe_disconnected',
+      ]),
+      'friendly_name': 'Pro-05 Probe 2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.pro_05_probe_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-10-21T00:00:00.000+00:00',
+  })
+# ---
+# name: test_events[5][event.pro_05_probe_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'probe_acknowledge',
+        'probe_alarm',
+        'probe_disconnected',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.pro_05_probe_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Probe 1',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'event',
+    'unique_id': '00000000-0000-0000-0000-000000000001_event_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[5][event.pro_05_probe_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': 'probe_alarm',
+      'event_types': list([
+        'probe_acknowledge',
+        'probe_alarm',
+        'probe_disconnected',
+      ]),
+      'friendly_name': 'Pro-05 Probe 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.pro_05_probe_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-10-21T00:00:00.000+00:00',
+  })
+# ---
+# name: test_events[5][event.pro_05_probe_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'probe_acknowledge',
+        'probe_alarm',
+        'probe_disconnected',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.pro_05_probe_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Probe 2',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'event',
+    'unique_id': '00000000-0000-0000-0000-000000000001_event_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[5][event.pro_05_probe_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': 'probe_alarm',
+      'event_types': list([
+        'probe_acknowledge',
+        'probe_alarm',
+        'probe_disconnected',
+      ]),
+      'friendly_name': 'Pro-05 Probe 2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.pro_05_probe_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-10-21T00:00:00.000+00:00',
+  })
+# ---
+# name: test_events[6][event.pro_05_probe_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'probe_acknowledge',
+        'probe_alarm',
+        'probe_disconnected',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.pro_05_probe_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Probe 1',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'event',
+    'unique_id': '00000000-0000-0000-0000-000000000001_event_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[6][event.pro_05_probe_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': 'probe_disconnected',
+      'event_types': list([
+        'probe_acknowledge',
+        'probe_alarm',
+        'probe_disconnected',
+      ]),
+      'friendly_name': 'Pro-05 Probe 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.pro_05_probe_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-10-21T00:00:00.000+00:00',
+  })
+# ---
+# name: test_events[6][event.pro_05_probe_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'probe_acknowledge',
+        'probe_alarm',
+        'probe_disconnected',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.pro_05_probe_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Probe 2',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'event',
+    'unique_id': '00000000-0000-0000-0000-000000000001_event_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_events[6][event.pro_05_probe_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': 'probe_disconnected',
+      'event_types': list([
+        'probe_acknowledge',
+        'probe_alarm',
+        'probe_disconnected',
+      ]),
+      'friendly_name': 'Pro-05 Probe 2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.pro_05_probe_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2023-10-21T00:00:00.000+00:00',
+  })
+# ---
+# name: test_setup[no_data][event.pro_05_probe_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'probe_acknowledge',
+        'probe_alarm',
+        'probe_disconnected',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.pro_05_probe_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Probe 1',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'event',
+    'unique_id': '00000000-0000-0000-0000-000000000001_event_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[no_data][event.pro_05_probe_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'probe_acknowledge',
+        'probe_alarm',
+        'probe_disconnected',
+      ]),
+      'friendly_name': 'Pro-05 Probe 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.pro_05_probe_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[no_data][event.pro_05_probe_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'probe_acknowledge',
+        'probe_alarm',
+        'probe_disconnected',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.pro_05_probe_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Probe 2',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'event',
+    'unique_id': '00000000-0000-0000-0000-000000000001_event_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[no_data][event.pro_05_probe_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'probe_acknowledge',
+        'probe_alarm',
+        'probe_disconnected',
+      ]),
+      'friendly_name': 'Pro-05 Probe 2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.pro_05_probe_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[non_event_packet][event.pro_05_probe_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'probe_acknowledge',
+        'probe_alarm',
+        'probe_disconnected',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.pro_05_probe_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Probe 1',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'event',
+    'unique_id': '00000000-0000-0000-0000-000000000001_event_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[non_event_packet][event.pro_05_probe_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'probe_acknowledge',
+        'probe_alarm',
+        'probe_disconnected',
+      ]),
+      'friendly_name': 'Pro-05 Probe 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.pro_05_probe_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[non_event_packet][event.pro_05_probe_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'probe_acknowledge',
+        'probe_alarm',
+        'probe_disconnected',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.pro_05_probe_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Probe 2',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'event',
+    'unique_id': '00000000-0000-0000-0000-000000000001_event_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[non_event_packet][event.pro_05_probe_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'probe_acknowledge',
+        'probe_alarm',
+        'probe_disconnected',
+      ]),
+      'friendly_name': 'Pro-05 Probe 2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.pro_05_probe_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[non_known_message][event.pro_05_probe_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'probe_acknowledge',
+        'probe_alarm',
+        'probe_disconnected',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.pro_05_probe_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Probe 1',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'event',
+    'unique_id': '00000000-0000-0000-0000-000000000001_event_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[non_known_message][event.pro_05_probe_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'probe_acknowledge',
+        'probe_alarm',
+        'probe_disconnected',
+      ]),
+      'friendly_name': 'Pro-05 Probe 1',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.pro_05_probe_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_setup[non_known_message][event.pro_05_probe_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'probe_acknowledge',
+        'probe_alarm',
+        'probe_disconnected',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.pro_05_probe_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Probe 2',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'event',
+    'unique_id': '00000000-0000-0000-0000-000000000001_event_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[non_known_message][event.pro_05_probe_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'probe_acknowledge',
+        'probe_alarm',
+        'probe_disconnected',
+      ]),
+      'friendly_name': 'Pro-05 Probe 2',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.pro_05_probe_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

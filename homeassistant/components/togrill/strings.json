@@ -46,6 +46,20 @@
       "alarm_interval": {
         "name": "Alarm interval"
       }
+    },
+    "event": {
+      "event": {
+        "name": "Probe {probe_number}",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "probe_acknowledge": "Acknowledge",
+              "probe_alarm": "Alarm",
+              "probe_disconnected": "Disconnected"
+            }
+          }
+        }
+      }
     }
   }
 }
