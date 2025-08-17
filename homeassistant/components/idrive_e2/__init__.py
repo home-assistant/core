@@ -101,6 +101,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: IDriveE2ConfigEntry) -> 
 
 async def async_unload_entry(hass: HomeAssistant, entry: IDriveE2ConfigEntry) -> bool:
     """Unload a config entry."""
-    client: boto3.client = entry.runtime_data
+    client = entry.runtime_data
     await hass.async_add_executor_job(client.close)
     return True
