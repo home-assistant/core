@@ -221,10 +221,8 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
         event.add("description", kwargs.get("description"))
         event.add("uid", str(uuid.uuid4()))
 
-        _rrule = kwargs.get("rrule")
-        if _rrule is not None and _rrule != "":
-            # If rrule is set as "" or None, icalendar errors out.
-            event.add("rrule", _rrule)
+        if rrule := kwargs.get("rrule"):
+            event.add("rrule", rrule)
 
         cal = Calendar()
         cal.add("prodid", "-//homeassistant.io//CALDAV//EN")
