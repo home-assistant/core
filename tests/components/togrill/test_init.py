@@ -7,6 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import TOGRILL_SERVICE_INFO, setup_entry
 
@@ -20,6 +21,7 @@ async def test_setup_device_present(
     mock_entry: MockConfigEntry,
     mock_client: Mock,
     mock_client_class: Mock,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that setup works with device present."""
 
@@ -27,6 +29,11 @@ async def test_setup_device_present(
 
     await setup_entry(hass, mock_entry, [])
     assert mock_entry.state is ConfigEntryState.LOADED
+
+    device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_BLUETOOTH, TOGRILL_SERVICE_INFO.address)}
+    )
+    assert device == snapshot
 
 
 async def test_setup_device_not_present(
