@@ -1,8 +1,9 @@
 """Support for Netgear Button."""
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+
+from netgearpy import NetgearClient
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -24,7 +25,7 @@ from .router import NetgearRouter
 class NetgearButtonEntityDescription(ButtonEntityDescription):
     """Class describing Netgear button entities."""
 
-    action: Callable[[NetgearRouter], Callable[[], Coroutine[Any, Any, None]]]
+    action: Callable[[NetgearClient], Awaitable[None]]
 
 
 BUTTONS = [
@@ -32,7 +33,7 @@ BUTTONS = [
         key="reboot",
         device_class=ButtonDeviceClass.RESTART,
         entity_category=EntityCategory.CONFIG,
-        action=lambda router: router.async_reboot,
+        action=lambda router: router.reboot(),
     )
 ]
 
@@ -69,8 +70,7 @@ class NetgearRouterButtonEntity(NetgearRouterCoordinatorEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Triggers the button press service."""
-        async_action = self.entity_description.action(self._router)
-        await async_action()
+        await self.entity_description.action(self._router.api)
 
     @callback
     def async_update_device(self) -> None:
