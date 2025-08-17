@@ -161,5 +161,22 @@
     "abort": {
       "already_configured": "Camera is already configured"
     }
+  },
+
+  "options": {
+    "step": {
+      "options": {
+        "title": "Amcrest camera options",
+        "description": "Configure additional options for your Amcrest camera.",
+        "data": {
+          "authentication": "Authentication type",
+          "resolution": "Resolution",
+          "stream_source": "Stream source",
+          "ffmpeg_arguments": "FFmpeg arguments",
+          "control_light": "Enable light control",
+          "scan_interval": "Scan interval (seconds)"
+        }
+      }
+    }
   }
 }

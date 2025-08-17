@@ -25,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, selector
 
 from .camera import STREAM_SOURCE_LIST
 from .const import DOMAIN, RESOLUTION_LIST
@@ -114,7 +114,6 @@ class AmcrestOptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -137,15 +136,35 @@ class AmcrestOptionsFlowHandler(OptionsFlow):
                 vol.Optional(
                     CONF_AUTHENTICATION,
                     default=options.get(CONF_AUTHENTICATION, HTTP_BASIC_AUTHENTICATION),
-                ): vol.In(["basic"]),
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[
+                            selector.SelectOptionDict(value="basic", label="Basic"),
+                        ]
+                    )
+                ),
                 vol.Optional(
                     "resolution",
                     default=options.get("resolution", DEFAULT_RESOLUTION),
-                ): vol.In(list(RESOLUTION_LIST.keys())),
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[
+                            selector.SelectOptionDict(value=key, label=key.capitalize())
+                            for key in RESOLUTION_LIST
+                        ]
+                    )
+                ),
                 vol.Optional(
                     "stream_source",
                     default=options.get("stream_source", STREAM_SOURCE_LIST[0]),
-                ): vol.In(STREAM_SOURCE_LIST),
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[
+                            selector.SelectOptionDict(value=source, label=source)
+                            for source in STREAM_SOURCE_LIST
+                        ]
+                    )
+                ),
                 vol.Optional(
                     "ffmpeg_arguments",
                     default=options.get("ffmpeg_arguments", DEFAULT_ARGUMENTS),
