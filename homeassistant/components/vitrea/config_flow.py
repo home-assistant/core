@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
@@ -81,8 +82,6 @@ class VitreaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_test_connection(self, host: str, port: int) -> None:
-        """Test connection to the Vitrea device using VitreaClient."""
-        client = VitreaClient(host, port)
         """Test connection to the Vitrea device using VitreaClient with a timeout."""
         client = VitreaClient(host, port)
         # Use a timeout to avoid hanging the config flow on unresponsive devices

@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 import logging
+import time
 
 from vitreaclient import DeviceStatus, VitreaClient, VitreaResponse
 
@@ -106,10 +107,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: VitreaConfigEntry) -> bo
         # we wait as long as entities are being discovered, assuming that
         # a lack of change in 10 seconds means that no more entities are being discovered
         entity_count = 0
-        while True:
-            await asyncio.sleep(10)
-            if len(entities) == entity_count:
-        entity_count = 0
         max_discovery_time = 60  # seconds
         discovery_start = time.monotonic()
         while True:
@@ -119,7 +116,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: VitreaConfigEntry) -> bo
             if time.monotonic() - discovery_start > max_discovery_time:
                 _LOGGER.warning(
                     "Entity discovery timed out after %d seconds. Proceeding with %d entities: %s",
-                    max_discovery_time, len(entities), entities
+                    max_discovery_time,
+                    len(entities),
+                    entities,
                 )
                 break
             entity_count = len(entities)
