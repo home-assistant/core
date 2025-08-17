@@ -407,4 +407,34 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(clusters.DishwasherAlarm.Attributes.State,),
         allow_multi=True,
     ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="ValveConfigurationAndControlValveFault_Blocked",
+            translation_key="valve_fault_blocked",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_to_ha=lambda x: (
+                x == clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kBlocked
+            ),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.ValveConfigurationAndControl.Attributes.ValveFault,),
+        allow_multi=True,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="ValveConfigurationAndControlValveFault_Leaking",
+            translation_key="valve_fault_leaking",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_to_ha=lambda x: (
+                x == clusters.ValveConfigurationAndControl.Bitmaps.ValveFaultBitmap.kLeaking
+            ),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.ValveConfigurationAndControl.Attributes.ValveFault,),
+        allow_multi=True,
+    ),
 ]
