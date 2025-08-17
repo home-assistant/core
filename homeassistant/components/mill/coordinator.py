@@ -60,6 +60,7 @@ class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         *,
         mill_data_connection: Mill,
     ) -> None:
@@ -70,6 +71,7 @@ class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name="MillHistoricDataUpdateCoordinator",
+            config_entry=config_entry,
         )
 
     async def _async_update_data(self):

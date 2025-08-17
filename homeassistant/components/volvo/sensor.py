@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 import logging
 from typing import Any, cast
 
@@ -47,7 +47,6 @@ _LOGGER = logging.getLogger(__name__)
 class VolvoSensorDescription(VolvoEntityDescription, SensorEntityDescription):
     """Describes a Volvo sensor entity."""
 
-    source_fields: list[str] | None = None
     value_fn: Callable[[VolvoCarsValue], Any] | None = None
 
 
@@ -87,7 +86,12 @@ def _charging_power_status_value(field: VolvoCarsValue) -> str | None:
     return None
 
 
-_CHARGING_POWER_STATUS_OPTIONS = ["providing_power", "no_power_available"]
+_CHARGING_POWER_STATUS_OPTIONS = [
+    "fault",
+    "power_available_but_not_activated",
+    "providing_power",
+    "no_power_available",
+]
 
 _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
     # command-accessibility endpoint
@@ -103,6 +107,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
             "power_saving_mode",
         ],
         value_fn=_availability_status,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -110,6 +115,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         api_field="averageEnergyConsumption",
         native_unit_of_measurement=UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -117,6 +123,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         api_field="averageEnergyConsumptionAutomatic",
         native_unit_of_measurement=UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -124,6 +131,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         api_field="averageEnergyConsumptionSinceCharge",
         native_unit_of_measurement=UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -131,6 +139,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         api_field="averageFuelConsumption",
         native_unit_of_measurement="L/100 km",
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -138,6 +147,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
         api_field="averageFuelConsumptionAutomatic",
         native_unit_of_measurement="L/100 km",
         state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
     ),
     # statistics endpoint
     VolvoSensorDescription(
@@ -235,11 +245,15 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
             "none",
         ],
     ),
-    # statistics & energy state endpoint
+    # statistics endpoint
+    # We're not using `electricRange` from the energy state endpoint because
+    # the official app seems to use `distanceToEmptyBattery`.
+    # In issue #150213, a user described to behavior as follows:
+    # - For a `distanceToEmptyBattery` of 250km, the `electricRange` was 150mi
+    # - For a `distanceToEmptyBattery` of 260km, the `electricRange` was 160mi
     VolvoSensorDescription(
         key="distance_to_empty_battery",
-        api_field="",
-        source_fields=["distanceToEmptyBattery", "electricRange"],
+        api_field="distanceToEmptyBattery",
         native_unit_of_measurement=UnitOfLength.KILOMETERS,
         device_class=SensorDeviceClass.DISTANCE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -357,12 +371,7 @@ async def async_setup_entry(
             if description.key in added_keys:
                 continue
 
-            if description.source_fields:
-                for field in description.source_fields:
-                    if field in coordinator.data:
-                        description = replace(description, api_field=field)
-                        _add_entity(coordinator, description)
-            elif description.api_field in coordinator.data:
+            if description.api_field in coordinator.data:
                 _add_entity(coordinator, description)
 
     async_add_entities(entities)

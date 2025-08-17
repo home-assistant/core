@@ -2,32 +2,34 @@
 
 from unittest.mock import MagicMock
 
-from homeassistant.components.button import (
-    DOMAIN as BUTTON_DOMAIN,
-    SERVICE_PRESS,
-    ButtonDeviceClass,
-)
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, STATE_UNKNOWN
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_adam_reboot_button(
+@pytest.mark.parametrize("platforms", [(BUTTON_DOMAIN,)])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_adam_button_snapshot(
+    hass: HomeAssistant,
+    mock_smile_adam: MagicMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    setup_platform: MockConfigEntry,
+) -> None:
+    """Test Adam button snapshot."""
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
+
+
+async def test_adam_press_reboot_button(
     hass: HomeAssistant, mock_smile_adam: MagicMock, init_integration: MockConfigEntry
 ) -> None:
-    """Test creation of button entities."""
-    state = hass.states.get("button.adam_reboot")
-    assert state
-    assert state.state == STATE_UNKNOWN
-    assert state.attributes.get(ATTR_DEVICE_CLASS) == ButtonDeviceClass.RESTART
-
-    registry = er.async_get(hass)
-    entry = registry.async_get("button.adam_reboot")
-    assert entry
-    assert entry.unique_id == "fe799307f1624099878210aa0b9f1475-reboot"
-
+    """Test pressing of button entity."""
     await hass.services.async_call(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
