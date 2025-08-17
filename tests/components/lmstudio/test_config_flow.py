@@ -16,6 +16,7 @@ from homeassistant.components.lmstudio.config_flow import (
     _create_temperature_selector,
     _create_top_p_selector,
     _safe_fetch_models,
+    _safe_fetch_models_with_errors,
     validate_input,
 )
 from homeassistant.components.lmstudio.const import (
@@ -323,3 +324,171 @@ def test_create_model_selector() -> None:
     result = _create_model_selector(models, "custom-model")
     assert isinstance(result, selector.SelectSelector)
     assert result.config["options"] == models
+
+
+async def test_safe_fetch_models_with_errors_scenarios(hass: HomeAssistant) -> None:
+    """Test _safe_fetch_models_with_errors with different scenarios."""
+    # Test with connection error
+    with patch(
+        "homeassistant.components.lmstudio.config_flow._fetch_available_models"
+    ) as mock_fetch:
+        mock_fetch.side_effect = Exception("Connection failed")
+
+        result, errors = await _safe_fetch_models_with_errors(
+            hass, "http://localhost:1234/v1", "test-key"
+        )
+
+        assert result == []
+        assert "base" in errors
+        assert errors["base"] == "unknown"
+
+    # Test with API connection error
+    with patch(
+        "homeassistant.components.lmstudio.config_flow._fetch_available_models"
+    ) as mock_fetch:
+        mock_fetch.side_effect = openai.APIConnectionError(
+            request=httpx.Request(method="GET", url="http://localhost:1234")
+        )
+
+        result, errors = await _safe_fetch_models_with_errors(
+            hass, "http://localhost:1234/v1", "test-key"
+        )
+
+        assert result == []
+        assert "base" in errors
+        assert errors["base"] == "cannot_connect"
+
+    # Test with auth error
+    with patch(
+        "homeassistant.components.lmstudio.config_flow._fetch_available_models"
+    ) as mock_fetch:
+        mock_fetch.side_effect = openai.AuthenticationError(
+            response=httpx.Response(
+                status_code=401,
+                request=httpx.Request(method="GET", url="http://localhost:1234"),
+            ),
+            body=None,
+            message="Invalid API key",
+        )
+
+        result, errors = await _safe_fetch_models_with_errors(
+            hass, "http://localhost:1234/v1", "test-key"
+        )
+
+        assert result == []
+        assert "base" in errors
+        assert errors["base"] == "invalid_auth"
+
+    # Test with successful fetch
+    with patch(
+        "homeassistant.components.lmstudio.config_flow._fetch_available_models"
+    ) as mock_fetch:
+        mock_fetch.return_value = [{"label": "test-model", "value": "test-model"}]
+
+        result, errors = await _safe_fetch_models_with_errors(
+            hass, "http://localhost:1234/v1", "test-key"
+        )
+
+        assert len(result) == 1
+        assert result[0]["label"] == "test-model"
+        assert errors == {}
+
+
+async def test_safe_fetch_models_scenarios(hass: HomeAssistant) -> None:
+    """Test _safe_fetch_models with different scenarios."""
+    # Test with cached models (string format)
+    cached_models = ["model1", "model2"]
+    result = await _safe_fetch_models(
+        hass, "http://localhost:1234/v1", "test-key", cached_models
+    )
+
+    assert len(result) == 2
+    assert result[0]["label"] == "model1"
+    assert result[1]["label"] == "model2"
+
+    # Test with cached models (dict format) - this covers line 239
+    cached_models_dict = [
+        {"label": "Model 1", "value": "model1"},
+        {"label": "Model 2", "value": "model2"},
+    ]
+    result = await _safe_fetch_models(
+        hass, "http://localhost:1234/v1", "test-key", cached_models_dict
+    )
+
+    assert len(result) == 2
+    assert result[0]["label"] == "Model 1"
+    assert result[1]["label"] == "Model 2"
+
+    # Test with no cached models and fetch succeeds
+    with patch(
+        "homeassistant.components.lmstudio.config_flow._fetch_available_models"
+    ) as mock_fetch:
+        mock_fetch.return_value = [{"label": "test-model", "value": "test-model"}]
+
+        result = await _safe_fetch_models(
+            hass, "http://localhost:1234/v1", "test-key", None
+        )
+
+        assert len(result) == 1
+        assert result[0]["label"] == "test-model"
+
+    # Test with exception during fetch - should return empty list
+    with patch(
+        "homeassistant.components.lmstudio.config_flow._fetch_available_models"
+    ) as mock_fetch:
+        mock_fetch.side_effect = Exception("Connection failed")
+
+        result = await _safe_fetch_models(
+            hass, "http://localhost:1234/v1", "test-key", None
+        )
+
+        assert result == []
+
+
+async def test_validate_input_unknown_error(hass: HomeAssistant) -> None:
+    """Test validate_input with unknown error type."""
+    data = {
+        "base_url": "http://localhost:1234/v1",
+        "api_key": "test-key",
+    }
+
+    # Simulate unknown error by patching _safe_fetch_models_with_errors
+    with patch(
+        "homeassistant.components.lmstudio.config_flow._safe_fetch_models_with_errors"
+    ) as mock_safe_fetch:
+        mock_safe_fetch.return_value = ([], {"base": "unknown"})
+
+        with pytest.raises(openai.APIError):
+            await validate_input(hass, data)
+
+
+async def test_validate_input_with_errors(hass: HomeAssistant) -> None:
+    """Test validate_input with different error scenarios."""
+    data = {
+        "base_url": "http://localhost:1234/v1",
+        "api_key": "test-key",
+    }
+
+    # Test with invalid auth error
+    with patch(
+        "homeassistant.components.lmstudio.config_flow.openai.AsyncOpenAI"
+    ) as mock_client:
+        mock_instance = AsyncMock()
+        mock_client.return_value = mock_instance
+        mock_with_options = AsyncMock()
+        mock_models = AsyncMock()
+        mock_models.list = AsyncMock(
+            side_effect=openai.AuthenticationError(
+                response=httpx.Response(
+                    status_code=401,
+                    request=httpx.Request(method="GET", url="http://localhost:1234"),
+                ),
+                body=None,
+                message="Invalid API key",
+            )
+        )
+        mock_with_options.models = mock_models
+        mock_instance.with_options = lambda timeout: mock_with_options
+
+        with pytest.raises(openai.AuthenticationError):
+            await validate_input(hass, data)
