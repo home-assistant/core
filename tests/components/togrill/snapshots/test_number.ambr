@@ -58,7 +58,7 @@
     'state': '0',
   })
 # ---
-# name: test_setup[no_data][number.pro_05_target_1-entry]
+# name: test_setup[no_data][number.probe_1_target_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -76,7 +76,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.pro_05_target_1',
+    'entity_id': 'number.probe_1_target_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -88,7 +88,7 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Target 1',
+    'original_name': 'Target temperature',
     'platform': 'togrill',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -98,11 +98,11 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[no_data][number.pro_05_target_1-state]
+# name: test_setup[no_data][number.probe_1_target_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Pro-05 Target 1',
+      'friendly_name': 'Probe 1 Target temperature',
       'max': 250,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -110,14 +110,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.pro_05_target_1',
+    'entity_id': 'number.probe_1_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_setup[no_data][number.pro_05_target_2-entry]
+# name: test_setup[no_data][number.probe_2_target_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -135,7 +135,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.pro_05_target_2',
+    'entity_id': 'number.probe_2_target_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -147,7 +147,7 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Target 2',
+    'original_name': 'Target temperature',
     'platform': 'togrill',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -157,11 +157,11 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[no_data][number.pro_05_target_2-state]
+# name: test_setup[no_data][number.probe_2_target_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Pro-05 Target 2',
+      'friendly_name': 'Probe 2 Target temperature',
       'max': 250,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -169,7 +169,7 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.pro_05_target_2',
+    'entity_id': 'number.probe_2_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -235,7 +235,7 @@
     'state': '5',
   })
 # ---
-# name: test_setup[one_probe_with_target_alarm][number.pro_05_target_1-entry]
+# name: test_setup[one_probe_with_target_alarm][number.probe_1_target_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -253,7 +253,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.pro_05_target_1',
+    'entity_id': 'number.probe_1_target_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -265,7 +265,7 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Target 1',
+    'original_name': 'Target temperature',
     'platform': 'togrill',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -275,11 +275,11 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[one_probe_with_target_alarm][number.pro_05_target_1-state]
+# name: test_setup[one_probe_with_target_alarm][number.probe_1_target_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Pro-05 Target 1',
+      'friendly_name': 'Probe 1 Target temperature',
       'max': 250,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -287,14 +287,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.pro_05_target_1',
+    'entity_id': 'number.probe_1_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50.0',
   })
 # ---
-# name: test_setup[one_probe_with_target_alarm][number.pro_05_target_2-entry]
+# name: test_setup[one_probe_with_target_alarm][number.probe_2_target_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -312,7 +312,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.pro_05_target_2',
+    'entity_id': 'number.probe_2_target_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -324,7 +324,7 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Target 2',
+    'original_name': 'Target temperature',
     'platform': 'togrill',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -334,11 +334,11 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_setup[one_probe_with_target_alarm][number.pro_05_target_2-state]
+# name: test_setup[one_probe_with_target_alarm][number.probe_2_target_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Pro-05 Target 2',
+      'friendly_name': 'Probe 2 Target temperature',
       'max': 250,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -346,7 +346,7 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.pro_05_target_2',
+    'entity_id': 'number.probe_2_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
