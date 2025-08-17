@@ -22,6 +22,16 @@ pytest ./tests/components/vitrea/test_config_flow.py -v --cov=homeassistant.comp
 pytest ./tests/components/vitrea/test_init.py -v --cov=homeassistant.components.v
 # vitrea.init
 pytest ./tests/components/vitrea/test_setup.py -v --cov=homeassistant.components.vitrea.setup
-pytest ./tests/components/vitrea/test_switch.py -v --cov=homeassistant.components.v
+pytest ./tests/components/vitrea/test_init.py -v --cov=homeassistant.components.vitrea.init
+# pytest ./tests/components/vitrea/test_setup.py -v --cov=homeassistant.components.vitrea.setup
+pytest ./tests/components/vitrea/test_setup.py -v --cov=homeassistant.components.vitrea.setup
+# pytest ./tests/components/vitrea/test_switch.py -v --cov=homeassistant.components.vitrea.switch
+pytest ./tests/components/vitrea/test_switch.py -v --cov=homeassistant.components.vitrea.switch
+# vitrea.switch
+pytest ./tests/components/vitrea/test_config_flow.py -v --cov=homeassistant.components.vitrea.config_flow
+pytest ./tests/components/vitrea/test_init.py -v --cov=homeassistant.components.vitrea.init
+# vitrea.init
+pytest ./tests/components/vitrea/test_setup.py -v --cov=homeassistant.components.vitrea.setup
+pytest ./tests/components/vitrea/test_switch.py -v --cov=homeassistant.components.vitrea.switch
 # vitrea.switch
 
