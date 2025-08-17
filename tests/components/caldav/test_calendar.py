@@ -1167,7 +1167,6 @@ async def test_add_vevent(
     hass: HomeAssistant,
     setup_platform_cb: Callable[[], Awaitable[None]],
     calendars: list[Mock],
-    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test adding a VEVENT to the calendar."""
     await setup_platform_cb()
@@ -1176,7 +1175,7 @@ async def test_add_vevent(
     def fake_add_event(ics_data: str) -> None:
         called["ics_data"] = ics_data
 
-    monkeypatch.setattr(calendars[0], "add_event", fake_add_event)
+    calendars[0].add_event = fake_add_event
     await hass.services.async_call(
         "calendar",
         "create_event",
