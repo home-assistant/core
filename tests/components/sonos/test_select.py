@@ -1,4 +1,4 @@
-"""Tests for the Sonos number platform."""
+"""Tests for the Sonos select platform."""
 
 import logging
 from unittest.mock import patch
