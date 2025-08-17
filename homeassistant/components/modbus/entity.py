@@ -168,6 +168,9 @@ class BasePlatform(Entity):
         if self._cancel_timer:
             self._cancel_timer()
             self._cancel_timer = None
+        if self._cancel_delay:
+            self._cancel_delay()
+            self._cancel_delay = None
 
     @callback
     def async_hold(self) -> None:
