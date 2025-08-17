@@ -83,4 +83,7 @@ class VitreaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def _async_test_connection(self, host: str, port: int) -> None:
         """Test connection to the Vitrea device using VitreaClient."""
         client = VitreaClient(host, port)
-        await client.connect()
+        """Test connection to the Vitrea device using VitreaClient with a timeout."""
+        client = VitreaClient(host, port)
+        # Use a timeout to avoid hanging the config flow on unresponsive devices
+        await asyncio.wait_for(client.connect(), timeout=5)
