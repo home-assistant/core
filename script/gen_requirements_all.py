@@ -246,6 +246,9 @@ num2words==0.5.14
 # downgraded or upgraded by custom components
 # This ensures all use the same version
 pymodbus==3.11.1
+
+# Some packages don't support gql 4.0.0 yet
+gql==3.5.3
 """
 
 GENERATED_MESSAGE = (
