@@ -891,6 +891,10 @@ ZEROCONF = {
     ],
     "_ssh._tcp.local.": [
         {
+            "domain": "homee",
+            "name": "homee-*",
+        },
+        {
             "domain": "smappee",
             "name": "smappee1*",
         },
