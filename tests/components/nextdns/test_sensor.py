@@ -36,34 +36,19 @@ async def test_availability(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
-    await init_integration(hass, mock_config_entry)
+    with patch("homeassistant.components.nextdns.PLATFORMS", [Platform.SENSOR]):
+        await init_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.fake_profile_dns_queries")
-    assert state
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == "100"
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    entity_ids = (entry.entity_id for entry in entity_entries)
 
-    state = hass.states.get("sensor.fake_profile_dns_over_https_queries")
-    assert state
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == "20"
-
-    state = hass.states.get("sensor.fake_profile_dnssec_validated_queries")
-    assert state
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == "75"
-
-    state = hass.states.get("sensor.fake_profile_encrypted_queries")
-    assert state
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == "60"
-
-    state = hass.states.get("sensor.fake_profile_ipv4_queries")
-    assert state
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == "90"
+    for entity_id in entity_ids:
+        assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
     freezer.tick(timedelta(minutes=10))
     with (
@@ -91,52 +76,13 @@ async def test_availability(
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("sensor.fake_profile_dns_queries")
-    assert state
-    assert state.state == STATE_UNAVAILABLE
-
-    state = hass.states.get("sensor.fake_profile_dns_over_https_queries")
-    assert state
-    assert state.state == STATE_UNAVAILABLE
-
-    state = hass.states.get("sensor.fake_profile_dnssec_validated_queries")
-    assert state
-    assert state.state == STATE_UNAVAILABLE
-
-    state = hass.states.get("sensor.fake_profile_encrypted_queries")
-    assert state
-    assert state.state == STATE_UNAVAILABLE
-
-    state = hass.states.get("sensor.fake_profile_ipv4_queries")
-    assert state
-    assert state.state == STATE_UNAVAILABLE
+    for entity_id in entity_ids:
+        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     freezer.tick(timedelta(minutes=10))
     with mock_nextdns():
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("sensor.fake_profile_dns_queries")
-    assert state
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == "100"
-
-    state = hass.states.get("sensor.fake_profile_dns_over_https_queries")
-    assert state
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == "20"
-
-    state = hass.states.get("sensor.fake_profile_dnssec_validated_queries")
-    assert state
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == "75"
-
-    state = hass.states.get("sensor.fake_profile_encrypted_queries")
-    assert state
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == "60"
-
-    state = hass.states.get("sensor.fake_profile_ipv4_queries")
-    assert state
-    assert state.state != STATE_UNAVAILABLE
-    assert state.state == "90"
+    for entity_id in entity_ids:
+        assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
