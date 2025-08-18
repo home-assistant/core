@@ -54,7 +54,7 @@ rules:
   docs-examples: todo
   docs-known-limitations:
     status: todo
-    comment: Add info that there is no known limitations.
+    comment: Add info that there are no known limitations.
   docs-supported-devices:
     status: exempt
     comment: This is a service, which doesn't integrate with any devices.
