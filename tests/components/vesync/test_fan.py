@@ -3,8 +3,8 @@
 from contextlib import nullcontext
 from unittest.mock import AsyncMock, patch
 
+from aioresponses import aioresponses
 import pytest
-import requests_mock
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import ATTR_PRESET_MODE, DOMAIN as FAN_DOMAIN
@@ -27,13 +27,13 @@ async def test_fan_state(
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    requests_mock: requests_mock.Mocker,
+    aio_mock: aioresponses,
     device_name: str,
 ) -> None:
     """Test the resulting setup state is as expected for the platform."""
 
     # Configure the API devices call for device_name
-    mock_devices_response(requests_mock, device_name)
+    mock_devices_response(aio_mock, device_name)
 
     # setup platform - only including the named device
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -68,10 +68,13 @@ async def test_fan_state(
 async def test_turn_on_off_success(
     hass: HomeAssistant,
     fan_config_entry: MockConfigEntry,
+    aio_mock: aioresponses,
     action: str,
     command: str,
 ) -> None:
     """Test turn_on and turn_off method."""
+
+    mock_devices_response(aio_mock, "SmartTowerFan")
 
     with (
         patch(command, new_callable=AsyncMock, return_value=True) as method_mock,

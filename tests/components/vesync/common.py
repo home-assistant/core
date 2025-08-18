@@ -1,6 +1,5 @@
 """Common methods used across tests for VeSync."""
 
-import json
 from typing import Any
 
 from aioresponses import aioresponses
@@ -8,7 +7,7 @@ from aioresponses import aioresponses
 from homeassistant.components.vesync.const import DOMAIN
 from homeassistant.util.json import JsonObjectType
 
-from tests.common import load_fixture, load_json_object_fixture
+from tests.common import load_json_object_fixture
 
 ENTITY_HUMIDIFIER = "humidifier.humidifier_200s"
 ENTITY_HUMIDIFIER_MIST_LEVEL = "number.humidifier_200s_mist_level"
@@ -19,50 +18,63 @@ ENTITY_FAN = "fan.SmartTowerFan"
 
 ENTITY_SWITCH_DISPLAY = "switch.humidifier_200s_display"
 
+DEVICE_CATEGORIES = [
+    "outlets",
+    "switches",
+    "fans",
+    "bulbs",
+    "humidifiers",
+    "air_purifiers",
+    "air_fryers",
+    "thermostats",
+]
+
 ALL_DEVICES = load_json_object_fixture("vesync-devices.json", DOMAIN)
 ALL_DEVICE_NAMES: list[str] = [
     dev["deviceName"] for dev in ALL_DEVICES["result"]["list"]
 ]
 DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
     "Humidifier 200s": [
-        ("post", "/cloud/v2/deviceManaged/bypassV2", "humidifier-200s.json")
+        ("post", "/cloud/v2/deviceManaged/bypassV2", "humidifier-detail.json")
     ],
     "Humidifier 600S": [
-        ("post", "/cloud/v2/deviceManaged/bypassV2", "device-detail.json")
+        ("post", "/cloud/v2/deviceManaged/bypassV2", "humidifier-detail.json")
     ],
     "Air Purifier 131s": [
         (
             "post",
-            "/131airPurifier/v1/device/deviceDetail",
+            "/cloud/v1/deviceManaged/deviceDetail",
             "air-purifier-131s-detail.json",
         )
     ],
     "Air Purifier 200s": [
-        ("post", "/cloud/v2/deviceManaged/bypassV2", "device-detail.json")
+        ("post", "/cloud/v2/deviceManaged/bypassV2", "air-purifier-detail.json")
     ],
     "Air Purifier 400s": [
-        ("post", "/cloud/v2/deviceManaged/bypassV2", "air-purifier-400s-detail.json")
+        ("post", "/cloud/v2/deviceManaged/bypassV2", "air-purifier-detail.json")
     ],
     "Air Purifier 600s": [
-        ("post", "/cloud/v2/deviceManaged/bypassV2", "device-detail.json")
+        ("post", "/cloud/v2/deviceManaged/bypassV2", "air-purifier-detail.json")
     ],
     "Dimmable Light": [
-        ("post", "/SmartBulb/v1/device/devicedetail", "device-detail.json")
+        ("post", "/cloud/v1/deviceManaged/deviceDetail", "device-detail.json")
     ],
     "Temperature Light": [
-        ("post", "/cloud/v1/deviceManaged/bypass", "device-detail.json")
+        ("post", "/cloud/v1/deviceManaged/bypass", "light-detail.json")
     ],
     "Outlet": [
         ("get", "/v1/device/outlet/detail", "outlet-detail.json"),
-        ("get", "/v1/device/outlet/energy/week", "outlet-energy-week.json"),
+        ("post", "/cloud/v1/device/getLastWeekEnergy", "outlet-energy.json"),
+        ("post", "/cloud/v1/device/getLastMonthEnergy", "outlet-energy.json"),
+        ("post", "/cloud/v1/device/getLastYearEnergy", "outlet-energy.json"),
     ],
     "Wall Switch": [
-        ("post", "/inwallswitch/v1/device/devicedetail", "device-detail.json")
+        ("post", "/cloud/v1/deviceManaged/deviceDetail", "device-detail.json")
     ],
-    "Dimmer Switch": [("post", "/dimmer/v1/device/devicedetail", "dimmer-detail.json")],
-    "SmartTowerFan": [
-        ("post", "/cloud/v2/deviceManaged/bypassV2", "SmartTowerFan-detail.json")
+    "Dimmer Switch": [
+        ("post", "/cloud/v1/deviceManaged/deviceDetail", "dimmer-detail.json")
     ],
+    "SmartTowerFan": [("post", "/cloud/v2/deviceManaged/bypassV2", "fan-detail.json")],
 }
 
 
@@ -75,18 +87,36 @@ def mock_devices_response(aio_mock: aioresponses, device_name: str) -> None:
     ]
 
     aio_mock.post(
-        "https://smartapi.vesync.com/cloud/v1/deviceManaged/devices",
-        json={"code": 0, "result": {"list": device_list}},
+        "https://smartapi.vesync.com/globalPlatform/api/accountAuth/v1/authByPWDOrOTM",
+        payload=load_json_object_fixture("vesync-auth.json", DOMAIN),
     )
     aio_mock.post(
-        "https://smartapi.vesync.com/cloud/v1/user/login",
-        json=load_json_object_fixture("vesync-login.json", DOMAIN),
+        "https://smartapi.vesync.com/user/api/accountManage/v1/loginByAuthorizeCode4Vesync",
+        payload=load_json_object_fixture("vesync-login.json", DOMAIN),
     )
+    aio_mock.post(
+        "https://smartapi.vesync.com/cloud/v1/deviceManaged/devices",
+        payload={
+            "traceId": "1234",
+            "code": 0,
+            "msg": None,
+            "module": None,
+            "stacktrace": None,
+            "result": {
+                "total": len(device_list),
+                "pageSize": len(device_list),
+                "pageNo": 1,
+                "list": device_list,
+            },
+        },
+        repeat=True,
+    )
+
     for fixture in DEVICE_FIXTURES[device_name]:
-        aio_mock.request(
-            fixture[0],
+        getattr(aio_mock, fixture[0])(
             f"https://smartapi.vesync.com{fixture[1]}",
-            json=load_json_object_fixture(fixture[2], DOMAIN),
+            payload=load_json_object_fixture(fixture[2], DOMAIN),
+            repeat=2,
         )
 
 
@@ -101,19 +131,37 @@ def mock_multiple_device_responses(
     ]
 
     aio_mock.post(
-        "https://smartapi.vesync.com/cloud/v1/deviceManaged/devices",
-        json={"code": 0, "result": {"list": device_list}},
+        "https://smartapi.vesync.com/globalPlatform/api/accountAuth/v1/authByPWDOrOTM",
+        payload=load_json_object_fixture("vesync-auth.json", DOMAIN),
     )
     aio_mock.post(
-        "https://smartapi.vesync.com/cloud/v1/user/login",
-        json=load_json_object_fixture("vesync-login.json", DOMAIN),
+        "https://smartapi.vesync.com/user/api/accountManage/v1/loginByAuthorizeCode4Vesync",
+        payload=load_json_object_fixture("vesync-login.json", DOMAIN),
     )
+    aio_mock.post(
+        "https://smartapi.vesync.com/cloud/v1/deviceManaged/devices",
+        payload={
+            "traceId": "1234",
+            "code": 0,
+            "msg": None,
+            "module": None,
+            "stacktrace": None,
+            "result": {
+                "total": len(device_list),
+                "pageSize": len(device_list),
+                "pageNo": 1,
+                "list": device_list,
+            },
+        },
+        repeat=True,
+    )
+
     for device_name in device_names:
         for fixture in DEVICE_FIXTURES[device_name]:
-            aio_mock.request(
-                fixture[0],
+            getattr(aio_mock, fixture[0])(
                 f"https://smartapi.vesync.com{fixture[1]}",
-                json=load_json_object_fixture(fixture[2], DOMAIN),
+                payload=load_json_object_fixture(fixture[2], DOMAIN),
+                repeat=2,
             )
 
 
@@ -122,11 +170,10 @@ def mock_air_purifier_400s_update_response(aio_mock: aioresponses) -> None:
 
     device_name = "Air Purifier 400s"
     for fixture in DEVICE_FIXTURES[device_name]:
-        aio_mock.request(
-            fixture[0],
+        getattr(aio_mock, fixture[0])(
             f"https://smartapi.vesync.com{fixture[1]}",
-            json=load_json_object_fixture(
-                "air-purifier-400s-detail-updated.json", DOMAIN
+            payload=load_json_object_fixture(
+                "air-purifier-detail-updated.json", DOMAIN
             ),
         )
 
@@ -150,10 +197,10 @@ def mock_device_response(
     if len(fixtures) > 0:
         item = fixtures[0]
 
-        aio_mock.request(
-            item[0],
+        getattr(aio_mock, item[0])(
             f"https://smartapi.vesync.com{item[1]}",
-            json=load_and_merge(item[2]),
+            payload=load_and_merge(item[2]),
+            repeat=True,
         )
 
 
@@ -166,83 +213,20 @@ def mock_outlet_energy_response(
         json = load_json_object_fixture(source, DOMAIN)
 
         if override:
-            json.update(override)
+            if "result" in json:
+                json["result"].update(override)
+            else:
+                json.update(override)
 
         return json
 
     fixtures = DEVICE_FIXTURES[device_name]
 
-    # The 2nd item contain energy details
+    # The 2nd item contains weekly energy details
     if len(fixtures) > 1:
         item = fixtures[1]
 
-        aio_mock.request(
-            item[0],
+        getattr(aio_mock, item[0])(
             f"https://smartapi.vesync.com{item[1]}",
-            json=load_and_merge(item[2]),
+            payload=load_and_merge(item[2]),
         )
-
-
-def call_api_side_effect__no_devices(*args, **kwargs):
-    """Build a side_effects method for the Helpers.call_api method."""
-    if args[0] == "/user/api/accountManage/v3/appLoginV3" and args[1] == "post":
-        return json.loads(load_fixture("vesync_api_call__login.json", "vesync")), 200
-    if args[0] == "/cloud/v1/deviceManaged/devices" and args[1] == "post":
-        return (
-            json.loads(
-                load_fixture("vesync_api_call__devices__no_devices.json", "vesync")
-            ),
-            200,
-        )
-    raise ValueError(f"Unhandled API call args={args}, kwargs={kwargs}")
-
-
-def call_api_side_effect__single_humidifier(*args, **kwargs):
-    """Build a side_effects method for the Helpers.call_api method."""
-    if args[0] == "/user/api/accountManage/v3/appLoginV3" and args[1] == "post":
-        return json.loads(load_fixture("vesync_api_call__login.json", "vesync")), 200
-    if args[0] == "/cloud/v1/deviceManaged/devices" and args[1] == "post":
-        return (
-            json.loads(
-                load_fixture(
-                    "vesync_api_call__devices__single_humidifier.json", "vesync"
-                )
-            ),
-            200,
-        )
-    if args[0] == "/cloud/v2/deviceManaged/bypassV2" and kwargs["method"] == "post":
-        return (
-            json.loads(
-                load_fixture(
-                    "vesync_api_call__device_details__single_humidifier.json", "vesync"
-                )
-            ),
-            200,
-        )
-    raise ValueError(f"Unhandled API call args={args}, kwargs={kwargs}")
-
-
-def call_api_side_effect__single_fan(*args, **kwargs):
-    """Build a side_effects method for the Helpers.call_api method."""
-    if args[0] == "/user/api/accountManage/v3/appLoginV3" and args[1] == "post":
-        return json.loads(load_fixture("vesync_api_call__login.json", "vesync")), 200
-    if args[0] == "/cloud/v1/deviceManaged/devices" and args[1] == "post":
-        return (
-            json.loads(
-                load_fixture("vesync_api_call__devices__single_fan.json", "vesync")
-            ),
-            200,
-        )
-    if (
-        args[0] == "/131airPurifier/v1/device/deviceDetail"
-        and kwargs["method"] == "post"
-    ):
-        return (
-            json.loads(
-                load_fixture(
-                    "vesync_api_call__device_details__single_fan.json", "vesync"
-                )
-            ),
-            200,
-        )
-    raise ValueError(f"Unhandled API call args={args}, kwargs={kwargs}")

@@ -3,23 +3,15 @@
 import logging
 
 from pyvesync import VeSync
-from pyvesync.utils.errors import VesyncLoginError
+from pyvesync.utils.errors import VeSyncError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import (
-    DOMAIN,
-    SERVICE_UPDATE_DEVS,
-    VS_COORDINATOR,
-    VS_DEVICES,
-    VS_DISCOVERY,
-    VS_MANAGER,
-)
+from .const import DOMAIN, SERVICE_UPDATE_DEVS, VS_COORDINATOR, VS_MANAGER
 from .coordinator import VeSyncDataCoordinator
 
 PLATFORMS = [
@@ -50,8 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
     try:
         await manager.login()
-    except VesyncLoginError as err:
-        _LOGGER.error("Username or password incorrect")
+    except VeSyncError as err:
         raise ConfigEntryAuthFailed from err
 
     hass.data[DOMAIN] = {}
@@ -70,19 +61,19 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     async def async_new_device_discovery(service: ServiceCall) -> None:
         """Discover if new devices should be added."""
         # needs to be corrected.
-        manager = hass.data[DOMAIN][VS_MANAGER]
-        devices = hass.data[DOMAIN][VS_DEVICES]
-
-        new_devices = manager.devices
-
-        device_set = set(new_devices)
-        new_devices = list(device_set.difference(devices))
-        if new_devices and devices:
-            devices.extend(new_devices)
-            async_dispatcher_send(hass, VS_DISCOVERY.format(VS_DEVICES), new_devices)
-            return
-        if new_devices and not devices:
-            devices.extend(new_devices)
+        # manager = hass.data[DOMAIN][VS_MANAGER]
+        # devices = hass.data[DOMAIN][VS_DEVICES]
+        #
+        # new_devices = manager.devices
+        #
+        # device_set = set(new_devices)
+        # new_devices = list(device_set.difference(devices))
+        # if new_devices and devices:
+        #     devices.extend(new_devices)
+        #     async_dispatcher_send(hass, VS_DISCOVERY.format(VS_DEVICES), new_devices)
+        #     return
+        # if new_devices and not devices:
+        #     devices.extend(new_devices)
 
     hass.services.async_register(
         DOMAIN, SERVICE_UPDATE_DEVS, async_new_device_discovery

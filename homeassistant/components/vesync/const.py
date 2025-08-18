@@ -5,6 +5,7 @@ VS_DISCOVERY = "vesync_discovery_{}"
 SERVICE_UPDATE_DEVS = "update_devices"
 
 UPDATE_INTERVAL = 60
+UPDATE_INTERVAL_ENERGY = 60 * 60 * 6
 """
 Update interval for DataCoordinator.
 
@@ -16,6 +17,9 @@ total would be 2880.
 
 Using 30 seconds interval gives 8640 for 3 devices which
 exceeds the quota of 7700.
+
+Energy history is weekly/monthly/yearly and can be updated a lot more infrequently,
+in this case every 6 hours.
 """
 VS_DEVICES = "devices"
 VS_COORDINATOR = "coordinator"

@@ -9,6 +9,7 @@
     "code": 0,
     "result": {
       "powerSwitch": 0,
+      "filterLifePercent": 99,
       "workMode": "normal",
       "manualSpeedLevel": 1,
       "fanSpeedLevel": 0,
@@ -24,9 +25,8 @@
       "thermalComfort": 65,
       "errorCode": 0,
       "sleepPreference": {
-        "sleepPreferenceType": "default",
+        "sleepPreferenceType": 0,
         "oscillationSwitch": 0,
-        "initFanSpeedLevel": 0,
         "fallAsleepRemain": 0,
         "autoChangeFanLevelSwitch": 0
       },

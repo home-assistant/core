@@ -6,6 +6,7 @@ import logging
 from typing import Any
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.devices.vesyncpurifier import VeSyncAirBaseV2
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -97,11 +98,13 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
 
     @property
     def percentage(self) -> int | None:
-        """Return the current speed."""
-        if (
-            self.device.state.mode == VS_FAN_MODE_MANUAL
-            and (current_level := self.device.state.fan_set_level) is not None
-        ):
+        """Return the currently set speed."""
+        if isinstance(self.device, VeSyncAirBaseV2):
+            current_level = self.device.state.fan_set_level
+        else:
+            current_level = self.device.state.fan_level
+
+        if self.device.state.mode == VS_FAN_MODE_MANUAL and current_level is not None:
             return ordered_list_item_to_percentage(
                 self.device.fan_levels, current_level
             )
@@ -117,11 +120,11 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         """Get the list of available preset modes."""
         if hasattr(self.device, "modes"):
             return sorted(
-                [
+                {
                     mode
                     for mode in self.device.modes
                     if mode in VS_FAN_MODE_PRESET_LIST_HA
-                ]
+                }
             )
         return []
 
@@ -146,8 +149,8 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         if hasattr(self.device.state, "child_lock"):
             attr["child_lock"] = self.device.state.child_lock
 
-        if hasattr(self.device.state, "night_light"):
-            attr["night_light"] = self.device.state.night_light
+        if hasattr(self.device.state, "nightlight_status"):
+            attr["night_light"] = self.device.state.nightlight_status
 
         if hasattr(self.device.state, "mode"):
             attr["mode"] = self.device.state.mode
@@ -178,7 +181,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
                 raise HomeAssistantError("An error occurred while setting manual mode.")
 
         # Calculate the speed level and set it
-        if not await self.device.change_fan_speed(
+        if not await self.device.set_fan_speed(
             percentage_to_ordered_list_item(self.device.fan_levels, percentage)
         ):
             raise HomeAssistantError("An error occurred while changing fan speed.")

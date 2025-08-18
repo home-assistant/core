@@ -4,8 +4,6 @@
   "msg": null,
   "result": {
     "accountID": "1234",
-    "token": "test-token",
-    "acceptLanguage": "en",
-    "countryCode": "US"
+    "authorizeCode": "test-code"
   }
 }

@@ -42,14 +42,7 @@ class VeSyncSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[VeSyncBaseDevice], StateType]
 
-    exists_fn: Callable[[VeSyncBaseDevice], bool] = lambda _: True
-    update_fn: Callable[[VeSyncBaseDevice], None] = lambda _: None
-
-
-def update_energy(device):
-    """Update outlet details and energy usage."""
-    device.update()
-    device.update_energy()
+    exists_fn: Callable[[VeSyncBaseDevice], bool]
 
 
 SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
@@ -84,7 +77,6 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.power,
-        update_fn=update_energy,
         exists_fn=is_outlet,
     ),
     VeSyncSensorEntityDescription(
@@ -94,7 +86,6 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda device: device.state.energy,
-        update_fn=update_energy,
         exists_fn=is_outlet,
     ),
     VeSyncSensorEntityDescription(
@@ -103,8 +94,9 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda device: device.state.weekly_history.totalEnergy,
-        update_fn=update_energy,
+        value_fn=lambda device: getattr(
+            device.state.weekly_history, "totalEnergy", None
+        ),
         exists_fn=is_outlet,
     ),
     VeSyncSensorEntityDescription(
@@ -113,8 +105,9 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda device: device.state.monthly_history.totalEnergy,
-        update_fn=update_energy,
+        value_fn=lambda device: getattr(
+            device.state.monthly_history, "totalEnergy", None
+        ),
         exists_fn=is_outlet,
     ),
     VeSyncSensorEntityDescription(
@@ -123,8 +116,9 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda device: device.state.yearly_history.totalEnergy,
-        update_fn=update_energy,
+        value_fn=lambda device: getattr(
+            device.state.yearly_history, "totalEnergy", None
+        ),
         exists_fn=is_outlet,
     ),
     VeSyncSensorEntityDescription(
@@ -134,7 +128,6 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.state.voltage,
-        update_fn=update_energy,
         exists_fn=is_outlet,
     ),
     VeSyncSensorEntityDescription(
@@ -210,10 +203,3 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.device)
-
-    async def async_update(self) -> None:
-        """Run the update function defined for the sensor."""
-        # I think this section can be removed since energy updates are now auto called?
-        # if self.entity_description.update_fn:
-        # return await self.entity_description.update_fn(self.device)
-        return

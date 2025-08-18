@@ -65,7 +65,7 @@ def _setup_entities(
                 entities.append(VeSyncTunableWhiteLightHA(dev, coordinator))
             elif dev.supports_brightness:
                 entities.append(VeSyncDimmableLightHA(dev, coordinator))
-        elif isinstance(dev, VeSyncSwitch) and dev.supports_brightness:
+        elif isinstance(dev, VeSyncSwitch) and dev.supports_dimmable:
             entities.append(VeSyncDimmableLightHA(dev, coordinator))
 
     async_add_entities(entities, update_before_add=True)
@@ -169,8 +169,9 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLightHA, LightEntity):
     @property
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature value in Kelvin."""
-        # get value from pyvesync library api,
-        result = self.device.state.color_temp_pct
+        # get value from pyvesync library api
+        # pyvesync v3 provides BulbState.color_temp_kelvin() - possible to use that instead?
+        result = self.device.state.color_temp
         try:
             # check for validity of brightness value received
             color_temp_value = int(result)

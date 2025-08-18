@@ -1,7 +1,7 @@
 """Tests for the light module."""
 
+from aioresponses import aioresponses
 import pytest
-import requests_mock
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
@@ -20,13 +20,13 @@ async def test_light_state(
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    requests_mock: requests_mock.Mocker,
+    aio_mock: aioresponses,
     device_name: str,
 ) -> None:
     """Test the resulting setup state is as expected for the platform."""
 
     # Configure the API devices call for device_name
-    mock_devices_response(requests_mock, device_name)
+    mock_devices_response(aio_mock, device_name)
 
     # setup platform - only including the named device
     await hass.config_entries.async_setup(config_entry.entry_id)

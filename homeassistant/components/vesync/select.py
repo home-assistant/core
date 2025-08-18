@@ -58,7 +58,7 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
         translation_key="night_light_level",
         options=list(VS_TO_HA_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.values()),
         icon="mdi:brightness-6",
-        exists_fn=lambda device: device.supports_nightlight and is_humidifier(device),
+        exists_fn=lambda device: is_humidifier(device) and device.supports_nightlight,
         # The select_option service framework ensures that only options specified are
         # accepted. ServiceValidationError gets raised for invalid value.
         select_option_fn=lambda device, value: device.set_nightlight_brightness(
@@ -70,7 +70,7 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
             HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF,
         ),
     ),
-    # night_light for fan devices based on pyvesync.VeSyncAirBypass
+    # night_light for devices that support it (certain air purifiers, humidifiers and outlets)
     VeSyncSelectEntityDescription(
         key="night_light_level",
         translation_key="night_light_level",
@@ -80,10 +80,12 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
             FAN_NIGHT_LIGHT_LEVEL_ON,
         ],
         icon="mdi:brightness-6",
-        exists_fn=lambda device: device.supports_nightlight and is_fan(device),
+        exists_fn=lambda device: is_fan(device)
+        and hasattr(device, "supports_nightlight")
+        and device.supports_nightlight,
         select_option_fn=lambda device, value: device.set_nightlight_mode(value),
         current_option_fn=lambda device: VS_TO_HA_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.get(
-            device.state.get("night_light"),
+            device.state.night_light,
             FAN_NIGHT_LIGHT_LEVEL_OFF,
         ),
     ),
