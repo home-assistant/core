@@ -201,7 +201,7 @@ async def test_get_trigger_capabilities_notification_notification(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == unordered(
         [
-            {"name": "type.", "required": False, "type": "string"},
+            {"name": "type.", "optional": True, "required": False, "type": "string"},
             {"name": "label", "optional": True, "required": False, "type": "string"},
             {"name": "event", "optional": True, "required": False, "type": "string"},
             {

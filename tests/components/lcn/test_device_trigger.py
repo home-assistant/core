@@ -471,6 +471,7 @@ async def test_get_send_keys_trigger_capabilities(
             "name": "key",
             "type": "select",
             "optional": True,
+            "required": False,
             "options": [(send_key.lower(), send_key.lower()) for send_key in SENDKEYS],
         },
         {
@@ -480,6 +481,7 @@ async def test_get_send_keys_trigger_capabilities(
                 (key_action.lower(), key_action.lower()) for key_action in KEY_ACTIONS
             ],
             "optional": True,
+            "required": False,
         },
     ]
 
