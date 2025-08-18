@@ -42,8 +42,6 @@
               "low": "[%key:common::state::low%]",
               "quiet": "Quiet",
               "target_humidity": "Target humidity",
-              "sleep": "Sleep",
-              "auto": "[%key:common::state::auto%]",
               "drying_filter": "Drying filter"
             }
           }

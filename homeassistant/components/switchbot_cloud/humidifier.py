@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudData
-from .const import DEFAULT_DELAY_TIME, DOMAIN, Humidifier2Mode
+from .const import AFTER_COMMAND_REFRESH, DOMAIN, Humidifier2Mode
 from .entity import SwitchBotCloudEntity
 
 PARALLEL_UPDATES = 0
@@ -70,7 +70,7 @@ class SwitchBotHumidifier(SwitchBotCloudEntity, HumidifierEntity):
             )  # humidifer only support set humidity to 34, 67, or 100
         self.target_humidity = humidity
         await self.send_api_command(HumidifierCommands.SET_MODE, parameters=str(para))
-        await asyncio.sleep(DEFAULT_DELAY_TIME)
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
     async def async_set_mode(self, mode: str) -> None:
@@ -81,19 +81,19 @@ class SwitchBotHumidifier(SwitchBotCloudEntity, HumidifierEntity):
             await self.send_api_command(
                 HumidifierCommands.SET_MODE, parameters=str(102)
             )
-        await asyncio.sleep(DEFAULT_DELAY_TIME)
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.send_api_command(CommonCommands.ON)
-        await asyncio.sleep(DEFAULT_DELAY_TIME)
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.send_api_command(CommonCommands.OFF)
-        await asyncio.sleep(DEFAULT_DELAY_TIME)
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
 
@@ -128,7 +128,7 @@ class SwitchBotEvaporativeHumidifier(SwitchBotCloudEntity, HumidifierEntity):
         self._attr_target_humidity = humidity
         params = {"mode": self.coordinator.data["mode"], "humidity": humidity}
         await self.send_api_command(HumidifierV2Commands.SET_MODE, parameters=params)
-        await asyncio.sleep(DEFAULT_DELAY_TIME)
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
     async def async_set_mode(self, mode: str) -> None:
@@ -136,17 +136,17 @@ class SwitchBotEvaporativeHumidifier(SwitchBotCloudEntity, HumidifierEntity):
         assert self.coordinator.data is not None
         params = {"mode": Humidifier2Mode[mode.upper()].value}
         await self.send_api_command(HumidifierV2Commands.SET_MODE, parameters=params)
-        await asyncio.sleep(DEFAULT_DELAY_TIME)
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.send_api_command(CommonCommands.ON)
-        await asyncio.sleep(DEFAULT_DELAY_TIME)
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.send_api_command(CommonCommands.OFF)
-        await asyncio.sleep(DEFAULT_DELAY_TIME)
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()

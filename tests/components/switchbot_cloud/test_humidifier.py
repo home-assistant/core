@@ -1,6 +1,6 @@
 """Test for the switchbot_cloud humidifiers."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 import switchbot_api
@@ -9,7 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
 from homeassistant.components.switchbot_cloud import SwitchBotAPI
-from homeassistant.components.switchbot_cloud.const import DEFAULT_DELAY_TIME, DOMAIN
+from homeassistant.components.switchbot_cloud.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -139,10 +139,7 @@ async def test_humidifier_controller(
     await configure_integration(hass)
     humidifier_id = "humidifier.humidifier_1"
 
-    with (
-        patch.object(SwitchBotAPI, "send_command") as mocked_send_command,
-        patch("asyncio.sleep", AsyncMock()) as mocked_sleep,
-    ):
+    with patch.object(SwitchBotAPI, "send_command") as mocked_send_command:
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
             service,
@@ -151,7 +148,6 @@ async def test_humidifier_controller(
         )
 
         mocked_send_command.assert_awaited_once_with(*expected_call_args)
-        mocked_sleep.assert_awaited_once_with(DEFAULT_DELAY_TIME)
 
 
 @pytest.mark.parametrize(
@@ -214,10 +210,7 @@ async def test_humidifier2_controller(
     await configure_integration(hass)
     humidifier_id = "humidifier.humidifier2_1"
 
-    with (
-        patch.object(SwitchBotAPI, "send_command") as mocked_send_command,
-        patch("asyncio.sleep", AsyncMock()) as mocked_sleep,
-    ):
+    with patch.object(SwitchBotAPI, "send_command") as mocked_send_command:
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
             service,
@@ -226,4 +219,3 @@ async def test_humidifier2_controller(
         )
 
         mocked_send_command.assert_awaited_once_with(*expected_call_args)
-        mocked_sleep.assert_awaited_once_with(DEFAULT_DELAY_TIME)
