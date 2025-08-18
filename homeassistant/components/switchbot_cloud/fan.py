@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudData
-from .const import AFTER_COMMAND_REFRESH, DEFAULT_DELAY_TIME, DOMAIN, AirPurifierMode
+from .const import AFTER_COMMAND_REFRESH, DOMAIN, AirPurifierMode
 from .entity import SwitchBotCloudEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -173,7 +173,7 @@ class SwitchBotAirPurifierEntity(SwitchBotCloudEntity, FanEntity):
             AirPurifierCommands.SET_MODE,
             parameters={"mode": AirPurifierMode[preset_mode.upper()].value},
         )
-        await asyncio.sleep(DEFAULT_DELAY_TIME)
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_on(
@@ -191,7 +191,7 @@ class SwitchBotAirPurifierEntity(SwitchBotCloudEntity, FanEntity):
             self._attr_unique_id,
         )
         await self.send_api_command(CommonCommands.ON)
-        await asyncio.sleep(DEFAULT_DELAY_TIME)
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -199,77 +199,5 @@ class SwitchBotAirPurifierEntity(SwitchBotCloudEntity, FanEntity):
 
         _LOGGER.debug("Switchbot air purifier to set turn off %s", self._attr_unique_id)
         await self.send_api_command(CommonCommands.OFF)
-        await asyncio.sleep(DEFAULT_DELAY_TIME)
-        await self.coordinator.async_request_refresh()
-
-
-class SwitchBotAirPurifierEntity(SwitchBotCloudEntity, FanEntity):
-    """Representation of a Switchbot air purifier."""
-
-    _api: SwitchBotAPI
-    _attr_supported_features = (
-        FanEntityFeature.PRESET_MODE
-        | FanEntityFeature.TURN_OFF
-        | FanEntityFeature.TURN_ON
-    )
-    _attr_preset_modes = AirPurifierMode.get_modes()
-    _attr_translation_key = "air_purifier"
-    _attr_name = None
-    _attr_is_on: bool | None = None
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if device is on."""
-        return self._attr_is_on
-
-    def _set_attributes(self) -> None:
-        """Set attributes from coordinator data."""
-        if self.coordinator.data is None:
-            return
-
-        self._attr_is_on = self.coordinator.data.get("power") == STATE_ON.upper()
-        mode = self.coordinator.data.get("mode")
-        self._attr_preset_mode = (
-            AirPurifierMode(mode).name.lower() if mode is not None else None
-        )
-
-    async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set the preset mode of the air purifier."""
-
-        _LOGGER.debug(
-            "Switchbot air purifier to set preset mode %s %s",
-            preset_mode,
-            self._attr_unique_id,
-        )
-        await self.send_api_command(
-            AirPurifierCommands.SET_MODE,
-            parameters={"mode": AirPurifierMode[preset_mode.upper()].value},
-        )
-        await asyncio.sleep(DEFAULT_DELAY_TIME)
-        await self.coordinator.async_request_refresh()
-
-    async def async_turn_on(
-        self,
-        percentage: int | None = None,
-        preset_mode: str | None = None,
-        **kwargs: Any,
-    ) -> None:
-        """Turn on the air purifier."""
-
-        _LOGGER.debug(
-            "Switchbot air purifier to set turn on %s %s %s",
-            percentage,
-            preset_mode,
-            self._attr_unique_id,
-        )
-        await self.send_api_command(CommonCommands.ON)
-        await asyncio.sleep(DEFAULT_DELAY_TIME)
-        await self.coordinator.async_request_refresh()
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off the air purifier."""
-
-        _LOGGER.debug("Switchbot air purifier to set turn off %s", self._attr_unique_id)
-        await self.send_api_command(CommonCommands.OFF)
-        await asyncio.sleep(DEFAULT_DELAY_TIME)
+        await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()

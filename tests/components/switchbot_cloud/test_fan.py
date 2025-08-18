@@ -1,6 +1,6 @@
 """Test for the Switchbot Battery Circulator Fan."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 import switchbot_api
@@ -15,7 +15,7 @@ from homeassistant.components.fan import (
     SERVICE_SET_PRESET_MODE,
     SERVICE_TURN_ON,
 )
-from homeassistant.components.switchbot_cloud.const import DEFAULT_DELAY_TIME, DOMAIN
+from homeassistant.components.switchbot_cloud.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -28,39 +28,32 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import configure_integration
+from . import AIR_PURIFIER_INFO, CIRCULATOR_FAN_INFO, configure_integration
 
 from tests.common import async_load_json_object_fixture, snapshot_platform
 
-AIR_PURIFIER_INFO = Device(
-    version="V1.0",
-    deviceId="air-purifier-id-1",
-    deviceName="air-purifier-1",
-    deviceType="Air Purifier Table PM2.5",
-    hubDeviceId="test-hub-id",
+
+@pytest.mark.parametrize(
+    ("device_info", "entry_id"),
+    [
+        (AIR_PURIFIER_INFO, "fan.air_purifier_1"),
+        (CIRCULATOR_FAN_INFO, "fan.battery_fan_1"),
+    ],
 )
-
-
 async def test_coordinator_data_is_none(
-    hass: HomeAssistant, mock_list_devices, mock_get_status
+    hass: HomeAssistant,
+    mock_list_devices,
+    mock_get_status,
+    device_info: Device,
+    entry_id: str,
 ) -> None:
     """Test coordinator data is none."""
-    mock_list_devices.return_value = [
-        Device(
-            version="V1.0",
-            deviceId="battery-fan-id-1",
-            deviceName="battery-fan-1",
-            deviceType="Battery Circulator Fan",
-            hubDeviceId="test-hub-id",
-        ),
-    ]
-    mock_get_status.side_effect = [
-        None,
-    ]
+    mock_list_devices.return_value = [device_info]
+    mock_get_status.side_effect = [None]
+
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
-    entity_id = "fan.battery_fan_1"
-    state = hass.states.get(entity_id)
+    state = hass.states.get(entry_id)
 
     assert state.state == STATE_UNKNOWN
 
@@ -68,13 +61,7 @@ async def test_coordinator_data_is_none(
 async def test_turn_on(hass: HomeAssistant, mock_list_devices, mock_get_status) -> None:
     """Test turning on the fan."""
     mock_list_devices.return_value = [
-        Device(
-            version="V1.0",
-            deviceId="battery-fan-id-1",
-            deviceName="battery-fan-1",
-            deviceType="Battery Circulator Fan",
-            hubDeviceId="test-hub-id",
-        ),
+        CIRCULATOR_FAN_INFO,
     ]
     mock_get_status.side_effect = [
         {"power": "off", "mode": "direct", "fanSpeed": "0"},
@@ -90,7 +77,6 @@ async def test_turn_on(hass: HomeAssistant, mock_list_devices, mock_get_status) 
 
     with (
         patch.object(SwitchBotAPI, "send_command") as mock_send_command,
-        patch("asyncio.sleep", AsyncMock()),
     ):
         await hass.services.async_call(
             FAN_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -106,13 +92,7 @@ async def test_turn_off(
 ) -> None:
     """Test turning off the fan."""
     mock_list_devices.return_value = [
-        Device(
-            version="V1.0",
-            deviceId="battery-fan-id-1",
-            deviceName="battery-fan-1",
-            deviceType="Battery Circulator Fan",
-            hubDeviceId="test-hub-id",
-        ),
+        CIRCULATOR_FAN_INFO,
     ]
     mock_get_status.side_effect = [
         {"power": "on", "mode": "direct", "fanSpeed": "0"},
@@ -128,7 +108,6 @@ async def test_turn_off(
 
     with (
         patch.object(SwitchBotAPI, "send_command") as mock_send_command,
-        patch("asyncio.sleep", AsyncMock()),
     ):
         await hass.services.async_call(
             FAN_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -144,13 +123,7 @@ async def test_set_percentage(
 ) -> None:
     """Test set percentage."""
     mock_list_devices.return_value = [
-        Device(
-            version="V1.0",
-            deviceId="battery-fan-id-1",
-            deviceName="battery-fan-1",
-            deviceType="Battery Circulator Fan",
-            hubDeviceId="test-hub-id",
-        ),
+        CIRCULATOR_FAN_INFO,
     ]
     mock_get_status.side_effect = [
         {"power": "on", "mode": "direct", "fanSpeed": "0"},
@@ -166,7 +139,6 @@ async def test_set_percentage(
 
     with (
         patch.object(SwitchBotAPI, "send_command") as mock_send_command,
-        patch("asyncio.sleep", AsyncMock()),
     ):
         await hass.services.async_call(
             FAN_DOMAIN,
@@ -182,13 +154,7 @@ async def test_set_preset_mode(
 ) -> None:
     """Test set preset mode."""
     mock_list_devices.return_value = [
-        Device(
-            version="V1.0",
-            deviceId="battery-fan-id-1",
-            deviceName="battery-fan-1",
-            deviceType="Battery Circulator Fan",
-            hubDeviceId="test-hub-id",
-        ),
+        CIRCULATOR_FAN_INFO,
     ]
     mock_get_status.side_effect = [
         {"power": "on", "mode": "direct", "fanSpeed": "0"},
@@ -204,7 +170,6 @@ async def test_set_preset_mode(
 
     with (
         patch.object(SwitchBotAPI, "send_command") as mock_send_command,
-        patch("asyncio.sleep", AsyncMock()),
     ):
         await hass.services.async_call(
             FAN_DOMAIN,
@@ -222,29 +187,12 @@ async def test_air_purifier(
     mock_list_devices,
     mock_get_status,
 ) -> None:
-    """Test air purifier sensors."""
+    """Test air purifier."""
 
     mock_list_devices.return_value = [AIR_PURIFIER_INFO]
     mock_get_status.return_value = await async_load_json_object_fixture(
         hass, "air_purifier_status.json", DOMAIN
     )
-
-    with patch("homeassistant.components.switchbot_cloud.PLATFORMS", [Platform.FAN]):
-        entry = await configure_integration(hass)
-
-    await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
-
-
-async def test_air_purifier_no_coordinator_data(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
-    mock_list_devices,
-    mock_get_status,
-) -> None:
-    """Test air purifier sensors are unknown without coordinator data."""
-    mock_list_devices.return_value = [AIR_PURIFIER_INFO]
-    mock_get_status.return_value = None
 
     with patch("homeassistant.components.switchbot_cloud.PLATFORMS", [Platform.FAN]):
         entry = await configure_integration(hass)
@@ -304,7 +252,6 @@ async def test_air_purifier_controller(
 
     with (
         patch.object(SwitchBotAPI, "send_command") as mocked_send_command,
-        patch("asyncio.sleep", AsyncMock()) as mocked_sleep,
     ):
         await hass.services.async_call(
             FAN_DOMAIN,
@@ -314,4 +261,3 @@ async def test_air_purifier_controller(
         )
 
         mocked_send_command.assert_awaited_once_with(*expected_call_args)
-        mocked_sleep.assert_awaited_once_with(DEFAULT_DELAY_TIME)
