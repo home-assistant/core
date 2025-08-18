@@ -712,10 +712,6 @@ async def async_setup_entry(
     initialized: bool = False
     add_entities_handler: Callable[[], None] | None
 
-    min_time_between_updates = timedelta(
-        seconds=entry.options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
-    )
-
     @callback
     def init_async_add_entities(telegram: Telegram) -> None:
         """Add the sensor entities after the first telegram was received."""
@@ -747,6 +743,9 @@ async def async_setup_entry(
     add_entities_handler = async_dispatcher_connect(
         hass, EVENT_FIRST_TELEGRAM.format(entry.entry_id), init_async_add_entities
     )
+    min_time_between_updates = timedelta(
+        seconds=entry.options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
+    )
 
     @Throttle(min_time_between_updates)
     @callback
@@ -758,7 +757,7 @@ async def async_setup_entry(
                 entity.async_write_ha_state()
 
     @callback
-    def _receive_telegram(telegram: Telegram | None) -> None:
+    def receive_telegram(telegram: Telegram | None) -> None:
         """Handle every new telegram, accumulate data, and schedule update."""
         nonlocal initialized
 
@@ -780,7 +779,7 @@ async def async_setup_entry(
         _publish_updates()
 
     # Creates an asyncio.Protocol factory for reading DSMR telegrams from
-    # serial and calls _receive_telegram to update entities on arrival
+    # serial and calls receive_telegram to update entities on arrival
     protocol = entry.data.get(CONF_PROTOCOL, DSMR_PROTOCOL)
     if CONF_HOST in entry.data:
         if protocol == DSMR_PROTOCOL:
@@ -792,7 +791,7 @@ async def async_setup_entry(
             entry.data[CONF_HOST],
             entry.data[CONF_PORT],
             dsmr_version,
-            _receive_telegram,
+            receive_telegram,
             loop=hass.loop,
             keep_alive_interval=60,
         )
@@ -805,7 +804,7 @@ async def async_setup_entry(
             create_reader,
             entry.data[CONF_PORT],
             dsmr_version,
-            _receive_telegram,
+            receive_telegram,
             loop=hass.loop,
         )
 
@@ -820,7 +819,7 @@ async def async_setup_entry(
 
             # Reflect connected state in devices state by setting an
             # empty telegram resulting in `unknown` states
-            _receive_telegram({})
+            receive_telegram({})
 
             try:
                 transport, protocol = await hass.loop.create_task(
@@ -852,7 +851,7 @@ async def async_setup_entry(
 
                 # Reflect disconnect state in devices state by setting an
                 # None telegram resulting in `unavailable` states
-                _receive_telegram(None)
+                receive_telegram(None)
 
                 # throttle reconnect attempts
                 await asyncio.sleep(DEFAULT_RECONNECT_INTERVAL)
@@ -866,14 +865,14 @@ async def async_setup_entry(
 
                 # Reflect disconnect state in devices state by setting an
                 # None telegram resulting in `unavailable` states
-                _receive_telegram(None)
+                receive_telegram(None)
 
                 # throttle reconnect attempts
                 await asyncio.sleep(DEFAULT_RECONNECT_INTERVAL)
             except CancelledError:
                 # Reflect disconnect state in devices state by setting an
                 # None telegram resulting in `unavailable` states
-                _receive_telegram(None)
+                receive_telegram(None)
 
                 if stop_listener and (
                     hass.state is CoreState.not_running or hass.is_running
@@ -929,7 +928,6 @@ class DSMREntity(SensorEntity):
         self._attr_native_unit_of_measurement = native_unit_of_measurement
         self._entry = entry
         self._telegram: Telegram | None = telegram  # Stores the latest telegram
-        self._obis_reference = entity_description.obis_reference
         self._dsmr_version = entry.data[CONF_DSMR_VERSION]
         self._value: StateType = None  # Stores the value to report
 
