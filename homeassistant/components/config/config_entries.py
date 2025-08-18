@@ -62,6 +62,7 @@ def async_setup(hass: HomeAssistant) -> bool:
     websocket_api.async_register_command(hass, config_entries_flow_subscribe)
     websocket_api.async_register_command(hass, ignore_config_flow)
 
+    websocket_api.async_register_command(hass, config_subentry_rename)
     websocket_api.async_register_command(hass, config_subentry_delete)
     websocket_api.async_register_command(hass, config_subentry_list)
 
@@ -733,6 +734,41 @@ async def config_subentry_list(
         for subentry in entry.subentries.values()
     ]
     connection.send_result(msg["id"], result)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        "type": "config_entries/subentries/rename",
+        "entry_id": str,
+        "subentry_id": str,
+        "new_title": str,
+    }
+)
+@websocket_api.async_response
+async def config_subentry_rename(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Rename a subentry of a config entry."""
+    entry = get_entry(hass, connection, msg["entry_id"], msg["id"])
+    if entry is None:
+        connection.send_error(
+            msg["entry_id"], websocket_api.const.ERR_NOT_FOUND, "Config entry not found"
+        )
+        return
+
+    subentry = entry.subentries.get(msg["subentry_id"])
+    if subentry is None:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Config subentry not found"
+        )
+        return
+
+    hass.config_entries.async_update_subentry(entry, subentry, title=msg["new_title"])
+
+    connection.send_result(msg["id"])
 
 
 @websocket_api.require_admin
