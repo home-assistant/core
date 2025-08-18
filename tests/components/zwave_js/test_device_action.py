@@ -608,8 +608,8 @@ async def test_get_action_capabilities(
             "type": "select",
         },
         {"name": "property", "required": True, "type": "string"},
-        {"name": "property_key", "optional": True, "type": "string"},
-        {"name": "endpoint", "optional": True, "type": "string"},
+        {"name": "property_key", "optional": True, "required": False, "type": "string"},
+        {"name": "endpoint", "optional": True, "required": False, "type": "string"},
         {"name": "value", "required": True, "type": "string"},
         {"type": "boolean", "name": "wait_for_result", "optional": True},
     ]
