@@ -74,6 +74,87 @@
     'state': 'off',
   })
 # ---
+# name: test_platform_setup_and_discovery[wk_air_conditioner][climate.clima_cucina-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'low',
+        'middle',
+        'high',
+        'auto',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'target_temp_step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.clima_cucina',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 393>,
+    'translation_key': None,
+    'unique_id': 'tuya.bf6fc1645146455a2efrex',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[wk_air_conditioner][climate.clima_cucina-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 27.0,
+      'fan_mode': 'auto',
+      'fan_modes': list([
+        'low',
+        'middle',
+        'high',
+        'auto',
+      ]),
+      'friendly_name': 'Clima cucina',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'supported_features': <ClimateEntityFeature: 393>,
+      'target_temp_step': 1.0,
+      'temperature': 25.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.clima_cucina',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_platform_setup_and_discovery[wk_wifi_smart_gas_boiler_thermostat][climate.wifi_smart_gas_boiler_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

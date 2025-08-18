@@ -14,7 +14,7 @@ from homeassistant.components.number import (
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.const import EntityCategory, UnitOfTime
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -541,6 +541,38 @@ NUMBER_ENTITIES = (
         supported=lambda api, ch: api.supported(ch, "isp_hue"),
         value=lambda api, ch: api.image_hue(ch),
         method=lambda api, ch, value: api.set_image(ch, hue=int(value)),
+    ),
+    ReolinkNumberEntityDescription(
+        key="pre_record_time",
+        cmd_key="594",
+        translation_key="pre_record_time",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_min_value=2,
+        native_max_value=10,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        supported=lambda api, ch: api.supported(ch, "pre_record"),
+        value=lambda api, ch: api.baichuan.pre_record_time(ch),
+        method=lambda api, ch, value: api.baichuan.set_pre_recording(
+            ch, time=int(value)
+        ),
+    ),
+    ReolinkNumberEntityDescription(
+        key="pre_record_battery_stop",
+        cmd_key="594",
+        translation_key="pre_record_battery_stop",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        native_step=1,
+        native_min_value=10,
+        native_max_value=80,
+        native_unit_of_measurement=PERCENTAGE,
+        supported=lambda api, ch: api.supported(ch, "pre_record"),
+        value=lambda api, ch: api.baichuan.pre_record_battery_stop(ch),
+        method=lambda api, ch, value: api.baichuan.set_pre_recording(
+            ch, battery_stop=int(value)
+        ),
     ),
 )
 

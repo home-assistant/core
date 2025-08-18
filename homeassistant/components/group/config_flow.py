@@ -141,9 +141,7 @@ async def light_switch_options_schema(
     """Generate options schema."""
     return (await basic_group_options_schema(domain, handler)).extend(
         {
-            vol.Required(
-                CONF_ALL, default=False, description={"advanced": True}
-            ): selector.BooleanSelector(),
+            vol.Required(CONF_ALL, default=False): selector.BooleanSelector(),
         }
     )
 

@@ -242,16 +242,28 @@
       "restricted_reason": {
         "name": "Restricted reason",
         "state": {
-          "none": "No restrictions",
-          "week_schedule": "Week schedule",
-          "park_override": "Park override",
-          "sensor": "Weather timer",
+          "all_work_areas_completed": "All work areas completed",
+          "amazon_alexa": "Amazon Alexa",
           "daily_limit": "Daily limit",
+          "developer_portal": "Developer Portal",
+          "external": "External",
           "fota": "Firmware Over-the-Air update running",
           "frost": "Frost",
-          "all_work_areas_completed": "All work areas completed",
-          "external": "External",
-          "not_applicable": "Not applicable"
+          "gardena_smart_system": "Gardena Smart System",
+          "google_assistant": "Google Assistant",
+          "home_assistant": "Home Assistant",
+          "ifttt_applets": "IFTTT applets",
+          "ifttt_calendar_connection": "IFTTT calendar connection",
+          "ifttt": "IFTTT",
+          "none": "No restrictions",
+          "not_applicable": "Not applicable",
+          "park_override": "Park override",
+          "sensor": "Weather timer",
+          "smart_routine_frost_guard": "Frost guard",
+          "smart_routine_rain_guard": "Rain guard",
+          "smart_routine_wildlife_protection": "Wildlife protection",
+          "smart_routine": "Generic smart routine",
+          "week_schedule": "Week schedule"
         }
       },
       "total_charging_time": {

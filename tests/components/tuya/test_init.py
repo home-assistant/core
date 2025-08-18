@@ -24,7 +24,6 @@ async def test_unsupported_device(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test unsupported device."""
 
@@ -38,12 +37,4 @@ async def test_unsupported_device(
     # No entities registered
     assert not er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
-    )
-
-    # Information log entry added
-    assert (
-        "Device DOLCECLIMA 10 HP WIFI (mock_device_id) has been ignored"
-        " as it does not provide any standard instructions (status, status_range"
-        " and function are all empty) - see "
-        "https://github.com/tuya/tuya-device-sharing-sdk/issues/11" in caplog.text
     )

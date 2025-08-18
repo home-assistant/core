@@ -17,5 +17,7 @@ ATTR_INCLUDE_TAGS = "include_tags"
 ATTR_ENTRY_TYPE = "entry_type"
 ATTR_NOTE_TITLE = "note_title"
 ATTR_NOTE_TEXT = "note_text"
+ATTR_SEARCH_TERMS = "search_terms"
+ATTR_RESULT_LIMIT = "result_limit"
 
 MIN_REQUIRED_MEALIE_VERSION = AwesomeVersion("v1.0.0")

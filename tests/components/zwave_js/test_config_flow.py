@@ -883,15 +883,20 @@ async def test_usb_discovery_migration(
     addon_options["device"] = "/dev/ttyUSB0"
     entry = integration
     assert client.connect.call_count == 1
+    assert entry.unique_id == "3245146787"
     hass.config_entries.async_update_entry(
         entry,
-        unique_id="1234",
         data={
             "url": "ws://localhost:3000",
             "use_addon": True,
             "usb_path": "/dev/ttyUSB0",
         },
     )
+
+    async def mock_restart_addon(addon_slug: str) -> None:
+        client.driver.controller.data["homeId"] = 1234
+
+    restart_addon.side_effect = mock_restart_addon
 
     async def mock_backup_nvm_raw():
         await asyncio.sleep(0)
@@ -914,6 +919,7 @@ async def test_usb_discovery_migration(
             "nvm restore progress",
             {"event": "nvm restore progress", "bytesWritten": 100, "total": 200},
         )
+        client.driver.controller.data["homeId"] = 3245146787
         client.driver.emit(
             "driver ready", {"event": "driver ready", "source": "driver"}
         )
@@ -967,7 +973,7 @@ async def test_usb_discovery_migration(
     assert restart_addon.call_args == call("core_zwave_js")
 
     version_info = get_server_version.return_value
-    version_info.home_id = 5678
+    version_info.home_id = 3245146787
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -991,7 +997,7 @@ async def test_usb_discovery_migration(
     assert entry.data["usb_path"] == USB_DISCOVERY_INFO.device
     assert entry.data["use_addon"] is True
     assert "keep_old_devices" not in entry.data
-    assert entry.unique_id == "5678"
+    assert entry.unique_id == "3245146787"
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running")
@@ -1008,15 +1014,20 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
     addon_options["device"] = "/dev/ttyUSB0"
     entry = integration
     assert client.connect.call_count == 1
+    assert entry.unique_id == "3245146787"
     hass.config_entries.async_update_entry(
         entry,
-        unique_id="1234",
         data={
             "url": "ws://localhost:3000",
             "use_addon": True,
             "usb_path": "/dev/ttyUSB0",
         },
     )
+
+    async def mock_restart_addon(addon_slug: str) -> None:
+        client.driver.controller.data["homeId"] = 1234
+
+    restart_addon.side_effect = mock_restart_addon
 
     async def mock_backup_nvm_raw():
         await asyncio.sleep(0)
@@ -1039,6 +1050,7 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
             "nvm restore progress",
             {"event": "nvm restore progress", "bytesWritten": 100, "total": 200},
         )
+        client.driver.controller.data["homeId"] = 3245146787
 
     client.driver.controller.async_restore_nvm = AsyncMock(side_effect=mock_restore_nvm)
 
@@ -1113,7 +1125,8 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
     assert entry.data["url"] == "ws://host1:3001"
     assert entry.data["usb_path"] == USB_DISCOVERY_INFO.device
     assert entry.data["use_addon"] is True
-    assert "keep_old_devices" not in entry.data
+    assert entry.unique_id == "1234"
+    assert "keep_old_devices" in entry.data
 
 
 @pytest.mark.usefixtures("supervisor", "addon_installed")
@@ -3011,6 +3024,7 @@ async def test_reconfigure_different_device(
     entry = integration
     data = {**entry.data, **entry_data}
     hass.config_entries.async_update_entry(entry, data=data, unique_id="1234")
+    client.driver.controller.data["homeId"] = 1234
 
     assert entry.data["url"] == "ws://test.org"
 
@@ -3164,6 +3178,7 @@ async def test_reconfigure_addon_restart_failed(
     entry = integration
     data = {**entry.data, **entry_data}
     hass.config_entries.async_update_entry(entry, data=data, unique_id="1234")
+    client.driver.controller.data["homeId"] = 1234
 
     assert entry.data["url"] == "ws://test.org"
 
@@ -3554,10 +3569,12 @@ async def test_reconfigure_migrate_low_sdk_version(
     (
         "restore_server_version_side_effect",
         "final_unique_id",
+        "keep_old_devices",
+        "device_entry_count",
     ),
     [
-        (None, "3245146787"),
-        (aiohttp.ClientError("Boom"), "5678"),
+        (None, "3245146787", False, 2),
+        (aiohttp.ClientError("Boom"), "5678", True, 4),
     ],
 )
 async def test_reconfigure_migrate_with_addon(
@@ -3572,12 +3589,15 @@ async def test_reconfigure_migrate_with_addon(
     get_server_version: AsyncMock,
     restore_server_version_side_effect: Exception | None,
     final_unique_id: str,
+    keep_old_devices: bool,
+    device_entry_count: int,
 ) -> None:
     """Test migration flow with add-on."""
     version_info = get_server_version.return_value
     entry = integration
     assert client.connect.call_count == 1
     assert client.driver.controller.home_id == 3245146787
+    assert entry.unique_id == "3245146787"
     hass.config_entries.async_update_entry(
         entry,
         data={
@@ -3745,10 +3765,10 @@ async def test_reconfigure_migrate_with_addon(
     assert entry.data["url"] == "ws://host1:3001"
     assert entry.data["usb_path"] == "/test"
     assert entry.data["use_addon"] is True
-    assert "keep_old_devices" not in entry.data
+    assert ("keep_old_devices" in entry.data) is keep_old_devices
     assert entry.unique_id == final_unique_id
 
-    assert len(device_registry.devices) == 2
+    assert len(device_registry.devices) == device_entry_count
     controller_device_id_ext = (
         f"{controller_device_id}-{controller_node.manufacturer_id}:"
         f"{controller_node.product_type}:{controller_node.product_id}"
@@ -3780,15 +3800,21 @@ async def test_reconfigure_migrate_restore_driver_ready_timeout(
     """Test migration flow with driver ready timeout after nvm restore."""
     entry = integration
     assert client.connect.call_count == 1
+    assert client.driver.controller.home_id == 3245146787
+    assert entry.unique_id == "3245146787"
     hass.config_entries.async_update_entry(
         entry,
-        unique_id="1234",
         data={
             "url": "ws://localhost:3000",
             "use_addon": True,
             "usb_path": "/dev/ttyUSB0",
         },
     )
+
+    async def mock_restart_addon(addon_slug: str) -> None:
+        client.driver.controller.data["homeId"] = 1234
+
+    restart_addon.side_effect = mock_restart_addon
 
     async def mock_backup_nvm_raw():
         await asyncio.sleep(0)
@@ -3811,6 +3837,7 @@ async def test_reconfigure_migrate_restore_driver_ready_timeout(
             "nvm restore progress",
             {"event": "nvm restore progress", "bytesWritten": 100, "total": 200},
         )
+        client.driver.controller.data["homeId"] = 3245146787
 
     client.driver.controller.async_restore_nvm = AsyncMock(side_effect=mock_restore_nvm)
 
@@ -3894,7 +3921,8 @@ async def test_reconfigure_migrate_restore_driver_ready_timeout(
     assert entry.data["url"] == "ws://host1:3001"
     assert entry.data["usb_path"] == "/test"
     assert entry.data["use_addon"] is True
-    assert "keep_old_devices" not in entry.data
+    assert "keep_old_devices" in entry.data
+    assert entry.unique_id == "1234"
 
 
 async def test_reconfigure_migrate_backup_failure(
