@@ -6,9 +6,7 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage:
-    status: todo
-    comment: Tests should end with the creation of a config entry or an abort.
+  config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -39,7 +37,9 @@ rules:
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
-  test-coverage: done
+  test-coverage:
+    status: todo
+    comment: Patch NextDns object instead of functions.
 
   # Gold
   devices: done
@@ -53,8 +53,8 @@ rules:
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations:
-    status: done
-    comment: No known limitations.
+    status: todo
+    comment: Add info that there is no known limitations.
   docs-supported-devices:
     status: exempt
     comment: This is a service, which doesn't integrate with any devices.
