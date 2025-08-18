@@ -216,7 +216,7 @@
           "level": "Defines a template to get the brightness of the light. Valid values are 0 to 255.",
           "set_level": "Defines actions to run when the light is given a brightness command. The script will only be called if the `turn_on` call only has `brightness`, and optionally `transition`. Receives variables `brightness` and, optionally, `transition`.",
           "hs": "Defines a template to get the HS color of the light. Must render a tuple (hue, saturation).",
-          "set_hs": "Defines actions to run when the light is given a hs color command. Available variables: `hs` as a tuple, `h` and `s`.",
+          "set_hs": "Defines actions to run when the light is given an HS color command. Available variables: `hs` as a tuple, `h` and `s`.",
           "temperature": "Defines a template to get the color temperature of the light.",
           "set_temperature": "Defines actions to run when the light is given a color temperature command. Receives variable `color_temp_kelvin`. May also receive variables `brightness` and/or `transition`."
         },
@@ -278,10 +278,10 @@
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",
           "state": "Template for the number's current value.",
-          "step": "Template for the number's increment/decrement step.",
+          "step": "Defines the number's increment/decrement step.",
           "set_value": "Defines actions to run when the number is set to a value. Receives variable `value`.",
-          "max": "Template for the number's maximum value.",
-          "min": "Template for the number's minimum value.",
+          "max": "Defines the number's maximum value.",
+          "min": "Defines the number's minimum value.",
           "unit_of_measurement": "Defines the unit of measurement of the number, if any."
         },
         "sections": {
@@ -438,6 +438,12 @@
         },
         "title": "Template vacuum"
       }
+    }
+  },
+  "issues": {
+    "deprecated_battery_level": {
+      "title": "Deprecated battery level option in {entity_name}",
+      "description": "The template vacuum options `battery_level` and `battery_level_template` are being removed in 2026.8.\n\nPlease remove the `battery_level` or `battery_level_template` option from the YAML configuration for {entity_id} ({entity_name})."
     }
   },
   "options": {
@@ -753,7 +759,7 @@
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",
           "state": "[%key:component::template::config::step::sensor::data_description::state%]",
-          "unit_of_measurement": "[%key:component::template::config::step::sensor::data_description::state%]"
+          "unit_of_measurement": "[%key:component::template::config::step::sensor::data_description::unit_of_measurement%]"
         },
         "sections": {
           "advanced_options": {
@@ -901,6 +907,7 @@
     },
     "sensor_device_class": {
       "options": {
+        "absolute_humidity": "[%key:component::sensor::entity_component::absolute_humidity::name%]",
         "apparent_power": "[%key:component::sensor::entity_component::apparent_power::name%]",
         "aqi": "[%key:component::sensor::entity_component::aqi::name%]",
         "area": "[%key:component::sensor::entity_component::area::name%]",
@@ -948,7 +955,7 @@
         "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
         "timestamp": "[%key:component::sensor::entity_component::timestamp::name%]",
         "volatile_organic_compounds": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
-        "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
+        "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds_parts::name%]",
         "voltage": "[%key:component::sensor::entity_component::voltage::name%]",
         "volume": "[%key:component::sensor::entity_component::volume::name%]",
         "volume_flow_rate": "[%key:component::sensor::entity_component::volume_flow_rate::name%]",

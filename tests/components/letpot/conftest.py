@@ -44,10 +44,25 @@ def _mock_device_info(device_type: str) -> LetPotDeviceInfo:
 def _mock_device_features(device_type: str) -> DeviceFeature:
     """Return mock device feature support for the given type."""
     if device_type == "LPH31":
-        return DeviceFeature.LIGHT_BRIGHTNESS_LOW_HIGH | DeviceFeature.PUMP_STATUS
+        return (
+            DeviceFeature.CATEGORY_HYDROPONIC_GARDEN
+            | DeviceFeature.LIGHT_BRIGHTNESS_LOW_HIGH
+            | DeviceFeature.PUMP_STATUS
+        )
+    if device_type == "LPH62":
+        return (
+            DeviceFeature.CATEGORY_HYDROPONIC_GARDEN
+            | DeviceFeature.LIGHT_BRIGHTNESS_LEVELS
+            | DeviceFeature.NUTRIENT_BUTTON
+            | DeviceFeature.PUMP_AUTO
+            | DeviceFeature.TEMPERATURE
+            | DeviceFeature.TEMPERATURE_SET_UNIT
+            | DeviceFeature.WATER_LEVEL
+        )
     if device_type == "LPH63":
         return (
-            DeviceFeature.LIGHT_BRIGHTNESS_LEVELS
+            DeviceFeature.CATEGORY_HYDROPONIC_GARDEN
+            | DeviceFeature.LIGHT_BRIGHTNESS_LEVELS
             | DeviceFeature.NUTRIENT_BUTTON
             | DeviceFeature.PUMP_AUTO
             | DeviceFeature.PUMP_STATUS
@@ -61,8 +76,17 @@ def _mock_device_status(device_type: str) -> LetPotDeviceStatus:
     """Return mock device status for the given type."""
     if device_type == "LPH31":
         return SE_STATUS
-    if device_type == "LPH63":
+    if device_type in {"LPH62", "LPH63"}:
         return MAX_STATUS
+    raise ValueError(f"No mock data for device type {device_type}")
+
+
+def _mock_light_brightness_levels(device_type: str) -> list[int]:
+    """Return mock brightness levels for the given type."""
+    if device_type == "LPH31":
+        return [500, 1000]
+    if device_type in {"LPH62", "LPH63"}:
+        return [125, 250, 375, 500, 625, 750, 875, 1000]
     raise ValueError(f"No mock data for device type {device_type}")
 
 
@@ -128,6 +152,9 @@ def mock_device_client() -> Generator[AsyncMock]:
 
         device_client.device_info.side_effect = lambda serial: _mock_device_info(
             serial[:5]
+        )
+        device_client.get_light_brightness_levels.side_effect = (
+            lambda serial: _mock_light_brightness_levels(serial[:5])
         )
         device_client.get_current_status.side_effect = get_current_status_side_effect
         device_client.request_status_update.side_effect = request_status_side_effect

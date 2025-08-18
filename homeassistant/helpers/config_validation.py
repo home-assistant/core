@@ -644,6 +644,13 @@ def slug(value: Any) -> str:
     raise vol.Invalid(f"invalid slug {value} (try {slg})")
 
 
+def underscore_slug(value: Any) -> str:
+    """Validate value is a valid slug, possibly starting with an underscore."""
+    if value.startswith("_"):
+        return f"_{slug(value[1:])}"
+    return slug(value)
+
+
 def schema_with_slug_keys(
     value_schema: dict | Callable, *, slug_validator: Callable[[Any], str] = slug
 ) -> Callable:
