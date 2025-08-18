@@ -3,7 +3,7 @@
 import asyncio
 
 import aiohttp
-from pyrituals import Account, Diffuser
+from pyrituals import Account, AuthenticationException, Diffuser
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -28,16 +28,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Rituals Perfume Genie from a config entry."""
     session = async_get_clientsession(hass)
 
-    # If credentials are missing, treat this as a legacy (v1) entry.
-    # Start a reauth flow to collect credentials for v2, but do NOT block setup.
-    # Tests patch Account.get_devices(), so we must continue setup even without creds.
+    # Require credentials for runtime; if missing, trigger reauth and retry later
     if USERNAME not in entry.data or PASSWORD not in entry.data:
         await _trigger_reauth(hass, entry)
-        email = entry.data.get(USERNAME, "legacy@unknown")
-        password = entry.data.get(PASSWORD, "")
-    else:
-        email = entry.data[USERNAME]
-        password = entry.data[PASSWORD]
+        raise ConfigEntryNotReady
+
+    email = entry.data[USERNAME]
+    password = entry.data[PASSWORD]
 
     # ACCOUNT_HASH is kept only for backwards compatibility
     account = Account(
@@ -48,10 +45,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     try:
-        # Do not call authenticate here; pyrituals v2 handles auth internally and tests patch get_devices().
-        # For legacy entries (no creds), we already kicked off reauth above but continue setup so tests can load.
+        # Authenticate first so API token/cookies are available for subsequent calls
+        await account.authenticate()
         account_devices = await account.get_devices()
+
+    except AuthenticationException as err:
+        # Credentials invalid/expired → start reauth and let HA retry setup later
+        await _trigger_reauth(hass, entry)
+        raise ConfigEntryNotReady from err
+
     except aiohttp.ClientError as err:
+        # Network/HTTP error → retry setup later
         raise ConfigEntryNotReady from err
 
     # Migrate old unique_ids to the new format
