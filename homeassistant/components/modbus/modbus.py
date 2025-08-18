@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections import namedtuple
-from collections.abc import Callable
 from typing import Any
 
 from pymodbus.client import (
@@ -28,11 +27,10 @@ from homeassistant.const import (
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
@@ -254,13 +252,13 @@ class ModbusHub:
         self._client: (
             AsyncModbusSerialClient | AsyncModbusTcpClient | AsyncModbusUdpClient | None
         ) = None
-        self._async_cancel_listener: Callable[[], None] | None = None
         self._in_error = False
         self._lock = asyncio.Lock()
+        self.event_connected = asyncio.Event()
         self.hass = hass
         self.name = client_config[CONF_NAME]
         self._config_type = client_config[CONF_TYPE]
-        self._config_delay = client_config[CONF_DELAY]
+        self.config_delay = client_config[CONF_DELAY]
         self._pb_request: dict[str, RunEntry] = {}
         self._connect_task: asyncio.Task
         self._last_log_error: str = ""
@@ -325,10 +323,10 @@ class ModbusHub:
             _LOGGER.info(message)
 
         # Start counting down to allow modbus requests.
-        if self._config_delay:
-            self._async_cancel_listener = async_call_later(
-                self.hass, self._config_delay, self.async_end_delay
-            )
+        if self.config_delay:
+            await asyncio.sleep(self.config_delay)
+        self.config_delay = 0
+        self.event_connected.set()
 
     async def async_setup(self) -> bool:
         """Set up pymodbus client."""
@@ -349,12 +347,6 @@ class ModbusHub:
         )
         return True
 
-    @callback
-    def async_end_delay(self, args: Any) -> None:
-        """End startup delay."""
-        self._async_cancel_listener = None
-        self._config_delay = 0
-
     async def async_restart(self) -> None:
         """Reconnect client."""
         if self._client:
@@ -364,9 +356,6 @@ class ModbusHub:
 
     async def async_close(self) -> None:
         """Disconnect client."""
-        if self._async_cancel_listener:
-            self._async_cancel_listener()
-            self._async_cancel_listener = None
         if not self._connect_task.done():
             self._connect_task.cancel()
 
@@ -426,8 +415,6 @@ class ModbusHub:
         use_call: str,
     ) -> ModbusPDU | None:
         """Convert async to sync pymodbus call."""
-        if self._config_delay:
-            return None
         async with self._lock:
             if not self._client:
                 return None
