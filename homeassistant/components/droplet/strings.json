@@ -28,7 +28,7 @@
       "already_configured": "{device_id} is already configured!"
     },
     "error": {
-      "failed_connect": "Failed to connect to Droplet!"
+      "cannot_connect": "Failed to connect to Droplet!"
     }
   },
   "entity": {
@@ -37,6 +37,11 @@
       "server_connectivity": { "name": "Server status" },
       "signal_quality": { "name": "Signal quality" },
       "volume": { "name": "Live volume" }
+    }
+  },
+  "exceptions": {
+    "connection_error": {
+      "message": "Disconnected from Droplet"
     }
   }
 }

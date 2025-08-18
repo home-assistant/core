@@ -34,13 +34,4 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    ):
-        coordinator = config_entry.runtime_data
-
-        # This will call droplet's disconnect method
-        if coordinator.unsub:
-            coordinator.unsub()
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)

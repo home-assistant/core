@@ -39,7 +39,7 @@ async def test_user_setup(
         }
 
 
-async def test_user_setup_failed_connect(hass: HomeAssistant) -> None:
+async def test_user_setup_cannot_connect(hass: HomeAssistant) -> None:
     """Test user setup when the device fails to connect at all."""
     result = await hass.config_entries.flow.async_init(
         "droplet", context={"source": config_entries.SOURCE_USER}
@@ -54,7 +54,7 @@ async def test_user_setup_failed_connect(hass: HomeAssistant) -> None:
         )
         assert result is not None
         assert result.get("type") is FlowResultType.FORM
-        assert result.get("errors") == {"base": "failed_connect"}
+        assert result.get("errors") == {"base": "cannot_connect"}
 
 
 async def test_user_setup_no_device_id(hass: HomeAssistant) -> None:
@@ -72,7 +72,7 @@ async def test_user_setup_no_device_id(hass: HomeAssistant) -> None:
         )
         assert result is not None
         assert result.get("type") is FlowResultType.FORM
-        assert result.get("errors") == {"base": "failed_connect"}
+        assert result.get("errors") == {"base": "cannot_connect"}
 
 
 async def test_user_setup_already_configured(
@@ -189,7 +189,7 @@ async def test_zeroconf_invalid_discovery(hass: HomeAssistant) -> None:
     assert result.get("reason") == "invalid_discovery_info"
 
 
-async def test_confirm_failed_connect(
+async def test_confirm_cannot_connect(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that config flow fails when Droplet can't connect."""
@@ -218,4 +218,4 @@ async def test_confirm_failed_connect(
         assert result.get("type") == FlowResultType.FORM
         errors = result.get("errors")
         assert errors
-        assert errors.get("base") == "failed_connect"
+        assert errors.get("base") == "cannot_connect"

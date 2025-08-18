@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
+
+from pydroplet.droplet import Droplet
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,7 +15,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import EntityCategory, UnitOfVolume, UnitOfVolumeFlowRate
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -27,15 +27,12 @@ from .const import (
 )
 from .coordinator import DropletConfigEntry, DropletDataCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @dataclass(kw_only=True, frozen=True)
 class DropletSensorEntityDescription(SensorEntityDescription):
     """Describes Droplet sensor entity."""
 
-    value_fn: Callable[[DropletDataCoordinator], float | str]
-    has_entity_name = True
+    value_fn: Callable[[Droplet], float | str | None]
 
 
 SENSORS: list[DropletSensorEntityDescription] = [
@@ -63,7 +60,7 @@ SENSORS: list[DropletSensorEntityDescription] = [
         key=KEY_SERVER_CONNECTIVITY,
         translation_key=KEY_SERVER_CONNECTIVITY,
         device_class=SensorDeviceClass.ENUM,
-        options=["Connected", "Connecting", "Disconnected", "Unknown"],
+        options=["connected", "connecting", "disconnected"],
         value_fn=lambda device: device.get_server_status(),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -71,7 +68,7 @@ SENSORS: list[DropletSensorEntityDescription] = [
         key=KEY_SIGNAL_QUALITY,
         translation_key=KEY_SIGNAL_QUALITY,
         device_class=SensorDeviceClass.ENUM,
-        options=["No Signal", "Weak Signal", "Strong Signal", "Unknown"],
+        options=["no_signal", "weak_signal", "strong_signal"],
         value_fn=lambda device: device.get_signal_quality(),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -84,21 +81,15 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Droplet sensors from config entry."""
-    _LOGGER.info(
-        "Set up sensor for device %s with entry_id is %s",
-        config_entry.unique_id,
-        config_entry.entry_id,
-    )
-
-    coordinator = config_entry.runtime_data
-    for sensor in SENSORS:
-        async_add_entities([DropletSensor(coordinator, sensor)])
+    coordinator: DropletDataCoordinator = config_entry.runtime_data
+    async_add_entities([DropletSensor(coordinator, sensor) for sensor in SENSORS])
 
 
 class DropletSensor(CoordinatorEntity[DropletDataCoordinator], SensorEntity):
     """Representation of a Droplet."""
 
     entity_description: DropletSensorEntityDescription
+    _attr_has_entity_name: bool = True
 
     def __init__(
         self,
@@ -110,12 +101,8 @@ class DropletSensor(CoordinatorEntity[DropletDataCoordinator], SensorEntity):
         self.entity_description = entity_description
 
         unique_id = coordinator.config_entry.unique_id
-        self._attr_unique_id = f"{entity_description.key}_{unique_id}"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Get Droplet's metadata."""
-        return self.coordinator.dev_info
+        self._attr_unique_id = f"{unique_id}_{entity_description.key}"
+        self._attr_device_info = self.coordinator.dev_info
 
     @property
     def available(self) -> bool:
@@ -127,4 +114,4 @@ class DropletSensor(CoordinatorEntity[DropletDataCoordinator], SensorEntity):
         """Return the value reported by the sensor."""
         if self.entity_description.key == KEY_VOLUME:
             self._attr_last_reset = dt_util.now()
-        return self.entity_description.value_fn(self.coordinator)
+        return self.entity_description.value_fn(self.coordinator.droplet)

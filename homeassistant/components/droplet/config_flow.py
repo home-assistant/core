@@ -39,12 +39,14 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="invalid_discovery_info")
 
         # In this case, device ID was part of the zeroconf discovery info
-        await self.async_set_unique_id(await self._droplet_discovery.get_device_id())
+        device_id: str = await self._droplet_discovery.get_device_id()
+        await self.async_set_unique_id(device_id)
 
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: self._droplet_discovery.host}
         )
 
+        self.context.update({"title_placeholders": {"name": device_id}})
         return await self.async_step_confirm()
 
     async def async_step_confirm(
@@ -52,13 +54,13 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm the setup."""
         errors: dict[str, str] = {}
+        device_id: str = await self._droplet_discovery.get_device_id()
         if user_input is not None:
             # Test if we can connect before returning
             session = async_get_clientsession(self.hass)
             if await self._droplet_discovery.try_connect(
                 session, user_input[CONF_CODE]
             ):
-                device_id: str = await self._droplet_discovery.get_device_id()
                 device_data = {
                     CONF_HOST: self._droplet_discovery.host,
                     CONF_PORT: self._droplet_discovery.port,
@@ -71,7 +73,7 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=device_id,
                     data=device_data,
                 )
-            errors["base"] = "failed_connect"
+            errors["base"] = "cannot_connect"
         return self.async_show_form(
             step_id="confirm",
             data_schema=vol.Schema(
@@ -80,7 +82,7 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             description_placeholders={
-                "device_name": await self._droplet_discovery.get_device_id(),
+                "device_name": device_id,
             },
             errors=errors,
         )
@@ -105,7 +107,7 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_NAME: DEVICE_NAME,
                     CONF_CODE: user_input[CONF_CODE],
                 }
-                await self.async_set_unique_id(device_id)
+                await self.async_set_unique_id(device_id, raise_on_progress=False)
                 self._abort_if_unique_id_configured(
                     description_placeholders={CONF_DEVICE_ID: device_id}
                 )
@@ -114,7 +116,7 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=device_id,
                     data=device_data,
                 )
-            errors["base"] = "failed_connect"
+            errors["base"] = "cannot_connect"
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(

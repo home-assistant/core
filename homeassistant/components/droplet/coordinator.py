@@ -3,25 +3,18 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 import logging
 import time
 
 from pydroplet.droplet import Droplet
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_CODE,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    EVENT_HOMEASSISTANT_STOP,
-)
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, RECONNECT_DELAY
 
@@ -38,7 +31,6 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
     """Droplet device object."""
 
     config_entry: DropletConfigEntry
-    unsub: Callable | None
 
     def __init__(self, hass: HomeAssistant, entry: DropletConfigEntry) -> None:
         """Initialize the device."""
@@ -58,7 +50,6 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
         if not await self.setup():
             raise ConfigEntryNotReady("Device is offline")
 
-    async def _async_update_data(self) -> None:
         # Droplet should send its metadata within 5 seconds
         end = time.time() + VERSION_TIMEOUT
         assert self.config_entry.unique_id is not None
@@ -80,18 +71,15 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
             )
         )
 
+    async def _async_update_data(self) -> None:
+        if not self.droplet.connected:
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="connection_error"
+            )
+
     async def setup(self) -> bool:
         """Set up droplet client."""
-
-        async def disconnect(_: Event) -> None:
-            """Close WebSocket connection."""
-            self.unsub = None
-            await self.droplet.stop_listening()
-
-        # Clean disconnect WebSocket on Home Assistant shutdown
-        self.unsub = self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, disconnect
-        )
+        self.config_entry.async_on_unload(self.droplet.stop_listening)
         self.config_entry.async_create_background_task(
             self.hass,
             self.droplet.listen_forever(RECONNECT_DELAY, self.async_set_updated_data),
@@ -99,22 +87,6 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
         )
         return True
 
-    def get_volume_delta(self) -> float:
-        """Get volume since the last point."""
-        return self.droplet.get_volume_delta() / ML_L_CONVERSION
-
-    def get_flow_rate(self) -> float:
-        """Retrieve Droplet's latest flow rate."""
-        return self.droplet.get_flow_rate()
-
     def get_availability(self) -> bool:
         """Retrieve Droplet's availability status."""
         return self.droplet.get_availability()
-
-    def get_server_status(self) -> str:
-        """Retrieve Droplet's connection status to Hydrific servers."""
-        return self.droplet.get_server_status()
-
-    def get_signal_quality(self) -> str:
-        """Retrieve Droplet's signal quality."""
-        return self.droplet.get_signal_quality()
