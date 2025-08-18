@@ -24,7 +24,10 @@ def _get_devices(mock_DayBetter_api: AsyncMock) -> list[DayBetterDevice]:
         )
     ]
 
-@patch("homeassistant.components.daybetter_light_local.config_flow.DISCOVERY_TIMEOUT", 0)
+
+@patch(
+    "homeassistant.components.daybetter_light_local.config_flow.DISCOVERY_TIMEOUT", 0
+)
 async def test_creating_entry_has_no_devices(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_DayBetter_api: AsyncMock
 ) -> None:

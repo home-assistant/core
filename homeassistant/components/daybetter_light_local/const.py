@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 
-DOMAIN =  "daybetter_light_local"
+DOMAIN = "daybetter_light_local"
 MANUFACTURER = "DayBetter"
 
 CONF_MULTICAST_ADDRESS_DEFAULT = "255.255.255.255"

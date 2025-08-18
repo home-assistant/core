@@ -21,7 +21,9 @@ PLATFORMS: list[Platform] = [Platform.LIGHT]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: DayBetterLocalConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: DayBetterLocalConfigEntry
+) -> bool:
     """Set up DayBetter light local from a config entry."""
     coordinator = DayBetterLocalApiCoordinator(hass, entry)
 
@@ -55,6 +57,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: DayBetterLocalConfigEntr
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: DayBetterLocalConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: DayBetterLocalConfigEntry
+) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

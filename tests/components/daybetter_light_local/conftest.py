@@ -8,7 +8,9 @@ from daybetter_local_api import DayBetterLightCapabilities, DayBetterLightFeatur
 from daybetter_local_api.light_capabilities import COMMON_FEATURES, SCENE_CODES
 import pytest
 
-from homeassistant.components.daybetter_light_local.coordinator import DayBetterController
+from homeassistant.components.daybetter_light_local.coordinator import (
+    DayBetterController,
+)
 
 
 @pytest.fixture(name="mock_DayBetter_api")

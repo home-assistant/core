@@ -218,7 +218,9 @@ async def test_light_on_off(hass: HomeAssistant, mock_DayBetter_api: MagicMock) 
     light = hass.states.get("light.P076")
     assert light is not None
     assert light.state == "on"
-    mock_DayBetter_api.turn_on_off.assert_awaited_with(mock_DayBetter_api.devices[0], True)
+    mock_DayBetter_api.turn_on_off.assert_awaited_with(
+        mock_DayBetter_api.devices[0], True
+    )
 
     # Turn off
     await hass.services.async_call(
@@ -232,7 +234,9 @@ async def test_light_on_off(hass: HomeAssistant, mock_DayBetter_api: MagicMock) 
     light = hass.states.get("light.P076")
     assert light is not None
     assert light.state == "off"
-    mock_DayBetter_api.turn_on_off.assert_awaited_with(mock_DayBetter_api.devices[0], False)
+    mock_DayBetter_api.turn_on_off.assert_awaited_with(
+        mock_DayBetter_api.devices[0], False
+    )
 
 
 @pytest.mark.parametrize(
@@ -306,7 +310,9 @@ async def test_turn_on_call_order(
     )
 
 
-async def test_light_brightness(hass: HomeAssistant, mock_DayBetter_api: MagicMock) -> None:
+async def test_light_brightness(
+    hass: HomeAssistant, mock_DayBetter_api: MagicMock
+) -> None:
     """Test changing brightness."""
     mock_DayBetter_api.devices = [
         DayBetterDevice(
@@ -341,7 +347,9 @@ async def test_light_brightness(hass: HomeAssistant, mock_DayBetter_api: MagicMo
     light = hass.states.get("light.P076")
     assert light is not None
     assert light.state == "on"
-    mock_DayBetter_api.set_brightness.assert_awaited_with(mock_DayBetter_api.devices[0], 50)
+    mock_DayBetter_api.set_brightness.assert_awaited_with(
+        mock_DayBetter_api.devices[0], 50
+    )
     assert light.attributes[ATTR_BRIGHTNESS] == 127
 
     await hass.services.async_call(
@@ -356,7 +364,9 @@ async def test_light_brightness(hass: HomeAssistant, mock_DayBetter_api: MagicMo
     assert light is not None
     assert light.state == "on"
     assert light.attributes[ATTR_BRIGHTNESS] == 255
-    mock_DayBetter_api.set_brightness.assert_awaited_with(mock_DayBetter_api.devices[0], 100)
+    mock_DayBetter_api.set_brightness.assert_awaited_with(
+        mock_DayBetter_api.devices[0], 100
+    )
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -370,7 +380,9 @@ async def test_light_brightness(hass: HomeAssistant, mock_DayBetter_api: MagicMo
     assert light is not None
     assert light.state == "on"
     assert light.attributes[ATTR_BRIGHTNESS] == 255
-    mock_DayBetter_api.set_brightness.assert_awaited_with(mock_DayBetter_api.devices[0], 100)
+    mock_DayBetter_api.set_brightness.assert_awaited_with(
+        mock_DayBetter_api.devices[0], 100
+    )
 
 
 async def test_light_color(hass: HomeAssistant, mock_DayBetter_api: MagicMock) -> None:
@@ -471,7 +483,9 @@ async def test_scene_on(hass: HomeAssistant, mock_DayBetter_api: MagicMock) -> N
     assert light is not None
     assert light.state == "on"
     assert light.attributes[ATTR_EFFECT] == "sunrise"
-    mock_DayBetter_api.turn_on_off.assert_awaited_with(mock_DayBetter_api.devices[0], True)
+    mock_DayBetter_api.turn_on_off.assert_awaited_with(
+        mock_DayBetter_api.devices[0], True
+    )
 
 
 async def test_scene_restore_rgb(
@@ -523,7 +537,9 @@ async def test_scene_restore_rgb(
     assert light.state == "on"
     assert light.attributes[ATTR_RGB_COLOR] == initial_color
     assert light.attributes[ATTR_BRIGHTNESS] == 255
-    mock_DayBetter_api.turn_on_off.assert_awaited_with(mock_DayBetter_api.devices[0], True)
+    mock_DayBetter_api.turn_on_off.assert_awaited_with(
+        mock_DayBetter_api.devices[0], True
+    )
 
     # Activate scene
     await hass.services.async_call(
@@ -538,7 +554,9 @@ async def test_scene_restore_rgb(
     assert light is not None
     assert light.state == "on"
     assert light.attributes[ATTR_EFFECT] == "sunrise"
-    mock_DayBetter_api.turn_on_off.assert_awaited_with(mock_DayBetter_api.devices[0], True)
+    mock_DayBetter_api.turn_on_off.assert_awaited_with(
+        mock_DayBetter_api.devices[0], True
+    )
 
     # Deactivate scene
     await hass.services.async_call(
@@ -598,7 +616,9 @@ async def test_scene_restore_temperature(
     assert light is not None
     assert light.state == "on"
     assert light.attributes["color_temp_kelvin"] == initial_color
-    mock_DayBetter_api.turn_on_off.assert_awaited_with(mock_DayBetter_api.devices[0], True)
+    mock_DayBetter_api.turn_on_off.assert_awaited_with(
+        mock_DayBetter_api.devices[0], True
+    )
 
     # Activate scene
     await hass.services.async_call(
@@ -613,7 +633,9 @@ async def test_scene_restore_temperature(
     assert light is not None
     assert light.state == "on"
     assert light.attributes[ATTR_EFFECT] == "sunrise"
-    mock_DayBetter_api.set_scene.assert_awaited_with(mock_DayBetter_api.devices[0], "sunrise")
+    mock_DayBetter_api.set_scene.assert_awaited_with(
+        mock_DayBetter_api.devices[0], "sunrise"
+    )
 
     # Deactivate scene
     await hass.services.async_call(
@@ -678,7 +700,9 @@ async def test_scene_none(hass: HomeAssistant, mock_DayBetter_api: MagicMock) ->
     assert light.state == "on"
     assert light.attributes[ATTR_RGB_COLOR] == initial_color
     assert light.attributes[ATTR_BRIGHTNESS] == 255
-    mock_DayBetter_api.turn_on_off.assert_awaited_with(mock_DayBetter_api.devices[0], True)
+    mock_DayBetter_api.turn_on_off.assert_awaited_with(
+        mock_DayBetter_api.devices[0], True
+    )
 
     # Activate scene
     await hass.services.async_call(
