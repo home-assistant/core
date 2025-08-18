@@ -295,7 +295,9 @@ async def test_get_action_capabilities_legacy(
         "arm_night": {"extra_fields": []},
         "arm_vacation": {"extra_fields": []},
         "disarm": {
-            "extra_fields": [{"name": "code", "required": False, "type": "string"}]
+            "extra_fields": [
+                {"name": "code", "optional": True, "required": False, "type": "string"}
+            ]
         },
         "trigger": {"extra_fields": []},
     }
