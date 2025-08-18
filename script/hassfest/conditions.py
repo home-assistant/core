@@ -47,13 +47,14 @@ CONDITION_SCHEMA = vol.Any(
 CONDITIONS_SCHEMA = vol.Schema(
     {
         vol.Remove(vol.All(str, condition.starts_with_dot)): object,
-        cv.slug: CONDITION_SCHEMA,
+        cv.underscore_slug: CONDITION_SCHEMA,
     }
 )
 
 NON_MIGRATED_INTEGRATIONS = {
     "device_automation",
     "sun",
+    "zone",
 }
 
 

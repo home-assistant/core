@@ -30,7 +30,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: AxisConfigEntry) 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     hub.setup()
 
-    config_entry.add_update_listener(hub.async_new_address_callback)
+    config_entry.async_on_unload(
+        config_entry.add_update_listener(hub.async_new_address_callback)
+    )
     config_entry.async_on_unload(hub.teardown)
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, hub.shutdown)

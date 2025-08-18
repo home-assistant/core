@@ -17,7 +17,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
-from .entity import EnumTypeData, IntegerTypeData, TuyaEntity
+from .entity import TuyaEntity
+from .models import EnumTypeData
+from .util import get_dpcode
 
 TUYA_MODE_RETURN_HOME = "chargego"
 TUYA_STATUS_TO_HA = {
@@ -76,7 +78,6 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
     """Tuya Vacuum Device."""
 
     _fan_speed: EnumTypeData | None = None
-    _battery_level: IntegerTypeData | None = None
     _attr_name = None
 
     def __init__(self, device: CustomerDevice, device_manager: Manager) -> None:
@@ -88,23 +89,24 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         self._attr_supported_features = (
             VacuumEntityFeature.SEND_COMMAND | VacuumEntityFeature.STATE
         )
-        if self.find_dpcode(DPCode.PAUSE, prefer_function=True):
+        if get_dpcode(self.device, DPCode.PAUSE):
             self._attr_supported_features |= VacuumEntityFeature.PAUSE
 
-        if self.find_dpcode(DPCode.SWITCH_CHARGE, prefer_function=True) or (
-            (
-                enum_type := self.find_dpcode(
-                    DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
-                )
+        self._return_home_use_switch_charge = False
+        if get_dpcode(self.device, DPCode.SWITCH_CHARGE):
+            self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
+            self._return_home_use_switch_charge = True
+        elif (
+            enum_type := self.find_dpcode(
+                DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
             )
-            and TUYA_MODE_RETURN_HOME in enum_type.range
-        ):
+        ) and TUYA_MODE_RETURN_HOME in enum_type.range:
             self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
 
-        if self.find_dpcode(DPCode.SEEK, prefer_function=True):
+        if get_dpcode(self.device, DPCode.SEEK):
             self._attr_supported_features |= VacuumEntityFeature.LOCATE
 
-        if self.find_dpcode(DPCode.POWER_GO, prefer_function=True):
+        if get_dpcode(self.device, DPCode.POWER_GO):
             self._attr_supported_features |= (
                 VacuumEntityFeature.STOP | VacuumEntityFeature.START
             )
@@ -115,19 +117,6 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
             self._fan_speed = enum_type
             self._attr_fan_speed_list = enum_type.range
             self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
-
-        if int_type := self.find_dpcode(DPCode.ELECTRICITY_LEFT, dptype=DPType.INTEGER):
-            self._attr_supported_features |= VacuumEntityFeature.BATTERY
-            self._battery_level = int_type
-
-    @property
-    def battery_level(self) -> int | None:
-        """Return Tuya device state."""
-        if self._battery_level is None or not (
-            status := self.device.status.get(DPCode.ELECTRICITY_LEFT)
-        ):
-            return None
-        return round(self._battery_level.scale_value(status))
 
     @property
     def fan_speed(self) -> str | None:
@@ -159,12 +148,10 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
 
     def return_to_base(self, **kwargs: Any) -> None:
         """Return device to dock."""
-        self._send_command(
-            [
-                {"code": DPCode.SWITCH_CHARGE, "value": True},
-                {"code": DPCode.MODE, "value": TUYA_MODE_RETURN_HOME},
-            ]
-        )
+        if self._return_home_use_switch_charge:
+            self._send_command([{"code": DPCode.SWITCH_CHARGE, "value": True}])
+        else:
+            self._send_command([{"code": DPCode.MODE, "value": TUYA_MODE_RETURN_HOME}])
 
     def locate(self, **kwargs: Any) -> None:
         """Locate the device."""

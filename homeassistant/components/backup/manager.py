@@ -1119,7 +1119,7 @@ class BackupManager:
             )
         if unavailable_agents:
             LOGGER.warning(
-                "Backup agents %s are not available, will backupp to %s",
+                "Backup agents %s are not available, will backup to %s",
                 unavailable_agents,
                 available_agents,
             )

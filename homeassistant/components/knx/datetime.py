@@ -1,4 +1,4 @@
-"""Support for KNX/IP datetime."""
+"""Support for KNX datetime entities."""
 
 from __future__ import annotations
 
@@ -23,7 +23,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from . import KNXModule
 from .const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
@@ -32,6 +31,7 @@ from .const import (
     KNX_MODULE_KEY,
 )
 from .entity import KnxYamlEntity
+from .knx_module import KNXModule
 
 
 async def async_setup_entry(

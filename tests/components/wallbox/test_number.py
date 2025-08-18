@@ -6,22 +6,17 @@ import pytest
 
 from homeassistant.components.input_number import ATTR_VALUE, SERVICE_SET_VALUE
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.components.wallbox.coordinator import InvalidAuth
+from homeassistant.components.wallbox.coordinator import InsufficientRights
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .conftest import (
-    http_403_error,
-    http_404_error,
-    http_429_error,
-    setup_integration,
-    test_response_bidir,
-)
+from .conftest import http_403_error, http_404_error, http_429_error, setup_integration
 from .const import (
     MOCK_NUMBER_ENTITY_ENERGY_PRICE_ID,
     MOCK_NUMBER_ENTITY_ICP_CURRENT_ID,
     MOCK_NUMBER_ENTITY_ID,
+    WALLBOX_STATUS_RESPONSE_BIDIR,
 )
 
 from tests.common import MockConfigEntry
@@ -53,7 +48,7 @@ async def test_wallbox_number_power_class_bidir(
 ) -> None:
     """Test wallbox sensor class."""
     with patch.object(
-        mock_wallbox, "getChargerStatus", return_value=test_response_bidir
+        mock_wallbox, "getChargerStatus", return_value=WALLBOX_STATUS_RESPONSE_BIDIR
     ):
         await setup_integration(hass, entry)
 
@@ -135,7 +130,7 @@ async def test_wallbox_number_power_class_error_handling(
 
     with (
         patch.object(mock_wallbox, "setMaxChargingCurrent", side_effect=http_403_error),
-        pytest.raises(InvalidAuth),
+        pytest.raises(InsufficientRights),
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -207,7 +202,7 @@ async def test_wallbox_number_icp_power_class_error_handling(
 
     with (
         patch.object(mock_wallbox, "setIcpMaxCurrent", side_effect=http_403_error),
-        pytest.raises(InvalidAuth),
+        pytest.raises(InsufficientRights),
     ):
         await hass.services.async_call(
             NUMBER_DOMAIN,

@@ -35,7 +35,7 @@ from .expose import create_knx_exposure
 from .schema import ExposeSchema, dpt_base_type_validator, ga_validator
 
 if TYPE_CHECKING:
-    from . import KNXModule
+    from .knx_module import KNXModule
 
 _LOGGER = logging.getLogger(__name__)
 
