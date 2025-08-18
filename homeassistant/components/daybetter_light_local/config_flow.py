@@ -6,7 +6,7 @@ import asyncio
 from contextlib import suppress
 import logging
 
-from daybetter_local_api import DayBetterController  # type: ignore
+from daybetter_local_api import DayBetterController
 from homeassistant.components import network
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_flow
