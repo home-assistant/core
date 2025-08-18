@@ -79,7 +79,7 @@ async def _get_target_coordinators(
     entry_to_coordinator = {
         entry.entry_id: entry.runtime_data
         for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.runtime_data
+        if hasattr(entry, "runtime_data") and entry.runtime_data
     }
 
     # Find coordinators for target devices
