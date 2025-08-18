@@ -1732,7 +1732,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "nexia",
     "nextbus",
     "nextcloud",
-    "nextdns",
     "nyt_games",
     "nfandroidtv",
     "nibe_heatpump",
