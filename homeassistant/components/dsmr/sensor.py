@@ -927,7 +927,7 @@ class DSMREntity(SensorEntity):
         self._attr_device_class = device_class
         self._attr_native_unit_of_measurement = native_unit_of_measurement
         self._entry = entry
-        self._telegram: Telegram | None = telegram  # Stores the latest telegram
+        self.telegram: Telegram | None = telegram  # Stores the latest telegram
         self._dsmr_version = entry.data[CONF_DSMR_VERSION]
         self._value: StateType = None  # Stores the value to report
 
@@ -977,7 +977,7 @@ class DSMREntity(SensorEntity):
     @callback
     def accumulate_data(self, telegram: Telegram | None) -> None:
         """Store telegram and accumulate power values."""
-        self._telegram = telegram
+        self.telegram = telegram
 
         if not telegram:
             self._raw_values = []  # Clear values on disconnect
@@ -1003,13 +1003,13 @@ class DSMREntity(SensorEntity):
     @callback
     def calculate_value(self) -> None:
         """Calculate the value to report based on accumulated data."""
-        if self._telegram is None:
+        if self.telegram is None:
             self._value = None
             self._raw_values = []  # Ensure clear on disconnect
             return
 
         dsmr_object = get_dsmr_object(
-            self._telegram, self._mbus_id, self.entity_description.obis_reference
+            self.telegram, self._mbus_id, self.entity_description.obis_reference
         )
 
         if self._is_averaged_sensor:
@@ -1043,7 +1043,7 @@ class DSMREntity(SensorEntity):
     @property
     def available(self) -> bool:
         """Entity is only available if there is a telegram."""
-        return self._telegram is not None
+        return self.telegram is not None
 
     @property
     def native_value(self) -> StateType:
