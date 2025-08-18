@@ -52,4 +52,5 @@ Use kiosker-python-api version 1.2.3 from PyPi
 - Use modern Python.
 - Look at "api.py", and "data.py" for library usage.
 - Main language is English.
-- Confirm to quality_scale bronze.
+- Confirm to quality_scale silver.
+- Generate tests.
