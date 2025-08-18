@@ -53,9 +53,9 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "probe_acknowledge": "Acknowledged",
-              "probe_alarm": "Alarm",
-              "probe_disconnected": "Disconnected"
+              "probe_acknowledge": "Alarm acknowledged",
+              "probe_alarm": "Alarm triggered",
+              "probe_disconnected": "Probe disconnected"
             }
           }
         }
