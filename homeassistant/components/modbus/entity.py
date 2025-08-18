@@ -6,7 +6,6 @@ from abc import abstractmethod
 import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
-import logging
 import struct
 from typing import Any, cast
 
@@ -33,6 +32,7 @@ from homeassistant.helpers.event import async_call_later, async_track_time_inter
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
+    _LOGGER,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CALL_TYPE_REGISTER_HOLDING,
@@ -68,8 +68,6 @@ from .const import (
 )
 from .modbus import ModbusHub
 
-_LOGGER = logging.getLogger(__name__)
-
 
 class BasePlatform(Entity):
     """Base for readonly platforms."""
@@ -94,7 +92,6 @@ class BasePlatform(Entity):
         self._scan_interval = int(entry[CONF_SCAN_INTERVAL])
         self._cancel_timer: Callable[[], None] | None = None
         self._cancel_call: Callable[[], None] | None = None
-
         self._attr_unique_id = entry.get(CONF_UNIQUE_ID)
         self._attr_name = entry[CONF_NAME]
         self._attr_device_class = entry.get(CONF_DEVICE_CLASS)
@@ -179,9 +176,20 @@ class BasePlatform(Entity):
         self._attr_available = False
         self.async_write_ha_state()
 
+    async def async_await_connection(self, _now: Any) -> None:
+        """Wait for first connect."""
+        await self._hub.event_connected.wait()
+        self.async_run()
+
     async def async_base_added_to_hass(self) -> None:
         """Handle entity which will be added."""
-        self.async_run()
+        self.async_on_remove(
+            async_call_later(
+                self.hass,
+                self._hub.config_delay + 0.1,
+                self.async_await_connection,
+            )
+        )
         self.async_on_remove(
             async_dispatcher_connect(self.hass, SIGNAL_STOP_ENTITY, self.async_hold)
         )
@@ -382,8 +390,6 @@ class BaseSwitch(BasePlatform, ToggleEntity, RestoreEntity):
 
     async def _async_update(self) -> None:
         """Update the entity state."""
-        # remark "now" is a dummy parameter to avoid problems with
-        # async_track_time_interval
         if not self._verify_active:
             self._attr_available = True
             return

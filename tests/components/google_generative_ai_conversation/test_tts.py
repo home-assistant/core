@@ -37,7 +37,7 @@ from tests.common import MockConfigEntry, async_mock_service
 from tests.components.tts.common import retrieve_media
 from tests.typing import ClientSessionGenerator
 
-API_ERROR_500 = APIError("test", response=MagicMock())
+API_ERROR_500 = APIError("test", response_json={})
 TEST_CHAT_MODEL = "models/some-tts-model"
 
 
