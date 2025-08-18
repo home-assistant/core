@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 @pytest.fixture
 def ap_fixture():
     """Load fixture data for AP mode."""
-    json_data = load_json_object_fixture("airos_ap-ptp.json", DOMAIN)
+    json_data = load_json_object_fixture("airos_loco5ac_ap-ptp.json", DOMAIN)
     return AirOSData.from_dict(json_data)
 
 
