@@ -14,7 +14,9 @@ class APCUPSdEntity(CoordinatorEntity[APCUPSdCoordinator]):
     _attr_has_entity_name = True
 
     def __init__(
-        self, coordinator: APCUPSdCoordinator, description: EntityDescription
+        self,
+        coordinator: APCUPSdCoordinator,
+        description: EntityDescription,
     ) -> None:
         """Initialize the APCUPSd entity."""
         super().__init__(coordinator, context=description.key.upper())
