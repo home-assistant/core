@@ -12,7 +12,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import ACCOUNT_HASH, DOMAIN, UPDATE_INTERVAL
+from .const import DOMAIN, UPDATE_INTERVAL, USERNAME, PASSWORD, ACCOUNT_HASH
 from .coordinator import RitualsDataUpdateCoordinator
 
 PLATFORMS = [
@@ -27,9 +27,20 @@ PLATFORMS = [
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Rituals Perfume Genie from a config entry."""
     session = async_get_clientsession(hass)
-    account = Account(session=session, account_hash=entry.data[ACCOUNT_HASH])
+
+    # Ensure we have credentials; if not, trigger reauth/migration
+    if USERNAME not in entry.data or PASSWORD not in entry.data:
+        await _trigger_reauth(hass, entry)
+        raise ConfigEntryNotReady
+
+    account = Account(
+        email=entry.data[USERNAME],
+        password=entry.data[PASSWORD],
+        session=session,
+    )
 
     try:
+        await account.authenticate()
         account_devices = await account.get_devices()
     except aiohttp.ClientError as err:
         raise ConfigEntryNotReady from err
@@ -106,3 +117,24 @@ def async_migrate_entities_unique_ids(
                     registry_entry.entity_id,
                     new_unique_id=f"{diffuser.hublot}-{new_unique_id}",
                 )
+
+
+# Migration helpers for API v2
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate legacy entries (V1 with account_hash) to V2 (credentials)."""
+    data = dict(entry.data)
+    if ACCOUNT_HASH in data and (USERNAME not in data or PASSWORD not in data):
+        await _trigger_reauth(hass, entry)
+        return True
+    return True
+
+
+async def _trigger_reauth(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Start a reauth flow to collect credentials for V2."""
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "reauth"},
+            data={"entry_id": entry.entry_id, "unique_id": entry.unique_id or ""},
+        )
+    )
