@@ -518,7 +518,7 @@ aurorapy==0.2.7
 autarco==3.1.0
 
 # homeassistant.components.husqvarna_automower_ble
-automower-ble==0.2.7
+automower-ble==0.2.1
 
 # homeassistant.components.generic
 # homeassistant.components.stream
@@ -2629,7 +2629,7 @@ youless-api==2.2.0
 youtubeaio==2.0.0
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2025.07.21
+yt-dlp[default]==2025.08.11
 
 # homeassistant.components.zamg
 zamg==0.3.6
