@@ -112,6 +112,7 @@ DEVICE_MOCKS = [
     "dr_pjvxl1wsyqxivsaf",  #  https://github.com/home-assistant/core/issues/84869
     "fs_g0ewlb1vmwqljzji",  # https://github.com/home-assistant/core/issues/141231
     "fs_ibytpo6fpnugft1c",  # https://github.com/home-assistant/core/issues/135541
+    "fsd_9ecs16c53uqskxw6",  # https://github.com/home-assistant/core/issues/149233
     "gyd_lgekqfxdabipm3tn",  # https://github.com/home-assistant/core/issues/133173
     "hps_2aaelwxk",  # https://github.com/home-assistant/core/issues/149704
     "hps_wqashyqo",  #  https://github.com/home-assistant/core/issues/146180
