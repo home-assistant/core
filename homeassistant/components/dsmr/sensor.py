@@ -927,16 +927,16 @@ class DSMREntity(SensorEntity):
         self._attr_device_class = device_class
         self._attr_native_unit_of_measurement = native_unit_of_measurement
         self._entry = entry
-        self.telegram: Telegram | None = telegram  # Stores the latest telegram
+        self.telegram: Telegram | None = telegram
         self._dsmr_version = entry.data[CONF_DSMR_VERSION]
-        self._value: StateType = None  # Stores the value to report
+        self._value: StateType = None
 
         # Check if this sensor measures power (W or kW)
         self._is_averaged_sensor = self.native_unit_of_measurement in {
             UnitOfPower.WATT,
             UnitOfPower.KILO_WATT,
         }
-        self._raw_values: list[float] = []  # Stores raw values for averaging
+        self._raw_values: list[float] = []
 
         device_serial = entry.data[CONF_SERIAL_ID]
         device_name = DEVICE_NAME_ELECTRICITY
@@ -980,7 +980,7 @@ class DSMREntity(SensorEntity):
         self.telegram = telegram
 
         if not telegram:
-            self._raw_values = []  # Clear values on disconnect
+            self._raw_values = []
             return
 
         dsmr_object = get_dsmr_object(
@@ -1005,7 +1005,7 @@ class DSMREntity(SensorEntity):
         """Calculate the value to report based on accumulated data."""
         if self.telegram is None:
             self._value = None
-            self._raw_values = []  # Ensure clear on disconnect
+            self._raw_values = []
             return
 
         dsmr_object = get_dsmr_object(
@@ -1017,7 +1017,7 @@ class DSMREntity(SensorEntity):
                 avg_value = statistics.mean(self._raw_values)
                 self._value = round(avg_value, DEFAULT_PRECISION)
             # If no raw values, keep the previous value unless disconnected (handled above)
-            self._raw_values = []  # Always clear after processing
+            self._raw_values = []
             return
 
         # Logic for non-power sensors (use latest value)
