@@ -23,7 +23,7 @@ from .const import AUTH, CLIENT_ID, COORDINATOR, DOMAIN
 from .coordinator import HinenDataUpdateCoordinator
 from .models import HinenClient, HinenIntegrationConfigEntry
 
-PLATFORMS = [Platform.NUMBER, Platform.SELECT, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(
