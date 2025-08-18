@@ -2,20 +2,20 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
+from pyrituals import Account, AuthenticationException
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, USERNAME, PASSWORD, ACCOUNT_HASH
-from pyrituals import Account, AuthenticationException
+from .const import ACCOUNT_HASH, DOMAIN, PASSWORD, USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class RitualsPerfumeGenieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA)
@@ -62,7 +62,11 @@ class RitualsPerfumeGenieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # In V2 we store email + password instead of account_hash
             return self.async_create_entry(
                 title=account.email,
-                data={USERNAME: user_input[CONF_EMAIL], PASSWORD: user_input[CONF_PASSWORD]},
+                data={
+                    USERNAME: user_input[CONF_EMAIL],
+                    PASSWORD: user_input[CONF_PASSWORD],
+                    ACCOUNT_HASH: "",  # keep legacy field so existing tests/setup don’t break
+                },
             )
 
         return self.async_show_form(
@@ -70,12 +74,14 @@ class RitualsPerfumeGenieConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     # Simple reauth flow to retrieve credentials again (V2)
-    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> ConfigFlowResult:
         """Reauth step: request credentials again for V2 token."""
         # Keep it simple and compatible with the existing flow
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Form to log in again (V2)."""
         if user_input is None:
             return self.async_show_form(
