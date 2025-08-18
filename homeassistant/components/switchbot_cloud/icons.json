@@ -45,8 +45,6 @@
               "low": "mdi:water-outline",
               "quiet": "mdi:volume-off",
               "target_humidity": "mdi:target",
-              "sleep": "mdi:weather-night",
-              "auto": "mdi:autorenew",
               "drying_filter": "mdi:water-remove"
             }
           }
