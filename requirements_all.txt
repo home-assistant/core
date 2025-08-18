@@ -22,7 +22,7 @@ HAP-python==4.9.2
 HATasmota==0.10.0
 
 # homeassistant.components.mastodon
-Mastodon.py==2.0.1
+Mastodon.py==2.1.0
 
 # homeassistant.components.playstation_network
 PSNAWP==3.0.0
