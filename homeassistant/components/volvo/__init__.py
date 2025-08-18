@@ -39,6 +39,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: VolvoConfigEntry) -> boo
     vehicle = await _async_load_vehicle(api)
 
     # Order is important! Faster intervals must come first.
+    # Different interval coordinators are in place to keep the number
+    # of requests under 5000 per day. This lets users use the same
+    # API key for two vehicles (as the limit is 10000 per day).
     coordinators = (
         VolvoFastIntervalCoordinator(hass, entry, api, vehicle),
         VolvoMediumIntervalCoordinator(hass, entry, api, vehicle),
