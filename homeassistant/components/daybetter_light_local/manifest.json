@@ -1,7 +1,6 @@
 {
   "domain": "daybetter_light_local",
   "name": "daybetter lights lhaocal",
-  "version": "1.0.0", 
   "codeowners": ["@THDayBetter"],
   "config_flow": true,
   "dependencies": ["network"],
