@@ -12,15 +12,6 @@
       },
       "volume": {
         "default": "mdi:chart-line"
-      },
-      "daily_volume": {
-        "default": "mdi:calendar-today"
-      },
-      "weekly_volume": {
-        "default": "mdi:calendar-week"
-      },
-      "monthly_volume": {
-        "default": "mdi:calendar-month"
       }
     }
   }
