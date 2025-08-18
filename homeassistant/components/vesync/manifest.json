@@ -6,7 +6,8 @@
     "@webdjoe",
     "@thegardenmonkey",
     "@cdnninja",
-    "@iprak"
+    "@iprak",
+    "@sapuseven"
   ],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/vesync",
