@@ -41,6 +41,8 @@ def _get_mystrom_switch(host: str) -> MyStromSwitch:
 
 async def async_setup_entry(hass: HomeAssistant, entry: MyStromConfigEntry) -> bool:
     """Set up myStrom from a config entry."""
+    from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
     host = entry.data[CONF_HOST]
     try:
         info = await pymystrom.get_device_info(host)
@@ -48,14 +50,39 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyStromConfigEntry) -> b
         _LOGGER.error("No route to myStrom plug: %s", host)
         raise ConfigEntryNotReady from err
 
+    # Ensure a default type for platform routing and unloading; v1 may not provide it
     info.setdefault("type", 101)
 
     device_type = info["type"]
     if device_type in [101, 106, 107, 120]:
+        # Switch / Plug
         device = _get_mystrom_switch(host)
         platforms = PLATFORMS_PLUGS
-        await _async_get_device_state(device, info["ip"])
+        try:
+            await _async_get_device_state(device, info["ip"])
+        except KeyError:
+            # Fallback for legacy v1 devices where pymystrom expects a 'type' in responses
+            _LOGGER.debug(
+                "Falling back to legacy myStrom v1 client for %s due to missing 'type' in response",
+                host,
+            )
+            from .legacy import LegacyMyStromV1Switch
+
+            session = async_get_clientsession(hass)
+            legacy = LegacyMyStromV1Switch(
+                ip=info.get("ip"),
+                mac=info.get("mac"),
+                firmware=info.get("version"),
+                session=session,
+            )
+            try:
+                await legacy.get_state()
+            except MyStromConnectionError as err:
+                _LOGGER.error("No route to myStrom plug: %s", info.get("ip"))
+                raise ConfigEntryNotReady from err
+            device = legacy
     elif device_type in [102, 105]:
+        # Bulbs
         mac = info["mac"]
         device = _get_mystrom_bulb(host, mac)
         platforms = PLATFORMS_BULB
