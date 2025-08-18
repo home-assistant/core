@@ -1,6 +1,8 @@
 """Support for SwitchBot Cloud binary sensors."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from switchbot_api import Device, SwitchBotAPI
 
@@ -26,7 +28,7 @@ class SwitchBotCloudBinarySensorEntityDescription(BinarySensorEntityDescription)
 
     # Value or values to consider binary sensor to be "on"
     on_value: bool | str = True
-    keys: list[str] | None = None
+    value_fn: Callable[[dict[str, Any]], bool | None] | None = None
 
 
 CALIBRATION_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
@@ -47,6 +49,8 @@ DOOR_OPEN_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
 MOVE_DETECTED_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
     key="moveDetected",
     device_class=BinarySensorDeviceClass.MOTION,
+    value_fn=lambda data: data.get("moveDetected") is True
+    or data.get("detectionState", "") == "DETECTED",
 )
 
 IS_LIGHT_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
@@ -57,13 +61,14 @@ IS_LIGHT_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
 
 LEAK_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
     key="status",
-    keys=["status", "detectionState"],
     device_class=BinarySensorDeviceClass.MOISTURE,
+    value_fn=lambda data: any(data.get(key) for key in ("status", "detectionState")),
 )
 
 OPEN_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
     key="openState",
     device_class=BinarySensorDeviceClass.OPENING,
+    value_fn=lambda data: data.get("openState") in ("open", "timeOutNotClose"),
 )
 
 
@@ -141,23 +146,8 @@ class SwitchBotCloudBinarySensor(SwitchBotCloudEntity, BinarySensorEntity):
         if not self.coordinator.data:
             return None
 
-        if self.entity_description.keys:
-            return any(
-                self.coordinator.data.get(key) for key in self.entity_description.keys
-            )
-
-        if self.entity_description.key == "openState":
-            value = self.coordinator.data.get(self.entity_description.key)
-            return value in {"open", "timeOutNotClose"}
-
-        if (
-            self.entity_description.key == "moveDetected"
-            and self.device.device_type == "Motion Sensor"
-        ):
-            return (
-                self.coordinator.data.get(self.entity_description.key) is True
-                or self.coordinator.data.get("detectionState", "") == "DETECTED"
-            )
+        if self.entity_description.value_fn:
+            return self.entity_description.value_fn(self.coordinator.data)
 
         return (
             self.coordinator.data.get(self.entity_description.key)
