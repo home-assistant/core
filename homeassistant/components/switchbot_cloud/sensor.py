@@ -198,7 +198,3 @@ class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
         if not self.coordinator.data:
             return
         self._attr_native_value = self.coordinator.data.get(self.entity_description.key)
-
-        value = self.coordinator.data.get(self.entity_description.key)
-
-        self._attr_native_value = value

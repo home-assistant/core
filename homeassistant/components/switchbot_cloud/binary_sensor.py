@@ -137,7 +137,6 @@ class SwitchBotCloudBinarySensor(SwitchBotCloudEntity, BinarySensorEntity):
         """Initialize SwitchBot Cloud sensor entity."""
         super().__init__(api, device, coordinator)
         self.entity_description = description
-        self.device = device
         self._attr_unique_id = f"{device.device_id}_{description.key}"
 
     @property
