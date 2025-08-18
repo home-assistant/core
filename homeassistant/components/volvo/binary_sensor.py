@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -74,6 +75,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="brakeLightCenterWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # warnings endpoint
     VolvoBinarySensorDescription(
@@ -81,6 +83,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="brakeLightLeftWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # warnings endpoint
     VolvoBinarySensorDescription(
@@ -88,6 +91,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="brakeLightRightWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # engine endpoint
     VolvoBinarySensorDescription(
@@ -102,6 +106,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="daytimeRunningLightLeftWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # warnings endpoint
     VolvoBinarySensorDescription(
@@ -109,6 +114,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="daytimeRunningLightRightWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # doors endpoint
     VolvoCarsDoorDescription(
@@ -143,6 +149,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="fogLightFrontWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # warnings endpoint
     VolvoBinarySensorDescription(
@@ -150,6 +157,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="fogLightRearWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # warnings endpoint
     VolvoBinarySensorDescription(
@@ -157,6 +165,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="hazardLightsWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # warnings endpoint
     VolvoBinarySensorDescription(
@@ -164,6 +173,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="highBeamLeftWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # warnings endpoint
     VolvoBinarySensorDescription(
@@ -171,6 +181,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="highBeamRightWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # doors endpoint
     VolvoCarsDoorDescription(
@@ -183,6 +194,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="lowBeamLeftWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # warnings endpoint
     VolvoBinarySensorDescription(
@@ -190,6 +202,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="lowBeamRightWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # engine endpoint
     VolvoBinarySensorDescription(
@@ -206,6 +219,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="positionLightFrontLeftWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # position lights
     VolvoBinarySensorDescription(
@@ -213,6 +227,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="positionLightFrontRightWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # position lights
     VolvoBinarySensorDescription(
@@ -220,6 +235,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="positionLightRearLeftWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # position lights
     VolvoBinarySensorDescription(
@@ -227,6 +243,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="positionLightRearRightWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # registration plate light
     VolvoBinarySensorDescription(
@@ -234,6 +251,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="registrationPlateLightWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # reverse lights
     VolvoBinarySensorDescription(
@@ -241,6 +259,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="reverseLightsWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # diagnostics endpoint
     VolvoBinarySensorDescription(
@@ -268,6 +287,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="sideMarkLightsWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # windows endpoint
     VolvoCarsWindowDescription(
@@ -310,6 +330,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="turnIndicationFrontLeftWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # warnings endpoint
     VolvoBinarySensorDescription(
@@ -317,6 +338,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="turnIndicationFrontRightWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # warnings endpoint
     VolvoBinarySensorDescription(
@@ -324,6 +346,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="turnIndicationRearLeftWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # warnings endpoint
     VolvoBinarySensorDescription(
@@ -331,6 +354,7 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="turnIndicationRearRightWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # diagnostics endpoint
     VolvoBinarySensorDescription(
