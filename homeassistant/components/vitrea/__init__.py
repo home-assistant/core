@@ -107,7 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VitreaConfigEntry) -> bo
         # we wait as long as entities are being discovered, assuming that
         # a lack of change in 10 seconds means that no more entities are being discovered
         entity_count = 0
-        max_discovery_time = 60  # seconds
+        max_discovery_time = 120
         discovery_start = time.monotonic()
         while True:
             await asyncio.sleep(10)

@@ -11,7 +11,10 @@ from vitreaclient.constants import DeviceStatus, VitreaResponse
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,6 +69,7 @@ class VitreaCover(CoverEntity):
         | CoverEntityFeature.STOP
         | CoverEntityFeature.SET_POSITION
     )
+    _attr_has_entity_name = True
 
     def __init__(
         self, node: str, key: str, position: str, monitor: VitreaClient
@@ -74,7 +78,6 @@ class VitreaCover(CoverEntity):
         self.monitor = monitor
         self._node = node
         self._key = key
-        self._name = f"blind_{node}_{key}"
         self._attr_unique_id = f"{node}_{key}"
         self._attr_current_cover_position = int(position)
         self._target_position = int(position)
@@ -82,10 +85,15 @@ class VitreaCover(CoverEntity):
         self._is_opening = False
         self._is_closing = False
 
-    @property
-    def name(self) -> str:
-        """Return the name of the cover."""
-        return self._name
+        # Modern naming pattern with device info
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, node)},
+            name=f"Vitrea Node {node}",
+            manufacturer="Vitrea",
+        )
+
+        # For specific blinds/covers, use descriptive names
+        self._attr_name = f"Blind {key}"  # e.g., "Blind 1", "Blind bedroom"
 
     @property
     def is_closed(self) -> bool:

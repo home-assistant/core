@@ -14,9 +14,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VitreaTimerControl
+from .const import DOMAIN
+from .number import VitreaTimerControl
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,6 +86,8 @@ def _handle_switch_event(entry: ConfigEntry, event: Any) -> None:
 class VitreaSwitch(SwitchEntity):
     """Representation of a Vitrea switch."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         node: str,
@@ -96,21 +100,31 @@ class VitreaSwitch(SwitchEntity):
         self.monitor = monitor
         self._node = node
         self._key = key
-        self._name = f"switch_{node}_{key}"
         self._attr_unique_id = f"{node}_{key}"
         self._attr_is_on = is_on
         self.timer = timer
-        # group the switch with the timer if available
-        if timer:
-            self._attr_assumed_state = True
-            self._attr_has_entity_name = True
-            self._attr_device_info = timer.device_info
-            self._attr_icon = "mdi:timer"
 
-    @property
-    def name(self) -> str:
-        """Return the name of the switch."""
-        return self._name
+        # Modern naming pattern with device info - always apply
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, node)},
+            name=f"Vitrea Node {node}",
+            manufacturer="Vitrea",
+        )
+
+        # Set appropriate name and icon based on switch type
+        if timer:
+            self._attr_name = (
+                f"Boiler {key}"  # e.g., "Boiler kitchen", "Boiler bedroom"
+            )
+            self._attr_icon = "mdi:water-boiler"
+            # Share device info with timer for proper grouping
+            if hasattr(timer, "_attr_device_info"):
+                # Use setattr to avoid direct private member access warning
+                setattr(timer, "_attr_device_info", self._attr_device_info)
+        else:
+            self._attr_name = f"Switch {key}"  # e.g., "Switch 1", "Switch living_room"
+            self._attr_icon = "mdi:light-switch"
 
     @property
     def should_poll(self) -> bool:
