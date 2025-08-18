@@ -36,7 +36,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'event',
-    'unique_id': '00000000-0000-0000-0000-000000000001_event_1',
+    'unique_id': '00000000-0000-0000-0000-000000000001_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -96,7 +96,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'event',
-    'unique_id': '00000000-0000-0000-0000-000000000001_event_2',
+    'unique_id': '00000000-0000-0000-0000-000000000001_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -156,7 +156,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'event',
-    'unique_id': '00000000-0000-0000-0000-000000000001_event_1',
+    'unique_id': '00000000-0000-0000-0000-000000000001_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -216,7 +216,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'event',
-    'unique_id': '00000000-0000-0000-0000-000000000001_event_2',
+    'unique_id': '00000000-0000-0000-0000-000000000001_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -276,7 +276,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'event',
-    'unique_id': '00000000-0000-0000-0000-000000000001_event_1',
+    'unique_id': '00000000-0000-0000-0000-000000000001_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -336,7 +336,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'event',
-    'unique_id': '00000000-0000-0000-0000-000000000001_event_2',
+    'unique_id': '00000000-0000-0000-0000-000000000001_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -396,7 +396,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'event',
-    'unique_id': '00000000-0000-0000-0000-000000000001_event_1',
+    'unique_id': '00000000-0000-0000-0000-000000000001_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -456,7 +456,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'event',
-    'unique_id': '00000000-0000-0000-0000-000000000001_event_2',
+    'unique_id': '00000000-0000-0000-0000-000000000001_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -516,7 +516,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'event',
-    'unique_id': '00000000-0000-0000-0000-000000000001_event_1',
+    'unique_id': '00000000-0000-0000-0000-000000000001_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -576,7 +576,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'event',
-    'unique_id': '00000000-0000-0000-0000-000000000001_event_2',
+    'unique_id': '00000000-0000-0000-0000-000000000001_2',
     'unit_of_measurement': None,
   })
 # ---
@@ -636,7 +636,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'event',
-    'unique_id': '00000000-0000-0000-0000-000000000001_event_1',
+    'unique_id': '00000000-0000-0000-0000-000000000001_1',
     'unit_of_measurement': None,
   })
 # ---
@@ -696,7 +696,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'event',
-    'unique_id': '00000000-0000-0000-0000-000000000001_event_2',
+    'unique_id': '00000000-0000-0000-0000-000000000001_2',
     'unit_of_measurement': None,
   })
 # ---

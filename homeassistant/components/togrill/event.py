@@ -38,7 +38,7 @@ class ToGrillEventEntity(ToGrillEntity, EventEntity):
 
         self._attr_translation_key = "event"
         self._attr_translation_placeholders = {"probe_number": f"{probe_number}"}
-        self._attr_unique_id = f"{coordinator.address}_event_{probe_number}"
+        self._attr_unique_id = f"{coordinator.address}_{probe_number}"
         self._probe_number = probe_number
 
         self._attr_event_types: list[str] = [
