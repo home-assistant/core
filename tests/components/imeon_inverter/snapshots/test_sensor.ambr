@@ -308,7 +308,7 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_device_class': <SensorDeviceClass.ENERGY_STORAGE: 'energy_storage'>,
     'original_icon': None,
     'original_name': 'Battery stored',
     'platform': 'imeon_inverter',
@@ -317,16 +317,16 @@
     'supported_features': 0,
     'translation_key': 'battery_stored',
     'unique_id': '111111111111111_battery_stored',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_battery_stored-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
+      'device_class': 'energy_storage',
       'friendly_name': 'Imeon inverter Battery stored',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.imeon_inverter_battery_stored',
@@ -2084,7 +2084,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2106,7 +2106,7 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'PV consumed',
     'platform': 'imeon_inverter',
@@ -2115,16 +2115,16 @@
     'supported_features': 0,
     'translation_key': 'pv_consumed',
     'unique_id': '111111111111111_pv_consumed',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_pv_consumed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
+      'device_class': 'energy',
       'friendly_name': 'Imeon inverter PV consumed',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.imeon_inverter_pv_consumed',
@@ -2140,7 +2140,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2162,7 +2162,7 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'PV injected',
     'platform': 'imeon_inverter',
@@ -2171,16 +2171,16 @@
     'supported_features': 0,
     'translation_key': 'pv_injected',
     'unique_id': '111111111111111_pv_injected',
-    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_pv_injected-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'power',
+      'device_class': 'energy',
       'friendly_name': 'Imeon inverter PV injected',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.imeon_inverter_pv_injected',
@@ -2364,7 +2364,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2402,7 +2402,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Imeon inverter Self-consumption',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -2419,7 +2419,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2457,7 +2457,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Imeon inverter Self-sufficiency',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
