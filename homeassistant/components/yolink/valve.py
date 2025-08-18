@@ -90,8 +90,9 @@ DEVICE_TYPES: tuple[YoLinkValveEntityDescription, ...] = (
         translation_key="sprinkler_valve",
         device_class=ValveDeviceClass.WATER,
         value=lambda value: value is False if value is not None else None,
-        exists_fn=lambda device: device.device_type
-        in [ATTR_DEVICE_SPRINKLER, ATTR_DEVICE_SPRINKLER_V2],
+        exists_fn=lambda device: (
+            device.device_type in [ATTR_DEVICE_SPRINKLER, ATTR_DEVICE_SPRINKLER_V2]
+        ),
         should_update_entity=lambda value: value is not None,
         is_available=sprinkler_valve_available,
     ),
