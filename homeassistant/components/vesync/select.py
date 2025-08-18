@@ -12,15 +12,18 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .common import is_fan, is_humidifier
+from .common import is_humidifier, is_outlet, is_purifier
 from .const import (
     DOMAIN,
-    FAN_NIGHT_LIGHT_LEVEL_DIM,
-    FAN_NIGHT_LIGHT_LEVEL_OFF,
-    FAN_NIGHT_LIGHT_LEVEL_ON,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_BRIGHT,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_DIM,
     HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF,
+    OUTLET_NIGHT_LIGHT_LEVEL_AUTO,
+    OUTLET_NIGHT_LIGHT_LEVEL_OFF,
+    OUTLET_NIGHT_LIGHT_LEVEL_ON,
+    PURIFIER_NIGHT_LIGHT_LEVEL_DIM,
+    PURIFIER_NIGHT_LIGHT_LEVEL_OFF,
+    PURIFIER_NIGHT_LIGHT_LEVEL_ON,
     VS_COORDINATOR,
     VS_DEVICES,
     VS_DISCOVERY,
@@ -70,24 +73,33 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
             HUMIDIFIER_NIGHT_LIGHT_LEVEL_OFF,
         ),
     ),
-    # night_light for devices that support it (certain air purifiers, humidifiers and outlets)
+    # night_light for air purifiers
     VeSyncSelectEntityDescription(
         key="night_light_level",
         translation_key="night_light_level",
         options=[
-            FAN_NIGHT_LIGHT_LEVEL_OFF,
-            FAN_NIGHT_LIGHT_LEVEL_DIM,
-            FAN_NIGHT_LIGHT_LEVEL_ON,
+            PURIFIER_NIGHT_LIGHT_LEVEL_OFF,
+            PURIFIER_NIGHT_LIGHT_LEVEL_DIM,
+            PURIFIER_NIGHT_LIGHT_LEVEL_ON,
         ],
         icon="mdi:brightness-6",
-        exists_fn=lambda device: is_fan(device)
-        and hasattr(device, "supports_nightlight")
-        and device.supports_nightlight,
+        exists_fn=lambda device: is_purifier(device) and device.supports_nightlight,
         select_option_fn=lambda device, value: device.set_nightlight_mode(value),
-        current_option_fn=lambda device: VS_TO_HA_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.get(
-            device.state.night_light,
-            FAN_NIGHT_LIGHT_LEVEL_OFF,
-        ),
+        current_option_fn=lambda device: device.state.nightlight_status,
+    ),
+    # night_light for outlets
+    VeSyncSelectEntityDescription(
+        key="night_light_level",
+        translation_key="night_light_level",
+        options=[
+            OUTLET_NIGHT_LIGHT_LEVEL_OFF,
+            OUTLET_NIGHT_LIGHT_LEVEL_ON,
+            OUTLET_NIGHT_LIGHT_LEVEL_AUTO,
+        ],
+        icon="mdi:brightness-6",
+        exists_fn=lambda device: is_outlet(device) and device.supports_nightlight,
+        select_option_fn=lambda device, value: device.set_nightlight_state(value),
+        current_option_fn=lambda device: device.state.nightlight_status,
     ),
 ]
 
