@@ -151,7 +151,16 @@ def pick_keys(component: str, translations: dict[str, Any]) -> dict[str, Any]:
     flat_translations = flatten_translations(translations)
     flat_current_keys = flatten_translations(get_current_keys(component))
     flatten_result = {}
-    for key in flat_current_keys:
+    for key, value in flat_current_keys.items():
+        if value.startswith(r"[%dict"):
+            flatten_result.update(
+                {
+                    translated_key: translated_value
+                    for translated_key, translated_value in flat_translations.items()
+                    if translated_key.startswith(key)
+                }
+            )
+
         if key in flat_translations:
             flatten_result[key] = flat_translations[key]
     result = {}

@@ -68,7 +68,7 @@ def load_json_from_path(path: pathlib.Path) -> Any:
         raise JSONDecodeErrorWithPath(err.msg, err.doc, err.pos, path) from err
 
 
-def flatten_translations(translations):
+def flatten_translations(translations: dict[str, Any]) -> dict[str, Any]:
     """Flatten all translations."""
     stack = [iter(translations.items())]
     key_stack = []
