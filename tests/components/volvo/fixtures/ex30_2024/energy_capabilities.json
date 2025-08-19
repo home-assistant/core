@@ -9,7 +9,7 @@
   "chargerConnectionStatus": {
     "isSupported": true
   },
-  "chargingSystemStatus": {
+  "chargingStatus": {
     "isSupported": true
   },
   "chargingType": {
@@ -25,7 +25,7 @@
     "isSupported": true
   },
   "chargingCurrentLimit": {
-    "isSupported": true
+    "isSupported": false
   },
   "chargingPower": {
     "isSupported": true

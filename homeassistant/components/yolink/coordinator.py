@@ -5,13 +5,16 @@ from __future__ import annotations
 import asyncio
 from datetime import UTC, datetime, timedelta
 import logging
+from typing import Any
 
+from yolink.client_request import ClientRequest
 from yolink.device import YoLinkDevice
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
+from yolink.model import BRDP
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import ATTR_DEVICE_STATE, ATTR_LORA_INFO, DOMAIN, YOLINK_OFFLINE_TIME
@@ -89,3 +92,16 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
                 self.dev_net_type = dev_lora_info.get("devNetType")
             return device_state
         return {}
+
+    async def call_device(self, request: ClientRequest) -> dict[str, Any]:
+        """Call device api."""
+        try:
+            # call_device will check result, fail by raise YoLinkClientError
+            resp: BRDP = await self.device.call_device(request)
+        except YoLinkAuthFailError as yl_auth_err:
+            self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(yl_auth_err) from yl_auth_err
+        except YoLinkClientError as yl_client_err:
+            raise HomeAssistantError(yl_client_err) from yl_client_err
+        else:
+            return resp.data

@@ -1651,7 +1651,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "manual",
     "manual_mqtt",
     "map",
-    "mastodon",
     "marytts",
     "matrix",
     "matter",

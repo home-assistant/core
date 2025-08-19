@@ -45,6 +45,7 @@
       'limited': None,
       'locked': False,
       'memorial': None,
+      'moved': None,
       'moved_to_account': None,
       'mute_expires_at': None,
       'noindex': False,

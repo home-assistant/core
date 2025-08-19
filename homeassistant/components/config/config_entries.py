@@ -137,20 +137,16 @@ class ConfigManagerEntryResourceReloadView(HomeAssistantView):
 
 def _prepare_config_flow_result_json(
     result: data_entry_flow.FlowResult,
-    prepare_result_json: Callable[
-        [data_entry_flow.FlowResult], data_entry_flow.FlowResult
-    ],
-) -> data_entry_flow.FlowResult:
+    prepare_result_json: Callable[[data_entry_flow.FlowResult], dict[str, Any]],
+) -> dict[str, Any]:
     """Convert result to JSON."""
     if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
         return prepare_result_json(result)
 
-    data = result.copy()
-    entry: config_entries.ConfigEntry = data["result"]  # type: ignore[typeddict-item]
+    data = {key: val for key, val in result.items() if key not in ("data", "context")}
+    entry: config_entries.ConfigEntry = result["result"]  # type: ignore[typeddict-item]
     # We overwrite the ConfigEntry object with its json representation.
-    data["result"] = entry.as_json_fragment  # type: ignore[typeddict-unknown-key]
-    data.pop("data")
-    data.pop("context")
+    data["result"] = entry.as_json_fragment
     return data
 
 
@@ -204,8 +200,8 @@ class ConfigManagerFlowIndexView(
 
     def _prepare_result_json(
         self, result: data_entry_flow.FlowResult
-    ) -> data_entry_flow.FlowResult:
-        """Convert result to JSON."""
+    ) -> dict[str, Any]:
+        """Convert result to JSON serializable dict."""
         return _prepare_config_flow_result_json(result, super()._prepare_result_json)
 
 
@@ -229,8 +225,8 @@ class ConfigManagerFlowResourceView(
 
     def _prepare_result_json(
         self, result: data_entry_flow.FlowResult
-    ) -> data_entry_flow.FlowResult:
-        """Convert result to JSON."""
+    ) -> dict[str, Any]:
+        """Convert result to JSON serializable dict."""
         return _prepare_config_flow_result_json(result, super()._prepare_result_json)
 
 

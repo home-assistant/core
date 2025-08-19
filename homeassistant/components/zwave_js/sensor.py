@@ -4,15 +4,15 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
-from zwave_js_server.const import CommandClass
+from zwave_js_server.const import CommandClass, RssiError
 from zwave_js_server.const.command_class.meter import (
     RESET_METER_OPTION_TARGET_VALUE,
     RESET_METER_OPTION_TYPE,
 )
-from zwave_js_server.exceptions import BaseZwaveJSServerError
+from zwave_js_server.exceptions import BaseZwaveJSServerError, RssiErrorReceived
 from zwave_js_server.model.controller import Controller
 from zwave_js_server.model.controller.statistics import ControllerStatistics
 from zwave_js_server.model.driver import Driver
@@ -1049,7 +1049,7 @@ class ZWaveStatisticsSensor(SensorEntity):
         self,
         config_entry: ZwaveJSConfigEntry,
         driver: Driver,
-        statistics_src: ZwaveNode | Controller,
+        statistics_src: Controller | ZwaveNode,
         description: ZWaveJSStatisticsSensorEntityDescription,
     ) -> None:
         """Initialize a Z-Wave statistics entity."""
@@ -1080,12 +1080,30 @@ class ZWaveStatisticsSensor(SensorEntity):
         )
 
     @callback
-    def statistics_updated(self, event_data: dict) -> None:
+    def _statistics_updated(self, event_data: dict) -> None:
         """Call when statistics updated event is received."""
-        self._attr_native_value = self.entity_description.convert(
-            event_data["statistics_updated"], self.entity_description.key
+        statistics = cast(
+            ControllerStatistics | NodeStatistics, event_data["statistics_updated"]
         )
+        self._set_statistics(statistics)
         self.async_write_ha_state()
+
+    @callback
+    def _set_statistics(
+        self, statistics: ControllerStatistics | NodeStatistics
+    ) -> None:
+        """Set updated statistics."""
+        try:
+            self._attr_native_value = self.entity_description.convert(
+                statistics, self.entity_description.key
+            )
+        except RssiErrorReceived as err:
+            if err.error is RssiError.NOT_AVAILABLE:
+                self._attr_available = False
+                return
+            self._attr_native_value = None
+        # Reset available state.
+        self._attr_available = True
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
@@ -1104,10 +1122,8 @@ class ZWaveStatisticsSensor(SensorEntity):
             )
         )
         self.async_on_remove(
-            self.statistics_src.on("statistics updated", self.statistics_updated)
+            self.statistics_src.on("statistics updated", self._statistics_updated)
         )
 
         # Set initial state
-        self._attr_native_value = self.entity_description.convert(
-            self.statistics_src.statistics, self.entity_description.key
-        )
+        self._set_statistics(self.statistics_src.statistics)

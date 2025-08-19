@@ -9,7 +9,7 @@
   "chargerConnectionStatus": {
     "isSupported": true
   },
-  "chargingSystemStatus": {
+  "chargingStatus": {
     "isSupported": true
   },
   "chargingType": {

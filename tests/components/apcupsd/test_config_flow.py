@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -17,12 +18,18 @@ from . import CONF_DATA, MOCK_MINIMAL_STATUS, MOCK_STATUS
 from tests.common import MockConfigEntry
 
 
-async def test_config_flow_cannot_connect(hass: HomeAssistant) -> None:
-    """Test config flow setup with connection error."""
+@pytest.mark.parametrize(
+    "exception",
+    [OSError(), asyncio.IncompleteReadError(partial=b"", expected=100), TimeoutError()],
+)
+async def test_config_flow_cannot_connect(
+    hass: HomeAssistant, exception: Exception
+) -> None:
+    """Test config flow setup with a connection error."""
     with patch(
         "homeassistant.components.apcupsd.coordinator.aioapcaccess.request_status"
-    ) as mock_get:
-        mock_get.side_effect = OSError()
+    ) as mock_request_status:
+        mock_request_status.side_effect = exception
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
