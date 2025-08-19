@@ -16,9 +16,15 @@ class HassEnforceGreekMicroCharChecker(BaseChecker):
     priority = -1
     msgs = {
         "W7452": (
-            "Constants with a micro unit prefix must encode mu as U+03BC (\u03bc), not as U+00B5 (\u00b5)",
+            "Constants with a micro unit prefix must encode the "
+            "small Greek Letter Mu as U+03BC (\u03bc), not as U+00B5 (\u00b5)",
             "hass-enforce-greek-micro-char",
-            "According to [The Unicode Consortium](https://en.wikipedia.org/wiki/Micro-#Symbol_encoding_in_character_sets), the Greek letter character is preferred.",
+            "According to [The Unicode Consortium]"
+            "(https://en.wikipedia.org/wiki/Micro-#Symbol_encoding_in_character_sets),"
+            " the Greek letter character is preferred. "
+            "To search a specific encoded μ char in Microsoft Visual Studio Code, "
+            'make sure the "Match case" option is enabled. Note that this only works '
+            "when searching globally, and not while searching a single document.",
         ),
     }
     options = ()
