@@ -2975,6 +2975,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[ikbbdbnqsd70pc1glc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'ikbbdbnqsd70pc1glc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Smart roller blinds',
+    'model_id': 'g1cp07dsqnbdbbki',
+    'name': 'Persiana do Quarto',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[iks13mcaiyie3rryjb2oc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
