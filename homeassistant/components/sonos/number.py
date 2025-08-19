@@ -5,13 +5,13 @@ from __future__ import annotations
 import logging
 from typing import cast
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import SONOS_CREATE_LEVELS
+from .const import SONOS_CREATE_LEVELS, SONOS_SPEAKER_ACTIVITY, SONOS_STATE_UPDATED
 from .entity import SonosEntity
 from .helpers import SonosConfigEntry, soco_error
 from .speaker import SonosSpeaker
@@ -82,12 +82,13 @@ async def async_setup_entry(
         return features
 
     async def _async_create_entities(speaker: SonosSpeaker) -> None:
-        entities = []
+        entities: list[NumberEntity] = []
 
         available_features = await hass.async_add_executor_job(
             available_soco_attributes, speaker
         )
 
+        # Standard SoCo-backed level controls
         for level_type, valid_range in available_features:
             _LOGGER.debug(
                 "Creating %s number control on %s", level_type, speaker.zone_name
@@ -95,6 +96,11 @@ async def async_setup_entry(
             entities.append(
                 SonosLevelEntity(speaker, config_entry, level_type, valid_range)
             )
+
+        # Group volume slider (0.0–1.0). Available only when grouped.
+        _LOGGER.debug("Creating group_volume number control on %s", speaker.zone_name)
+        entities.append(SonosGroupVolumeEntity(speaker, config_entry))
+
         async_add_entities(entities)
 
     config_entry.async_on_unload(
@@ -142,3 +148,113 @@ class SonosLevelEntity(SonosEntity, NumberEntity):
         """Return the current value."""
         to_number = LEVEL_TO_NUMBER.get(self.level_type, int)
         return cast(float, to_number(getattr(self.speaker, self.level_type)))
+
+
+class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
+    """Group volume control (0.0–1.0) for the Sonos group of this player."""
+
+    _attr_translation_key = "group_volume"
+    _attr_native_min_value = 0.0
+    _attr_native_max_value = 1.0
+    _attr_native_step = 0.01
+    _attr_mode = NumberMode.SLIDER
+
+    def __init__(self, speaker: SonosSpeaker, config_entry: SonosConfigEntry) -> None:
+        """Initialize the Sonos group volume number entity."""
+        super().__init__(speaker, config_entry)
+        self._attr_unique_id = f"{self.soco.uid}-group_volume"
+        self._cached: float | None = None
+        self._coord_uid: str | None = None
+
+    # ---------- Availability ----------
+
+    @property
+    def available(self) -> bool:
+        """Available only when the player is online and in a group."""
+        return bool(self.speaker.available and self.speaker.sonos_group_entities)
+
+    # ---------- Reading / writing ----------
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the cached group volume (0.0–1.0)."""
+        return self._cached
+
+    @soco_error()
+    def set_native_value(self, value: float) -> None:
+        """Set the group volume (0.0–1.0)."""
+        level = max(0.0, min(1.0, float(value)))
+        self.soco.group.volume = int(round(level * 100))
+        self._cached = level
+        self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
+
+    async def _async_fallback_poll(self) -> None:
+        """Poll if subscriptions aren’t working."""
+        await self._async_refresh_from_device(write=True)
+
+    async def _async_refresh_from_device(self, write: bool = False) -> None:
+        """Fetch current group volume from SoCo."""
+
+        def _get() -> int | None:
+            try:
+                return self.soco.group.volume
+            except Exception:  # noqa: BLE001
+                return None
+
+        gv = await self.hass.async_add_executor_job(_get)
+        self._cached = gv / 100.0 if isinstance(gv, int) else None
+        if write:
+            self.async_write_ha_state()
+
+    # ---------- Push wiring for responsiveness ----------
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to activity/state signals for fast updates."""
+        await super().async_added_to_hass()
+
+        # Always listen to this speaker (group membership can change).
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SONOS_SPEAKER_ACTIVITY}-{self.soco.uid}",
+                self._async_handle_activity,
+            )
+        )
+
+        # Bind to the current coordinator.
+        self._coord_uid = (self.speaker.coordinator or self.speaker).uid
+        self._bind_coordinator_listeners(self._coord_uid)
+
+        # Initial read
+        await self._async_refresh_from_device(write=True)
+
+    def _bind_coordinator_listeners(self, coord_uid: str) -> None:
+        """Attach listeners to the coordinator’s signals."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SONOS_SPEAKER_ACTIVITY}-{coord_uid}",
+                self._async_handle_activity,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SONOS_STATE_UPDATED}-{coord_uid}",
+                self._async_handle_activity,
+            )
+        )
+
+    @callback
+    def _async_handle_activity(self, *_: object) -> None:
+        """Handle push signals and refresh.
+
+        Also rebind if the group coordinator changed because of regrouping.
+        """
+        new_coord_uid = (self.speaker.coordinator or self.speaker).uid
+        if new_coord_uid != self._coord_uid:
+            self._coord_uid = new_coord_uid
+            self._bind_coordinator_listeners(new_coord_uid)
+
+        # Refresh group volume and write state
+        self.hass.create_task(self._async_refresh_from_device(write=True))
