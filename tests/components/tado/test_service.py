@@ -17,7 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .util import async_init_integration
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture
 
 
 async def test_has_services(
@@ -38,7 +38,7 @@ async def test_add_meter_readings(
     await async_init_integration(hass)
 
     config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
-    fixture: str = load_fixture("tado/add_readings_success.json")
+    fixture: str = await async_load_fixture(hass, "add_readings_success.json", DOMAIN)
     with patch(
         "PyTado.interface.api.Tado.set_eiq_meter_readings",
         return_value=json.loads(fixture),
@@ -91,7 +91,9 @@ async def test_add_meter_readings_invalid(
     await async_init_integration(hass)
 
     config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
-    fixture: str = load_fixture("tado/add_readings_invalid_meter_reading.json")
+    fixture: str = await async_load_fixture(
+        hass, "add_readings_invalid_meter_reading.json", DOMAIN
+    )
     with (
         patch(
             "PyTado.interface.api.Tado.set_eiq_meter_readings",
@@ -120,7 +122,9 @@ async def test_add_meter_readings_duplicate(
     await async_init_integration(hass)
 
     config_entry: MockConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
-    fixture: str = load_fixture("tado/add_readings_duplicated_meter_reading.json")
+    fixture: str = await async_load_fixture(
+        hass, "add_readings_duplicated_meter_reading.json", DOMAIN
+    )
     with (
         patch(
             "PyTado.interface.api.Tado.set_eiq_meter_readings",

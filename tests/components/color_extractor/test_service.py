@@ -27,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import color as color_util
 
-from tests.common import load_fixture
+from tests.common import async_load_fixture, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 LIGHT_ENTITY = "light.kitchen_lights"
@@ -145,7 +145,7 @@ async def test_url_success(
     aioclient_mock.get(
         url=service_data[ATTR_URL],
         content=base64.b64decode(
-            load_fixture("color_extractor/color_extractor_url.txt")
+            await async_load_fixture(hass, "color_extractor_url.txt", DOMAIN)
         ),
     )
 
@@ -233,9 +233,7 @@ async def test_url_error(
 @patch(
     "builtins.open",
     mock_open(
-        read_data=base64.b64decode(
-            load_fixture("color_extractor/color_extractor_file.txt")
-        )
+        read_data=base64.b64decode(load_fixture("color_extractor_file.txt", DOMAIN))
     ),
     create=True,
 )

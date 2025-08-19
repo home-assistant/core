@@ -16,6 +16,7 @@ from aiohttp.hdrs import (
 from aiohttp.test_utils import TestClient
 import pytest
 
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.components.http.cors import setup_cors
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.http import KEY_ALLOW_CONFIGURED_CORS, HomeAssistantView
@@ -157,7 +158,9 @@ async def test_cors_on_static_files(
     assert await async_setup_component(
         hass, "frontend", {"http": {"cors_allowed_origins": ["http://www.example.com"]}}
     )
-    hass.http.register_static_path("/something", str(Path(__file__).parent))
+    await hass.http.async_register_static_paths(
+        [StaticPathConfig("/something", str(Path(__file__).parent))]
+    )
 
     client = await hass_client()
     resp = await client.options(

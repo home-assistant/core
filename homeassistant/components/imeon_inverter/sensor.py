@@ -23,12 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import (
-    ATTR_BATTERY_STATUS,
-    ATTR_INVERTER_STATE,
-    ATTR_TIMELINE_STATUS,
-    TIMELINE_ICONS,
-)
+from .const import ATTR_BATTERY_STATUS, ATTR_INVERTER_STATE, ATTR_TIMELINE_STATUS
 from .coordinator import InverterCoordinator
 from .entity import InverterEntity
 
@@ -312,13 +307,6 @@ SENSOR_DESCRIPTIONS = (
     ),
     # Monitoring (data over the last 24 hours)
     SensorEntityDescription(
-        key="monitoring_self_produced",
-        translation_key="monitoring_self_produced",
-        native_unit_of_measurement=UnitOfPower.WATT,
-        state_class=SensorStateClass.TOTAL,
-        suggested_display_precision=2,
-    ),
-    SensorEntityDescription(
         key="monitoring_self_consumption",
         translation_key="monitoring_self_consumption",
         native_unit_of_measurement=PERCENTAGE,
@@ -449,22 +437,9 @@ async def async_setup_entry(
 class InverterSensor(InverterEntity, SensorEntity):
     """Representation of an Imeon inverter sensor."""
 
-    entity_description: SensorEntityDescription
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
     def native_value(self) -> StateType | None:
         """Return the state of the entity."""
-        raw_value = self.coordinator.data.get(self.data_key)
-        if not isinstance(raw_value, str):
-            return raw_value
-        return {"???": "unknown"}.get(raw_value, raw_value)
-
-    @property
-    def icon(self) -> str | None:
-        """Update the sensor timeline icon."""
-        if self.data_key == "timeline_type_msg":
-            raw_status = self.coordinator.data.get(self.data_key)
-            status = raw_status if isinstance(raw_status, str) else "warning_unknown"
-            return TIMELINE_ICONS[status]
-        return super().icon
+        return self.coordinator.data.get(self.data_key)

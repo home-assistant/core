@@ -112,9 +112,6 @@
       "temp_component_temperature": {
         "default": "mdi:thermometer"
       },
-      "monitoring_self_produced": {
-        "default": "mdi:solar-power-variant"
-      },
       "monitoring_self_consumption": {
         "default": "mdi:percent"
       },
@@ -135,6 +132,25 @@
       },
       "monitoring_minute_solar_production": {
         "default": "mdi:solar-power"
+      },
+      "timeline_type_msg": {
+        "default": "mdi:check-circle",
+        "state": {
+          "com_lost": "mdi:lan-disconnect",
+          "warning_grid": "mdi:alert-circle",
+          "warning_pv": "mdi:alert-circle",
+          "warning_bat": "mdi:alert-circle",
+          "error_ond": "mdi:close-octagon",
+          "error_soft": "mdi:close-octagon",
+          "error_pv": "mdi:close-octagon",
+          "error_grid": "mdi:close-octagon",
+          "error_bat": "mdi:close-octagon",
+          "good_1": "mdi:check-circle",
+          "info_soft": "mdi:information-slab-circle",
+          "info_ond": "mdi:information-slab-circle",
+          "info_bat": "mdi:information-slab-circle",
+          "info_smartlo": "mdi:information-slab-circle"
+        }
       },
       "energy_pv": {
         "default": "mdi:solar-power"

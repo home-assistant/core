@@ -17,7 +17,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import TIMEOUT
 
 HUBNAME = "imeon_inverter_hub"
-INTERVAL = timedelta(seconds=60)
+INTERVAL = 60
 _LOGGER = logging.getLogger(__name__)
 
 type InverterConfigEntry = ConfigEntry[InverterCoordinator]
@@ -44,7 +44,7 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
             hass,
             _LOGGER,
             name=HUBNAME,
-            update_interval=INTERVAL,
+            update_interval=timedelta(seconds=INTERVAL),
             config_entry=entry,
         )
 

@@ -17,7 +17,7 @@ from homeassistant.util.dt import utcnow
 
 from . import init_integration
 
-from tests.common import async_fire_time_changed, load_fixture, snapshot_platform
+from tests.common import async_fire_time_changed, async_load_fixture, snapshot_platform
 
 
 async def test_sensor(
@@ -32,8 +32,8 @@ async def test_sensor(
 
 async def test_availability(hass: HomeAssistant) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
-    indexes = json.loads(load_fixture("gios/indexes.json"))
-    sensors = json.loads(load_fixture("gios/sensors.json"))
+    indexes = json.loads(await async_load_fixture(hass, "indexes.json", DOMAIN))
+    sensors = json.loads(await async_load_fixture(hass, "sensors.json", DOMAIN))
 
     await init_integration(hass)
 
