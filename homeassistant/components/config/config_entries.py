@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from http import HTTPStatus
 from typing import Any, NoReturn
 
@@ -62,7 +62,7 @@ def async_setup(hass: HomeAssistant) -> bool:
     websocket_api.async_register_command(hass, config_entries_flow_subscribe)
     websocket_api.async_register_command(hass, ignore_config_flow)
 
-    websocket_api.async_register_command(hass, config_subentry_rename)
+    websocket_api.async_register_command(hass, config_subentry_update)
     websocket_api.async_register_command(hass, config_subentry_delete)
     websocket_api.async_register_command(hass, config_subentry_list)
 
@@ -739,14 +739,16 @@ async def config_subentry_list(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        "type": "config_entries/subentries/rename",
+        "type": "config_entries/subentries/update",
         "entry_id": str,
         "subentry_id": str,
-        "new_title": str,
+        vol.Optional("data"): Mapping,
+        vol.Optional("title"): str,
+        vol.Optional("unique_id"): str,
     }
 )
 @websocket_api.async_response
-async def config_subentry_rename(
+async def config_subentry_update(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
@@ -766,7 +768,13 @@ async def config_subentry_rename(
         )
         return
 
-    hass.config_entries.async_update_subentry(entry, subentry, title=msg["new_title"])
+    changes = dict(msg)
+    changes.pop("type")
+    changes.pop("entry_id")
+    changes.pop("id")
+    changes.pop("subentry_id")
+
+    hass.config_entries.async_update_subentry(entry, subentry, **changes)
 
     connection.send_result(msg["id"])
 

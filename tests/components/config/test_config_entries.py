@@ -3347,10 +3347,10 @@ async def test_list_subentries(
     }
 
 
-async def test_rename_subentry(
+async def test_update_subentry(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test that we can rename a subentry."""
+    """Test that we can update a subentry."""
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
@@ -3363,6 +3363,7 @@ async def test_rename_subentry(
                 subentry_id="mock_id",
                 subentry_type="test",
                 title="Mock title",
+                unique_id="mock_unique_id",
             )
         ],
     )
@@ -3373,10 +3374,12 @@ async def test_rename_subentry(
 
     await ws_client.send_json_auto_id(
         {
-            "type": "config_entries/subentries/rename",
+            "type": "config_entries/subentries/update",
             "entry_id": entry.entry_id,
             "subentry_id": "mock_id",
-            "new_title": "Updated Title",
+            "title": "Updated Title",
+            "data": {"test": "updated test"},
+            "unique_id": "updated_unique_id",
         }
     )
     response = await ws_client.receive_json()
@@ -3385,15 +3388,17 @@ async def test_rename_subentry(
     assert response["result"] is None
 
     assert list(entry.subentries.values())[0].title == "Updated Title"
+    assert list(entry.subentries.values())[0].unique_id == "updated_unique_id"
+    assert list(entry.subentries.values())[0].data["test"] == "updated test"
 
     # Try renaming subentry from an unknown entry
     ws_client = await hass_ws_client(hass)
     await ws_client.send_json_auto_id(
         {
-            "type": "config_entries/subentries/rename",
+            "type": "config_entries/subentries/update",
             "entry_id": "no_such_entry",
             "subentry_id": "mock_id",
-            "new_title": "Updated Title",
+            "title": "Updated Title",
         }
     )
     response = await ws_client.receive_json()
@@ -3408,10 +3413,10 @@ async def test_rename_subentry(
     ws_client = await hass_ws_client(hass)
     await ws_client.send_json_auto_id(
         {
-            "type": "config_entries/subentries/rename",
+            "type": "config_entries/subentries/update",
             "entry_id": entry.entry_id,
             "subentry_id": "no_such_entry2",
-            "new_title": "Updated Title2",
+            "title": "Updated Title2",
         }
     )
     response = await ws_client.receive_json()
