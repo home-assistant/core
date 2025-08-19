@@ -112,13 +112,21 @@ class BasePlatform(Entity):
     async def _async_update(self) -> None:
         """Virtual function to be overwritten."""
 
-    async def async_update(self, now: datetime | None = None) -> None:
+    async def async_update(self) -> None:
+        """Update the entity state."""
+        if self._cancel_call:
+            self._cancel_call()
+        await self.async_local_update()
+
+    async def async_local_update(self, now: datetime | None = None) -> None:
         """Update the entity state."""
         await self._async_update()
         self.async_write_ha_state()
         if self._scan_interval > 0:
             self._cancel_call = async_call_later(
-                self.hass, timedelta(seconds=self._scan_interval), self.async_update
+                self.hass,
+                timedelta(seconds=self._scan_interval),
+                self.async_local_update,
             )
 
     async def _async_update_write_state(self) -> None:
@@ -126,7 +134,7 @@ class BasePlatform(Entity):
         if self._cancel_call:
             self._cancel_call()
             self._cancel_call = None
-        await self.async_update()
+        await self.async_local_update()
 
     async def _async_update_if_not_in_progress(
         self, now: datetime | None = None
@@ -140,7 +148,7 @@ class BasePlatform(Entity):
         self._async_cancel_update_polling()
         self._async_schedule_future_update(0.1)
         self._cancel_call = async_call_later(
-            self.hass, timedelta(seconds=0.1), self.async_update
+            self.hass, timedelta(seconds=0.1), self.async_local_update
         )
         self._attr_available = True
         self.async_write_ha_state()
