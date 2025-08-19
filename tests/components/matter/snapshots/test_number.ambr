@@ -2373,7 +2373,7 @@
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
-      'min': 0,
+      'min': 1,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,
     }),
@@ -2411,7 +2411,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Valve Default open duration',
       'max': 65534,
-      'min': 0,
+      'min': 1,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
