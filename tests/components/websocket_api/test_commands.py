@@ -691,7 +691,7 @@ async def test_get_services(
     assert msg == {"id": 2, "result": {}, "success": True, "type": "result"}
     assert hass.data[ALL_SERVICE_DESCRIPTIONS_JSON_CACHE] is old_cache
 
-    # Set up an integration that has services and check cache is update
+    # Set up an integration that has services and check cache is updated
     assert await async_setup_component(hass, DOMAIN_GROUP, {DOMAIN_GROUP: {}})
     await websocket_client.send_json_auto_id({"type": "get_services"})
     msg = await websocket_client.receive_json()
