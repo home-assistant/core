@@ -538,6 +538,27 @@ async def test_tool_call_exception(
             {"role": "assistant"},
             {"native": object()},
         ],
+        # With external tool calls
+        [
+            {"role": "assistant"},
+            {"content": "Test"},
+            {
+                "tool_calls": [
+                    llm.ToolInput(
+                        id="mock-tool-call-id",
+                        tool_name="test_tool",
+                        tool_args={"param1": "Test Param 1"},
+                        external=True,
+                    )
+                ]
+            },
+            {
+                "role": "tool_result",
+                "tool_call_id": "mock-tool-call-id",
+                "tool_name": "test_tool",
+                "tool_result": "Test Result",
+            },
+        ],
     ],
 )
 async def test_add_delta_content_stream(
@@ -568,7 +589,9 @@ async def test_add_delta_content_stream(
         """Yield deltas."""
         for d in deltas:
             yield d
-            expected_delta.append(d)
+            if filtered_delta := {k: v for k, v in d.items() if k != "native"}:
+                if filtered_delta.get("role") != "tool_result":
+                    expected_delta.append(filtered_delta)
 
     captured_deltas = []
 
