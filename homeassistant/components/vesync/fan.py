@@ -177,7 +177,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
 
         # Switch to manual mode if not already set
         if self.device.state.mode != VS_FAN_MODE_MANUAL:
-            if not await self.device.manual_mode():
+            if not await self.device.set_manual_mode():
                 raise HomeAssistantError("An error occurred while setting manual mode.")
 
         # Calculate the speed level and set it
