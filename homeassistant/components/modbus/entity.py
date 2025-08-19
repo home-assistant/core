@@ -143,7 +143,6 @@ class BasePlatform(Entity):
             self._cancel_call()
             self._cancel_call = None
         self._attr_available = False
-        self.async_write_ha_state()
 
     async def async_await_connection(self, _now: Any) -> None:
         """Wait for first connect."""
@@ -163,9 +162,7 @@ class BasePlatform(Entity):
             async_dispatcher_connect(self.hass, SIGNAL_STOP_ENTITY, self.async_disable)
         )
         self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_START_ENTITY, self.async_local_update
-            )
+            async_dispatcher_connect(self.hass, SIGNAL_START_ENTITY, self.async_update)
         )
 
 
