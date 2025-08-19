@@ -88,7 +88,7 @@ class VitreaCover(CoverEntity):
         # Modern naming pattern with device info
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, node)},
-            name=f"Vitrea Node {node}",
+            name=f"Node {node}",
             manufacturer="Vitrea",
         )
 
