@@ -33,7 +33,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: VasttrafikConfigEntry) -
             raise ConfigEntryNotReady("Main Västtrafik integration not found")
 
         # Check if main entry is loaded and has runtime_data
-        if main_entry.state != ConfigEntryState.LOADED or not hasattr(main_entry, 'runtime_data') or not main_entry.runtime_data:
+        if (
+            main_entry.state != ConfigEntryState.LOADED
+            or not hasattr(main_entry, "runtime_data")
+            or not main_entry.runtime_data
+        ):
             raise ConfigEntryNotReady("Main Västtrafik integration not ready")
 
         entry.runtime_data = main_entry.runtime_data
@@ -45,13 +49,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: VasttrafikConfigEntry) -
         # Create the planner in executor since constructor makes blocking HTTP calls
         try:
             planner = await hass.async_add_executor_job(
-                vasttrafik.JournyPlanner,
-                entry.data[CONF_KEY],
-                entry.data[CONF_SECRET]
+                vasttrafik.JournyPlanner, entry.data[CONF_KEY], entry.data[CONF_SECRET]
             )
         except Exception as err:
             _LOGGER.error("Failed to initialize Västtrafik API: %s", err)
-            raise ConfigEntryNotReady(f"Unable to initialize Västtrafik API: {err}") from err
+            raise ConfigEntryNotReady(
+                f"Unable to initialize Västtrafik API: {err}"
+            ) from err
 
         # Store the planner instance in runtime_data
         entry.runtime_data = planner
@@ -67,8 +71,6 @@ def _get_main_entry(hass: HomeAssistant) -> ConfigEntry | None:
         if entry.data.get("is_departure_board") is not True:
             return entry
     return None
-
-
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: VasttrafikConfigEntry) -> bool:
