@@ -12,8 +12,7 @@
         "title": "WSDOT setup",
         "description": "Set up your Washington State Department of Transportation integration.",
         "data": {
-          "api_key": "[%key:common::config_flow::data::api_key%]",
-          "domain": "Domain name"
+          "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
           "api_key": "Your WSDOT API Key."
@@ -32,14 +31,19 @@
           "title": "WSDOT Travel Time setup",
           "description": "Select one of the provided the highway routes to monitor estimated driving time along that route",
           "data": {
-            "name": "Name",
-            "route": "Route"
+            "name": "Name"
           },
           "data_description": {
             "name": "The official WSDOT description of the route."
           }
         }
       }
+    }
+  },
+  "issues": {
+    "deprecated_platform_yaml": {
+      "title": "The {domai} YAML configuration is being removed",
+      "description": "A YAML-configured {domain} entry was found which matches an existing {domain} entry. This entry was successfully mirated to use the new config setup and can now be safely removed from your `configuration.yaml`"
     }
   }
 }

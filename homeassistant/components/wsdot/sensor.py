@@ -23,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -60,15 +60,25 @@ async def async_setup_platform(
     entries = hass.config_entries.async_entries(DOMAIN)
     if entries:
         for entry in entries:
-            _LOGGER.info(
-                "Found already-setup WSDOT entry. Skipping platform setup. Your "
-                'configuration.yaml might contain a "wsdot" entry in `sensor.platform` '
-                "that is no longer needed"
-            )
-            if entry.data[CONF_API_KEY] != config[CONF_API_KEY]:
-                _LOGGER.warning(
-                    "Legacy Platform WSDOT entry found but there already exists a WSDOT "
-                    "entry with a different API Key. Skipping migration of this configuration"
+            if entry.data[CONF_API_KEY] == config[CONF_API_KEY]:
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    "deprecated_platform_yaml",
+                    breaks_in_ha_version="2025.11.0",
+                    is_fixable=False,
+                    is_persistent=True,
+                    issue_domain=DOMAIN,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="deprecated_platform_yaml",
+                    translation_placeholders={
+                        "domain": DOMAIN,
+                    },
+                )
+                _LOGGER.info(
+                    "Found already-setup WSDOT entry. Skipping platform setup. Your "
+                    'configuration.yaml might contain a "wsdot" entry in `sensor.platform` '
+                    "that is no longer needed"
                 )
         return
 

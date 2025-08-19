@@ -78,15 +78,13 @@ class WSDOTConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by import."""
         await self.async_set_unique_id(import_info[CONF_API_KEY])
         self._abort_if_unique_id_configured()
+        wsdot_travel_times = wsdot_api.WsdotTravelTimes(import_info[CONF_API_KEY])
         try:
-            wsdot_travel_times = wsdot_api.WsdotTravelTimes(import_info[CONF_API_KEY])
             travel_time_routes = await wsdot_travel_times.get_all_travel_times()
         except wsdot_api.WsdotTravelError as ws_error:
             if ws_error.status == 400:
-                reason = "Invalid API Key"
-            else:
-                reason = "unable to retrieve WSDOT routes"
-            return self.async_abort(reason=reason)
+                return self.async_abort(reason="invalid_api_key")
+            return self.async_abort(reason="cannot_connect")
 
         subentries = []
         for route in import_info[CONF_TRAVEL_TIMES]:
