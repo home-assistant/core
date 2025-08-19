@@ -298,23 +298,22 @@ class RadioMediaSource(MediaSource):
     def _filter_local_stations(
         self, stations: list[Station], latitude: float, longitude: float
     ) -> list[Station]:
-        distance_tuples = [
-            (station, dist)
+        return [
+            station
             for station in stations
             if station.latitude is not None
             and station.longitude is not None
             and (
-                dist := vincenty(
-                    (latitude, longitude), (station.latitude, station.longitude), False
+                (
+                    dist := vincenty(
+                        (latitude, longitude),
+                        (station.latitude, station.longitude),
+                        False,
+                    )
                 )
+                is not None
             )
-            is not None
-        ]
-
-        return [
-            station
-            for station, dist in filter(lambda x: x[1] < 100, distance_tuples)
-            if dist is not None
+            and dist < 100
         ]
 
     async def _async_build_local(
