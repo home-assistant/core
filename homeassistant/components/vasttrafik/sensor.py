@@ -108,9 +108,7 @@ async def async_setup_entry(
         ]
     else:
         # This is the main integration - create status sensor and any departure sensors from options
-        sensors = [
-            VasttrafikStatusSensor(planner, entry.title, entry.entry_id)
-        ]
+        sensors = [VasttrafikStatusSensor(planner, entry.title, entry.entry_id)]
 
         # Add departure sensors from options (for backward compatibility)
         departures = entry.options.get(CONF_DEPARTURES, [])
@@ -138,7 +136,9 @@ class VasttrafikStatusSensor(SensorEntity):
     _attr_icon = "mdi:train"
     _attr_has_entity_name = True
 
-    def __init__(self, planner: vasttrafik.JournyPlanner, name: str, entry_id: str) -> None:
+    def __init__(
+        self, planner: vasttrafik.JournyPlanner, name: str, entry_id: str
+    ) -> None:
         """Initialize the status sensor."""
         self._planner = planner
         self._attr_name = "Status"
@@ -182,7 +182,9 @@ class VasttrafikDepartureSensor(SensorEntity):
     _attr_attribution = "Data provided by Västtrafik"
     _attr_icon = "mdi:train"
 
-    def __init__(self, planner, name, departure, heading, lines, tracks, delay, entry_id):
+    def __init__(
+        self, planner, name, departure, heading, lines, tracks, delay, entry_id
+    ):
         """Initialize the sensor."""
         self._planner = planner
         self._attr_name = name if name else "Next departure"
@@ -196,7 +198,9 @@ class VasttrafikDepartureSensor(SensorEntity):
         self._departureboard = None
         self._state = None
         self._attributes = None
-        self._attr_unique_id = f"{entry_id}_departure_{departure.lower().replace(' ', '_')}"
+        self._attr_unique_id = (
+            f"{entry_id}_departure_{departure.lower().replace(' ', '_')}"
+        )
         self._attr_has_entity_name = True
 
         # Create device info for this departure board
@@ -216,7 +220,6 @@ class VasttrafikDepartureSensor(SensorEntity):
             station_id = self._planner.location_name(location)[0]["gid"]
             station_info = {"station_name": location, "station_id": station_id}
         return station_info
-
 
     @property
     def extra_state_attributes(self):
@@ -270,7 +273,7 @@ class VasttrafikDepartureSensor(SensorEntity):
                 total_departures,
                 self._departure["station_name"],
                 self._lines,
-                self._tracks
+                self._tracks,
             )
 
             for departure in self._departureboard:
@@ -295,11 +298,10 @@ class VasttrafikDepartureSensor(SensorEntity):
                     line_name,
                     platform,
                     line_matches,
-                    track_matches
+                    track_matches,
                 )
 
                 if line_matches and track_matches:
-
                     # Parse departure time
                     departure_time = None
                     if "estimatedOtherwisePlannedTime" in departure:
@@ -320,14 +322,18 @@ class VasttrafikDepartureSensor(SensorEntity):
                         "line": line.get("shortName"),
                         "direction": service_journey.get("direction"),
                         "track": stop_point.get("platform"),
-                        "accessibility": "wheelChair" if line.get("isWheelchairAccessible") else None,
+                        "accessibility": "wheelChair"
+                        if line.get("isWheelchairAccessible")
+                        else None,
                         "line_color": line.get("backgroundColor"),
                         "line_text_color": line.get("foregroundColor"),
                     }
 
                     # Add to departures list (limit to first 5 departures)
                     if len(departures_list) < 5:
-                        departures_list.append({k: v for k, v in departure_info.items() if v is not None})
+                        departures_list.append(
+                            {k: v for k, v in departure_info.items() if v is not None}
+                        )
 
             # Set sensor state to next departure time
             self._state = next_departure
@@ -335,14 +341,16 @@ class VasttrafikDepartureSensor(SensorEntity):
             _LOGGER.debug(
                 "Departure board update complete: found %d matching departures, next_departure=%s",
                 len(departures_list),
-                next_departure
+                next_departure,
             )
 
             # Set attributes with multiple departures and general info
             self._attributes = {
                 "departures": departures_list,
                 "station": self._departure["station_name"],
-                "destination": self._heading["station_name"] if self._heading else "Any direction",
+                "destination": self._heading["station_name"]
+                if self._heading
+                else "Any direction",
                 "line_filter": self._lines if self._lines else None,
                 "track_filter": self._tracks if self._tracks else None,
                 "delay_minutes": self._delay.seconds // 60 % 60,
@@ -350,4 +358,6 @@ class VasttrafikDepartureSensor(SensorEntity):
             }
 
             # Remove None values
-            self._attributes = {k: v for k, v in self._attributes.items() if v is not None}
+            self._attributes = {
+                k: v for k, v in self._attributes.items() if v is not None
+            }

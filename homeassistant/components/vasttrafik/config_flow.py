@@ -33,7 +33,10 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-async def search_stations(hass: HomeAssistant, config_entry, query: str) -> tuple[list[dict], str | None]:
+
+async def search_stations(
+    hass: HomeAssistant, config_entry, query: str
+) -> tuple[list[dict], str | None]:
     """Search for stations using the Västtrafik API.
 
     Returns (stations_list, error_code).
@@ -54,10 +57,7 @@ async def search_stations(hass: HomeAssistant, config_entry, query: str) -> tupl
             name = result.get("name", "")
             gid = result.get("gid", "")
             if name and gid:
-                stations.append({
-                    "value": name,
-                    "label": f"{name} ({gid})"
-                })
+                stations.append({"value": name, "label": f"{name} ({gid})"})
 
         if stations:
             return stations, None
@@ -83,12 +83,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     # Test the connection by making a simple API call
     try:
-        await hass.async_add_executor_job(
-            planner.location_name, "Centralstationen"
-        )
+        await hass.async_add_executor_job(planner.location_name, "Centralstationen")
     except vasttrafik.Error as err:
         _LOGGER.error("Failed to validate Västtrafik credentials: %s", err)
-        if hasattr(err, 'response') and err.response and err.response.status_code in (401, 403):
+        if (
+            hasattr(err, "response")
+            and err.response
+            and err.response.status_code in (401, 403)
+        ):
             raise InvalidAuth from err
         raise CannotConnect from err
     except Exception as err:
@@ -109,7 +111,6 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry):
         """Create the options flow."""
         return VasttrafikOptionsFlow()
-
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -150,8 +151,7 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title="Västtrafik",
-                    data={**user_input, "is_departure_board": False}
+                    title="Västtrafik", data={**user_input, "is_departure_board": False}
                 )
 
         return self.async_show_form(
@@ -175,7 +175,9 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="no_main_integration")
 
                 # Search for stations
-                stations, error_code = await search_stations(self.hass, main_entry, search_query)
+                stations, error_code = await search_stations(
+                    self.hass, main_entry, search_query
+                )
                 if error_code:
                     errors = {"base": error_code}
                 elif not stations:
@@ -187,9 +189,11 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             errors = {}
 
-        search_schema = vol.Schema({
-            vol.Required("search_query"): vol.All(str, vol.Length(min=2)),
-        })
+        search_schema = vol.Schema(
+            {
+                vol.Required("search_query"): vol.All(str, vol.Length(min=2)),
+            }
+        )
 
         return self.async_show_form(
             step_id="departure_board",
@@ -217,11 +221,15 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._selected_station = selected_station
                 return await self.async_step_configure_departure_sensor()
 
-        station_options = {station["value"]: station["label"] for station in self._search_results}
+        station_options = {
+            station["value"]: station["label"] for station in self._search_results
+        }
 
-        station_schema = vol.Schema({
-            vol.Required("station"): vol.In(station_options),
-        })
+        station_schema = vol.Schema(
+            {
+                vol.Required("station"): vol.In(station_options),
+            }
+        )
 
         return self.async_show_form(
             step_id="select_departure_station",
@@ -236,11 +244,19 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             lines = []
             if user_input.get(CONF_LINES):
-                lines = [line.strip() for line in user_input[CONF_LINES].split(",") if line.strip()]
+                lines = [
+                    line.strip()
+                    for line in user_input[CONF_LINES].split(",")
+                    if line.strip()
+                ]
 
             tracks = []
             if user_input.get(CONF_TRACKS):
-                tracks = [track.strip() for track in user_input[CONF_TRACKS].split(",") if track.strip()]
+                tracks = [
+                    track.strip()
+                    for track in user_input[CONF_TRACKS].split(",")
+                    if track.strip()
+                ]
 
             station_name = self._selected_station
             unique_id = f"{DOMAIN}_departure_{station_name.lower().replace(' ', '_')}"
@@ -253,7 +269,9 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
             departure_data = {
                 CONF_FROM: station_name,
                 CONF_NAME: user_input.get(CONF_NAME, station_name),
-                CONF_HEADING: user_input.get(CONF_HEADING, ""),  # Keep for backward compatibility
+                CONF_HEADING: user_input.get(
+                    CONF_HEADING, ""
+                ),  # Keep for backward compatibility
                 CONF_LINES: lines,
                 CONF_TRACKS: tracks,
                 CONF_DELAY: user_input.get(CONF_DELAY, DEFAULT_DELAY),
@@ -261,17 +279,18 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
             }
 
             return self.async_create_entry(
-                title=f"Departure: {departure_data[CONF_NAME]}",
-                data=departure_data
+                title=f"Departure: {departure_data[CONF_NAME]}", data=departure_data
             )
 
-        configure_schema = vol.Schema({
-            vol.Optional(CONF_NAME): str,
-            vol.Optional(CONF_HEADING): str,
-            vol.Optional(CONF_LINES): str,
-            vol.Optional(CONF_TRACKS): str,
-            vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): vol.Coerce(int),
-        })
+        configure_schema = vol.Schema(
+            {
+                vol.Optional(CONF_NAME): str,
+                vol.Optional(CONF_HEADING): str,
+                vol.Optional(CONF_LINES): str,
+                vol.Optional(CONF_TRACKS): str,
+                vol.Optional(CONF_DELAY, default=DEFAULT_DELAY): vol.Coerce(int),
+            }
+        )
 
         return self.async_show_form(
             step_id="configure_departure_sensor",
@@ -280,8 +299,8 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={
                 "station_name": self._selected_station,
                 "lines_help": "Enter line numbers separated by commas (e.g. 1, 2, 55)",
-                "tracks_help": "Enter track/platform numbers separated by commas (e.g. A, B, 1, 2)"
-            }
+                "tracks_help": "Enter track/platform numbers separated by commas (e.g. A, B, 1, 2)",
+            },
         )
 
 
@@ -306,28 +325,40 @@ class VasttrafikOptionsFlow(OptionsFlow):
             # Process lines input (convert comma-separated string to list)
             lines = []
             if user_input.get(CONF_LINES):
-                lines = [line.strip() for line in user_input[CONF_LINES].split(",") if line.strip()]
+                lines = [
+                    line.strip()
+                    for line in user_input[CONF_LINES].split(",")
+                    if line.strip()
+                ]
 
             # Process tracks input (convert comma-separated string to list)
             tracks = []
             if user_input.get(CONF_TRACKS):
-                tracks = [track.strip() for track in user_input[CONF_TRACKS].split(",") if track.strip()]
+                tracks = [
+                    track.strip()
+                    for track in user_input[CONF_TRACKS].split(",")
+                    if track.strip()
+                ]
 
             # Update config entry data with new settings
             new_data = self.config_entry.data.copy()
-            new_data.update({
-                CONF_NAME: user_input.get(CONF_NAME, new_data.get(CONF_NAME)),
-                CONF_HEADING: user_input.get(CONF_HEADING, ""),
-                CONF_LINES: lines,
-                CONF_TRACKS: tracks,
-                CONF_DELAY: user_input.get(CONF_DELAY, new_data.get(CONF_DELAY, DEFAULT_DELAY)),
-            })
+            new_data.update(
+                {
+                    CONF_NAME: user_input.get(CONF_NAME, new_data.get(CONF_NAME)),
+                    CONF_HEADING: user_input.get(CONF_HEADING, ""),
+                    CONF_LINES: lines,
+                    CONF_TRACKS: tracks,
+                    CONF_DELAY: user_input.get(
+                        CONF_DELAY, new_data.get(CONF_DELAY, DEFAULT_DELAY)
+                    ),
+                }
+            )
 
             # Update the config entry
             self.hass.config_entries.async_update_entry(
                 self.config_entry,
                 data=new_data,
-                title=f"Departure: {new_data[CONF_NAME]}"
+                title=f"Departure: {new_data[CONF_NAME]}",
             )
 
             # Reload the integration to apply changes
@@ -344,18 +375,24 @@ class VasttrafikOptionsFlow(OptionsFlow):
         lines_str = ", ".join(current_lines) if current_lines else ""
         tracks_str = ", ".join(current_tracks) if current_tracks else ""
 
-        configure_schema = vol.Schema({
-            vol.Optional(CONF_NAME, default=current_data.get(CONF_NAME, "")): str,
-            vol.Optional(CONF_HEADING, default=current_data.get(CONF_HEADING, "")): str,
-            vol.Optional(CONF_LINES, default=lines_str): str,
-            vol.Optional(CONF_TRACKS, default=tracks_str): str,
-            vol.Optional(CONF_DELAY, default=current_data.get(CONF_DELAY, DEFAULT_DELAY)): vol.Coerce(int),
-        })
+        configure_schema = vol.Schema(
+            {
+                vol.Optional(CONF_NAME, default=current_data.get(CONF_NAME, "")): str,
+                vol.Optional(
+                    CONF_HEADING, default=current_data.get(CONF_HEADING, "")
+                ): str,
+                vol.Optional(CONF_LINES, default=lines_str): str,
+                vol.Optional(CONF_TRACKS, default=tracks_str): str,
+                vol.Optional(
+                    CONF_DELAY, default=current_data.get(CONF_DELAY, DEFAULT_DELAY)
+                ): vol.Coerce(int),
+            }
+        )
 
         return self.async_show_form(
             step_id="init",
             data_schema=configure_schema,
             description_placeholders={
                 "station_name": current_data.get(CONF_FROM, "Unknown"),
-            }
+            },
         )
