@@ -94,9 +94,6 @@
       },
       "alarm_door": {
         "name": "Door alarm"
-      },
-      "refrigerator_alarm_door_open": {
-        "name": "Door alarm"
       }
     },
     "button": {
