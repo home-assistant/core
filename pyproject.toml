@@ -121,6 +121,7 @@ load-plugins = [
   "hass_async_load_fixtures",
   "hass_decorator",
   "hass_enforce_class_module",
+  "hass_enforce_greek_micro_char",
   "hass_enforce_sorted_platforms",
   "hass_enforce_super_call",
   "hass_enforce_type_hints",
