@@ -16,17 +16,20 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import EntityCategory, UnitOfVolume, UnitOfVolumeFlowRate
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
 
 from .const import (
+    DOMAIN,
     KEY_CURRENT_FLOW_RATE,
     KEY_SERVER_CONNECTIVITY,
     KEY_SIGNAL_QUALITY,
     KEY_VOLUME,
 )
 from .coordinator import DropletConfigEntry, DropletDataCoordinator
+
+ML_L_CONVERSION = 1000
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -55,7 +58,7 @@ SENSORS: list[DropletSensorEntityDescription] = [
         suggested_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=2,
         state_class=SensorStateClass.TOTAL,
-        value_fn=lambda device: device.get_volume_delta(),
+        value_fn=lambda device: device.get_volume_delta() / ML_L_CONVERSION,
         last_reset_fn=lambda device: device.get_volume_last_fetched(),
     ),
     DropletSensorEntityDescription(
@@ -104,7 +107,6 @@ class DropletSensor(CoordinatorEntity[DropletDataCoordinator], SensorEntity):
 
         unique_id = coordinator.config_entry.unique_id
         self._attr_unique_id = f"{unique_id}_{entity_description.key}"
-        self._attr_device_info = self.coordinator.dev_info
 
     @property
     def available(self) -> bool:
@@ -114,11 +116,20 @@ class DropletSensor(CoordinatorEntity[DropletDataCoordinator], SensorEntity):
     @property
     def native_value(self) -> float | str | None:
         """Return the value reported by the sensor."""
-        if self.entity_description.key == KEY_VOLUME:
-            self._attr_last_reset = dt_util.now()
         return self.entity_description.value_fn(self.coordinator.droplet)
 
     @property
     def last_reset(self) -> datetime | None:
         """Return the last reset of the sensor, if applicable."""
         return self.entity_description.last_reset_fn(self.coordinator.droplet)
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.metadata.get("unique_id", ""))},
+            manufacturer=self.coordinator.metadata.get("manufacturer"),
+            model=self.coordinator.metadata.get("model"),
+            sw_version=self.coordinator.metadata.get("sw_version"),
+            serial_number=self.coordinator.metadata.get("serial_number"),
+        )

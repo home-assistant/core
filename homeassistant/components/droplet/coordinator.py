@@ -13,12 +13,10 @@ from homeassistant.const import CONF_CODE, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONNECT_DELAY, DEVICE_NAME, DOMAIN
+from .const import CONNECT_DELAY, DOMAIN
 
-ML_L_CONVERSION = 1000
 VERSION_TIMEOUT = 5
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,7 +42,8 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
             session=async_get_clientsession(self.hass),
             logger=_LOGGER,
         )
-        self.dev_info = DeviceInfo()
+        assert entry.unique_id is not None
+        self.metadata: dict[str, str] = {"unique_id": entry.unique_id}
 
     async def _async_setup(self) -> None:
         if not await self.setup():
@@ -52,23 +51,18 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
 
         # Droplet should send its metadata within 5 seconds
         end = time.time() + VERSION_TIMEOUT
-        assert self.config_entry.unique_id is not None
-        self.dev_info = DeviceInfo(
-            identifiers={(DOMAIN, self.config_entry.unique_id)},
-            name=DEVICE_NAME,
-        )
         while not self.droplet.version_info_available():
             await asyncio.sleep(1)
             if time.time() > end:
                 _LOGGER.warning("Failed to get version info from Droplet")
                 return
-        self.dev_info.update(
-            DeviceInfo(
-                manufacturer=self.droplet.get_manufacturer(),
-                model=self.droplet.get_model(),
-                sw_version=self.droplet.get_fw_version(),
-                serial_number=self.droplet.get_sn(),
-            )
+        self.metadata.update(
+            {
+                "manufacturer": self.droplet.get_manufacturer(),
+                "model": self.droplet.get_model(),
+                "sw_version": self.droplet.get_fw_version(),
+                "serial_number": self.droplet.get_sn(),
+            }
         )
 
     async def _async_update_data(self) -> None:
