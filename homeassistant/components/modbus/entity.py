@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import struct
@@ -108,7 +107,6 @@ class BasePlatform(Entity):
         self._max_value = get_optional_numeric_config(CONF_MAX_VALUE)
         self._nan_value = entry.get(CONF_NAN_VALUE)
         self._zero_suppress = get_optional_numeric_config(CONF_ZERO_SUPPRESS)
-        self._update_lock = asyncio.Lock()
 
     @abstractmethod
     async def _async_update(self) -> None:
@@ -134,9 +132,6 @@ class BasePlatform(Entity):
         self, now: datetime | None = None
     ) -> None:
         """Update the entity state if not already in progress."""
-        if self._update_lock.locked():
-            _LOGGER.debug("Update for entity %s is already in progress", self.name)
-            return
         await self._async_update_write_state()
 
     @callback
