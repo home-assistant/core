@@ -212,6 +212,7 @@ DEVICE_MOCKS = [
     "zndb_4ggkyflayu1h1ho9",  # https://github.com/home-assistant/core/pull/149317
     "zndb_v5jlnn5hwyffkhp3",  #  https://github.com/home-assistant/core/issues/143209
     "zndb_ze8faryrxr0glqnn",  # https://github.com/home-assistant/core/issues/138372
+    "znnbq_6b3pbbuqbfabhfiq",  # https://github.com/orgs/home-assistant/discussions/707
     "znrb_db81ge24jctwx8lo",  #  https://github.com/home-assistant/core/issues/136513
     "zwjcy_myd45weu",  # https://github.com/orgs/home-assistant/discussions/482
 ]
