@@ -18,6 +18,13 @@ type InverterConfigEntry = ConfigEntry[InverterCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
 
+DISPLAY_MODE = {
+    "smg": "Smart-Grid",
+    "bup": "Backup",
+    "ong": "On-grid",
+    "ofg": "Off-grid",
+}
+
 
 @dataclass(frozen=True, kw_only=True)
 class ImeonSelectEntityDescription(SelectEntityDescription):
@@ -60,8 +67,12 @@ class InverterSelect(InverterEntity, SelectEntity):
     def current_option(self) -> str | None:
         """Return the state of the select."""
         value = self.coordinator.data.get(self.data_key)
-        return str(value) if value is not None else None
+        return DISPLAY_MODE.get(str(value), str(value)) if value is not None else None
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        await self.entity_description.set_value_fn(self.coordinator.api, option)
+        reverse_map = {v: k for k, v in DISPLAY_MODE.items()}
+        await self.entity_description.set_value_fn(
+            self.coordinator.api,
+            reverse_map.get(option, option),
+        )
