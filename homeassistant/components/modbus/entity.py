@@ -130,7 +130,7 @@ class BasePlatform(Entity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Remove entity from hass."""
-        _LOGGER.info(f"Removing entity {self._attr_name}")
+        _LOGGER.debug(f"Removing entity {self._attr_name}")
         if self._cancel_call:
             self._cancel_call()
             self._cancel_call = None
@@ -138,7 +138,7 @@ class BasePlatform(Entity):
     @callback
     def async_hold(self) -> None:
         """Remote stop entity."""
-        _LOGGER.info(f"hold entity {self._attr_name}")
+        _LOGGER.debug(f"hold entity {self._attr_name}")
         self._async_cancel_future_pending_update()
         self._attr_available = False
         self.async_write_ha_state()
