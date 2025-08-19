@@ -509,7 +509,7 @@ class ControllerEvents:
             )
         )
 
-        await self.async_check_preprovisioned_device(node)
+        await self.async_check_pre_provisioned_device(node)
 
         if node.is_controller_node:
             # Create a controller status sensor for each device
@@ -637,8 +637,8 @@ class ControllerEvents:
             f"{DOMAIN}.identify_controller.{dev_id[1]}",
         )
 
-    async def async_check_preprovisioned_device(self, node: ZwaveNode) -> None:
-        """Check if the node was preprovisioned and update the device registry."""
+    async def async_check_pre_provisioned_device(self, node: ZwaveNode) -> None:
+        """Check if the node was pre-provisioned and update the device registry."""
         provisioning_entry = (
             await self.driver_events.driver.controller.async_get_provisioning_entry(
                 node.node_id
@@ -648,29 +648,37 @@ class ControllerEvents:
             provisioning_entry
             and provisioning_entry.additional_properties
             and "device_id" in provisioning_entry.additional_properties
-        ):
-            preprovisioned_device = self.dev_reg.async_get(
-                provisioning_entry.additional_properties["device_id"]
+            and (
+                pre_provisioned_device := self.dev_reg.async_get(
+                    provisioning_entry.additional_properties["device_id"]
+                )
             )
+            and (dsk_identifier := (DOMAIN, f"provision_{provisioning_entry.dsk}"))
+            in pre_provisioned_device.identifiers
+        ):
+            driver = self.driver_events.driver
+            device_id = get_device_id(driver, node)
+            device_id_ext = get_device_id_ext(driver, node)
+            new_identifiers = pre_provisioned_device.identifiers.copy()
+            new_identifiers.remove(dsk_identifier)
+            new_identifiers.add(device_id)
+            if device_id_ext:
+                new_identifiers.add(device_id_ext)
 
-            if preprovisioned_device:
-                dsk = provisioning_entry.dsk
-                dsk_identifier = (DOMAIN, f"provision_{dsk}")
-
-                # If the pre-provisioned device has the DSK identifier, remove it
-                if dsk_identifier in preprovisioned_device.identifiers:
-                    driver = self.driver_events.driver
-                    device_id = get_device_id(driver, node)
-                    device_id_ext = get_device_id_ext(driver, node)
-                    new_identifiers = preprovisioned_device.identifiers.copy()
-                    new_identifiers.remove(dsk_identifier)
-                    new_identifiers.add(device_id)
-                    if device_id_ext:
-                        new_identifiers.add(device_id_ext)
-                    self.dev_reg.async_update_device(
-                        preprovisioned_device.id,
-                        new_identifiers=new_identifiers,
-                    )
+            if self.dev_reg.async_get_device(identifiers=new_identifiers):
+                # If a device entry is registered with the node ID based identifiers,
+                # just remove the device entry with the DSK identifier.
+                self.dev_reg.async_update_device(
+                    pre_provisioned_device.id,
+                    remove_config_entry_id=self.config_entry.entry_id,
+                )
+            else:
+                # Add the node ID based identifiers to the device entry
+                # with the DSK identifier and remove the DSK identifier.
+                self.dev_reg.async_update_device(
+                    pre_provisioned_device.id,
+                    new_identifiers=new_identifiers,
+                )
 
     async def async_register_node_in_dev_reg(self, node: ZwaveNode) -> dr.DeviceEntry:
         """Register node in dev reg."""

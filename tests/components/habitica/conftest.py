@@ -10,6 +10,7 @@ from habiticalib import (
     HabiticaContentResponse,
     HabiticaErrorResponse,
     HabiticaGroupMembersResponse,
+    HabiticaGroupsResponse,
     HabiticaLoginResponse,
     HabiticaQuestResponse,
     HabiticaResponse,
@@ -154,6 +155,9 @@ async def mock_habiticalib(hass: HomeAssistant) -> AsyncGenerator[AsyncMock]:
         )
         client.create_task.return_value = HabiticaTaskResponse.from_json(
             await async_load_fixture(hass, "task.json", DOMAIN)
+        )
+        client.get_group.return_value = HabiticaGroupsResponse.from_json(
+            await async_load_fixture(hass, "party.json", DOMAIN)
         )
         yield client
 
