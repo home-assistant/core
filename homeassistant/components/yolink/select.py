@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
@@ -29,6 +29,31 @@ class YoLinkSelectEntityDescription(SelectEntityDescription):
     exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
     should_update_entity: Callable = lambda state: True
     value: Callable = lambda data: data
+    on_option_selected: Callable[[YoLinkCoordinator, str], Awaitable[bool]]
+
+
+async def set_sprinker_mode_fn(coordinator: YoLinkCoordinator, option: str) -> bool:
+    """Set sprinkler mode."""
+    data: dict[str, Any] = await coordinator.call_device(
+        ClientRequest(
+            "setState",
+            {
+                "state": {
+                    "mode": option,
+                }
+            },
+        )
+    )
+    sprinkler_message_resolve(coordinator.device, data, None)
+    coordinator.async_set_updated_data(data)
+    return True
+
+
+def on_sprinkler_option_selected(
+    coordinator: YoLinkCoordinator, option: str
+) -> Awaitable[bool]:
+    """Handle sprinkler mode switching."""
+    return set_sprinker_mode_fn(coordinator, option)
 
 
 SELECTOR_MAPPINGS: tuple[YoLinkSelectEntityDescription, ...] = (
@@ -41,6 +66,7 @@ SELECTOR_MAPPINGS: tuple[YoLinkSelectEntityDescription, ...] = (
         ),  # watering state report will missing state field
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_SPRINKLER,
         should_update_entity=lambda value: value is not None,
+        on_option_selected=on_sprinkler_option_selected,
     ),
 )
 
@@ -95,18 +121,6 @@ class YoLinkSelectEntity(YoLinkEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        device_type = self.coordinator.device.device_type
-        if device_type == ATTR_DEVICE_SPRINKLER:
-            data = await self.call_device(
-                ClientRequest(
-                    "setState",
-                    {
-                        "state": {
-                            "mode": option,
-                        }
-                    },
-                )
-            )
+        if await self.entity_description.on_option_selected(self.coordinator, option):
             self._attr_current_option = option
-            sprinkler_message_resolve(self.coordinator.device, data, None)
-            self.coordinator.async_set_updated_data(data)
+            self.async_write_ha_state()
