@@ -9,8 +9,8 @@
         "title": "Set up Västtrafik API",
         "description": "Enter your Västtrafik API credentials. You can get these from the Västtrafik developer portal.",
         "data": {
-          "key": "API Key",
-          "secret": "API Secret"
+          "key": "[%key:common::config_flow::data::api_key%]",
+          "secret": "API secret"
         },
         "data_description": {
           "key": "Your Västtrafik API key",
