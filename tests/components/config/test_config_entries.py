@@ -3347,6 +3347,82 @@ async def test_list_subentries(
     }
 
 
+async def test_rename_subentry(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that we can rename a subentry."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    entry = MockConfigEntry(
+        domain="test",
+        state=core_ce.ConfigEntryState.LOADED,
+        subentries_data=[
+            core_ce.ConfigSubentryData(
+                data={"test": "test"},
+                subentry_id="mock_id",
+                subentry_type="test",
+                title="Mock title",
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    assert entry.pref_disable_new_entities is False
+    assert entry.pref_disable_polling is False
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/subentries/rename",
+            "entry_id": entry.entry_id,
+            "subentry_id": "mock_id",
+            "new_title": "Updated Title",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] is None
+
+    assert list(entry.subentries.values())[0].title == "Updated Title"
+
+    # Try renaming subentry from an unknown entry
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/subentries/rename",
+            "entry_id": "no_such_entry",
+            "subentry_id": "mock_id",
+            "new_title": "Updated Title",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "not_found",
+        "message": "Config entry not found",
+    }
+
+    # Try renaming subentry from an unknown subentry
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/subentries/rename",
+            "entry_id": entry.entry_id,
+            "subentry_id": "no_such_entry2",
+            "new_title": "Updated Title2",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "not_found",
+        "message": "Config subentry not found",
+    }
+
+
 async def test_delete_subentry(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
