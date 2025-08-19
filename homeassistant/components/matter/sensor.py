@@ -1349,4 +1349,19 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterSensor,
         required_attributes=(clusters.PumpConfigurationAndControl.Attributes.Speed,),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SENSOR,
+        entity_description=MatterSensorEntityDescription(
+            key="ValveConfigurationAndControlAutoCloseTime",
+            translation_key="auto_close_time",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            state_class=None,
+            device_to_ha=(lambda x: dt_util.utc_from_timestamp(x) if x > 0 else None),
+        ),
+        entity_class=MatterSensor,
+        featuremap_contains=clusters.ValveConfigurationAndControl.Bitmaps.Feature.kTimeSync,
+        required_attributes=(
+            clusters.ValveConfigurationAndControl.Attributes.AutoCloseTime,
+        ),
+    ),
 ]

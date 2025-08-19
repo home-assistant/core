@@ -301,6 +301,9 @@
       "activated_carbon_filter_condition": {
         "name": "Activated carbon filter condition"
       },
+      "auto_close_time": {
+        "name": "Auto-close time"
+      },
       "contamination_state": {
         "name": "Contamination state",
         "state": {
