@@ -256,7 +256,7 @@ async def test_light_on_off(hass: HomeAssistant, mock_DayBetter_api: MagicMock) 
             [],
             {"temperature": 4400, "rgb": None},
         ),
-        (ATTR_EFFECT, "sunrise", "set_scene", ["sunrise"], {}),
+        (ATTR_EFFECT, "christmas", "set_scene", ["christmas"], {}),
     ],
 )
 async def test_turn_on_call_order(
@@ -474,7 +474,7 @@ async def test_scene_on(hass: HomeAssistant, mock_DayBetter_api: MagicMock) -> N
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_EFFECT: "sunrise"},
+        {"entity_id": light.entity_id, ATTR_EFFECT: "christmas"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -482,7 +482,7 @@ async def test_scene_on(hass: HomeAssistant, mock_DayBetter_api: MagicMock) -> N
     light = hass.states.get("light.P076")
     assert light is not None
     assert light.state == "on"
-    assert light.attributes[ATTR_EFFECT] == "sunrise"
+    assert light.attributes[ATTR_EFFECT] == "christmas"
     mock_DayBetter_api.turn_on_off.assert_awaited_with(
         mock_DayBetter_api.devices[0], True
     )
@@ -545,7 +545,7 @@ async def test_scene_restore_rgb(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_EFFECT: "sunrise"},
+        {"entity_id": light.entity_id, ATTR_EFFECT: "christmas"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -553,7 +553,7 @@ async def test_scene_restore_rgb(
     light = hass.states.get("light.P076")
     assert light is not None
     assert light.state == "on"
-    assert light.attributes[ATTR_EFFECT] == "sunrise"
+    assert light.attributes[ATTR_EFFECT] == "christmas"
     mock_DayBetter_api.turn_on_off.assert_awaited_with(
         mock_DayBetter_api.devices[0], True
     )
@@ -624,7 +624,7 @@ async def test_scene_restore_temperature(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_EFFECT: "sunrise"},
+        {"entity_id": light.entity_id, ATTR_EFFECT: "christmas"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -632,9 +632,9 @@ async def test_scene_restore_temperature(
     light = hass.states.get("light.P076")
     assert light is not None
     assert light.state == "on"
-    assert light.attributes[ATTR_EFFECT] == "sunrise"
+    assert light.attributes[ATTR_EFFECT] == "christmas"
     mock_DayBetter_api.set_scene.assert_awaited_with(
-        mock_DayBetter_api.devices[0], "sunrise"
+        mock_DayBetter_api.devices[0], "christmas"
     )
 
     # Deactivate scene
