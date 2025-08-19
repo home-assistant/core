@@ -19,7 +19,7 @@
       "cannot_connect": "Failed to connect to the Vitrea device. Please check the host and port.",
       "invalid_host": "Please enter a valid host address.",
       "invalid_port": "Please enter a valid port number.",
-      "unknown": "Unexpected error occurred."
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
