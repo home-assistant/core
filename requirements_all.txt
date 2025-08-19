@@ -548,7 +548,7 @@ asyncinotify==4.2.0
 asyncpysupla==0.0.5
 
 # homeassistant.components.sleepiq
-asyncsleepiq==1.5.3
+asyncsleepiq==1.6.0
 
 # homeassistant.components.aten_pe
 # atenpdu==0.3.2
