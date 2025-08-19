@@ -250,7 +250,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'e44d4e5c-45ea-498f-a653-f5d0c3d97bb8_main_fineDustSensor_fineDustLevel_fineDustLevel',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_all_entities[aq_sensor_3_ikea][sensor.aq_sensor_3_ikea_pm2_5-state]
@@ -259,7 +259,7 @@
       'device_class': 'pm25',
       'friendly_name': 'aq-sensor-3-ikea PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aq_sensor_3_ikea_pm2_5',
