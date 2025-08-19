@@ -33,14 +33,20 @@ from homeassistant.components.sonos.const import (
     SOURCE_TV,
 )
 from homeassistant.components.sonos.media_player import (
+    ATTR_ALARM_ID,
+    ATTR_ENABLED,
+    ATTR_INCLUDE_LINKED_ZONES,
+    ATTR_VOLUME,
     LONG_SERVICE_TIMEOUT,
     SERVICE_GET_QUEUE,
     SERVICE_RESTORE,
     SERVICE_SNAPSHOT,
+    SERVICE_UPDATE_ALARM,
     VOLUME_INCREMENT,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_TIME,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -54,7 +60,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     CONNECTION_UPNP,
@@ -83,11 +89,15 @@ async def test_device_registry(
     assert reg_device.manufacturer == "Sonos"
     assert reg_device.name == "Zone A"
     # Default device provides battery info, area should not be suggested
-    assert reg_device.suggested_area is None
+    assert reg_device.area_id is None
 
 
 async def test_device_registry_not_portable(
-    hass: HomeAssistant, device_registry: DeviceRegistry, async_setup_sonos, soco
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: DeviceRegistry,
+    async_setup_sonos,
+    soco,
 ) -> None:
     """Test non-portable sonos device registered in the device registry to ensure area suggested."""
     soco.get_battery_info.return_value = {}
@@ -97,7 +107,7 @@ async def test_device_registry_not_portable(
         identifiers={("sonos", "RINCON_test")}
     )
     assert reg_device is not None
-    assert reg_device.suggested_area == "Zone A"
+    assert reg_device.area_id == area_registry.async_get_area_by_name("Zone A").id
 
 
 async def test_entity_basic(
@@ -1261,3 +1271,67 @@ async def test_media_source_list(
     """Test the mapping between the speaker model name and source_list."""
     state = hass.states.get("media_player.zone_a")
     assert state.attributes.get(ATTR_INPUT_SOURCE_LIST) == source_list
+
+
+async def test_service_update_alarm(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+) -> None:
+    """Test updating an alarm."""
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_ALARM,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_ALARM_ID: 14,
+            ATTR_TIME: "07:15:00",
+            ATTR_VOLUME: 0.25,
+            ATTR_INCLUDE_LINKED_ZONES: True,
+            ATTR_ENABLED: True,
+        },
+        blocking=True,
+    )
+
+    assert soco.alarmClock.UpdateAlarm.call_count == 1
+    assert soco.alarmClock.UpdateAlarm.call_args.args[0] == [
+        ("ID", "14"),
+        ("StartLocalTime", "07:15:00"),
+        ("Duration", "02:00:00"),
+        ("Recurrence", "DAILY"),
+        ("Enabled", "1"),
+        ("RoomUUID", "RINCON_test"),
+        ("ProgramURI", "x-rincon-buzzer:0"),
+        ("ProgramMetaData", ""),
+        ("PlayMode", "SHUFFLE_NOREPEAT"),
+        ("Volume", 25),
+        ("IncludeLinkedZones", "1"),
+    ]
+
+
+async def test_service_update_alarm_dne(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+) -> None:
+    """Test updating an alarm that does not exist."""
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Alarm 99 does not exist and cannot be updated",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UPDATE_ALARM,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_ALARM_ID: 99,
+                ATTR_TIME: "07:15:00",
+                ATTR_VOLUME: 0.25,
+                ATTR_INCLUDE_LINKED_ZONES: True,
+                ATTR_ENABLED: True,
+            },
+            blocking=True,
+        )
+    assert soco.alarmClock.UpdateAlarm.call_count == 0

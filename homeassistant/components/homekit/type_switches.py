@@ -15,6 +15,11 @@ from pyhap.const import (
 )
 
 from homeassistant.components import button, input_button
+from homeassistant.components.input_number import (
+    ATTR_VALUE as INPUT_NUMBER_ATTR_VALUE,
+    DOMAIN as INPUT_NUMBER_DOMAIN,
+    SERVICE_SET_VALUE as INPUT_NUMBER_SERVICE_SET_VALUE,
+)
 from homeassistant.components.input_select import ATTR_OPTIONS, SERVICE_SELECT_OPTION
 from homeassistant.components.lawn_mower import (
     DOMAIN as LAWN_MOWER_DOMAIN,
@@ -45,6 +50,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.helpers.event import async_call_later
+from homeassistant.util import dt as dt_util
 
 from .accessories import TYPES, HomeAccessory, HomeDriver
 from .const import (
@@ -54,7 +60,11 @@ from .const import (
     CHAR_NAME,
     CHAR_ON,
     CHAR_OUTLET_IN_USE,
+    CHAR_REMAINING_DURATION,
+    CHAR_SET_DURATION,
     CHAR_VALVE_TYPE,
+    CONF_LINKED_VALVE_DURATION,
+    CONF_LINKED_VALVE_END_TIME,
     SERV_OUTLET,
     SERV_SWITCH,
     SERV_VALVE,
@@ -271,7 +281,21 @@ class ValveBase(HomeAccessory):
         self.on_service = on_service
         self.off_service = off_service
 
-        serv_valve = self.add_preload_service(SERV_VALVE)
+        self.chars = []
+
+        self.linked_duration_entity: str | None = self.config.get(
+            CONF_LINKED_VALVE_DURATION
+        )
+        self.linked_end_time_entity: str | None = self.config.get(
+            CONF_LINKED_VALVE_END_TIME
+        )
+
+        if self.linked_duration_entity:
+            self.chars.append(CHAR_SET_DURATION)
+        if self.linked_end_time_entity:
+            self.chars.append(CHAR_REMAINING_DURATION)
+
+        serv_valve = self.add_preload_service(SERV_VALVE, self.chars)
         self.char_active = serv_valve.configure_char(
             CHAR_ACTIVE, value=False, setter_callback=self.set_state
         )
@@ -279,6 +303,25 @@ class ValveBase(HomeAccessory):
         self.char_valve_type = serv_valve.configure_char(
             CHAR_VALVE_TYPE, value=VALVE_TYPE[valve_type].valve_type
         )
+
+        if CHAR_SET_DURATION in self.chars:
+            _LOGGER.debug(
+                "%s: Add characteristic %s", self.entity_id, CHAR_SET_DURATION
+            )
+            self.char_set_duration = serv_valve.configure_char(
+                CHAR_SET_DURATION,
+                value=self.get_duration(),
+                setter_callback=self.set_duration,
+            )
+
+        if CHAR_REMAINING_DURATION in self.chars:
+            _LOGGER.debug(
+                "%s: Add characteristic %s", self.entity_id, CHAR_REMAINING_DURATION
+            )
+            self.char_remaining_duration = serv_valve.configure_char(
+                CHAR_REMAINING_DURATION, getter_callback=self.get_remaining_duration
+            )
+
         # Set the state so it is in sync on initial
         # GET to avoid an event storm after homekit startup
         self.async_update_state(state)
@@ -294,11 +337,74 @@ class ValveBase(HomeAccessory):
     @callback
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
+        self._update_duration_chars()
         current_state = 1 if new_state.state in self.open_states else 0
         _LOGGER.debug("%s: Set active state to %s", self.entity_id, current_state)
         self.char_active.set_value(current_state)
         _LOGGER.debug("%s: Set in_use state to %s", self.entity_id, current_state)
         self.char_in_use.set_value(current_state)
+
+    def _update_duration_chars(self) -> None:
+        """Update valve duration related properties if characteristics are available."""
+        if CHAR_SET_DURATION in self.chars:
+            self.char_set_duration.set_value(self.get_duration())
+        if CHAR_REMAINING_DURATION in self.chars:
+            self.char_remaining_duration.set_value(self.get_remaining_duration())
+
+    def set_duration(self, value: int) -> None:
+        """Set default duration for how long the valve should remain open."""
+        _LOGGER.debug("%s: Set default run time to %s", self.entity_id, value)
+        self.async_call_service(
+            INPUT_NUMBER_DOMAIN,
+            INPUT_NUMBER_SERVICE_SET_VALUE,
+            {
+                ATTR_ENTITY_ID: self.linked_duration_entity,
+                INPUT_NUMBER_ATTR_VALUE: value,
+            },
+            value,
+        )
+
+    def get_duration(self) -> int:
+        """Get the default duration from Home Assistant."""
+        duration_state = self._get_entity_state(self.linked_duration_entity)
+        if duration_state is None:
+            _LOGGER.debug(
+                "%s: No linked duration entity state available", self.entity_id
+            )
+            return 0
+
+        try:
+            duration = float(duration_state)
+            return max(int(duration), 0)
+        except ValueError:
+            _LOGGER.debug("%s: Cannot parse linked duration entity", self.entity_id)
+            return 0
+
+    def get_remaining_duration(self) -> int:
+        """Calculate the remaining duration based on end time in Home Assistant."""
+        end_time_state = self._get_entity_state(self.linked_end_time_entity)
+        if end_time_state is None:
+            _LOGGER.debug(
+                "%s: No linked end time entity state available", self.entity_id
+            )
+            return self.get_duration()
+
+        end_time = dt_util.parse_datetime(end_time_state)
+        if end_time is None:
+            _LOGGER.debug("%s: Cannot parse linked end time entity", self.entity_id)
+            return self.get_duration()
+
+        remaining_time = (end_time - dt_util.utcnow()).total_seconds()
+        return max(int(remaining_time), 0)
+
+    def _get_entity_state(self, entity_id: str | None) -> str | None:
+        """Fetch the state of a linked entity."""
+        if entity_id is None:
+            return None
+        state = self.hass.states.get(entity_id)
+        if state is None:
+            return None
+        return state.state
 
 
 @TYPES.register("ValveSwitch")

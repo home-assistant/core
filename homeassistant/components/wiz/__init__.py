@@ -37,6 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.FAN,
     Platform.LIGHT,
     Platform.NUMBER,
     Platform.SENSOR,
@@ -63,12 +64,12 @@ async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     return True
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_listener(hass: HomeAssistant, entry: WizConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: WizConfigEntry) -> bool:
     """Set up the wiz integration from a config entry."""
     ip_address = entry.data[CONF_HOST]
     _LOGGER.debug("Get bulb with IP: %s", ip_address)
@@ -145,7 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: WizConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         await entry.runtime_data.bulb.async_close()

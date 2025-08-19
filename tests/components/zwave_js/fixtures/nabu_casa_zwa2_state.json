@@ -1,0 +1,146 @@
+{
+  "nodeId": 1,
+  "index": 0,
+  "status": 4,
+  "ready": true,
+  "isListening": true,
+  "isRouting": true,
+  "manufacturerId": 1126,
+  "productId": 1,
+  "productType": 1,
+  "firmwareVersion": "1.0",
+  "deviceConfig": {
+    "filename": "/home/dominic/Repositories/zwavejs2mqtt/store/.config-db/devices/0x0466/zwa-2.json",
+    "isEmbedded": true,
+    "manufacturer": "Nabu Casa",
+    "manufacturerId": 1126,
+    "label": "NC-ZWA-9734",
+    "description": "Home Assistant Connect ZWA-2",
+    "devices": [
+      {
+        "productType": 1,
+        "productId": 1
+      }
+    ],
+    "firmwareVersion": {
+      "min": "0.0",
+      "max": "255.255"
+    },
+    "preferred": false
+  },
+  "label": "NC-ZWA-9734",
+  "interviewAttempts": 0,
+  "isFrequentListening": false,
+  "maxDataRate": 100000,
+  "supportedDataRates": [40000, 100000],
+  "protocolVersion": 3,
+  "supportsBeaming": true,
+  "supportsSecurity": false,
+  "deviceClass": {
+    "basic": {
+      "key": 2,
+      "label": "Static Controller"
+    },
+    "generic": {
+      "key": 2,
+      "label": "Static Controller"
+    },
+    "specific": {
+      "key": 1,
+      "label": "PC Controller"
+    }
+  },
+  "interviewStage": "Complete",
+  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0466:0x0001:0x0001:1.0",
+  "statistics": {
+    "commandsTX": 0,
+    "commandsRX": 0,
+    "commandsDroppedRX": 0,
+    "commandsDroppedTX": 0,
+    "timeoutResponse": 0
+  },
+  "isControllerNode": true,
+  "keepAwake": false,
+  "protocol": 0,
+  "sdkVersion": "7.23.1",
+  "values": [
+    {
+      "commandClass": 37,
+      "commandClassName": "Binary Switch",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "stateful": true,
+        "secret": false
+      },
+      "value": true
+    },
+    {
+      "commandClass": 37,
+      "commandClassName": "Binary Switch",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "valueChangeOptions": ["transitionDuration"],
+        "stateful": true,
+        "secret": false
+      },
+      "value": true
+    },
+    {
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 0,
+      "propertyName": "enableTiltIndicator",
+      "ccVersion": 0,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Enable Tilt Indicator",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disable",
+          "1": "Enable"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false
+      },
+      "value": 1
+    }
+  ],
+  "endpoints": [
+    {
+      "nodeId": 1,
+      "index": 0,
+      "deviceClass": {
+        "basic": {
+          "key": 2,
+          "label": "Static Controller"
+        },
+        "generic": {
+          "key": 2,
+          "label": "Static Controller"
+        },
+        "specific": {
+          "key": 1,
+          "label": "PC Controller"
+        }
+      },
+      "commandClasses": []
+    }
+  ]
+}

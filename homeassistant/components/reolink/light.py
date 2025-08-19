@@ -57,7 +57,7 @@ LIGHT_ENTITIES = (
     ReolinkLightEntityDescription(
         key="floodlight",
         cmd_key="GetWhiteLed",
-        cmd_id=291,
+        cmd_id=[291, 289, 438],
         translation_key="floodlight",
         supported=lambda api, ch: api.supported(ch, "floodLight"),
         is_on_fn=lambda api, ch: api.whiteled_state(ch),

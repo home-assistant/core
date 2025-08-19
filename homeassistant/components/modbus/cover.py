@@ -123,8 +123,6 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
 
     async def _async_update(self) -> None:
         """Update the state of the cover."""
-        # remark "now" is a dummy parameter to avoid problems with
-        # async_track_time_interval
         result = await self._hub.async_pb_call(
             self._slave, self._address, 1, self._input_type
         )

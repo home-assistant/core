@@ -56,11 +56,14 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
                 CoffeeBoiler, config[WidgetType.CM_COFFEE_BOILER]
             ).ready_start_time
         ),
-        entity_category=EntityCategory.DIAGNOSTIC,
         available_fn=(
-            lambda coordinator: WidgetType.CM_COFFEE_BOILER
-            in coordinator.device.dashboard.config
+            lambda coordinator: cast(
+                CoffeeBoiler,
+                coordinator.device.dashboard.config[WidgetType.CM_COFFEE_BOILER],
+            ).ready_start_time
+            is not None
         ),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     LaMarzoccoSensorEntityDescription(
         key="steam_boiler_ready_time",
@@ -71,11 +74,18 @@ ENTITIES: tuple[LaMarzoccoSensorEntityDescription, ...] = (
                 SteamBoilerLevel, config[WidgetType.CM_STEAM_BOILER_LEVEL]
             ).ready_start_time
         ),
-        entity_category=EntityCategory.DIAGNOSTIC,
         supported_fn=(
             lambda coordinator: coordinator.device.dashboard.model_name
             in (ModelName.LINEA_MICRA, ModelName.LINEA_MINI_R)
         ),
+        available_fn=(
+            lambda coordinator: cast(
+                SteamBoilerLevel,
+                coordinator.device.dashboard.config[WidgetType.CM_STEAM_BOILER_LEVEL],
+            ).ready_start_time
+            is not None
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     LaMarzoccoSensorEntityDescription(
         key="brewing_start_time",
@@ -187,6 +197,8 @@ class LaMarzoccoSensorEntity(LaMarzoccoEntity, SensorEntity):
 
 class LaMarzoccoStatisticSensorEntity(LaMarzoccoSensorEntity):
     """Sensor for La Marzocco statistics."""
+
+    _unavailable_when_machine_off = False
 
     @property
     def native_value(self) -> StateType | datetime | None:

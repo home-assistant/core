@@ -1,6 +1,12 @@
 {
   "entity": {
     "sensor": {
+      "hydrological_alert": {
+        "default": "mdi:alert-octagon-outline"
+      },
+      "water_flow": {
+        "default": "mdi:waves-arrow-right"
+      },
       "water_level": {
         "default": "mdi:waves"
       },

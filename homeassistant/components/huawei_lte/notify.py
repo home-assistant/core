@@ -3,18 +3,17 @@
 from __future__ import annotations
 
 import logging
-import time
 from typing import Any
 
 from huawei_lte_api.exceptions import ResponseErrorException
 
 from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
-from homeassistant.const import CONF_RECIPIENT
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_RECIPIENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import Router
-from .const import ATTR_CONFIG_ENTRY_ID, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,5 +61,3 @@ class HuaweiLteSmsNotificationService(BaseNotificationService):
             _LOGGER.debug("Sent to %s: %s", targets, resp)
         except ResponseErrorException as ex:
             _LOGGER.error("Could not send to %s: %s", targets, ex)
-        finally:
-            self.router.notify_last_attempt = time.monotonic()

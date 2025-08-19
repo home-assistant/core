@@ -144,7 +144,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'test-serial-number_PM10',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[entry_pm2_5]
@@ -181,7 +181,7 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'test-serial-number_PM25',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensors[entry_temperature]
@@ -314,7 +314,7 @@
       'device_class': 'pm10',
       'friendly_name': 'Test Sensor PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_sensor_pm10',
@@ -330,7 +330,7 @@
       'device_class': 'pm25',
       'friendly_name': 'Test Sensor PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_sensor_pm2_5',

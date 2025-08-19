@@ -1,7 +1,7 @@
 {
   "domain": "telegram_bot",
   "name": "Telegram bot",
-  "codeowners": [],
+  "codeowners": ["@hanwg"],
   "config_flow": true,
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/telegram_bot",

@@ -1,0 +1,269 @@
+# serializer version: 1
+# name: test_platform_setup_and_discovery[camera.burocam-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.burocam',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CameraEntityFeature: 2>,
+    'translation_key': None,
+    'unique_id': 'tuya.svjjuwykgijjedurps',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[camera.burocam-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1',
+      'brand': 'Tuya',
+      'entity_picture': '/api/camera_proxy/camera.burocam?token=1',
+      'friendly_name': 'Bürocam',
+      'model_name': 'LSC PTZ Camera',
+      'motion_detection': True,
+      'supported_features': <CameraEntityFeature: 2>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.burocam',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'recording',
+  })
+# ---
+# name: test_platform_setup_and_discovery[camera.c9-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.c9',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CameraEntityFeature: 2>,
+    'translation_key': None,
+    'unique_id': 'tuya.fjdyw5ld2f5f5ddsps',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[camera.c9-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1',
+      'brand': 'Tuya',
+      'entity_picture': '/api/camera_proxy/camera.c9?token=1',
+      'friendly_name': 'C9',
+      'model_name': 'Security Camera',
+      'motion_detection': True,
+      'supported_features': <CameraEntityFeature: 2>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.c9',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'recording',
+  })
+# ---
+# name: test_platform_setup_and_discovery[camera.cam_garage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.cam_garage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CameraEntityFeature: 2>,
+    'translation_key': None,
+    'unique_id': 'tuya.mgcpxpmovasazerdps',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[camera.cam_garage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1',
+      'brand': 'Tuya',
+      'entity_picture': '/api/camera_proxy/camera.cam_garage?token=1',
+      'friendly_name': 'CAM GARAGE',
+      'model_name': 'Indoor camera ',
+      'motion_detection': True,
+      'supported_features': <CameraEntityFeature: 2>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.cam_garage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_platform_setup_and_discovery[camera.cam_porch-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.cam_porch',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CameraEntityFeature: 2>,
+    'translation_key': None,
+    'unique_id': 'tuya.uBLyTOvlhoRWXKjrps',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[camera.cam_porch-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1',
+      'brand': 'Tuya',
+      'entity_picture': '/api/camera_proxy/camera.cam_porch?token=1',
+      'friendly_name': 'CAM PORCH',
+      'model_name': 'Indoor cam Pan/Tilt ',
+      'supported_features': <CameraEntityFeature: 2>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.cam_porch',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_platform_setup_and_discovery[camera.garage_camera-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.garage_camera',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CameraEntityFeature: 2>,
+    'translation_key': None,
+    'unique_id': 'tuya.53fnjncm3jywuaznps',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[camera.garage_camera-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1',
+      'brand': 'Tuya',
+      'entity_picture': '/api/camera_proxy/camera.garage_camera?token=1',
+      'friendly_name': 'Garage Camera',
+      'model_name': 'Smart Camera ',
+      'supported_features': <CameraEntityFeature: 2>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.garage_camera',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'recording',
+  })
+# ---

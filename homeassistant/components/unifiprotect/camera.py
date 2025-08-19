@@ -247,7 +247,7 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         if self.channel.is_package:
             last_image = await self.device.get_package_snapshot(width, height)
         else:
-            last_image = await self.device.get_snapshot(width, height)
+            last_image = await self.device.get_public_api_snapshot()
         self._last_image = last_image
         return self._last_image
 

@@ -6,7 +6,7 @@
           "mjpeg_url": "MJPEG URL",
           "name": "[%key:common::config_flow::data::name%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "still_image_url": "Still Image URL",
+          "still_image_url": "Still image URL",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         }

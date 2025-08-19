@@ -79,6 +79,7 @@ class PingDataICMPLib(PingData):
             "min": data.min_rtt,
             "max": data.max_rtt,
             "avg": data.avg_rtt,
+            "jitter": data.jitter,
         }
 
 

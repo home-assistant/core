@@ -291,7 +291,7 @@ class NitrogenDioxideSensor(AirQualitySensor):
 class VolatileOrganicCompoundsSensor(AirQualitySensor):
     """Generate a VolatileOrganicCompoundsSensor accessory as VOCs sensor.
 
-    Sensor entity must return VOC in µg/m3.
+    Sensor entity must return VOC in μg/m3.
     """
 
     def create_services(self) -> None:

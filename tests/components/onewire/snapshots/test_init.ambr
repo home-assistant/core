@@ -17,7 +17,6 @@
         '05.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -27,7 +26,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
-    'suggested_area': None,
     'sw_version': '3.2',
     'via_device_id': None,
   })
@@ -50,7 +48,6 @@
         '10.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -60,7 +57,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
-    'suggested_area': None,
     'sw_version': '3.2',
     'via_device_id': None,
   })
@@ -83,7 +79,6 @@
         '12.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -93,7 +88,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
-    'suggested_area': None,
     'sw_version': '3.2',
     'via_device_id': None,
   })
@@ -116,7 +110,6 @@
         '1D.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -126,7 +119,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
-    'suggested_area': None,
     'sw_version': '3.2',
     'via_device_id': <ANY>,
   })
@@ -149,7 +141,6 @@
         '1F.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -159,7 +150,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
-    'suggested_area': None,
     'sw_version': '3.2',
     'via_device_id': None,
   })
@@ -182,7 +172,6 @@
         '20.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -192,7 +181,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
-    'suggested_area': None,
     'sw_version': '3.2',
     'via_device_id': None,
   })
@@ -215,7 +203,6 @@
         '22.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -225,7 +212,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
-    'suggested_area': None,
     'sw_version': '3.2',
     'via_device_id': None,
   })
@@ -248,7 +234,6 @@
         '26.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -258,7 +243,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
-    'suggested_area': None,
     'sw_version': '3.2',
     'via_device_id': None,
   })
@@ -281,7 +265,6 @@
         '28.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -291,7 +274,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
-    'suggested_area': None,
     'sw_version': '3.2',
     'via_device_id': None,
   })
@@ -314,7 +296,6 @@
         '28.222222222222',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -324,7 +305,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '222222222222',
-    'suggested_area': None,
     'sw_version': '3.2',
     'via_device_id': None,
   })
@@ -347,7 +327,6 @@
         '28.222222222223',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -357,7 +336,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '222222222223',
-    'suggested_area': None,
     'sw_version': '3.2',
     'via_device_id': None,
   })
@@ -380,7 +358,6 @@
         '29.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -390,7 +367,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
-    'suggested_area': None,
     'sw_version': '3.2',
     'via_device_id': None,
   })
@@ -413,7 +389,6 @@
         '30.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -423,7 +398,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
-    'suggested_area': None,
     'sw_version': '3.2',
     'via_device_id': None,
   })
@@ -446,7 +420,6 @@
         '3A.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -456,7 +429,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
-    'suggested_area': None,
     'sw_version': '3.2',
     'via_device_id': None,
   })
@@ -479,7 +451,6 @@
         '3B.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -489,7 +460,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
-    'suggested_area': None,
     'sw_version': '3.2',
     'via_device_id': None,
   })
@@ -512,7 +482,6 @@
         '42.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -522,7 +491,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
-    'suggested_area': None,
     'sw_version': '3.2',
     'via_device_id': None,
   })
@@ -545,7 +513,6 @@
         '7E.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Embedded Data Systems',
@@ -555,7 +522,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
-    'suggested_area': None,
     'sw_version': '3.2',
     'via_device_id': None,
   })
@@ -578,7 +544,6 @@
         '7E.222222222222',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Embedded Data Systems',
@@ -588,7 +553,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '222222222222',
-    'suggested_area': None,
     'sw_version': '3.2',
     'via_device_id': None,
   })
@@ -611,7 +575,6 @@
         'A6.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Maxim Integrated',
@@ -621,7 +584,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
-    'suggested_area': None,
     'sw_version': '3.2',
     'via_device_id': None,
   })
@@ -644,7 +606,6 @@
         'EF.111111111111',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Hobby Boards',
@@ -654,7 +615,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '111111111111',
-    'suggested_area': None,
     'sw_version': '3.2',
     'via_device_id': None,
   })
@@ -677,7 +637,6 @@
         'EF.111111111112',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Hobby Boards',
@@ -687,7 +646,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '111111111112',
-    'suggested_area': None,
     'sw_version': '3.2',
     'via_device_id': None,
   })
@@ -710,7 +668,6 @@
         'EF.111111111113',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Hobby Boards',
@@ -720,7 +677,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '111111111113',
-    'suggested_area': None,
     'sw_version': '3.2',
     'via_device_id': None,
   })

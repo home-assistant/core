@@ -93,6 +93,7 @@ class EmonitorPowerSensor(CoordinatorEntity[EmonitorStatus], SensorEntity):
             manufacturer="Powerhouse Dynamics, Inc.",
             name=device_name,
             sw_version=emonitor_status.hardware.firmware_version,
+            serial_number=emonitor_status.hardware.serial_number,
         )
         self._attr_extra_state_attributes = {"channel": channel_number}
         self._attr_native_value = self._paired_attr(self.entity_description.key)

@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
@@ -32,6 +31,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import DOMAIN
+from .coordinator import LaCrosseConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -159,17 +159,14 @@ UNIT_OF_MEASUREMENT_MAP = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: LaCrosseConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LaCrosse View from a config entry."""
-    coordinator: DataUpdateCoordinator[list[Sensor]] = hass.data[DOMAIN][
-        entry.entry_id
-    ]["coordinator"]
-    sensors: list[Sensor] = coordinator.data
+    coordinator = entry.runtime_data
 
     sensor_list = []
-    for i, sensor in enumerate(sensors):
+    for i, sensor in enumerate(coordinator.data):
         for field in sensor.sensor_field_names:
             description = SENSOR_DESCRIPTIONS.get(field)
             if description is None:

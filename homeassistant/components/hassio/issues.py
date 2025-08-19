@@ -61,18 +61,19 @@ PLACEHOLDER_KEY_REASON = "reason"
 
 UNSUPPORTED_REASONS = {
     "apparmor",
+    "cgroup_version",
     "connectivity_check",
     "content_trust",
     "dbus",
     "dns_server",
     "docker_configuration",
     "docker_version",
-    "cgroup_version",
     "job_conditions",
     "lxc",
     "network_manager",
     "os",
     "os_agent",
+    "os_version",
     "restart_policy",
     "software",
     "source_mods",
@@ -80,15 +81,18 @@ UNSUPPORTED_REASONS = {
     "systemd",
     "systemd_journal",
     "systemd_resolved",
+    "virtualization_image",
 }
 # Some unsupported reasons also mark the system as unhealthy. If the unsupported reason
 # provides no additional information beyond the unhealthy one then skip that repair.
 UNSUPPORTED_SKIP_REPAIR = {"privileged"}
 UNHEALTHY_REASONS = {
     "docker",
-    "supervisor",
-    "setup",
+    "duplicate_os_installation",
+    "oserror_bad_message",
     "privileged",
+    "setup",
+    "supervisor",
     "untrusted",
 }
 
@@ -101,6 +105,7 @@ ISSUE_KEYS_FOR_REPAIRS = {
     ISSUE_KEY_SYSTEM_DOCKER_CONFIG,
     ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING,
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED,
+    "issue_system_disk_lifetime",
 }
 
 _LOGGER = logging.getLogger(__name__)

@@ -6,12 +6,15 @@ from collections.abc import Awaitable, Callable
 from datetime import timedelta
 import logging
 import time
+from typing import TYPE_CHECKING
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import NEVER_TIME, POLLING_FALLBACK_SECONDS
+
+if TYPE_CHECKING:
+    from .models import LookinConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,12 +47,12 @@ class LookinPushCoordinator:
 class LookinDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """DataUpdateCoordinator to gather data for a specific lookin devices."""
 
-    config_entry: ConfigEntry
+    config_entry: LookinConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: LookinConfigEntry,
         push_coordinator: LookinPushCoordinator,
         name: str,
         update_interval: timedelta | None = None,

@@ -11,6 +11,7 @@ from homeassistant.const import CONF_CONDITION, SUN_EVENT_SUNRISE, SUN_EVENT_SUN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.condition import (
+    Condition,
     ConditionCheckerType,
     condition_trace_set_result,
     condition_trace_update_result,
@@ -35,13 +36,6 @@ _CONDITION_SCHEMA = vol.All(
     ),
     cv.has_at_least_one_key("before", "after"),
 )
-
-
-async def async_validate_condition_config(
-    hass: HomeAssistant, config: ConfigType
-) -> ConfigType:
-    """Validate config."""
-    return _CONDITION_SCHEMA(config)  # type: ignore[no-any-return]
 
 
 def sun(
@@ -128,16 +122,41 @@ def sun(
     return True
 
 
-def async_condition_from_config(config: ConfigType) -> ConditionCheckerType:
-    """Wrap action method with sun based condition."""
-    before = config.get("before")
-    after = config.get("after")
-    before_offset = config.get("before_offset")
-    after_offset = config.get("after_offset")
+class SunCondition(Condition):
+    """Sun condition."""
 
-    @trace_condition_function
-    def sun_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
-        """Validate time based if-condition."""
-        return sun(hass, before, after, before_offset, after_offset)
+    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+        """Initialize condition."""
+        self._config = config
+        self._hass = hass
 
-    return sun_if
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return _CONDITION_SCHEMA(config)  # type: ignore[no-any-return]
+
+    async def async_get_checker(self) -> ConditionCheckerType:
+        """Wrap action method with sun based condition."""
+        before = self._config.get("before")
+        after = self._config.get("after")
+        before_offset = self._config.get("before_offset")
+        after_offset = self._config.get("after_offset")
+
+        @trace_condition_function
+        def sun_if(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+            """Validate time based if-condition."""
+            return sun(hass, before, after, before_offset, after_offset)
+
+        return sun_if
+
+
+CONDITIONS: dict[str, type[Condition]] = {
+    "_": SunCondition,
+}
+
+
+async def async_get_conditions(hass: HomeAssistant) -> dict[str, type[Condition]]:
+    """Return the sun conditions."""
+    return CONDITIONS

@@ -13,7 +13,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.mqtt import ReceiveMessage, client as mqtt
+from homeassistant.components.mqtt import client as mqtt
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import QbusConfigEntry
-from .entity import QbusEntity, add_new_outputs
+from .entity import QbusEntity, create_new_entities
 
 PARALLEL_UPDATES = 0
 
@@ -42,13 +42,13 @@ async def async_setup_entry(
     added_outputs: list[QbusMqttOutput] = []
 
     def _check_outputs() -> None:
-        add_new_outputs(
+        entities = create_new_entities(
             coordinator,
             added_outputs,
             lambda output: output.type == "thermo",
             QbusClimate,
-            async_add_entities,
         )
+        async_add_entities(entities)
 
     _check_outputs()
     entry.async_on_unload(coordinator.async_add_listener(_check_outputs))
@@ -56,6 +56,8 @@ async def async_setup_entry(
 
 class QbusClimate(QbusEntity, ClimateEntity):
     """Representation of a Qbus climate entity."""
+
+    _state_cls = QbusMqttThermoState
 
     _attr_name = None
     _attr_hvac_modes = [HVACMode.HEAT]
@@ -128,14 +130,7 @@ class QbusClimate(QbusEntity, ClimateEntity):
 
             await self._async_publish_output_state(state)
 
-    async def _state_received(self, msg: ReceiveMessage) -> None:
-        state = self._message_factory.parse_output_state(
-            QbusMqttThermoState, msg.payload
-        )
-
-        if state is None:
-            return
-
+    async def _handle_state_received(self, state: QbusMqttThermoState) -> None:
         if preset_mode := state.read_regime():
             self._attr_preset_mode = preset_mode
 
@@ -154,8 +149,6 @@ class QbusClimate(QbusEntity, ClimateEntity):
         if state.type == StateType.EVENT:
             assert self._request_state_debouncer is not None
             await self._request_state_debouncer.async_call()
-
-        self.async_schedule_update_ha_state()
 
     def _set_hvac_action(self) -> None:
         if self.target_temperature is None or self.current_temperature is None:

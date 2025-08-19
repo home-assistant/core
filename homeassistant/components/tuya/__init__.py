@@ -94,7 +94,7 @@ class SharingMQCompat(SharingMQ):
         """Start the MQTT client."""
         # We don't import on the top because some integrations
         # should be able to optionally rely on MQTT.
-        import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
+        import paho.mqtt.client as mqtt  # noqa: PLC0415
 
         mqttc = mqtt.Client(client_id=mq_config.client_id)
         mqttc.username_pw_set(mq_config.username, mq_config.password)
@@ -153,11 +153,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
     # Register known device IDs
     device_registry = dr.async_get(hass)
     for device in manager.device_map.values():
+        LOGGER.debug(
+            "Register device %s: %s (function: %s, status range: %s)",
+            device.id,
+            device.status,
+            device.function,
+            device.status_range,
+        )
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, device.id)},
             manufacturer="Tuya",
             name=device.name,
+            # Note: the model is overridden via entity.device_info property
+            # when the entity is created. If no entities are generated, it will
+            # stay as unsupported
             model=f"{device.product_name} (unsupported)",
             model_id=device.product_id,
         )
@@ -236,6 +246,14 @@ class DeviceListener(SharingDeviceListener):
         """Add device added listener."""
         # Ensure the device isn't present stale
         self.hass.add_job(self.async_remove_device, device.id)
+
+        LOGGER.debug(
+            "Add device %s: %s (function: %s, status range: %s)",
+            device.id,
+            device.status,
+            device.function,
+            device.status_range,
+        )
 
         dispatcher_send(self.hass, TUYA_DISCOVERY_NEW, [device.id])
 

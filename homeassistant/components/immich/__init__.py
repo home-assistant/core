@@ -16,11 +16,23 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
+from .const import DOMAIN
 from .coordinator import ImmichConfigEntry, ImmichDataUpdateCoordinator
+from .services import async_setup_services
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.UPDATE]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up immich integration."""
+    await async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ImmichConfigEntry) -> bool:
@@ -33,6 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ImmichConfigEntry) -> bo
         entry.data[CONF_HOST],
         entry.data[CONF_PORT],
         entry.data[CONF_SSL],
+        "home-assistant",
     )
 
     try:

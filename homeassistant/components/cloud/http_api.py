@@ -71,7 +71,7 @@ _CLOUD_ERRORS: dict[
 ] = {
     TimeoutError: (
         HTTPStatus.BAD_GATEWAY,
-        "Unable to reach the Home Assistant cloud.",
+        "Unable to reach the Home Assistant Cloud.",
     ),
     aiohttp.ClientError: (
         HTTPStatus.INTERNAL_SERVER_ERROR,

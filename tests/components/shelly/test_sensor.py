@@ -23,6 +23,7 @@ from homeassistant.components.shelly.const import DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     STATE_UNAVAILABLE,
@@ -40,6 +41,7 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
 
 from . import (
+    MOCK_MAC,
     init_integration,
     mock_polling_rpc_update,
     mock_rest_update,
@@ -1585,3 +1587,45 @@ async def test_rpc_switch_no_returned_energy_sensor(
     await init_integration(hass, 3)
 
     assert hass.states.get("sensor.test_name_test_switch_0_returned_energy") is None
+
+
+async def test_block_friendly_name_sleeping_sensor(
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    device_registry: DeviceRegistry,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test friendly name for restored sleeping sensor."""
+    entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
+    device = register_device(device_registry, entry)
+
+    entity = entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"{MOCK_MAC}-sensor_0-temp",
+        suggested_object_id="test_name_temperature",
+        original_name="Test name temperature",
+        disabled_by=None,
+        config_entry=entry,
+        device_id=device.id,
+    )
+
+    # Old name, the word "temperature" starts with a lower case letter
+    assert entity.original_name == "Test name temperature"
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity.entity_id))
+
+    # New name, the word "temperature" starts with a capital letter
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test name Temperature"
+
+    # Make device online
+    monkeypatch.setattr(mock_block_device, "initialized", True)
+    mock_block_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity.entity_id))
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test name Temperature"

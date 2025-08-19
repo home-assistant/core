@@ -27,13 +27,14 @@ from homeassistant.const import (
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
     CONF_SENSORS,
+    CONF_UNIQUE_ID,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.device import async_device_info_to_link_from_entity
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device import async_entity_id_to_device
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -89,6 +90,7 @@ SENSOR_SCHEMA = vol.All(
             vol.Optional(CONF_MIN_GRADIENT, default=0.0): vol.Coerce(float),
             vol.Optional(CONF_SAMPLE_DURATION, default=0): cv.positive_int,
             vol.Optional(CONF_MIN_SAMPLES, default=2): cv.positive_int,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
         }
     ),
     _validate_min_max,
@@ -112,6 +114,7 @@ async def async_setup_platform(
     for sensor_name, sensor_config in config[CONF_SENSORS].items():
         entities.append(
             SensorTrend(
+                hass,
                 name=sensor_config.get(CONF_FRIENDLY_NAME, sensor_name),
                 entity_id=sensor_config[CONF_ENTITY_ID],
                 attribute=sensor_config.get(CONF_ATTRIBUTE),
@@ -121,6 +124,7 @@ async def async_setup_platform(
                 min_samples=sensor_config[CONF_MIN_SAMPLES],
                 max_samples=sensor_config[CONF_MAX_SAMPLES],
                 device_class=sensor_config.get(CONF_DEVICE_CLASS),
+                unique_id=sensor_config.get(CONF_UNIQUE_ID),
                 sensor_entity_id=generate_entity_id(
                     ENTITY_ID_FORMAT, sensor_name, hass=hass
                 ),
@@ -137,14 +141,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up trend sensor from config entry."""
 
-    device_info = async_device_info_to_link_from_entity(
-        hass,
-        entry.options[CONF_ENTITY_ID],
-    )
-
     async_add_entities(
         [
             SensorTrend(
+                hass,
                 name=entry.title,
                 entity_id=entry.options[CONF_ENTITY_ID],
                 attribute=entry.options.get(CONF_ATTRIBUTE),
@@ -156,7 +156,6 @@ async def async_setup_entry(
                 min_samples=entry.options.get(CONF_MIN_SAMPLES, DEFAULT_MIN_SAMPLES),
                 max_samples=entry.options.get(CONF_MAX_SAMPLES, DEFAULT_MAX_SAMPLES),
                 unique_id=entry.entry_id,
-                device_info=device_info,
             )
         ]
     )
@@ -171,6 +170,8 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
+        *,
         name: str,
         entity_id: str,
         attribute: str | None,
@@ -182,7 +183,6 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
         unique_id: str | None = None,
         device_class: BinarySensorDeviceClass | None = None,
         sensor_entity_id: str | None = None,
-        device_info: dr.DeviceInfo | None = None,
     ) -> None:
         """Initialize the sensor."""
         self._entity_id = entity_id
@@ -196,7 +196,10 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
         self._attr_name = name
         self._attr_device_class = device_class
         self._attr_unique_id = unique_id
-        self._attr_device_info = device_info
+        self.device_entry = async_entity_id_to_device(
+            hass,
+            entity_id,
+        )
 
         if sensor_entity_id:
             self.entity_id = sensor_entity_id

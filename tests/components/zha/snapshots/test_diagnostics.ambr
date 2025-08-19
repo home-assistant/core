@@ -36,6 +36,7 @@
         }),
         'network_key': '**REDACTED**',
         'nwk_addresses': dict({
+          '11:22:33:44:55:66:77:88': 4660,
         }),
         'nwk_manager_id': 0,
         'nwk_update_id': 0,
@@ -168,7 +169,6 @@
               dict({
                 'id': '0x0010',
                 'name': 'cie_addr',
-                'unsupported': False,
                 'value': list([
                   50,
                   79,
@@ -182,46 +182,10 @@
                 'zcl_type': 'EUI64',
               }),
               dict({
-                'id': '0x0013',
-                'name': 'current_zone_sensitivity_level',
-                'unsupported': False,
-                'value': None,
-                'zcl_type': 'uint8',
-              }),
-              dict({
                 'id': '0x0012',
                 'name': 'num_zone_sensitivity_levels_supported',
                 'unsupported': True,
-                'value': None,
                 'zcl_type': 'uint8',
-              }),
-              dict({
-                'id': '0x0011',
-                'name': 'zone_id',
-                'unsupported': False,
-                'value': None,
-                'zcl_type': 'uint8',
-              }),
-              dict({
-                'id': '0x0000',
-                'name': 'zone_state',
-                'unsupported': False,
-                'value': None,
-                'zcl_type': 'enum8',
-              }),
-              dict({
-                'id': '0x0002',
-                'name': 'zone_status',
-                'unsupported': False,
-                'value': None,
-                'zcl_type': 'map16',
-              }),
-              dict({
-                'id': '0x0001',
-                'name': 'zone_type',
-                'unsupported': False,
-                'value': None,
-                'zcl_type': 'uint16',
               }),
             ]),
             'cluster_id': '0x0500',
@@ -229,20 +193,6 @@
           }),
           dict({
             'attributes': list([
-              dict({
-                'id': '0xfffd',
-                'name': 'cluster_revision',
-                'unsupported': False,
-                'value': None,
-                'zcl_type': 'uint16',
-              }),
-              dict({
-                'id': '0xfffe',
-                'name': 'reporting_status',
-                'unsupported': False,
-                'value': None,
-                'zcl_type': 'enum8',
-              }),
             ]),
             'cluster_id': '0x0501',
             'endpoint_attribute': 'ias_ace',
