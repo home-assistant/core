@@ -151,11 +151,12 @@ def websocket_depose_mfa(
 
 def _prepare_result_json(result: data_entry_flow.FlowResult) -> dict[str, Any]:
     """Convert result to JSON serializable dict."""
-    data = dict(result)
-
+    if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
+        return dict(result)
     if result["type"] != data_entry_flow.FlowResultType.FORM:
-        return data
+        return result  # type: ignore[return-value]
 
+    data = dict(result)
     if (schema := result["data_schema"]) is None:
         data["data_schema"] = []
     else:
