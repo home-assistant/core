@@ -1,11 +1,11 @@
 """Alexa Devices integration."""
 
-from homeassistant.const import Platform
+from homeassistant.const import CONF_COUNTRY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import _LOGGER, COUNTRY_DOMAINS, DOMAIN
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
 from .services import async_setup_services
 
@@ -36,6 +36,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", entry.version)
+
+    if entry.version == 1:
+        # Convert country in domain
+        country = entry.data[CONF_COUNTRY]
+        domain = COUNTRY_DOMAINS.get(country, country)
+
+        # Save domain and remove country
+        new_data = entry.data.copy()
+        new_data.update({"site": f"https://www.amazon.{domain}"})
+        new_data.pop(CONF_COUNTRY)
+
+        hass.config_entries.async_update_entry(entry, data=new_data, version=2)
+
+    _LOGGER.info("Migration to version %s successful", entry.version)
 
     return True
 
