@@ -22,7 +22,7 @@
       "unknown": "Unexpected error occurred."
     },
     "abort": {
-      "already_configured": "Device is already configured"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
   "entity": {
