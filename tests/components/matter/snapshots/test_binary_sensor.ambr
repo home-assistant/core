@@ -519,7 +519,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'dishwasher_alarm_door',
+    'translation_key': 'alarm_door',
     'unique_id': '00000000000004D2-0000000000000036-MatterNodeDevice-1-DishwasherAlarmDoorError-93-2',
     'unit_of_measurement': None,
   })
@@ -764,7 +764,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'refrigerator_alarm_door_open',
+    'translation_key': 'alarm_door',
     'unique_id': '00000000000004D2-000000000000003A-MatterNodeDevice-1-RefrigeratorAlarmDoorOpen-87-2',
     'unit_of_measurement': None,
   })
