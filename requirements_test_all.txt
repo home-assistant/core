@@ -22,7 +22,7 @@ HAP-python==4.9.2
 HATasmota==0.10.0
 
 # homeassistant.components.mastodon
-Mastodon.py==2.0.1
+Mastodon.py==2.1.0
 
 # homeassistant.components.playstation_network
 PSNAWP==3.0.0
@@ -307,7 +307,7 @@ aionanoleaf==0.2.1
 aionotion==2024.03.0
 
 # homeassistant.components.ntfy
-aiontfy==0.5.3
+aiontfy==0.5.4
 
 # homeassistant.components.nut
 aionut==4.3.4
@@ -518,7 +518,7 @@ aurorapy==0.2.7
 autarco==3.1.0
 
 # homeassistant.components.husqvarna_automower_ble
-automower-ble==0.2.7
+automower-ble==0.2.1
 
 # homeassistant.components.generic
 # homeassistant.components.stream
@@ -613,7 +613,7 @@ bring-api==1.1.0
 broadlink==0.19.0
 
 # homeassistant.components.brother
-brother==5.0.0
+brother==5.0.1
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==1.0.5
@@ -1020,7 +1020,7 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.78
+holidays==0.79
 
 # homeassistant.components.frontend
 home-assistant-frontend==20250811.0
@@ -1162,7 +1162,7 @@ lektricowifi==0.1
 letpot==0.6.1
 
 # homeassistant.components.foscam
-libpyfoscamcgi==0.0.6
+libpyfoscamcgi==0.0.7
 
 # homeassistant.components.mikrotik
 librouteros==3.2.0
@@ -2626,7 +2626,7 @@ youless-api==2.2.0
 youtubeaio==2.0.0
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2025.07.21
+yt-dlp[default]==2025.08.11
 
 # homeassistant.components.zamg
 zamg==0.3.6
