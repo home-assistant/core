@@ -503,7 +503,7 @@ async def test_translated_unit(
     """Test translated unit."""
 
     with patch(
-        "homeassistant.helpers.service.translation.async_get_translations",
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
         return_value={
             "component.test.entity.sensor.test_translation_key.unit_of_measurement": "Tests"
         },
@@ -535,7 +535,7 @@ async def test_translated_unit_with_native_unit_raises(
     """Test that translated unit."""
 
     with patch(
-        "homeassistant.helpers.service.translation.async_get_translations",
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
         return_value={
             "component.test.entity.sensor.test_translation_key.unit_of_measurement": "Tests"
         },
@@ -566,7 +566,7 @@ async def test_unit_translation_key_without_platform_raises(
     """Test that unit translation key property raises if the entity has no platform yet."""
 
     with patch(
-        "homeassistant.helpers.service.translation.async_get_translations",
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
         return_value={
             "component.test.entity.sensor.test_translation_key.unit_of_measurement": "Tests"
         },
