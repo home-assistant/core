@@ -1,10 +1,18 @@
 """Test the Imeon Inverter selects."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.components.imeon_inverter.const import DOMAIN
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_OPTION,
+    SERVICE_SELECT_OPTION,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -24,3 +32,30 @@ async def test_selects(
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_select_mode(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_imeon_inverter: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test select mode updates entity state."""
+    entity_registry = er.async_get(hass)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        SELECT_DOMAIN,
+        DOMAIN,
+        "111111111111111_manager_inverter_mode",
+    )
+    assert entity_id
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "smg"},
+        blocking=True,
+    )

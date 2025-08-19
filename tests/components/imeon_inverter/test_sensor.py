@@ -7,7 +7,9 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.imeon_inverter.const import DOMAIN
 from homeassistant.components.imeon_inverter.coordinator import INTERVAL
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -53,8 +55,8 @@ async def test_sensor_unavailable_on_update_error(
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
-        "sensor",
-        "imeon_inverter",
+        SENSOR_DOMAIN,
+        DOMAIN,
         "111111111111111_battery_power",
     )
 
