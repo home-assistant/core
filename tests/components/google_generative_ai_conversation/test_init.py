@@ -11,11 +11,13 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.google_generative_ai_conversation.const import (
     DEFAULT_AI_TASK_NAME,
     DEFAULT_CONVERSATION_NAME,
+    DEFAULT_STT_NAME,
     DEFAULT_TITLE,
     DEFAULT_TTS_NAME,
     DOMAIN,
     RECOMMENDED_AI_TASK_OPTIONS,
     RECOMMENDED_CONVERSATION_OPTIONS,
+    RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TTS_OPTIONS,
 )
 from homeassistant.config_entries import (
@@ -489,7 +491,7 @@ async def test_migration_from_v1(
     assert entry.minor_version == 4
     assert not entry.options
     assert entry.title == DEFAULT_TITLE
-    assert len(entry.subentries) == 4
+    assert len(entry.subentries) == 5
     conversation_subentries = [
         subentry
         for subentry in entry.subentries.values()
@@ -516,6 +518,14 @@ async def test_migration_from_v1(
     assert len(ai_task_subentries) == 1
     assert ai_task_subentries[0].data == RECOMMENDED_AI_TASK_OPTIONS
     assert ai_task_subentries[0].title == DEFAULT_AI_TASK_NAME
+    stt_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "stt"
+    ]
+    assert len(stt_subentries) == 1
+    assert stt_subentries[0].data == RECOMMENDED_STT_OPTIONS
+    assert stt_subentries[0].title == DEFAULT_STT_NAME
 
     subentry = conversation_subentries[0]
 
@@ -721,7 +731,7 @@ async def test_migration_from_v1_disabled(
     assert entry.minor_version == 4
     assert not entry.options
     assert entry.title == DEFAULT_TITLE
-    assert len(entry.subentries) == 4
+    assert len(entry.subentries) == 5
     conversation_subentries = [
         subentry
         for subentry in entry.subentries.values()
@@ -748,6 +758,14 @@ async def test_migration_from_v1_disabled(
     assert len(ai_task_subentries) == 1
     assert ai_task_subentries[0].data == RECOMMENDED_AI_TASK_OPTIONS
     assert ai_task_subentries[0].title == DEFAULT_AI_TASK_NAME
+    stt_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "stt"
+    ]
+    assert len(stt_subentries) == 1
+    assert stt_subentries[0].data == RECOMMENDED_STT_OPTIONS
+    assert stt_subentries[0].title == DEFAULT_STT_NAME
 
     assert not device_registry.async_get_device(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
@@ -860,7 +878,7 @@ async def test_migration_from_v1_with_multiple_keys(
         assert entry.minor_version == 4
         assert not entry.options
         assert entry.title == DEFAULT_TITLE
-        assert len(entry.subentries) == 3
+        assert len(entry.subentries) == 4
         subentry = list(entry.subentries.values())[0]
         assert subentry.subentry_type == "conversation"
         assert subentry.data == options
@@ -873,6 +891,10 @@ async def test_migration_from_v1_with_multiple_keys(
         assert subentry.subentry_type == "ai_task_data"
         assert subentry.data == RECOMMENDED_AI_TASK_OPTIONS
         assert subentry.title == DEFAULT_AI_TASK_NAME
+        subentry = list(entry.subentries.values())[3]
+        assert subentry.subentry_type == "stt"
+        assert subentry.data == RECOMMENDED_STT_OPTIONS
+        assert subentry.title == DEFAULT_STT_NAME
 
         dev = device_registry.async_get_device(
             identifiers={(DOMAIN, list(entry.subentries.values())[0].subentry_id)}
@@ -963,7 +985,7 @@ async def test_migration_from_v1_with_same_keys(
     assert entry.minor_version == 4
     assert not entry.options
     assert entry.title == DEFAULT_TITLE
-    assert len(entry.subentries) == 4
+    assert len(entry.subentries) == 5
     conversation_subentries = [
         subentry
         for subentry in entry.subentries.values()
@@ -990,6 +1012,14 @@ async def test_migration_from_v1_with_same_keys(
     assert len(ai_task_subentries) == 1
     assert ai_task_subentries[0].data == RECOMMENDED_AI_TASK_OPTIONS
     assert ai_task_subentries[0].title == DEFAULT_AI_TASK_NAME
+    stt_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "stt"
+    ]
+    assert len(stt_subentries) == 1
+    assert stt_subentries[0].data == RECOMMENDED_STT_OPTIONS
+    assert stt_subentries[0].title == DEFAULT_STT_NAME
 
     subentry = conversation_subentries[0]
 
@@ -1090,10 +1120,11 @@ async def test_migration_from_v2_1(
     """Test migration from version 2.1.
 
     This tests we clean up the broken migration in Home Assistant Core
-    2025.7.0b0-2025.7.0b1 and add AI Task subentry:
+    2025.7.0b0-2025.7.0b1 and add AI Task and STT subentries:
     - Fix device registry (Fixed in Home Assistant Core 2025.7.0b2)
     - Add TTS subentry (Added in Home Assistant Core 2025.7.0b1)
     - Add AI Task subentry (Added in version 2.3)
+    - Add STT subentry (Added in version 2.3)
     """
     # Create a v2.1 config entry with 2 subentries, devices and entities
     options = {
@@ -1184,7 +1215,7 @@ async def test_migration_from_v2_1(
     assert entry.minor_version == 4
     assert not entry.options
     assert entry.title == DEFAULT_TITLE
-    assert len(entry.subentries) == 4
+    assert len(entry.subentries) == 5
     conversation_subentries = [
         subentry
         for subentry in entry.subentries.values()
@@ -1211,6 +1242,14 @@ async def test_migration_from_v2_1(
     assert len(ai_task_subentries) == 1
     assert ai_task_subentries[0].data == RECOMMENDED_AI_TASK_OPTIONS
     assert ai_task_subentries[0].title == DEFAULT_AI_TASK_NAME
+    stt_subentries = [
+        subentry
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == "stt"
+    ]
+    assert len(stt_subentries) == 1
+    assert stt_subentries[0].data == RECOMMENDED_STT_OPTIONS
+    assert stt_subentries[0].title == DEFAULT_STT_NAME
 
     subentry = conversation_subentries[0]
 
@@ -1320,8 +1359,8 @@ async def test_migrate_entry_from_v2_2(hass: HomeAssistant) -> None:
     assert entry.version == 2
     assert entry.minor_version == 4
 
-    # Check we now have conversation, tts and ai_task_data subentries
-    assert len(entry.subentries) == 3
+    # Check we now have conversation, tts, stt, and ai_task_data subentries
+    assert len(entry.subentries) == 4
 
     subentries = {
         subentry.subentry_type: subentry for subentry in entry.subentries.values()
@@ -1335,6 +1374,12 @@ async def test_migrate_entry_from_v2_2(hass: HomeAssistant) -> None:
     assert ai_task_subentry is not None
     assert ai_task_subentry.title == DEFAULT_AI_TASK_NAME
     assert ai_task_subentry.data == RECOMMENDED_AI_TASK_OPTIONS
+
+    # Find and verify the stt subentry
+    ai_task_subentry = subentries["stt"]
+    assert ai_task_subentry is not None
+    assert ai_task_subentry.title == DEFAULT_STT_NAME
+    assert ai_task_subentry.data == RECOMMENDED_STT_OPTIONS
 
     # Verify conversation subentry is still there and unchanged
     conversation_subentry = subentries["conversation"]

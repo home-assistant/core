@@ -8,6 +8,7 @@ from collections.abc import Callable, Mapping
 from copy import deepcopy
 from dataclasses import dataclass
 from enum import IntEnum
+import json
 import logging
 import queue
 from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
@@ -24,9 +25,17 @@ from cryptography.hazmat.primitives.serialization import (
 )
 from cryptography.x509 import load_der_x509_certificate, load_pem_x509_certificate
 import voluptuous as vol
+import yaml
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.button import ButtonDeviceClass
+from homeassistant.components.climate import (
+    DEFAULT_MAX_HUMIDITY,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_HUMIDITY,
+    DEFAULT_MIN_TEMP,
+    PRESET_NONE,
+)
 from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
@@ -78,6 +87,8 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_STATE_TEMPLATE,
+    CONF_TEMPERATURE_UNIT,
+    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
@@ -86,8 +97,9 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
     EntityCategory,
+    UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, async_get_hass, callback
 from homeassistant.data_entry_flow import AbortFlow, SectionConfig, section
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.hassio import is_hassio
@@ -112,6 +124,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .addon import get_addon_manager
 from .client import MqttClientSetup
@@ -120,6 +133,8 @@ from .const import (
     ATTR_QOS,
     ATTR_RETAIN,
     ATTR_TOPIC,
+    CONF_ACTION_TEMPLATE,
+    CONF_ACTION_TOPIC,
     CONF_AVAILABILITY_TEMPLATE,
     CONF_AVAILABILITY_TOPIC,
     CONF_BIRTH_MESSAGE,
@@ -146,6 +161,10 @@ from .const import (
     CONF_COMMAND_ON_TEMPLATE,
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
+    CONF_CURRENT_HUMIDITY_TEMPLATE,
+    CONF_CURRENT_HUMIDITY_TOPIC,
+    CONF_CURRENT_TEMP_TEMPLATE,
+    CONF_CURRENT_TEMP_TOPIC,
     CONF_DIRECTION_COMMAND_TEMPLATE,
     CONF_DIRECTION_COMMAND_TOPIC,
     CONF_DIRECTION_STATE_TOPIC,
@@ -159,6 +178,11 @@ from .const import (
     CONF_EFFECT_VALUE_TEMPLATE,
     CONF_ENTITY_PICTURE,
     CONF_EXPIRE_AFTER,
+    CONF_FAN_MODE_COMMAND_TEMPLATE,
+    CONF_FAN_MODE_COMMAND_TOPIC,
+    CONF_FAN_MODE_LIST,
+    CONF_FAN_MODE_STATE_TEMPLATE,
+    CONF_FAN_MODE_STATE_TOPIC,
     CONF_FLASH,
     CONF_FLASH_TIME_LONG,
     CONF_FLASH_TIME_SHORT,
@@ -169,10 +193,21 @@ from .const import (
     CONF_HS_COMMAND_TOPIC,
     CONF_HS_STATE_TOPIC,
     CONF_HS_VALUE_TEMPLATE,
+    CONF_HUMIDITY_COMMAND_TEMPLATE,
+    CONF_HUMIDITY_COMMAND_TOPIC,
+    CONF_HUMIDITY_MAX,
+    CONF_HUMIDITY_MIN,
+    CONF_HUMIDITY_STATE_TEMPLATE,
+    CONF_HUMIDITY_STATE_TOPIC,
     CONF_KEEPALIVE,
     CONF_LAST_RESET_VALUE_TEMPLATE,
     CONF_MAX_KELVIN,
     CONF_MIN_KELVIN,
+    CONF_MODE_COMMAND_TEMPLATE,
+    CONF_MODE_COMMAND_TOPIC,
+    CONF_MODE_LIST,
+    CONF_MODE_STATE_TEMPLATE,
+    CONF_MODE_STATE_TOPIC,
     CONF_OFF_DELAY,
     CONF_ON_COMMAND_TYPE,
     CONF_OPTIONS,
@@ -197,6 +232,9 @@ from .const import (
     CONF_PERCENTAGE_VALUE_TEMPLATE,
     CONF_POSITION_CLOSED,
     CONF_POSITION_OPEN,
+    CONF_POWER_COMMAND_TEMPLATE,
+    CONF_POWER_COMMAND_TOPIC,
+    CONF_PRECISION,
     CONF_PRESET_MODE_COMMAND_TEMPLATE,
     CONF_PRESET_MODE_COMMAND_TOPIC,
     CONF_PRESET_MODE_STATE_TOPIC,
@@ -233,6 +271,32 @@ from .const import (
     CONF_STATE_VALUE_TEMPLATE,
     CONF_SUGGESTED_DISPLAY_PRECISION,
     CONF_SUPPORTED_COLOR_MODES,
+    CONF_SWING_HORIZONTAL_MODE_COMMAND_TEMPLATE,
+    CONF_SWING_HORIZONTAL_MODE_COMMAND_TOPIC,
+    CONF_SWING_HORIZONTAL_MODE_LIST,
+    CONF_SWING_HORIZONTAL_MODE_STATE_TEMPLATE,
+    CONF_SWING_HORIZONTAL_MODE_STATE_TOPIC,
+    CONF_SWING_MODE_COMMAND_TEMPLATE,
+    CONF_SWING_MODE_COMMAND_TOPIC,
+    CONF_SWING_MODE_LIST,
+    CONF_SWING_MODE_STATE_TEMPLATE,
+    CONF_SWING_MODE_STATE_TOPIC,
+    CONF_TEMP_COMMAND_TEMPLATE,
+    CONF_TEMP_COMMAND_TOPIC,
+    CONF_TEMP_HIGH_COMMAND_TEMPLATE,
+    CONF_TEMP_HIGH_COMMAND_TOPIC,
+    CONF_TEMP_HIGH_STATE_TEMPLATE,
+    CONF_TEMP_HIGH_STATE_TOPIC,
+    CONF_TEMP_INITIAL,
+    CONF_TEMP_LOW_COMMAND_TEMPLATE,
+    CONF_TEMP_LOW_COMMAND_TOPIC,
+    CONF_TEMP_LOW_STATE_TEMPLATE,
+    CONF_TEMP_LOW_STATE_TOPIC,
+    CONF_TEMP_MAX,
+    CONF_TEMP_MIN,
+    CONF_TEMP_STATE_TEMPLATE,
+    CONF_TEMP_STATE_TOPIC,
+    CONF_TEMP_STEP,
     CONF_TILT_CLOSED_POSITION,
     CONF_TILT_COMMAND_TEMPLATE,
     CONF_TILT_COMMAND_TOPIC,
@@ -257,6 +321,7 @@ from .const import (
     CONFIG_ENTRY_MINOR_VERSION,
     CONFIG_ENTRY_VERSION,
     DEFAULT_BIRTH,
+    DEFAULT_CLIMATE_INITIAL_TEMPERATURE,
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
     DEFAULT_KEEPALIVE,
@@ -321,6 +386,10 @@ SET_CLIENT_CERT = "set_client_cert"
 
 BOOLEAN_SELECTOR = BooleanSelector()
 TEXT_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
+TEXT_SELECTOR_READ_ONLY = TextSelector(
+    TextSelectorConfig(type=TextSelectorType.TEXT, read_only=True)
+)
+URL_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.URL))
 PUBLISH_TOPIC_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT))
 PORT_SELECTOR = vol.All(
     NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=65535)),
@@ -385,6 +454,7 @@ KEY_UPLOAD_SELECTOR = FileSelector(
 SUBENTRY_PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.COVER,
     Platform.FAN,
     Platform.LIGHT,
@@ -400,6 +470,7 @@ SUBENTRY_PLATFORM_SELECTOR = SelectSelector(
     )
 )
 TEMPLATE_SELECTOR = TemplateSelector(TemplateSelectorConfig())
+TEMPLATE_SELECTOR_READ_ONLY = TemplateSelector(TemplateSelectorConfig(read_only=True))
 
 SUBENTRY_AVAILABILITY_SCHEMA = vol.Schema(
     {
@@ -485,6 +556,59 @@ TIMEOUT_SELECTOR = NumberSelector(
     NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0)
 )
 
+# Climate specific selectors
+CLIMATE_MODE_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=["auto", "off", "cool", "heat", "dry", "fan_only"],
+        multiple=True,
+        translation_key="climate_modes",
+    )
+)
+
+
+@callback
+def temperature_selector(config: dict[str, Any]) -> Selector:
+    """Return a temperature selector with configured or system unit."""
+
+    return NumberSelector(
+        NumberSelectorConfig(
+            mode=NumberSelectorMode.BOX,
+            unit_of_measurement=cv.temperature_unit(config[CONF_TEMPERATURE_UNIT]),
+        )
+    )
+
+
+@callback
+def temperature_step_selector(config: dict[str, Any]) -> Selector:
+    """Return a temperature step selector."""
+
+    return NumberSelector(
+        NumberSelectorConfig(
+            mode=NumberSelectorMode.BOX,
+            min=0.1,
+            max=10.0,
+            step=0.1,
+            unit_of_measurement=cv.temperature_unit(config[CONF_TEMPERATURE_UNIT]),
+        )
+    )
+
+
+TEMPERATURE_UNIT_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[
+            SelectOptionDict(value="C", label="°C"),
+            SelectOptionDict(value="F", label="°F"),
+        ],
+        mode=SelectSelectorMode.DROPDOWN,
+    )
+)
+PRECISION_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=["1.0", "0.5", "0.1"],
+        mode=SelectSelectorMode.DROPDOWN,
+    )
+)
+
 # Cover specific selectors
 POSITION_SELECTOR = NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX))
 
@@ -556,11 +680,94 @@ SUPPORTED_COLOR_MODES_SELECTOR = SelectSelector(
     )
 )
 
+EXCLUDE_FROM_CONFIG_IF_NONE = {CONF_ENTITY_CATEGORY}
+
+
+# Target temperature feature selector
+@callback
+def configured_target_temperature_feature(config: dict[str, Any]) -> str:
+    """Calculate current target temperature feature from config."""
+    if (
+        config == {CONF_PLATFORM: Platform.CLIMATE.value}
+        or CONF_TEMP_COMMAND_TOPIC in config
+    ):
+        # default to single on initial set
+        return "single"
+    if CONF_TEMP_HIGH_COMMAND_TOPIC in config:
+        return "high_low"
+    return "none"
+
+
+TARGET_TEMPERATURE_FEATURE_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=["single", "high_low", "none"],
+        mode=SelectSelectorMode.DROPDOWN,
+        translation_key="target_temperature_feature",
+    )
+)
+HUMIDITY_SELECTOR = vol.All(
+    NumberSelector(
+        NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0, max=100, step=1)
+    ),
+    vol.Coerce(int),
+)
+
 
 @callback
-def validate_cover_platform_config(
-    config: dict[str, Any],
-) -> dict[str, str]:
+def temperature_default_from_celsius_to_system_default(
+    value: float,
+) -> Callable[[dict[str, Any]], int]:
+    """Return temperature in Celsius in system default unit."""
+
+    def _default(config: dict[str, Any]) -> int:
+        return round(
+            TemperatureConverter.convert(
+                value,
+                UnitOfTemperature.CELSIUS,
+                cv.temperature_unit(config[CONF_TEMPERATURE_UNIT]),
+            )
+        )
+
+    return _default
+
+
+@callback
+def default_precision(config: dict[str, Any]) -> str:
+    """Return the thermostat precision for system default unit."""
+
+    return str(
+        config.get(
+            CONF_PRECISION,
+            0.1
+            if cv.temperature_unit(config[CONF_TEMPERATURE_UNIT])
+            is UnitOfTemperature.CELSIUS
+            else 1.0,
+        )
+    )
+
+
+@callback
+def validate_climate_platform_config(config: dict[str, Any]) -> dict[str, str]:
+    """Validate the climate platform options."""
+    errors: dict[str, str] = {}
+    if (
+        CONF_PRESET_MODES_LIST in config
+        and PRESET_NONE in config[CONF_PRESET_MODES_LIST]
+    ):
+        errors["climate_preset_mode_settings"] = "preset_mode_none_not_allowed"
+    if (
+        CONF_HUMIDITY_MIN in config
+        and config[CONF_HUMIDITY_MIN] >= config[CONF_HUMIDITY_MAX]
+    ):
+        errors["target_humidity_settings"] = "max_below_min_humidity"
+    if CONF_TEMP_MIN in config and config[CONF_TEMP_MIN] >= config[CONF_TEMP_MAX]:
+        errors["target_temperature_settings"] = "max_below_min_temperature"
+
+    return errors
+
+
+@callback
+def validate_cover_platform_config(config: dict[str, Any]) -> dict[str, str]:
     """Validate the cover platform options."""
     errors: dict[str, str] = {}
 
@@ -671,6 +878,14 @@ def validate_sensor_platform_config(
 
 
 @callback
+def no_empty_list(value: list[Any]) -> list[Any]:
+    """Validate a selector returns at least one item."""
+    if not value:
+        raise vol.Invalid("empty_list_not_allowed")
+    return value
+
+
+@callback
 def validate(validator: Callable[[Any], Any]) -> Callable[[Any], Any]:
     """Run validator, then return the unmodified input."""
 
@@ -685,13 +900,13 @@ def validate(validator: Callable[[Any], Any]) -> Callable[[Any], Any]:
 class PlatformField:
     """Stores a platform config field schema, required flag and validator."""
 
-    selector: Selector[Any] | Callable[..., Selector[Any]]
+    selector: Selector[Any] | Callable[[dict[str, Any]], Selector[Any]]
     required: bool
-    validator: Callable[..., Any] | None = None
+    validator: Callable[[Any], Any] | None = None
     error: str | None = None
-    default: (
-        str | int | bool | None | Callable[[dict[str, Any]], Any] | vol.Undefined
-    ) = vol.UNDEFINED
+    default: Any | None | Callable[[dict[str, Any]], Any] | vol.Undefined = (
+        vol.UNDEFINED
+    )
     is_schema_default: bool = False
     exclude_from_reconfig: bool = False
     exclude_from_config: bool = False
@@ -778,6 +993,78 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
         CONF_DEVICE_CLASS: PlatformField(
             selector=BUTTON_DEVICE_CLASS_SELECTOR,
             required=False,
+        ),
+    },
+    Platform.CLIMATE.value: {
+        CONF_TEMPERATURE_UNIT: PlatformField(
+            selector=TEMPERATURE_UNIT_SELECTOR,
+            validator=validate(cv.temperature_unit),
+            required=True,
+            exclude_from_reconfig=True,
+            default=lambda _: "C"
+            if async_get_hass().config.units.temperature_unit
+            is UnitOfTemperature.CELSIUS
+            else "F",
+        ),
+        "climate_feature_action": PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+            exclude_from_config=True,
+            default=lambda config: bool(config.get(CONF_ACTION_TOPIC)),
+        ),
+        "climate_feature_target_temperature": PlatformField(
+            selector=TARGET_TEMPERATURE_FEATURE_SELECTOR,
+            required=False,
+            exclude_from_config=True,
+            default=configured_target_temperature_feature,
+        ),
+        "climate_feature_current_temperature": PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+            exclude_from_config=True,
+            default=lambda config: bool(config.get(CONF_CURRENT_TEMP_TOPIC)),
+        ),
+        "climate_feature_target_humidity": PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+            exclude_from_config=True,
+            default=lambda config: bool(config.get(CONF_HUMIDITY_COMMAND_TOPIC)),
+        ),
+        "climate_feature_current_humidity": PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+            exclude_from_config=True,
+            default=lambda config: bool(config.get(CONF_HUMIDITY_STATE_TOPIC)),
+        ),
+        "climate_feature_preset_modes": PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+            exclude_from_config=True,
+            default=lambda config: bool(config.get(CONF_PRESET_MODES_LIST)),
+        ),
+        "climate_feature_fan_modes": PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+            exclude_from_config=True,
+            default=lambda config: bool(config.get(CONF_FAN_MODE_LIST)),
+        ),
+        "climate_feature_swing_modes": PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+            exclude_from_config=True,
+            default=lambda config: bool(config.get(CONF_SWING_MODE_LIST)),
+        ),
+        "climate_feature_swing_horizontal_modes": PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+            exclude_from_config=True,
+            default=lambda config: bool(config.get(CONF_SWING_HORIZONTAL_MODE_LIST)),
+        ),
+        "climate_feature_power": PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+            exclude_from_config=True,
+            default=lambda config: bool(config.get(CONF_POWER_COMMAND_TOPIC)),
         ),
     },
     Platform.COVER.value: {
@@ -918,6 +1205,496 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             default=DEFAULT_PAYLOAD_PRESS,
         ),
         CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
+    },
+    Platform.CLIMATE.value: {
+        # operation mode settings
+        CONF_MODE_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_MODE_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_MODE_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_MODE_STATE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_MODE_LIST: PlatformField(
+            selector=CLIMATE_MODE_SELECTOR,
+            required=True,
+            default=[],
+            validator=validate(no_empty_list),
+            error="empty_list_not_allowed",
+        ),
+        CONF_RETAIN: PlatformField(
+            selector=BOOLEAN_SELECTOR, required=False, validator=validate(bool)
+        ),
+        CONF_OPTIMISTIC: PlatformField(
+            selector=BOOLEAN_SELECTOR, required=False, validator=validate(bool)
+        ),
+        # current action settings
+        CONF_ACTION_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            section="climate_action_settings",
+            conditions=({"climate_feature_action": True},),
+        ),
+        CONF_ACTION_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="climate_action_settings",
+            conditions=({"climate_feature_action": True},),
+        ),
+        # target temperature settings
+        CONF_TEMP_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            section="target_temperature_settings",
+            conditions=({"climate_feature_target_temperature": "single"},),
+        ),
+        CONF_TEMP_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="target_temperature_settings",
+            conditions=({"climate_feature_target_temperature": "single"},),
+        ),
+        CONF_TEMP_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            section="target_temperature_settings",
+            conditions=({"climate_feature_target_temperature": "single"},),
+        ),
+        CONF_TEMP_STATE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="target_temperature_settings",
+            conditions=({"climate_feature_target_temperature": "single"},),
+        ),
+        CONF_TEMP_LOW_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            section="target_temperature_settings",
+            conditions=({"climate_feature_target_temperature": "high_low"},),
+        ),
+        CONF_TEMP_LOW_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="target_temperature_settings",
+            conditions=({"climate_feature_target_temperature": "high_low"},),
+        ),
+        CONF_TEMP_LOW_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            section="target_temperature_settings",
+            conditions=({"climate_feature_target_temperature": "high_low"},),
+        ),
+        CONF_TEMP_LOW_STATE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="target_temperature_settings",
+            conditions=({"climate_feature_target_temperature": "high_low"},),
+        ),
+        CONF_TEMP_HIGH_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            section="target_temperature_settings",
+            conditions=({"climate_feature_target_temperature": "high_low"},),
+        ),
+        CONF_TEMP_HIGH_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="target_temperature_settings",
+            conditions=({"climate_feature_target_temperature": "high_low"},),
+        ),
+        CONF_TEMP_HIGH_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            section="target_temperature_settings",
+            conditions=({"climate_feature_target_temperature": "high_low"},),
+        ),
+        CONF_TEMP_HIGH_STATE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="target_temperature_settings",
+            conditions=({"climate_feature_target_temperature": "high_low"},),
+        ),
+        CONF_TEMP_MIN: PlatformField(
+            selector=temperature_selector,
+            custom_filtering=True,
+            required=True,
+            default=temperature_default_from_celsius_to_system_default(
+                DEFAULT_MIN_TEMP
+            ),
+            section="target_temperature_settings",
+            conditions=(
+                {"climate_feature_target_temperature": "high_low"},
+                {"climate_feature_target_temperature": "single"},
+            ),
+        ),
+        CONF_TEMP_MAX: PlatformField(
+            selector=temperature_selector,
+            custom_filtering=True,
+            required=True,
+            default=temperature_default_from_celsius_to_system_default(
+                DEFAULT_MAX_TEMP
+            ),
+            section="target_temperature_settings",
+            conditions=(
+                {"climate_feature_target_temperature": "high_low"},
+                {"climate_feature_target_temperature": "single"},
+            ),
+        ),
+        CONF_PRECISION: PlatformField(
+            selector=PRECISION_SELECTOR,
+            required=False,
+            default=default_precision,
+            section="target_temperature_settings",
+            conditions=(
+                {"climate_feature_target_temperature": "high_low"},
+                {"climate_feature_target_temperature": "single"},
+            ),
+        ),
+        CONF_TEMP_STEP: PlatformField(
+            selector=temperature_step_selector,
+            custom_filtering=True,
+            required=False,
+            default=1.0,
+            section="target_temperature_settings",
+            conditions=(
+                {"climate_feature_target_temperature": "high_low"},
+                {"climate_feature_target_temperature": "single"},
+            ),
+        ),
+        CONF_TEMP_INITIAL: PlatformField(
+            selector=temperature_selector,
+            custom_filtering=True,
+            required=False,
+            default=temperature_default_from_celsius_to_system_default(
+                DEFAULT_CLIMATE_INITIAL_TEMPERATURE
+            ),
+            section="target_temperature_settings",
+            conditions=(
+                {"climate_feature_target_temperature": "high_low"},
+                {"climate_feature_target_temperature": "single"},
+            ),
+        ),
+        # current temperature settings
+        CONF_CURRENT_TEMP_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            section="current_temperature_settings",
+            conditions=({"climate_feature_current_temperature": True},),
+        ),
+        CONF_CURRENT_TEMP_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="current_temperature_settings",
+            conditions=({"climate_feature_current_temperature": True},),
+        ),
+        # target humidity settings
+        CONF_HUMIDITY_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            section="target_humidity_settings",
+            conditions=({"climate_feature_target_humidity": True},),
+        ),
+        CONF_HUMIDITY_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="target_humidity_settings",
+            conditions=({"climate_feature_target_humidity": True},),
+        ),
+        CONF_HUMIDITY_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            section="target_humidity_settings",
+            conditions=({"climate_feature_target_humidity": True},),
+        ),
+        CONF_HUMIDITY_STATE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="target_humidity_settings",
+            conditions=({"climate_feature_target_humidity": True},),
+        ),
+        CONF_HUMIDITY_MIN: PlatformField(
+            selector=HUMIDITY_SELECTOR,
+            required=True,
+            default=DEFAULT_MIN_HUMIDITY,
+            section="target_humidity_settings",
+            conditions=({"climate_feature_target_humidity": True},),
+        ),
+        CONF_HUMIDITY_MAX: PlatformField(
+            selector=HUMIDITY_SELECTOR,
+            required=True,
+            default=DEFAULT_MAX_HUMIDITY,
+            section="target_humidity_settings",
+            conditions=({"climate_feature_target_humidity": True},),
+        ),
+        # current humidity settings
+        CONF_CURRENT_HUMIDITY_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            section="current_humidity_settings",
+            conditions=({"climate_feature_current_humidity": True},),
+        ),
+        CONF_CURRENT_HUMIDITY_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="current_humidity_settings",
+            conditions=({"climate_feature_current_humidity": True},),
+        ),
+        # power on/off support
+        CONF_POWER_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            section="climate_power_settings",
+            conditions=({"climate_feature_power": True},),
+        ),
+        CONF_POWER_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="climate_power_settings",
+            conditions=({"climate_feature_power": True},),
+        ),
+        CONF_PAYLOAD_OFF: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            default=DEFAULT_PAYLOAD_OFF,
+            section="climate_power_settings",
+            conditions=({"climate_feature_power": True},),
+        ),
+        CONF_PAYLOAD_ON: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            default=DEFAULT_PAYLOAD_ON,
+            section="climate_power_settings",
+            conditions=({"climate_feature_power": True},),
+        ),
+        # preset mode settings
+        CONF_PRESET_MODE_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            section="climate_preset_mode_settings",
+            conditions=({"climate_feature_preset_modes": True},),
+        ),
+        CONF_PRESET_MODE_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="climate_preset_mode_settings",
+            conditions=({"climate_feature_preset_modes": True},),
+        ),
+        CONF_PRESET_MODE_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            section="climate_preset_mode_settings",
+            conditions=({"climate_feature_preset_modes": True},),
+        ),
+        CONF_PRESET_MODE_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="climate_preset_mode_settings",
+            conditions=({"climate_feature_preset_modes": True},),
+        ),
+        CONF_PRESET_MODES_LIST: PlatformField(
+            selector=PRESET_MODES_SELECTOR,
+            required=True,
+            validator=validate(no_empty_list),
+            error="empty_list_not_allowed",
+            section="climate_preset_mode_settings",
+            conditions=({"climate_feature_preset_modes": True},),
+        ),
+        # fan mode settings
+        CONF_FAN_MODE_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            section="climate_fan_mode_settings",
+            conditions=({"climate_feature_fan_modes": True},),
+        ),
+        CONF_FAN_MODE_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="climate_fan_mode_settings",
+            conditions=({"climate_feature_fan_modes": True},),
+        ),
+        CONF_FAN_MODE_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            section="climate_fan_mode_settings",
+            conditions=({"climate_feature_fan_modes": True},),
+        ),
+        CONF_FAN_MODE_STATE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="climate_fan_mode_settings",
+            conditions=({"climate_feature_fan_modes": True},),
+        ),
+        CONF_FAN_MODE_LIST: PlatformField(
+            selector=PRESET_MODES_SELECTOR,
+            required=True,
+            validator=validate(no_empty_list),
+            error="empty_list_not_allowed",
+            section="climate_fan_mode_settings",
+            conditions=({"climate_feature_fan_modes": True},),
+        ),
+        # swing mode settings
+        CONF_SWING_MODE_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            section="climate_swing_mode_settings",
+            conditions=({"climate_feature_swing_modes": True},),
+        ),
+        CONF_SWING_MODE_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="climate_swing_mode_settings",
+            conditions=({"climate_feature_swing_modes": True},),
+        ),
+        CONF_SWING_MODE_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            section="climate_swing_mode_settings",
+            conditions=({"climate_feature_swing_modes": True},),
+        ),
+        CONF_SWING_MODE_STATE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="climate_swing_mode_settings",
+            conditions=({"climate_feature_swing_modes": True},),
+        ),
+        CONF_SWING_MODE_LIST: PlatformField(
+            selector=PRESET_MODES_SELECTOR,
+            required=True,
+            validator=validate(no_empty_list),
+            error="empty_list_not_allowed",
+            section="climate_swing_mode_settings",
+            conditions=({"climate_feature_swing_modes": True},),
+        ),
+        # swing horizontal mode settings
+        CONF_SWING_HORIZONTAL_MODE_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            section="climate_swing_horizontal_mode_settings",
+            conditions=({"climate_feature_swing_horizontal_modes": True},),
+        ),
+        CONF_SWING_HORIZONTAL_MODE_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="climate_swing_horizontal_mode_settings",
+            conditions=({"climate_feature_swing_horizontal_modes": True},),
+        ),
+        CONF_SWING_HORIZONTAL_MODE_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            section="climate_swing_horizontal_mode_settings",
+            conditions=({"climate_feature_swing_horizontal_modes": True},),
+        ),
+        CONF_SWING_HORIZONTAL_MODE_STATE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="climate_swing_horizontal_mode_settings",
+            conditions=({"climate_feature_swing_horizontal_modes": True},),
+        ),
+        CONF_SWING_HORIZONTAL_MODE_LIST: PlatformField(
+            selector=PRESET_MODES_SELECTOR,
+            required=True,
+            validator=validate(no_empty_list),
+            error="empty_list_not_allowed",
+            section="climate_swing_horizontal_mode_settings",
+            conditions=({"climate_feature_swing_horizontal_modes": True},),
+        ),
     },
     Platform.COVER.value: {
         CONF_COMMAND_TOPIC: PlatformField(
@@ -1894,6 +2671,7 @@ ENTITY_CONFIG_VALIDATOR: dict[
 ] = {
     Platform.BINARY_SENSOR.value: None,
     Platform.BUTTON.value: None,
+    Platform.CLIMATE.value: validate_climate_platform_config,
     Platform.COVER.value: validate_cover_platform_config,
     Platform.FAN.value: validate_fan_platform_config,
     Platform.LIGHT.value: validate_light_platform_config,
@@ -2087,15 +2865,15 @@ def data_schema_from_fields(
     no_reconfig_options: set[Any] = set()
     for schema_section in sections:
         data_schema_element = {
-            vol.Required(field_name, default=field_details.default)
+            vol.Required(field_name, default=get_default(field_details))
             if field_details.required
             else vol.Optional(
                 field_name,
                 default=get_default(field_details)
                 if field_details.default is not None
                 else vol.UNDEFINED,
-            ): field_details.selector(component_data_with_user_input)  # type: ignore[operator]
-            if field_details.custom_filtering
+            ): field_details.selector(component_data_with_user_input or {})
+            if callable(field_details.selector) and field_details.custom_filtering
             else field_details.selector
             for field_name, field_details in data_schema_fields.items()
             if not field_details.is_schema_default
@@ -2117,12 +2895,20 @@ def data_schema_from_fields(
         if not data_schema_element:
             # Do not show empty sections
             continue
+        # Collapse if values are changed or required fields need to be set
         collapsed = (
             not any(
                 (default := data_schema_fields[str(option)].default) is vol.UNDEFINED
-                or component_data_with_user_input[str(option)] != default
+                or (
+                    str(option) in component_data_with_user_input
+                    and component_data_with_user_input[str(option)] != default
+                )
                 for option in data_element_options
                 if option in component_data_with_user_input
+                or (
+                    str(option) in data_schema_fields
+                    and data_schema_fields[str(option)].required
+                )
             )
             if component_data_with_user_input is not None
             else True
@@ -3102,8 +3888,11 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             menu_options.append("delete_entity")
         menu_options.extend(["device", "availability"])
         self._async_update_component_data_defaults()
-        if self._subentry_data != self._get_reconfigure_subentry().data:
-            menu_options.append("save_changes")
+        menu_options.append(
+            "save_changes"
+            if self._subentry_data != self._get_reconfigure_subentry().data
+            else "export"
+        )
         return self.async_show_menu(
             step_id="summary_menu",
             menu_options=menu_options,
@@ -3143,6 +3932,117 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             subentry,
             data=self._subentry_data,
             title=self._subentry_data[CONF_DEVICE][CONF_NAME],
+        )
+
+    async def async_step_export(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Export the MQTT device config as YAML or discovery payload."""
+        return self.async_show_menu(
+            step_id="export",
+            menu_options=["export_yaml", "export_discovery"],
+        )
+
+    async def async_step_export_yaml(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Export the MQTT device config as YAML."""
+        if user_input is not None:
+            return await self.async_step_summary_menu()
+
+        subentry = self._get_reconfigure_subentry()
+        mqtt_yaml_config_base: dict[str, list[dict[str, dict[str, Any]]]] = {DOMAIN: []}
+        mqtt_yaml_config = mqtt_yaml_config_base[DOMAIN]
+
+        for component_id, component_data in self._subentry_data["components"].items():
+            component_config: dict[str, Any] = component_data.copy()
+            component_config[CONF_UNIQUE_ID] = f"{subentry.subentry_id}_{component_id}"
+            component_config[CONF_DEVICE] = {
+                key: value
+                for key, value in self._subentry_data["device"].items()
+                if key != "mqtt_settings"
+            } | {"identifiers": [subentry.subentry_id]}
+            platform = component_config.pop(CONF_PLATFORM)
+            component_config.update(self._subentry_data.get("availability", {}))
+            component_config.update(
+                self._subentry_data["device"].get("mqtt_settings", {}).copy()
+            )
+            for field in EXCLUDE_FROM_CONFIG_IF_NONE:
+                if field in component_config and component_config[field] is None:
+                    component_config.pop(field)
+            mqtt_yaml_config.append({platform: component_config})
+
+        yaml_config = yaml.dump(mqtt_yaml_config_base)
+        data_schema = vol.Schema(
+            {
+                vol.Optional("yaml"): TEMPLATE_SELECTOR_READ_ONLY,
+            }
+        )
+        data_schema = self.add_suggested_values_to_schema(
+            data_schema=data_schema,
+            suggested_values={"yaml": yaml_config},
+        )
+        return self.async_show_form(
+            step_id="export_yaml",
+            last_step=False,
+            data_schema=data_schema,
+            description_placeholders={
+                "url": "https://www.home-assistant.io/integrations/mqtt/"
+            },
+        )
+
+    async def async_step_export_discovery(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Export the MQTT device config dor MQTT discovery."""
+
+        if user_input is not None:
+            return await self.async_step_summary_menu()
+
+        subentry = self._get_reconfigure_subentry()
+        discovery_topic = f"homeassistant/device/{subentry.subentry_id}/config"
+        discovery_payload: dict[str, Any] = {}
+        discovery_payload.update(self._subentry_data.get("availability", {}))
+        discovery_payload["dev"] = {
+            key: value
+            for key, value in self._subentry_data["device"].items()
+            if key != "mqtt_settings"
+        } | {"identifiers": [subentry.subentry_id]}
+        discovery_payload["o"] = {"name": "MQTT subentry export"}
+        discovery_payload["cmps"] = {}
+
+        for component_id, component_data in self._subentry_data["components"].items():
+            component_config: dict[str, Any] = component_data.copy()
+            component_config[CONF_UNIQUE_ID] = f"{subentry.subentry_id}_{component_id}"
+            component_config.update(self._subentry_data.get("availability", {}))
+            component_config.update(
+                self._subentry_data["device"].get("mqtt_settings", {}).copy()
+            )
+            for field in EXCLUDE_FROM_CONFIG_IF_NONE:
+                if field in component_config and component_config[field] is None:
+                    component_config.pop(field)
+            discovery_payload["cmps"][component_id] = component_config
+
+        data_schema = vol.Schema(
+            {
+                vol.Optional("discovery_topic"): TEXT_SELECTOR_READ_ONLY,
+                vol.Optional("discovery_payload"): TEMPLATE_SELECTOR_READ_ONLY,
+            }
+        )
+        data_schema = self.add_suggested_values_to_schema(
+            data_schema=data_schema,
+            suggested_values={
+                "discovery_topic": discovery_topic,
+                "discovery_payload": json.dumps(discovery_payload, indent=2),
+            },
+        )
+        return self.async_show_form(
+            step_id="export_discovery",
+            last_step=False,
+            data_schema=data_schema,
+            description_placeholders={
+                "url": "https://www.home-assistant.io/integrations/mqtt/"
+            },
         )
 
 

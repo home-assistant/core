@@ -35,9 +35,10 @@ from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import ConfigurationStyle
+from .conftest import ConfigurationStyle, async_get_flow_preview_state
 
 from tests.common import MockConfigEntry, assert_setup_component, async_capture_events
+from tests.conftest import WebSocketGenerator
 
 _TEST_OBJECT_ID = "template_select"
 _TEST_SELECT = f"select.{_TEST_OBJECT_ID}"
@@ -606,6 +607,42 @@ async def test_optimistic(hass: HomeAssistant) -> None:
         (
             1,
             {
+                "state": "{{ states('select.test_state') }}",
+                "optimistic": False,
+                "options": "{{ ['test', 'yes', 'no'] }}",
+                "select_option": [],
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_select")
+async def test_not_optimistic(hass: HomeAssistant) -> None:
+    """Test optimistic yaml option set to false."""
+    # Ensure Trigger template entities update the options list
+    hass.states.async_set(TEST_STATE_ENTITY_ID, "anything")
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        select.DOMAIN,
+        select.SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: _TEST_SELECT, "option": "test"},
+        blocking=True,
+    )
+
+    state = hass.states.get(_TEST_SELECT)
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("count", "select_config"),
+    [
+        (
+            1,
+            {
                 "options": "{{ ['test', 'yes', 'no'] }}",
                 "select_option": [],
                 "state": "{{ states('select.test_state') }}",
@@ -645,3 +682,19 @@ async def test_availability(hass: HomeAssistant) -> None:
 
     state = hass.states.get(_TEST_SELECT)
     assert state.state == "yes"
+
+
+async def test_flow_preview(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the config flow preview."""
+
+    state = await async_get_flow_preview_state(
+        hass,
+        hass_ws_client,
+        select.DOMAIN,
+        {"name": "My template", **TEST_OPTIONS},
+    )
+
+    assert state["state"] == "test"

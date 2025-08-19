@@ -40,6 +40,7 @@ from .chat_log import (
     ConverseError,
     SystemContent,
     ToolResultContent,
+    ToolResultContentDeltaDict,
     UserContent,
     async_get_chat_log,
 )
@@ -61,6 +62,7 @@ from .entity import ConversationEntity
 from .http import async_setup as async_setup_conversation_http
 from .models import AbstractConversationAgent, ConversationInput, ConversationResult
 from .trace import ConversationTraceEventType, async_conversation_trace_append
+from .util import async_get_result_from_chat_log
 
 __all__ = [
     "DOMAIN",
@@ -78,11 +80,13 @@ __all__ = [
     "ConverseError",
     "SystemContent",
     "ToolResultContent",
+    "ToolResultContentDeltaDict",
     "UserContent",
     "async_conversation_trace_append",
     "async_converse",
     "async_get_agent_info",
     "async_get_chat_log",
+    "async_get_result_from_chat_log",
     "async_set_agent",
     "async_setup",
     "async_unset_agent",
@@ -115,7 +119,7 @@ CONFIG_SCHEMA = vol.Schema(
                     {cv.string: vol.All(cv.ensure_list, [cv.string])}
                 )
             }
-        )
+        ),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -266,8 +270,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     entity_component = EntityComponent[ConversationEntity](_LOGGER, DOMAIN, hass)
     hass.data[DATA_COMPONENT] = entity_component
 
+    agent_config = config.get(DOMAIN, {})
     await async_setup_default_agent(
-        hass, entity_component, config.get(DOMAIN, {}).get("intents", {})
+        hass, entity_component, config_intents=agent_config.get("intents", {})
     )
 
     async def handle_process(service: ServiceCall) -> ServiceResponse:

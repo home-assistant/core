@@ -1,6 +1,12 @@
 """Tests for the OpenAI Conversation integration."""
 
 from openai.types.responses import (
+    ResponseCodeInterpreterCallCodeDeltaEvent,
+    ResponseCodeInterpreterCallCodeDoneEvent,
+    ResponseCodeInterpreterCallCompletedEvent,
+    ResponseCodeInterpreterCallInProgressEvent,
+    ResponseCodeInterpreterCallInterpretingEvent,
+    ResponseCodeInterpreterToolCall,
     ResponseContentPartAddedEvent,
     ResponseContentPartDoneEvent,
     ResponseFunctionCallArgumentsDeltaEvent,
@@ -12,6 +18,10 @@ from openai.types.responses import (
     ResponseOutputMessage,
     ResponseOutputText,
     ResponseReasoningItem,
+    ResponseReasoningSummaryPartAddedEvent,
+    ResponseReasoningSummaryPartDoneEvent,
+    ResponseReasoningSummaryTextDeltaEvent,
+    ResponseReasoningSummaryTextDoneEvent,
     ResponseStreamEvent,
     ResponseTextDeltaEvent,
     ResponseTextDoneEvent,
@@ -20,6 +30,7 @@ from openai.types.responses import (
     ResponseWebSearchCallSearchingEvent,
 )
 from openai.types.responses.response_function_web_search import ActionSearch
+from openai.types.responses.response_reasoning_item import Summary
 
 
 def create_message_item(
@@ -59,6 +70,7 @@ def create_message_item(
             content_index=0,
             delta=delta,
             item_id=id,
+            logprobs=[],
             output_index=output_index,
             sequence_number=0,
             type="response.output_text.delta",
@@ -71,6 +83,7 @@ def create_message_item(
             ResponseTextDoneEvent(
                 content_index=0,
                 item_id=id,
+                logprobs=[],
                 output_index=output_index,
                 text="".join(text),
                 sequence_number=0,
@@ -165,9 +178,23 @@ def create_function_tool_call_item(
     return events
 
 
-def create_reasoning_item(id: str, output_index: int) -> list[ResponseStreamEvent]:
+def create_reasoning_item(
+    id: str,
+    output_index: int,
+    reasoning_summary: list[list[str]] | list[str] | str | None = None,
+) -> list[ResponseStreamEvent]:
     """Create a reasoning item."""
-    return [
+
+    if reasoning_summary is None:
+        reasoning_summary = [[]]
+    elif isinstance(reasoning_summary, str):
+        reasoning_summary = [reasoning_summary]
+    if isinstance(reasoning_summary, list) and all(
+        isinstance(item, str) for item in reasoning_summary
+    ):
+        reasoning_summary = [reasoning_summary]
+
+    events = [
         ResponseOutputItemAddedEvent(
             item=ResponseReasoningItem(
                 id=id,
@@ -179,11 +206,60 @@ def create_reasoning_item(id: str, output_index: int) -> list[ResponseStreamEven
             output_index=output_index,
             sequence_number=0,
             type="response.output_item.added",
-        ),
+        )
+    ]
+
+    for summary_index, summary in enumerate(reasoning_summary):
+        events.append(
+            ResponseReasoningSummaryPartAddedEvent(
+                item_id=id,
+                output_index=output_index,
+                part={"text": "", "type": "summary_text"},
+                sequence_number=0,
+                summary_index=summary_index,
+                type="response.reasoning_summary_part.added",
+            )
+        )
+        events.extend(
+            ResponseReasoningSummaryTextDeltaEvent(
+                delta=delta,
+                item_id=id,
+                output_index=output_index,
+                sequence_number=0,
+                summary_index=summary_index,
+                type="response.reasoning_summary_text.delta",
+            )
+            for delta in summary
+        )
+        events.extend(
+            [
+                ResponseReasoningSummaryTextDoneEvent(
+                    item_id=id,
+                    output_index=output_index,
+                    sequence_number=0,
+                    summary_index=summary_index,
+                    text="".join(summary),
+                    type="response.reasoning_summary_text.done",
+                ),
+                ResponseReasoningSummaryPartDoneEvent(
+                    item_id=id,
+                    output_index=output_index,
+                    part={"text": "".join(summary), "type": "summary_text"},
+                    sequence_number=0,
+                    summary_index=summary_index,
+                    type="response.reasoning_summary_part.done",
+                ),
+            ]
+        )
+
+    events.append(
         ResponseOutputItemDoneEvent(
             item=ResponseReasoningItem(
                 id=id,
-                summary=[],
+                summary=[
+                    Summary(text="".join(summary), type="summary_text")
+                    for summary in reasoning_summary
+                ],
                 type="reasoning",
                 status=None,
                 encrypted_content="AAABBB",
@@ -192,7 +268,9 @@ def create_reasoning_item(id: str, output_index: int) -> list[ResponseStreamEven
             sequence_number=0,
             type="response.output_item.done",
         ),
-    ]
+    )
+
+    return events
 
 
 def create_web_search_item(id: str, output_index: int) -> list[ResponseStreamEvent]:
@@ -239,3 +317,86 @@ def create_web_search_item(id: str, output_index: int) -> list[ResponseStreamEve
             type="response.output_item.done",
         ),
     ]
+
+
+def create_code_interpreter_item(
+    id: str, code: str | list[str], output_index: int
+) -> list[ResponseStreamEvent]:
+    """Create a message item."""
+    if isinstance(code, str):
+        code = [code]
+
+    container_id = "cntr_A"
+    events = [
+        ResponseOutputItemAddedEvent(
+            item=ResponseCodeInterpreterToolCall(
+                id=id,
+                code="",
+                container_id=container_id,
+                outputs=None,
+                type="code_interpreter_call",
+                status="in_progress",
+            ),
+            output_index=output_index,
+            sequence_number=0,
+            type="response.output_item.added",
+        ),
+        ResponseCodeInterpreterCallInProgressEvent(
+            item_id=id,
+            output_index=output_index,
+            sequence_number=0,
+            type="response.code_interpreter_call.in_progress",
+        ),
+    ]
+
+    events.extend(
+        ResponseCodeInterpreterCallCodeDeltaEvent(
+            delta=delta,
+            item_id=id,
+            output_index=output_index,
+            sequence_number=0,
+            type="response.code_interpreter_call_code.delta",
+        )
+        for delta in code
+    )
+
+    code = "".join(code)
+
+    events.extend(
+        [
+            ResponseCodeInterpreterCallCodeDoneEvent(
+                item_id=id,
+                output_index=output_index,
+                code=code,
+                sequence_number=0,
+                type="response.code_interpreter_call_code.done",
+            ),
+            ResponseCodeInterpreterCallInterpretingEvent(
+                item_id=id,
+                output_index=output_index,
+                sequence_number=0,
+                type="response.code_interpreter_call.interpreting",
+            ),
+            ResponseCodeInterpreterCallCompletedEvent(
+                item_id=id,
+                output_index=output_index,
+                sequence_number=0,
+                type="response.code_interpreter_call.completed",
+            ),
+            ResponseOutputItemDoneEvent(
+                item=ResponseCodeInterpreterToolCall(
+                    id=id,
+                    code=code,
+                    container_id=container_id,
+                    outputs=None,
+                    status="completed",
+                    type="code_interpreter_call",
+                ),
+                output_index=output_index,
+                sequence_number=0,
+                type="response.output_item.done",
+            ),
+        ]
+    )
+
+    return events

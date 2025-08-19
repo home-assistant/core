@@ -13,12 +13,14 @@ from homeassistant.components.openai_conversation.config_flow import (
 )
 from homeassistant.components.openai_conversation.const import (
     CONF_CHAT_MODEL,
+    CONF_CODE_INTERPRETER,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_REASONING_EFFORT,
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_TOP_P,
+    CONF_VERBOSITY,
     CONF_WEB_SEARCH,
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_CONTEXT_SIZE,
@@ -301,7 +303,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
             (
                 {
                     CONF_RECOMMENDED: False,
-                    CONF_PROMPT: "Speak like a pirate",
+                    CONF_PROMPT: "Speak like a pro",
                 },
                 {
                     CONF_TEMPERATURE: 1.0,
@@ -311,16 +313,18 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 },
                 {
                     CONF_REASONING_EFFORT: "high",
+                    CONF_CODE_INTERPRETER: True,
                 },
             ),
             {
                 CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pirate",
+                CONF_PROMPT: "Speak like a pro",
                 CONF_TEMPERATURE: 1.0,
                 CONF_CHAT_MODEL: "o1-pro",
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_MAX_TOKENS: 10000,
                 CONF_REASONING_EFFORT: "high",
+                CONF_CODE_INTERPRETER: True,
             },
         ),
         (  # options for web search without user location
@@ -343,6 +347,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                     CONF_WEB_SEARCH: True,
                     CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                     CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_CODE_INTERPRETER: False,
                 },
             ),
             {
@@ -355,6 +360,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_CODE_INTERPRETER: False,
             },
         ),
         # Test that current options are showed as suggested values
@@ -373,6 +379,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH_REGION: "California",
                 CONF_WEB_SEARCH_COUNTRY: "US",
                 CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+                CONF_CODE_INTERPRETER: True,
             },
             (
                 {
@@ -389,6 +396,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                     CONF_WEB_SEARCH: True,
                     CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                     CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_CODE_INTERPRETER: True,
                 },
             ),
             {
@@ -401,39 +409,57 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_CODE_INTERPRETER: True,
             },
         ),
         (  # Case 2: reasoning model
             {
                 CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pro",
+                CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 0.8,
-                CONF_CHAT_MODEL: "o1-pro",
+                CONF_CHAT_MODEL: "gpt-5",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
-                CONF_REASONING_EFFORT: "high",
+                CONF_REASONING_EFFORT: "low",
+                CONF_VERBOSITY: "high",
+                CONF_CODE_INTERPRETER: False,
+                CONF_WEB_SEARCH: False,
+                CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
+                CONF_WEB_SEARCH_USER_LOCATION: False,
             },
             (
                 {
                     CONF_RECOMMENDED: False,
-                    CONF_PROMPT: "Speak like a pro",
+                    CONF_PROMPT: "Speak like a pirate",
                 },
                 {
                     CONF_TEMPERATURE: 0.8,
-                    CONF_CHAT_MODEL: "o1-pro",
+                    CONF_CHAT_MODEL: "gpt-5",
                     CONF_TOP_P: 0.9,
                     CONF_MAX_TOKENS: 1000,
                 },
-                {CONF_REASONING_EFFORT: "high"},
+                {
+                    CONF_REASONING_EFFORT: "minimal",
+                    CONF_CODE_INTERPRETER: False,
+                    CONF_VERBOSITY: "high",
+                    CONF_WEB_SEARCH: False,
+                    CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
+                    CONF_WEB_SEARCH_USER_LOCATION: False,
+                },
             ),
             {
                 CONF_RECOMMENDED: False,
-                CONF_PROMPT: "Speak like a pro",
+                CONF_PROMPT: "Speak like a pirate",
                 CONF_TEMPERATURE: 0.8,
-                CONF_CHAT_MODEL: "o1-pro",
+                CONF_CHAT_MODEL: "gpt-5",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
-                CONF_REASONING_EFFORT: "high",
+                CONF_REASONING_EFFORT: "minimal",
+                CONF_CODE_INTERPRETER: False,
+                CONF_VERBOSITY: "high",
+                CONF_WEB_SEARCH: False,
+                CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
+                CONF_WEB_SEARCH_USER_LOCATION: False,
             },
         ),
         # Test that old options are removed after reconfiguration
@@ -445,6 +471,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_CHAT_MODEL: "gpt-4o",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
+                CONF_CODE_INTERPRETER: True,
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                 CONF_WEB_SEARCH_USER_LOCATION: True,
@@ -472,10 +499,13 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_LLM_HASS_API: ["assist"],
                 CONF_TEMPERATURE: 0.8,
-                CONF_CHAT_MODEL: "gpt-4o",
+                CONF_CHAT_MODEL: "gpt-5",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
                 CONF_REASONING_EFFORT: "high",
+                CONF_CODE_INTERPRETER: True,
+                CONF_VERBOSITY: "low",
+                CONF_WEB_SEARCH: False,
             },
             (
                 {
@@ -504,6 +534,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH_REGION: "California",
                 CONF_WEB_SEARCH_COUNTRY: "US",
                 CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+                CONF_CODE_INTERPRETER: True,
             },
             (
                 {
@@ -518,6 +549,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 },
                 {
                     CONF_REASONING_EFFORT: "low",
+                    CONF_CODE_INTERPRETER: True,
                 },
             ),
             {
@@ -528,6 +560,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
                 CONF_REASONING_EFFORT: "low",
+                CONF_CODE_INTERPRETER: True,
             },
         ),
         (  # Case 4: reasoning to web search
@@ -536,10 +569,12 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_PROMPT: "Speak like a pirate",
                 CONF_LLM_HASS_API: ["assist"],
                 CONF_TEMPERATURE: 0.8,
-                CONF_CHAT_MODEL: "o3-mini",
+                CONF_CHAT_MODEL: "o5",
                 CONF_TOP_P: 0.9,
                 CONF_MAX_TOKENS: 1000,
                 CONF_REASONING_EFFORT: "low",
+                CONF_CODE_INTERPRETER: True,
+                CONF_VERBOSITY: "medium",
             },
             (
                 {
@@ -556,6 +591,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                     CONF_WEB_SEARCH: True,
                     CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
                     CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_CODE_INTERPRETER: False,
                 },
             ),
             {
@@ -568,6 +604,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_CODE_INTERPRETER: False,
             },
         ),
     ],
@@ -718,6 +755,7 @@ async def test_subentry_web_search_user_location(
         CONF_WEB_SEARCH_REGION: "California",
         CONF_WEB_SEARCH_COUNTRY: "US",
         CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+        CONF_CODE_INTERPRETER: False,
     }
 
 
@@ -817,12 +855,24 @@ async def test_creating_ai_task_subentry_advanced(
         },
     )
 
-    assert result3.get("type") is FlowResultType.CREATE_ENTRY
-    assert result3.get("title") == "Advanced AI Task"
-    assert result3.get("data") == {
+    assert result3.get("type") is FlowResultType.FORM
+    assert result3.get("step_id") == "model"
+
+    # Configure model settings
+    result4 = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_CODE_INTERPRETER: False,
+        },
+    )
+
+    assert result4.get("type") is FlowResultType.CREATE_ENTRY
+    assert result4.get("title") == "Advanced AI Task"
+    assert result4.get("data") == {
         CONF_RECOMMENDED: False,
         CONF_CHAT_MODEL: "gpt-4o",
         CONF_MAX_TOKENS: 200,
         CONF_TEMPERATURE: 0.5,
         CONF_TOP_P: 0.9,
+        CONF_CODE_INTERPRETER: False,
     }

@@ -55,6 +55,15 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Smart Odor Eliminator-Pro
+    # Undocumented, see https://github.com/orgs/home-assistant/discussions/79
+    "cwjwq": (
+        SelectEntityDescription(
+            key=DPCode.WORK_MODE,
+            entity_category=EntityCategory.CONFIG,
+            translation_key="odor_elimination_mode",
+        ),
+    ),
     # Multi-functional Sensor
     # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
     "dgnbj": (
@@ -311,17 +320,20 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         SelectEntityDescription(
             key=DPCode.LED_TYPE_1,
             entity_category=EntityCategory.CONFIG,
-            translation_key="led_type",
+            translation_key="indexed_led_type",
+            translation_placeholders={"index": "1"},
         ),
         SelectEntityDescription(
             key=DPCode.LED_TYPE_2,
             entity_category=EntityCategory.CONFIG,
-            translation_key="led_type_2",
+            translation_key="indexed_led_type",
+            translation_placeholders={"index": "2"},
         ),
         SelectEntityDescription(
             key=DPCode.LED_TYPE_3,
             entity_category=EntityCategory.CONFIG,
-            translation_key="led_type_3",
+            translation_key="indexed_led_type",
+            translation_placeholders={"index": "3"},
         ),
     ),
     # Dimmer
@@ -330,12 +342,14 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         SelectEntityDescription(
             key=DPCode.LED_TYPE_1,
             entity_category=EntityCategory.CONFIG,
-            translation_key="led_type",
+            translation_key="indexed_led_type",
+            translation_placeholders={"index": "1"},
         ),
         SelectEntityDescription(
             key=DPCode.LED_TYPE_2,
             entity_category=EntityCategory.CONFIG,
-            translation_key="led_type_2",
+            translation_key="indexed_led_type",
+            translation_placeholders={"index": "2"},
         ),
     ),
 }

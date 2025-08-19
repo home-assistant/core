@@ -3,6 +3,7 @@
 from typing import Any
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import setup
 from homeassistant.components import lock, template
@@ -19,9 +20,10 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import ConfigurationStyle
+from .conftest import ConfigurationStyle, async_get_flow_preview_state
 
-from tests.common import assert_setup_component
+from tests.common import MockConfigEntry, assert_setup_component
+from tests.typing import WebSocketGenerator
 
 TEST_OBJECT_ID = "test_template_lock"
 TEST_ENTITY_ID = f"lock.{TEST_OBJECT_ID}"
@@ -1137,3 +1139,140 @@ async def test_emtpy_action_config(hass: HomeAssistant) -> None:
 
     state = hass.states.get("lock.test_template_lock")
     assert state.state == LockState.LOCKED
+
+
+@pytest.mark.parametrize(
+    ("count", "lock_config"),
+    [
+        (
+            1,
+            {
+                "name": TEST_OBJECT_ID,
+                "lock": [],
+                "unlock": [],
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_lock")
+async def test_optimistic(hass: HomeAssistant) -> None:
+    """Test configuration with optimistic state."""
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == LockState.UNLOCKED
+
+    # Ensure Trigger template entities update.
+    hass.states.async_set(TEST_STATE_ENTITY_ID, "anything")
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        lock.DOMAIN,
+        lock.SERVICE_LOCK,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == LockState.LOCKED
+
+    await hass.services.async_call(
+        lock.DOMAIN,
+        lock.SERVICE_UNLOCK,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == LockState.UNLOCKED
+
+
+@pytest.mark.parametrize(
+    ("count", "lock_config"),
+    [
+        (
+            1,
+            {
+                "name": TEST_OBJECT_ID,
+                "state": "{{ is_state('sensor.test_state', 'on') }}",
+                "lock": [],
+                "unlock": [],
+                "optimistic": False,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.usefixtures("setup_lock")
+async def test_not_optimistic(hass: HomeAssistant) -> None:
+    """Test optimistic yaml option set to false."""
+    await hass.services.async_call(
+        lock.DOMAIN,
+        lock.SERVICE_LOCK,
+        {ATTR_ENTITY_ID: TEST_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == LockState.UNLOCKED
+
+
+async def test_setup_config_entry(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Tests creating a lock from a config entry."""
+
+    hass.states.async_set(
+        "sensor.test_state",
+        LockState.LOCKED,
+        {},
+    )
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": "My template",
+            "state": "{{ states('sensor.test_state') }}",
+            "lock": [],
+            "unlock": [],
+            "template_type": lock.DOMAIN,
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lock.my_template")
+    assert state is not None
+    assert state == snapshot
+
+
+async def test_flow_preview(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the config flow preview."""
+
+    state = await async_get_flow_preview_state(
+        hass,
+        hass_ws_client,
+        lock.DOMAIN,
+        {
+            "name": "My template",
+            "state": "{{ 'locked' }}",
+            "lock": [],
+            "unlock": [],
+        },
+    )
+
+    assert state["state"] == LockState.LOCKED

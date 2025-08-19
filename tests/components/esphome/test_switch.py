@@ -26,7 +26,6 @@ async def test_switch_generic_entity(
             object_id="myswitch",
             key=1,
             name="my switch",
-            unique_id="my_switch",
         )
     ]
     states = [SwitchState(key=1, state=True)]
@@ -78,14 +77,12 @@ async def test_switch_sub_device_non_zero_device_id(
             object_id="main_switch",
             key=1,
             name="Main Switch",
-            unique_id="main_switch_1",
             device_id=0,  # Main device
         ),
         SwitchInfo(
             object_id="sub_switch",
             key=2,
             name="Sub Switch",
-            unique_id="sub_switch_1",
             device_id=11111111,  # Sub-device
         ),
     ]

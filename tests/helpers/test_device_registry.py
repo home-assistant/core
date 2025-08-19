@@ -107,7 +107,6 @@ async def test_get_or_create_returns_same_entry(
     assert entry3.model == "model"
     assert entry3.name == "name"
     assert entry3.sw_version == "sw-version"
-    assert entry3.suggested_area == "Game Room"
     assert entry3.area_id == game_room_area.id
 
     await hass.async_block_till_done()
@@ -409,7 +408,6 @@ async def test_loading_from_storage(
         name="name",
         primary_config_entry=mock_config_entry.entry_id,
         serial_number="serial_no",
-        suggested_area=None,  # Not stored
         sw_version="version",
     )
     assert isinstance(entry.config_entries, set)
@@ -1652,7 +1650,7 @@ async def test_removing_config_entries(
     assert update_events[4].data == {
         "action": "remove",
         "device_id": entry3.id,
-        "device": entry3,
+        "device": entry3.dict_repr,
     }
 
 
@@ -1725,12 +1723,12 @@ async def test_deleted_device_removing_config_entries(
     assert update_events[3].data == {
         "action": "remove",
         "device_id": entry.id,
-        "device": entry2,
+        "device": entry2.dict_repr,
     }
     assert update_events[4].data == {
         "action": "remove",
         "device_id": entry3.id,
-        "device": entry3,
+        "device": entry3.dict_repr,
     }
 
     device_registry.async_clear_config_entry(config_entry_1.entry_id)
@@ -1976,7 +1974,7 @@ async def test_removing_config_subentries(
     assert update_events[7].data == {
         "action": "remove",
         "device_id": entry.id,
-        "device": entry,
+        "device": entry.dict_repr,
     }
 
 
@@ -2106,7 +2104,7 @@ async def test_deleted_device_removing_config_subentries(
     assert update_events[4].data == {
         "action": "remove",
         "device_id": entry.id,
-        "device": entry4,
+        "device": entry4.dict_repr,
     }
 
     device_registry.async_clear_config_subentry(config_entry_1.entry_id, None)
@@ -2509,13 +2507,13 @@ async def test_loading_saving_data(
 
     # Ensure a save/load cycle does not keep suggested area
     new_kitchen_light = registry2.async_get_device(identifiers={("hue", "999")})
-    assert orig_kitchen_light.suggested_area == "Kitchen"
+    assert orig_kitchen_light.area_id == "kitchen"
 
-    orig_kitchen_light_witout_suggested_area = device_registry.async_update_device(
+    orig_kitchen_light_without_suggested_area = device_registry.async_update_device(
         orig_kitchen_light.id, suggested_area=None
     )
-    assert orig_kitchen_light_witout_suggested_area.suggested_area is None
-    assert orig_kitchen_light_witout_suggested_area == new_kitchen_light
+    assert orig_kitchen_light_without_suggested_area.area_id == "kitchen"
+    assert orig_kitchen_light_without_suggested_area == new_kitchen_light
 
 
 async def test_no_unnecessary_changes(
@@ -2930,7 +2928,7 @@ async def test_update_remove_config_entries(
     assert update_events[6].data == {
         "action": "remove",
         "device_id": entry3.id,
-        "device": entry3,
+        "device": entry3.dict_repr,
     }
 
 
@@ -3208,25 +3206,39 @@ async def test_update_remove_config_subentries(
     assert update_events[7].data == {
         "action": "remove",
         "device_id": entry_id,
-        "device": entry_before_remove,
+        "device": entry_before_remove.dict_repr,
     }
 
 
+@pytest.mark.parametrize(
+    ("initial_area", "device_area_id", "number_of_areas"),
+    [
+        (None, None, 0),
+        ("Living Room", "living_room", 1),
+    ],
+)
 async def test_update_suggested_area(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     area_registry: ar.AreaRegistry,
     mock_config_entry: MockConfigEntry,
+    initial_area: str | None,
+    device_area_id: str | None,
+    number_of_areas: int,
 ) -> None:
-    """Verify that we can update the suggested area version of a device."""
+    """Verify that we can update the suggested area of a device.
+
+    Updating the suggested area of a device should not create a new area, nor should
+    it change the area_id of the device.
+    """
     update_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
     entry = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
         identifiers={("bla", "123")},
+        suggested_area=initial_area,
     )
-    assert not entry.suggested_area
-    assert entry.area_id is None
+    assert entry.area_id == device_area_id
 
     suggested_area = "Pool"
 
@@ -3235,26 +3247,23 @@ async def test_update_suggested_area(
             entry.id, suggested_area=suggested_area
         )
 
-    assert mock_save.call_count == 1
+    # Check the device registry was not saved
+    assert mock_save.call_count == 0
     assert updated_entry != entry
-    assert updated_entry.suggested_area == suggested_area
+    assert updated_entry.area_id == device_area_id
 
-    pool_area = area_registry.async_get_area_by_name("Pool")
-    assert pool_area is not None
-    assert updated_entry.area_id == pool_area.id
-    assert len(area_registry.areas) == 1
+    # Check we did not create an area
+    pool_area = area_registry.async_get_area_by_name(suggested_area)
+    assert pool_area is None
+    assert updated_entry.area_id == device_area_id
+    assert len(area_registry.areas) == number_of_areas
 
     await hass.async_block_till_done()
 
-    assert len(update_events) == 2
+    assert len(update_events) == 1
     assert update_events[0].data == {
         "action": "create",
         "device_id": entry.id,
-    }
-    assert update_events[1].data == {
-        "action": "update",
-        "device_id": entry.id,
-        "changes": {"area_id": None, "suggested_area": None},
     }
 
     # Do not save or fire the event if the suggested
@@ -3264,10 +3273,10 @@ async def test_update_suggested_area(
         updated_entry = device_registry.async_update_device(
             entry.id, suggested_area="Other"
         )
-    assert len(update_events) == 2
+    assert len(update_events) == 1
     assert mock_save_2.call_count == 0
     assert updated_entry != entry
-    assert updated_entry.suggested_area == "Other"
+    assert updated_entry.area_id == device_area_id
 
 
 async def test_cleanup_device_registry(
@@ -3401,11 +3410,13 @@ async def test_cleanup_entity_registry_change(
         assert len(mock_call.mock_calls) == 2
 
 
+@pytest.mark.parametrize("initial_area", [None, "12345A"])
 @pytest.mark.usefixtures("freezer")
 async def test_restore_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     mock_config_entry_with_subentries: MockConfigEntry,
+    initial_area: str | None,
 ) -> None:
     """Make sure device id is stable."""
     entry_id = mock_config_entry_with_subentries.entry_id
@@ -3432,7 +3443,7 @@ async def test_restore_device(
     # Apply user customizations
     entry = device_registry.async_update_device(
         entry.id,
-        area_id="12345A",
+        area_id=initial_area,
         disabled_by=dr.DeviceEntryDisabler.USER,
         labels={"label1", "label2"},
         name_by_user="Test Friendly Name",
@@ -3475,7 +3486,6 @@ async def test_restore_device(
         name=None,
         primary_config_entry=entry_id,
         serial_number=None,
-        suggested_area=None,
         sw_version=None,
     )
     # This will restore the original device, user customizations of
@@ -3498,7 +3508,7 @@ async def test_restore_device(
         via_device="via_device_id_new",
     )
     assert entry3 == dr.DeviceEntry(
-        area_id="12345A",
+        area_id=initial_area,
         config_entries={entry_id},
         config_entries_subentries={entry_id: {subentry_id}},
         configuration_url="http://config_url_new.bla",
@@ -3551,7 +3561,7 @@ async def test_restore_device(
     assert update_events[2].data == {
         "action": "remove",
         "device_id": entry.id,
-        "device": entry,
+        "device": entry.dict_repr,
     }
     assert update_events[3].data == {
         "action": "create",
@@ -3874,7 +3884,7 @@ async def test_restore_shared_device(
     assert update_events[3].data == {
         "action": "remove",
         "device_id": entry.id,
-        "device": updated_device,
+        "device": updated_device.dict_repr,
     }
     assert update_events[4].data == {
         "action": "create",
@@ -3883,7 +3893,7 @@ async def test_restore_shared_device(
     assert update_events[5].data == {
         "action": "remove",
         "device_id": entry.id,
-        "device": entry2,
+        "device": entry2.dict_repr,
     }
     assert update_events[6].data == {
         "action": "create",
@@ -4905,3 +4915,44 @@ async def test_connections_validator() -> None:
     """Test checking connections validator."""
     with pytest.raises(ValueError, match="Invalid mac address format"):
         dr.DeviceEntry(connections={(dr.CONNECTION_NETWORK_MAC, "123456ABCDEF")})
+
+
+async def test_suggested_area_deprecation(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Make sure we do not duplicate entries."""
+    entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+        identifiers={("bridgeid", "0123")},
+        sw_version="sw-version",
+        name="name",
+        manufacturer="manufacturer",
+        model="model",
+        suggested_area="Game Room",
+    )
+
+    game_room_area = area_registry.async_get_area_by_name("Game Room")
+    assert game_room_area is not None
+    assert len(area_registry.areas) == 1
+
+    assert len(device_registry.devices) == 1
+    assert entry.area_id == game_room_area.id
+    assert entry.suggested_area == "Game Room"
+
+    assert (
+        "The deprecated function suggested_area was called. It will be removed in "
+        "HA Core 2026.9. Use code which ignores suggested_area instead"
+    ) in caplog.text
+
+    device_registry.async_update_device(entry.id, suggested_area="TV Room")
+
+    assert (
+        "Detected code that passes a suggested_area to device_registry.async_update "
+        "device. This will stop working in Home Assistant 2026.9.0, please report "
+        "this issue"
+    ) in caplog.text

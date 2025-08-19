@@ -18,5 +18,17 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "entity": {
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
+    "number": {
+      "humidity": {
+        "name": "[%key:component::sensor::entity_component::humidity::name%]"
+      }
+    }
   }
 }
