@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 
 from pydroplet.droplet import Droplet
 
@@ -33,6 +34,7 @@ class DropletSensorEntityDescription(SensorEntityDescription):
     """Describes Droplet sensor entity."""
 
     value_fn: Callable[[Droplet], float | str | None]
+    last_reset_fn: Callable[[Droplet], datetime | None] = lambda _: None
 
 
 SENSORS: list[DropletSensorEntityDescription] = [
@@ -48,13 +50,13 @@ SENSORS: list[DropletSensorEntityDescription] = [
     ),
     DropletSensorEntityDescription(
         key=KEY_VOLUME,
-        translation_key=KEY_VOLUME,
         device_class=SensorDeviceClass.WATER,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         suggested_unit_of_measurement=UnitOfVolume.GALLONS,
         suggested_display_precision=2,
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda device: device.get_volume_delta(),
+        last_reset_fn=lambda device: device.get_volume_last_fetched(),
     ),
     DropletSensorEntityDescription(
         key=KEY_SERVER_CONNECTIVITY,
@@ -81,7 +83,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Droplet sensors from config entry."""
-    coordinator: DropletDataCoordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
     async_add_entities([DropletSensor(coordinator, sensor) for sensor in SENSORS])
 
 
@@ -89,7 +91,7 @@ class DropletSensor(CoordinatorEntity[DropletDataCoordinator], SensorEntity):
     """Representation of a Droplet."""
 
     entity_description: DropletSensorEntityDescription
-    _attr_has_entity_name: bool = True
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -115,3 +117,8 @@ class DropletSensor(CoordinatorEntity[DropletDataCoordinator], SensorEntity):
         if self.entity_description.key == KEY_VOLUME:
             self._attr_last_reset = dt_util.now()
         return self.entity_description.value_fn(self.coordinator.droplet)
+
+    @property
+    def last_reset(self) -> datetime | None:
+        """Return the last reset of the sensor, if applicable."""
+        return self.entity_description.last_reset_fn(self.coordinator.droplet)

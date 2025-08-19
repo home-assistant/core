@@ -2,16 +2,13 @@
   "entity": {
     "sensor": {
       "current_flow_rate": {
-        "default": "mdi:water"
+        "default": "mdi:chart-line"
       },
       "server_connectivity": {
         "default": "mdi:web"
       },
       "signal_quality": {
         "default": "mdi:waveform"
-      },
-      "volume": {
-        "default": "mdi:chart-line"
       }
     }
   }

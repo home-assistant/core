@@ -8,17 +8,11 @@ from pydroplet.droplet import DropletConnection, DropletDiscovery
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import (
-    CONF_CODE,
-    CONF_DEVICE_ID,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-)
+from homeassistant.const import CONF_CODE, CONF_DEVICE_ID, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DEVICE_NAME, DOMAIN
+from .const import DOMAIN
 
 
 class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -43,7 +37,7 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(device_id)
 
         self._abort_if_unique_id_configured(
-            updates={CONF_HOST: self._droplet_discovery.host}
+            updates={CONF_IP_ADDRESS: self._droplet_discovery.host},
         )
 
         self.context.update({"title_placeholders": {"name": device_id}})
@@ -62,10 +56,9 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
                 session, user_input[CONF_CODE]
             ):
                 device_data = {
-                    CONF_HOST: self._droplet_discovery.host,
+                    CONF_IP_ADDRESS: self._droplet_discovery.host,
                     CONF_PORT: self._droplet_discovery.port,
                     CONF_DEVICE_ID: device_id,
-                    CONF_NAME: DEVICE_NAME,
                     CONF_CODE: user_input[CONF_CODE],
                 }
 
@@ -94,22 +87,21 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             self._droplet_discovery = DropletDiscovery(
-                user_input[CONF_HOST], DropletConnection.DEFAULT_PORT, ""
+                user_input[CONF_IP_ADDRESS], DropletConnection.DEFAULT_PORT, ""
             )
             session = async_get_clientsession(self.hass)
             if await self._droplet_discovery.try_connect(
                 session, user_input[CONF_CODE]
             ) and (device_id := await self._droplet_discovery.get_device_id()):
                 device_data = {
-                    CONF_HOST: self._droplet_discovery.host,
+                    CONF_IP_ADDRESS: self._droplet_discovery.host,
                     CONF_PORT: self._droplet_discovery.port,
                     CONF_DEVICE_ID: device_id,
-                    CONF_NAME: DEVICE_NAME,
                     CONF_CODE: user_input[CONF_CODE],
                 }
                 await self.async_set_unique_id(device_id, raise_on_progress=False)
                 self._abort_if_unique_id_configured(
-                    description_placeholders={CONF_DEVICE_ID: device_id}
+                    description_placeholders={CONF_DEVICE_ID: device_id},
                 )
 
                 return self.async_create_entry(
@@ -120,7 +112,7 @@ class DropletConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
-                {vol.Required(CONF_HOST): str, vol.Required(CONF_CODE): str}
+                {vol.Required(CONF_IP_ADDRESS): str, vol.Required(CONF_CODE): str}
             ),
             errors=errors,
         )

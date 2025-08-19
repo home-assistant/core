@@ -1,12 +1,6 @@
 """Constants for the droplet integration."""
 
-# Keys for values used in the config_entry data dictionary
-CONF_DEVICE_NAME = "name"
-CONF_MANUFACTURER = "manufacturer"
-CONF_SW = "sw"
-CONF_SERIAL = "sn"
-
-RECONNECT_DELAY = 5
+CONNECT_DELAY = 5
 
 DOMAIN = "droplet"
 DEVICE_NAME = "Droplet"

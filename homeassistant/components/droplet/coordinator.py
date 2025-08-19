@@ -9,14 +9,14 @@ import time
 from pydroplet.droplet import Droplet
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.const import CONF_CODE, CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, RECONNECT_DELAY
+from .const import CONNECT_DELAY, DEVICE_NAME, DOMAIN
 
 ML_L_CONVERSION = 1000
 VERSION_TIMEOUT = 5
@@ -38,7 +38,7 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
             hass, _LOGGER, config_entry=entry, name=f"{DOMAIN}-{entry.unique_id}"
         )
         self.droplet = Droplet(
-            host=entry.data[CONF_HOST],
+            host=entry.data[CONF_IP_ADDRESS],
             port=entry.data[CONF_PORT],
             token=entry.data[CONF_CODE],
             session=async_get_clientsession(self.hass),
@@ -55,7 +55,7 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
         assert self.config_entry.unique_id is not None
         self.dev_info = DeviceInfo(
             identifiers={(DOMAIN, self.config_entry.unique_id)},
-            name=self.config_entry.data[CONF_NAME],
+            name=DEVICE_NAME,
         )
         while not self.droplet.version_info_available():
             await asyncio.sleep(1)
@@ -82,10 +82,15 @@ class DropletDataCoordinator(DataUpdateCoordinator[None]):
         self.config_entry.async_on_unload(self.droplet.stop_listening)
         self.config_entry.async_create_background_task(
             self.hass,
-            self.droplet.listen_forever(RECONNECT_DELAY, self.async_set_updated_data),
+            self.droplet.listen_forever(CONNECT_DELAY, self.async_set_updated_data),
             "droplet-listen",
         )
-        return True
+        end = time.time() + CONNECT_DELAY
+        while time.time() < end:
+            if self.droplet.connected:
+                return True
+            await asyncio.sleep(1)
+        return False
 
     def get_availability(self) -> bool:
         """Retrieve Droplet's availability status."""
