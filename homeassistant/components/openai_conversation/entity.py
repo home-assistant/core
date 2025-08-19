@@ -92,6 +92,8 @@ MAX_TOOL_ITERATIONS = 10
 def _adjust_schema(schema: dict[str, Any]) -> None:
     """Adjust the schema to be compatible with OpenAI API."""
     if schema["type"] == "object":
+        schema.setdefault("strict", True)
+        schema.setdefault("additionalProperties", False)
         if "properties" not in schema:
             return
 
@@ -125,8 +127,6 @@ def _format_structured_output(
 
     _adjust_schema(result)
 
-    result["strict"] = True
-    result["additionalProperties"] = False
     return result
 
 
