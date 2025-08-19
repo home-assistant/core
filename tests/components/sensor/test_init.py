@@ -11,8 +11,12 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import sensor
-from homeassistant.components.number import NumberDeviceClass
+from homeassistant.components.number import (
+    AMBIGUOUS_UNITS as NUMBER_AMBIGUOUS_UNITS,
+    NumberDeviceClass,
+)
 from homeassistant.components.sensor import (
+    AMBIGUOUS_UNITS as SENSOR_AMBIGUOUS_UNITS,
     DEVICE_CLASS_STATE_CLASSES,
     DEVICE_CLASS_UNITS,
     DOMAIN,
@@ -190,6 +194,14 @@ async def test_ambiguous_unit_of_measurement_compat(
     state = hass.states.get(entity0.entity_id)
     assert state.state == "0.0"
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == normalized_unit
+
+
+def test_ambiguous_units_of_measurement_aligned() -> None:
+    """Make sure all ambiguous UOM for sensor are also available for number."""
+
+    for ambiguous_unit, unit in SENSOR_AMBIGUOUS_UNITS.items():
+        assert ambiguous_unit in NUMBER_AMBIGUOUS_UNITS
+        assert NUMBER_AMBIGUOUS_UNITS[ambiguous_unit] == unit
 
 
 @pytest.mark.parametrize("state_class", ["measurement", "total_increasing"])
