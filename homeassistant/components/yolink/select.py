@@ -49,13 +49,6 @@ async def set_sprinker_mode_fn(coordinator: YoLinkCoordinator, option: str) -> b
     return True
 
 
-def on_sprinkler_option_selected(
-    coordinator: YoLinkCoordinator, option: str
-) -> Awaitable[bool]:
-    """Handle sprinkler mode switching."""
-    return set_sprinker_mode_fn(coordinator, option)
-
-
 SELECTOR_MAPPINGS: tuple[YoLinkSelectEntityDescription, ...] = (
     YoLinkSelectEntityDescription(
         key="model",
@@ -66,7 +59,7 @@ SELECTOR_MAPPINGS: tuple[YoLinkSelectEntityDescription, ...] = (
         ),  # watering state report will missing state field
         exists_fn=lambda device: device.device_type == ATTR_DEVICE_SPRINKLER,
         should_update_entity=lambda value: value is not None,
-        on_option_selected=on_sprinkler_option_selected,
+        on_option_selected=set_sprinker_mode_fn,
     ),
 )
 
