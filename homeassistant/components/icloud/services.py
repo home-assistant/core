@@ -101,11 +101,9 @@ def update_account(service: ServiceCall) -> None:
 
 
 def _get_account(hass: HomeAssistant, account_identifier: str) -> IcloudAccount:
-    """Get iCloud account by identifier from config entries."""
     if account_identifier is None:
         return None
 
-    # Look through all iCloud config entries to find the account
     entry: IcloudConfigEntry
     for entry in hass.config_entries.async_loaded_entries(DOMAIN):
         if entry.runtime_data.username == account_identifier:
