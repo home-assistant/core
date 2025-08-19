@@ -70,7 +70,7 @@ ulid-transform==1.4.0
 urllib3>=2.0
 uv==0.8.9
 voluptuous-openapi==0.1.0
-voluptuous-serialize==2.6.0
+voluptuous-serialize==2.7.0
 voluptuous==0.15.2
 webrtc-models==0.3.0
 yarl==1.20.1
@@ -168,7 +168,7 @@ poetry==1000000000.0.0
 # We want to skip the binary wheels for the 'charset-normalizer' packages.
 # They are build with mypyc, but causes issues with our wheel builder.
 # In order to do so, we need to constrain the version.
-charset-normalizer==3.4.0
+charset-normalizer==3.4.3
 
 # dacite: Ensure we have a version that is able to handle type unions for
 # NAM, Brother, and GIOS.
@@ -220,3 +220,6 @@ num2words==0.5.14
 # downgraded or upgraded by custom components
 # This ensures all use the same version
 pymodbus==3.11.1
+
+# Some packages don't support gql 4.0.0 yet
+gql<4.0.0
