@@ -613,7 +613,7 @@
               },
               "data_description": {
                 "payload_lock": "The payload sent when a \"lock\" command is issued.",
-                "payload_open": "The payload sent when an \"open\" command is issued. Set this payload if your lock support the \"open\" action.",
+                "payload_open": "The payload sent when an \"open\" command is issued. Set this payload if your lock supports the \"open\" action.",
                 "payload_reset": "The payload received at the state topic that resets the lock to an unknown state.",
                 "payload_unlock": "The payload sent when an \"unlock\" command is issued.",
                 "state_jammed": "The payload received at the state topic that represents the \"jammed\" state.",
