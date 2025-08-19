@@ -22,7 +22,7 @@ HAP-python==4.9.2
 HATasmota==0.10.0
 
 # homeassistant.components.mastodon
-Mastodon.py==2.0.1
+Mastodon.py==2.1.0
 
 # homeassistant.components.playstation_network
 PSNAWP==3.0.0
@@ -81,7 +81,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.68.3
+PySwitchbot==0.68.4
 
 # homeassistant.components.syncthru
 PySyncThru==0.8.0
@@ -357,7 +357,7 @@ aioridwell==2024.01.0
 aioruckus==0.42
 
 # homeassistant.components.russound_rio
-aiorussound==4.8.0
+aiorussound==4.8.1
 
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
@@ -1020,7 +1020,7 @@ hole==0.9.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.78
+holidays==0.79
 
 # homeassistant.components.frontend
 home-assistant-frontend==20250811.0
@@ -1162,7 +1162,7 @@ lektricowifi==0.1
 letpot==0.6.1
 
 # homeassistant.components.foscam
-libpyfoscamcgi==0.0.6
+libpyfoscamcgi==0.0.7
 
 # homeassistant.components.mikrotik
 librouteros==3.2.0
