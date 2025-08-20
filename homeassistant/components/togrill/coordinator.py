@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
 import logging
 from typing import TypeVar
@@ -78,6 +79,7 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
         self.device_info = DeviceInfo(
             connections={(CONNECTION_BLUETOOTH, self.address)}
         )
+        self._packet_listeners: list[Callable[[Packet], None]] = []
 
         config_entry.async_on_unload(
             async_register_callback(
@@ -87,6 +89,23 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
                 BluetoothScanningMode.ACTIVE,
             )
         )
+
+    @callback
+    def async_add_packet_listener(
+        self, packet_callback: Callable[[Packet], None]
+    ) -> Callable[[], None]:
+        """Add a listener for a given packet type."""
+
+        def _unregister():
+            self._packet_listeners.remove(packet_callback)
+
+        self._packet_listeners.append(packet_callback)
+        return _unregister
+
+    def async_update_packet_listeners(self, packet: Packet):
+        """Update all packet listeners."""
+        for listener in self._packet_listeners:
+            listener(packet)
 
     async def _connect_and_update_registry(self) -> Client:
         """Update device registry data."""
@@ -151,6 +170,7 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
     def _notify_callback(self, packet: Packet):
         probe = getattr(packet, "probe", None)
         self.data[(packet.type, probe)] = packet
+        self.async_update_packet_listeners(packet)
         self.async_update_listeners()
 
     async def _async_update_data(self) -> dict[tuple[int, int | None], Packet]:
