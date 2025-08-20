@@ -63,6 +63,8 @@ async def test_format_structured_output() -> None:
                         "item_value",
                     ],
                     "type": "object",
+                    "additionalProperties": False,
+                    "strict": True,
                 },
                 "type": "array",
             },
