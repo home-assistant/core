@@ -3,7 +3,7 @@
   "services": {
     "log": {
       "name": "Log",
-      "description": "Creates a custom entry in the activity log.",
+      "description": "Track a custom activity.",
       "fields": {
         "name": {
           "name": "[%key:common::config_flow::data::name%]",
@@ -11,15 +11,15 @@
         },
         "message": {
           "name": "Message",
-          "description": "Message of the activity log entry."
+          "description": "Message of the activity."
         },
         "entity_id": {
           "name": "Entity ID",
-          "description": "Entity to reference in the activity log entry."
+          "description": "Entity to reference in the activity."
         },
         "domain": {
           "name": "Domain",
-          "description": "Determines which icon is used in the activity log entry. The icon illustrates the integration domain related to this activity log entry."
+          "description": "Determines which icon is used in the activity. The icon illustrates the integration domain related to this activity."
         }
       }
     }
