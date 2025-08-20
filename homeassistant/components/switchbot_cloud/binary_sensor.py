@@ -50,7 +50,7 @@ MOVE_DETECTED_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
     key="moveDetected",
     device_class=BinarySensorDeviceClass.MOTION,
     value_fn=lambda data: data.get("moveDetected") is True
-    or data.get("detectionState", "") == "DETECTED",
+    or data.get("detectionState") == "DETECTED",
 )
 
 IS_LIGHT_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
