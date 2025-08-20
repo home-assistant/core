@@ -56,4 +56,8 @@ class ToGrillEventEntity(ToGrillEntity, EventEntity):
             message = PacketA5Notify.Message(packet.message)
         except ValueError:
             return
+
+        if packet.probe != self._probe_number:
+            return
+
         self._trigger_event(slugify(message.name))
