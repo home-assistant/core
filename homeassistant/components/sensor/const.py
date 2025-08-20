@@ -792,7 +792,7 @@ STATE_CLASS_UNITS: dict[SensorStateClass | str, set[type[StrEnum] | str | None]]
 
 # We translate units that were using using the legacy coding of μ \u00b5
 # to units using recommended coding of μ \u03bc
-AMBIGUOUS_UNITS: dict[str | None, str] = {
+AMBIGUOUS_UNITS: dict[str, str] = {
     "\u00b5Sv/h": "μSv/h",  # aranet: radiation rate
     "\u00b5S/cm": UnitOfConductivity.MICROSIEMENS_PER_CM,
     "\u00b5V": UnitOfElectricPotential.MICROVOLT,
