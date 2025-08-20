@@ -22,6 +22,7 @@ class FoscamNumberEntityDescription(NumberEntityDescription):
 
     native_value_fn: Callable[..., int]
     set_value_fn: Callable[[FoscamCamera, float], Any]
+    exists_fn: Callable[..., int]
 
 
 NUMBER_DESCRIPTIONS: list[FoscamNumberEntityDescription] = [
@@ -33,6 +34,7 @@ NUMBER_DESCRIPTIONS: list[FoscamNumberEntityDescription] = [
         native_step=1,
         native_value_fn=lambda data: data.device_volume,
         set_value_fn=lambda session, value: session.setAudioVolume(value),
+        exists_fn=lambda coordinator: 1,
     ),
     FoscamNumberEntityDescription(
         key="speak_volume",
@@ -42,6 +44,7 @@ NUMBER_DESCRIPTIONS: list[FoscamNumberEntityDescription] = [
         native_step=1,
         native_value_fn=lambda data: data.speak_volume,
         set_value_fn=lambda session, value: session.setSpeakVolume(value),
+        exists_fn=lambda coordinator: coordinator.data.supports_speak_volume_adjustment,
     ),
 ]
 
@@ -53,20 +56,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up foscam number from a config entry."""
     coordinator = config_entry.runtime_data
-    await coordinator.async_config_entry_first_refresh()
-    entities = []
-    for description in NUMBER_DESCRIPTIONS:
-        if description.key == "speak_volume":
-            if not coordinator.data.supports_speak_volume_adjustment:
-                continue
-        entities.append(FoscamVolumeNumberEntity(coordinator, description))
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            FoscamVolumeNumberEntity(coordinator, description)
+            for description in NUMBER_DESCRIPTIONS
+            if description.exists_fn is None or description.exists_fn(coordinator)
+        ]
+    )
 
 
 class FoscamVolumeNumberEntity(FoscamEntity, NumberEntity):
     """Representation of a Foscam Smart AI number entity."""
 
-    _attr_has_entity_name = True
     entity_description: FoscamNumberEntityDescription
 
     def __init__(
@@ -82,7 +83,7 @@ class FoscamVolumeNumberEntity(FoscamEntity, NumberEntity):
         self._attr_unique_id = f"{entry_id}_{description.key}"
 
     @property
-    def native_value(self):
+    def native_value(self) -> float:
         """Return the current value."""
         return self.entity_description.native_value_fn(self.coordinator.data)
 
