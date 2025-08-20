@@ -29,6 +29,7 @@ STATE_MAX_VALUE = "maximum_value"
 STATE_VALUE = "value"
 STATE_OBJECT = "object"
 CONF_INTERVAL = "interval"
+CONF_POLLING_ENABLED = "polling_enabled"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -41,7 +42,11 @@ OHM_CHILDREN = "Children"
 OHM_NAME = "Text"
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_HOST): cv.string, vol.Optional(CONF_PORT, default=8085): cv.port}
+    {
+        vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_PORT, default=8085): cv.port,
+        vol.Optional(CONF_POLLING_ENABLED, default=True): cv.boolean,
+    }
 )
 
 
@@ -52,16 +57,22 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Open Hardware Monitor platform."""
+    polling_enabled = config.get(CONF_POLLING_ENABLED, True)
     data = OpenHardwareMonitorData(config, hass)
     if data.data is None:
         raise PlatformNotReady
-    add_entities(data.devices, True)
+    entities = data.devices
+    if not polling_enabled:
+        for entity in entities:
+            entity.should_poll = False
+    add_entities(entities, True)
 
 
 class OpenHardwareMonitorDevice(SensorEntity):
     """Device used to display information from OpenHardwareMonitor."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_should_poll = True
 
     def __init__(self, data, name, path, unit_of_measurement):
         """Initialize an OpenHardwareMonitor sensor."""
