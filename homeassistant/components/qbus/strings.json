@@ -17,6 +17,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "raining": {
+        "name": "Raining"
+      },
+      "twilight": {
+        "name": "Twilight"
+      }
+    },
     "sensor": {
       "daylight": {
         "name": "Daylight"
