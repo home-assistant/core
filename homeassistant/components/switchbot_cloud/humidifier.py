@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudData
-from .const import AFTER_COMMAND_REFRESH, DOMAIN, Humidifier2Mode
+from .const import AFTER_COMMAND_REFRESH, DOMAIN, HUMIDITY_LEVELS, Humidifier2Mode
 from .entity import SwitchBotCloudEntity
 
 PARALLEL_UPDATES = 0
@@ -59,17 +59,12 @@ class SwitchBotHumidifier(SwitchBotCloudEntity, HumidifierEntity):
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
-        if 0 <= humidity <= 34:
-            humidity, para = 34, 101
-        elif 35 <= humidity <= 67:
-            humidity, para = 67, 102
-        else:
-            humidity, para = (
-                100,
-                103,
-            )  # humidifer only support set humidity to 34, 67, or 100
-        self.target_humidity = humidity
-        await self.send_api_command(HumidifierCommands.SET_MODE, parameters=str(para))
+        self.target_humidity, parameters = self._map_humidity_to_supported_level(
+            humidity
+        )
+        await self.send_api_command(
+            HumidifierCommands.SET_MODE, parameters=str(parameters)
+        )
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
 
@@ -95,6 +90,14 @@ class SwitchBotHumidifier(SwitchBotCloudEntity, HumidifierEntity):
         await self.send_api_command(CommonCommands.OFF)
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
+
+    def _map_humidity_to_supported_level(self, humidity: int) -> tuple[int, int]:
+        """Map any humidity to the closest supported level and its parameter."""
+        if humidity <= 34:
+            return 34, HUMIDITY_LEVELS[34]
+        if humidity <= 67:
+            return 67, HUMIDITY_LEVELS[67]
+        return 100, HUMIDITY_LEVELS[100]
 
 
 class SwitchBotEvaporativeHumidifier(SwitchBotCloudEntity, HumidifierEntity):
