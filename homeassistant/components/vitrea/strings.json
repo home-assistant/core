@@ -11,7 +11,7 @@
         },
         "data_description": {
           "host": "IP address or hostname of the Vitrea device",
-          "port": "Port number (default: 11502)"
+          "port": "Port number"
         }
       }
     },
