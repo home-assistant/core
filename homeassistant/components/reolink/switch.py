@@ -20,6 +20,7 @@ from .entity import (
     ReolinkChannelEntityDescription,
     ReolinkChimeCoordinatorEntity,
     ReolinkChimeEntityDescription,
+    ReolinkHostChimeCoordinatorEntity,
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
@@ -364,9 +365,7 @@ async def async_setup_entry(
     """Set up a Reolink switch entities."""
     reolink_data: ReolinkData = config_entry.runtime_data
 
-    entities: list[
-        ReolinkSwitchEntity | ReolinkNVRSwitchEntity | ReolinkChimeSwitchEntity
-    ] = [
+    entities: list[SwitchEntity] = [
         ReolinkSwitchEntity(reolink_data, channel, entity_description)
         for entity_description in SWITCH_ENTITIES
         for channel in reolink_data.host.api.channels
@@ -381,6 +380,13 @@ async def async_setup_entry(
         ReolinkChimeSwitchEntity(reolink_data, chime, entity_description)
         for entity_description in CHIME_SWITCH_ENTITIES
         for chime in reolink_data.host.api.chime_list
+        if chime.channel is not None
+    )
+    entities.extend(
+        ReolinkHostChimeSwitchEntity(reolink_data, chime, entity_description)
+        for entity_description in CHIME_SWITCH_ENTITIES
+        for chime in reolink_data.host.api.chime_list
+        if chime.channel is None
     )
 
     # Can be removed in HA 2025.4.0
@@ -480,6 +486,39 @@ class ReolinkNVRSwitchEntity(ReolinkHostCoordinatorEntity, SwitchEntity):
 
 
 class ReolinkChimeSwitchEntity(ReolinkChimeCoordinatorEntity, SwitchEntity):
+    """Base switch entity class for a chime."""
+
+    entity_description: ReolinkChimeSwitchEntityDescription
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        chime: Chime,
+        entity_description: ReolinkChimeSwitchEntityDescription,
+    ) -> None:
+        """Initialize Reolink switch entity."""
+        self.entity_description = entity_description
+        super().__init__(reolink_data, chime)
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if switch is on."""
+        return self.entity_description.value(self._chime)
+
+    @raise_translated_error
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the entity on."""
+        await self.entity_description.method(self._chime, True)
+        self.async_write_ha_state()
+
+    @raise_translated_error
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+        await self.entity_description.method(self._chime, False)
+        self.async_write_ha_state()
+
+
+class ReolinkHostChimeSwitchEntity(ReolinkHostChimeCoordinatorEntity, SwitchEntity):
     """Base switch entity class for a chime."""
 
     entity_description: ReolinkChimeSwitchEntityDescription

@@ -30,6 +30,7 @@ from .entity import (
     ReolinkChannelEntityDescription,
     ReolinkChimeCoordinatorEntity,
     ReolinkChimeEntityDescription,
+    ReolinkHostChimeCoordinatorEntity,
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
@@ -363,9 +364,7 @@ async def async_setup_entry(
     """Set up a Reolink select entities."""
     reolink_data: ReolinkData = config_entry.runtime_data
 
-    entities: list[
-        ReolinkSelectEntity | ReolinkHostSelectEntity | ReolinkChimeSelectEntity
-    ] = [
+    entities: list[SelectEntity] = [
         ReolinkSelectEntity(reolink_data, channel, entity_description)
         for entity_description in SELECT_ENTITIES
         for channel in reolink_data.host.api.channels
@@ -381,6 +380,14 @@ async def async_setup_entry(
         for entity_description in CHIME_SELECT_ENTITIES
         for chime in reolink_data.host.api.chime_list
         if entity_description.supported(chime)
+        if chime.channel is not None
+    )
+    entities.extend(
+        ReolinkHostChimeSelectEntity(reolink_data, chime, entity_description)
+        for entity_description in CHIME_SELECT_ENTITIES
+        for chime in reolink_data.host.api.chime_list
+        if entity_description.supported(chime)
+        if chime.channel is None
     )
     async_add_entities(entities)
 
@@ -458,7 +465,45 @@ class ReolinkHostSelectEntity(ReolinkHostCoordinatorEntity, SelectEntity):
 
 
 class ReolinkChimeSelectEntity(ReolinkChimeCoordinatorEntity, SelectEntity):
-    """Base select entity class for Reolink IP cameras."""
+    """Base select entity class for Reolink chimes connected through a camera."""
+
+    entity_description: ReolinkChimeSelectEntityDescription
+
+    def __init__(
+        self,
+        reolink_data: ReolinkData,
+        chime: Chime,
+        entity_description: ReolinkChimeSelectEntityDescription,
+    ) -> None:
+        """Initialize Reolink select entity for a chime."""
+        self.entity_description = entity_description
+        super().__init__(reolink_data, chime)
+        self._log_error = True
+        self._attr_options = entity_description.get_options
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the current option."""
+        try:
+            option = self.entity_description.value(self._chime)
+        except (ValueError, KeyError):
+            if self._log_error:
+                _LOGGER.exception("Reolink '%s' has an unknown value", self.name)
+                self._log_error = False
+            return None
+
+        self._log_error = True
+        return option
+
+    @raise_translated_error
+    async def async_select_option(self, option: str) -> None:
+        """Change the selected option."""
+        await self.entity_description.method(self._chime, option)
+        self.async_write_ha_state()
+
+
+class ReolinkHostChimeSelectEntity(ReolinkHostChimeCoordinatorEntity, SelectEntity):
+    """Base select entity class for Reolink chimes connected to a host."""
 
     entity_description: ReolinkChimeSelectEntityDescription
 
