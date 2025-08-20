@@ -83,6 +83,19 @@
       "total_discharging_energy": {
         "name": "Total Discharging Energy"
       }
+    },
+    "select": {
+      "work_mode_setting": {
+        "name": "Work Mode",
+        "state": {
+          "battery_priority": "Battery Priority",
+          "grid_priority": "Grid Priority",
+          "none": "None",
+          "power_keeping": "Power Keeping",
+          "self_consumption": "Self Consumption",
+          "time_period": "Time Period"
+        }
+      }
     }
   }
 }
