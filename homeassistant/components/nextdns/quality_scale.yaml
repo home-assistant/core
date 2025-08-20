@@ -73,8 +73,8 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow:
-    status: exempt
-    comment: Only parameter that could be changed profile_id would force a new config entry.
+    status: todo
+    comment: Allow API key to be changed in the re-configure flow.
   repair-issues:
     status: exempt
     comment: This integration doesn't have any cases where raising an issue is needed.
