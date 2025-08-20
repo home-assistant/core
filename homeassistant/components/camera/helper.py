@@ -33,4 +33,6 @@ async def get_dynamic_camera_stream_settings(
     hass: HomeAssistant, entity_id: str
 ) -> DynamicStreamSettings:
     """Get dynamic stream settings for a camera entity."""
+    if DATA_CAMERA_PREFS not in hass.data:
+        raise HomeAssistantError("Camera integration not set up")
     return await hass.data[DATA_CAMERA_PREFS].get_dynamic_stream_settings(entity_id)
