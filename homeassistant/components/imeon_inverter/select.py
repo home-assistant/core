@@ -10,20 +10,13 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_INVERTER_MODE
+from .const import ATTR_INVERTER_MODE, INVERTER_MODE_OPTIONS
 from .coordinator import Inverter, InverterCoordinator
 from .entity import InverterEntity
 
 type InverterConfigEntry = ConfigEntry[InverterCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
-
-DISPLAY_MODE = {
-    "smg": "Smart-Grid",
-    "bup": "Backup",
-    "ong": "On-grid",
-    "ofg": "Off-grid",
-}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -37,7 +30,7 @@ SELECT_DESCRIPTIONS: tuple[ImeonSelectEntityDescription, ...] = (
     ImeonSelectEntityDescription(
         key="manager_inverter_mode",
         translation_key="manager_inverter_mode",
-        options=ATTR_INVERTER_MODE,
+        options=INVERTER_MODE_OPTIONS,
         set_value_fn=lambda api, mode: api.set_inverter_mode(mode),
     ),
 )
@@ -67,12 +60,17 @@ class InverterSelect(InverterEntity, SelectEntity):
     def current_option(self) -> str | None:
         """Return the state of the select."""
         value = self.coordinator.data.get(self.data_key)
-        return DISPLAY_MODE.get(str(value), str(value)) if value is not None else None
+        return (
+            ATTR_INVERTER_MODE.get(str(value), str(value))
+            if value is not None
+            else None
+        )
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        reverse_map = {v: k for k, v in DISPLAY_MODE.items()}
+        reverse_map = {v: k for k, v in ATTR_INVERTER_MODE.items()}
+        api_code = reverse_map.get(option, option)
         await self.entity_description.set_value_fn(
             self.coordinator.api,
-            reverse_map.get(option, option),
+            api_code,
         )

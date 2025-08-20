@@ -9,7 +9,13 @@ PLATFORMS = [
     Platform.SENSOR,
 ]
 ATTR_BATTERY_STATUS = ["charging", "discharging", "charged"]
-ATTR_INVERTER_MODE = ["smg", "bup", "ong", "ofg"]
+ATTR_INVERTER_MODE = {
+    "smg": "Smart-Grid",
+    "bup": "Backup",
+    "ong": "On-grid",
+    "ofg": "Off-grid",
+}
+INVERTER_MODE_OPTIONS = list(ATTR_INVERTER_MODE.values())
 ATTR_INVERTER_STATE = [
     "unsynchronized",
     "grid_consumption",

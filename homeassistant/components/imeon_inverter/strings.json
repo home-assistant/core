@@ -218,7 +218,7 @@
       "manager_inverter_mode": {
         "name": "Inverter mode",
         "state": {
-          "smg": "Smart Grid",
+          "smg": "Smart-grid",
           "bup": "Backup",
           "ong": "On-grid",
           "ofg": "Off-grid"
