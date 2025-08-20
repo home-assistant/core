@@ -4658,7 +4658,6 @@ async def test_addon_rf_region_new_network(
         "Australia/New Zealand",
         "China",
         "Europe",
-        "Europe (Long Range)",
         "Hong Kong",
         "India",
         "Israel",
@@ -4666,7 +4665,6 @@ async def test_addon_rf_region_new_network(
         "Korea",
         "Russia",
         "USA",
-        "USA (Long Range)",
     ]
 
     assert selector_options == expected_regions

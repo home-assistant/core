@@ -110,7 +110,6 @@ RF_REGIONS = [
     "Australia/New Zealand",
     "China",
     "Europe",
-    "Europe (Long Range)",
     "Hong Kong",
     "India",
     "Israel",
@@ -118,7 +117,6 @@ RF_REGIONS = [
     "Korea",
     "Russia",
     "USA",
-    "USA (Long Range)",
 ]
 
 

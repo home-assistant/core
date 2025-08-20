@@ -114,7 +114,7 @@
         "title": "[%key:component::zwave_js::config::step::on_supervisor::title%]"
       },
       "rf_region": {
-        "title": "Z-Wave radio frequency (RF) region",
+        "title": "Z-Wave region",
         "description": "Select the RF region for your Z-Wave network.",
         "data": {
           "rf_region": "RF region"
