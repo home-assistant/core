@@ -1085,6 +1085,23 @@ async def async_handle_play_stream_service(
 async def _async_stream_endpoint_url(
     hass: HomeAssistant, camera: Camera, fmt: str
 ) -> str:
+    # Check if go2rtc HLS provider is available and supports this camera
+    if fmt == "hls":
+        try:
+            from homeassistant.components.go2rtc.const import DOMAIN as GO2RTC_DOMAIN
+            if (
+                GO2RTC_DOMAIN in hass.data
+                and "hls_provider" in hass.data[GO2RTC_DOMAIN]
+            ):
+                hls_provider = hass.data[GO2RTC_DOMAIN]["hls_provider"]
+                # Check if camera stream source is compatible with go2rtc
+                if await camera.stream_source():
+                    if hls_provider.async_is_supported(await camera.stream_source()):
+                        return await hls_provider.async_get_stream_url(camera)
+        except Exception:
+            # If go2rtc HLS fails, fall back to stream integration
+            pass
+    
     stream = await camera.async_create_stream()
     if not stream:
         raise HomeAssistantError(

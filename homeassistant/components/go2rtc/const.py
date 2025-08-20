@@ -7,3 +7,6 @@ DEBUG_UI_URL_MESSAGE = "Url and debug_ui cannot be set at the same time."
 HA_MANAGED_API_PORT = 11984
 HA_MANAGED_URL = f"http://localhost:{HA_MANAGED_API_PORT}/"
 RECOMMENDED_VERSION = "1.9.9"
+
+# HLS provider constants
+GO2RTC_HLS_PROVIDER = "go2rtc_hls"
