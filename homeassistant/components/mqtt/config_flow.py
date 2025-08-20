@@ -774,7 +774,7 @@ _CODE_VALIDATION_MODE = {
 
 @callback
 def default_alarm_control_panel_code(config: dict[str, Any]) -> str:
-    """Return the thermostat precision for system default unit."""
+    """Return alarm control panel code based on the stored code and desired code mode."""
 
     code_validation_mode: str = config["alarm_control_panel_code_mode"]
     code: str = config.get(CONF_CODE, "")
