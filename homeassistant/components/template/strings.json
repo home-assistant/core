@@ -146,7 +146,7 @@
         },
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",
-          "event_type": "Defines a template for the type of event.",
+          "event_type": "Defines a template for the type of the event.",
           "event_types": "Defines a template for a list of available event types."
         },
         "sections": {
@@ -955,6 +955,13 @@
         "shade": "[%key:component::cover::entity_component::shade::name%]",
         "shutter": "[%key:component::cover::entity_component::shutter::name%]",
         "window": "[%key:component::cover::entity_component::window::name%]"
+      }
+    },
+    "event_device_class": {
+      "options": {
+        "doorbell": "[%key:component::event::entity_component::doorbell::name%]",
+        "button": "[%key:component::event::entity_component::button::name%]",
+        "motion": "[%key:component::event::entity_component::motion::name%]"
       }
     },
     "sensor_device_class": {

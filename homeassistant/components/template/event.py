@@ -139,10 +139,7 @@ class AbstractTemplateEvent(AbstractTemplateEntity, EventEntity):
 
         if not isinstance(event_types, list):
             _LOGGER.error(
-                (
-                    "Received invalid event_types list: %s for entity %s. Expected list of"
-                    " strings"
-                ),
+                ("Received invalid event_types list: %s for entity %s. Expected list"),
                 event_types,
                 self.entity_id,
             )
@@ -155,7 +152,7 @@ class AbstractTemplateEvent(AbstractTemplateEntity, EventEntity):
     def _update_event_type(self, event_type: Any) -> None:
         """Update the effect from the template."""
         try:
-            self._trigger_event(event_type, {})
+            self._trigger_event(event_type)
         except ValueError:
             _LOGGER.error(
                 "Received invalid event_type: %s for entity %s. Expected one of: %s",
