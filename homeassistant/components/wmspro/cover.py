@@ -10,6 +10,7 @@ from wmspro.const import (
     WMS_WebControl_pro_API_actionType,
     WMS_WebControl_pro_API_responseType,
 )
+from wmspro.destination import Destination
 
 from homeassistant.components.cover import ATTR_POSITION, CoverDeviceClass, CoverEntity
 from homeassistant.core import HomeAssistant
@@ -34,9 +35,9 @@ async def async_setup_entry(
     for dest in hub.dests.values():
         if dest.hasAction(ACTION_DESC.AwningDrive):
             entities.append(WebControlProAwning(config_entry.entry_id, dest))
-        elif dest.hasAction(ACTION_DESC.ValanceDrive):
+        if dest.hasAction(ACTION_DESC.ValanceDrive):
             entities.append(WebControlProValance(config_entry.entry_id, dest))
-        elif dest.hasAction(ACTION_DESC.RollerShutterBlindDrive):
+        if dest.hasAction(ACTION_DESC.RollerShutterBlindDrive):
             entities.append(WebControlProRollerShutter(config_entry.entry_id, dest))
 
     async_add_entities(entities)
@@ -95,8 +96,15 @@ class WebControlProAwning(WebControlProCover):
 class WebControlProValance(WebControlProCover):
     """Representation of a WMS based valance."""
 
+    _attr_translation_key = "valance"
     _attr_device_class = CoverDeviceClass.SHADE
     _drive_action_desc = ACTION_DESC.ValanceDrive
+
+    def __init__(self, config_entry_id: str, dest: Destination) -> None:
+        """Initialize the entity with destination channel."""
+        super().__init__(config_entry_id, dest)
+        if self._attr_unique_id:
+            self._attr_unique_id += "-valance"
 
 
 class WebControlProRollerShutter(WebControlProCover):
