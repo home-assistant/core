@@ -44,6 +44,9 @@
     },
     "leave_chat": {
       "service": "mdi:exit-run"
+    },
+    "set_message_reaction": {
+      "service": "mdi:emoticon-happy"
     }
   }
 }

@@ -161,6 +161,7 @@ async def test_user_legacy(hass: HomeAssistant) -> None:
     assert result["data"][CONF_METHOD] == METHOD_LEGACY
     assert result["data"][CONF_MANUFACTURER] == DEFAULT_MANUFACTURER
     assert result["data"][CONF_MODEL] is None
+    assert result["data"][CONF_PORT] == 55000
     assert result["result"].unique_id is None
 
 
@@ -195,6 +196,7 @@ async def test_user_legacy_does_not_ok_first_time(hass: HomeAssistant) -> None:
     assert result3["data"][CONF_METHOD] == METHOD_LEGACY
     assert result3["data"][CONF_MANUFACTURER] == DEFAULT_MANUFACTURER
     assert result3["data"][CONF_MODEL] is None
+    assert result3["data"][CONF_PORT] == 55000
     assert result3["result"].unique_id is None
 
 
@@ -224,6 +226,7 @@ async def test_user_websocket(hass: HomeAssistant) -> None:
         assert result["data"][CONF_METHOD] == "websocket"
         assert result["data"][CONF_MANUFACTURER] == "Samsung"
         assert result["data"][CONF_MODEL] == "82GXARRS"
+        assert result["data"][CONF_PORT] == 8002
         assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
@@ -272,6 +275,7 @@ async def test_user_encrypted_websocket(
     assert result4["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result4["data"][CONF_MANUFACTURER] == "Samsung"
     assert result4["data"][CONF_MODEL] == "UE48JU6400"
+    assert result4["data"][CONF_PORT] == 8000
     assert result4["data"][CONF_SSDP_RENDERING_CONTROL_LOCATION] is None
     assert result4["data"][CONF_TOKEN] == "037739871315caef138547b03e348b72"
     assert result4["data"][CONF_SESSION_ID] == "1"
@@ -402,6 +406,7 @@ async def test_user_websocket_auth_retry(hass: HomeAssistant) -> None:
     assert result["data"][CONF_HOST] == "10.20.43.21"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "82GXARRS"
+    assert result["data"][CONF_PORT] == 8002
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
@@ -464,6 +469,7 @@ async def test_ssdp(hass: HomeAssistant) -> None:
     assert result["data"][CONF_HOST] == "10.10.12.34"
     assert result["data"][CONF_MANUFACTURER] == "Samsung Electronics"
     assert result["data"][CONF_MODEL] == "UE55H6400"
+    assert result["data"][CONF_PORT] == 55000
     assert result["result"].unique_id == "068e7781-006e-1000-bbbf-84a4668d8423"
 
 
@@ -522,6 +528,7 @@ async def test_ssdp_noprefix(hass: HomeAssistant) -> None:
     assert result["data"][CONF_HOST] == "10.10.12.34"
     assert result["data"][CONF_MANUFACTURER] == "Samsung Electronics"
     assert result["data"][CONF_MODEL] == "UE55H6400"
+    assert result["data"][CONF_PORT] == 55000
     assert result["result"].unique_id == "068e7781-006e-1000-bbbf-84a4668d8423"
 
 
@@ -557,6 +564,7 @@ async def test_ssdp_legacy_missing_auth(hass: HomeAssistant) -> None:
     assert result["data"][CONF_HOST] == "10.10.12.34"
     assert result["data"][CONF_MANUFACTURER] == "Samsung Electronics"
     assert result["data"][CONF_MODEL] == "UE55H6400"
+    assert result["data"][CONF_PORT] == 55000
     assert result["result"].unique_id == "068e7781-006e-1000-bbbf-84a4668d8423"
 
 
@@ -599,6 +607,7 @@ async def test_ssdp_websocket_success_populates_mac_address_and_ssdp_location(
     assert result["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result["data"][CONF_MANUFACTURER] == "Samsung Electronics"
     assert result["data"][CONF_MODEL] == "82GXARRS"
+    assert result["data"][CONF_PORT] == 8002
     assert (
         result["data"][CONF_SSDP_RENDERING_CONTROL_LOCATION]
         == "http://10.10.12.34:7676/smp_15_"
@@ -630,6 +639,7 @@ async def test_ssdp_websocket_success_populates_mac_address_and_main_tv_ssdp_loc
     assert result["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result["data"][CONF_MANUFACTURER] == "Samsung Electronics"
     assert result["data"][CONF_MODEL] == "82GXARRS"
+    assert result["data"][CONF_PORT] == 8002
     assert (
         result["data"][CONF_SSDP_MAIN_TV_AGENT_LOCATION]
         == "http://10.10.12.34:7676/smp_2_"
@@ -681,6 +691,7 @@ async def test_ssdp_encrypted_websocket_success_populates_mac_address_and_ssdp_l
     assert result4["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result4["data"][CONF_MANUFACTURER] == "Samsung Electronics"
     assert result4["data"][CONF_MODEL] == "UE48JU6400"
+    assert result4["data"][CONF_PORT] == 8000
     assert (
         result4["data"][CONF_SSDP_RENDERING_CONTROL_LOCATION]
         == "http://10.10.12.34:7676/smp_15_"
@@ -887,6 +898,7 @@ async def test_dhcp_wireless(hass: HomeAssistant) -> None:
     assert result["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "UE48JU6400"
+    assert result["data"][CONF_PORT] == 8002
     assert result["result"].unique_id == "223da676-497a-4e06-9507-5e27ec4f0fb3"
 
 
@@ -919,6 +931,7 @@ async def test_dhcp_wired(hass: HomeAssistant, rest_api: Mock) -> None:
     assert result["data"][CONF_MAC] == "aa:ee:tt:hh:ee:rr"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "UE43LS003"
+    assert result["data"][CONF_PORT] == 8002
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
@@ -1020,6 +1033,7 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     assert result["data"][CONF_MAC] == "aa:bb:aa:aa:aa:aa"
     assert result["data"][CONF_MANUFACTURER] == "Samsung"
     assert result["data"][CONF_MODEL] == "82GXARRS"
+    assert result["data"][CONF_PORT] == 8002
     assert result["result"].unique_id == "be9554b9-c9fb-41f4-8920-22da015376a4"
 
 
@@ -1129,6 +1143,7 @@ async def test_autodetect_websocket(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_METHOD] == "websocket"
         assert result["data"][CONF_TOKEN] == "123456789"
+        assert result["data"][CONF_PORT] == 8002
         remote_websocket.assert_called_once_with(**AUTODETECT_WEBSOCKET_SSL)
         rest_api_class.assert_called_once_with(**DEVICEINFO_WEBSOCKET_SSL)
         await hass.async_block_till_done()
@@ -1180,6 +1195,7 @@ async def test_websocket_no_mac(hass: HomeAssistant, mac_address: Mock) -> None:
         assert result["data"][CONF_METHOD] == "websocket"
         assert result["data"][CONF_TOKEN] == "123456789"
         assert result["data"][CONF_MAC] == "gg:ee:tt:mm:aa:cc"
+        assert result["data"][CONF_PORT] == 8002
         remote_websocket.assert_called_once_with(**AUTODETECT_WEBSOCKET_SSL)
         rest_api_class.assert_called_once_with(**DEVICEINFO_WEBSOCKET_SSL)
         await hass.async_block_till_done()
@@ -2091,6 +2107,7 @@ async def test_ssdp_update_mac(hass: HomeAssistant) -> None:
         assert entry.data[CONF_MANUFACTURER] == DEFAULT_MANUFACTURER
         assert entry.data[CONF_MODEL] == "fake_model"
         assert entry.data[CONF_MAC] is None
+        assert entry.data[CONF_PORT] == 8002
         assert entry.unique_id == "123"
 
     device_info = deepcopy(MOCK_DEVICE_INFO)

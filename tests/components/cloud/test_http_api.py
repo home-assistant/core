@@ -18,6 +18,7 @@ from hass_nabucasa.auth import (
     UnknownError,
 )
 from hass_nabucasa.const import STATE_CONNECTED
+from hass_nabucasa.payments_api import PaymentsApiError
 from hass_nabucasa.remote import CertificateStatus
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -138,31 +139,34 @@ async def setup_cloud_fixture(hass: HomeAssistant, cloud: MagicMock) -> None:
 async def test_google_actions_sync(
     setup_cloud: None,
     hass_client: ClientSessionGenerator,
+    cloud: MagicMock,
 ) -> None:
     """Test syncing Google Actions."""
     cloud_client = await hass_client()
-    with patch(
-        "hass_nabucasa.cloud_api.async_google_actions_request_sync",
-        return_value=Mock(status=200),
-    ) as mock_request_sync:
-        req = await cloud_client.post("/api/cloud/google_actions/sync")
-        assert req.status == HTTPStatus.OK
-        assert mock_request_sync.call_count == 1
+
+    cloud.google_report_state.request_sync = AsyncMock(
+        return_value=Mock(status=HTTPStatus.OK)
+    )
+
+    req = await cloud_client.post("/api/cloud/google_actions/sync")
+    assert req.status == HTTPStatus.OK
+    assert len(cloud.google_report_state.request_sync.mock_calls) == 1
 
 
 async def test_google_actions_sync_fails(
     setup_cloud: None,
     hass_client: ClientSessionGenerator,
+    cloud: MagicMock,
 ) -> None:
     """Test syncing Google Actions gone bad."""
     cloud_client = await hass_client()
-    with patch(
-        "hass_nabucasa.cloud_api.async_google_actions_request_sync",
-        return_value=Mock(status=HTTPStatus.INTERNAL_SERVER_ERROR),
-    ) as mock_request_sync:
-        req = await cloud_client.post("/api/cloud/google_actions/sync")
-        assert req.status == HTTPStatus.INTERNAL_SERVER_ERROR
-        assert mock_request_sync.call_count == 1
+    cloud.google_report_state.request_sync = AsyncMock(
+        return_value=Mock(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    )
+
+    req = await cloud_client.post("/api/cloud/google_actions/sync")
+    assert req.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert len(cloud.google_report_state.request_sync.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
@@ -1008,16 +1012,14 @@ async def test_websocket_subscription_info(
     cloud: MagicMock,
     setup_cloud: None,
 ) -> None:
-    """Test subscription info and connecting because valid account."""
-    aioclient_mock.get(SUBSCRIPTION_INFO_URL, json={"provider": "stripe"})
+    """Test subscription info."""
+    cloud.payments.subscription_info.return_value = {"provider": "stripe"}
     client = await hass_ws_client(hass)
-    mock_renew = cloud.auth.async_renew_access_token
 
     await client.send_json({"id": 5, "type": "cloud/subscription"})
     response = await client.receive_json()
 
     assert response["result"] == {"provider": "stripe"}
-    assert mock_renew.call_count == 1
 
 
 async def test_websocket_subscription_fail(
@@ -1028,7 +1030,9 @@ async def test_websocket_subscription_fail(
     setup_cloud: None,
 ) -> None:
     """Test subscription info fail."""
-    aioclient_mock.get(SUBSCRIPTION_INFO_URL, status=HTTPStatus.INTERNAL_SERVER_ERROR)
+    cloud.payments.subscription_info.side_effect = PaymentsApiError(
+        "Failed to fetch subscription information"
+    )
     client = await hass_ws_client(hass)
 
     await client.send_json({"id": 5, "type": "cloud/subscription"})
@@ -1049,7 +1053,7 @@ async def test_websocket_subscription_not_logged_in(
     client = await hass_ws_client(hass)
 
     with patch(
-        "hass_nabucasa.cloud_api.async_subscription_info",
+        "hass_nabucasa.payments_api.PaymentsApi.subscription_info",
         return_value={"return": "value"},
     ):
         await client.send_json({"id": 5, "type": "cloud/subscription"})
@@ -1931,6 +1935,7 @@ async def test_download_support_package(
                 "virtualenv": False,
                 "python_version": "3.13.1",
                 "docker": False,
+                "container_arch": None,
                 "arch": "x86_64",
                 "timezone": "US/Pacific",
                 "os_name": "Linux",

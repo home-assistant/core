@@ -168,7 +168,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'AC Failure',
+    'original_name': 'AC failure',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -182,7 +182,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Bosch AMAX 3000 AC Failure',
+      'friendly_name': 'Bosch AMAX 3000 AC failure',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_amax_3000_ac_failure',
@@ -1187,7 +1187,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'AC Failure',
+    'original_name': 'AC failure',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1201,7 +1201,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Bosch B5512 (US1B) AC Failure',
+      'friendly_name': 'Bosch B5512 (US1B) AC failure',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_b5512_us1b_ac_failure',
@@ -2206,7 +2206,7 @@
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'AC Failure',
+    'original_name': 'AC failure',
     'platform': 'bosch_alarm',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2220,7 +2220,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
-      'friendly_name': 'Bosch Solution 3000 AC Failure',
+      'friendly_name': 'Bosch Solution 3000 AC failure',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.bosch_solution_3000_ac_failure',
