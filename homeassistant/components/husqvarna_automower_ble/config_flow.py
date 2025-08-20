@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothServiceInfo
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_BLUETOOTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_PIN
 
 from .const import DOMAIN, LOGGER
@@ -73,7 +73,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self.pin = user_input[CONF_PIN]
-            return await self.check_mower(True, user_input)
+            return await self.check_mower(user_input)
 
         return self.async_show_form(
             step_id="bluetooth_confirm",
@@ -94,7 +94,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             self.pin = user_input[CONF_PIN]
             await self.async_set_unique_id(self.address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
-            return await self.check_mower(False, user_input)
+            return await self.check_mower(user_input)
 
         return self.async_show_form(
             step_id="user",
@@ -138,7 +138,6 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def check_mower(
         self,
-        ble_flow: bool,
         user_input: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Check that the mower exists and is setup."""
@@ -171,7 +170,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     errors["base"] = "cannot_connect"
 
-                if ble_flow:
+                if self.source == SOURCE_BLUETOOTH:
                     return self.async_show_form(
                         step_id="bluetooth_confirm",
                         data_schema=vol.Schema(
@@ -182,12 +181,12 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                         errors=errors,
                     )
 
-                user_input = {}
+                suggested_values = {}
 
                 if self.address:
-                    user_input[CONF_ADDRESS] = self.address
+                    suggested_values[CONF_ADDRESS] = self.address
                 if self.pin:
-                    user_input[CONF_PIN] = self.pin
+                    suggested_values[CONF_PIN] = self.pin
 
                 return self.async_show_form(
                     step_id="user",
@@ -198,7 +197,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                                 vol.Required(CONF_PIN): int,
                             },
                         ),
-                        user_input,
+                        suggested_values,
                     ),
                     errors=errors,
                 )
