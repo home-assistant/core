@@ -1,0 +1,27 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "OPNsence",
+                "description": "Set required parameters to connect to your router.\n`API Key` and `API Secret` values are acquired from your router using the web interface. For more information on this procedure, refer to the OPNsense [documentation](https://docs.opnsense.org/development/how-tos/api.html#creating-keys).\n\nUser with API Key requires privileges for:\n* GUI Name: Diagnostics: ARP Table\n* GUI Name: Diagnostics: Network Insight\n\nYou can use multiple interfaces for tracking devices, separated by commas.",
+                "data": {
+                    "host": "[%key:common::config_flow::data::host%]",
+                    "port": "[%key:common::config_flow::data::port%]",
+                    "api_key": "[%key:common::config_flow::data::api_key%]",
+                    "api_secret": "API Secret",
+                    "ssl": "[%key:common::config_flow::data::ssl%]",
+                    "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+                    "tracker_interfaces": "Interface(s) to use for tracking devices"
+                }
+            }
+        },
+        "error": {
+            "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+            "invalid_interface": "Interface(s) does not exist",
+            "unknown": "[%key:common::config_flow::error::unknown%]"
+        },
+        "abort": {
+            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+        }
+    }
+}
