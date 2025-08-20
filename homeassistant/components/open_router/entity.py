@@ -4,22 +4,23 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator, Callable
 import json
-from typing import Any, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import openai
-from openai import NOT_GIVEN
 from openai.types.chat import (
     ChatCompletionAssistantMessageParam,
+    ChatCompletionFunctionToolParam,
     ChatCompletionMessage,
+    ChatCompletionMessageFunctionToolCallParam,
     ChatCompletionMessageParam,
-    ChatCompletionMessageToolCallParam,
     ChatCompletionSystemMessageParam,
     ChatCompletionToolMessageParam,
-    ChatCompletionToolParam,
     ChatCompletionUserMessageParam,
 )
-from openai.types.chat.chat_completion_message_tool_call_param import Function
-from openai.types.shared_params import FunctionDefinition
+from openai.types.chat.chat_completion_message_function_tool_call_param import Function
+from openai.types.shared_params import FunctionDefinition, ResponseFormatJSONSchema
+from openai.types.shared_params.response_format_json_schema import JSONSchema
+import voluptuous as vol
 from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
@@ -36,10 +37,54 @@ from .const import DOMAIN, LOGGER
 MAX_TOOL_ITERATIONS = 10
 
 
+def _adjust_schema(schema: dict[str, Any]) -> None:
+    """Adjust the schema to be compatible with OpenRouter API."""
+    if schema["type"] == "object":
+        if "properties" not in schema:
+            return
+
+        if "required" not in schema:
+            schema["required"] = []
+
+        # Ensure all properties are required
+        for prop, prop_info in schema["properties"].items():
+            _adjust_schema(prop_info)
+            if prop not in schema["required"]:
+                prop_info["type"] = [prop_info["type"], "null"]
+                schema["required"].append(prop)
+
+    elif schema["type"] == "array":
+        if "items" not in schema:
+            return
+
+        _adjust_schema(schema["items"])
+
+
+def _format_structured_output(
+    name: str, schema: vol.Schema, llm_api: llm.APIInstance | None
+) -> JSONSchema:
+    """Format the schema to be compatible with OpenRouter API."""
+    result: JSONSchema = {
+        "name": name,
+        "strict": True,
+    }
+    result_schema = convert(
+        schema,
+        custom_serializer=(
+            llm_api.custom_serializer if llm_api else llm.selector_serializer
+        ),
+    )
+
+    _adjust_schema(result_schema)
+
+    result["schema"] = result_schema
+    return result
+
+
 def _format_tool(
     tool: llm.Tool,
     custom_serializer: Callable[[Any], Any] | None,
-) -> ChatCompletionToolParam:
+) -> ChatCompletionFunctionToolParam:
     """Format tool specification."""
     tool_spec = FunctionDefinition(
         name=tool.name,
@@ -47,7 +92,7 @@ def _format_tool(
     )
     if tool.description:
         tool_spec["description"] = tool.description
-    return ChatCompletionToolParam(type="function", function=tool_spec)
+    return ChatCompletionFunctionToolParam(type="function", function=tool_spec)
 
 
 def _convert_content_to_chat_message(
@@ -76,7 +121,7 @@ def _convert_content_to_chat_message(
         )
         if isinstance(content, conversation.AssistantContent) and content.tool_calls:
             param["tool_calls"] = [
-                ChatCompletionMessageToolCallParam(
+                ChatCompletionMessageFunctionToolCallParam(
                     type="function",
                     id=tool_call.id,
                     function=Function(
@@ -115,6 +160,7 @@ async def _transform_response(
                 tool_args=_decode_tool_arguments(tool_call.function.arguments),
             )
             for tool_call in message.tool_calls
+            if tool_call.type == "function"
         ]
     yield data
 
@@ -136,43 +182,62 @@ class OpenRouterEntity(Entity):
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
-    async def _async_handle_chat_log(self, chat_log: conversation.ChatLog) -> None:
+    async def _async_handle_chat_log(
+        self,
+        chat_log: conversation.ChatLog,
+        structure_name: str | None = None,
+        structure: vol.Schema | None = None,
+    ) -> None:
         """Generate an answer for the chat log."""
 
-        tools: list[ChatCompletionToolParam] | None = None
+        model_args = {
+            "model": self.model,
+            "user": chat_log.conversation_id,
+            "extra_headers": {
+                "X-Title": "Home Assistant",
+                "HTTP-Referer": "https://www.home-assistant.io/integrations/open_router",
+            },
+            "extra_body": {"require_parameters": True},
+        }
+
+        tools: list[ChatCompletionFunctionToolParam] | None = None
         if chat_log.llm_api:
             tools = [
                 _format_tool(tool, chat_log.llm_api.custom_serializer)
                 for tool in chat_log.llm_api.tools
             ]
 
-        messages = [
+        if tools:
+            model_args["tools"] = tools
+
+        model_args["messages"] = [
             m
             for content in chat_log.content
             if (m := _convert_content_to_chat_message(content))
         ]
 
+        if structure:
+            if TYPE_CHECKING:
+                assert structure_name is not None
+            model_args["response_format"] = ResponseFormatJSONSchema(
+                type="json_schema",
+                json_schema=_format_structured_output(
+                    structure_name, structure, chat_log.llm_api
+                ),
+            )
+
         client = self.entry.runtime_data
 
         for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
-                result = await client.chat.completions.create(
-                    model=self.model,
-                    messages=messages,
-                    tools=tools or NOT_GIVEN,
-                    user=chat_log.conversation_id,
-                    extra_headers={
-                        "X-Title": "Home Assistant",
-                        "HTTP-Referer": "https://www.home-assistant.io/integrations/open_router",
-                    },
-                )
+                result = await client.chat.completions.create(**model_args)
             except openai.OpenAIError as err:
                 LOGGER.error("Error talking to API: %s", err)
                 raise HomeAssistantError("Error talking to API") from err
 
             result_message = result.choices[0].message
 
-            messages.extend(
+            model_args["messages"].extend(
                 [
                     msg
                     async for content in chat_log.async_add_delta_content_stream(

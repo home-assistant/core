@@ -7,11 +7,13 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.osoenergy.const import DOMAIN
 from homeassistant.components.osoenergy.water_heater import (
+    ATTR_DURATION_DAYS,
     ATTR_UNTIL_TEMP_LIMIT,
     ATTR_V40MIN,
     SERVICE_GET_PROFILE,
     SERVICE_SET_PROFILE,
     SERVICE_SET_V40MIN,
+    SERVICE_TURN_AWAY_MODE_ON,
 )
 from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE,
@@ -310,3 +312,25 @@ async def test_turn_away_mode_off(
     )
 
     mock_osoenergy_client().hotwater.disable_holiday_mode.assert_called_once_with(ANY)
+
+
+async def test_oso_set_away_mode_on(
+    hass: HomeAssistant,
+    mock_osoenergy_client: MagicMock,
+    mock_config_entry: ConfigEntry,
+) -> None:
+    """Test enabling away mode."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TURN_AWAY_MODE_ON,
+        {
+            ATTR_ENTITY_ID: "water_heater.test_device",
+            ATTR_DURATION_DAYS: 10,
+        },
+        blocking=True,
+    )
+
+    mock_osoenergy_client().hotwater.enable_holiday_mode.assert_called_once_with(
+        ANY, 10
+    )

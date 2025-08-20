@@ -17,6 +17,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CODE, CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import CountrySelector
 
@@ -33,18 +34,15 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema(
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
 
+    session = aiohttp_client.async_create_clientsession(hass)
     api = AmazonEchoApi(
+        session,
         data[CONF_COUNTRY],
         data[CONF_USERNAME],
         data[CONF_PASSWORD],
     )
 
-    try:
-        data = await api.login_mode_interactive(data[CONF_CODE])
-    finally:
-        await api.close()
-
-    return data
+    return await api.login_mode_interactive(data[CONF_CODE])
 
 
 class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):

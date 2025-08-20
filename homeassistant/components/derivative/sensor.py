@@ -63,7 +63,7 @@ ATTR_SOURCE_ID = "source"
 UNIT_PREFIXES = {
     None: 1,
     "n": 1e-9,
-    "µ": 1e-6,
+    "μ": 1e-6,
     "m": 1e-3,
     "k": 1e3,
     "M": 1e6,

@@ -163,6 +163,7 @@ async def async_setup_entry(
         name="light",
         update_method=partial(async_safe_fetch, bridge, bridge.api.lights.update),
         update_interval=SCAN_INTERVAL,
+        config_entry=config_entry,
         request_refresh_debouncer=Debouncer(
             bridge.hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
         ),
@@ -197,6 +198,7 @@ async def async_setup_entry(
         name="group",
         update_method=partial(async_safe_fetch, bridge, bridge.api.groups.update),
         update_interval=SCAN_INTERVAL,
+        config_entry=config_entry,
         request_refresh_debouncer=Debouncer(
             bridge.hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=True
         ),
