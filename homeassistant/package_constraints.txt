@@ -3,7 +3,7 @@
 aiodhcpwatcher==1.2.1
 aiodiscover==2.7.1
 aiodns==3.5.0
-aiohasupervisor==0.3.1
+aiohasupervisor==0.3.2b0
 aiohttp-asyncmdnsresolver==0.1.1
 aiohttp-fast-zlib==0.3.0
 aiohttp==3.12.15
@@ -20,7 +20,7 @@ audioop-lts==0.2.1
 av==13.1.0
 awesomeversion==25.5.0
 bcrypt==4.3.0
-bleak-retry-connector==4.0.1
+bleak-retry-connector==4.0.2
 bleak==1.0.1
 bluetooth-adapters==2.0.0
 bluetooth-auto-recovery==1.5.2
@@ -70,7 +70,7 @@ ulid-transform==1.4.0
 urllib3>=2.0
 uv==0.8.9
 voluptuous-openapi==0.1.0
-voluptuous-serialize==2.6.0
+voluptuous-serialize==2.7.0
 voluptuous==0.15.2
 webrtc-models==0.3.0
 yarl==1.20.1
@@ -220,3 +220,6 @@ num2words==0.5.14
 # downgraded or upgraded by custom components
 # This ensures all use the same version
 pymodbus==3.11.1
+
+# Some packages don't support gql 4.0.0 yet
+gql<4.0.0
