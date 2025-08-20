@@ -1788,7 +1788,7 @@ class TuyaEnergySensorEntity(TuyaSensorEntity, RestoreSensor):
 
     async def _handle_state_update(
         self,
-        updated_status_properties: list[str] | None,
+        updated_status_properties: list[str] | None = None,
         dp_timestamps: dict | None = None,
     ) -> None:
         """Handle state updates from device with DP timestamp information."""
