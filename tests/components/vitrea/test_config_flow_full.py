@@ -16,7 +16,7 @@ TEST_USER_INPUT = {CONF_HOST: "127.0.0.1", CONF_PORT: 80}
 
 
 @pytest.fixture(autouse=True)
-def patch_vitrea_client(monkeypatch):
+def patch_vitrea_client(monkeypatch: pytest.MonkeyPatch) -> None:
     """Patch VitreaClient for all config flow tests."""
     monkeypatch.setattr(
         "homeassistant.components.vitrea.config_flow.VitreaConfigFlow._async_test_connection",
@@ -25,7 +25,7 @@ def patch_vitrea_client(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_user_flow_success(hass: HomeAssistant):
+async def test_user_flow_success(hass: HomeAssistant) -> None:
     """Test successful user config flow."""
 
     # Define a proper async function for patching
@@ -72,7 +72,9 @@ async def test_user_flow_success(hass: HomeAssistant):
 
 
 @pytest.mark.asyncio
-async def test_user_flow_connection_error(hass: HomeAssistant, monkeypatch):
+async def test_user_flow_connection_error(
+    hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Test connection error in user config flow."""
     monkeypatch.setattr(
         "homeassistant.components.vitrea.config_flow.VitreaConfigFlow._async_test_connection",
@@ -92,7 +94,7 @@ async def test_user_flow_connection_error(hass: HomeAssistant, monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_user_flow_duplicate_entry(hass: HomeAssistant):
+async def test_user_flow_duplicate_entry(hass: HomeAssistant) -> None:
     """Test duplicate prevention in config flow."""
     # First, set up a mock entry to be detected as a duplicate
     entry = MockConfigEntry(
