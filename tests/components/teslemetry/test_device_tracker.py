@@ -49,7 +49,6 @@ async def test_device_tracker_noscope(
     entity_registry: er.EntityRegistry,
     mock_metadata: AsyncMock,
     mock_vehicle_data: AsyncMock,
-    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the device tracker entities are correct."""
 

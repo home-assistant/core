@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
 from homeassistant.core import HomeAssistant, callback
 
 from .const import MEDIA_SOURCE_DATA, URI_SCHEME, URI_SCHEME_REGEX
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @dataclass(slots=True)
@@ -17,6 +20,7 @@ class PlayMedia:
 
     url: str
     mime_type: str
+    path: Path | None = field(kw_only=True, default=None)
 
 
 class BrowseMediaSource(BrowseMedia):
@@ -44,6 +48,16 @@ class MediaSourceItem:
     domain: str | None
     identifier: str
     target_media_player: str | None
+
+    @property
+    def media_source_id(self) -> str:
+        """Return the media source ID."""
+        uri = URI_SCHEME
+        if self.domain:
+            uri += self.domain
+            if self.identifier:
+                uri += f"/{self.identifier}"
+        return uri
 
     async def async_browse(self) -> BrowseMediaSource:
         """Browse this item."""
