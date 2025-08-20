@@ -320,8 +320,8 @@ DISCOVERY_SCHEMAS = [
             key="OccupancySensingHoldTime",
             entity_category=EntityCategory.CONFIG,
             translation_key="hold_time",
-            native_max_value=65534,  # HoldTimeLimitsStruct.HoldTimeMax
-            native_min_value=0,  # HoldTimeLimitsStruct.HoldTimeMin
+            native_max_value=65534,
+            native_min_value=1,
             native_unit_of_measurement=UnitOfTime.SECONDS,
             mode=NumberMode.BOX,
         ),
