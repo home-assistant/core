@@ -30,7 +30,7 @@ from homeassistant.components.camera import (
     async_get_image,
 )
 from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOMAIN
-from homeassistant.components.go2rtc import HomeAssistant, WebRTCProvider, Go2RtcHlsProvider
+from homeassistant.components.go2rtc import HomeAssistant, WebRTCProvider
 from homeassistant.components.go2rtc.const import (
     CONF_DEBUG_UI,
     DEBUG_UI_URL_MESSAGE,
@@ -733,7 +733,7 @@ async def test_hls_stream_url_generation(
     
     # Test URL generation
     url = await hls_provider.async_get_stream_url(camera)
-    expected_url = f"/api/go2rtc_hls/{camera.entity_id}/playlist.m3u8"
+    expected_url = f"/api/go2rtc/hls/{camera.entity_id}/playlist.m3u8"
     assert url == expected_url
     
     # Verify stream was configured in go2rtc

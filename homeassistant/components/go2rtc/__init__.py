@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import shutil
 
-from aiohttp import ClientSession, web
+from aiohttp import ClientSession
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
 from awesomeversion import AwesomeVersion
 from go2rtc_client import Go2RtcRestClient
@@ -31,7 +31,6 @@ from homeassistant.components.camera import (
     WebRTCSendMessage,
     async_register_webrtc_provider,
 )
-from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.default_config import DOMAIN as DEFAULT_CONFIG_DOMAIN
 from homeassistant.config_entries import SOURCE_SYSTEM, ConfigEntry
 from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STOP
@@ -56,6 +55,7 @@ from .const import (
     RECOMMENDED_VERSION,
 )
 from .server import Server
+from .web import Go2RtcHlsView
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -196,18 +196,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> bo
         return False
 
     webrtc_provider = WebRTCProvider(hass, url, session, client)
-    hls_provider = Go2RtcHlsProvider(hass, url, session, client)
     
-    # Set up HLS provider
-    await hls_provider.async_setup()
+    # Set up HLS support in the WebRTC provider
+    await webrtc_provider.async_setup_hls()
     
-    # Store both providers in runtime_data
     entry.runtime_data = webrtc_provider
     entry.async_on_unload(async_register_webrtc_provider(hass, webrtc_provider))
     
-    # Store HLS provider for access in other parts of the integration
+    # Store provider for access in camera integration
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN]["hls_provider"] = hls_provider
+    hass.data[DOMAIN]["hls_provider"] = webrtc_provider
     
     return True
 
@@ -216,10 +214,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: Go2RtcConfigEntry) -> b
     """Unload a go2rtc config entry."""
     await entry.runtime_data.teardown()
     
-    # Clean up HLS provider
+    # Clean up HLS provider reference
     if DOMAIN in hass.data and "hls_provider" in hass.data[DOMAIN]:
-        hls_provider = hass.data[DOMAIN]["hls_provider"]
-        await hls_provider.async_teardown()
         del hass.data[DOMAIN]["hls_provider"]
         
     return True
@@ -231,7 +227,7 @@ async def _get_binary(hass: HomeAssistant) -> str | None:
 
 
 class WebRTCProvider(CameraWebRTCProvider):
-    """WebRTC provider."""
+    """WebRTC provider with HLS support."""
 
     def __init__(
         self,
@@ -246,6 +242,12 @@ class WebRTCProvider(CameraWebRTCProvider):
         self._session = session
         self._rest_client = rest_client
         self._sessions: dict[str, Go2RtcWsClient] = {}
+        self._hls_view: Go2RtcHlsView | None = None
+
+    async def async_setup_hls(self) -> None:
+        """Set up HLS support."""
+        self._hls_view = Go2RtcHlsView(self._hass, self._url)
+        self._hass.http.register_view(self._hls_view)
 
     @property
     def domain(self) -> str:
@@ -256,6 +258,14 @@ class WebRTCProvider(CameraWebRTCProvider):
     def async_is_supported(self, stream_source: str) -> bool:
         """Return if this provider is supports the Camera as source."""
         return stream_source.partition(":")[0] in _SUPPORTED_STREAMS
+
+    async def async_get_stream_url(self, camera: Camera) -> str:
+        """Get HLS stream URL for the camera."""
+        # Ensure stream is configured in go2rtc
+        await self._update_stream_source(camera)
+        
+        # Return the HLS playlist URL through our proxy
+        return f"/api/go2rtc/hls/{camera.entity_id}/playlist.m3u8"
 
     async def async_handle_async_webrtc_offer(
         self,
@@ -357,136 +367,3 @@ class WebRTCProvider(CameraWebRTCProvider):
         for ws_client in self._sessions.values():
             await ws_client.close()
         self._sessions.clear()
-
-
-class Go2RtcHlsView(HomeAssistantView):
-    """View to proxy HLS requests to go2rtc server."""
-
-    url = r"/api/go2rtc_hls/{entity_id}/{file_name:.*}"
-    name = "api:go2rtc:hls"
-    requires_auth = False
-
-    def __init__(self, hass: HomeAssistant, go2rtc_url: str) -> None:
-        """Initialize the view."""
-        self.hass = hass
-        self.go2rtc_url = go2rtc_url.rstrip('/')
-
-    async def get(self, request: web.Request, entity_id: str, file_name: str) -> web.Response:
-        """Proxy HLS requests to go2rtc server."""
-        # Validate entity_id exists and is accessible
-        if entity_id not in self.hass.states.async_entity_ids("camera"):
-            raise web.HTTPNotFound()
-
-        # Proxy request to go2rtc server
-        # go2rtc uses stream.m3u8?src=entity_id format
-        if file_name == "playlist.m3u8":
-            url = f"{self.go2rtc_url}/api/stream.m3u8"
-            params = {"src": entity_id}
-        else:
-            # For segment files, proxy directly
-            url = f"{self.go2rtc_url}/api/{file_name}"
-            params = {"src": entity_id}
-            
-        params.update(request.query)
-        
-        from homeassistant.helpers.aiohttp_client import async_get_clientsession
-        session = async_get_clientsession(self.hass)
-        
-        try:
-            async with session.get(url, params=params) as resp:
-                if resp.status != 200:
-                    raise web.HTTPNotFound()
-                
-                content_type = resp.headers.get('Content-Type', 'application/vnd.apple.mpegurl')
-                body = await resp.read()
-                
-                # For playlist files, we need to rewrite segment URLs to point to our proxy
-                if file_name == "playlist.m3u8" and content_type.startswith('application/'):
-                    content = body.decode('utf-8')
-                    # Rewrite segment URLs to use our proxy
-                    lines = content.split('\n')
-                    for i, line in enumerate(lines):
-                        if line and not line.startswith('#') and not line.startswith('http'):
-                            # This is a segment reference, rewrite it to use our proxy
-                            lines[i] = f"/api/go2rtc_hls/{entity_id}/{line}"
-                    body = '\n'.join(lines).encode('utf-8')
-                
-                return web.Response(
-                    body=body,
-                    content_type=content_type,
-                    headers={'Access-Control-Allow-Origin': '*'}
-                )
-        except Exception as err:
-            _LOGGER.error("Error proxying HLS request to go2rtc: %s", err)
-            raise web.HTTPInternalServerError() from err
-
-
-class Go2RtcHlsProvider:
-    """Go2rtc HLS provider for camera streaming."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        url: str,
-        session: ClientSession,
-        rest_client: Go2RtcRestClient,
-    ) -> None:
-        """Initialize the HLS provider."""
-        self._hass = hass
-        self._url = url
-        self._session = session
-        self._rest_client = rest_client
-        self._view: Go2RtcHlsView | None = None
-        
-    async def async_setup(self) -> None:
-        """Set up the HLS provider."""
-        # Register the HLS view for proxying requests
-        self._view = Go2RtcHlsView(self._hass, self._url)
-        self._hass.http.register_view(self._view)
-        
-    async def async_teardown(self) -> None:
-        """Tear down the HLS provider."""
-        # View cleanup is handled by Home Assistant
-        pass
-
-    @callback
-    def async_is_supported(self, stream_source: str) -> bool:
-        """Return if this provider supports the camera stream source."""
-        return stream_source.partition(":")[0] in _SUPPORTED_STREAMS
-
-    async def async_get_stream_url(self, camera: Camera) -> str:
-        """Get HLS stream URL for the camera."""
-        # Ensure stream is configured in go2rtc
-        await self._update_stream_source(camera)
-        
-        # Return the HLS playlist URL through our proxy
-        return f"/api/go2rtc_hls/{camera.entity_id}/playlist.m3u8"
-
-    async def _update_stream_source(self, camera: Camera) -> None:
-        """Update the stream source in go2rtc config if needed."""
-        if not (stream_source := await camera.stream_source()):
-            raise HomeAssistantError("Camera has no stream source")
-
-        if camera.platform.platform_name == "generic":
-            # This is a workaround to use ffmpeg for generic cameras
-            # A proper fix will be added in the future together with supporting multiple streams per camera
-            stream_source = "ffmpeg:" + stream_source
-
-        if not self.async_is_supported(stream_source):
-            raise HomeAssistantError("Stream source is not supported by go2rtc")
-
-        streams = await self._rest_client.streams.list()
-
-        if (stream := streams.get(camera.entity_id)) is None or not any(
-            stream_source == producer.url for producer in stream.producers
-        ):
-            await self._rest_client.streams.add(
-                camera.entity_id,
-                [
-                    stream_source,
-                    # We are setting any ffmpeg rtsp related logs to debug
-                    # Connection problems to the camera will be logged by the first stream
-                    # Therefore setting it to debug will not hide any important logs
-                    f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
-                ],
-            )
