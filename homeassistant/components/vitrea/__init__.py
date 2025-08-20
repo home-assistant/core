@@ -14,15 +14,13 @@ from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
-# Import entity classes - these are used at runtime in the setup function
+# Import entity classes - only cover for simplified integration
 from .cover import VitreaCover
-from .number import VitreaTimerControl
-from .switch import VitreaSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
-# List the platforms that you want to support.
-_PLATFORMS = [Platform.SWITCH, Platform.COVER, Platform.NUMBER]
+# List the platforms that you want to support - only cover for new integration
+_PLATFORMS = [Platform.COVER]
 
 
 @dataclass
@@ -31,8 +29,6 @@ class VitreaRuntimeData:
 
     client: VitreaClient
     covers: list[VitreaCover]
-    switches: list[VitreaSwitch]
-    timers: list[VitreaTimerControl]
 
 
 type VitreaConfigEntry = ConfigEntry[VitreaRuntimeData]
@@ -53,17 +49,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: VitreaConfigEntry) -> bo
         await monitor.connect()
 
         # Initialize runtime data with the client and empty entity lists
-        entry.runtime_data = VitreaRuntimeData(
-            client=monitor, covers=[], switches=[], timers=[]
-        )
+        entry.runtime_data = VitreaRuntimeData(client=monitor, covers=[])
 
         entities = set()
 
         def handle_new_entity(event) -> None:
-            """Register entities sent by vitrea box upon status request."""
+            """Register cover entities sent by vitrea box upon status request."""
             entity_id = f"{event.node}_{event.key}"
             if entity_id in entities:
                 return
+            # Only discover cover/blind entities for simplified integration
             if event.status == DeviceStatus.BLIND:
                 entities.add(entity_id)
                 _LOGGER.debug("New cover discovered: %s", entity_id)
@@ -71,48 +66,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: VitreaConfigEntry) -> bo
                     VitreaCover(event.node, event.key, event.data, monitor)
                 )
 
-            elif event.status in (DeviceStatus.SWITCH_ON, DeviceStatus.SWITCH_OFF):
-                _LOGGER.debug("New switch discovered: %s", entity_id)
-                entities.add(entity_id)
-                entry.runtime_data.switches.append(
-                    VitreaSwitch(
-                        event.node,
-                        event.key,
-                        event.status == DeviceStatus.SWITCH_ON,
-                        monitor,
-                    )
-                )
-            elif event.status in (DeviceStatus.BOILER_ON, DeviceStatus.BOILER_OFF):
-                _LOGGER.debug("New boiler discovered: %s", entity_id)
-                entities.add(entity_id)
-                timer_control = VitreaTimerControl(
-                    event.node, event.key, event.data, monitor
-                )
-                entry.runtime_data.timers.append(timer_control)
-                entry.runtime_data.switches.append(
-                    VitreaSwitch(
-                        event.node,
-                        event.key,
-                        event.status == DeviceStatus.BOILER_ON,
-                        monitor,
-                        timer_control,
-                    )
-                )
-
         monitor.on(VitreaResponse.STATUS, handle_new_entity)
         await monitor.start_read_task()
+
+        # Request status to discover entities
         await monitor.status_request()
 
+        # Optimized discovery: shorter wait times for faster startup
         # Vitrea sends slowly the status response for each node/key
-        # we wait as long as entities are being discovered, assuming that
-        # a lack of change in 10 seconds means that no more entities are being discovered
+        # we wait as long as entities are being discovered, but with shorter intervals
         entity_count = 0
-        max_discovery_time = 120
+        max_discovery_time = 30  # Reduced from 60 to 30 seconds
         discovery_start = time.monotonic()
         while True:
-            await asyncio.sleep(10)
+            await asyncio.sleep(3)  # Reduced from 10 to 3 seconds for faster response
             if len(entities) == entity_count:
-                break
+                # Wait a bit more to ensure no more entities are coming
+                await asyncio.sleep(2)
+                if len(entities) == entity_count:
+                    break
             if time.monotonic() - discovery_start > max_discovery_time:
                 _LOGGER.warning(
                     "Entity discovery timed out after %d seconds. Proceeding with %d entities: %s",
@@ -124,7 +96,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: VitreaConfigEntry) -> bo
             entity_count = len(entities)
 
         monitor.off(VitreaResponse.STATUS, handle_new_entity)
-        _LOGGER.debug("Discovered %d entities: %s", len(entities), entities)
+        _LOGGER.info(
+            "Vitrea integration setup complete. Discovered %d cover entities: %s",
+            len(entities),
+            entities,
+        )
+        await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
     except ConnectionError as ex:
         # Connection failed - device may be offline or unreachable
@@ -141,7 +118,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: VitreaConfigEntry) -> bo
         _LOGGER.exception("Unexpected error setting up Vitrea integration")
         raise ConfigEntryError(f"Unknown error connecting to Vitrea: {ex}") from ex
 
-    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
     return True
 
 
@@ -152,6 +128,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: VitreaConfigEntry) -> b
     if unload_ok:
         # Clean up the monitor and any resources from runtime_data
         if hasattr(entry.runtime_data.client, "disconnect"):
-            await entry.runtime_data.client.disconnect()
+            try:
+                await entry.runtime_data.client.disconnect()
+            except (ConnectionError, TimeoutError) as ex:
+                _LOGGER.warning("Error disconnecting Vitrea client: %s", ex)
 
     return unload_ok

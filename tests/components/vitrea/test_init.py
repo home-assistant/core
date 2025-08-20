@@ -20,6 +20,8 @@ async def test_setup_entry(
         await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_vitrea_client.connect.assert_called_once()
+    # Verify only cover platform is loaded (simplified integration)
+    assert len(hass.config_entries.async_entries("vitrea")) == 1
 
 
 async def test_setup_entry_connection_failed(
@@ -51,11 +53,9 @@ async def test_unload_entry(
 async def test_reload_entry(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
-    mock_vitrea_client: MagicMock,
 ) -> None:
     """Test successful reloading of config entry."""
     assert init_integration.state is ConfigEntryState.LOADED
-    with patch("vitreaclient.client.VitreaClient", return_value=mock_vitrea_client):
-        assert await hass.config_entries.async_reload(init_integration.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_reload(init_integration.entry_id)
+    await hass.async_block_till_done()
     assert init_integration.state is ConfigEntryState.LOADED
