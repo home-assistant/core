@@ -33,9 +33,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .binary_sensor import BINARY_SENSOR_KEYS, BINARY_SENSORS, check_binary_sensors
 from .camera import STREAM_SOURCE_LIST
@@ -46,6 +48,7 @@ from .const import (
     DATA_AMCREST,
     DEVICES,
     DOMAIN,
+    PLATFORMS,
     RESOLUTION_LIST,
     SERVICE_EVENT,
     SERVICE_UPDATE,
@@ -487,9 +490,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     ffmpeg_arguments = config_data[CONF_FFMPEG_ARGUMENTS]
     resolution = RESOLUTION_LIST[config_data[CONF_RESOLUTION]]
-    binary_sensors = config_data.get(CONF_BINARY_SENSORS)
-    sensors = config_data.get(CONF_SENSORS)
-    switches = config_data.get(CONF_SWITCHES)
     stream_source = config_data[CONF_STREAM_SOURCE]
     control_light = config_data.get(CONF_CONTROL_LIGHT, True)
 
@@ -500,7 +500,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     else:
         authentication = None
 
-    hass.data[DATA_AMCREST][DEVICES][name] = AmcrestDevice(
+    device = AmcrestConfiguredDevice(
+        hass,
+        entry,
+        name,
         api,
         authentication,
         ffmpeg_arguments,
@@ -509,55 +512,69 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         control_light,
     )
 
-    hass.async_create_task(
-        discovery.async_load_platform(
-            hass, Platform.CAMERA, DOMAIN, {CONF_NAME: name}, {}
-        )
+    async def async_update_data() -> None:
+        """Fetch data from the device."""
+        try:
+            return await device.async_get_data()
+        except Exception as err:
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+    data_coordinator = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=name,
+        update_method=async_update_data,
+        update_interval=SCAN_INTERVAL,
     )
 
-    event_codes = set()
-    if binary_sensors:
-        hass.async_create_task(
-            discovery.async_load_platform(
-                hass,
-                Platform.BINARY_SENSOR,
-                DOMAIN,
-                {CONF_NAME: name, CONF_BINARY_SENSORS: binary_sensors},
-                {},
-            )
-        )
-        event_codes = {
-            event_code
-            for sensor in BINARY_SENSORS
-            if sensor.key in binary_sensors
-            and not sensor.should_poll
-            and sensor.event_codes is not None
-            for event_code in sensor.event_codes
-        }
+    hass.data[DOMAIN][DEVICES][entry.entry_id] = {
+        "device": device,
+        "coordinator": data_coordinator,
+    }
 
-    _start_event_monitor(hass, name, api, event_codes)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    if sensors:
-        hass.async_create_task(
-            discovery.async_load_platform(
-                hass,
-                Platform.SENSOR,
-                DOMAIN,
-                {CONF_NAME: name, CONF_SENSORS: sensors},
-                {},
-            )
-        )
+    # event_codes = set()
+    # # TODO make switch for polling vs streaming
+    # # todo load only polling?
+    # hass.async_create_task(
+    #     discovery.async_load_platform(
+    #         hass,
+    #         Platform.BINARY_SENSOR,
+    #         DOMAIN,
+    #         {CONF_NAME: name, CONF_BINARY_SENSORS: binary_sensors},
+    #         {},
+    #     )
+    # )
+    # event_codes = {
+    #     event_code
+    #     for sensor in BINARY_SENSORS
+    #     if not sensor.should_poll and sensor.event_codes is not None
+    #     for event_code in sensor.event_codes
+    # }
 
-    if switches:
-        hass.async_create_task(
-            discovery.async_load_platform(
-                hass,
-                Platform.SWITCH,
-                DOMAIN,
-                {CONF_NAME: name, CONF_SWITCHES: switches},
-                {},
-            )
-        )
+    # _start_event_monitor(hass, name, api, event_codes)
+
+    # sensors = {"sdcard", "ptz_preset"}
+    # hass.async_create_task(
+    #     discovery.async_load_platform(
+    #         hass,
+    #         Platform.SENSOR,
+    #         DOMAIN,
+    #         {CONF_NAME: name, CONF_SENSORS: sensors},
+    #         {},
+    #     )
+    # )
+
+    # hass.async_create_task(
+    #     discovery.async_load_platform(
+    #         hass,
+    #         Platform.SWITCH,
+    #         DOMAIN,
+    #         {CONF_NAME: name, CONF_SWITCHES: ["privacy_mode"]},
+    #         {},
+    #     )
+    # )
 
     # Setup services if this is the first device
     if len(hass.data[DATA_AMCREST][DEVICES]) == 1:
@@ -583,7 +600,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 @dataclass
 class AmcrestDevice:
-    """Representation of a base Amcrest discovery device."""
+    """Representation of a base Amcrest discovery device configured via YAML."""
 
     api: AmcrestChecker
     authentication: aiohttp.BasicAuth | None
@@ -592,3 +609,47 @@ class AmcrestDevice:
     resolution: int
     control_light: bool
     channel: int = 0
+
+
+class AmcrestConfiguredDevice(AmcrestDevice):
+    """Representation of a base Amcrest device."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        name: str,
+        api: AmcrestChecker,
+        authentication: aiohttp.BasicAuth | None,
+        ffmpeg_arguments: list[str],
+        stream_source: str,
+        resolution: int,
+        control_light: bool,
+        channel: int = 0,
+    ) -> None:
+        """Initialize Amcrest device."""
+        super().__init__(
+            api,
+            authentication,
+            ffmpeg_arguments,
+            stream_source,
+            resolution,
+            control_light,
+            channel,
+        )
+        self.hass = hass
+        self.name = name
+        self.serial_number = ""
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device info for device registration."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.serial_number)},
+            name=self.name,
+            manufacturer="Amcrest",
+        )
+
+    async def async_get_data(self) -> None:
+        """Get data from the device."""
+        self.serial_number = self.api.serial_number
