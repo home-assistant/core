@@ -12,6 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .coordinator import PooldoseCoordinator
 
@@ -39,9 +40,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> 
 
     # Create the PoolDose API client and connect
     client = PooldoseClient(host)
-    client_status = await client.connect()
+    try:
+        client_status = await client.connect()
+    except TimeoutError as err:
+        raise UpdateFailed(f"Timeout connecting to PoolDose device: {err}") from err
+    except (ConnectionError, OSError) as err:
+        raise UpdateFailed(f"Failed to connect to PoolDose device: {err}") from err
+
     if client_status != RequestStatus.SUCCESS:
-        raise ConfigEntryNotReady(f"Failed to create PoolDose client: {client_status}")
+        raise ConfigEntryNotReady(
+            f"Failed to create PoolDose client while initialization: {client_status}"
+        )
 
     # Create coordinator and perform first refresh
     coordinator = PooldoseCoordinator(hass, client, entry)

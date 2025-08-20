@@ -38,11 +38,6 @@ class PooldoseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
-        # Connect to the client
-        client_status = await self.client.connect()
-        if client_status != RequestStatus.SUCCESS:
-            raise UpdateFailed(f"Failed to connect to PoolDose client: {client_status}")
-
         # Update device info after successful connection
         self.device_info = self.client.device_info
 
@@ -52,13 +47,11 @@ class PooldoseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             status, instant_values = await self.client.instant_values()
         except TimeoutError as err:
             raise UpdateFailed(
-                f"Timeout communicating with PoolDose device: {err}"
+                f"Timeout fetching data from PoolDose device: {err}"
             ) from err
         except (ConnectionError, OSError) as err:
-            raise UpdateFailed(f"Failed to connect to PoolDose device: {err}") from err
-        except Exception as err:
             raise UpdateFailed(
-                f"Unexpected error communicating with device: {err}"
+                f"Failed to connect to PoolDose device while fetching data: {err}"
             ) from err
 
         if status != RequestStatus.SUCCESS:

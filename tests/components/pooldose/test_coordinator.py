@@ -108,7 +108,6 @@ async def test_coordinator_setup_success(
     # Test setup
     await coordinator._async_setup()
     assert coordinator.device_info == mock_client.device_info
-    mock_client.connect.assert_called_once()
 
     # Test data fetch
     await coordinator.async_refresh()
@@ -123,27 +122,6 @@ async def test_coordinator_setup_success(
     assert data["PDPR1H1HAW100_FW539187_w_1ekeigkin"]["current"] == 7.6
 
     mock_client.instant_values.assert_called_once()
-
-
-@pytest.mark.asyncio
-async def test_coordinator_setup_connection_failure(
-    hass: HomeAssistant,
-    mock_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test coordinator setup with connection failure."""
-    mock_client.connect.return_value = RequestStatus.HOST_UNREACHABLE
-
-    coordinator = PooldoseCoordinator(
-        hass,
-        mock_client,
-        mock_config_entry,
-    )
-
-    with pytest.raises(UpdateFailed, match="Failed to connect to PoolDose client"):
-        await coordinator._async_setup()
-
-    mock_client.connect.assert_called_once()
 
 
 @pytest.mark.asyncio
@@ -447,33 +425,29 @@ async def test_coordinator_internal_update_method(
     # Test ConnectionError is properly raised
     mock_client.instant_values.side_effect = ConnectionError("Connection failed")
 
-    with pytest.raises(UpdateFailed, match="Failed to connect to PoolDose device"):
+    with pytest.raises(
+        UpdateFailed, match="Failed to connect to PoolDose device while fetching data"
+    ):
         await coordinator._async_update_data()
 
     # Test TimeoutError is properly raised
     mock_client.instant_values.side_effect = TimeoutError("Request timed out")
 
     with pytest.raises(
-        UpdateFailed, match="Timeout communicating with PoolDose device"
+        UpdateFailed, match="Timeout fetching data from PoolDose device"
     ):
         await coordinator._async_update_data()
 
     # Test OSError is properly raised
     mock_client.instant_values.side_effect = OSError("Network unreachable")
 
-    with pytest.raises(UpdateFailed, match="Failed to connect to PoolDose device"):
-        await coordinator._async_update_data()
-
-    # Test generic Exception is properly raised
-    mock_client.instant_values.side_effect = Exception("Unexpected error")
-
     with pytest.raises(
-        UpdateFailed, match="Unexpected error communicating with device"
+        UpdateFailed, match="Failed to connect to PoolDose device while fetching data"
     ):
         await coordinator._async_update_data()
 
     # Test API error status
-    mock_client.instant_values.side_effect = None
+    mock_client.instant_values.side_effect = None  # Reset side_effect
     mock_client.instant_values.return_value = (
         RequestStatus.API_VERSION_UNSUPPORTED,
         None,

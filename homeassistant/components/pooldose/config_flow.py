@@ -13,13 +13,13 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import config_validation as cv
 
-from .const import DEFAULT_HOST, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 SCHEMA_DEVICE = vol.Schema(
     {
-        vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
+        vol.Required(CONF_HOST): cv.string,
     }
 )
 
