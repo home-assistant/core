@@ -248,10 +248,8 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         player = self.player
         active_queue = self.active_queue
         # update generic attributes
-        if player.powered and active_queue is not None:
-            self._attr_state = MediaPlayerState(active_queue.state.value)
-        if player.powered and player.state is not None:
-            self._attr_state = MediaPlayerState(player.state.value)
+        if player.powered and player.playback_state is not None:
+            self._attr_state = MediaPlayerState(player.playback_state.value)
         else:
             self._attr_state = MediaPlayerState(STATE_OFF)
         # active source and source list (translate to HA source names)
@@ -270,12 +268,12 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         self._attr_source = active_source_name
 
         group_members: list[str] = []
-        if player.group_childs:
-            group_members = player.group_childs
+        if player.group_members:
+            group_members = player.group_members
         elif player.synced_to and (parent := self.mass.players.get(player.synced_to)):
-            group_members = parent.group_childs
+            group_members = parent.group_members
 
-        # translate MA group_childs to HA group_members as entity id's
+        # translate MA group_members to HA group_members as entity id's
         entity_registry = er.async_get(self.hass)
         group_members_entity_ids: list[str] = [
             entity_id

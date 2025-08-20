@@ -704,7 +704,7 @@ class ZWaveServices:
             client = first_node.client
         except StopIteration:
             data = self._hass.config_entries.async_entries(const.DOMAIN)[0].runtime_data
-            client = data[const.DATA_CLIENT]
+            client = data.client
             assert client.driver
             first_node = next(
                 node

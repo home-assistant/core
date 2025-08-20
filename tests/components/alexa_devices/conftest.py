@@ -50,6 +50,7 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
                 device_type="echo",
                 device_owner_customer_id="amazon_ower_id",
                 device_cluster_members=[TEST_SERIAL_NUMBER],
+                device_locale="en-US",
                 online=True,
                 serial_number=TEST_SERIAL_NUMBER,
                 software_version="echo_test_software_version",
@@ -68,6 +69,7 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         client.get_model_details = lambda device: DEVICE_TYPE_TO_MODEL.get(
             device.device_type
         )
+        client.send_sound_notification = AsyncMock()
         yield client
 
 

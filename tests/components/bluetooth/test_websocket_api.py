@@ -22,6 +22,7 @@ from . import (
     generate_advertisement_data,
     generate_ble_device,
     inject_advertisement_with_source,
+    inject_advertisement_with_time_and_source_connectable,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -38,11 +39,9 @@ async def test_subscribe_advertisements(
     """Test bluetooth subscribe_advertisements."""
     address = "44:44:33:11:23:12"
 
-    switchbot_device_signal_100 = generate_ble_device(
-        address, "wohand_signal_100", rssi=-100
-    )
+    switchbot_device_signal_100 = generate_ble_device(address, "wohand_signal_100")
     switchbot_adv_signal_100 = generate_advertisement_data(
-        local_name="wohand_signal_100", service_uuids=[]
+        local_name="wohand_signal_100", service_uuids=[], rssi=-100
     )
     inject_advertisement_with_source(
         hass, switchbot_device_signal_100, switchbot_adv_signal_100, HCI0_SOURCE_ADDRESS
@@ -68,12 +67,13 @@ async def test_subscribe_advertisements(
                 "connectable": True,
                 "manufacturer_data": {},
                 "name": "wohand_signal_100",
-                "rssi": -127,
+                "rssi": -100,
                 "service_data": {},
                 "service_uuids": [],
                 "source": HCI0_SOURCE_ADDRESS,
                 "time": ANY,
                 "tx_power": -127,
+                "raw": None,
             }
         ]
     }
@@ -85,8 +85,15 @@ async def test_subscribe_advertisements(
         service_uuids=[],
         rssi=-80,
     )
-    inject_advertisement_with_source(
-        hass, switchbot_device_signal_100, switchbot_adv_signal_100, HCI1_SOURCE_ADDRESS
+    # Inject with raw bytes data
+    inject_advertisement_with_time_and_source_connectable(
+        hass,
+        switchbot_device_signal_100,
+        switchbot_adv_signal_100,
+        time.monotonic(),
+        HCI1_SOURCE_ADDRESS,
+        True,
+        raw=b"\x02\x01\x06\x03\x03\x0f\x18",
     )
     async with asyncio.timeout(1):
         response = await client.receive_json()
@@ -103,6 +110,7 @@ async def test_subscribe_advertisements(
                 "source": HCI1_SOURCE_ADDRESS,
                 "time": ANY,
                 "tx_power": -127,
+                "raw": "02010603030f18",
             }
         ]
     }
@@ -134,11 +142,9 @@ async def test_subscribe_connection_allocations(
     """Test bluetooth subscribe_connection_allocations."""
     address = "44:44:33:11:23:12"
 
-    switchbot_device_signal_100 = generate_ble_device(
-        address, "wohand_signal_100", rssi=-100
-    )
+    switchbot_device_signal_100 = generate_ble_device(address, "wohand_signal_100")
     switchbot_adv_signal_100 = generate_advertisement_data(
-        local_name="wohand_signal_100", service_uuids=[]
+        local_name="wohand_signal_100", service_uuids=[], rssi=-100
     )
     inject_advertisement_with_source(
         hass, switchbot_device_signal_100, switchbot_adv_signal_100, HCI0_SOURCE_ADDRESS

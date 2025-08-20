@@ -21,5 +21,10 @@
   "usage": 54.8,
   "power_available": 45.13,
   "capacity": 85.5,
-  "last_updated": "2024-08-01T15:20:45Z"
+  "last_updated": "2024-08-01T15:20:45Z",
+  "battery_data": {
+    "charge_power": 1074,
+    "discharge_power": 0,
+    "level": 79
+  }
 }

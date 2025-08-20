@@ -2,6 +2,9 @@
 
 from unittest.mock import patch
 
+import pytest
+
+from homeassistant.components.coinbase import create_and_update_instance
 from homeassistant.components.coinbase.const import (
     API_TYPE_VAULT,
     CONF_CURRENCIES,
@@ -9,14 +12,16 @@ from homeassistant.components.coinbase.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import entity_registry as er
 
 from .common import (
     init_mock_coinbase,
-    mock_get_current_user,
     mock_get_exchange_rates,
-    mocked_get_accounts,
+    mock_get_portfolios,
+    mocked_get_accounts_v3,
 )
 from .const import (
     GOOD_CURRENCY,
@@ -30,16 +35,16 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test successful unload of entry."""
     with (
         patch(
-            "coinbase.wallet.client.Client.get_current_user",
-            return_value=mock_get_current_user(),
+            "coinbase.rest.RESTClient.get_portfolios",
+            return_value=mock_get_portfolios(),
         ),
         patch(
-            "coinbase.wallet.client.Client.get_accounts",
-            new=mocked_get_accounts,
+            "coinbase.rest.RESTClient.get_accounts",
+            new=mocked_get_accounts_v3,
         ),
         patch(
-            "coinbase.wallet.client.Client.get_exchange_rates",
-            return_value=mock_get_exchange_rates(),
+            "coinbase.rest.RESTClient.get",
+            return_value={"data": {"rates": {}}},
         ),
     ):
         entry = await init_mock_coinbase(hass)
@@ -61,13 +66,13 @@ async def test_option_updates(
 
     with (
         patch(
-            "coinbase.wallet.client.Client.get_current_user",
-            return_value=mock_get_current_user(),
+            "coinbase.rest.RESTClient.get_portfolios",
+            return_value=mock_get_portfolios(),
         ),
-        patch("coinbase.wallet.client.Client.get_accounts", new=mocked_get_accounts),
+        patch("coinbase.rest.RESTClient.get_accounts", new=mocked_get_accounts_v3),
         patch(
-            "coinbase.wallet.client.Client.get_exchange_rates",
-            return_value=mock_get_exchange_rates(),
+            "coinbase.rest.RESTClient.get",
+            return_value={"data": mock_get_exchange_rates()},
         ),
     ):
         config_entry = await init_mock_coinbase(hass)
@@ -141,13 +146,13 @@ async def test_ignore_vaults_wallets(
 
     with (
         patch(
-            "coinbase.wallet.client.Client.get_current_user",
-            return_value=mock_get_current_user(),
+            "coinbase.rest.RESTClient.get_portfolios",
+            return_value=mock_get_portfolios(),
         ),
-        patch("coinbase.wallet.client.Client.get_accounts", new=mocked_get_accounts),
+        patch("coinbase.rest.RESTClient.get_accounts", new=mocked_get_accounts_v3),
         patch(
-            "coinbase.wallet.client.Client.get_exchange_rates",
-            return_value=mock_get_exchange_rates(),
+            "coinbase.rest.RESTClient.get",
+            return_value={"data": mock_get_exchange_rates()},
         ),
     ):
         config_entry = await init_mock_coinbase(hass, currencies=[GOOD_CURRENCY])
@@ -159,3 +164,54 @@ async def test_ignore_vaults_wallets(
         assert len(entities) == 1
         entity = entities[0]
         assert API_TYPE_VAULT not in entity.original_name.lower()
+
+
+async def test_v2_api_credentials_trigger_reauth(hass: HomeAssistant) -> None:
+    """Test that v2 API credentials trigger a reauth flow."""
+
+    config_entry_data = {
+        CONF_API_KEY: "v2_api_key_legacy_format",
+        CONF_API_TOKEN: "v2_api_secret",
+    }
+
+    class MockConfigEntry:
+        def __init__(self, data) -> None:
+            self.data = data
+            self.options = {}
+
+    entry = MockConfigEntry(config_entry_data)
+
+    with pytest.raises(ConfigEntryAuthFailed) as exc_info:
+        create_and_update_instance(entry)
+
+    assert "deprecated v2 API" in str(exc_info.value)
+
+
+async def test_v3_api_credentials_work(hass: HomeAssistant) -> None:
+    """Test that v3 API credentials with 'organizations' don't trigger reauth."""
+
+    config_entry_data = {
+        CONF_API_KEY: "organizations_v3_api_key",
+        CONF_API_TOKEN: "v3_api_secret",
+    }
+
+    class MockConfigEntry:
+        def __init__(self, data) -> None:
+            self.data = data
+            self.options = {}
+
+    entry = MockConfigEntry(config_entry_data)
+
+    with (
+        patch(
+            "coinbase.rest.RESTClient.get_portfolios",
+            return_value=mock_get_portfolios(),
+        ),
+        patch("coinbase.rest.RESTClient.get_accounts", new=mocked_get_accounts_v3),
+        patch(
+            "coinbase.rest.RESTClient.get",
+            return_value={"data": mock_get_exchange_rates()},
+        ),
+    ):
+        instance = create_and_update_instance(entry)
+        assert instance is not None

@@ -14,7 +14,8 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_DEVICE_NAME, DOMAIN
-from .coordinator import AvmWrapper, FritzDevice
+from .coordinator import AvmWrapper
+from .models import FritzDevice
 
 
 class FritzDeviceBase(CoordinatorEntity[AvmWrapper]):

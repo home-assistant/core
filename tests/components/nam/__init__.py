@@ -33,7 +33,10 @@ async def init_integration(
     update_response = Mock(json=AsyncMock(return_value=nam_data))
 
     with (
-        patch("homeassistant.components.nam.NettigoAirMonitor.initialize"),
+        patch(
+            "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
+            return_value="aa:bb:cc:dd:ee:ff",
+        ),
         patch(
             "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
             return_value=update_response,

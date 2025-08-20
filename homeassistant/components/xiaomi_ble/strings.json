@@ -59,13 +59,13 @@
   "device_automation": {
     "trigger_subtype": {
       "press": "Press",
-      "double_press": "Double Press",
-      "long_press": "Long Press",
-      "motion_detected": "Motion Detected",
-      "rotate_left": "Rotate Left",
-      "rotate_right": "Rotate Right",
-      "rotate_left_pressed": "Rotate Left (Pressed)",
-      "rotate_right_pressed": "Rotate Right (Pressed)",
+      "double_press": "Double press",
+      "long_press": "Long press",
+      "motion_detected": "Motion detected",
+      "rotate_left": "Rotate left",
+      "rotate_right": "Rotate right",
+      "rotate_left_pressed": "Rotate left (pressed)",
+      "rotate_right_pressed": "Rotate right (pressed)",
       "match_successful": "Match successful",
       "match_failed": "Match failed",
       "low_quality_too_light_fuzzy": "Low quality (too light, fuzzy)",
@@ -75,7 +75,7 @@
       "lock_outside_the_door": "Lock outside the door",
       "unlock_outside_the_door": "Unlock outside the door",
       "lock_inside_the_door": "Lock inside the door",
-      "unlock_inside_the_door": "Unlock outside the door",
+      "unlock_inside_the_door": "Unlock inside the door",
       "locked": "Locked",
       "turn_on_antilock": "Turn on antilock",
       "release_the_antilock": "Release antilock",
@@ -224,7 +224,7 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "motion_detected": "Motion Detected"
+              "motion_detected": "Motion detected"
             }
           }
         }
@@ -235,7 +235,7 @@
         "name": "Impedance"
       },
       "weight_non_stabilized": {
-        "name": "Weight non stabilized"
+        "name": "Weight non-stabilized"
       }
     }
   }

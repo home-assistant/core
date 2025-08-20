@@ -1306,7 +1306,6 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
@@ -1423,7 +1422,6 @@
           'days': list([
           ]),
           'recurrence': 'daily',
-          'state': 'never',
           'time': None,
         }),
       }),
@@ -1540,7 +1538,6 @@
           'days': list([
           ]),
           'recurrence': 'daily',
-          'state': 'never',
           'time': None,
         }),
       }),
@@ -1671,7 +1668,6 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
@@ -1949,7 +1945,6 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
@@ -2064,7 +2059,6 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
@@ -2179,7 +2173,6 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
@@ -2296,7 +2289,6 @@
           'days': list([
           ]),
           'recurrence': 'daily',
-          'state': 'never',
           'time': '06:00:00',
         }),
       }),
@@ -2415,7 +2407,6 @@
             'mon',
           ]),
           'recurrence': 'custom_days',
-          'state': 'never',
           'time': None,
         }),
       }),
@@ -2532,7 +2523,6 @@
           'days': list([
           ]),
           'recurrence': 'never',
-          'state': 'never',
           'time': None,
         }),
       }),
@@ -2653,7 +2643,6 @@
             'sun',
           ]),
           'recurrence': 'custom_days',
-          'state': 'never',
           'time': None,
         }),
       }),
@@ -2778,7 +2767,6 @@
           'days': list([
           ]),
           'recurrence': 'daily',
-          'state': 'never',
           'time': None,
         }),
       }),
@@ -2895,7 +2883,6 @@
           'days': list([
           ]),
           'recurrence': 'daily',
-          'state': 'never',
           'time': None,
         }),
       }),
@@ -3012,7 +2999,6 @@
           'days': list([
           ]),
           'recurrence': 'daily',
-          'state': 'never',
           'time': None,
         }),
       }),
@@ -3129,7 +3115,6 @@
           'days': list([
           ]),
           'recurrence': 'daily',
-          'state': 'never',
           'time': None,
         }),
       }),
@@ -3246,7 +3231,6 @@
           'days': list([
           ]),
           'recurrence': 'daily',
-          'state': 'never',
           'time': None,
         }),
       }),
@@ -6297,22 +6281,5 @@
     }),
     'id': 1,
     'type': 'event',
-  })
-# ---
-# name: test_subscribe_event_early
-  dict({
-    'event': dict({
-      'manager_state': 'idle',
-    }),
-    'id': 1,
-    'type': 'event',
-  })
-# ---
-# name: test_subscribe_event_early.1
-  dict({
-    'id': 1,
-    'result': None,
-    'success': True,
-    'type': 'result',
   })
 # ---

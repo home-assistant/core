@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entity_registry[switch.test_player_alarm_1-entry]
+# name: test_entity_registry[switch.none_alarm_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.test_player_alarm_1',
+    'entity_id': 'switch.none_alarm_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -34,21 +34,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity_registry[switch.test_player_alarm_1-state]
+# name: test_entity_registry[switch.none_alarm_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'alarm_id': '1',
-      'friendly_name': 'Test Player Alarm (1)',
+      'friendly_name': 'Alarm (1)',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_player_alarm_1',
+    'entity_id': 'switch.none_alarm_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_entity_registry[switch.test_player_alarms_enabled-entry]
+# name: test_entity_registry[switch.none_alarms_enabled-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -61,7 +61,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'switch.test_player_alarms_enabled',
+    'entity_id': 'switch.none_alarms_enabled',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -83,13 +83,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entity_registry[switch.test_player_alarms_enabled-state]
+# name: test_entity_registry[switch.none_alarms_enabled-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Player Alarms enabled',
+      'friendly_name': 'Alarms enabled',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_player_alarms_enabled',
+    'entity_id': 'switch.none_alarms_enabled',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

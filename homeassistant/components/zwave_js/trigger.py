@@ -8,8 +8,8 @@ from homeassistant.helpers.trigger import Trigger
 from .triggers import event, value_updated
 
 TRIGGERS = {
-    event.PLATFORM_TYPE: event.EventTrigger,
-    value_updated.PLATFORM_TYPE: value_updated.ValueUpdatedTrigger,
+    event.RELATIVE_PLATFORM_TYPE: event.EventTrigger,
+    value_updated.RELATIVE_PLATFORM_TYPE: value_updated.ValueUpdatedTrigger,
 }
 
 

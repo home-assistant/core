@@ -773,6 +773,18 @@
     },
     "time_of_use": {
       "service": "mdi:clock-time-eight-outline"
+    },
+    "add_charge_schedule": {
+      "service": "mdi:calendar-plus"
+    },
+    "remove_charge_schedule": {
+      "service": "mdi:calendar-minus"
+    },
+    "add_precondition_schedule": {
+      "service": "mdi:hvac-outline"
+    },
+    "remove_precondition_schedule": {
+      "service": "mdi:hvac-off-outline"
     }
   }
 }

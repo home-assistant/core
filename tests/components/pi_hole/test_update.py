@@ -11,7 +11,7 @@ from tests.common import MockConfigEntry
 
 async def test_update(hass: HomeAssistant) -> None:
     """Tests update entity."""
-    mocked_hole = _create_mocked_hole()
+    mocked_hole = _create_mocked_hole(api_version=6)
     entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONFIG_DATA_DEFAULTS)
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole):
@@ -52,7 +52,7 @@ async def test_update(hass: HomeAssistant) -> None:
 
 async def test_update_no_versions(hass: HomeAssistant) -> None:
     """Tests update entity when no version data available."""
-    mocked_hole = _create_mocked_hole(has_versions=False)
+    mocked_hole = _create_mocked_hole(has_versions=False, api_version=6)
     entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONFIG_DATA_DEFAULTS)
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole):
@@ -84,7 +84,9 @@ async def test_update_no_versions(hass: HomeAssistant) -> None:
 
 async def test_update_no_updates(hass: HomeAssistant) -> None:
     """Tests update entity when no latest data available."""
-    mocked_hole = _create_mocked_hole(has_versions=True, has_update=False)
+    mocked_hole = _create_mocked_hole(
+        has_versions=True, has_update=False, api_version=6
+    )
     entry = MockConfigEntry(domain=pi_hole.DOMAIN, data=CONFIG_DATA_DEFAULTS)
     entry.add_to_hass(hass)
     with _patch_init_hole(mocked_hole):

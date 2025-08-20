@@ -136,7 +136,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SynologyDSMConfigEntry) 
         coordinator_switches=coordinator_switches,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     if entry.options[CONF_BACKUP_SHARE]:
 
@@ -170,13 +169,6 @@ async def async_unload_entry(
         entry_data = entry.runtime_data
         await entry_data.api.async_unload()
     return unload_ok
-
-
-async def _async_update_listener(
-    hass: HomeAssistant, entry: SynologyDSMConfigEntry
-) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_remove_config_entry_device(

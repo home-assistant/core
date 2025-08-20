@@ -323,9 +323,6 @@ async def test_options_flow_entity_removal(
             "pynina.baseApi.BaseAPI._makeRequest",
             wraps=mocked_request_function,
         ),
-        patch(
-            "homeassistant.components.nina._async_update_listener"
-        ) as mock_update_listener,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -352,4 +349,3 @@ async def test_options_flow_entity_removal(
         )
 
         assert len(entries) == 2
-        assert len(mock_update_listener.mock_calls) == 1

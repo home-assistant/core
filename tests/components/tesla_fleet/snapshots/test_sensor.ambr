@@ -2356,7 +2356,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'version',
+    'original_name': 'Version',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2369,7 +2369,7 @@
 # name: test_sensors[sensor.energy_site_version-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site version',
+      'friendly_name': 'Energy Site Version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_version',
@@ -2382,7 +2382,7 @@
 # name: test_sensors[sensor.energy_site_version-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Energy Site version',
+      'friendly_name': 'Energy Site Version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.energy_site_version',

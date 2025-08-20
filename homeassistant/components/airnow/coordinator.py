@@ -71,7 +71,7 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
-        data = {}
+        data: dict[str, Any] = {}
         try:
             obs = await self.airnow.observations.latLong(
                 self.latitude,

@@ -124,6 +124,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
         self._model: str | None = None
         self._connect_result: str | None = None
         self._method: str | None = None
+        self._port: int | None = None
         self._name: str | None = None
         self._title: str = ""
         self._id: int | None = None
@@ -199,33 +200,37 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_create_bridge(self) -> None:
         """Create the bridge."""
-        result, method, _info = await self._async_get_device_info_and_method()
+        result = await self._async_load_device_info()
         if result not in SUCCESSFUL_RESULTS:
             LOGGER.debug("No working config found for %s", self._host)
             raise AbortFlow(result)
-        assert method is not None
-        self._bridge = SamsungTVBridge.get_bridge(self.hass, method, self._host)
+        assert self._method is not None
+        self._bridge = SamsungTVBridge.get_bridge(
+            self.hass, self._method, self._host, self._port
+        )
 
-    async def _async_get_device_info_and_method(
+    async def _async_load_device_info(
         self,
-    ) -> tuple[str, str | None, dict[str, Any] | None]:
+    ) -> str:
         """Get device info and method only once."""
         if self._connect_result is None:
-            result, _, method, info = await async_get_device_info(self.hass, self._host)
+            result, port, method, info = await async_get_device_info(
+                self.hass, self._host
+            )
             self._connect_result = result
             self._method = method
+            self._port = port
             self._device_info = info
             if not method:
                 LOGGER.debug("Host:%s did not return device info", self._host)
-                return result, None, None
-        return self._connect_result, self._method, self._device_info
+        return self._connect_result
 
     async def _async_get_and_check_device_info(self) -> bool:
         """Try to get the device info."""
-        result, _method, info = await self._async_get_device_info_and_method()
+        result = await self._async_load_device_info()
         if result not in SUCCESSFUL_RESULTS:
             raise AbortFlow(result)
-        if not info:
+        if not (info := self._device_info):
             return False
         dev_info = info.get("device", {})
         assert dev_info is not None

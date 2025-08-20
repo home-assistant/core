@@ -18,6 +18,9 @@ from homematicip.device import (
     PrintedCircuitBoardSwitch2,
     PrintedCircuitBoardSwitchBattery,
     SwitchMeasuring,
+    WiredInput32,
+    WiredInputSwitch6,
+    WiredSwitch4,
     WiredSwitch8,
 )
 from homematicip.group import ExtendedLinkedSwitchingGroup, SwitchingGroup
@@ -51,6 +54,7 @@ async def async_setup_entry(
         elif isinstance(
             device,
             (
+                WiredSwitch4,
                 WiredSwitch8,
                 OpenCollector8Module,
                 BrandSwitch2,
@@ -60,6 +64,8 @@ async def async_setup_entry(
                 MotionDetectorSwitchOutdoor,
                 DinRailSwitch,
                 DinRailSwitch4,
+                WiredInput32,
+                WiredInputSwitch6,
             ),
         ):
             channel_indices = [

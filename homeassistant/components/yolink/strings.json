@@ -47,6 +47,9 @@
   "exceptions": {
     "invalid_config_entry": {
       "message": "Config entry not found or not loaded!"
+    },
+    "valve_inoperable_currently": {
+      "message": "The Valve cannot be operated currently."
     }
   },
   "entity": {
@@ -118,6 +121,19 @@
       },
       "meter_valve_2_state": {
         "name": "Valve 2"
+      },
+      "sprinkler_valve": {
+        "name": "[%key:component::valve::title%]"
+      }
+    },
+    "select": {
+      "sprinkler_mode": {
+        "name": "Mode",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "manual": "[%key:common::state::manual%]",
+          "off": "[%key:common::state::off%]"
+        }
       }
     }
   },

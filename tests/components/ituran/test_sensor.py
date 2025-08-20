@@ -32,13 +32,27 @@ async def test_sensor(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_availability(
+@pytest.mark.parametrize("mock_ituran", [True], indirect=True)
+async def test_ev_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_ituran: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state of sensor."""
+    with patch("homeassistant.components.ituran.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def __test_availability(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_ituran: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    ev_entity_names: list[str] | None = None,
 ) -> None:
-    """Test sensor is marked as unavailable when we can't reach the Ituran service."""
     entities = [
         "sensor.mock_model_address",
         "sensor.mock_model_battery_voltage",
@@ -46,6 +60,7 @@ async def test_availability(
         "sensor.mock_model_last_update_from_vehicle",
         "sensor.mock_model_mileage",
         "sensor.mock_model_speed",
+        *(ev_entity_names if ev_entity_names is not None else []),
     ]
 
     await setup_integration(hass, mock_config_entry)
@@ -74,3 +89,32 @@ async def test_availability(
         state = hass.states.get(entity_id)
         assert state
         assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_availability(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_ituran: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test ICE sensor is marked as unavailable when we can't reach the Ituran service."""
+    await __test_availability(hass, freezer, mock_ituran, mock_config_entry)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("mock_ituran", [True], indirect=True)
+async def test_ev_availability(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_ituran: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test EV sensor is marked as unavailable when we can't reach the Ituran service."""
+    ev_entities = [
+        "sensor.mock_model_battery",
+        "sensor.mock_model_remaining_range",
+    ]
+    await __test_availability(
+        hass, freezer, mock_ituran, mock_config_entry, ev_entities
+    )

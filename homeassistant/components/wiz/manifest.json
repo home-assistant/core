@@ -1,7 +1,7 @@
 {
   "domain": "wiz",
   "name": "WiZ",
-  "codeowners": ["@sbidy"],
+  "codeowners": ["@sbidy", "@arturpragacz"],
   "config_flow": true,
   "dependencies": ["network"],
   "dhcp": [

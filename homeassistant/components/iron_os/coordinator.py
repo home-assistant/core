@@ -168,7 +168,9 @@ class IronOSSettingsCoordinator(IronOSBaseCoordinator[SettingsDataResponse]):
 
         if self.device.is_connected and characteristics:
             try:
-                return await self.device.get_settings(list(characteristics))
+                return await self.device.get_settings(
+                    list(characteristics | {CharSetting.TEMP_UNIT})
+                )
             except CommunicationError as e:
                 _LOGGER.debug("Failed to fetch settings", exc_info=e)
 

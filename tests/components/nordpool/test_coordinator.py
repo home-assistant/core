@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import timedelta
 from unittest.mock import patch
 
+import aiohttp
 from freezegun.api import FrozenDateTimeFactory
 from pynordpool import (
     NordPoolAuthenticationError,
@@ -93,6 +94,36 @@ async def test_coordinator(
     with (
         patch(
             "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
+            side_effect=aiohttp.ClientError("error"),
+        ) as mock_data,
+    ):
+        assert "Response error" not in caplog.text
+        freezer.tick(timedelta(hours=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert mock_data.call_count == 1
+        state = hass.states.get("sensor.nord_pool_se3_current_price")
+        assert state.state == STATE_UNAVAILABLE
+        assert "error" in caplog.text
+
+    with (
+        patch(
+            "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
+            side_effect=TimeoutError("error"),
+        ) as mock_data,
+    ):
+        assert "Response error" not in caplog.text
+        freezer.tick(timedelta(hours=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert mock_data.call_count == 1
+        state = hass.states.get("sensor.nord_pool_se3_current_price")
+        assert state.state == STATE_UNAVAILABLE
+        assert "error" in caplog.text
+
+    with (
+        patch(
+            "homeassistant.components.nordpool.coordinator.NordPoolClient.async_get_delivery_period",
             side_effect=NordPoolResponseError("Response error"),
         ) as mock_data,
     ):
@@ -109,4 +140,4 @@ async def test_coordinator(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.nord_pool_se3_current_price")
-    assert state.state == "1.81645"
+    assert state.state == "1.81983"

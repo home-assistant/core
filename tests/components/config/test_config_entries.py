@@ -625,7 +625,9 @@ async def test_two_step_flow(hass: HomeAssistant, client: TestClient) -> None:
             "type": "form",
             "handler": "test",
             "step_id": "account",
-            "data_schema": [{"name": "user_title", "type": "string"}],
+            "data_schema": [
+                {"name": "user_title", "required": False, "type": "string"}
+            ],
             "description_placeholders": None,
             "errors": None,
             "last_step": None,
@@ -712,7 +714,9 @@ async def test_continue_flow_unauth(
             "type": "form",
             "handler": "test",
             "step_id": "account",
-            "data_schema": [{"name": "user_title", "type": "string"}],
+            "data_schema": [
+                {"name": "user_title", "required": False, "type": "string"}
+            ],
             "description_placeholders": None,
             "errors": None,
             "last_step": None,
@@ -1272,7 +1276,7 @@ async def test_two_step_options_flow(hass: HomeAssistant, client: TestClient) ->
             "type": "form",
             "handler": "test1",
             "step_id": "finish",
-            "data_schema": [{"name": "enabled", "type": "boolean"}],
+            "data_schema": [{"name": "enabled", "required": False, "type": "boolean"}],
             "description_placeholders": None,
             "errors": None,
             "last_step": None,
@@ -1581,7 +1585,7 @@ async def test_subentry_flow_abort_duplicate(hass: HomeAssistant, client) -> Non
         "type": "form",
         "handler": ["test1", "test"],
         "step_id": "finish",
-        "data_schema": [{"name": "enabled", "type": "boolean"}],
+        "data_schema": [{"name": "enabled", "required": False, "type": "boolean"}],
         "description_placeholders": None,
         "errors": None,
         "last_step": None,
@@ -1749,7 +1753,7 @@ async def test_two_step_subentry_flow(hass: HomeAssistant, client) -> None:
         data = await resp.json()
         flow_id = data["flow_id"]
         expected_data = {
-            "data_schema": [{"name": "enabled", "type": "boolean"}],
+            "data_schema": [{"name": "enabled", "required": False, "type": "boolean"}],
             "description_placeholders": None,
             "errors": None,
             "flow_id": flow_id,
