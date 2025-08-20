@@ -3,7 +3,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'event_type': 'single',
-      'event_types': Wrapper([
+      'event_types': list([
         'single',
         'double',
         'hold',
