@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[button.v20_reset_duster_cloth-entry]
+# name: test_platform_setup_and_discovery[button.v20_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.v20_reset_duster_cloth',
+    'entity_id': 'button.v20_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,7 +24,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Reset duster cloth',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -34,20 +34,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[button.v20_reset_duster_cloth-state]
+# name: test_platform_setup_and_discovery[button.v20_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'V20 Reset duster cloth',
+      'friendly_name': 'V20 None',
     }),
     'context': <ANY>,
-    'entity_id': 'button.v20_reset_duster_cloth',
+    'entity_id': 'button.v20_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[button.v20_reset_edge_brush-entry]
+# name: test_platform_setup_and_discovery[button.v20_none_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -60,7 +60,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.v20_reset_edge_brush',
+    'entity_id': 'button.v20_none_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -72,7 +72,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Reset edge brush',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -82,20 +82,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[button.v20_reset_edge_brush-state]
+# name: test_platform_setup_and_discovery[button.v20_none_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'V20 Reset edge brush',
+      'friendly_name': 'V20 None',
     }),
     'context': <ANY>,
-    'entity_id': 'button.v20_reset_edge_brush',
+    'entity_id': 'button.v20_none_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[button.v20_reset_filter-entry]
+# name: test_platform_setup_and_discovery[button.v20_none_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -108,7 +108,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.v20_reset_filter',
+    'entity_id': 'button.v20_none_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -120,7 +120,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Reset filter',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -130,20 +130,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[button.v20_reset_filter-state]
+# name: test_platform_setup_and_discovery[button.v20_none_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'V20 Reset filter',
+      'friendly_name': 'V20 None',
     }),
     'context': <ANY>,
-    'entity_id': 'button.v20_reset_filter',
+    'entity_id': 'button.v20_none_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[button.v20_reset_map-entry]
+# name: test_platform_setup_and_discovery[button.v20_none_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -156,7 +156,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.v20_reset_map',
+    'entity_id': 'button.v20_none_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -168,7 +168,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Reset map',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -178,20 +178,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[button.v20_reset_map-state]
+# name: test_platform_setup_and_discovery[button.v20_none_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'V20 Reset map',
+      'friendly_name': 'V20 None',
     }),
     'context': <ANY>,
-    'entity_id': 'button.v20_reset_map',
+    'entity_id': 'button.v20_none_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_platform_setup_and_discovery[button.v20_reset_roll_brush-entry]
+# name: test_platform_setup_and_discovery[button.v20_none_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -204,7 +204,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.v20_reset_roll_brush',
+    'entity_id': 'button.v20_none_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -216,7 +216,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Reset roll brush',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -226,13 +226,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[button.v20_reset_roll_brush-state]
+# name: test_platform_setup_and_discovery[button.v20_none_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'V20 Reset roll brush',
+      'friendly_name': 'V20 None',
     }),
     'context': <ANY>,
-    'entity_id': 'button.v20_reset_roll_brush',
+    'entity_id': 'button.v20_none_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

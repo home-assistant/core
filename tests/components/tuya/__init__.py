@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 DEVICE_MOCKS = [
+    "bzyd_ssimhf6r8kgwepfb",
     "cl_3r8gc33pnqsxfe1g",  # https://github.com/tuya/tuya-home-assistant/issues/754
     "cl_cpbo62rn",  # https://github.com/orgs/home-assistant/discussions/539
     "cl_ebt12ypvexnixvtf",  # https://github.com/tuya/tuya-home-assistant/issues/754

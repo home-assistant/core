@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_1-entry]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'valve',
     'entity_category': None,
-    'entity_id': 'valve.jie_hashui_fa_valve_1',
+    'entity_id': 'valve.jie_hashui_fa_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,7 +24,7 @@
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
     'original_icon': None,
-    'original_name': 'Valve 1',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -34,22 +34,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_1-state]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
-      'friendly_name': '接HA水阀 Valve 1',
+      'friendly_name': '接HA水阀 None',
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'valve.jie_hashui_fa_valve_1',
+    'entity_id': 'valve.jie_hashui_fa_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_2-entry]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_none_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -62,7 +62,7 @@
     'disabled_by': None,
     'domain': 'valve',
     'entity_category': None,
-    'entity_id': 'valve.jie_hashui_fa_valve_2',
+    'entity_id': 'valve.jie_hashui_fa_none_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -74,7 +74,7 @@
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
     'original_icon': None,
-    'original_name': 'Valve 2',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -84,22 +84,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_2-state]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_none_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
-      'friendly_name': '接HA水阀 Valve 2',
+      'friendly_name': '接HA水阀 None',
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'valve.jie_hashui_fa_valve_2',
+    'entity_id': 'valve.jie_hashui_fa_none_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'closed',
   })
 # ---
-# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_3-entry]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_none_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -112,7 +112,7 @@
     'disabled_by': None,
     'domain': 'valve',
     'entity_category': None,
-    'entity_id': 'valve.jie_hashui_fa_valve_3',
+    'entity_id': 'valve.jie_hashui_fa_none_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -124,7 +124,7 @@
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
     'original_icon': None,
-    'original_name': 'Valve 3',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -134,22 +134,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_3-state]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_none_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
-      'friendly_name': '接HA水阀 Valve 3',
+      'friendly_name': '接HA水阀 None',
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'valve.jie_hashui_fa_valve_3',
+    'entity_id': 'valve.jie_hashui_fa_none_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_4-entry]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_none_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -162,7 +162,7 @@
     'disabled_by': None,
     'domain': 'valve',
     'entity_category': None,
-    'entity_id': 'valve.jie_hashui_fa_valve_4',
+    'entity_id': 'valve.jie_hashui_fa_none_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -174,7 +174,7 @@
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
     'original_icon': None,
-    'original_name': 'Valve 4',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -184,22 +184,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_4-state]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_none_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
-      'friendly_name': '接HA水阀 Valve 4',
+      'friendly_name': '接HA水阀 None',
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'valve.jie_hashui_fa_valve_4',
+    'entity_id': 'valve.jie_hashui_fa_none_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'closed',
   })
 # ---
-# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_5-entry]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_none_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -212,7 +212,7 @@
     'disabled_by': None,
     'domain': 'valve',
     'entity_category': None,
-    'entity_id': 'valve.jie_hashui_fa_valve_5',
+    'entity_id': 'valve.jie_hashui_fa_none_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -224,7 +224,7 @@
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
     'original_icon': None,
-    'original_name': 'Valve 5',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -234,22 +234,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_5-state]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_none_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
-      'friendly_name': '接HA水阀 Valve 5',
+      'friendly_name': '接HA水阀 None',
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'valve.jie_hashui_fa_valve_5',
+    'entity_id': 'valve.jie_hashui_fa_none_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_6-entry]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_none_6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -262,7 +262,7 @@
     'disabled_by': None,
     'domain': 'valve',
     'entity_category': None,
-    'entity_id': 'valve.jie_hashui_fa_valve_6',
+    'entity_id': 'valve.jie_hashui_fa_none_6',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -274,7 +274,7 @@
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
     'original_icon': None,
-    'original_name': 'Valve 6',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -284,22 +284,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_6-state]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_none_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
-      'friendly_name': '接HA水阀 Valve 6',
+      'friendly_name': '接HA水阀 None',
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'valve.jie_hashui_fa_valve_6',
+    'entity_id': 'valve.jie_hashui_fa_none_6',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'closed',
   })
 # ---
-# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_7-entry]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_none_7-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -312,7 +312,7 @@
     'disabled_by': None,
     'domain': 'valve',
     'entity_category': None,
-    'entity_id': 'valve.jie_hashui_fa_valve_7',
+    'entity_id': 'valve.jie_hashui_fa_none_7',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -324,7 +324,7 @@
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
     'original_icon': None,
-    'original_name': 'Valve 7',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -334,22 +334,22 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_7-state]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_none_7-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
-      'friendly_name': '接HA水阀 Valve 7',
+      'friendly_name': '接HA水阀 None',
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'valve.jie_hashui_fa_valve_7',
+    'entity_id': 'valve.jie_hashui_fa_none_7',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_8-entry]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_none_8-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -362,7 +362,7 @@
     'disabled_by': None,
     'domain': 'valve',
     'entity_category': None,
-    'entity_id': 'valve.jie_hashui_fa_valve_8',
+    'entity_id': 'valve.jie_hashui_fa_none_8',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -374,7 +374,7 @@
     }),
     'original_device_class': <ValveDeviceClass.WATER: 'water'>,
     'original_icon': None,
-    'original_name': 'Valve 8',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -384,15 +384,15 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_8-state]
+# name: test_platform_setup_and_discovery[valve.jie_hashui_fa_none_8-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
-      'friendly_name': '接HA水阀 Valve 8',
+      'friendly_name': '接HA水阀 None',
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'valve.jie_hashui_fa_valve_8',
+    'entity_id': 'valve.jie_hashui_fa_none_8',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

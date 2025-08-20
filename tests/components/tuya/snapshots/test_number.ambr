@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[number.aqi_alarm_duration-entry]
+# name: test_platform_setup_and_discovery[number.aqi_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -17,7 +17,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.aqi_alarm_duration',
+    'entity_id': 'number.aqi_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -29,7 +29,7 @@
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Alarm duration',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -39,11 +39,11 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_platform_setup_and_discovery[number.aqi_alarm_duration-state]
+# name: test_platform_setup_and_discovery[number.aqi_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'AQI Alarm duration',
+      'friendly_name': 'AQI None',
       'max': 60.0,
       'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -51,14 +51,14 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.aqi_alarm_duration',
+    'entity_id': 'number.aqi_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.boiler_temperature_controller_temperature_correction-entry]
+# name: test_platform_setup_and_discovery[number.boiler_temperature_controller_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -76,7 +76,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.boiler_temperature_controller_temperature_correction',
+    'entity_id': 'number.boiler_temperature_controller_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -88,7 +88,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Temperature correction',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -98,10 +98,10 @@
     'unit_of_measurement': '',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.boiler_temperature_controller_temperature_correction-state]
+# name: test_platform_setup_and_discovery[number.boiler_temperature_controller_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Boiler Temperature Controller Temperature correction',
+      'friendly_name': 'Boiler Temperature Controller None',
       'max': 9.9,
       'min': -9.9,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -109,14 +109,14 @@
       'unit_of_measurement': '',
     }),
     'context': <ANY>,
-    'entity_id': 'number.boiler_temperature_controller_temperature_correction',
+    'entity_id': 'number.boiler_temperature_controller_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-0.8',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.c9_volume-entry]
+# name: test_platform_setup_and_discovery[number.c9_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -134,7 +134,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.c9_volume',
+    'entity_id': 'number.c9_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -146,7 +146,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Volume',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -156,10 +156,10 @@
     'unit_of_measurement': '',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.c9_volume-state]
+# name: test_platform_setup_and_discovery[number.c9_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'C9 Volume',
+      'friendly_name': 'C9 None',
       'max': 10.0,
       'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -167,14 +167,14 @@
       'unit_of_measurement': '',
     }),
     'context': <ANY>,
-    'entity_id': 'number.c9_volume',
+    'entity_id': 'number.c9_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.cleverio_pf100_feed-entry]
+# name: test_platform_setup_and_discovery[number.cleverio_pf100_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -192,7 +192,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.cleverio_pf100_feed',
+    'entity_id': 'number.cleverio_pf100_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -204,7 +204,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Feed',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -214,10 +214,10 @@
     'unit_of_measurement': '',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.cleverio_pf100_feed-state]
+# name: test_platform_setup_and_discovery[number.cleverio_pf100_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cleverio PF100 Feed',
+      'friendly_name': 'Cleverio PF100 None',
       'max': 20.0,
       'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -225,14 +225,14 @@
       'unit_of_measurement': '',
     }),
     'context': <ANY>,
-    'entity_id': 'number.cleverio_pf100_feed',
+    'entity_id': 'number.cleverio_pf100_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.hot_water_heat_pump_temperature-entry]
+# name: test_platform_setup_and_discovery[number.hot_water_heat_pump_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -250,7 +250,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': None,
-    'entity_id': 'number.hot_water_heat_pump_temperature',
+    'entity_id': 'number.hot_water_heat_pump_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -262,7 +262,7 @@
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
     'original_icon': None,
-    'original_name': 'Temperature',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -272,11 +272,11 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_platform_setup_and_discovery[number.hot_water_heat_pump_temperature-state]
+# name: test_platform_setup_and_discovery[number.hot_water_heat_pump_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Hot Water Heat Pump Temperature',
+      'friendly_name': 'Hot Water Heat Pump None',
       'max': 75.0,
       'min': 15.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -284,14 +284,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.hot_water_heat_pump_temperature',
+    'entity_id': 'number.hot_water_heat_pump_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '60.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.house_water_level_alarm_maximum-entry]
+# name: test_platform_setup_and_discovery[number.house_water_level_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -309,7 +309,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.house_water_level_alarm_maximum',
+    'entity_id': 'number.house_water_level_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -321,7 +321,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Alarm maximum',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -331,10 +331,10 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.house_water_level_alarm_maximum-state]
+# name: test_platform_setup_and_discovery[number.house_water_level_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'House Water Level Alarm maximum',
+      'friendly_name': 'House Water Level None',
       'max': 100.0,
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -342,14 +342,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.house_water_level_alarm_maximum',
+    'entity_id': 'number.house_water_level_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.house_water_level_alarm_minimum-entry]
+# name: test_platform_setup_and_discovery[number.house_water_level_none_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -367,7 +367,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.house_water_level_alarm_minimum',
+    'entity_id': 'number.house_water_level_none_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -379,7 +379,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Alarm minimum',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -389,10 +389,10 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.house_water_level_alarm_minimum-state]
+# name: test_platform_setup_and_discovery[number.house_water_level_none_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'House Water Level Alarm minimum',
+      'friendly_name': 'House Water Level None',
       'max': 100.0,
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -400,14 +400,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.house_water_level_alarm_minimum',
+    'entity_id': 'number.house_water_level_none_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.house_water_level_installation_height-entry]
+# name: test_platform_setup_and_discovery[number.house_water_level_none_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -425,7 +425,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.house_water_level_installation_height',
+    'entity_id': 'number.house_water_level_none_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -437,7 +437,7 @@
     }),
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
-    'original_name': 'Installation height',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -447,11 +447,11 @@
     'unit_of_measurement': 'm',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.house_water_level_installation_height-state]
+# name: test_platform_setup_and_discovery[number.house_water_level_none_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'House Water Level Installation height',
+      'friendly_name': 'House Water Level None',
       'max': 2.5,
       'min': 0.2,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -459,14 +459,14 @@
       'unit_of_measurement': 'm',
     }),
     'context': <ANY>,
-    'entity_id': 'number.house_water_level_installation_height',
+    'entity_id': 'number.house_water_level_none_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.56',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.house_water_level_maximum_liquid_depth-entry]
+# name: test_platform_setup_and_discovery[number.house_water_level_none_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -484,7 +484,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.house_water_level_maximum_liquid_depth',
+    'entity_id': 'number.house_water_level_none_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -496,7 +496,7 @@
     }),
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
-    'original_name': 'Maximum liquid depth',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -506,11 +506,11 @@
     'unit_of_measurement': 'm',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.house_water_level_maximum_liquid_depth-state]
+# name: test_platform_setup_and_discovery[number.house_water_level_none_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'House Water Level Maximum liquid depth',
+      'friendly_name': 'House Water Level None',
       'max': 2.4,
       'min': 0.1,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -518,132 +518,14 @@
       'unit_of_measurement': 'm',
     }),
     'context': <ANY>,
-    'entity_id': 'number.house_water_level_maximum_liquid_depth',
+    'entity_id': 'number.house_water_level_none_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.1',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.human_presence_office_far_detection-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 1000.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.human_presence_office_far_detection',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
-    'original_icon': None,
-    'original_name': 'Far detection',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'far_detection',
-    'unique_id': 'tuya.kxwleaa2sphfar_detection',
-    'unit_of_measurement': 'cm',
-  })
-# ---
-# name: test_platform_setup_and_discovery[number.human_presence_office_far_detection-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'distance',
-      'friendly_name': 'Human presence Office Far detection',
-      'max': 1000.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-      'unit_of_measurement': 'cm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.human_presence_office_far_detection',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '220.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[number.human_presence_office_near_detection-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 1000.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.human_presence_office_near_detection',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
-    'original_icon': None,
-    'original_name': 'Near detection',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'near_detection',
-    'unique_id': 'tuya.kxwleaa2sphnear_detection',
-    'unit_of_measurement': 'cm',
-  })
-# ---
-# name: test_platform_setup_and_discovery[number.human_presence_office_near_detection-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'distance',
-      'friendly_name': 'Human presence Office Near detection',
-      'max': 1000.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-      'unit_of_measurement': 'cm',
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.human_presence_office_near_detection',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '40.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[number.human_presence_office_sensitivity-entry]
+# name: test_platform_setup_and_discovery[number.human_presence_office_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -661,7 +543,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.human_presence_office_sensitivity',
+    'entity_id': 'number.human_presence_office_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -673,7 +555,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Sensitivity',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -683,10 +565,10 @@
     'unit_of_measurement': 'x',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.human_presence_office_sensitivity-state]
+# name: test_platform_setup_and_discovery[number.human_presence_office_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Human presence Office Sensitivity',
+      'friendly_name': 'Human presence Office None',
       'max': 10.0,
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -694,14 +576,132 @@
       'unit_of_measurement': 'x',
     }),
     'context': <ANY>,
-    'entity_id': 'number.human_presence_office_sensitivity',
+    'entity_id': 'number.human_presence_office_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_1-entry]
+# name: test_platform_setup_and_discovery[number.human_presence_office_none_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 1000.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.human_presence_office_none_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'near_detection',
+    'unique_id': 'tuya.kxwleaa2sphnear_detection',
+    'unit_of_measurement': 'cm',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.human_presence_office_none_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Human presence Office None',
+      'max': 1000.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': 'cm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.human_presence_office_none_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '40.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.human_presence_office_none_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 1000.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.human_presence_office_none_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'far_detection',
+    'unique_id': 'tuya.kxwleaa2sphfar_detection',
+    'unit_of_measurement': 'cm',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.human_presence_office_none_3-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Human presence Office None',
+      'max': 1000.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': 'cm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.human_presence_office_none_3',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '220.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -719,7 +719,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_1',
+    'entity_id': 'number.jie_hashui_fa_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -731,7 +731,7 @@
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Irrigation duration 1',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -741,11 +741,11 @@
     'unit_of_measurement': 'min',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_1-state]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': '接HA水阀 Irrigation duration 1',
+      'friendly_name': '接HA水阀 None',
       'max': 1439.0,
       'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -753,14 +753,14 @@
       'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_1',
+    'entity_id': 'number.jie_hashui_fa_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_2-entry]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_none_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -778,7 +778,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_2',
+    'entity_id': 'number.jie_hashui_fa_none_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -790,7 +790,7 @@
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Irrigation duration 2',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -800,11 +800,11 @@
     'unit_of_measurement': 'min',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_2-state]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_none_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': '接HA水阀 Irrigation duration 2',
+      'friendly_name': '接HA水阀 None',
       'max': 1439.0,
       'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -812,14 +812,14 @@
       'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_2',
+    'entity_id': 'number.jie_hashui_fa_none_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_3-entry]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_none_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -837,7 +837,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_3',
+    'entity_id': 'number.jie_hashui_fa_none_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -849,7 +849,7 @@
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Irrigation duration 3',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -859,11 +859,11 @@
     'unit_of_measurement': 'min',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_3-state]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_none_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': '接HA水阀 Irrigation duration 3',
+      'friendly_name': '接HA水阀 None',
       'max': 1439.0,
       'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -871,14 +871,14 @@
       'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_3',
+    'entity_id': 'number.jie_hashui_fa_none_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_4-entry]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_none_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -896,7 +896,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_4',
+    'entity_id': 'number.jie_hashui_fa_none_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -908,7 +908,7 @@
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Irrigation duration 4',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -918,11 +918,11 @@
     'unit_of_measurement': 'min',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_4-state]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_none_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': '接HA水阀 Irrigation duration 4',
+      'friendly_name': '接HA水阀 None',
       'max': 1439.0,
       'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -930,14 +930,14 @@
       'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_4',
+    'entity_id': 'number.jie_hashui_fa_none_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_5-entry]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_none_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -955,7 +955,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_5',
+    'entity_id': 'number.jie_hashui_fa_none_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -967,7 +967,7 @@
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Irrigation duration 5',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -977,11 +977,11 @@
     'unit_of_measurement': 'min',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_5-state]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_none_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': '接HA水阀 Irrigation duration 5',
+      'friendly_name': '接HA水阀 None',
       'max': 1439.0,
       'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -989,14 +989,14 @@
       'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_5',
+    'entity_id': 'number.jie_hashui_fa_none_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_6-entry]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_none_6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1014,7 +1014,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_6',
+    'entity_id': 'number.jie_hashui_fa_none_6',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1026,7 +1026,7 @@
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Irrigation duration 6',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1036,11 +1036,11 @@
     'unit_of_measurement': 'min',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_6-state]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_none_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': '接HA水阀 Irrigation duration 6',
+      'friendly_name': '接HA水阀 None',
       'max': 1439.0,
       'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1048,14 +1048,14 @@
       'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_6',
+    'entity_id': 'number.jie_hashui_fa_none_6',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_7-entry]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_none_7-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1073,7 +1073,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_7',
+    'entity_id': 'number.jie_hashui_fa_none_7',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1085,7 +1085,7 @@
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Irrigation duration 7',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1095,11 +1095,11 @@
     'unit_of_measurement': 'min',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_7-state]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_none_7-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': '接HA水阀 Irrigation duration 7',
+      'friendly_name': '接HA水阀 None',
       'max': 1439.0,
       'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1107,14 +1107,14 @@
       'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_7',
+    'entity_id': 'number.jie_hashui_fa_none_7',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_8-entry]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_none_8-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1132,7 +1132,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_8',
+    'entity_id': 'number.jie_hashui_fa_none_8',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1144,7 +1144,7 @@
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Irrigation duration 8',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1154,11 +1154,11 @@
     'unit_of_measurement': 'min',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.jie_hashui_fa_irrigation_duration_8-state]
+# name: test_platform_setup_and_discovery[number.jie_hashui_fa_none_8-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': '接HA水阀 Irrigation duration 8',
+      'friendly_name': '接HA水阀 None',
       'max': 1439.0,
       'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1166,14 +1166,14 @@
       'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
-    'entity_id': 'number.jie_hashui_fa_irrigation_duration_8',
+    'entity_id': 'number.jie_hashui_fa_none_8',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.kabinet_temperature_correction-entry]
+# name: test_platform_setup_and_discovery[number.kabinet_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1191,7 +1191,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.kabinet_temperature_correction',
+    'entity_id': 'number.kabinet_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1203,7 +1203,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Temperature correction',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1213,10 +1213,10 @@
     'unit_of_measurement': '℃',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.kabinet_temperature_correction-state]
+# name: test_platform_setup_and_discovery[number.kabinet_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Кабінет Temperature correction',
+      'friendly_name': 'Кабінет None',
       'max': 9.0,
       'min': -9.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1224,14 +1224,14 @@
       'unit_of_measurement': '℃',
     }),
     'context': <ANY>,
-    'entity_id': 'number.kabinet_temperature_correction',
+    'entity_id': 'number.kabinet_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-2.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.multifunction_alarm_alarm_delay-entry]
+# name: test_platform_setup_and_discovery[number.multifunction_alarm_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1249,7 +1249,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.multifunction_alarm_alarm_delay',
+    'entity_id': 'number.multifunction_alarm_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1261,66 +1261,7 @@
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Alarm delay',
-    'platform': 'tuya',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'alarm_delay',
-    'unique_id': 'tuya.2pxfek1jjrtctiyglamalarm_delay_time',
-    'unit_of_measurement': 's',
-  })
-# ---
-# name: test_platform_setup_and_discovery[number.multifunction_alarm_alarm_delay-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'duration',
-      'friendly_name': 'Multifunction alarm Alarm delay',
-      'max': 999.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-      'unit_of_measurement': 's',
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.multifunction_alarm_alarm_delay',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '20.0',
-  })
-# ---
-# name: test_platform_setup_and_discovery[number.multifunction_alarm_arm_delay-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 999.0,
-      'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.multifunction_alarm_arm_delay',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
-    'original_icon': None,
-    'original_name': 'Arm delay',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1330,11 +1271,11 @@
     'unit_of_measurement': 's',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.multifunction_alarm_arm_delay-state]
+# name: test_platform_setup_and_discovery[number.multifunction_alarm_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Multifunction alarm Arm delay',
+      'friendly_name': 'Multifunction alarm None',
       'max': 999.0,
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1342,14 +1283,14 @@
       'unit_of_measurement': 's',
     }),
     'context': <ANY>,
-    'entity_id': 'number.multifunction_alarm_arm_delay',
+    'entity_id': 'number.multifunction_alarm_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '15.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.multifunction_alarm_siren_duration-entry]
+# name: test_platform_setup_and_discovery[number.multifunction_alarm_none_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1367,7 +1308,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.multifunction_alarm_siren_duration',
+    'entity_id': 'number.multifunction_alarm_none_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1379,7 +1320,66 @@
     }),
     'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Siren duration',
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'alarm_delay',
+    'unique_id': 'tuya.2pxfek1jjrtctiyglamalarm_delay_time',
+    'unit_of_measurement': 's',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.multifunction_alarm_none_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Multifunction alarm None',
+      'max': 999.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+      'unit_of_measurement': 's',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.multifunction_alarm_none_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20.0',
+  })
+# ---
+# name: test_platform_setup_and_discovery[number.multifunction_alarm_none_3-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 999.0,
+      'min': 0.0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.multifunction_alarm_none_3',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1389,11 +1389,11 @@
     'unit_of_measurement': 'min',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.multifunction_alarm_siren_duration-state]
+# name: test_platform_setup_and_discovery[number.multifunction_alarm_none_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Multifunction alarm Siren duration',
+      'friendly_name': 'Multifunction alarm None',
       'max': 999.0,
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1401,14 +1401,14 @@
       'unit_of_measurement': 'min',
     }),
     'context': <ANY>,
-    'entity_id': 'number.multifunction_alarm_siren_duration',
+    'entity_id': 'number.multifunction_alarm_none_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.rainwater_tank_level_alarm_maximum-entry]
+# name: test_platform_setup_and_discovery[number.rainwater_tank_level_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1426,7 +1426,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.rainwater_tank_level_alarm_maximum',
+    'entity_id': 'number.rainwater_tank_level_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1438,7 +1438,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Alarm maximum',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1448,10 +1448,10 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.rainwater_tank_level_alarm_maximum-state]
+# name: test_platform_setup_and_discovery[number.rainwater_tank_level_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Rainwater Tank Level Alarm maximum',
+      'friendly_name': 'Rainwater Tank Level None',
       'max': 100.0,
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1459,14 +1459,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.rainwater_tank_level_alarm_maximum',
+    'entity_id': 'number.rainwater_tank_level_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '90.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.rainwater_tank_level_alarm_minimum-entry]
+# name: test_platform_setup_and_discovery[number.rainwater_tank_level_none_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1484,7 +1484,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.rainwater_tank_level_alarm_minimum',
+    'entity_id': 'number.rainwater_tank_level_none_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1496,7 +1496,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Alarm minimum',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1506,10 +1506,10 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.rainwater_tank_level_alarm_minimum-state]
+# name: test_platform_setup_and_discovery[number.rainwater_tank_level_none_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Rainwater Tank Level Alarm minimum',
+      'friendly_name': 'Rainwater Tank Level None',
       'max': 100.0,
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1517,14 +1517,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.rainwater_tank_level_alarm_minimum',
+    'entity_id': 'number.rainwater_tank_level_none_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.rainwater_tank_level_installation_height-entry]
+# name: test_platform_setup_and_discovery[number.rainwater_tank_level_none_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1542,7 +1542,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.rainwater_tank_level_installation_height',
+    'entity_id': 'number.rainwater_tank_level_none_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1554,7 +1554,7 @@
     }),
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
-    'original_name': 'Installation height',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1564,11 +1564,11 @@
     'unit_of_measurement': 'm',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.rainwater_tank_level_installation_height-state]
+# name: test_platform_setup_and_discovery[number.rainwater_tank_level_none_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'Rainwater Tank Level Installation height',
+      'friendly_name': 'Rainwater Tank Level None',
       'max': 3.0,
       'min': 0.1,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1576,14 +1576,14 @@
       'unit_of_measurement': 'm',
     }),
     'context': <ANY>,
-    'entity_id': 'number.rainwater_tank_level_installation_height',
+    'entity_id': 'number.rainwater_tank_level_none_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.35',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.rainwater_tank_level_maximum_liquid_depth-entry]
+# name: test_platform_setup_and_discovery[number.rainwater_tank_level_none_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1601,7 +1601,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.rainwater_tank_level_maximum_liquid_depth',
+    'entity_id': 'number.rainwater_tank_level_none_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1613,7 +1613,7 @@
     }),
     'original_device_class': <NumberDeviceClass.DISTANCE: 'distance'>,
     'original_icon': None,
-    'original_name': 'Maximum liquid depth',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1623,11 +1623,11 @@
     'unit_of_measurement': 'm',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.rainwater_tank_level_maximum_liquid_depth-state]
+# name: test_platform_setup_and_discovery[number.rainwater_tank_level_none_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
-      'friendly_name': 'Rainwater Tank Level Maximum liquid depth',
+      'friendly_name': 'Rainwater Tank Level None',
       'max': 2.7,
       'min': 0.1,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1635,14 +1635,14 @@
       'unit_of_measurement': 'm',
     }),
     'context': <ANY>,
-    'entity_id': 'number.rainwater_tank_level_maximum_liquid_depth',
+    'entity_id': 'number.rainwater_tank_level_none_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.1',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.siren_veranda_time-entry]
+# name: test_platform_setup_and_discovery[number.siren_veranda_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1660,7 +1660,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.siren_veranda_time',
+    'entity_id': 'number.siren_veranda_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1672,7 +1672,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Time',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1682,10 +1682,10 @@
     'unit_of_measurement': '',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.siren_veranda_time-state]
+# name: test_platform_setup_and_discovery[number.siren_veranda_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Siren veranda  Time',
+      'friendly_name': 'Siren veranda  None',
       'max': 30.0,
       'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1693,14 +1693,14 @@
       'unit_of_measurement': '',
     }),
     'context': <ANY>,
-    'entity_id': 'number.siren_veranda_time',
+    'entity_id': 'number.siren_veranda_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.smart_thermostats_temperature_correction-entry]
+# name: test_platform_setup_and_discovery[number.smart_thermostats_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1718,7 +1718,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.smart_thermostats_temperature_correction',
+    'entity_id': 'number.smart_thermostats_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1730,7 +1730,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Temperature correction',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1740,10 +1740,10 @@
     'unit_of_measurement': '摄氏度',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.smart_thermostats_temperature_correction-state]
+# name: test_platform_setup_and_discovery[number.smart_thermostats_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'smart thermostats Temperature correction',
+      'friendly_name': 'smart thermostats None',
       'max': 9.0,
       'min': -9.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1751,14 +1751,14 @@
       'unit_of_measurement': '摄氏度',
     }),
     'context': <ANY>,
-    'entity_id': 'number.smart_thermostats_temperature_correction',
+    'entity_id': 'number.smart_thermostats_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-2.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.sous_vide_cook_temperature-entry]
+# name: test_platform_setup_and_discovery[number.sous_vide_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1776,7 +1776,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.sous_vide_cook_temperature',
+    'entity_id': 'number.sous_vide_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1788,7 +1788,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Cook temperature',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1798,10 +1798,10 @@
     'unit_of_measurement': '℃',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.sous_vide_cook_temperature-state]
+# name: test_platform_setup_and_discovery[number.sous_vide_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sous Vide Cook temperature',
+      'friendly_name': 'Sous Vide None',
       'max': 92.5,
       'min': 25.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1809,14 +1809,14 @@
       'unit_of_measurement': '℃',
     }),
     'context': <ANY>,
-    'entity_id': 'number.sous_vide_cook_temperature',
+    'entity_id': 'number.sous_vide_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.sous_vide_cook_time-entry]
+# name: test_platform_setup_and_discovery[number.sous_vide_none_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1834,7 +1834,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.sous_vide_cook_time',
+    'entity_id': 'number.sous_vide_none_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1846,7 +1846,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Cook time',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1856,10 +1856,10 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_platform_setup_and_discovery[number.sous_vide_cook_time-state]
+# name: test_platform_setup_and_discovery[number.sous_vide_none_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Sous Vide Cook time',
+      'friendly_name': 'Sous Vide None',
       'max': 5999.0,
       'min': 1.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1867,14 +1867,14 @@
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.sous_vide_cook_time',
+    'entity_id': 'number.sous_vide_none_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unavailable',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.v20_volume-entry]
+# name: test_platform_setup_and_discovery[number.v20_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1892,7 +1892,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.v20_volume',
+    'entity_id': 'number.v20_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1904,7 +1904,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Volume',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1914,10 +1914,10 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.v20_volume-state]
+# name: test_platform_setup_and_discovery[number.v20_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'V20 Volume',
+      'friendly_name': 'V20 None',
       'max': 100.0,
       'min': 0.0,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1925,14 +1925,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.v20_volume',
+    'entity_id': 'number.v20_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '95.0',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.wifi_smart_gas_boiler_thermostat_temperature_correction-entry]
+# name: test_platform_setup_and_discovery[number.wifi_smart_gas_boiler_thermostat_none-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1950,7 +1950,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.wifi_smart_gas_boiler_thermostat_temperature_correction',
+    'entity_id': 'number.wifi_smart_gas_boiler_thermostat_none',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1962,7 +1962,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Temperature correction',
+    'original_name': None,
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1972,10 +1972,10 @@
     'unit_of_measurement': '℃',
   })
 # ---
-# name: test_platform_setup_and_discovery[number.wifi_smart_gas_boiler_thermostat_temperature_correction-state]
+# name: test_platform_setup_and_discovery[number.wifi_smart_gas_boiler_thermostat_none-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'WiFi Smart Gas Boiler Thermostat  Temperature correction',
+      'friendly_name': 'WiFi Smart Gas Boiler Thermostat  None',
       'max': 9.9,
       'min': -9.9,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -1983,7 +1983,7 @@
       'unit_of_measurement': '℃',
     }),
     'context': <ANY>,
-    'entity_id': 'number.wifi_smart_gas_boiler_thermostat_temperature_correction',
+    'entity_id': 'number.wifi_smart_gas_boiler_thermostat_none',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
