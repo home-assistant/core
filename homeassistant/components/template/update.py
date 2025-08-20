@@ -218,7 +218,7 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
             return
 
         try:
-            self._attr_release_url = cv.configuration_url(result)
+            self._attr_release_url = cv.url(result)
         except vol.Invalid:
             _LOGGER.error(
                 "Received invalid release_url: %s for entity %s",
@@ -244,9 +244,10 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
             return
 
         try:
-            percentage = vol.All(vol.Coerce(float), vol.Range(0, 100, True, True))(
-                result
-            )
+            percentage = vol.All(
+                vol.Coerce(float),
+                vol.Range(0, 100, min_included=True, max_included=True),
+            )(result)
             if self._optimistic_in_process:
                 self._attr_in_progress = True
             self._attr_update_percentage = percentage

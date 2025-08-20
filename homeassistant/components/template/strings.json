@@ -418,7 +418,7 @@
           "device_id": "[%key:component::template::common::device_id_description%]",
           "installed_version": "Defines a template to get the installed version.",
           "latest_version": "Defines a template to get the latest version.",
-          "install": "Defines actions to run when the update is installed.  Receives variables `specific_version` and `backup` when enabled.",
+          "install": "Defines actions to run when the update is installed. Receives variables `specific_version` and `backup` when enabled.",
           "in_progress": "Defines a template to get the in-progress state.",
           "release_summary": "Defines a template to get the release summary.",
           "release_url": "Defines a template to get the release URL.",
