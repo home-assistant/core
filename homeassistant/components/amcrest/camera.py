@@ -16,6 +16,7 @@ import voluptuous as vol
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.ffmpeg import FFmpegManager, get_ffmpeg_manager
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -25,8 +26,15 @@ from homeassistant.helpers.aiohttp_client import (
     async_get_clientsession,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import (
     CAMERA_WEB_SESSION_TIMEOUT,
@@ -123,6 +131,7 @@ CAMERA_SERVICES = {
 _BOOL_TO_STATE = {True: STATE_ON, False: STATE_OFF}
 
 
+# Platform setup for YAML config
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -136,6 +145,24 @@ async def async_setup_platform(
     name = discovery_info[CONF_NAME]
     device = hass.data[DATA_AMCREST][DEVICES][name]
     entity = AmcrestCam(name, device, get_ffmpeg_manager(hass))
+
+    async_add_entities([entity], True)
+
+
+# Platform setup for config flow
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up an Amcrest IP Camera."""
+
+    device = hass.data[DATA_AMCREST][DEVICES][config_entry.entry_id]["device"]
+    coordinator = hass.data[DATA_AMCREST][DEVICES][config_entry.entry_id]["coordinator"]
+    name = f"{device.name} Camera"
+    entity = AmcrestCoordinatedCamera(
+        name, device, coordinator, get_ffmpeg_manager(hass)
+    )
 
     async_add_entities([entity], True)
 
@@ -642,3 +669,18 @@ class AmcrestCam(Camera):
             log_update_error(
                 _LOGGER, "start" if start else "stop", self.name, "camera tour", error
             )
+
+
+class AmcrestCoordinatedCamera(CoordinatorEntity, AmcrestCam):
+    """An implementation of an Amcrest IP camera with a data update coordinator."""
+
+    def __init__(
+        self,
+        name: str,
+        device: AmcrestDevice,
+        coordinator: DataUpdateCoordinator,
+        ffmpeg: FFmpegManager,
+    ) -> None:
+        """Initialize an Amcrest camera with a coordinator."""
+        CoordinatorEntity.__init__(self, coordinator)
+        AmcrestCam.__init__(self, name, device, ffmpeg)
