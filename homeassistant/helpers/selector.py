@@ -1447,8 +1447,7 @@ class SensorDeviceClassSelector(DeviceClassSelector):
     """Selector for a sensor device class."""
 
     def _default_device_classes(self) -> list[str]:
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.sensor import SensorDeviceClass
+        from homeassistant.components.sensor import SensorDeviceClass  # noqa: PLC0415
 
         return [device_class.value for device_class in SensorDeviceClass]
 
@@ -1488,8 +1487,7 @@ class SensorStateClassSelector(Selector[SensorStateClassSelectorConfig]):
     def __call__(self, data: Any) -> Any:
         """Return valid device classes."""
 
-        # pylint: disable-next=import-outside-toplevel
-        from homeassistant.components.sensor import SensorStateClass
+        from homeassistant.components.sensor import SensorStateClass  # noqa: PLC0415
 
         state_classes: Sequence[str] = []
         if config_state_classes := self.config.get(

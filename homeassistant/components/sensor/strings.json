@@ -338,6 +338,7 @@
   "selector": {
     "device_class": {
       "options": {
+        "absolute_humidity": "[%key:component::sensor::entity_component::absolute_humidity::name%]",
         "apparent_power": "[%key:component::sensor::entity_component::apparent_power::name%]",
         "area": "[%key:component::sensor::entity_component::area::name%]",
         "aqi": "[%key:component::sensor::entity_component::aqi::name%]",
