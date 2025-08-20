@@ -1,0 +1,64 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "An OpenRouter API key"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "config_subentries": {
+    "conversation": {
+      "step": {
+        "user": {
+          "description": "Configure the new conversation agent",
+          "data": {
+            "model": "Model",
+            "prompt": "[%key:common::config_flow::data::prompt%]",
+            "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]"
+          },
+          "data_description": {
+            "model": "The model to use for the conversation agent",
+            "prompt": "Instruct how the LLM should respond. This can be a template."
+          }
+        }
+      },
+      "initiate_flow": {
+        "user": "Add conversation agent"
+      },
+      "entry_type": "Conversation agent",
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      }
+    },
+    "ai_task_data": {
+      "step": {
+        "user": {
+          "data": {
+            "model": "[%key:component::open_router::config_subentries::conversation::step::user::data::model%]"
+          }
+        }
+      },
+      "initiate_flow": {
+        "user": "Add AI task"
+      },
+      "entry_type": "AI task",
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      }
+    }
+  }
+}

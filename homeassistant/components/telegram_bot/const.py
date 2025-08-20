@@ -7,7 +7,7 @@ DOMAIN = "telegram_bot"
 PLATFORM_BROADCAST = "broadcast"
 PLATFORM_POLLING = "polling"
 PLATFORM_WEBHOOKS = "webhooks"
-
+SECTION_ADVANCED_SETTINGS = "advanced_settings"
 SUBENTRY_TYPE_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 
 CONF_BOT_COUNT = "bot_count"
