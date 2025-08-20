@@ -146,7 +146,7 @@ class AbstractTemplateEvent(AbstractTemplateEntity, EventEntity):
             self._attr_event_types = []
             return
 
-        self._attr_event_types = event_types
+        self._attr_event_types = [str(event_type) for event_type in event_types]
 
     @callback
     def _update_event_type(self, event_type: Any) -> None:
