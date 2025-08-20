@@ -3,7 +3,7 @@
 import logging
 
 from pyvesync import VeSync
-from pyvesync.utils.errors import VesyncLoginError
+from pyvesync.utils.errors import VeSyncLoginError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
@@ -44,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
     try:
         await manager.login()
-    except VesyncLoginError as err:
+    except VeSyncLoginError as err:
         raise ConfigEntryAuthFailed from err
 
     hass.data[DOMAIN] = {}
@@ -54,7 +54,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     # Store coordinator at domain level since only single integration instance is permitted.
     hass.data[DOMAIN][VS_COORDINATOR] = coordinator
-    await manager.get_devices()
     await manager.update()
     await manager.check_firmware()
 

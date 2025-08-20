@@ -6,7 +6,6 @@ import logging
 from typing import Any
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.devices.vesyncpurifier import VeSyncAirBaseV2
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -99,10 +98,8 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
     @property
     def percentage(self) -> int | None:
         """Return the currently set speed."""
-        if isinstance(self.device, VeSyncAirBaseV2):
-            current_level = self.device.state.fan_set_level
-        else:
-            current_level = self.device.state.fan_level
+
+        current_level = self.device.state.fan_level
 
         if self.device.state.mode == VS_FAN_MODE_MANUAL and current_level is not None:
             return ordered_list_item_to_percentage(
