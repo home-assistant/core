@@ -1511,6 +1511,12 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             suggested_display_precision=0,
             suggested_unit_of_measurement=UnitOfPower.WATT,
         ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            translation_key="temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
     ),
     # Pool HeatPump
     "znrb": (
