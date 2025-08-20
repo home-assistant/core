@@ -99,7 +99,30 @@
               "rose": "mdi:flower",
               "colorful": "mdi:looks",
               "flickering": "mdi:led-strip-variant",
-              "breathing": "mdi:heart-pulse"
+              "breathing": "mdi:heart-pulse",
+              "romance": "mdi:looks",
+              "energy": "mdi:looks",
+              "heartbeat": "mdi:looks",
+              "party": "mdi:looks",
+              "dynamic": "mdi:looks",
+              "mystery": "mdi:looks",
+              "lightning": "mdi:looks",
+              "rock": "mdi:looks",
+              "starlight": "mdi:looks",
+              "valentine_day": "mdi:looks",
+              "dream": "mdi:looks",
+              "alarm": "mdi:looks",
+              "fireworks": "mdi:looks",
+              "waves": "mdi:looks",
+              "rainbow": "mdi:looks",
+              "game": "mdi:looks",
+              "meditation": "mdi:looks",
+              "starlit_sky": "mdi:looks",
+              "sleep": "mdi:looks",
+              "movie": "mdi:looks",
+              "sunrise": "mdi:looks",
+              "new_year": "mdi:looks",
+              "cherry_blossom": "mdi:looks"
             }
           }
         }
