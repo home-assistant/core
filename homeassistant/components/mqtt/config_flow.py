@@ -2708,7 +2708,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             error="invalid_template",
         ),
         CONF_CODE_FORMAT: PlatformField(
-            selector=TEMPLATE_SELECTOR,
+            selector=TEXT_SELECTOR,
             required=False,
             validator=validate(cv.is_regex),
             error="invalid_regular_expression",
