@@ -476,20 +476,12 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             ],
         )
 
- register_value = await self._async_read_register(self._input_type, self._address)
-            
-self._attr_current_temperature = register_value
-
-if register_value is not None and self._attr_available:
-	self._attr_current_temperature = int(
-                (register_value - self._offset)
-                / self._scale
-                * self._current_temperature_scale
-            self._attr_current_temperature = int(
-                (register_value - self._offset)
-                / self._scale
-                * self._current_temperature_scale
-            )
+        register_value = await self._async_read_register(
+            self._input_type, self._address
+        )
+        if register_value:
+            raw_value = (register_value - self._offset) / self._scale
+            self._attr_current_temperature = raw_value * self._current_temperature_scale
         else:
             self._attr_current_temperature = None
 
