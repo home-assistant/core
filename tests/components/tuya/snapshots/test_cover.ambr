@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[cover.bedroom_blinds_none-entry]
+# name: test_platform_setup_and_discovery[cover.bedroom_blinds_curtain-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.bedroom_blinds_none',
+    'entity_id': 'cover.bedroom_blinds_curtain',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,7 +24,7 @@
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Curtain',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -34,23 +34,23 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cover.bedroom_blinds_none-state]
+# name: test_platform_setup_and_discovery[cover.bedroom_blinds_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 0,
       'device_class': 'curtain',
-      'friendly_name': 'bedroom blinds None',
+      'friendly_name': 'bedroom blinds Curtain',
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.bedroom_blinds_none',
+    'entity_id': 'cover.bedroom_blinds_curtain',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'closed',
   })
 # ---
-# name: test_platform_setup_and_discovery[cover.blinds_none-entry]
+# name: test_platform_setup_and_discovery[cover.blinds_curtain-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -63,7 +63,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.blinds_none',
+    'entity_id': 'cover.blinds_curtain',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -75,7 +75,7 @@
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Curtain',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -85,23 +85,23 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cover.blinds_none-state]
+# name: test_platform_setup_and_discovery[cover.blinds_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 36,
       'device_class': 'curtain',
-      'friendly_name': 'blinds None',
+      'friendly_name': 'blinds Curtain',
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.blinds_none',
+    'entity_id': 'cover.blinds_curtain',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_platform_setup_and_discovery[cover.kitchen_blinds_none-entry]
+# name: test_platform_setup_and_discovery[cover.kitchen_blinds_blind-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -114,7 +114,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.kitchen_blinds_none',
+    'entity_id': 'cover.kitchen_blinds_blind',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -126,7 +126,7 @@
     }),
     'original_device_class': <CoverDeviceClass.BLIND: 'blind'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Blind',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -136,23 +136,23 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cover.kitchen_blinds_none-state]
+# name: test_platform_setup_and_discovery[cover.kitchen_blinds_blind-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 100,
       'device_class': 'blind',
-      'friendly_name': 'Kitchen Blinds None',
+      'friendly_name': 'Kitchen Blinds Blind',
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.kitchen_blinds_none',
+    'entity_id': 'cover.kitchen_blinds_blind',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_platform_setup_and_discovery[cover.kitchen_blinds_none_2-entry]
+# name: test_platform_setup_and_discovery[cover.kitchen_blinds_curtain-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -165,7 +165,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.kitchen_blinds_none_2',
+    'entity_id': 'cover.kitchen_blinds_curtain',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -177,7 +177,7 @@
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Curtain',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -187,23 +187,23 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cover.kitchen_blinds_none_2-state]
+# name: test_platform_setup_and_discovery[cover.kitchen_blinds_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 48,
       'device_class': 'curtain',
-      'friendly_name': 'Kitchen Blinds None',
+      'friendly_name': 'Kitchen Blinds Curtain',
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.kitchen_blinds_none_2',
+    'entity_id': 'cover.kitchen_blinds_curtain',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_platform_setup_and_discovery[cover.lounge_dark_blind_none-entry]
+# name: test_platform_setup_and_discovery[cover.lounge_dark_blind_curtain-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -216,7 +216,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.lounge_dark_blind_none',
+    'entity_id': 'cover.lounge_dark_blind_curtain',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -228,7 +228,7 @@
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Curtain',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -238,23 +238,23 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cover.lounge_dark_blind_none-state]
+# name: test_platform_setup_and_discovery[cover.lounge_dark_blind_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 100,
       'device_class': 'curtain',
-      'friendly_name': 'Lounge Dark Blind None',
+      'friendly_name': 'Lounge Dark Blind Curtain',
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.lounge_dark_blind_none',
+    'entity_id': 'cover.lounge_dark_blind_curtain',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_platform_setup_and_discovery[cover.persiana_do_quarto_none-entry]
+# name: test_platform_setup_and_discovery[cover.persiana_do_quarto_curtain-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -267,7 +267,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.persiana_do_quarto_none',
+    'entity_id': 'cover.persiana_do_quarto_curtain',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -279,7 +279,7 @@
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Curtain',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -289,23 +289,23 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cover.persiana_do_quarto_none-state]
+# name: test_platform_setup_and_discovery[cover.persiana_do_quarto_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 100,
       'device_class': 'curtain',
-      'friendly_name': 'Persiana do Quarto None',
+      'friendly_name': 'Persiana do Quarto Curtain',
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.persiana_do_quarto_none',
+    'entity_id': 'cover.persiana_do_quarto_curtain',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'open',
   })
 # ---
-# name: test_platform_setup_and_discovery[cover.tapparelle_studio_none-entry]
+# name: test_platform_setup_and_discovery[cover.tapparelle_studio_curtain-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -318,7 +318,7 @@
     'disabled_by': None,
     'domain': 'cover',
     'entity_category': None,
-    'entity_id': 'cover.tapparelle_studio_none',
+    'entity_id': 'cover.tapparelle_studio_curtain',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -330,7 +330,7 @@
     }),
     'original_device_class': <CoverDeviceClass.CURTAIN: 'curtain'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Curtain',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -340,16 +340,16 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[cover.tapparelle_studio_none-state]
+# name: test_platform_setup_and_discovery[cover.tapparelle_studio_curtain-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_position': 0,
       'device_class': 'curtain',
-      'friendly_name': 'Tapparelle studio None',
+      'friendly_name': 'Tapparelle studio Curtain',
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.tapparelle_studio_none',
+    'entity_id': 'cover.tapparelle_studio_curtain',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

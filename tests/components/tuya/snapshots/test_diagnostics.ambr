@@ -29,9 +29,9 @@
           'state': dict({
             'attributes': dict({
               'device_class': 'gas',
-              'friendly_name': 'Gas sensor None',
+              'friendly_name': 'Gas sensor Gas',
             }),
-            'entity_id': 'binary_sensor.gas_sensor_none',
+            'entity_id': 'binary_sensor.gas_sensor_gas',
             'state': 'off',
           }),
           'unit_of_measurement': None,
@@ -46,11 +46,11 @@
           'original_icon': None,
           'state': dict({
             'attributes': dict({
-              'friendly_name': 'Gas sensor',
+              'friendly_name': 'Gas sensor Gas',
               'state_class': 'measurement',
               'unit_of_measurement': 'ppm',
             }),
-            'entity_id': 'sensor.gas_sensor',
+            'entity_id': 'sensor.gas_sensor_gas',
             'state': '0.0',
           }),
           'unit_of_measurement': 'ppm',
@@ -117,9 +117,9 @@
               'state': dict({
                 'attributes': dict({
                   'device_class': 'gas',
-                  'friendly_name': 'Gas sensor None',
+                  'friendly_name': 'Gas sensor Gas',
                 }),
-                'entity_id': 'binary_sensor.gas_sensor_none',
+                'entity_id': 'binary_sensor.gas_sensor_gas',
                 'state': 'off',
               }),
               'unit_of_measurement': None,
@@ -134,11 +134,11 @@
               'original_icon': None,
               'state': dict({
                 'attributes': dict({
-                  'friendly_name': 'Gas sensor',
+                  'friendly_name': 'Gas sensor Gas',
                   'state_class': 'measurement',
                   'unit_of_measurement': 'ppm',
                 }),
-                'entity_id': 'sensor.gas_sensor',
+                'entity_id': 'sensor.gas_sensor_gas',
                 'state': '0.0',
               }),
               'unit_of_measurement': 'ppm',
