@@ -20,6 +20,12 @@ VACUUM_FAN_SPEED_MAX = "max"
 AFTER_COMMAND_REFRESH = 5
 COVER_ENTITY_AFTER_COMMAND_REFRESH = 10
 
+HUMIDITY_LEVELS = {
+    34: 101,  # Low humidity mode
+    67: 102,  # Medium humidity mode
+    100: 103,  # High humidity mode
+}
+
 
 class AirPurifierMode(Enum):
     """Air Purifier Modes."""
@@ -33,8 +39,6 @@ class AirPurifierMode(Enum):
     def get_modes(cls) -> list[str]:
         """Return a list of available air purifier modes as lowercase strings."""
         return [mode.name.lower() for mode in cls]
-
-DEFAULT_DELAY_TIME = 5  # seconds
 
 
 class Humidifier2Mode(Enum):
