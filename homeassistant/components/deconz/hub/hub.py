@@ -169,16 +169,12 @@ class DeconzHub:
 
     async def async_update_device_registry(self) -> None:
         """Update device registry."""
-        if self.api.config.mac is None:
-            return
-
         device_registry = dr.async_get(self.hass)
 
         # Host device
-        if not self.api.config.mac:
-            return  # Safeguard: no MAC, skip to avoid invalid via_device
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
+            identifiers={(DOMAIN, f"{self.api.config.bridge_id}-host")},
             connections={(CONNECTION_NETWORK_MAC, self.api.config.mac)},
         )
 
@@ -191,11 +187,11 @@ class DeconzHub:
             configuration_url=configuration_url,
             entry_type=dr.DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self.api.config.bridge_id)},
-            manufacturer="Dresden Elektronik",
+            manufacturer="dresden elektronik",
             model=self.api.config.model_id,
             name=self.api.config.name,
             sw_version=self.api.config.software_version,
-            via_device=(CONNECTION_NETWORK_MAC, self.api.config.mac),
+            via_device=(DOMAIN, self.api.config.bridge_id),
         )
 
     @staticmethod
