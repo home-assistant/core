@@ -25,7 +25,8 @@ PLATFORMS: list[Platform] = [Platform.TTS]
 
 async def get_model_by_id(client: AsyncElevenLabs, model_id: str) -> Model | None:
     """Get ElevenLabs model from their API by the model_id."""
-    models = await client.models.get_all()
+    models = await client.models.list()
+
     for maybe_model in models:
         if maybe_model.model_id == model_id:
             return maybe_model

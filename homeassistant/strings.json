@@ -65,6 +65,7 @@
         "path": "Path",
         "pin": "PIN code",
         "port": "Port",
+        "prompt": "Instructions",
         "ssl": "Uses an SSL certificate",
         "url": "URL",
         "usb_path": "USB device path",

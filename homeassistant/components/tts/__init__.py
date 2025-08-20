@@ -382,7 +382,7 @@ async def _async_convert_audio(
             assert process.stderr
             stderr_data = await process.stderr.read()
             _LOGGER.error(stderr_data.decode())
-            raise RuntimeError(
+            raise HomeAssistantError(
                 f"Unexpected error while running ffmpeg with arguments: {command}. "
                 "See log for details."
             )
@@ -976,11 +976,15 @@ class SpeechManager:
         if engine_instance.name is None or engine_instance.name is UNDEFINED:
             raise HomeAssistantError("TTS engine name is not set.")
 
-        if isinstance(engine_instance, Provider) or isinstance(message_or_stream, str):
+        if isinstance(engine_instance, Provider) or (
+            not engine_instance.async_supports_streaming_input()
+        ):
+            # Non-streaming
             if isinstance(message_or_stream, str):
                 message = message_or_stream
             else:
                 message = "".join([chunk async for chunk in message_or_stream])
+
             extension, data = await engine_instance.async_internal_get_tts_audio(
                 message, language, options
             )
@@ -996,8 +1000,19 @@ class SpeechManager:
             data_gen = make_data_generator(data)
 
         else:
+            # Streaming
+            if isinstance(message_or_stream, str):
+
+                async def gen_stream() -> AsyncGenerator[str]:
+                    yield message_or_stream
+
+                stream = gen_stream()
+
+            else:
+                stream = message_or_stream
+
             tts_result = await engine_instance.internal_async_stream_tts_audio(
-                TTSAudioRequest(language, options, message_or_stream)
+                TTSAudioRequest(language, options, stream)
             )
             extension = tts_result.extension
             data_gen = tts_result.data_gen

@@ -17,7 +17,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import TIMEOUT
 
 HUBNAME = "imeon_inverter_hub"
-INTERVAL = timedelta(seconds=60)
+INTERVAL = 60
 _LOGGER = logging.getLogger(__name__)
 
 type InverterConfigEntry = ConfigEntry[InverterCoordinator]
@@ -44,7 +44,7 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
             hass,
             _LOGGER,
             name=HUBNAME,
-            update_interval=INTERVAL,
+            update_interval=timedelta(seconds=INTERVAL),
             config_entry=entry,
         )
 
@@ -83,15 +83,12 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
             # Fetch data using distant API
             try:
                 await self._api.update()
-            except (ValueError, ClientError) as e:
+            except (ValueError, TimeoutError, ClientError) as e:
                 raise UpdateFailed(e) from e
 
         # Store data
         for key, val in self._api.storage.items():
-            if key == "timeline":
-                data[key] = val
-            else:
-                for sub_key, sub_val in val.items():
-                    data[f"{key}_{sub_key}"] = sub_val
+            for sub_key, sub_val in val.items():
+                data[f"{key}_{sub_key}"] = sub_val
 
         return data

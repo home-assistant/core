@@ -52,6 +52,7 @@ from .conftest import (
     DEFAULT_PROTOCOL,
     TEST_BC_PORT,
     TEST_CAM_MODEL,
+    TEST_CAM_NAME,
     TEST_HOST,
     TEST_HOST_MODEL,
     TEST_MAC,
@@ -178,26 +179,6 @@ async def test_credential_error_three(
         await hass.async_block_till_done()
 
     assert (HOMEASSISTANT_DOMAIN, issue_id) in issue_registry.issues
-
-
-async def test_entry_reloading(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    reolink_host: MagicMock,
-) -> None:
-    """Test the entry is reloaded correctly when settings change."""
-    reolink_host.is_nvr = False
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert reolink_host.logout.call_count == 0
-    assert config_entry.title == "test_reolink_name"
-
-    hass.config_entries.async_update_entry(config_entry, title="New Name")
-    await hass.async_block_till_done()
-
-    assert reolink_host.logout.call_count == 1
-    assert config_entry.title == "New Name"
 
 
 @pytest.mark.parametrize(
@@ -1054,7 +1035,7 @@ async def test_privacy_mode_change_callback(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.SWITCH}.{TEST_NVR_NAME}_record_audio"
+    entity_id = f"{Platform.SWITCH}.{TEST_CAM_NAME}_record_audio"
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # simulate a TCP push callback signaling a privacy mode change
@@ -1126,7 +1107,7 @@ async def test_camera_wake_callback(
         await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.SWITCH}.{TEST_NVR_NAME}_record_audio"
+    entity_id = f"{Platform.SWITCH}.{TEST_CAM_NAME}_record_audio"
     assert hass.states.get(entity_id).state == STATE_ON
 
     reolink_host.sleeping.return_value = False

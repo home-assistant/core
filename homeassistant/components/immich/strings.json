@@ -74,5 +74,42 @@
         "name": "Version"
       }
     }
+  },
+  "services": {
+    "upload_file": {
+      "name": "Upload file",
+      "description": "Uploads a file to your Immich instance.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Immich instance",
+          "description": "The Immich instance where to upload the file."
+        },
+        "file": {
+          "name": "File",
+          "description": "The path to the file to be uploaded."
+        },
+        "album_id": {
+          "name": "Album ID",
+          "description": "The album in which the file should be placed after uploading."
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "config_entry_not_found": {
+      "message": "Config entry not found."
+    },
+    "config_entry_not_loaded": {
+      "message": "Config entry not loaded."
+    },
+    "only_local_media_supported": {
+      "message": "Only local media files are currently supported."
+    },
+    "album_not_found": {
+      "message": "Album with ID `{album_id}` not found ({error})."
+    },
+    "upload_failed": {
+      "message": "Upload of file `{file}` failed ({error})."
+    }
   }
 }

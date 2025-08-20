@@ -180,6 +180,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions(
                     ["system_execute_reboot", "system_execute_reboot"],
                     ["system_test_type", "system_test_type"],
                 ],
+                "required": False,
                 "name": "next_step_id",
             }
         ],
@@ -275,6 +276,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions_and_confir
                     ["system_execute_reboot", "system_execute_reboot"],
                     ["system_test_type", "system_test_type"],
                 ],
+                "required": False,
                 "name": "next_step_id",
             }
         ],
@@ -471,7 +473,6 @@ async def test_mount_failed_repair_flow_error(
         "flow_id": flow_id,
         "handler": "hassio",
         "reason": "apply_suggestion_fail",
-        "result": None,
         "description_placeholders": None,
     }
 
@@ -546,6 +547,7 @@ async def test_mount_failed_repair_flow(
                     ["mount_execute_reload", "mount_execute_reload"],
                     ["mount_execute_remove", "mount_execute_remove"],
                 ],
+                "required": False,
                 "name": "next_step_id",
             }
         ],
@@ -757,6 +759,7 @@ async def test_supervisor_issue_repair_flow_multiple_data_disks(
                     ["system_rename_data_disk", "system_rename_data_disk"],
                     ["system_adopt_data_disk", "system_adopt_data_disk"],
                 ],
+                "required": False,
                 "name": "next_step_id",
             }
         ],
@@ -961,6 +964,7 @@ async def test_supervisor_issue_addon_boot_fail(
                     ["addon_execute_start", "addon_execute_start"],
                     ["addon_disable_boot", "addon_disable_boot"],
                 ],
+                "required": False,
                 "name": "next_step_id",
             }
         ],

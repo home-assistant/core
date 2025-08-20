@@ -15,7 +15,9 @@ HOMEE_IP = "192.168.1.11"
 NEW_HOMEE_IP = "192.168.1.12"
 HOMEE_NAME = "TestHomee"
 TESTUSER = "testuser"
+NEW_TESTUSER = "testuser2"
 TESTPASS = "testpass"
+NEW_TESTPASS = "testpass2"
 
 
 @pytest.fixture

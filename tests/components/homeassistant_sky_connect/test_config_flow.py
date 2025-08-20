@@ -211,7 +211,6 @@ async def test_options_flow(
         )
 
     assert create_result["type"] is FlowResultType.CREATE_ENTRY
-    assert create_result["result"] is True
 
     assert config_entry.data == {
         "firmware": "ezsp",

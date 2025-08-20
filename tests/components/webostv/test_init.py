@@ -54,6 +54,7 @@ async def test_update_options(hass: HomeAssistant, client) -> None:
     new_options = config_entry.options.copy()
     new_options[CONF_SOURCES] = ["Input02", "Live TV"]
     hass.config_entries.async_update_entry(config_entry, options=new_options)
+    await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED

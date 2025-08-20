@@ -39,6 +39,14 @@ from .const import DOMAIN
 from .coordinator import WeatherFlowObservationCoordinator, WeatherFlowWindCoordinator
 from .entity import WeatherFlowCloudEntity
 
+PRECIPITATION_TYPE = {
+    0: "none",
+    1: "rain",
+    2: "snow",
+    3: "sleet",
+    4: "storm",
+}
+
 
 @dataclass(frozen=True, kw_only=True)
 class WeatherFlowCloudSensorEntityDescription(
@@ -222,6 +230,81 @@ WF_SENSORS: tuple[WeatherFlowCloudSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
+    ),
+    # Rain Sensors
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_accum_last_1hr",
+        translation_key="precip_accum_last_1hr",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.precip_accum_last_1hr,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_accum_local_day",
+        translation_key="precip_accum_local_day",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.precip_accum_local_day,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_accum_local_day_final",
+        translation_key="precip_accum_local_day_final",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.precip_accum_local_day_final,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_accum_local_yesterday",
+        translation_key="precip_accum_local_yesterday",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.precip_accum_local_yesterday,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_accum_local_yesterday_final",
+        translation_key="precip_accum_local_yesterday_final",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.precip_accum_local_yesterday_final,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_analysis_type_yesterday",
+        translation_key="precip_analysis_type_yesterday",
+        device_class=SensorDeviceClass.ENUM,
+        options=["none", "rain", "snow", "sleet", "storm"],
+        suggested_display_precision=1,
+        value_fn=lambda data: PRECIPITATION_TYPE.get(
+            data.precip_analysis_type_yesterday
+        ),
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_minutes_local_day",
+        translation_key="precip_minutes_local_day",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.precip_minutes_local_day,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_minutes_local_yesterday",
+        translation_key="precip_minutes_local_yesterday",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.precip_minutes_local_yesterday,
+    ),
+    WeatherFlowCloudSensorEntityDescription(
+        key="precip_minutes_local_yesterday_final",
+        translation_key="precip_minutes_local_yesterday_final",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        suggested_display_precision=1,
+        value_fn=lambda data: data.precip_minutes_local_yesterday_final,
     ),
     # Lightning Sensors
     WeatherFlowCloudSensorEntityDescription(

@@ -1140,6 +1140,61 @@ async def test_selector_serializer(
         "additionalProperties": True,
     }
     assert selector_serializer(
+        selector.ObjectSelector(
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"text": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {"min": 30, "max": 100}},
+                    },
+                },
+                "multiple": False,
+                "label_field": "name",
+            },
+        )
+    ) == {
+        "type": "object",
+        "properties": {
+            "name": {"type": "string"},
+            "percentage": {"type": "number", "minimum": 30, "maximum": 100},
+        },
+        "required": ["name"],
+    }
+    assert selector_serializer(
+        selector.ObjectSelector(
+            {
+                "fields": {
+                    "name": {
+                        "required": True,
+                        "selector": {"text": {}},
+                    },
+                    "percentage": {
+                        "selector": {"number": {"min": 30, "max": 100}},
+                    },
+                },
+                "multiple": True,
+                "label_field": "name",
+            },
+        )
+    ) == {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "name": {"type": "string"},
+                "percentage": {
+                    "type": "number",
+                    "minimum": 30,
+                    "maximum": 100,
+                },
+            },
+            "required": ["name"],
+        },
+    }
+    assert selector_serializer(
         selector.SelectSelector(
             {
                 "options": [
@@ -1489,18 +1544,18 @@ This is prompt 2
 """
     )
     assert [(tool.name, tool.description) for tool in instance.tools] == [
-        ("api-1.Tool_1", "Description 1"),
-        ("api-2.Tool_2", "Description 2"),
+        ("api-1__Tool_1", "Description 1"),
+        ("api-2__Tool_2", "Description 2"),
     ]
 
     # The test tool returns back the provided arguments so we can verify
     # the original tool is invoked with the correct tool name and args.
     result = await instance.async_call_tool(
-        llm.ToolInput(tool_name="api-1.Tool_1", tool_args={"arg1": "value1"})
+        llm.ToolInput(tool_name="api-1__Tool_1", tool_args={"arg1": "value1"})
     )
     assert result == {"result": {"Tool_1": {"arg1": "value1"}}}
 
     result = await instance.async_call_tool(
-        llm.ToolInput(tool_name="api-2.Tool_2", tool_args={"arg2": "value2"})
+        llm.ToolInput(tool_name="api-2__Tool_2", tool_args={"arg2": "value2"})
     )
     assert result == {"result": {"Tool_2": {"arg2": "value2"}}}

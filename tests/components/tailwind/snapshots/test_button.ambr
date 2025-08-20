@@ -70,7 +70,6 @@
         '_3c_e9_e_6d_21_84_',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Tailwind',
@@ -80,7 +79,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '10.10',
     'via_device_id': None,
   })

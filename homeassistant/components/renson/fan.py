@@ -196,7 +196,7 @@ class RensonFan(RensonEntity, FanEntity):
             all_data = self.coordinator.data
             breeze_temp = self.api.get_field_value(all_data, BREEZE_TEMPERATURE_FIELD)
             await self.hass.async_add_executor_job(
-                self.api.set_breeze, cmd.name, breeze_temp, True
+                self.api.set_breeze, cmd, breeze_temp, True
             )
         else:
             await self.hass.async_add_executor_job(self.api.set_manual_level, cmd)

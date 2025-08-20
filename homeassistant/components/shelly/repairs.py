@@ -11,7 +11,7 @@ from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
-from homeassistant.components.repairs import RepairsFlow
+from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 
@@ -20,9 +20,11 @@ from .const import (
     BLE_SCANNER_MIN_FIRMWARE,
     CONF_BLE_SCANNER_MODE,
     DOMAIN,
+    OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID,
     BLEScannerMode,
 )
 from .coordinator import ShellyConfigEntry
+from .utils import get_rpc_ws_url
 
 
 @callback
@@ -65,7 +67,46 @@ def async_manage_ble_scanner_firmware_unsupported_issue(
     ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
-class BleScannerFirmwareUpdateFlow(RepairsFlow):
+@callback
+def async_manage_outbound_websocket_incorrectly_enabled_issue(
+    hass: HomeAssistant,
+    entry: ShellyConfigEntry,
+) -> None:
+    """Manage the Outbound WebSocket incorrectly enabled issue."""
+    issue_id = OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID.format(
+        unique=entry.unique_id
+    )
+
+    if TYPE_CHECKING:
+        assert entry.runtime_data.rpc is not None
+
+    device = entry.runtime_data.rpc.device
+
+    if (
+        (ws_config := device.config.get("ws"))
+        and ws_config["enable"]
+        and ws_config["server"] == get_rpc_ws_url(hass)
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=True,
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="outbound_websocket_incorrectly_enabled",
+            translation_placeholders={
+                "device_name": device.name,
+                "ip_address": device.ip_address,
+            },
+            data={"entry_id": entry.entry_id},
+        )
+        return
+
+    ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
+class ShellyRpcRepairsFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
     def __init__(self, device: RpcDevice) -> None:
@@ -83,7 +124,7 @@ class BleScannerFirmwareUpdateFlow(RepairsFlow):
     ) -> data_entry_flow.FlowResult:
         """Handle the confirm step of a fix flow."""
         if user_input is not None:
-            return await self.async_step_update_firmware()
+            return await self._async_step_confirm()
 
         issue_registry = ir.async_get(self.hass)
         description_placeholders = None
@@ -96,6 +137,18 @@ class BleScannerFirmwareUpdateFlow(RepairsFlow):
             description_placeholders=description_placeholders,
         )
 
+    async def _async_step_confirm(self) -> data_entry_flow.FlowResult:
+        """Handle the confirm step of a fix flow."""
+        raise NotImplementedError
+
+
+class BleScannerFirmwareUpdateFlow(ShellyRpcRepairsFlow):
+    """Handler for BLE Scanner Firmware Update flow."""
+
+    async def _async_step_confirm(self) -> data_entry_flow.FlowResult:
+        """Handle the confirm step of a fix flow."""
+        return await self.async_step_update_firmware()
+
     async def async_step_update_firmware(
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
@@ -104,6 +157,29 @@ class BleScannerFirmwareUpdateFlow(RepairsFlow):
             return self.async_abort(reason="update_not_available")
         try:
             await self._device.trigger_ota_update()
+        except (DeviceConnectionError, RpcCallError):
+            return self.async_abort(reason="cannot_connect")
+
+        return self.async_create_entry(title="", data={})
+
+
+class DisableOutboundWebSocketFlow(ShellyRpcRepairsFlow):
+    """Handler for Disable Outbound WebSocket flow."""
+
+    async def _async_step_confirm(self) -> data_entry_flow.FlowResult:
+        """Handle the confirm step of a fix flow."""
+        return await self.async_step_disable_outbound_websocket()
+
+    async def async_step_disable_outbound_websocket(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the confirm step of a fix flow."""
+        try:
+            result = await self._device.ws_setconfig(
+                False, self._device.config["ws"]["server"]
+            )
+            if result["restart_required"]:
+                await self._device.trigger_reboot()
         except (DeviceConnectionError, RpcCallError):
             return self.async_abort(reason="cannot_connect")
 
@@ -124,4 +200,11 @@ async def async_create_fix_flow(
         assert entry is not None
 
     device = entry.runtime_data.rpc.device
-    return BleScannerFirmwareUpdateFlow(device)
+
+    if "ble_scanner_firmware_unsupported" in issue_id:
+        return BleScannerFirmwareUpdateFlow(device)
+
+    if "outbound_websocket_incorrectly_enabled" in issue_id:
+        return DisableOutboundWebSocketFlow(device)
+
+    return ConfirmRepairFlow()

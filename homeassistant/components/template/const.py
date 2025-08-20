@@ -1,8 +1,12 @@
 """Constants for the Template Platform Components."""
 
-from homeassistant.const import Platform
+import voluptuous as vol
+
+from homeassistant.const import CONF_ICON, CONF_NAME, CONF_UNIQUE_ID, Platform
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
+CONF_ADVANCED_OPTIONS = "advanced_options"
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 CONF_ATTRIBUTES = "attributes"
 CONF_AVAILABILITY = "availability"
@@ -15,6 +19,15 @@ CONF_PRESS = "press"
 CONF_STEP = "step"
 CONF_TURN_OFF = "turn_off"
 CONF_TURN_ON = "turn_on"
+
+TEMPLATE_ENTITY_BASE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ICON): cv.template,
+        vol.Optional(CONF_NAME): cv.template,
+        vol.Optional(CONF_PICTURE): cv.template,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
+    }
+)
 
 DOMAIN = "template"
 

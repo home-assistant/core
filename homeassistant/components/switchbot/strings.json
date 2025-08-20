@@ -34,7 +34,7 @@
         }
       },
       "encrypted_auth": {
-        "description": "Please provide your SwitchBot app username and password. This data won't be saved and only used to retrieve your device's encryption key. Usernames and passwords are case sensitive.",
+        "description": "Please provide your SwitchBot app username and password. This data won't be saved and only used to retrieve your device's encryption key. Usernames and passwords are case-sensitive.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -206,7 +206,7 @@
           },
           "preset_mode": {
             "state": {
-              "normal": "Normal",
+              "normal": "[%key:common::state::normal%]",
               "natural": "Natural",
               "sleep": "Sleep",
               "baby": "Baby"

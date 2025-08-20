@@ -68,8 +68,14 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
 
 
 @pytest.mark.parametrize("platform", ["sensor"])
-async def test_options(hass: HomeAssistant, platform) -> None:
-    """Test reconfiguring."""
+@pytest.mark.parametrize(
+    ("unit_prefix_entry", "unit_prefix_used"),
+    [("k", "k"), ("\u00b5", "\u03bc"), ("\u03bc", "\u03bc")],
+)
+async def test_options(
+    hass: HomeAssistant, platform, unit_prefix_entry: str, unit_prefix_used: str
+) -> None:
+    """Test reconfiguring and migrated unit prefix."""
     # Setup the config entry
     config_entry = MockConfigEntry(
         data={},
@@ -79,7 +85,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
             "round": 1.0,
             "source": "sensor.input",
             "time_window": {"seconds": 0.0},
-            "unit_prefix": "k",
+            "unit_prefix": unit_prefix_entry,
             "unit_time": "min",
             "max_sub_interval": {"seconds": 30},
         },
@@ -99,7 +105,7 @@ async def test_options(hass: HomeAssistant, platform) -> None:
     schema = result["data_schema"].schema
     assert get_schema_suggested_value(schema, "round") == 1.0
     assert get_schema_suggested_value(schema, "time_window") == {"seconds": 0.0}
-    assert get_schema_suggested_value(schema, "unit_prefix") == "k"
+    assert get_schema_suggested_value(schema, "unit_prefix") == unit_prefix_used
     assert get_schema_suggested_value(schema, "unit_time") == "min"
 
     source = schema["source"]

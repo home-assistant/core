@@ -280,7 +280,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
                 # (fewest capabilities set)
                 data["color_mode"] = _least_complex_color_mode(color_modes)
 
-        self._client.light_command(**data)
+        self._client.light_command(**data, device_id=self._static_info.device_id)
 
     @convert_api_error_ha_error
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -290,7 +290,7 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
             data["flash_length"] = FLASH_LENGTHS[kwargs[ATTR_FLASH]]
         if ATTR_TRANSITION in kwargs:
             data["transition_length"] = kwargs[ATTR_TRANSITION]
-        self._client.light_command(**data)
+        self._client.light_command(**data, device_id=self._static_info.device_id)
 
     @property
     @esphome_state_property

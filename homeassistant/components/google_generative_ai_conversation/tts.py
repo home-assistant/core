@@ -48,10 +48,13 @@ class GoogleGenerativeAITextToSpeechEntity(
 
     _attr_supported_options = [ATTR_VOICE]
     # See https://ai.google.dev/gemini-api/docs/speech-generation#languages
+    # Note the documentation might not be up to date, e.g. el-GR is not listed
+    # there but is supported.
     _attr_supported_languages = [
         "ar-EG",
         "bn-BD",
         "de-DE",
+        "el-GR",
         "en-IN",
         "en-US",
         "es-US",
@@ -143,15 +146,41 @@ class GoogleGenerativeAITextToSpeechEntity(
                 )
             )
         )
+
+        def _extract_audio_parts(
+            response: types.GenerateContentResponse,
+        ) -> tuple[bytes, str]:
+            if (
+                not response.candidates
+                or not response.candidates[0].content
+                or not response.candidates[0].content.parts
+                or not response.candidates[0].content.parts[0].inline_data
+            ):
+                raise ValueError("No content returned from TTS generation")
+
+            data = response.candidates[0].content.parts[0].inline_data.data
+            mime_type = response.candidates[0].content.parts[0].inline_data.mime_type
+
+            if not isinstance(data, bytes):
+                raise TypeError(
+                    f"Expected bytes for audio data, got {type(data).__name__}"
+                )
+            if not isinstance(mime_type, str):
+                raise TypeError(
+                    f"Expected str for mime_type, got {type(mime_type).__name__}"
+                )
+
+            return data, mime_type
+
         try:
             response = await self._genai_client.aio.models.generate_content(
                 model=self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_TTS_MODEL),
                 contents=message,
                 config=config,
             )
-            data = response.candidates[0].content.parts[0].inline_data.data
-            mime_type = response.candidates[0].content.parts[0].inline_data.mime_type
-        except (APIError, ClientError, ValueError) as exc:
+
+            data, mime_type = _extract_audio_parts(response)
+        except (APIError, ClientError, ValueError, TypeError) as exc:
             LOGGER.error("Error during TTS: %s", exc, exc_info=True)
             raise HomeAssistantError(exc) from exc
         return "wav", convert_to_wav(data, mime_type)

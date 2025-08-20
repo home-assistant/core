@@ -793,8 +793,13 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             if one_alarm.alarm_id == str(alarm_id):
                 alarm = one_alarm
         if alarm is None:
-            _LOGGER.warning("Did not find alarm with id %s", alarm_id)
-            return
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_alarm_id",
+                translation_placeholders={
+                    "alarm_id": str(alarm_id),
+                },
+            )
         if time is not None:
             alarm.start_time = time
         if volume is not None:

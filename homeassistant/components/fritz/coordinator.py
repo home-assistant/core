@@ -120,7 +120,6 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self.fritz_guest_wifi: FritzGuestWLAN = None
         self.fritz_hosts: FritzHosts = None
         self.fritz_status: FritzStatus = None
-        self.hass = hass
         self.host = host
         self.mesh_role = MeshRoles.NONE
         self.mesh_wifi_uplink = False

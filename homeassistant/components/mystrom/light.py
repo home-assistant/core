@@ -15,12 +15,12 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, MANUFACTURER
+from .models import MyStromConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,12 +32,12 @@ EFFECT_SUNRISE = "sunrise"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MyStromConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the myStrom entities."""
-    info = hass.data[DOMAIN][entry.entry_id].info
-    device = hass.data[DOMAIN][entry.entry_id].device
+    info = entry.runtime_data.info
+    device = entry.runtime_data.device
     async_add_entities([MyStromLight(device, entry.title, info["mac"])])
 
 

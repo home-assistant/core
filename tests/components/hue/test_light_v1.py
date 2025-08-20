@@ -11,7 +11,11 @@ from homeassistant.components.light import ColorMode
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.util import color as color_util
 
 from .conftest import create_config_entry
@@ -776,6 +780,7 @@ def test_hs_color() -> None:
 
 async def test_group_features(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     mock_bridge_v1: Mock,
@@ -966,16 +971,22 @@ async def test_group_features(
 
     entry = entity_registry.async_get("light.hue_lamp_1")
     device_entry = device_registry.async_get(entry.device_id)
-    assert device_entry.suggested_area is None
+    assert device_entry.area_id is None
 
     entry = entity_registry.async_get("light.hue_lamp_2")
     device_entry = device_registry.async_get(entry.device_id)
-    assert device_entry.suggested_area == "Living Room"
+    assert (
+        device_entry.area_id == area_registry.async_get_area_by_name("Living Room").id
+    )
 
     entry = entity_registry.async_get("light.hue_lamp_3")
     device_entry = device_registry.async_get(entry.device_id)
-    assert device_entry.suggested_area == "Living Room"
+    assert (
+        device_entry.area_id == area_registry.async_get_area_by_name("Living Room").id
+    )
 
     entry = entity_registry.async_get("light.hue_lamp_4")
     device_entry = device_registry.async_get(entry.device_id)
-    assert device_entry.suggested_area == "Dining Room"
+    assert (
+        device_entry.area_id == area_registry.async_get_area_by_name("Dining Room").id
+    )
