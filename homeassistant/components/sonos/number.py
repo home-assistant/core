@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import logging
 from typing import cast
 
@@ -97,7 +98,7 @@ async def async_setup_entry(
                 SonosLevelEntity(speaker, config_entry, level_type, valid_range)
             )
 
-        # Group volume slider (0.0–1.0). Available only when grouped.
+        # Group volume slider (0.0–1.0)
         _LOGGER.debug("Creating group_volume number control on %s", speaker.zone_name)
         entities.append(SonosGroupVolumeEntity(speaker, config_entry))
 
@@ -165,13 +166,12 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
         self._attr_unique_id = f"{self.soco.uid}-group_volume"
         self._cached: float | None = None
         self._coord_uid: str | None = None
-
-    # ---------- Availability ----------
+        self._unsub_coord: Callable[[], None] | None = None
 
     @property
     def available(self) -> bool:
-        """Available only when the player is online and in a group."""
-        return bool(self.speaker.available and self.speaker.sonos_group_entities)
+        """Available whenever the player is online."""
+        return bool(self.speaker.available)
 
     # ---------- Reading / writing ----------
 
@@ -209,52 +209,53 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
     # ---------- Push wiring for responsiveness ----------
 
     async def async_added_to_hass(self) -> None:
-        """Subscribe to activity/state signals for fast updates."""
+        """Subscribe to signals for live updates with minimal polling."""
         await super().async_added_to_hass()
 
-        # Always listen to this speaker (group membership can change).
+        # Track current coordinator and listen for regrouping on THIS speaker only.
+        self._coord_uid = (self.speaker.coordinator or self.speaker).uid
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
                 f"{SONOS_SPEAKER_ACTIVITY}-{self.soco.uid}",
-                self._async_handle_activity,
+                self._on_local_activity,
             )
         )
-
-        # Bind to the current coordinator.
-        self._coord_uid = (self.speaker.coordinator or self.speaker).uid
-        self._bind_coordinator_listeners(self._coord_uid)
+        # Listen to STATE_UPDATED from the current coordinator (volume/mute/transport).
+        self._bind_coordinator_state(self._coord_uid)
 
         # Initial read
         await self._async_refresh_from_device(write=True)
 
-    def _bind_coordinator_listeners(self, coord_uid: str) -> None:
-        """Attach listeners to the coordinator’s signals."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{SONOS_SPEAKER_ACTIVITY}-{coord_uid}",
-                self._async_handle_activity,
-            )
+    async def async_will_remove_from_hass(self) -> None:
+        """Clean up listeners when the entity is removed."""
+        if self._unsub_coord is not None:
+            self._unsub_coord()
+            self._unsub_coord = None
+        await super().async_will_remove_from_hass()
+
+    def _bind_coordinator_state(self, coord_uid: str) -> None:
+        """(Re)bind a single STATE_UPDATED listener for the given coordinator."""
+        if self._unsub_coord is not None:
+            self._unsub_coord()
+            self._unsub_coord = None
+        self._unsub_coord = async_dispatcher_connect(
+            self.hass,
+            f"{SONOS_STATE_UPDATED}-{coord_uid}",
+            self._on_coord_state_updated,
         )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{SONOS_STATE_UPDATED}-{coord_uid}",
-                self._async_handle_activity,
-            )
-        )
+        self.async_on_remove(self._unsub_coord)
 
     @callback
-    def _async_handle_activity(self, *_: object) -> None:
-        """Handle push signals and refresh.
+    def _on_coord_state_updated(self, *_: object) -> None:
+        """Coordinator state changed — refresh once."""
+        self.hass.create_task(self._async_refresh_from_device(write=True))
 
-        Also rebind if the group coordinator changed because of regrouping.
-        """
+    @callback
+    def _on_local_activity(self, *_: object) -> None:
+        """Local speaker activity — only rebind if coordinator changed."""
         new_coord_uid = (self.speaker.coordinator or self.speaker).uid
         if new_coord_uid != self._coord_uid:
             self._coord_uid = new_coord_uid
-            self._bind_coordinator_listeners(new_coord_uid)
-
-        # Refresh group volume and write state
-        self.hass.create_task(self._async_refresh_from_device(write=True))
+            self._bind_coordinator_state(new_coord_uid)
+            self.hass.create_task(self._async_refresh_from_device(write=True))
