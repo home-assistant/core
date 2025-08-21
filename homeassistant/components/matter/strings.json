@@ -92,7 +92,7 @@
       "dishwasher_alarm_inflow": {
         "name": "Inflow alarm"
       },
-      "dishwasher_alarm_door": {
+      "alarm_door": {
         "name": "Door alarm"
       }
     },
