@@ -25,10 +25,7 @@ async def test_async_setup_entry_with_non_existing_bid(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (
-        hass.config_entries.async_get_entry(config_entry.entry_id).state
-        == ConfigEntryState.LOADED
-    )
+    assert config_entry.state == ConfigEntryState.LOADED
 
 
 async def test_async_setup_entry_with_existing_bid(

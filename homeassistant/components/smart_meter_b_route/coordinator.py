@@ -25,13 +25,16 @@ class BRouteData:
     total_consumption: float
 
 
+type BRouteConfigEntry = ConfigEntry[BRouteUpdateCoordinator]
+
+
 class BRouteUpdateCoordinator(DataUpdateCoordinator[BRouteData]):
     """The B Route update coordinator."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: BRouteConfigEntry,
     ) -> None:
         """Initialize."""
 

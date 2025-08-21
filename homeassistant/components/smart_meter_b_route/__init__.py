@@ -7,12 +7,10 @@ from homeassistant.const import CONF_ID, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .coordinator import BRouteUpdateCoordinator
+from .coordinator import BRouteConfigEntry, BRouteUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-type BRouteConfigEntry = ConfigEntry[BRouteUpdateCoordinator]
 
 
 def is_duplicate(
