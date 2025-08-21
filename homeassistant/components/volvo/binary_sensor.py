@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import API_NONE_VALUE
 from .coordinator import VolvoBaseCoordinator, VolvoConfigEntry
-from .entity import VolvoEntity, VolvoEntityDescription, value_to_translation_key
+from .entity import VolvoEntity, VolvoEntityDescription
 
 PARALLEL_UPDATES = 0
 
@@ -29,8 +29,6 @@ class VolvoBinarySensorDescription(
     """Describes a Volvo binary sensor entity."""
 
     on_values: tuple[str, ...]
-    api_value_in_attributes: bool = False
-    api_value_attribute_name: str = ""
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -49,8 +47,6 @@ class VolvoCarsTireDescription(VolvoBinarySensorDescription):
     on_values: tuple[str, ...] = field(
         default=("VERY_LOW_PRESSURE", "LOW_PRESSURE", "HIGH_PRESSURE"), init=False
     )
-    api_value_in_attributes: bool = True
-    api_value_attribute_name: str = "pressure"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -210,8 +206,6 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         api_field="oilLevelWarning",
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("SERVICE_REQUIRED", "TOO_LOW", "TOO_HIGH"),
-        api_value_in_attributes=True,
-        api_value_attribute_name="level",
     ),
     # position lights
     VolvoBinarySensorDescription(
@@ -260,26 +254,6 @@ _DESCRIPTIONS: tuple[VolvoBinarySensorDescription, ...] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         on_values=("FAILURE",),
         entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    # diagnostics endpoint
-    VolvoBinarySensorDescription(
-        key="service_warning",
-        api_field="serviceWarning",
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        on_values=(
-            "DISTANCE_DRIVEN_ALMOST_TIME_FOR_SERVICE",
-            "DISTANCE_DRIVEN_OVERDUE_FOR_SERVICE",
-            "DISTANCE_DRIVEN_TIME_FOR_SERVICE",
-            "ENGINE_HOURS_ALMOST_TIME_FOR_SERVICE",
-            "ENGINE_HOURS_OVERDUE_FOR_SERVICE",
-            "ENGINE_HOURS_TIME_FOR_SERVICE",
-            "REGULAR_MAINTENANCE_ALMOST_TIME_FOR_SERVICE",
-            "REGULAR_MAINTENANCE_OVERDUE_FOR_SERVICE",
-            "REGULAR_MAINTENANCE_TIME_FOR_SERVICE",
-            "UNKNOWN_WARNING",
-        ),
-        api_value_in_attributes=True,
-        api_value_attribute_name="reason",
     ),
     # warnings endpoint
     VolvoBinarySensorDescription(
@@ -432,14 +406,3 @@ class VolvoBinarySensor(VolvoEntity, BinarySensorEntity):
             if value.upper() != API_NONE_VALUE
             else None
         )
-
-        if self.entity_description.api_value_in_attributes:
-            attribute_value = (
-                value_to_translation_key(value)
-                if value.upper() != API_NONE_VALUE
-                else None
-            )
-
-            self._attr_extra_state_attributes[
-                self.entity_description.api_value_attribute_name
-            ] = attribute_value

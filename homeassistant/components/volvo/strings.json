@@ -115,18 +115,7 @@
         "name": "Low beam right"
       },
       "oil_level_warning": {
-        "name": "Oil level",
-        "state_attributes": {
-          "level": {
-            "name": "Level",
-            "state": {
-              "no_warning": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
-              "service_required": "Service required",
-              "too_high": "Too high",
-              "too_low": "Too low"
-            }
-          }
-        }
+        "name": "Oil level"
       },
       "position_light_front_left_warning": {
         "name": "Position light front left"
@@ -145,27 +134,6 @@
       },
       "reverse_lights_warning": {
         "name": "Reverse lights"
-      },
-      "service_warning": {
-        "name": "Service",
-        "state_attributes": {
-          "reason": {
-            "name": "Reason",
-            "state": {
-              "distance_driven_almost_time_for_service": "Almost time for distance service",
-              "distance_driven_overdue_for_service": "Distance service overdue",
-              "distance_driven_time_for_service": "Time for distance service",
-              "engine_hours_almost_time_for_service": "Almost time for engine service",
-              "engine_hours_overdue_for_service": "Engine service overdue",
-              "engine_hours_time_for_service": "Time for engine service",
-              "no_warning": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
-              "regular_maintenance_almost_time_for_service": "Almost time for service",
-              "regular_maintenance_overdue_for_service": "Service overdue",
-              "regular_maintenance_time_for_service": "Time for service",
-              "unknown_warning": "Unknown warning"
-            }
-          }
-        }
       },
       "side_mark_lights_warning": {
         "name": "Side mark lights"
@@ -192,60 +160,16 @@
         "name": "Turn indication rear right"
       },
       "tire_front_left": {
-        "name": "Tire front left",
-        "state_attributes": {
-          "pressure": {
-            "name": "[%key:component::volvo::common::pressure%]",
-            "state": {
-              "high_pressure": "[%key:common::state::high%]",
-              "low_pressure": "[%key:common::state::low%]",
-              "no_warning": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
-              "very_low_pressure": "[%key:common::state::very_low%]"
-            }
-          }
-        }
+        "name": "Tire front left"
       },
       "tire_front_right": {
-        "name": "Tire front right",
-        "state_attributes": {
-          "pressure": {
-            "name": "[%key:component::volvo::common::pressure%]",
-            "state": {
-              "high_pressure": "[%key:common::state::high%]",
-              "low_pressure": "[%key:common::state::low%]",
-              "no_warning": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
-              "very_low_pressure": "[%key:common::state::very_low%]"
-            }
-          }
-        }
+        "name": "Tire front right"
       },
       "tire_rear_left": {
-        "name": "Tire rear left",
-        "state_attributes": {
-          "pressure": {
-            "name": "[%key:component::volvo::common::pressure%]",
-            "state": {
-              "high_pressure": "[%key:common::state::high%]",
-              "low_pressure": "[%key:common::state::low%]",
-              "no_warning": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
-              "very_low_pressure": "[%key:common::state::very_low%]"
-            }
-          }
-        }
+        "name": "Tire rear left"
       },
       "tire_rear_right": {
-        "name": "Tire rear right",
-        "state_attributes": {
-          "pressure": {
-            "name": "[%key:component::volvo::common::pressure%]",
-            "state": {
-              "high_pressure": "[%key:common::state::high%]",
-              "low_pressure": "[%key:common::state::low%]",
-              "no_warning": "[%key:component::binary_sensor::entity_component::problem::state::off%]",
-              "very_low_pressure": "[%key:common::state::very_low%]"
-            }
-          }
-        }
+        "name": "Tire rear right"
       },
       "washer_fluid_level_warning": {
         "name": "Washer fluid"

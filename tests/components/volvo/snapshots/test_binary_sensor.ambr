@@ -970,7 +970,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Volvo EX30 Oil level',
-      'level': 'no_warning',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_oil_level',
@@ -1274,56 +1273,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_service-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.volvo_ex30_service',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Service',
-    'platform': 'volvo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'service_warning',
-    'unique_id': 'yv1abcdefg1234567_service_warning',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_service-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Service',
-      'reason': 'no_warning',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.volvo_ex30_service',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_side_mark_lights-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1560,7 +1509,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Volvo EX30 Tire front left',
-      'pressure': None,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_tire_front_left',
@@ -1610,7 +1558,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Volvo EX30 Tire front right',
-      'pressure': None,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_tire_front_right',
@@ -1660,7 +1607,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Volvo EX30 Tire rear left',
-      'pressure': None,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_tire_rear_left',
@@ -1710,7 +1656,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Volvo EX30 Tire rear right',
-      'pressure': None,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_tire_rear_right',
@@ -3181,7 +3126,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Volvo S90 Oil level',
-      'level': 'no_warning',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_oil_level',
@@ -3485,56 +3429,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_service-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.volvo_s90_service',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Service',
-    'platform': 'volvo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'service_warning',
-    'unique_id': 'yv1abcdefg1234567_service_warning',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_service-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Service',
-      'reason': 'no_warning',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.volvo_s90_service',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_side_mark_lights-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3771,7 +3665,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Volvo S90 Tire front left',
-      'pressure': None,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_tire_front_left',
@@ -3821,7 +3714,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Volvo S90 Tire front right',
-      'pressure': None,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_tire_front_right',
@@ -3871,7 +3763,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Volvo S90 Tire rear left',
-      'pressure': None,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_tire_rear_left',
@@ -3921,7 +3812,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Volvo S90 Tire rear right',
-      'pressure': None,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_tire_rear_right',
@@ -5343,7 +5233,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Volvo XC40 Oil level',
-      'level': 'no_warning',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_oil_level',
@@ -5647,56 +5536,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_service-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.volvo_xc40_service',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Service',
-    'platform': 'volvo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'service_warning',
-    'unique_id': 'yv1abcdefg1234567_service_warning',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_service-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Service',
-      'reason': 'no_warning',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.volvo_xc40_service',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_side_mark_lights-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -5933,7 +5772,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Volvo XC40 Tire front left',
-      'pressure': None,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_tire_front_left',
@@ -5983,7 +5821,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Volvo XC40 Tire front right',
-      'pressure': None,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_tire_front_right',
@@ -6033,7 +5870,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Volvo XC40 Tire rear left',
-      'pressure': None,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_tire_rear_left',
@@ -6083,7 +5919,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Volvo XC40 Tire rear right',
-      'pressure': None,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_tire_rear_right',
@@ -7554,7 +7389,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Volvo XC90 Oil level',
-      'level': 'no_warning',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_oil_level',
@@ -7858,56 +7692,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_service-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'binary_sensor',
-    'entity_category': None,
-    'entity_id': 'binary_sensor.volvo_xc90_service',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
-    'original_icon': None,
-    'original_name': 'Service',
-    'platform': 'volvo',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'service_warning',
-    'unique_id': 'yv1abcdefg1234567_service_warning',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_service-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Service',
-      'reason': 'no_warning',
-    }),
-    'context': <ANY>,
-    'entity_id': 'binary_sensor.volvo_xc90_service',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
-  })
-# ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_side_mark_lights-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -8144,7 +7928,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Volvo XC90 Tire front left',
-      'pressure': None,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_tire_front_left',
@@ -8194,7 +7977,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Volvo XC90 Tire front right',
-      'pressure': None,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_tire_front_right',
@@ -8244,7 +8026,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Volvo XC90 Tire rear left',
-      'pressure': None,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_tire_rear_left',
@@ -8294,7 +8075,6 @@
     'attributes': ReadOnlyDict({
       'device_class': 'problem',
       'friendly_name': 'Volvo XC90 Tire rear right',
-      'pressure': None,
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_tire_rear_right',
