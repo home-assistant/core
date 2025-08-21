@@ -16,7 +16,7 @@ from .common import USB_DATA_ZBT2
 
 from tests.common import MockConfigEntry
 
-UPDATE_ENTITY_ID = "update.home_assistant_connect_zbt_2_9e2adbd7_firmware"
+UPDATE_ENTITY_ID = "update.home_assistant_connect_zbt_2_80b54eefae18_firmware"
 
 
 async def test_zbt2_update_entity(hass: HomeAssistant) -> None:
@@ -37,7 +37,7 @@ async def test_zbt2_update_entity(hass: HomeAssistant) -> None:
             "vid": USB_DATA_ZBT2.vid,
         },
         version=1,
-        minor_version=3,
+        minor_version=1,
     )
     zbt2_config_entry.add_to_hass(hass)
 
@@ -94,7 +94,6 @@ async def test_zbt2_update_entity(hass: HomeAssistant) -> None:
         ("ezsp", "7.3.1.0 build 0", "EmberZNet Zigbee 7.3.1.0"),
         ("spinel", "SL-OPENTHREAD/2.4.4.0_GitHub-7074a43e4", "OpenThread RCP 2.4.4.0"),
         ("bootloader", "2.4.2", "Gecko Bootloader 2.4.2"),
-        ("cpc", "4.3.2", "Multiprotocol 4.3.2"),
         ("router", "1.2.3.4", "Unknown 1.2.3.4"),  # Not supported but still shown
     ],
 )
@@ -117,7 +116,7 @@ async def test_zbt2_update_entity_state(
             "vid": USB_DATA_ZBT2.vid,
         },
         version=1,
-        minor_version=3,
+        minor_version=1,
     )
     zbt2_config_entry.add_to_hass(hass)
 

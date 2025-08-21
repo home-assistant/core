@@ -38,7 +38,7 @@ async def test_setup_fails_on_missing_usb_port(hass: HomeAssistant) -> None:
             "firmware_version": "7.4.4.0",
         },
         version=1,
-        minor_version=3,
+        minor_version=1,
     )
 
     config_entry.add_to_hass(hass)
@@ -85,7 +85,7 @@ async def test_usb_device_reactivity(hass: HomeAssistant) -> None:
             "firmware_version": "7.4.4.0",
         },
         version=1,
-        minor_version=3,
+        minor_version=1,
     )
 
     config_entry.add_to_hass(hass)

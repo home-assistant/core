@@ -6,7 +6,7 @@ from homeassistant.components.hardware.models import HardwareInfo, USBInfo
 from homeassistant.core import HomeAssistant, callback
 
 from .config_flow import HomeAssistantConnectZBT2ConfigFlow
-from .const import DOMAIN, HARDWARE_NAME
+from .const import DOMAIN, HARDWARE_NAME, MANUFACTURER, PID, PRODUCT, SERIAL_NUMBER, VID
 
 DOCUMENTATION_URL = "https://support.nabucasa.com/hc/en-us/categories/24734620813469-Home-Assistant-Connect-ZBT-1"
 EXPECTED_ENTRY_VERSION = (
@@ -24,11 +24,11 @@ def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
             board=None,
             config_entries=[entry.entry_id],
             dongle=USBInfo(
-                vid=entry.data["vid"],
-                pid=entry.data["pid"],
-                serial_number=entry.data["serial_number"],
-                manufacturer=entry.data["manufacturer"],
-                description=entry.data["product"],
+                vid=entry.data[VID],
+                pid=entry.data[PID],
+                serial_number=entry.data[SERIAL_NUMBER],
+                manufacturer=entry.data[MANUFACTURER],
+                description=entry.data[PRODUCT],
             ),
             name=HARDWARE_NAME,
             url=DOCUMENTATION_URL,

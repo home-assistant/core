@@ -141,6 +141,7 @@ async def test_options_flow(
         domain="homeassistant_connect_zbt2",
         data={
             "firmware": "spinel",
+            "firmware_version": "SL-OPENTHREAD/2.4.4.0_GitHub-7074a43e4",
             "device": usb_data.device,
             "manufacturer": usb_data.manufacturer,
             "pid": usb_data.pid,
@@ -149,7 +150,7 @@ async def test_options_flow(
             "vid": usb_data.vid,
         },
         version=1,
-        minor_version=2,
+        minor_version=1,
     )
     config_entry.add_to_hass(hass)
 

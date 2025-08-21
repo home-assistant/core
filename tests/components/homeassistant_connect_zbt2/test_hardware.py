@@ -16,6 +16,7 @@ CONFIG_ENTRY_DATA = {
     "manufacturer": "Nabu Casa",
     "product": "ZBT-2",
     "firmware": "ezsp",
+    "firmware_version": "7.4.4.0 build 0",
 }
 
 
@@ -34,7 +35,7 @@ async def test_hardware_info(
         title="Home Assistant Connect ZBT-2",
         unique_id="unique_1",
         version=1,
-        minor_version=2,
+        minor_version=1,
     )
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
