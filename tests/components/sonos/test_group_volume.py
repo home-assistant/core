@@ -6,10 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.sonos.const import (
-    SONOS_SPEAKER_ACTIVITY,
-    SONOS_STATE_UPDATED,
-)
+from homeassistant.components.sonos.const import SONOS_SPEAKER_ACTIVITY
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -35,6 +32,7 @@ async def test_group_volume_entity_created(
     await _setup_numbers_only(async_setup_sonos)
     group_eid = _expected_group_volume_entity_id()
 
+    # Confirm entity exists via registry and state machine (translation applied)
     assert entity_registry.async_get(group_eid) is not None
     state = hass.states.get(group_eid)
     assert state is not None, "Expected a Sonos group volume number entity"
@@ -45,19 +43,20 @@ async def test_group_volume_entity_created(
 async def test_group_volume_sets_backend_and_updates_state(
     hass: HomeAssistant, async_setup_sonos, soco
 ) -> None:
-    """Setting 0.33 writes group.volume=33; HA state updates after coordinator event."""
+    """Setting 0.33 writes group.volume=33; HA state updates after activity event."""
     await _setup_numbers_only(async_setup_sonos)
     group_eid = _expected_group_volume_entity_id()
 
+    # Call number.set_value on the entity
     await hass.services.async_call(
         "number", "set_value", {"entity_id": group_eid, "value": 0.33}, blocking=True
     )
 
-    # Backend write scaling: 0.33 -> 33
+    # Backend scaling: 0.33 -> 33 (integer percent)
     assert soco.group.volume == 33
 
-    # Entity updates when it hears a coordinator state update (coord is zone_a).
-    async_dispatcher_send(hass, f"{SONOS_STATE_UPDATED}-{soco.uid}")
+    # State is updated upon activity; simulate global activity event
+    async_dispatcher_send(hass, SONOS_SPEAKER_ACTIVITY, "test")
     await hass.async_block_till_done()
 
     state = hass.states.get(group_eid)
@@ -99,10 +98,9 @@ async def test_group_volume_updates_on_activity(
     await _setup_numbers_only(async_setup_sonos)
     group_eid = _expected_group_volume_entity_id()
 
-    # Change underlying group volume (0–100) and simulate an activity update
-    # from the coordinator (zone_a in the fixture).
+    # Change the underlying (0–100) group volume and simulate activity
     soco.group.volume = 55
-    async_dispatcher_send(hass, f"{SONOS_STATE_UPDATED}-{soco.uid}")
+    async_dispatcher_send(hass, SONOS_SPEAKER_ACTIVITY, "test")
     await hass.async_block_till_done()
 
     state = hass.states.get(group_eid)
@@ -117,9 +115,9 @@ async def test_group_volume_fallback_polling(
     await _setup_numbers_only(async_setup_sonos)
     group_eid = _expected_group_volume_entity_id()
 
-    # Simulate a local-activity event on this speaker (entity listens and polls).
+    # Simulate a global activity event; entity listens to the global bus
     soco.group.volume = 33
-    async_dispatcher_send(hass, f"{SONOS_SPEAKER_ACTIVITY}-{soco.uid}")
+    async_dispatcher_send(hass, SONOS_SPEAKER_ACTIVITY, "test")
     await hass.async_block_till_done()
 
     state = hass.states.get(group_eid)
