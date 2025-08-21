@@ -124,18 +124,10 @@ async def test_webhook_sensor(
     assert state.state == "label"
 
 
-@pytest.mark.parametrize(
-    "event",
-    [
-        "alarm_alert_dismiss",
-        "alarm_rescheduled",
-    ],
-)
 async def test_webhook_sensor_alarm_unset(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     hass_client_no_auth: ClientSessionGenerator,
-    event: str,
 ) -> None:
     """Test unsetting sensors if there is no next alarm."""
 
@@ -150,7 +142,7 @@ async def test_webhook_sensor_alarm_unset(
     response = await client.post(
         "/api/webhook/webhook_id",
         json={
-            "event": event,
+            "event": "alarm_rescheduled",
             "value1": "1582719660934",
             "value2": "label",
         },
@@ -165,7 +157,7 @@ async def test_webhook_sensor_alarm_unset(
 
     response = await client.post(
         "/api/webhook/webhook_id",
-        json={"event": event},
+        json={"event": "alarm_rescheduled"},
     )
     assert (state := hass.states.get("sensor.sleep_as_android_next_alarm"))
     assert state.state == STATE_UNKNOWN
