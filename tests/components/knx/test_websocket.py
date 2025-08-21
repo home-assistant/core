@@ -395,7 +395,7 @@ async def test_knx_subscribe_telegrams_command_project(
     assert res["event"]["timestamp"] is not None
 
 
-@pytest.mark.parametrize("platform", {*SUPPORTED_PLATFORMS_UI, "tts"})
+@pytest.mark.parametrize("platform", [*SUPPORTED_PLATFORMS_UI, "tts"])
 async def test_knx_get_schema(
     hass: HomeAssistant,
     knx: KNXTestKit,
