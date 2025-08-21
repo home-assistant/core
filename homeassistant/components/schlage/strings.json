@@ -58,6 +58,62 @@
   "exceptions": {
     "schlage_refresh_failed": {
       "message": "Failed to refresh Schlage data"
+    },
+    "schlage_code_exists": {
+      "message": "A PIN code with this value already exists on the lock"
+    },
+    "schlage_code_required": {
+      "message": "PIN code is required"
+    },
+    "schlage_name_exists": {
+      "message": "A PIN code with this name already exists on the lock"
+    },
+    "schlage_name_required": {
+      "message": "PIN name is required"
+    }
+  },
+  "services": {
+    "add_code": {
+      "name": "Add PIN code",
+      "description": "Add a PIN code to a lock.",
+      "fields": {
+        "entity_id": {
+          "name": "Lock",
+          "description": "The lock to add the PIN code to."
+        },
+        "name": {
+          "name": "PIN Name",
+          "description": "Name for PIN code. Must be unique to lock."
+        },
+        "code": {
+          "name": "PIN code",
+          "description": "The PIN code to add. Must be unique to lock and be between 4 and 8 digits long."
+        }
+      }
+    },
+    "delete_code": {
+      "name": "Delete PIN code",
+      "description": "Delete a PIN code from a lock.",
+      "fields": {
+        "entity_id": {
+          "name": "Lock",
+          "description": "The lock to delete the PIN code from."
+        },
+        "name": {
+          "name": "PIN Name",
+          "description": "Name of PIN code to delete."
+        }
+      }
+    },
+    "get_codes": {
+      "name": "Get PIN codes",
+      "description": "Retrieve all PIN codes from the lock",
+      "fields": {
+        "entity_id": {
+          "name": "Lock",
+          "description": "The lock to retrieve PIN codes from."
+        }
+      }
     }
   }
 }
