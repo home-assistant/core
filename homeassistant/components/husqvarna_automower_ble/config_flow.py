@@ -244,6 +244,12 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauthentication upon an API authentication error."""
+        reauth_entry = self._get_reauth_entry()
+        self.address = reauth_entry.data[CONF_ADDRESS]
+        self.context["title_placeholders"] = {
+            "name": reauth_entry.title,
+            "address": self.address,
+        }
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -256,10 +262,10 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_pin"
         elif user_input is not None:
             reauth_entry = self._get_reauth_entry()
-            self.address = reauth_entry.data[CONF_ADDRESS]
             self.pin = user_input[CONF_PIN]
 
             try:
+                assert self.address
                 device = bluetooth.async_ble_device_from_address(
                     self.hass, self.address, connectable=True
                 ) or await get_device(self.address)
