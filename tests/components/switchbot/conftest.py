@@ -8,6 +8,7 @@ from homeassistant.components.switchbot.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_SENSOR_TYPE
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -45,3 +46,9 @@ def mock_entry_encrypted_factory():
         },
         unique_id="aabbccddeeff",
     )
+
+
+@pytest.fixture(autouse=True)
+def bluetooth_adapters_dependency(hass: HomeAssistant) -> None:
+    """Mock the bluetooth_adapters integration as loaded."""
+    hass.config.components.add("bluetooth_adapters")
