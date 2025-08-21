@@ -12,6 +12,7 @@ from typing import Any, cast
 from aioasuswrt.asuswrt import AsusWrt as AsusWrtLegacy
 from aiohttp import ClientSession
 from asusrouter import AsusRouter, AsusRouterError
+from asusrouter.config import ARConfig, ARConfigKey
 from asusrouter.modules.client import AsusClient
 from asusrouter.modules.data import AsusData
 from asusrouter.modules.homeassistant import convert_to_ha_data, convert_to_ha_sensors
@@ -315,6 +316,7 @@ class AsusWrtHttpBridge(AsusWrtBridge):
         """Initialize Bridge that use HTTP library."""
         super().__init__(conf[CONF_HOST])
         self._api = self._get_api(conf, session)
+        self._configure_api()
 
     @staticmethod
     def _get_api(conf: dict[str, Any], session: ClientSession) -> AsusRouter:
@@ -327,6 +329,20 @@ class AsusWrtHttpBridge(AsusWrtBridge):
             port=conf.get(CONF_PORT),
             session=session,
         )
+
+    def _configure_api(self) -> None:
+        """Configure the API.
+
+        This method configures AsusRouter library using the in-built global
+        runtime settings of the package `ARConfig` and its `ARConfigKey` properties.
+        """
+        # Enable automatic temperature data correction.
+        # Required for some new firmware versions reporting values
+        # 2 orders of magnitude lower (e.g. 0.069 °C for actual 69 °C).
+        ARConfig.set(ARConfigKey.OPTIMISTIC_TEMPERATURE, True)
+        # Disable `warning`-level log message when temperature is corrected
+        # by setting it to already notified.
+        ARConfig.set(ARConfigKey.NOTIFIED_OPTIMISTIC_TEMPERATURE, True)
 
     @property
     def is_connected(self) -> bool:
