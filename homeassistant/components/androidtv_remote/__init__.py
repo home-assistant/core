@@ -68,7 +68,6 @@ async def async_setup_entry(
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
     )
-    entry.async_on_unload(entry.add_update_listener(async_update_options))
     entry.async_on_unload(api.disconnect)
 
     return True
@@ -80,13 +79,3 @@ async def async_unload_entry(
     """Unload a config entry."""
     _LOGGER.debug("async_unload_entry: %s", entry.data)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def async_update_options(
-    hass: HomeAssistant, entry: AndroidTVRemoteConfigEntry
-) -> None:
-    """Handle options update."""
-    _LOGGER.debug(
-        "async_update_options: data: %s options: %s", entry.data, entry.options
-    )
-    await hass.config_entries.async_reload(entry.entry_id)

@@ -324,15 +324,10 @@ async def test_async_poll_manual_hosts_5(
     soco_1 = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
     soco_1.renderingControl = Mock()
     soco_1.renderingControl.GetVolume = Mock()
-    # Unavailable speakers should not be included in all zones
-    soco_1.mock_include_in_all_zones = False
-
     speaker_1_activity = SpeakerActivity(hass, soco_1)
     soco_2 = soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
     soco_2.renderingControl = Mock()
     soco_2.renderingControl.GetVolume = Mock()
-    soco_2.mock_include_in_all_zones = False
-
     speaker_2_activity = SpeakerActivity(hass, soco_2)
 
     with caplog.at_level(logging.DEBUG):

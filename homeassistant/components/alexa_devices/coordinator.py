@@ -8,6 +8,7 @@ from aioamazondevices.exceptions import (
     CannotConnect,
     CannotRetrieveData,
 )
+from aiohttp import ClientSession
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
@@ -31,6 +32,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         self,
         hass: HomeAssistant,
         entry: AmazonConfigEntry,
+        session: ClientSession,
     ) -> None:
         """Initialize the scanner."""
         super().__init__(
@@ -41,6 +43,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
         self.api = AmazonEchoApi(
+            session,
             entry.data[CONF_COUNTRY],
             entry.data[CONF_USERNAME],
             entry.data[CONF_PASSWORD],
@@ -52,8 +55,18 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         try:
             await self.api.login_mode_stored_data()
             return await self.api.get_devices_data()
-        except (CannotConnect, CannotRetrieveData) as err:
-            raise UpdateFailed(f"Error occurred while updating {self.name}") from err
+        except CannotConnect as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect_with_error",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except CannotRetrieveData as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_retrieve_data_with_error",
+                translation_placeholders={"error": repr(err)},
+            ) from err
         except CannotAuthenticate as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
