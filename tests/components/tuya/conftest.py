@@ -21,6 +21,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util import dt as dt_util
 
+from . import DEVICE_MOCKS, MockDeviceListener
+
 from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
@@ -137,13 +139,33 @@ def mock_device_code() -> str:
 
 
 @pytest.fixture
+async def mock_devices(hass: HomeAssistant) -> list[CustomerDevice]:
+    """Load all Tuya CustomerDevice fixtures.
+
+    Use this to generate global snapshots for each platform.
+    """
+    return [await _create_device(hass, device_code) for device_code in DEVICE_MOCKS]
+
+
+@pytest.fixture
 async def mock_device(hass: HomeAssistant, mock_device_code: str) -> CustomerDevice:
+    """Load a single Tuya CustomerDevice fixture.
+
+    Use this for testing behavior on a specific device.
+    """
+    return await _create_device(hass, mock_device_code)
+
+
+async def _create_device(hass: HomeAssistant, mock_device_code: str) -> CustomerDevice:
     """Mock a Tuya CustomerDevice."""
     details = await async_load_json_object_fixture(
         hass, f"{mock_device_code}.json", DOMAIN
     )
     device = MagicMock(spec=CustomerDevice)
-    device.id = details.get("id", "mocked_device_id")
+
+    # Use reverse of the product_id for testing
+    device.id = mock_device_code.replace("_", "")[::-1]
+
     device.name = details["name"]
     device.category = details["category"]
     device.product_id = details["product_id"]
@@ -184,3 +206,13 @@ async def mock_device(hass: HomeAssistant, mock_device_code: str) -> CustomerDev
         if device.status_range[key].type == "Json":
             device.status[key] = json_dumps(value)
     return device
+
+
+@pytest.fixture
+def mock_listener(
+    hass: HomeAssistant, mock_manager: ManagerCompat
+) -> MockDeviceListener:
+    """Create a DeviceListener for testing."""
+    listener = MockDeviceListener(hass, mock_manager)
+    mock_manager.add_device_listener(listener)
+    return listener
