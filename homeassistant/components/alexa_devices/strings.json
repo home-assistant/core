@@ -1,7 +1,6 @@
 {
   "common": {
     "data_code": "One-time password (OTP code)",
-    "data_description_country": "The country where your Amazon account is registered.",
     "data_description_username": "The email address of your Amazon account.",
     "data_description_password": "The password of your Amazon account.",
     "data_description_code": "The one-time password to log in to your account. Currently, only tokens from OTP applications are supported.",
@@ -12,13 +11,11 @@
     "step": {
       "user": {
         "data": {
-          "country": "[%key:common::config_flow::data::country%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
           "code": "[%key:component::alexa_devices::common::data_code%]"
         },
         "data_description": {
-          "country": "[%key:component::alexa_devices::common::data_description_country%]",
           "username": "[%key:component::alexa_devices::common::data_description_username%]",
           "password": "[%key:component::alexa_devices::common::data_description_password%]",
           "code": "[%key:component::alexa_devices::common::data_description_code%]"
@@ -46,7 +43,6 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "cannot_retrieve_data": "Unable to retrieve data from Amazon. Please try again later.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "wrong_country": "Wrong country selected. Please select the country where your Amazon account is registered.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
