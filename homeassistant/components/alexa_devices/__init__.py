@@ -42,9 +42,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
 
 async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bool:
     """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", entry.version)
+    if entry.version == 1 and entry.minor_version == 0:
+        _LOGGER.debug(
+            "Migrating from version %s.%s", entry.version, entry.minor_version
+        )
 
-    if entry.version == 1:
         # Convert country in domain
         country = entry.data[CONF_COUNTRY]
         domain = COUNTRY_DOMAINS.get(country, country)
@@ -52,11 +54,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> 
         # Save domain and remove country
         new_data = entry.data.copy()
         new_data.update({"site": f"https://www.amazon.{domain}"})
-        new_data.pop(CONF_COUNTRY)
 
-        hass.config_entries.async_update_entry(entry, data=new_data, version=2)
+        hass.config_entries.async_update_entry(
+            entry, data=new_data, version=1, minor_version=1
+        )
 
-    _LOGGER.info("Migration to version %s successful", entry.version)
+    _LOGGER.info(
+        "Migration to version %s.%s successful", entry.version, entry.minor_version
+    )
 
     return True
 
