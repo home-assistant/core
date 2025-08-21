@@ -173,7 +173,7 @@ aioairzone-cloud==0.7.1
 aioairzone==1.0.0
 
 # homeassistant.components.alexa_devices
-aioamazondevices==4.0.0
+aioamazondevices==5.0.0
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -1023,7 +1023,7 @@ hole==0.9.0
 holidays==0.79
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250811.0
+home-assistant-frontend==20250811.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.7.30
@@ -1359,7 +1359,7 @@ ondilo==0.5.0
 onedrive-personal-sdk==0.0.14
 
 # homeassistant.components.onvif
-onvif-zeep-async==4.0.3
+onvif-zeep-async==4.0.4
 
 # homeassistant.components.opengarage
 open-garage==0.2.0
@@ -2046,7 +2046,7 @@ python-miio==0.5.12
 python-mpd2==3.1.1
 
 # homeassistant.components.mystrom
-python-mystrom==2.4.0
+python-mystrom==2.5.0
 
 # homeassistant.components.open_router
 python-open-router==0.3.1
