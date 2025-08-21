@@ -49,7 +49,7 @@ from .const import (
 from .helpers import log_update_error, service_signal
 
 if TYPE_CHECKING:
-    from . import AmcrestDevice
+    from . import AmcrestConfiguredDevice, AmcrestDevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -677,10 +677,11 @@ class AmcrestCoordinatedCamera(CoordinatorEntity, AmcrestCam):
     def __init__(
         self,
         name: str,
-        device: AmcrestDevice,
+        device: AmcrestConfiguredDevice,
         coordinator: DataUpdateCoordinator,
         ffmpeg: FFmpegManager,
     ) -> None:
         """Initialize an Amcrest camera with a coordinator."""
         CoordinatorEntity.__init__(self, coordinator)
         AmcrestCam.__init__(self, name, device, ffmpeg)
+        self._attr_device_info = device.device_info

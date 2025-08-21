@@ -16,11 +16,19 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_BINARY_SENSORS, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 from homeassistant.util import Throttle
 
 from .const import (
@@ -33,7 +41,7 @@ from .const import (
 from .helpers import log_update_error, service_signal
 
 if TYPE_CHECKING:
-    from . import AmcrestDevice
+    from . import AmcrestConfiguredDevice, AmcrestDevice
 
 
 @dataclass(frozen=True)
@@ -283,3 +291,38 @@ class AmcrestBinarySensor(BinarySensorEntity):
                         self.async_event_received,
                     )
                 )
+
+# Platform setup for config flow
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up a binary sensor for an Amcrest IP Camera."""
+    device = hass.data[DATA_AMCREST][DEVICES][config_entry.entry_id]["device"]
+    coordinator = hass.data[DATA_AMCREST][DEVICES][config_entry.entry_id]["coordinator"]
+
+    # Only create coordinated binary sensors that should poll
+    entities = [
+        AmcrestCoordinatedBinarySensor(device.name, device, coordinator, entity_description)
+        for entity_description in BINARY_SENSORS
+        if entity_description.should_poll
+    ]
+
+    async_add_entities(entities, True)
+
+
+class AmcrestCoordinatedBinarySensor(CoordinatorEntity, AmcrestBinarySensor):
+    """Representation of a coordinated Amcrest binary sensor."""
+
+    def __init__(
+        self,
+        name: str,
+        device: AmcrestConfiguredDevice,
+        coordinator: DataUpdateCoordinator,
+        entity_description: AmcrestSensorEntityDescription,
+    ) -> None:
+        """Initialize a coordinated Amcrest binary sensor."""
+        CoordinatorEntity.__init__(self, coordinator)
+        AmcrestBinarySensor.__init__(self, name, device, entity_description)
+        self._attr_device_info = device.device_info
