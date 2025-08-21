@@ -265,6 +265,8 @@ class VolvoMediumIntervalCoordinator(VolvoBaseCoordinator):
             "Volvo medium interval coordinator",
         )
 
+        self._supported_capabilities: list[str] = []
+
     async def _async_determine_api_calls(
         self,
     ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
@@ -274,12 +276,37 @@ class VolvoMediumIntervalCoordinator(VolvoBaseCoordinator):
             capabilities = await self.api.async_get_energy_capabilities()
 
             if capabilities.get("isSupported", False):
-                api_calls.append(self.api.async_get_energy_state)
+                self._supported_capabilities = [
+                    key
+                    for key, value in capabilities.items()
+                    if isinstance(value, dict) and value.get("isSupported", False)
+                ]
+
+                api_calls.append(self._async_get_energy_state)
 
         if self.vehicle.has_combustion_engine():
             api_calls.append(self.api.async_get_engine_status)
 
         return api_calls
+
+    async def _async_get_energy_state(
+        self,
+    ) -> dict[str, VolvoCarsValueStatusField | None]:
+        def _mark_ok(
+            field: VolvoCarsValueStatusField | None,
+        ) -> VolvoCarsValueStatusField | None:
+            if field:
+                field.status = "OK"
+
+            return field
+
+        energy_state = await self.api.async_get_energy_state()
+
+        return {
+            key: _mark_ok(value)
+            for key, value in energy_state.items()
+            if key in self._supported_capabilities
+        }
 
 
 class VolvoFastIntervalCoordinator(VolvoBaseCoordinator):
