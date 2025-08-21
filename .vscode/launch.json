@@ -10,8 +10,8 @@
       "request": "launch",
       "module": "homeassistant",
       "justMyCode": false,
-      "args": ["--debug", "-c", "config"]
-      //"preLaunchTask": "Compile English translations"
+      "args": ["--debug", "-c", "config"],
+      "preLaunchTask": "Compile English translations"
     },
     {
       "name": "Home Assistant (skip pip)",
