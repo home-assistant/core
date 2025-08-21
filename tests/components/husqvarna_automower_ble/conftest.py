@@ -58,7 +58,7 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_ADDRESS: AUTOMOWER_SERVICE_INFO.address,
             CONF_CLIENT_ID: 1197489078,
-            CONF_PIN: 1234,
+            CONF_PIN: "1234",
         },
         unique_id=AUTOMOWER_SERVICE_INFO.address,
     )

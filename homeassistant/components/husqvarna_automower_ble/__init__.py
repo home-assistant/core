@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HusqvarnaConfigEntry) ->
         raise ConfigEntryAuthFailed
 
     address = entry.data[CONF_ADDRESS]
-    pin = entry.data[CONF_PIN]
+    pin = int(entry.data[CONF_PIN])
     channel_id = entry.data[CONF_CLIENT_ID]
 
     mower = Mower(channel_id, address, pin)

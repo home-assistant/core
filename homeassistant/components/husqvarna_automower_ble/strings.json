@@ -38,8 +38,9 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "Unable to pair with device, ensure the PIN is correct and the mower is in pairing mode",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "invalid_pin": "The PIN must be a number"
     }
   }
 }

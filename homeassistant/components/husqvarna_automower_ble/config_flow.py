@@ -42,6 +42,15 @@ def _is_supported(discovery_info: BluetoothServiceInfo):
     return manufacturer and service_husqvarna and service_generic
 
 
+def _pin_valid(pin: str) -> bool:
+    """Check if the pin is valid."""
+    try:
+        int(pin)
+    except (TypeError, ValueError):
+        return False
+    return True
+
+
 class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Husqvarna Bluetooth."""
 
@@ -50,7 +59,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.address: str | None = None
-        self.pin: int | None = None
+        self.pin: str | None = None
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
@@ -70,40 +79,56 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm Bluetooth discovery."""
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            self.pin = user_input[CONF_PIN]
-            return await self.check_mower(user_input)
+            if not _pin_valid(user_input[CONF_PIN]):
+                errors["base"] = "invalid_pin"
+            else:
+                self.pin = user_input[CONF_PIN]
+                return await self.check_mower(user_input)
 
         return self.async_show_form(
             step_id="bluetooth_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_PIN): int,
-                },
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_PIN): str,
+                    },
+                ),
+                user_input,
             ),
+            errors=errors,
         )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial manual step."""
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            self.address = user_input[CONF_ADDRESS]
-            self.pin = user_input[CONF_PIN]
-            await self.async_set_unique_id(self.address, raise_on_progress=False)
-            self._abort_if_unique_id_configured()
-            return await self.check_mower(user_input)
+            if not _pin_valid(user_input[CONF_PIN]):
+                errors["base"] = "invalid_pin"
+            else:
+                self.address = user_input[CONF_ADDRESS]
+                self.pin = user_input[CONF_PIN]
+                await self.async_set_unique_id(self.address, raise_on_progress=False)
+                self._abort_if_unique_id_configured()
+                return await self.check_mower(user_input)
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_ADDRESS): str,
-                    vol.Required(CONF_PIN): int,
-                },
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_ADDRESS): str,
+                        vol.Required(CONF_PIN): str,
+                    },
+                ),
+                user_input,
             ),
+            errors=errors,
         )
 
     async def probe_mower(self, device) -> str | None:
@@ -175,7 +200,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                         step_id="bluetooth_confirm",
                         data_schema=vol.Schema(
                             {
-                                vol.Required(CONF_PIN): int,
+                                vol.Required(CONF_PIN): str,
                             },
                         ),
                         errors=errors,
@@ -194,7 +219,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                         vol.Schema(
                             {
                                 vol.Required(CONF_ADDRESS): str,
-                                vol.Required(CONF_PIN): int,
+                                vol.Required(CONF_PIN): str,
                             },
                         ),
                         suggested_values,
@@ -225,7 +250,9 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm reauthentication dialog."""
         errors: dict[str, str] = {}
 
-        if user_input:
+        if user_input is not None and not _pin_valid(user_input[CONF_PIN]):
+            errors["base"] = "invalid_pin"
+        elif user_input is not None:
             reauth_entry = self._get_reauth_entry()
             self.address = reauth_entry.data[CONF_ADDRESS]
             self.pin = user_input[CONF_PIN]
@@ -268,7 +295,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(
                     {
-                        vol.Required(CONF_PIN): int,
+                        vol.Required(CONF_PIN): str,
                     },
                 ),
                 user_input,

@@ -49,7 +49,7 @@ async def test_user_selection(hass: HomeAssistant) -> None:
         result["flow_id"],
         user_input={
             CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
-            CONF_PIN: 1234,
+            CONF_PIN: "1234",
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -59,7 +59,7 @@ async def test_user_selection(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
         CONF_CLIENT_ID: 1197489078,
-        CONF_PIN: 1234,
+        CONF_PIN: "1234",
     }
 
 
@@ -68,7 +68,6 @@ async def test_user_selection_incorrect_pin(
     mock_automower_client: Mock,
 ) -> None:
     """Test we can select a device."""
-    mock_automower_client.connect.return_value = ResponseResult.INVALID_PIN
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -76,20 +75,40 @@ async def test_user_selection_incorrect_pin(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
+    # Try non numeric pin
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_ADDRESS: "00000000-0000-0000-0000-000000000003",
-            CONF_PIN: 1234,
+            CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
+            CONF_PIN: "ABCD",
         },
     )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_pin"}
+
+    # Try wrong PIN
+    mock_automower_client.connect.return_value = ResponseResult.INVALID_PIN
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
+            CONF_PIN: "1234",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_auth"}
 
     mock_automower_client.connect.return_value = ResponseResult.OK
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_PIN: 1234,
+            CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
+            CONF_PIN: "1234",
         },
     )
 
@@ -98,7 +117,7 @@ async def test_user_selection_incorrect_pin(
     assert result["data"] == {
         CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
         CONF_CLIENT_ID: 1197489078,
-        CONF_PIN: 1234,
+        CONF_PIN: "1234",
     }
 
 
@@ -113,7 +132,7 @@ async def test_bluetooth(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_PIN: 1234},
+        user_input={CONF_PIN: "1234"},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -123,7 +142,7 @@ async def test_bluetooth(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_ADDRESS: "00000000-0000-0000-0000-000000000003",
         CONF_CLIENT_ID: 1197489078,
-        CONF_PIN: 1234,
+        CONF_PIN: "1234",
     }
 
 
@@ -143,21 +162,34 @@ async def test_bluetooth_incorrect_pin(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
 
-    mock_automower_client.connect.return_value = ResponseResult.INVALID_PIN
-
+    # Try non numeric pin
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_PIN: 5678},
+        user_input={
+            CONF_PIN: "ABCD",
+        },
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
+    assert result["errors"] == {"base": "invalid_pin"}
+
+    # Try wrong PIN
+    mock_automower_client.connect.return_value = ResponseResult.INVALID_PIN
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_PIN: "5678"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "bluetooth_confirm"
+    assert result["errors"] == {"base": "invalid_auth"}
 
     mock_automower_client.connect.return_value = ResponseResult.OK
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_PIN: 1234},
+        user_input={CONF_PIN: "1234"},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -167,7 +199,7 @@ async def test_bluetooth_incorrect_pin(
     assert result["data"] == {
         CONF_ADDRESS: "00000000-0000-0000-0000-000000000003",
         CONF_CLIENT_ID: 1197489078,
-        CONF_PIN: 1234,
+        CONF_PIN: "1234",
     }
 
 
@@ -191,7 +223,7 @@ async def test_bluetooth_unknown_error(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_PIN: 5678},
+        user_input={CONF_PIN: "5678"},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -218,7 +250,7 @@ async def test_bluetooth_not_paired(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_PIN: 5678},
+        user_input={CONF_PIN: "5678"},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -228,7 +260,7 @@ async def test_bluetooth_not_paired(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_PIN: 1234},
+        user_input={CONF_PIN: "1234"},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -238,7 +270,7 @@ async def test_bluetooth_not_paired(
     assert result["data"] == {
         CONF_ADDRESS: "00000000-0000-0000-0000-000000000003",
         CONF_CLIENT_ID: 1197489078,
-        CONF_PIN: 1234,
+        CONF_PIN: "1234",
     }
 
 
@@ -268,30 +300,41 @@ async def test_successful_reauth(
 
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    mock_automower_client.connect.return_value = ResponseResult.INVALID_PIN
-
     result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    result = await mock_config_entry.start_reauth_flow(hass)
-
+    # Try non numeric pin
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_PIN: 5678,
+            CONF_PIN: "ABCD",
         },
     )
-    mock_automower_client.connect.return_value = ResponseResult.OK
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "invalid_pin"}
 
+    # Try wrong PIN
+    mock_automower_client.connect.return_value = ResponseResult.INVALID_PIN
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_PIN: 1234,
+            CONF_PIN: "5678",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    mock_automower_client.connect.return_value = ResponseResult.OK
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PIN: "1234",
         },
     )
 
@@ -306,7 +349,7 @@ async def test_successful_reauth(
         mock_config_entry.data[CONF_ADDRESS] == "00000000-0000-0000-0000-000000000003"
     )
     assert mock_config_entry.data[CONF_CLIENT_ID] == 1197489078
-    assert mock_config_entry.data[CONF_PIN] == 1234
+    assert mock_config_entry.data[CONF_PIN] == "1234"
 
 
 async def test_unable_to_connect(
@@ -333,7 +376,7 @@ async def test_unable_to_connect(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_PIN: 5678,
+            CONF_PIN: "5678",
         },
     )
 
@@ -369,7 +412,7 @@ async def test_failed_reauth(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_PIN: 5678,
+            CONF_PIN: "5678",
         },
     )
     assert result["type"] is FlowResultType.ABORT
@@ -399,7 +442,7 @@ async def test_duplicate_entry(
         result["flow_id"],
         user_input={
             CONF_ADDRESS: "00000000-0000-0000-0000-000000000003",
-            CONF_PIN: 1234,
+            CONF_PIN: "1234",
         },
     )
     assert result["type"] is FlowResultType.ABORT
@@ -422,7 +465,7 @@ async def test_exception_probe(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_PIN: 1234},
+        user_input={CONF_PIN: "1234"},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -452,7 +495,7 @@ async def test_exception_connect(
         result["flow_id"],
         user_input={
             CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
-            CONF_PIN: 1234,
+            CONF_PIN: "1234",
         },
     )
 
