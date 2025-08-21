@@ -96,7 +96,7 @@ def mock_external_calls() -> Generator[None]:
         max_reaction_count=100,
         accent_color_id=AccentColor.COLOR_000,
     )
-    test_user = User(123456, "Testbot", True)
+    test_user = User(123456, "Testbot", True, "mock last name", "mock username")
     message = Message(
         message_id=12345,
         date=datetime.now(),
@@ -255,8 +255,8 @@ def mock_broadcast_config_entry() -> MockConfigEntry:
         options={ATTR_PARSER: PARSER_MD},
         subentries_data=[
             ConfigSubentryData(
-                unique_id="1234567890",
-                data={CONF_CHAT_ID: 1234567890},
+                unique_id="123456",
+                data={CONF_CHAT_ID: 123456},
                 subentry_id="mock_id",
                 subentry_type=CONF_ALLOWED_CHAT_IDS,
                 title="mock chat",
@@ -275,7 +275,7 @@ def mock_webhooks_config_entry() -> MockConfigEntry:
             CONF_PLATFORM: PLATFORM_WEBHOOKS,
             CONF_API_KEY: "mock api key",
             CONF_URL: "https://test",
-            CONF_TRUSTED_NETWORKS: "149.154.160.0/20,91.108.4.0/22",
+            CONF_TRUSTED_NETWORKS: ["149.154.160.0/20", "91.108.4.0/22"],
         },
         options={ATTR_PARSER: PARSER_MD},
         subentries_data=[

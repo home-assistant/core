@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Awaitable, Callable
 from functools import wraps
+import inspect
 from typing import TYPE_CHECKING, Any, Final, overload
 
 import knx_frontend as knx_panel
@@ -36,7 +36,7 @@ from .storage.entity_store_validation import (
 from .telegrams import SIGNAL_KNX_TELEGRAM, TelegramDict
 
 if TYPE_CHECKING:
-    from . import KNXModule
+    from .knx_module import KNXModule
 
 URL_BASE: Final = "/knx_static"
 
@@ -116,7 +116,7 @@ def provide_knx(
             "KNX integration not loaded.",
         )
 
-    if asyncio.iscoroutinefunction(func):
+    if inspect.iscoroutinefunction(func):
 
         @wraps(func)
         async def with_knx(

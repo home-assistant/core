@@ -1,0 +1,183 @@
+# serializer version: 1
+# name: test_device_diagnostics[rqbj_4iqe2hsfyd86kwwc]
+  dict({
+    'active_time': '2025-06-24T20:33:10+00:00',
+    'category': 'rqbj',
+    'create_time': '2025-06-24T20:33:10+00:00',
+    'disabled_by': None,
+    'disabled_polling': False,
+    'endpoint': 'https://apigw.tuyaeu.com',
+    'function': dict({
+      'null': dict({
+        'type': 'Boolean',
+        'value': dict({
+        }),
+      }),
+    }),
+    'home_assistant': dict({
+      'disabled': False,
+      'disabled_by': None,
+      'entities': list([
+        dict({
+          'device_class': None,
+          'disabled': False,
+          'disabled_by': None,
+          'entity_category': None,
+          'icon': None,
+          'original_device_class': 'gas',
+          'original_icon': None,
+          'state': dict({
+            'attributes': dict({
+              'device_class': 'gas',
+              'friendly_name': 'Gas sensor Gas',
+            }),
+            'entity_id': 'binary_sensor.gas_sensor_gas',
+            'state': 'off',
+          }),
+          'unit_of_measurement': None,
+        }),
+        dict({
+          'device_class': None,
+          'disabled': False,
+          'disabled_by': None,
+          'entity_category': None,
+          'icon': None,
+          'original_device_class': None,
+          'original_icon': None,
+          'state': dict({
+            'attributes': dict({
+              'friendly_name': 'Gas sensor Gas',
+              'state_class': 'measurement',
+              'unit_of_measurement': 'ppm',
+            }),
+            'entity_id': 'sensor.gas_sensor_gas',
+            'state': '0.0',
+          }),
+          'unit_of_measurement': 'ppm',
+        }),
+      ]),
+      'name': 'Gas sensor',
+      'name_by_user': None,
+    }),
+    'id': 'cwwk68dyfsh2eqi4jbqr',
+    'mqtt_connected': True,
+    'name': 'Gas sensor',
+    'online': True,
+    'product_id': '4iqe2hsfyd86kwwc',
+    'product_name': 'Gas sensor',
+    'set_up': True,
+    'status': dict({
+      'alarm_time': 300,
+      'checking_result': 'check_success',
+      'gas_sensor_status': 'normal',
+      'gas_sensor_value': 0,
+      'muffling': True,
+      'self_checking': False,
+    }),
+    'status_range': dict({
+      'null': dict({
+        'type': 'Boolean',
+        'value': dict({
+        }),
+      }),
+    }),
+    'sub': False,
+    'support_local': True,
+    'terminal_id': '7cd96aff-6ec8-4006-b093-3dbff7947591',
+    'time_zone': '-04:00',
+    'update_time': '2025-06-24T20:33:10+00:00',
+  })
+# ---
+# name: test_entry_diagnostics[rqbj_4iqe2hsfyd86kwwc]
+  dict({
+    'devices': list([
+      dict({
+        'active_time': '2025-06-24T20:33:10+00:00',
+        'category': 'rqbj',
+        'create_time': '2025-06-24T20:33:10+00:00',
+        'function': dict({
+          'null': dict({
+            'type': 'Boolean',
+            'value': dict({
+            }),
+          }),
+        }),
+        'home_assistant': dict({
+          'disabled': False,
+          'disabled_by': None,
+          'entities': list([
+            dict({
+              'device_class': None,
+              'disabled': False,
+              'disabled_by': None,
+              'entity_category': None,
+              'icon': None,
+              'original_device_class': 'gas',
+              'original_icon': None,
+              'state': dict({
+                'attributes': dict({
+                  'device_class': 'gas',
+                  'friendly_name': 'Gas sensor Gas',
+                }),
+                'entity_id': 'binary_sensor.gas_sensor_gas',
+                'state': 'off',
+              }),
+              'unit_of_measurement': None,
+            }),
+            dict({
+              'device_class': None,
+              'disabled': False,
+              'disabled_by': None,
+              'entity_category': None,
+              'icon': None,
+              'original_device_class': None,
+              'original_icon': None,
+              'state': dict({
+                'attributes': dict({
+                  'friendly_name': 'Gas sensor Gas',
+                  'state_class': 'measurement',
+                  'unit_of_measurement': 'ppm',
+                }),
+                'entity_id': 'sensor.gas_sensor_gas',
+                'state': '0.0',
+              }),
+              'unit_of_measurement': 'ppm',
+            }),
+          ]),
+          'name': 'Gas sensor',
+          'name_by_user': None,
+        }),
+        'id': 'cwwk68dyfsh2eqi4jbqr',
+        'name': 'Gas sensor',
+        'online': True,
+        'product_id': '4iqe2hsfyd86kwwc',
+        'product_name': 'Gas sensor',
+        'set_up': True,
+        'status': dict({
+          'alarm_time': 300,
+          'checking_result': 'check_success',
+          'gas_sensor_status': 'normal',
+          'gas_sensor_value': 0,
+          'muffling': True,
+          'self_checking': False,
+        }),
+        'status_range': dict({
+          'null': dict({
+            'type': 'Boolean',
+            'value': dict({
+            }),
+          }),
+        }),
+        'sub': False,
+        'support_local': True,
+        'time_zone': '-04:00',
+        'update_time': '2025-06-24T20:33:10+00:00',
+      }),
+    ]),
+    'disabled_by': None,
+    'disabled_polling': False,
+    'endpoint': 'https://apigw.tuyaeu.com',
+    'mqtt_connected': True,
+    'terminal_id': '7cd96aff-6ec8-4006-b093-3dbff7947591',
+  })
+# ---

@@ -11,7 +11,7 @@ from homeassistant.helpers.typing import ConfigType
 from .bridge import HueBridge, HueConfigEntry
 from .const import DOMAIN
 from .migration import check_migration
-from .services import async_register_services
+from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -19,7 +19,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Hue integration."""
 
-    async_register_services(hass)
+    async_setup_services(hass)
 
     return True
 
@@ -77,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
             identifiers={(DOMAIN, api.config.bridge_id)},
             manufacturer="Signify",
             name=api.config.name,
-            model=api.config.model_id,
+            model_id=api.config.model_id,
             sw_version=api.config.software_version,
         )
         # create persistent notification if we found a bridge version with security vulnerability
@@ -105,7 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
             },
             manufacturer=api.config.bridge_device.product_data.manufacturer_name,
             name=api.config.name,
-            model=api.config.model_id,
+            model_id=api.config.model_id,
             sw_version=api.config.software_version,
         )
 

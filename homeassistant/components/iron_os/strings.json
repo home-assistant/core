@@ -278,6 +278,9 @@
       },
       "calibrate_cjc": {
         "name": "Calibrate CJC"
+      },
+      "boost": {
+        "name": "Boost"
       }
     }
   },

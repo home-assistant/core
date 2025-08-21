@@ -191,7 +191,7 @@ class PS4Device(MediaPlayerEntity):
                         )
                 elif self.state != MediaPlayerState.IDLE:
                     self.idle()
-            elif self.state != MediaPlayerState.STANDBY:
+            elif self.state != MediaPlayerState.OFF:
                 self.state_standby()
 
         elif self._retry > DEFAULT_RETRIES:
@@ -223,7 +223,7 @@ class PS4Device(MediaPlayerEntity):
     def state_standby(self) -> None:
         """Set states for state standby."""
         self.reset_title()
-        self._attr_state = MediaPlayerState.STANDBY
+        self._attr_state = MediaPlayerState.OFF
 
     def state_unknown(self) -> None:
         """Set states for state unknown."""
