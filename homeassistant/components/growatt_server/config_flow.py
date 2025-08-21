@@ -105,9 +105,6 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
             return self._async_show_token_form({"base": "invalid_auth"})
 
         self.plants = plant_response.get("plants", [])
-        if not self.plants:
-            return self.async_abort(reason="no_plants")
-
         self.data = user_input
         self.data[CONF_AUTH_TYPE] = self.auth_type
         return await self.async_step_plant()
