@@ -304,7 +304,7 @@ jobs:
         uses: actions/cache/restore@v4.2.4
         with:
           path: venv
-          fail-on-cache-miss: false
+          fail-on-cache-miss: true
           key: >-
             ${{ runner.os }}-${{ runner.arch }}-${{ steps.python.outputs.python-version }}-venv-${{
               needs.info.outputs.pre-commit_cache_key }}
