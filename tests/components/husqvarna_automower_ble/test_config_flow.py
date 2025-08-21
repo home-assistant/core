@@ -195,4 +195,4 @@ async def test_exception_connect(
         user_input={},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["reason"] == "cannot_connect"
+    assert result["errors"] == {"base": "cannot_connect"}
