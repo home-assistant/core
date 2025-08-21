@@ -11,7 +11,6 @@ from homeassistant.components.notify import (
     ATTR_MESSAGE,
     ATTR_TARGET,
     ATTR_TITLE,
-    DOMAIN as NOTIFY_DOMAIN,
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
@@ -62,7 +61,7 @@ async def async_get_service(
         is_fixable=False,
         translation_key="migrate_notify",
         severity=ir.IssueSeverity.WARNING,
-        learn_more_url="https://github.com/home-assistant/core/pull/150720",
+        learn_more_url="https://www.home-assistant.io/integrations/telegram_bot#notifiers",
     )
 
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
