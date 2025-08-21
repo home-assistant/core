@@ -6,6 +6,8 @@ from collections.abc import Callable
 import logging
 from typing import cast
 
+from soco.exceptions import SoCoException
+
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
@@ -99,7 +101,6 @@ async def async_setup_entry(
             )
 
         # Group volume slider (0.0–1.0)
-        _LOGGER.debug("Creating group_volume number control on %s", speaker.zone_name)
         entities.append(SonosGroupVolumeEntity(speaker, config_entry))
 
         async_add_entities(entities)
@@ -177,7 +178,7 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
 
     @property
     def native_value(self) -> float | None:
-        """Return the cached group volume (0.0–1.0)."""
+        """Return the last device-sourced group volume (0.0–1.0), or None if unknown."""
         return self._cached
 
     @soco_error()
@@ -185,25 +186,32 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
         """Set the group volume (0.0–1.0)."""
         level = max(0.0, min(1.0, float(value)))
         self.soco.group.volume = int(round(level * 100))
-        self._cached = level
-        self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
 
     async def _async_fallback_poll(self) -> None:
         """Poll if subscriptions aren’t working."""
         await self._async_refresh_from_device(write=True)
 
     async def _async_refresh_from_device(self, write: bool = False) -> None:
-        """Fetch current group volume from SoCo."""
+        """Fetch current group volume from SoCo and update state."""
 
         def _get() -> int | None:
             try:
                 return self.soco.group.volume
-            except Exception:  # noqa: BLE001
+            except (SoCoException, OSError) as err:
+                _LOGGER.debug(
+                    "Failed to read group volume for %s: %s",
+                    self.speaker.zone_name,
+                    err,
+                )
                 return None
 
-        gv = await self.hass.async_add_executor_job(_get)
-        self._cached = gv / 100.0 if isinstance(gv, int) else None
-        if write:
+        vol = await self.hass.async_add_executor_job(_get)
+        if vol is None:
+            return
+
+        new = max(0.0, min(1.0, vol / 100.0))
+        if write or new != self._cached:
+            self._cached = new
             self.async_write_ha_state()
 
     # ---------- Push wiring for responsiveness ----------
@@ -227,13 +235,6 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
         # Initial read
         await self._async_refresh_from_device(write=True)
 
-    async def async_will_remove_from_hass(self) -> None:
-        """Clean up listeners when the entity is removed."""
-        if self._unsub_coord is not None:
-            self._unsub_coord()
-            self._unsub_coord = None
-        await super().async_will_remove_from_hass()
-
     def _bind_coordinator_state(self, coord_uid: str) -> None:
         """(Re)bind a single STATE_UPDATED listener for the given coordinator."""
         if self._unsub_coord is not None:
@@ -249,7 +250,9 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
     @callback
     def _on_coord_state_updated(self, *_: object) -> None:
         """Coordinator state changed — refresh once."""
-        self.hass.create_task(self._async_refresh_from_device(write=True))
+        self.hass.loop.call_soon_threadsafe(
+            self.hass.async_create_task, self._async_refresh_from_device(write=True)
+        )
 
     @callback
     def _on_local_activity(self, *_: object) -> None:
@@ -258,4 +261,6 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
         if new_coord_uid != self._coord_uid:
             self._coord_uid = new_coord_uid
             self._bind_coordinator_state(new_coord_uid)
-            self.hass.create_task(self._async_refresh_from_device(write=True))
+        self.hass.loop.call_soon_threadsafe(
+            self.hass.async_create_task, self._async_refresh_from_device(write=True)
+        )
