@@ -19,6 +19,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudData
@@ -194,11 +195,25 @@ async def async_setup_entry(
 ) -> None:
     """Set up SwitchBot Cloud entry."""
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
-    async_add_entities(
-        _async_make_entity(data.api, device, coordinator, description)
-        for device, coordinator in data.devices.sensors
-        for description in SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[device.device_type]
-    )
+    entities: list[SwitchBotCloudSensor] = []
+    for device, coordinator in data.devices.sensors:
+        for description in SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[device.device_type]:
+            if device.device_type == "Relay Switch 2PM":
+                entities.append(
+                    SwitchBotCloudRelaySwitch2PMSensor(
+                        data.api, device, coordinator, description, "1"
+                    )
+                )
+                entities.append(
+                    SwitchBotCloudRelaySwitch2PMSensor(
+                        data.api, device, coordinator, description, "2"
+                    )
+                )
+            else:
+                entities.append(
+                    _async_make_entity(data.api, device, coordinator, description)
+                )
+    async_add_entities(entities)
 
 
 class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
@@ -232,17 +247,28 @@ class SwitchBotCloudRelaySwitch2PMSensor(SwitchBotCloudSensor):
         device: Device,
         coordinator: SwitchBotCoordinator,
         description: SensorEntityDescription,
+        channel: str,
     ) -> None:
         """Initialize SwitchBot Cloud sensor entity."""
         super().__init__(api, device, coordinator, description)
-        self.channel = device.device_id.split("-")[1]
+
+        self.entity_description = description
+        self._channel = channel
+        self._attr_unique_id = f"{device.device_id}-{description.key}-{channel}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{device.device_name}-channel-{channel}")},
+            manufacturer="SwitchBot",
+            model=device.device_type,
+            model_id="RelaySwitch2PM",
+            name=f"{device.device_name} Channel {channel}",
+        )
 
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return
         self._attr_native_value = self.coordinator.data.get(
-            f"switch{self.channel}{self.entity_description.key.strip()}"
+            f"switch{self._channel}{self.entity_description.key.strip()}"
         )
 
 
@@ -252,8 +278,6 @@ def _async_make_entity(
     device: Device | Remote,
     coordinator: SwitchBotCoordinator,
     description: SensorEntityDescription,
-) -> SwitchBotCloudSensor | SwitchBotCloudRelaySwitch2PMSensor:
+) -> SwitchBotCloudSensor:
     """Make a SwitchBotCloudSensor or SwitchBotCloudRelaySwitch2PMSensor."""
-    if "Relay Switch 2PM" in device.device_type:
-        return SwitchBotCloudRelaySwitch2PMSensor(api, device, coordinator, description)
     return SwitchBotCloudSensor(api, device, coordinator, description)
