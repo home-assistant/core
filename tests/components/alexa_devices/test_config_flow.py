@@ -227,12 +227,10 @@ async def test_reconfigure_successful(
     assert mock_config_entry.data[CONF_USERNAME] == TEST_USERNAME
 
     new_password = "new_fake_password"
-    new_country = "new_fake_country"
 
     reconfigure_result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_COUNTRY: new_country,
             CONF_PASSWORD: new_password,
             CONF_CODE: TEST_CODE,
         },
@@ -243,7 +241,6 @@ async def test_reconfigure_successful(
 
     # changed entry
     assert mock_config_entry.data[CONF_PASSWORD] == new_password
-    assert mock_config_entry.data[CONF_COUNTRY] == new_country
 
 
 @pytest.mark.parametrize(
@@ -252,7 +249,6 @@ async def test_reconfigure_successful(
         (CannotConnect, "cannot_connect"),
         (CannotAuthenticate, "invalid_auth"),
         (CannotRetrieveData, "cannot_retrieve_data"),
-        (WrongCountry, "wrong_country"),
     ],
 )
 async def test_reconfigure_fails(
@@ -275,7 +271,6 @@ async def test_reconfigure_fails(
     reconfigure_result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_COUNTRY: TEST_COUNTRY,
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_CODE: TEST_CODE,
         },
@@ -290,7 +285,6 @@ async def test_reconfigure_fails(
     reconfigure_result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_COUNTRY: TEST_COUNTRY,
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_CODE: TEST_CODE,
         },
@@ -299,7 +293,6 @@ async def test_reconfigure_fails(
     assert reconfigure_result["type"] is FlowResultType.ABORT
     assert reconfigure_result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data == {
-        CONF_COUNTRY: TEST_COUNTRY,
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_LOGIN_DATA: {
