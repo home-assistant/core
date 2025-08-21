@@ -2784,9 +2784,6 @@
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
@@ -2842,9 +2839,6 @@
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -2902,9 +2896,6 @@
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
@@ -2961,9 +2952,6 @@
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
@@ -3018,10 +3006,7 @@
     'name': None,
     'options': dict({
       'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        'suggested_display_precision': 0,
       }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
@@ -3033,7 +3018,7 @@
     'supported_features': 0,
     'translation_key': 'cuml_e_export_offgrid1',
     'unique_id': 'tuya.gbq8kiahk57ct0bpncjynxcuml_e_export_offgrid1',
-    'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+    'unit_of_measurement': 'Wh',
   })
 # ---
 # name: test_platform_setup_and_discovery[sensor.cbe_pro_2_cumulative_off_grid_port_1_output_energy-state]
@@ -3042,7 +3027,7 @@
       'device_class': 'energy',
       'friendly_name': 'CBE Pro 2 Cumulative off-grid port 1 output energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-      'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+      'unit_of_measurement': 'Wh',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cbe_pro_2_cumulative_off_grid_port_1_output_energy',
