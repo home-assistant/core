@@ -1,22 +1,29 @@
 """The tests for the opnsense device tracker platform."""
+
+from unittest.mock import patch
+
 from homeassistant.components import opnsense
+from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.opnsense.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
 from . import CONFIG_DATA_IMPORT, setup_mock_diagnostics
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
-async def test_get_scanner(hass, mock_device_tracker_conf):
+async def test_get_scanner(
+    hass: HomeAssistant, mock_device_tracker_conf: list[Device]
+) -> None:
     """Test creating an opnsense scanner."""
     opnsense.OPNsenseData.hass_config = {"foo": "bar"}
 
-    with patch(
-        "homeassistant.components.opnsense.diagnostics"
-    ) as mock_diagnostics, patch(
-        "homeassistant.components.opnsense.config_flow.diagnostics"
-    ) as mock_diagnostics_config_flow:
+    with (
+        patch("homeassistant.components.opnsense.diagnostics") as mock_diagnostics,
+        patch(
+            "homeassistant.components.opnsense.config_flow.diagnostics"
+        ) as mock_diagnostics_config_flow,
+    ):
         setup_mock_diagnostics(mock_diagnostics)
         setup_mock_diagnostics(mock_diagnostics_config_flow)
 

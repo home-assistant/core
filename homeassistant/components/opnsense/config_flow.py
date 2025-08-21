@@ -1,5 +1,7 @@
 """Config flow for OPNsense."""
+
 import logging
+from typing import Any
 
 from pyopnsense import diagnostics
 from pyopnsense.exceptions import APIException
@@ -7,6 +9,7 @@ from requests.exceptions import ConnectionError as requestsConnectionError
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_HOST,
@@ -27,7 +30,7 @@ class OPNsenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
-    data = None
+    data: Any | None = None
 
     async def _show_setup_form(self, user_input=None, errors=None):
         """Show the setup form to the user."""
@@ -60,7 +63,7 @@ class OPNsenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle user step."""
         errors = {}
 
@@ -116,6 +119,6 @@ class OPNsenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._show_setup_form(user_input, errors)
 
-    async def async_step_import(self, import_config):
+    async def async_step_import(self, import_config) -> ConfigFlowResult:
         """Import a config entry."""
         return await self.async_step_user(import_config)

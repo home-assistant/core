@@ -1,5 +1,7 @@
 """Tests for the opnsense component."""
 
+from unittest.mock import MagicMock
+
 from homeassistant.components.opnsense.const import (
     CONF_API_SECRET,
     CONF_TRACKER_INTERFACE,
@@ -12,8 +14,6 @@ from homeassistant.const import (
     CONF_URL,
     CONF_VERIFY_SSL,
 )
-
-from tests.async_mock import MagicMock
 
 TITLE = "OPNsense"
 CONFIG_DATA = {

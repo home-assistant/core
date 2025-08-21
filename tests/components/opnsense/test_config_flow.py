@@ -1,25 +1,31 @@
 """Tests for the OPNsense config flow."""
+
+from unittest.mock import patch
+
 from pyopnsense.exceptions import APIException
 
 from homeassistant import data_entry_flow
 from homeassistant.components.opnsense.const import CONF_TRACKER_INTERFACE, DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_API_KEY
+from homeassistant.core import HomeAssistant
 
 from . import CONFIG_DATA, CONFIG_DATA_IMPORT, TITLE, setup_mock_diagnostics
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
-async def test_import(hass):
+async def test_import(hass: HomeAssistant) -> None:
     """Test import step."""
-    with patch(
-        "homeassistant.components.opnsense.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.opnsense.config_flow.diagnostics"
-    ) as mock_diagnostics:
+    with (
+        patch(
+            "homeassistant.components.opnsense.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.opnsense.config_flow.diagnostics"
+        ) as mock_diagnostics,
+    ):
         setup_mock_diagnostics(mock_diagnostics)
 
         result = await hass.config_entries.flow.async_init(
@@ -36,7 +42,7 @@ async def test_import(hass):
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_user(hass):
+async def test_user(hass: HomeAssistant) -> None:
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -44,12 +50,15 @@ async def test_user(hass):
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.opnsense.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry, patch(
-        "homeassistant.components.opnsense.config_flow.diagnostics"
-    ) as mock_diagnostics:
+    with (
+        patch(
+            "homeassistant.components.opnsense.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+        patch(
+            "homeassistant.components.opnsense.config_flow.diagnostics"
+        ) as mock_diagnostics,
+    ):
         setup_mock_diagnostics(mock_diagnostics)
 
         result = await hass.config_entries.flow.async_init(
@@ -66,7 +75,7 @@ async def test_user(hass):
         assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_abort_if_already_setup(hass):
+async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
     """Test we abort if component is already setup."""
     MockConfigEntry(
         domain=DOMAIN,
@@ -91,7 +100,7 @@ async def test_abort_if_already_setup(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_on_api_error(hass):
+async def test_on_api_error(hass: HomeAssistant) -> None:
     """Test when we have errors connecting the router."""
     with patch(
         "homeassistant.components.opnsense.config_flow.diagnostics.InterfaceClient.get_arp",
@@ -107,7 +116,7 @@ async def test_on_api_error(hass):
         assert result["errors"] == {"base": "cannot_connect"}
 
 
-async def test_on_invalid_interface(hass):
+async def test_on_invalid_interface(hass: HomeAssistant) -> None:
     """Test when we have invalid interface(s)."""
     config_data = CONFIG_DATA.copy()
     config_data[CONF_TRACKER_INTERFACE] = "WRONG"
@@ -128,7 +137,7 @@ async def test_on_invalid_interface(hass):
         assert result["errors"] == {"base": "invalid_interface"}
 
 
-async def test_on_unknown_error(hass):
+async def test_on_unknown_error(hass: HomeAssistant) -> None:
     """Test when we have unknown errors."""
     with patch(
         "homeassistant.components.opnsense.config_flow.diagnostics.InterfaceClient.get_arp",

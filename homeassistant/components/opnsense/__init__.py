@@ -1,4 +1,5 @@
 """Support for OPNsense Routers."""
+
 from dataclasses import dataclass
 
 from pyopnsense import diagnostics
@@ -10,6 +11,7 @@ from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACE, DOMAIN, OPNSENSE_DATA
 
@@ -38,7 +40,7 @@ class OPNsenseData:
     hass_config: dict
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the OPNsense component."""
     if config.get(DOMAIN) is not None:
         OPNsenseData.hass_config = config

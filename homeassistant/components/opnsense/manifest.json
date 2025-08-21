@@ -1,8 +1,8 @@
 {
   "domain": "opnsense",
   "name": "OPNsense",
-  "config_flow": true,
   "codeowners": ["@mtreinish"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/opnsense",
   "iot_class": "local_polling",
   "loggers": ["pbr", "pyopnsense"],

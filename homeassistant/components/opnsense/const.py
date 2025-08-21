@@ -1,4 +1,5 @@
 """Constants for OPNsense component."""
+
 DOMAIN = "opnsense"
 OPNSENSE_DATA = DOMAIN
 
