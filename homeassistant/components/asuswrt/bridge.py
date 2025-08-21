@@ -338,7 +338,7 @@ class AsusWrtHttpBridge(AsusWrtBridge):
         """
         # Enable automatic temperature data correction.
         # Required for some new firmware versions reporting values
-        # 2 orders of magnitude lower (e.g. 0.069 °C for actual 69 °C).
+        # several orders of magnitude lower (e.g. 0.069 °C for actual 69 °C).
         ARConfig.set(ARConfigKey.OPTIMISTIC_TEMPERATURE, True)
         # Disable `warning`-level log message when temperature is corrected
         # by setting it to already notified.
