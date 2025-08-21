@@ -623,13 +623,13 @@ async def test_ws_delete(
             "23:59:59",
             "2022-08-10T23:59:59-07:00",
             "23:59:59",
-            {CONF_ICON: "mdi:party-popper"},
+            {CONF_ICON: "mdi:party-pooper"},
         ),
         (
             "24:00",
             "2022-08-11T00:00:00-07:00",
             "24:00:00",
-            {CONF_ICON: "mdi:calendar"},
+            {CONF_ICON: "mdi:party-popper"},
         ),
         (
             "24:00:00",
