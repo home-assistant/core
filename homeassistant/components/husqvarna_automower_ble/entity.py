@@ -23,6 +23,7 @@ class HusqvarnaAutomowerBleEntity(CoordinatorEntity[HusqvarnaCoordinator]):
             identifiers={(DOMAIN, f"{coordinator.address}_{coordinator.channel_id}")},
             manufacturer=MANUFACTURER,
             model_id=coordinator.model,
+            suggested_area="Garden",
         )
 
     @property
