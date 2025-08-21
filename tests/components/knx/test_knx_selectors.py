@@ -266,7 +266,7 @@ def test_ga_selector_serialization(
     [
         (
             AllSerializeFirst(vol.Schema({"key": int}), vol.Schema({"ignored": str})),
-            [{"name": "key", "type": "integer"}],
+            [{"name": "key", "required": False, "type": "integer"}],
         ),
         (
             KNXSectionFlat(collapsible=True),
@@ -280,7 +280,7 @@ def test_ga_selector_serialization(
             {
                 "type": "knx_section",
                 "collapsible": True,
-                "schema": [{"name": "key", "type": "integer"}],
+                "schema": [{"name": "key", "required": False, "type": "integer"}],
             },
         ),
         (
@@ -295,12 +295,16 @@ def test_ga_selector_serialization(
                     {
                         "type": "knx_group_select_option",
                         "translation_key": "option_1",
-                        "schema": [{"name": "key_1", "type": "string"}],
+                        "schema": [
+                            {"name": "key_1", "required": False, "type": "string"}
+                        ],
                     },
                     {
                         "type": "knx_group_select_option",
                         "translation_key": "option_2",
-                        "schema": [{"name": "key_2", "type": "integer"}],
+                        "schema": [
+                            {"name": "key_2", "required": False, "type": "integer"}
+                        ],
                     },
                 ],
             },
@@ -318,6 +322,29 @@ def test_ga_selector_serialization(
                 "type": "ha_selector",
                 "selector": {"boolean": {}},
             },
+        ),
+        (  # in a dict schema `name` and `required` keys are added
+            vol.Schema(
+                {
+                    "section_test": KNXSectionFlat(),
+                    vol.Optional("key"): selector.BooleanSelector(),
+                }
+            ),
+            [
+                {
+                    "name": "section_test",
+                    "type": "knx_section_flat",
+                    "required": False,
+                    "collapsible": False,
+                },
+                {
+                    "name": "key",
+                    "optional": True,
+                    "required": False,
+                    "type": "ha_selector",
+                    "selector": {"boolean": {}},
+                },
+            ],
         ),
     ],
 )

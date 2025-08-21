@@ -6,6 +6,7 @@
       dict({
         'collapsible': False,
         'name': 'section_binary_sensor',
+        'required': False,
         'type': 'knx_section_flat',
       }),
       dict({
@@ -29,6 +30,7 @@
       dict({
         'name': 'invert',
         'optional': True,
+        'required': False,
         'selector': dict({
           'boolean': dict({
           }),
@@ -38,11 +40,13 @@
       dict({
         'collapsible': True,
         'name': 'section_advanced_options',
+        'required': False,
         'type': 'knx_section_flat',
       }),
       dict({
         'name': 'ignore_internal_state',
         'optional': True,
+        'required': False,
         'selector': dict({
           'boolean': dict({
           }),
@@ -52,6 +56,7 @@
       dict({
         'name': 'context_timeout',
         'optional': True,
+        'required': False,
         'selector': dict({
           'number': dict({
             'max': 10.0,
@@ -66,6 +71,7 @@
       dict({
         'name': 'reset_after',
         'optional': True,
+        'required': False,
         'selector': dict({
           'number': dict({
             'max': 600.0,
@@ -96,6 +102,7 @@
       dict({
         'collapsible': False,
         'name': 'section_binary_control',
+        'required': False,
         'type': 'knx_section_flat',
       }),
       dict({
@@ -108,11 +115,13 @@
             'required': False,
           }),
         }),
+        'required': False,
         'type': 'knx_group_address',
       }),
       dict({
         'name': 'invert_updown',
         'optional': True,
+        'required': False,
         'selector': dict({
           'boolean': dict({
           }),
@@ -122,6 +131,7 @@
       dict({
         'collapsible': False,
         'name': 'section_stop_control',
+        'required': False,
         'type': 'knx_section_flat',
       }),
       dict({
@@ -134,6 +144,7 @@
             'required': False,
           }),
         }),
+        'required': False,
         'type': 'knx_group_address',
       }),
       dict({
@@ -146,11 +157,13 @@
             'required': False,
           }),
         }),
+        'required': False,
         'type': 'knx_group_address',
       }),
       dict({
         'collapsible': True,
         'name': 'section_position_control',
+        'required': False,
         'type': 'knx_section_flat',
       }),
       dict({
@@ -163,6 +176,7 @@
             'required': False,
           }),
         }),
+        'required': False,
         'type': 'knx_group_address',
       }),
       dict({
@@ -175,11 +189,13 @@
           }),
           'write': False,
         }),
+        'required': False,
         'type': 'knx_group_address',
       }),
       dict({
         'name': 'invert_position',
         'optional': True,
+        'required': False,
         'selector': dict({
           'boolean': dict({
           }),
@@ -189,6 +205,7 @@
       dict({
         'collapsible': True,
         'name': 'section_tilt_control',
+        'required': False,
         'type': 'knx_section_flat',
       }),
       dict({
@@ -203,11 +220,13 @@
             'required': False,
           }),
         }),
+        'required': False,
         'type': 'knx_group_address',
       }),
       dict({
         'name': 'invert_angle',
         'optional': True,
+        'required': False,
         'selector': dict({
           'boolean': dict({
           }),
@@ -217,12 +236,14 @@
       dict({
         'collapsible': False,
         'name': 'section_travel_time',
+        'required': False,
         'type': 'knx_section_flat',
       }),
       dict({
         'default': 25,
         'name': 'travelling_time_up',
         'optional': True,
+        'required': False,
         'selector': dict({
           'number': dict({
             'max': 1000.0,
@@ -238,6 +259,7 @@
         'default': 25,
         'name': 'travelling_time_down',
         'optional': True,
+        'required': False,
         'selector': dict({
           'number': dict({
             'max': 1000.0,
@@ -254,6 +276,7 @@
         'default': True,
         'name': 'sync_state',
         'optional': True,
+        'required': False,
         'type': 'knx_sync_state',
       }),
     ]),
@@ -268,6 +291,7 @@
       dict({
         'collapsible': False,
         'name': 'section_switch',
+        'required': False,
         'type': 'knx_section_flat',
       }),
       dict({
@@ -288,11 +312,13 @@
             'required': True,
           }),
         }),
+        'required': False,
         'type': 'knx_group_address',
       }),
       dict({
         'collapsible': False,
         'name': 'section_brightness',
+        'required': False,
         'type': 'knx_section_flat',
       }),
       dict({
@@ -313,11 +339,13 @@
             'required': True,
           }),
         }),
+        'required': False,
         'type': 'knx_group_address',
       }),
       dict({
         'collapsible': True,
         'name': 'section_color_temp',
+        'required': False,
         'type': 'knx_section_flat',
       }),
       dict({
@@ -358,6 +386,7 @@
             'required': True,
           }),
         }),
+        'required': False,
         'type': 'knx_group_address',
       }),
       dict({
@@ -394,6 +423,7 @@
         'collapsible': True,
         'name': 'color',
         'optional': True,
+        'required': False,
         'schema': list([
           dict({
             'schema': list([
@@ -435,6 +465,7 @@
                     'required': True,
                   }),
                 }),
+                'required': False,
                 'type': 'knx_group_address',
               }),
             ]),
@@ -446,6 +477,7 @@
               dict({
                 'collapsible': False,
                 'name': 'section_red',
+                'required': False,
                 'type': 'knx_section_flat',
               }),
               dict({
@@ -466,6 +498,7 @@
                     'required': False,
                   }),
                 }),
+                'required': False,
                 'type': 'knx_group_address',
               }),
               dict({
@@ -491,6 +524,7 @@
               dict({
                 'collapsible': False,
                 'name': 'section_green',
+                'required': False,
                 'type': 'knx_section_flat',
               }),
               dict({
@@ -511,6 +545,7 @@
                     'required': False,
                   }),
                 }),
+                'required': False,
                 'type': 'knx_group_address',
               }),
               dict({
@@ -536,6 +571,7 @@
               dict({
                 'collapsible': False,
                 'name': 'section_blue',
+                'required': False,
                 'type': 'knx_section_flat',
               }),
               dict({
@@ -576,11 +612,13 @@
                     'required': False,
                   }),
                 }),
+                'required': False,
                 'type': 'knx_group_address',
               }),
               dict({
                 'collapsible': False,
                 'name': 'section_white',
+                'required': False,
                 'type': 'knx_section_flat',
               }),
               dict({
@@ -601,6 +639,7 @@
                     'required': True,
                   }),
                 }),
+                'required': False,
                 'type': 'knx_group_address',
               }),
               dict({
@@ -621,6 +660,7 @@
                     'required': False,
                   }),
                 }),
+                'required': False,
                 'type': 'knx_group_address',
               }),
             ]),
@@ -681,6 +721,7 @@
         'default': True,
         'name': 'sync_state',
         'optional': True,
+        'required': False,
         'type': 'knx_sync_state',
       }),
     ]),
@@ -695,6 +736,7 @@
       dict({
         'collapsible': False,
         'name': 'section_switch',
+        'required': False,
         'type': 'knx_section_flat',
       }),
       dict({
@@ -715,6 +757,7 @@
         'default': False,
         'name': 'invert',
         'optional': True,
+        'required': False,
         'selector': dict({
           'boolean': dict({
           }),
@@ -725,6 +768,7 @@
         'default': False,
         'name': 'respond_to_read',
         'optional': True,
+        'required': False,
         'selector': dict({
           'boolean': dict({
           }),
@@ -736,6 +780,7 @@
         'default': True,
         'name': 'sync_state',
         'optional': True,
+        'required': False,
         'type': 'knx_sync_state',
       }),
     ]),
