@@ -6,18 +6,20 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 
-from habiticalib import UserData
+from habiticalib import ContentData, UserData
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import HABITICA_KEY
 from .const import ASSETS_URL
-from .coordinator import HabiticaConfigEntry
-from .entity import HabiticaBase
+from .coordinator import HabiticaConfigEntry, HabiticaPartyCoordinator
+from .entity import HabiticaBase, HabiticaPartyBase
 
 PARALLEL_UPDATES = 1
 
@@ -34,6 +36,7 @@ class HabiticaBinarySensor(StrEnum):
     """Habitica Entities."""
 
     PENDING_QUEST = "pending_quest"
+    QUEST_RUNNING = "quest_running"
 
 
 def get_scroll_image_for_pending_quest_invitation(user: UserData) -> str | None:
@@ -62,10 +65,21 @@ async def async_setup_entry(
 
     coordinator = config_entry.runtime_data
 
-    async_add_entities(
+    entities: list[BinarySensorEntity] = [
         HabiticaBinarySensorEntity(coordinator, description)
         for description in BINARY_SENSOR_DESCRIPTIONS
-    )
+    ]
+
+    if party := coordinator.data.user.party.id:
+        party_coordinator = hass.data[HABITICA_KEY][party]
+        entities.append(
+            HabiticaPartyBinarySensorEntity(
+                party_coordinator,
+                config_entry,
+                coordinator.content,
+            )
+        )
+    async_add_entities(entities)
 
 
 class HabiticaBinarySensorEntity(HabiticaBase, BinarySensorEntity):
@@ -86,3 +100,27 @@ class HabiticaBinarySensorEntity(HabiticaBase, BinarySensorEntity):
         ):
             return f"{ASSETS_URL}{entity_picture}"
         return None
+
+
+class HabiticaPartyBinarySensorEntity(HabiticaPartyBase, BinarySensorEntity):
+    """Representation of a Habitica party binary sensor."""
+
+    entity_description = BinarySensorEntityDescription(
+        key=HabiticaBinarySensor.QUEST_RUNNING,
+        translation_key=HabiticaBinarySensor.QUEST_RUNNING,
+        device_class=BinarySensorDeviceClass.RUNNING,
+    )
+
+    def __init__(
+        self,
+        coordinator: HabiticaPartyCoordinator,
+        config_entry: HabiticaConfigEntry,
+        content: ContentData,
+    ) -> None:
+        """Initialize the binary sensor."""
+        super().__init__(coordinator, config_entry, self.entity_description, content)
+
+    @property
+    def is_on(self) -> bool | None:
+        """If the binary sensor is on."""
+        return self.coordinator.data.quest.active

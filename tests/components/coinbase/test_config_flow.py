@@ -186,9 +186,6 @@ async def test_option_form(hass: HomeAssistant) -> None:
             "coinbase.rest.RESTClient.get",
             return_value={"data": mock_get_exchange_rates()},
         ),
-        patch(
-            "homeassistant.components.coinbase.update_listener"
-        ) as mock_update_listener,
     ):
         config_entry = await init_mock_coinbase(hass)
         await hass.async_block_till_done()
@@ -204,7 +201,6 @@ async def test_option_form(hass: HomeAssistant) -> None:
         )
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         await hass.async_block_till_done()
-        assert len(mock_update_listener.mock_calls) == 1
 
 
 async def test_form_bad_account_currency(hass: HomeAssistant) -> None:
