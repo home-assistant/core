@@ -300,6 +300,13 @@ class WebRTCProvider(CameraWebRTCProvider):
             camera.entity_id, width, height
         )
 
+    async def async_get_stream_source(self, camera: Camera) -> str | None:
+        """Get a stream source URL suitable for recording."""
+        await self._update_stream_source(camera)
+        # Return an HLS stream URL that can be used by the stream component for recording
+        # go2rtc provides HLS streams at /api/stream.m3u8?src=<stream_name>
+        return f"{self._url}api/stream.m3u8?src={camera.entity_id}"
+
     async def _update_stream_source(self, camera: Camera) -> None:
         """Update the stream source in go2rtc config if needed."""
         if not (stream_source := await camera.stream_source()):

@@ -21,6 +21,8 @@ import pytest
 from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import (
+    Camera,
+    CameraEntityFeature,
     StreamType,
     WebRTCAnswer as HAWebRTCAnswer,
     WebRTCCandidate as HAWebRTCCandidate,
@@ -696,3 +698,105 @@ async def test_generic_workaround(
             f"ffmpeg:{camera.entity_id}#audio=opus#query=log_level=debug",
         ],
     )
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_async_get_stream_source(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test getting stream source for recording."""
+    camera = init_test_integration
+    assert isinstance(camera._webrtc_provider, WebRTCProvider)
+
+    # Test that the provider can return a stream source for recording
+    stream_source = await camera._webrtc_provider.async_get_stream_source(camera)
+    expected_url = f"http://localhost:11984/api/stream.m3u8?src={camera.entity_id}"
+    assert stream_source == expected_url
+
+    # Verify the stream source was set up
+    rest_client.streams.add.assert_called_once()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_camera_stream_source_with_go2rtc_provider(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test camera stream_source method with go2rtc provider."""
+    camera = init_test_integration
+    assert isinstance(camera._webrtc_provider, WebRTCProvider)
+    
+    # Mock that this camera doesn't have its own stream_source implementation
+    # to test the base class fallback to provider
+    class TestCamera(Camera):
+        _attr_name = "Test Camera"
+        _attr_supported_features: CameraEntityFeature = CameraEntityFeature.STREAM
+        
+    test_camera = TestCamera()
+    test_camera.hass = hass
+    test_camera.entity_id = "camera.test_fallback"
+    test_camera._webrtc_provider = camera._webrtc_provider
+    
+    # Test that the camera can get stream source from go2rtc provider
+    stream_source = await test_camera.stream_source()
+    expected_url = f"http://localhost:11984/api/stream.m3u8?src={test_camera.entity_id}"
+    assert stream_source == expected_url
+
+
+@pytest.mark.usefixtures("init_integration")  
+async def test_camera_record_service_with_go2rtc(
+    hass: HomeAssistant,
+    init_test_integration: MockCamera,
+    rest_client: AsyncMock,
+) -> None:
+    """Test camera.record service with go2rtc provider."""
+    from homeassistant.components.camera import async_handle_record_service
+    from homeassistant.core import ServiceCall
+    from homeassistant.helpers.template import Template
+    from unittest.mock import patch, AsyncMock
+    
+    camera = init_test_integration
+    assert isinstance(camera._webrtc_provider, WebRTCProvider)
+    
+    # Create a test camera that uses the base stream_source implementation
+    class RecordTestCamera(Camera):
+        _attr_name = "Record Test Camera"
+        _attr_supported_features: CameraEntityFeature = CameraEntityFeature.STREAM
+        
+        def __init__(self):
+            super().__init__()
+            self.entity_id = "camera.test_record"
+    
+    test_camera = RecordTestCamera()
+    test_camera.hass = hass
+    test_camera._webrtc_provider = camera._webrtc_provider
+    
+    # Mock the stream creation and recording
+    mock_stream = AsyncMock()
+    mock_stream.async_record = AsyncMock()
+    
+    service_call = ServiceCall(
+        domain="camera",
+        service="record", 
+        data={
+            "filename": Template("/tmp/test_recording.mp4", hass),
+            "duration": 30,
+            "lookback": 5,
+        },
+    )
+    
+    with patch(
+        "homeassistant.components.stream.create_stream",
+        return_value=mock_stream
+    ):
+        await async_handle_record_service(test_camera, service_call)
+        
+        # Verify the stream was created with the correct go2rtc URL
+        mock_stream.async_record.assert_called_once_with(
+            "/tmp/test_recording.mp4",
+            duration=30,
+            lookback=5,
+        )

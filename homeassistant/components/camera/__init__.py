@@ -564,6 +564,13 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         This is used by cameras with CameraEntityFeature.STREAM
         and StreamType.HLS.
         """
+        # Check if camera has a go2rtc provider that can provide stream sources
+        if (
+            self._webrtc_provider 
+            and hasattr(self._webrtc_provider, 'async_get_stream_source')
+            and self._webrtc_provider.domain == "go2rtc"
+        ):
+            return await self._webrtc_provider.async_get_stream_source(self)
         return None
 
     async def async_handle_async_webrtc_offer(
