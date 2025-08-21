@@ -183,9 +183,18 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
 
     @soco_error()
     def set_native_value(self, value: float) -> None:
-        """Set the group volume (0.0–1.0)."""
+        """Set the group volume (0.0–1.0) without an immediate poll.
+
+        Rely on Sonos GroupRenderingControl events to deliver the
+        authoritative value shortly after the write. To keep the UI
+        responsive, update cached value and push state now.
+        """
         level = max(0.0, min(1.0, float(value)))
         self.soco.group.volume = int(round(level * 100))
+
+        # Optimistic update: cache & write state on the event loop thread.
+        self._cached = level
+        self.hass.loop.call_soon_threadsafe(self.async_write_ha_state)
 
     async def _async_fallback_poll(self) -> None:
         """Poll if subscriptions aren’t working."""
@@ -220,12 +229,14 @@ class SonosGroupVolumeEntity(SonosEntity, NumberEntity):
         """Subscribe to signals for live updates with minimal polling."""
         await super().async_added_to_hass()
 
-        # Track current coordinator and listen for regrouping on THIS speaker only.
+        # Track current coordinator and listen for ANY Sonos speaker activity.
+        # Refresh on every activity because group volume can change when
+        # *any* group member's volume is adjusted.
         self._coord_uid = (self.speaker.coordinator or self.speaker).uid
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{SONOS_SPEAKER_ACTIVITY}-{self.soco.uid}",
+                SONOS_SPEAKER_ACTIVITY,  # no UID suffix -> global activity
                 self._on_local_activity,
             )
         )
