@@ -2531,6 +2531,9 @@ volvooncall==0.10.3
 # homeassistant.components.verisure
 vsure==2.6.7
 
+# homeassistant.components.vasttrafik
+vtjp==0.2.1
+
 # homeassistant.components.vulcan
 vulcan-api==2.4.2
 

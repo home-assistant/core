@@ -8,7 +8,12 @@ from typing import Any
 import vasttrafik
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentryFlow,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_DELAY, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -112,32 +117,25 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
         """Create the options flow."""
         return VasttrafikOptionsFlow()
 
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(cls, config_entry):
+        """Get supported subentry types."""
+        return {"departure_board": VasttrafikSubentryFlow}
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        # Check if we already have a main Västtrafik integration configured
+        # Check if we already have a Västtrafik integration configured
         existing_entries = self._async_current_entries(include_ignore=False)
-        main_entry = None
-        for entry in existing_entries:
-            if entry.data.get("is_departure_board") is not True:
-                main_entry = entry
-                break
+        if existing_entries:
+            return self.async_abort(reason="single_instance_allowed")
 
-        if main_entry:
-            # Main integration exists, this will be a departure board
-            return await self.async_step_departure_board()
-        # No main integration, set up credentials first
-        return await self.async_step_credentials()
-
-    async def async_step_credentials(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the credentials setup for main integration."""
         errors: dict[str, str] = {}
         if user_input is not None:
             # Set unique ID for main integration
-            await self.async_set_unique_id(f"{DOMAIN}_main")
+            await self.async_set_unique_id(DOMAIN)
             self._abort_if_unique_id_configured()
 
             try:
@@ -150,18 +148,66 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(
-                    title="Västtrafik", data={**user_input, "is_departure_board": False}
-                )
+                return self.async_create_entry(title="Västtrafik", data=user_input)
 
         return self.async_show_form(
-            step_id="credentials", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_departure_board(
+    async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle adding a departure board."""
+        """Handle reconfiguration of API credentials."""
+        entry = self._get_reconfigure_entry()
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                await validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception during reconfiguration")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data=user_input,
+                    reload_even_if_entry_is_unchanged=False,
+                )
+
+        # Pre-fill form with current credentials
+        suggested_values = user_input or {
+            CONF_KEY: entry.data.get(CONF_KEY, ""),
+            CONF_SECRET: entry.data.get(CONF_SECRET, ""),
+        }
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, suggested_values
+            ),
+            errors=errors,
+        )
+
+
+class VasttrafikSubentryFlow(ConfigSubentryFlow):
+    """Handle a subentry config flow for Västtrafik departure boards."""
+
+    VERSION = 1
+
+    def __init__(self) -> None:
+        """Initialize the subentry flow."""
+        super().__init__()
+        self._search_results: list[dict] = []
+        self._selected_station: str = ""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step of adding a departure board."""
         if user_input is not None:
             search_query = user_input.get("search_query", "").strip()
             if not search_query:
@@ -169,14 +215,14 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
             elif len(search_query) < 2:
                 errors = {"base": "search_too_short"}
             else:
-                # Get main entry for API access
-                main_entry = self._get_main_entry()
-                if not main_entry:
-                    return self.async_abort(reason="no_main_integration")
+                # Get parent entry for API access
+                parent_entry = self._get_entry()
+                if not parent_entry:
+                    return self.async_abort(reason="parent_entry_not_found")
 
                 # Search for stations
                 stations, error_code = await search_stations(
-                    self.hass, main_entry, search_query
+                    self.hass, parent_entry, search_query
                 )
                 if error_code:
                     errors = {"base": error_code}
@@ -185,7 +231,7 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     # Store search results and proceed to station selection
                     self._search_results = stations
-                    return await self.async_step_select_departure_station()
+                    return await self.async_step_select_station()
         else:
             errors = {}
 
@@ -196,20 +242,12 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="departure_board",
+            step_id="user",
             data_schema=search_schema,
             errors=errors,
         )
 
-    def _get_main_entry(self):
-        """Get the main Västtrafik integration entry."""
-        existing_entries = self._async_current_entries(include_ignore=False)
-        for entry in existing_entries:
-            if entry.data.get("is_departure_board") is not True:
-                return entry
-        return None
-
-    async def async_step_select_departure_station(self, user_input=None):
+    async def async_step_select_station(self, user_input=None):
         """Select station and configure departure sensor."""
         errors = {}
 
@@ -219,7 +257,7 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "station_required"
             else:
                 self._selected_station = selected_station
-                return await self.async_step_configure_departure_sensor()
+                return await self.async_step_configure()
 
         station_options = {
             station["value"]: station["label"] for station in self._search_results
@@ -232,12 +270,12 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="select_departure_station",
+            step_id="select_station",
             data_schema=station_schema,
             errors=errors,
         )
 
-    async def async_step_configure_departure_sensor(self, user_input=None):
+    async def async_step_configure(self, user_input=None):
         """Configure the departure sensor details."""
         errors = {}
 
@@ -259,12 +297,7 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
                 ]
 
             station_name = self._selected_station
-            unique_id = f"{DOMAIN}_departure_{station_name.lower().replace(' ', '_')}"
-
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured(
-                updates={CONF_NAME: user_input.get(CONF_NAME, station_name)}
-            )
+            unique_id = f"departure_{station_name.lower().replace(' ', '_')}"
 
             departure_data = {
                 CONF_FROM: station_name,
@@ -275,11 +308,12 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_LINES: lines,
                 CONF_TRACKS: tracks,
                 CONF_DELAY: user_input.get(CONF_DELAY, DEFAULT_DELAY),
-                "is_departure_board": True,
             }
 
             return self.async_create_entry(
-                title=f"Departure: {departure_data[CONF_NAME]}", data=departure_data
+                title=f"Departure: {departure_data[CONF_NAME]}",
+                data=departure_data,
+                unique_id=unique_id,
             )
 
         configure_schema = vol.Schema(
@@ -293,7 +327,7 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="configure_departure_sensor",
+            step_id="configure",
             data_schema=configure_schema,
             errors=errors,
             description_placeholders={
@@ -303,23 +337,11 @@ class VasttrafikConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""
-
-
-class VasttrafikOptionsFlow(OptionsFlow):
-    """Handle options flow for Västtrafik departure boards."""
-
-    async def async_step_init(self, user_input=None):
-        """Manage the options."""
-        # Only departure boards can be reconfigured
-        if not self.config_entry.data.get("is_departure_board"):
-            return self.async_abort(reason="not_configurable")
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of a departure board."""
+        subentry = self._get_reconfigure_subentry()
 
         if user_input is not None:
             # Process lines input (convert comma-separated string to list)
@@ -340,34 +362,25 @@ class VasttrafikOptionsFlow(OptionsFlow):
                     if track.strip()
                 ]
 
-            # Update config entry data with new settings
-            new_data = self.config_entry.data.copy()
-            new_data.update(
-                {
-                    CONF_NAME: user_input.get(CONF_NAME, new_data.get(CONF_NAME)),
-                    CONF_HEADING: user_input.get(CONF_HEADING, ""),
-                    CONF_LINES: lines,
-                    CONF_TRACKS: tracks,
-                    CONF_DELAY: user_input.get(
-                        CONF_DELAY, new_data.get(CONF_DELAY, DEFAULT_DELAY)
-                    ),
-                }
-            )
+            # Update subentry data with new settings
+            new_data = {
+                CONF_FROM: subentry.data.get(CONF_FROM),  # Keep original station
+                CONF_NAME: user_input.get(CONF_NAME, subentry.data.get(CONF_NAME)),
+                CONF_HEADING: user_input.get(CONF_HEADING, ""),
+                CONF_LINES: lines,
+                CONF_TRACKS: tracks,
+                CONF_DELAY: user_input.get(CONF_DELAY, DEFAULT_DELAY),
+            }
 
-            # Update the config entry
-            self.hass.config_entries.async_update_entry(
-                self.config_entry,
+            return self.async_update_and_abort(
+                self._get_entry(),
+                subentry,
                 data=new_data,
                 title=f"Departure: {new_data[CONF_NAME]}",
             )
 
-            # Reload the integration to apply changes
-            await self.hass.config_entries.async_reload(self.config_entry.entry_id)
-
-            return self.async_create_entry(title="", data={})
-
         # Get current settings
-        current_data = self.config_entry.data
+        current_data = subentry.data
         current_lines = current_data.get(CONF_LINES, [])
         current_tracks = current_data.get(CONF_TRACKS, [])
 
@@ -390,9 +403,27 @@ class VasttrafikOptionsFlow(OptionsFlow):
         )
 
         return self.async_show_form(
-            step_id="init",
+            step_id="reconfigure",
             data_schema=configure_schema,
             description_placeholders={
                 "station_name": current_data.get(CONF_FROM, "Unknown"),
             },
         )
+
+
+class CannotConnect(HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
+class InvalidAuth(HomeAssistantError):
+    """Error to indicate there is invalid auth."""
+
+
+class VasttrafikOptionsFlow(OptionsFlow):
+    """Handle options flow for Västtrafik main integration."""
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options for the main integration."""
+        # The main integration doesn't have configurable options currently
+        # All configuration is done via subentries
+        return self.async_abort(reason="not_configurable")
