@@ -4867,7 +4867,7 @@ async def test_addon_rf_region_migrate_network(
 
 @pytest.mark.usefixtures("supervisor", "addon_installed", "unload_entry")
 @pytest.mark.parametrize(("country", "rf_region"), [("US", "Automatic"), (None, "USA")])
-async def test_addon__skip_rf_region(
+async def test_addon_skip_rf_region(
     hass: HomeAssistant,
     setup_entry: AsyncMock,
     addon_options: dict[str, Any],
