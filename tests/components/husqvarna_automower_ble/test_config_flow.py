@@ -66,14 +66,8 @@ async def test_user_selection(hass: HomeAssistant) -> None:
 async def test_user_selection_incorrect_pin(
     hass: HomeAssistant,
     mock_automower_client: Mock,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we can select a device."""
-
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.async_block_till_done(wait_background_tasks=True)
-
     mock_automower_client.connect.return_value = ResponseResult.INVALID_PIN
 
     result = await hass.config_entries.flow.async_init(
@@ -92,11 +86,6 @@ async def test_user_selection_incorrect_pin(
 
     mock_automower_client.connect.return_value = ResponseResult.OK
 
-    result = await mock_config_entry.start_reauth_flow(hass)
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -104,16 +93,13 @@ async def test_user_selection_incorrect_pin(
         },
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
-    assert len(hass.config_entries.async_entries()) == 2
-
-    assert (
-        mock_config_entry.data[CONF_ADDRESS] == "00000000-0000-0000-0000-000000000003"
-    )
-    assert mock_config_entry.data[CONF_CLIENT_ID] == 1197489078
-    assert mock_config_entry.data[CONF_PIN] == 1234
+    assert result["data"] == {
+        CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
+        CONF_CLIENT_ID: 1197489078,
+        CONF_PIN: 1234,
+    }
 
 
 async def test_bluetooth(hass: HomeAssistant) -> None:
@@ -284,11 +270,10 @@ async def test_successful_reauth(
 
     mock_automower_client.connect.return_value = ResponseResult.INVALID_PIN
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
+
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "reauth_confirm"
 
     result = await mock_config_entry.start_reauth_flow(hass)
 
@@ -298,10 +283,7 @@ async def test_successful_reauth(
             CONF_PIN: 5678,
         },
     )
-
     mock_automower_client.connect.return_value = ResponseResult.OK
-
-    result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -318,7 +300,7 @@ async def test_successful_reauth(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
-    assert len(hass.config_entries.async_entries()) == 2
+    assert len(hass.config_entries.async_entries("husqvarna_automower_ble")) == 1
 
     assert (
         mock_config_entry.data[CONF_ADDRESS] == "00000000-0000-0000-0000-000000000003"
