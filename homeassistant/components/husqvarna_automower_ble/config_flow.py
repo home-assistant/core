@@ -246,9 +246,11 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         """Perform reauthentication upon an API authentication error."""
         reauth_entry = self._get_reauth_entry()
         self.address = reauth_entry.data[CONF_ADDRESS]
+        self.mower_name = reauth_entry.title
         self.pin = reauth_entry.data.get(CONF_PIN, "")
+
         self.context["title_placeholders"] = {
-            "name": reauth_entry.title,
+            "name": self.mower_name,
             "address": self.address,
         }
         return await self.async_step_reauth_confirm()
@@ -303,5 +305,6 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
                 {CONF_PIN: self.pin},
             ),
+            description_placeholders={"name": self.mower_name},
             errors=errors,
         )

@@ -12,7 +12,7 @@
         }
       },
       "bluetooth_confirm": {
-        "description": "Do you want to set up {name}? Make sure the mower is in pairing mode",
+        "description": "Do you want to set up {name}?\nMake sure the mower is in pairing mode",
         "data": {
           "pin": "[%key:component::husqvarna_automower_ble::config::step::user::data::pin%]"
         },
@@ -21,6 +21,7 @@
         }
       },
       "reauth_confirm": {
+        "description": "Please confirm the PIN for {name}.\nMake sure the mower is in pairing mode and the PIN is correct.",
         "data": {
           "pin": "[%key:component::husqvarna_automower_ble::config::step::user::data::pin%]"
         },
