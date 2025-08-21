@@ -1,8 +1,9 @@
-"""Support for Open Hardware Monitor Sensor Platform."""
+"""Sensor platform for Open Hardware Monitor."""
 
 from __future__ import annotations
 
 from datetime import timedelta
+import functools
 import logging
 
 import requests
@@ -13,11 +14,15 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
@@ -48,6 +53,23 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_POLLING_ENABLED, default=True): cv.boolean,
     }
 )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Open Hardware Monitor sensors from a config entry."""
+    config = {
+        CONF_HOST: entry.data[CONF_HOST],
+        CONF_PORT: entry.data.get(CONF_PORT, 8085),
+        CONF_POLLING_ENABLED: entry.data.get(CONF_POLLING_ENABLED, True),
+    }
+    data = OpenHardwareMonitorData(config, hass)
+    # Run the blocking initialize in the executor to avoid blocking the event loop
+    await hass.async_add_executor_job(functools.partial(data.initialize, utcnow()))
+    async_add_entities(data.devices)
 
 
 def setup_platform(
@@ -81,7 +103,6 @@ class OpenHardwareMonitorDevice(SensorEntity):
         self.path = path
         self.attributes = {}
         self._unit_of_measurement = unit_of_measurement
-
         self.value = None
 
     @property
@@ -111,9 +132,10 @@ class OpenHardwareMonitorDevice(SensorEntity):
         """In some locales a decimal numbers uses ',' instead of '.'."""
         return string.replace(",", ".")
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update the device from a new JSON object."""
-        self._data.update()
+        # Run the blocking update in the executor to avoid blocking the event loop
+        await self._data.hass.async_add_executor_job(self._data.update)
 
         array = self._data.data[OHM_CHILDREN]
         _attributes = {}
@@ -148,9 +170,9 @@ class OpenHardwareMonitorData:
         """Initialize the Open Hardware Monitor data-handler."""
         self.data = None
         self._config = config
-        self._hass = hass
+        self.hass = hass
         self.devices = []
-        self.initialize(utcnow())
+        # Do not call initialize here, as it may block the event loop
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
