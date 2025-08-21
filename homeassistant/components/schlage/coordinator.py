@@ -65,7 +65,7 @@ class SchlageDataUpdateCoordinator(DataUpdateCoordinator[SchlageData]):
     async def _async_update_data(self) -> SchlageData:
         """Fetch the latest data from the Schlage API."""
         try:
-            locks = await self.hass.async_add_executor_job(self.api.locks)
+            locks = await self.hass.async_add_executor_job(self.api.locks, True)
         except NotAuthorizedError as ex:
             raise ConfigEntryAuthFailed from ex
         except SchlageError as ex:
