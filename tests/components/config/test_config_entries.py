@@ -3369,17 +3369,12 @@ async def test_update_subentry(
     )
     entry.add_to_hass(hass)
 
-    assert entry.pref_disable_new_entities is False
-    assert entry.pref_disable_polling is False
-
     await ws_client.send_json_auto_id(
         {
             "type": "config_entries/subentries/update",
             "entry_id": entry.entry_id,
             "subentry_id": "mock_id",
             "title": "Updated Title",
-            "data": {"test": "updated test"},
-            "unique_id": "updated_unique_id",
         }
     )
     response = await ws_client.receive_json()
@@ -3388,8 +3383,8 @@ async def test_update_subentry(
     assert response["result"] is None
 
     assert list(entry.subentries.values())[0].title == "Updated Title"
-    assert list(entry.subentries.values())[0].unique_id == "updated_unique_id"
-    assert list(entry.subentries.values())[0].data["test"] == "updated test"
+    assert list(entry.subentries.values())[0].unique_id == "mock_unique_id"
+    assert list(entry.subentries.values())[0].data["test"] == "test"
 
     # Try renaming subentry from an unknown entry
     ws_client = await hass_ws_client(hass)

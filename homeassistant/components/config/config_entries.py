@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from http import HTTPStatus
 from typing import Any, NoReturn
 
@@ -742,9 +742,7 @@ async def config_subentry_list(
         "type": "config_entries/subentries/update",
         "entry_id": str,
         "subentry_id": str,
-        vol.Optional("data"): Mapping,
         vol.Optional("title"): str,
-        vol.Optional("unique_id"): str,
     }
 )
 @websocket_api.async_response
@@ -753,7 +751,7 @@ async def config_subentry_update(
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Rename a subentry of a config entry."""
+    """Update a subentry of a config entry."""
     entry = get_entry(hass, connection, msg["entry_id"], msg["id"])
     if entry is None:
         connection.send_error(
