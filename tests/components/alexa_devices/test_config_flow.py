@@ -6,17 +6,16 @@ from aioamazondevices.exceptions import (
     CannotAuthenticate,
     CannotConnect,
     CannotRetrieveData,
-    WrongCountry,
 )
 import pytest
 
 from homeassistant.components.alexa_devices.const import CONF_LOGIN_DATA, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_CODE, CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .const import TEST_CODE, TEST_COUNTRY, TEST_PASSWORD, TEST_USERNAME
+from .const import TEST_CODE, TEST_PASSWORD, TEST_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -37,7 +36,6 @@ async def test_full_flow(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_COUNTRY: TEST_COUNTRY,
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_CODE: TEST_CODE,
@@ -46,7 +44,6 @@ async def test_full_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_USERNAME
     assert result["data"] == {
-        CONF_COUNTRY: TEST_COUNTRY,
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_LOGIN_DATA: {
@@ -63,7 +60,6 @@ async def test_full_flow(
         (CannotConnect, "cannot_connect"),
         (CannotAuthenticate, "invalid_auth"),
         (CannotRetrieveData, "cannot_retrieve_data"),
-        (WrongCountry, "wrong_country"),
     ],
 )
 async def test_flow_errors(
@@ -87,7 +83,6 @@ async def test_flow_errors(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_COUNTRY: TEST_COUNTRY,
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_CODE: TEST_CODE,
@@ -102,7 +97,6 @@ async def test_flow_errors(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_COUNTRY: TEST_COUNTRY,
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_CODE: TEST_CODE,
@@ -131,7 +125,6 @@ async def test_already_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_COUNTRY: TEST_COUNTRY,
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
             CONF_CODE: TEST_CODE,
