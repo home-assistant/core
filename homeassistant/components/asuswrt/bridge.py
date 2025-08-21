@@ -15,6 +15,7 @@ from asusrouter import AsusRouter, AsusRouterError
 from asusrouter.modules.client import AsusClient
 from asusrouter.modules.data import AsusData
 from asusrouter.modules.homeassistant import convert_to_ha_data, convert_to_ha_sensors
+from asusrouter.tools.connection import get_cookie_jar
 
 from homeassistant.const import (
     CONF_HOST,
@@ -25,7 +26,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -109,7 +110,10 @@ class AsusWrtBridge(ABC):
     ) -> AsusWrtBridge:
         """Get Bridge instance."""
         if conf[CONF_PROTOCOL] in (PROTOCOL_HTTPS, PROTOCOL_HTTP):
-            session = async_get_clientsession(hass)
+            session = async_create_clientsession(
+                hass,
+                cookie_jar=get_cookie_jar(),
+            )
             return AsusWrtHttpBridge(conf, session)
         return AsusWrtLegacyBridge(conf, options)
 
