@@ -26,7 +26,7 @@ from .entity import SwitchBotCloudEntity
 _LOGGER = getLogger(__name__)
 
 _SWITCHBOT_HVAC_MODES: dict[HVACMode, int] = {
-    HVACMode.AUTO: 1,
+    HVACMode.HEAT_COOL: 1,
     HVACMode.COOL: 2,
     HVACMode.DRY: 3,
     HVACMode.FAN_ONLY: 4,
@@ -76,7 +76,7 @@ class SwitchBotCloudAirConditioner(SwitchBotCloudEntity, ClimateEntity, RestoreE
     ]
     _attr_fan_mode = FanState.FAN_AUTO
     _attr_hvac_modes = [
-        HVACMode.AUTO,
+        HVACMode.HEAT_COOL,
         HVACMode.COOL,
         HVACMode.DRY,
         HVACMode.FAN_ONLY,
