@@ -93,7 +93,7 @@ async def test_set_hvac_cool_mode(
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
-        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: "cool"},
+        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVACMode.COOL},
         blocking=True,
     )
     mock_niko_home_control_connection.thermostats[
@@ -132,7 +132,7 @@ async def test_set_hvac_auto_mode(
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
-        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: "auto"},
+        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVACMode.AUTO},
         blocking=True,
     )
     mock_niko_home_control_connection.thermostats[
