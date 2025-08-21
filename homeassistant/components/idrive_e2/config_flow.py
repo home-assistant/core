@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 import boto3
-from botocore.exceptions import ClientError, ConnectionError, ParamValidationError
+from botocore.exceptions import ClientError, ConnectionError
 from idrive_e2 import CannotConnect, IDriveE2Client, InvalidAuth
 import voluptuous as vol
 
@@ -140,9 +140,6 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except ClientError:
             errors["base"] = "invalid_credentials"
-        except ParamValidationError as err:
-            if "Invalid bucket name" in str(err):
-                errors[CONF_BUCKET] = "invalid_bucket_name"
         except ValueError:
             errors["base"] = "invalid_endpoint_url"
         except ConnectionError:

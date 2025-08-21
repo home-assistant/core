@@ -24,7 +24,6 @@
     },
     "error": {
       "cannot_connect": "[%key:component::idrive_e2::exceptions::cannot_connect::message%]",
-      "invalid_bucket_name": "[%key:component::idrive_e2::exceptions::invalid_bucket_name::message%]",
       "invalid_credentials": "[%key:component::idrive_e2::exceptions::invalid_credentials::message%]",
       "invalid_endpoint_url": "[%key:component::idrive_e2::exceptions::invalid_endpoint_url::message%]"
     },
@@ -32,7 +31,6 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:component::idrive_e2::exceptions::cannot_connect::message%]",
       "invalid_credentials": "[%key:component::idrive_e2::exceptions::invalid_credentials::message%]",
-      "invalid_bucket_name": "[%key:component::idrive_e2::exceptions::invalid_bucket_name::message%]",
       "invalid_endpoint_url": "[%key:component::idrive_e2::exceptions::invalid_endpoint_url::message%]"
     }
   },
@@ -40,8 +38,8 @@
     "cannot_connect": {
       "message": "Cannot connect to endpoint"
     },
-    "invalid_bucket_name": {
-      "message": "Invalid bucket name"
+    "bucket_not_found": {
+      "message": "Bucket \"{bucket}\" does not exist. Please recreate this bucket in IDrive e2 before continuing."
     },
     "invalid_credentials": {
       "message": "Bucket cannot be accessed using provided combination of access key ID and secret access key."

@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from botocore.exceptions import EndpointConnectionError, ParamValidationError
+from botocore.exceptions import EndpointConnectionError
 from idrive_e2 import CannotConnect, InvalidAuth
 import pytest
 
@@ -39,7 +39,7 @@ async def _async_start_flow(
         return_value=mock_session,
     ):
         is_bucket_exception = isinstance(
-            exception, (ParamValidationError, EndpointConnectionError, ValueError)
+            exception, (EndpointConnectionError, ValueError)
         )
 
         # Patch the IDriveE2Client class instantiated by the flow for the endpoint URL
@@ -103,10 +103,6 @@ async def test_flow(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("exception", "errors"),
     [
-        (
-            ParamValidationError(report="Invalid bucket name"),
-            {CONF_BUCKET: "invalid_bucket_name"},
-        ),
         (ValueError(), {"base": "invalid_endpoint_url"}),
         (
             EndpointConnectionError(endpoint_url="http://example.com"),

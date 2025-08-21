@@ -6,7 +6,7 @@ import logging
 from typing import cast
 
 import boto3
-from botocore.exceptions import ClientError, ConnectionError, ParamValidationError
+from botocore.exceptions import ClientError, ConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -67,16 +67,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: IDriveE2ConfigEntry) -> 
             data[CONF_BUCKET],
         )
     except ClientError as err:
+        if "Not Found" in str(err):
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="bucket_not_found",
+                translation_placeholders={"bucket": data[CONF_BUCKET]},
+            ) from err
+
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="invalid_credentials",
         ) from err
-    except ParamValidationError as err:
-        if "Invalid bucket name" in str(err):
-            raise ConfigEntryError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_bucket_name",
-            ) from err
     except ValueError as err:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
