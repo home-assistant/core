@@ -226,7 +226,8 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input:
-            self.address = user_input[CONF_ADDRESS]
+            reauth_entry = self._get_reauth_entry()
+            self.address = reauth_entry.data[CONF_ADDRESS]
             self.pin = user_input[CONF_PIN]
 
             try:
@@ -252,17 +253,13 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_PIN: self.pin,
                     }
 
-                    return self.async_update_reload_and_abort(
-                        self._get_reauth_entry(), data=data
-                    )
+                    return self.async_update_reload_and_abort(reauth_entry, data=data)
 
             except (TimeoutError, BleakError):
                 return self.async_abort(reason="cannot_connect")
 
         user_input = {}
 
-        if self.address:
-            user_input[CONF_ADDRESS] = self.address
         if self.pin:
             user_input[CONF_PIN] = self.pin
 
@@ -271,7 +268,6 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(
                     {
-                        vol.Required(CONF_ADDRESS): str,
                         vol.Required(CONF_PIN): int,
                     },
                 ),

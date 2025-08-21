@@ -85,13 +85,10 @@ async def test_user_selection_incorrect_pin(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
+            CONF_ADDRESS: "00000000-0000-0000-0000-000000000003",
             CONF_PIN: 1234,
         },
     )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
 
     mock_automower_client.connect.return_value = ResponseResult.OK
 
@@ -103,7 +100,6 @@ async def test_user_selection_incorrect_pin(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
             CONF_PIN: 1234,
         },
     )
@@ -114,7 +110,7 @@ async def test_user_selection_incorrect_pin(
     assert len(hass.config_entries.async_entries()) == 2
 
     assert (
-        mock_config_entry.data[CONF_ADDRESS] == "00000000-0000-0000-0000-000000000001"
+        mock_config_entry.data[CONF_ADDRESS] == "00000000-0000-0000-0000-000000000003"
     )
     assert mock_config_entry.data[CONF_CLIENT_ID] == 1197489078
     assert mock_config_entry.data[CONF_PIN] == 1234
@@ -299,7 +295,6 @@ async def test_successful_reauth(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_ADDRESS: "00000000-0000-0000-0000-000000000003",
             CONF_PIN: 5678,
         },
     )
@@ -314,7 +309,6 @@ async def test_successful_reauth(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
             CONF_PIN: 1234,
         },
     )
@@ -327,7 +321,7 @@ async def test_successful_reauth(
     assert len(hass.config_entries.async_entries()) == 2
 
     assert (
-        mock_config_entry.data[CONF_ADDRESS] == "00000000-0000-0000-0000-000000000001"
+        mock_config_entry.data[CONF_ADDRESS] == "00000000-0000-0000-0000-000000000003"
     )
     assert mock_config_entry.data[CONF_CLIENT_ID] == 1197489078
     assert mock_config_entry.data[CONF_PIN] == 1234
@@ -357,7 +351,6 @@ async def test_unable_to_connect(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_ADDRESS: "00000000-0000-0000-0000-000000000003",
             CONF_PIN: 5678,
         },
     )
@@ -394,7 +387,6 @@ async def test_failed_reauth(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_ADDRESS: "00000000-0000-0000-0000-000000000003",
             CONF_PIN: 5678,
         },
     )
