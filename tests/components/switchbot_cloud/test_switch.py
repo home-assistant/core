@@ -1,6 +1,6 @@
 """Test for the switchbot_cloud relay switch & bot."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 from switchbot_api import Device
 
@@ -119,7 +119,7 @@ async def test_switch_relay_2pm_turn_on(
         Device(
             version="V1.0",
             deviceId="relay-switch-id-1",
-            deviceName="relay-switch-2",
+            deviceName="relay-switch-1",
             deviceType="Relay Switch 2PM",
             hubDeviceId="test-hub-id",
         ),
@@ -129,14 +129,10 @@ async def test_switch_relay_2pm_turn_on(
 
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
-
-    entity_id = "switch.relay_switch_2_1"
+    entity_id = "switch.relay_switch_1_channel_1"
     assert hass.states.get(entity_id).state == STATE_OFF
 
-    with (
-        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
-        patch("asyncio.sleep", AsyncMock()),
-    ):
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
@@ -151,7 +147,7 @@ async def test_switch_relay_2pm_turn_off(
         Device(
             version="V1.0",
             deviceId="relay-switch-id-1",
-            deviceName="relay-switch-2",
+            deviceName="relay-switch-1",
             deviceType="Relay Switch 2PM",
             hubDeviceId="test-hub-id",
         ),
@@ -162,13 +158,10 @@ async def test_switch_relay_2pm_turn_off(
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    entity_id = "switch.relay_switch_2_1"
+    entity_id = "switch.relay_switch_1_channel_1"
     assert hass.states.get(entity_id).state == STATE_OFF
 
-    with (
-        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
-        patch("asyncio.sleep", AsyncMock()),
-    ):
+    with patch.object(SwitchBotAPI, "send_command") as mock_send_command:
         await hass.services.async_call(
             SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
         )
@@ -183,7 +176,7 @@ async def test_switch_relay_2pm_coordination_is_none(
         Device(
             version="V1.0",
             deviceId="relay-switch-id-1",
-            deviceName="relay-switch-2",
+            deviceName="relay-switch-1",
             deviceType="Relay Switch 2PM",
             hubDeviceId="test-hub-id",
         ),
@@ -194,5 +187,5 @@ async def test_switch_relay_2pm_coordination_is_none(
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    entity_id = "switch.relay_switch_2_1"
+    entity_id = "switch.relay_switch_1_channel_1"
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
