@@ -202,6 +202,9 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
             }
         )
 
+        if not self.friends_list:
+            return self.async_abort(reason="no_friends")
+
         options = [
             SelectOptionDict(
                 value=friend.account_id,
@@ -209,6 +212,7 @@ class FriendSubentryFlowHandler(ConfigSubentryFlow):
             )
             for friend in self.friends_list.values()
         ]
+
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(

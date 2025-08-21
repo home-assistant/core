@@ -3833,11 +3833,6 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
-    "mercury_nz": {
-      "name": "Mercury NZ Limited",
-      "integration_type": "virtual",
-      "supported_by": "opower"
-    },
     "message_bird": {
       "name": "MessageBird",
       "integration_type": "hub",
@@ -5999,6 +5994,12 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "sleep_as_android": {
+      "name": "Sleep as Android",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "sleepiq": {
       "name": "SleepIQ",
       "integration_type": "hub",
@@ -6789,6 +6790,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "togrill": {
+      "name": "ToGrill",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "tolo": {
       "name": "TOLO Sauna",
