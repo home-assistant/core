@@ -57,6 +57,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     address: str | None = None
+    mower_name: str = "-"
     pin: str | None = None
 
     async def async_step_bluetooth(
@@ -96,6 +97,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
                 user_input,
             ),
+            description_placeholders={"name": self.mower_name},
             errors=errors,
         )
 
@@ -173,6 +175,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         title = await self.probe_mower(device)
         if title is None:
             return self.async_abort(reason="cannot_connect")
+        self.mower_name = title
 
         try:
             errors: dict[str, str] = {}
@@ -201,6 +204,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                                 vol.Required(CONF_PIN): str,
                             },
                         ),
+                        description_placeholders={"name": self.mower_name},
                         errors=errors,
                     )
 
