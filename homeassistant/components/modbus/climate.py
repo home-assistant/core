@@ -50,6 +50,8 @@ from .const import (
     CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
+    CONF_CURRENT_TEMP_OFFSET,
+    CONF_CURRENT_TEMP_SCALE,
     CONF_FAN_MODE_AUTO,
     CONF_FAN_MODE_DIFFUSE,
     CONF_FAN_MODE_FOCUS,
@@ -301,6 +303,13 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         else:
             self._hvac_onoff_coil = None
 
+        if CONF_CURRENT_TEMP_SCALE in config:
+            self._current_temp_scale = config[CONF_CURRENT_TEMP_SCALE]
+            self._current_temp_offset = config[CONF_CURRENT_TEMP_OFFSET]
+        else:
+            self._current_temp_scale = None
+            self._current_temp_offset = None
+
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
@@ -474,9 +483,17 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             ],
         )
 
-        self._attr_current_temperature = await self._async_read_register(
+        current_temp_register_value = await self._async_read_register(
             self._input_type, self._address
         )
+        if self._current_temp_scale is None:
+            self._attr_current_temperature = current_temp_register_value
+        else:
+            # Undo global scale/offset
+            raw_value = (current_temp_register_value - self._offset) / self._scale
+            new_value = raw_value * self._current_temp_scale + self._current_temp_offset
+            self._attr_current_temperature = new_value
+
         # Read the HVAC mode register if defined
         if self._hvac_mode_register is not None:
             hvac_mode = await self._async_read_register(

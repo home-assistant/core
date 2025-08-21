@@ -66,6 +66,8 @@ from .const import (
     CONF_BYTESIZE,
     CONF_CLIMATES,
     CONF_COLOR_TEMP_REGISTER,
+    CONF_CURRENT_TEMP_OFFSET,
+    CONF_CURRENT_TEMP_SCALE,
     CONF_DATA_TYPE,
     CONF_DEVICE_ADDRESS,
     CONF_FAN_MODE_AUTO,
@@ -212,6 +214,8 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_STRUCTURE): cv.string,
         vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
         vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float),
+        vol.Inclusive(CONF_CURRENT_TEMP_SCALE, "current_temp"): vol.Coerce(float),
+        vol.Inclusive(CONF_CURRENT_TEMP_OFFSET, "current_temp"): vol.Coerce(float),
         vol.Optional(CONF_PRECISION): cv.positive_int,
         vol.Optional(
             CONF_SWAP,
