@@ -157,12 +157,6 @@
           "on": "mdi:car-light-alert"
         }
       },
-      "service_warning": {
-        "default": "mdi:wrench",
-        "state": {
-          "on": "mdi:wrench-clock"
-        }
-      },
       "side_mark_lights_warning": {
         "default": "mdi:wall-sconce-round",
         "state": {
