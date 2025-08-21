@@ -185,7 +185,7 @@ async def test_mower_activity_mapping(
     mower_activities: list[MowerActivity],
     expected_state: str,
 ) -> None:
-    """Test BleakError during data update."""
+    """Test mower state and activity mapping to LawnMowerActivity states."""
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
