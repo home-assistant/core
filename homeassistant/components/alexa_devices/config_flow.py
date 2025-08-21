@@ -10,16 +10,14 @@ from aioamazondevices.exceptions import (
     CannotAuthenticate,
     CannotConnect,
     CannotRetrieveData,
-    WrongCountry,
 )
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_CODE, CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_CODE, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.selector import CountrySelector
 
 from .const import CONF_LOGIN_DATA, DOMAIN
 
@@ -37,7 +35,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     session = aiohttp_client.async_create_clientsession(hass)
     api = AmazonEchoApi(
         session,
-        data[CONF_COUNTRY],
         data[CONF_USERNAME],
         data[CONF_PASSWORD],
     )
@@ -47,6 +44,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
 class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Alexa Devices."""
+
+    VERSION = 1
+    MINOR_VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -62,8 +62,6 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except CannotRetrieveData:
                 errors["base"] = "cannot_retrieve_data"
-            except WrongCountry:
-                errors["base"] = "wrong_country"
             else:
                 await self.async_set_unique_id(data["customer_info"]["user_id"])
                 self._abort_if_unique_id_configured()
@@ -78,9 +76,6 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_COUNTRY, default=self.hass.config.country
-                    ): CountrySelector(),
                     vol.Required(CONF_USERNAME): cv.string,
                     vol.Required(CONF_PASSWORD): cv.string,
                     vol.Required(CONF_CODE): cv.string,
