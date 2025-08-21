@@ -43,5 +43,10 @@
       "invalid_auth": "Unable to pair with device, ensure the PIN is correct and the mower is in pairing mode",
       "invalid_pin": "The PIN must be a number"
     }
+  },
+  "exceptions": {
+    "pin_required": {
+      "message": "PIN is required for {domain_name}"
+    }
   }
 }
