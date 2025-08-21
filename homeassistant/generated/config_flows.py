@@ -263,6 +263,7 @@ FLOWS = {
         "hlk_sw16",
         "holiday",
         "home_connect",
+        "homeassistant_connect_zbt2",
         "homeassistant_sky_connect",
         "homee",
         "homekit",
