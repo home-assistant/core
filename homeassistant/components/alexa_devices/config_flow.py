@@ -32,7 +32,6 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema(
 STEP_RECONFIGURE = vol.Schema(
     {
         vol.Required(CONF_COUNTRY): CountrySelector(),
-        vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_CODE): cv.string,
     }
@@ -149,16 +148,19 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=STEP_RECONFIGURE,
             )
 
-        updated_username = user_input[CONF_USERNAME]
         updated_password = user_input[CONF_PASSWORD]
         updated_country = user_input[CONF_COUNTRY]
 
-        self._async_abort_entries_match({CONF_USERNAME: updated_username})
+        self._async_abort_entries_match(
+            {CONF_USERNAME: reconfigure_entry.data[CONF_USERNAME]}
+        )
 
         errors: dict[str, str] = {}
 
         try:
-            data = await validate_input(self.hass, user_input)
+            data = await validate_input(
+                self.hass, {**reconfigure_entry.data, **user_input}
+            )
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except CannotAuthenticate:
@@ -171,7 +173,6 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_update_reload_and_abort(
                 reconfigure_entry,
                 data_updates={
-                    CONF_USERNAME: updated_username,
                     CONF_PASSWORD: updated_password,
                     CONF_COUNTRY: updated_country,
                     CONF_LOGIN_DATA: data,
