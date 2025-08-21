@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
+from contextlib import ExitStack
 from itertools import chain
 from types import MappingProxyType
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
-from aioresponses import aioresponses
 import pytest
 from pyvesync import VeSync
 from pyvesync.base_devices.bulb_base import VeSyncBulb
@@ -27,13 +27,7 @@ from homeassistant.helpers.typing import ConfigType
 from .common import DEVICE_CATEGORIES, mock_multiple_device_responses
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture(name="aio_mock")
-def aio_mock():
-    """Create a mock for all aiohttp requests in tests."""
-    with aioresponses() as m:
-        yield m
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture(autouse=True)
@@ -42,6 +36,38 @@ def patch_vesync_firmware():
     with patch(
         "pyvesync.vesync.VeSync.check_firmware", new=AsyncMock(return_value=True)
     ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def patch_vesync_login():
+    """Patch VeSync login method."""
+    with patch("pyvesync.vesync.VeSync.login", new=AsyncMock()):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def patch_vesync():
+    """Patch VeSync methods and several properties/attributes for all tests."""
+    props = {
+        "enabled": True,
+        "token": "TEST_TOKEN",
+        "account_id": "TEST_ACCOUNT_ID",
+    }
+
+    with (
+        patch.multiple(
+            "pyvesync.vesync.VeSync",
+            check_firmware=AsyncMock(return_value=True),
+            login=AsyncMock(return_value=None),
+        ),
+        ExitStack() as stack,
+    ):
+        for name, value in props.items():
+            mock = stack.enter_context(
+                patch.object(VeSync, name, new_callable=PropertyMock)
+            )
+            mock.return_value = value
         yield
 
 
@@ -225,7 +251,7 @@ def humidifier_300s_fixture():
 
 @pytest.fixture(name="humidifier_config_entry")
 async def humidifier_config_entry(
-    hass: HomeAssistant, aio_mock: aioresponses, config
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, config
 ) -> MockConfigEntry:
     """Create a mock VeSync config entry for `Humidifier 200s`."""
     entry = MockConfigEntry(
@@ -236,7 +262,7 @@ async def humidifier_config_entry(
     entry.add_to_hass(hass)
 
     device_name = "Humidifier 200s"
-    mock_multiple_device_responses(aio_mock, [device_name])
+    mock_multiple_device_responses(aioclient_mock, [device_name])
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -260,7 +286,7 @@ async def install_humidifier_device(
 
 @pytest.fixture(name="fan_config_entry")
 async def fan_config_entry(
-    hass: HomeAssistant, aio_mock: aioresponses, config
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, config
 ) -> MockConfigEntry:
     """Create a mock VeSync config entry for `SmartTowerFan`."""
     entry = MockConfigEntry(
@@ -271,7 +297,7 @@ async def fan_config_entry(
     entry.add_to_hass(hass)
 
     device_name = "SmartTowerFan"
-    mock_multiple_device_responses(aio_mock, [device_name])
+    mock_multiple_device_responses(aioclient_mock, [device_name])
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -280,7 +306,7 @@ async def fan_config_entry(
 
 @pytest.fixture(name="switch_old_id_config_entry")
 async def switch_old_id_config_entry(
-    hass: HomeAssistant, aio_mock: aioresponses, config
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, config
 ) -> MockConfigEntry:
     """Create a mock VeSync config entry for `switch` with the old unique ID approach."""
     entry = MockConfigEntry(
@@ -295,6 +321,6 @@ async def switch_old_id_config_entry(
     wall_switch = "Wall Switch"
     humidifer = "Humidifier 200s"
 
-    mock_multiple_device_responses(aio_mock, [wall_switch, humidifer])
+    mock_multiple_device_responses(aioclient_mock, [wall_switch, humidifer])
 
     return entry

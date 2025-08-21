@@ -50,7 +50,7 @@ class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
 
         await self._manager.update_all_devices()
 
-        # if self.should_update_energy():
-        self.update_time = datetime.now()
-        for outlet in self._manager.devices.outlets:
-            await outlet.update_energy()
+        if self.should_update_energy():
+            self.update_time = datetime.now()
+            for outlet in self._manager.devices.outlets:
+                await outlet.update_energy()

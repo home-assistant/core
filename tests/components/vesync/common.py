@@ -2,12 +2,11 @@
 
 from typing import Any
 
-from aioresponses import aioresponses
-
 from homeassistant.components.vesync.const import DOMAIN
 from homeassistant.util.json import JsonObjectType
 
 from tests.common import load_json_object_fixture
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 ENTITY_HUMIDIFIER = "humidifier.humidifier_200s"
 ENTITY_HUMIDIFIER_MIST_LEVEL = "number.humidifier_200s_mist_level"
@@ -78,7 +77,9 @@ DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
 }
 
 
-def mock_devices_response(aio_mock: aioresponses, device_name: str) -> None:
+def mock_devices_response(
+    aioclient_mock: AiohttpClientMocker, device_name: str
+) -> None:
     """Build a response for the Helpers.call_api method."""
     device_list = [
         device
@@ -86,17 +87,9 @@ def mock_devices_response(aio_mock: aioresponses, device_name: str) -> None:
         if device["deviceName"] == device_name
     ]
 
-    aio_mock.post(
-        "https://smartapi.vesync.com/globalPlatform/api/accountAuth/v1/authByPWDOrOTM",
-        payload=load_json_object_fixture("vesync-auth.json", DOMAIN),
-    )
-    aio_mock.post(
-        "https://smartapi.vesync.com/user/api/accountManage/v1/loginByAuthorizeCode4Vesync",
-        payload=load_json_object_fixture("vesync-login.json", DOMAIN),
-    )
-    aio_mock.post(
+    aioclient_mock.post(
         "https://smartapi.vesync.com/cloud/v1/deviceManaged/devices",
-        payload={
+        json={
             "traceId": "1234",
             "code": 0,
             "msg": None,
@@ -109,19 +102,17 @@ def mock_devices_response(aio_mock: aioresponses, device_name: str) -> None:
                 "list": device_list,
             },
         },
-        repeat=True,
     )
 
     for fixture in DEVICE_FIXTURES[device_name]:
-        getattr(aio_mock, fixture[0])(
+        getattr(aioclient_mock, fixture[0])(
             f"https://smartapi.vesync.com{fixture[1]}",
-            payload=load_json_object_fixture(fixture[2], DOMAIN),
-            repeat=2,
+            json=load_json_object_fixture(fixture[2], DOMAIN),
         )
 
 
 def mock_multiple_device_responses(
-    aio_mock: aioresponses, device_names: list[str]
+    aioclient_mock: AiohttpClientMocker, device_names: list[str]
 ) -> None:
     """Build a response for the Helpers.call_api method for multiple devices."""
     device_list = [
@@ -130,17 +121,9 @@ def mock_multiple_device_responses(
         if device["deviceName"] in device_names
     ]
 
-    aio_mock.post(
-        "https://smartapi.vesync.com/globalPlatform/api/accountAuth/v1/authByPWDOrOTM",
-        payload=load_json_object_fixture("vesync-auth.json", DOMAIN),
-    )
-    aio_mock.post(
-        "https://smartapi.vesync.com/user/api/accountManage/v1/loginByAuthorizeCode4Vesync",
-        payload=load_json_object_fixture("vesync-login.json", DOMAIN),
-    )
-    aio_mock.post(
+    aioclient_mock.post(
         "https://smartapi.vesync.com/cloud/v1/deviceManaged/devices",
-        payload={
+        json={
             "traceId": "1234",
             "code": 0,
             "msg": None,
@@ -153,35 +136,35 @@ def mock_multiple_device_responses(
                 "list": device_list,
             },
         },
-        repeat=True,
     )
 
     for device_name in device_names:
-        for fixture in DEVICE_FIXTURES[device_name]:
-            getattr(aio_mock, fixture[0])(
-                f"https://smartapi.vesync.com{fixture[1]}",
-                payload=load_json_object_fixture(fixture[2], DOMAIN),
-                repeat=2,
-            )
+        fixture = DEVICE_FIXTURES[device_name][0]
+
+        getattr(aioclient_mock, fixture[0])(
+            f"https://smartapi.vesync.com{fixture[1]}",
+            json=load_json_object_fixture(fixture[2], DOMAIN),
+        )
 
 
-def mock_air_purifier_400s_update_response(aio_mock: aioresponses) -> None:
+def mock_air_purifier_400s_update_response(aioclient_mock: AiohttpClientMocker) -> None:
     """Build a response for the Helpers.call_api method for air_purifier_400s with updated data."""
 
     device_name = "Air Purifier 400s"
     for fixture in DEVICE_FIXTURES[device_name]:
-        getattr(aio_mock, fixture[0])(
+        getattr(aioclient_mock, fixture[0])(
             f"https://smartapi.vesync.com{fixture[1]}",
-            payload=load_json_object_fixture(
-                "air-purifier-detail-updated.json", DOMAIN
-            ),
+            json=load_json_object_fixture("air-purifier-detail-updated.json", DOMAIN),
         )
 
 
 def mock_device_response(
-    aio_mock: aioresponses, device_name: str, override: Any
+    aioclient_mock: AiohttpClientMocker, device_name: str, override: Any
 ) -> None:
-    """Build a response for the Helpers.call_api method with updated data."""
+    """Build a response for the Helpers.call_api method with updated data.
+
+    The provided override only applies to the base device response.
+    """
 
     def load_and_merge(source: str) -> JsonObjectType:
         json = load_json_object_fixture(source, DOMAIN)
@@ -197,15 +180,14 @@ def mock_device_response(
     if len(fixtures) > 0:
         item = fixtures[0]
 
-        getattr(aio_mock, item[0])(
+        getattr(aioclient_mock, item[0])(
             f"https://smartapi.vesync.com{item[1]}",
-            payload=load_and_merge(item[2]),
-            repeat=True,
+            json=load_and_merge(item[2]),
         )
 
 
 def mock_outlet_energy_response(
-    aio_mock: aioresponses, device_name: str, override: Any
+    aioclient_mock: AiohttpClientMocker, device_name: str, override: Any = None
 ) -> None:
     """Build a response for the Helpers.call_api energy request with updated data."""
 
@@ -220,13 +202,9 @@ def mock_outlet_energy_response(
 
         return json
 
-    fixtures = DEVICE_FIXTURES[device_name]
-
-    # The 2nd item contains weekly energy details
-    if len(fixtures) > 1:
-        item = fixtures[1]
-
-        getattr(aio_mock, item[0])(
-            f"https://smartapi.vesync.com{item[1]}",
-            payload=load_and_merge(item[2]),
+    # Skip the device details (1st item)
+    for fixture in DEVICE_FIXTURES[device_name][1:]:
+        getattr(aioclient_mock, fixture[0])(
+            f"https://smartapi.vesync.com{fixture[1]}",
+            json=load_and_merge(fixture[2]),
         )

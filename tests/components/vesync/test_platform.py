@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 
-from aioresponses import aioresponses
 from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.vesync.const import DOMAIN, UPDATE_INTERVAL
@@ -18,12 +17,13 @@ from .common import (
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_entity_update(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    aio_mock: aioresponses,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test Vesync coordinator data update.
 
@@ -38,7 +38,8 @@ async def test_entity_update(
         entry_id="1",
     )
 
-    mock_multiple_device_responses(aio_mock, ["Air Purifier 400s", "Outlet"])
+    mock_multiple_device_responses(aioclient_mock, ["Air Purifier 400s", "Outlet"])
+    mock_outlet_energy_response(aioclient_mock, "Outlet")
 
     expected_entities = [
         # From "Air Purifier 400s"
@@ -71,9 +72,10 @@ async def test_entity_update(
     assert hass.states.get("sensor.outlet_energy_use_weekly").state == "0.0"
 
     # Update the mock responses
-    mock_air_purifier_400s_update_response(aio_mock)
-    mock_device_response(aio_mock, "Outlet", {"voltage": 129})
-    mock_outlet_energy_response(aio_mock, "Outlet", {"totalEnergy": 2.2})
+    aioclient_mock.clear_requests()
+    mock_air_purifier_400s_update_response(aioclient_mock)
+    mock_device_response(aioclient_mock, "Outlet", {"voltage": 129})
+    mock_outlet_energy_response(aioclient_mock, "Outlet", {"totalEnergy": 2.2})
 
     freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
     async_fire_time_changed(hass)
@@ -85,10 +87,6 @@ async def test_entity_update(
     assert hass.states.get("sensor.outlet_energy_use_weekly").state == "0.0"
 
     # energy history only updates once every 6 hours.
-    # aio mocks are only valid once and need to be repeated here
-    mock_air_purifier_400s_update_response(aio_mock)
-    mock_outlet_energy_response(aio_mock, "Outlet", {"totalEnergy": 2.2})
-
     freezer.tick(timedelta(hours=6))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(True)
