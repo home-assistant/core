@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 import vasttrafik
 import voluptuous as vol
@@ -16,7 +17,11 @@ from homeassistant.const import CONF_DELAY, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.entity_platform import (
+    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 from homeassistant.util.dt import now
@@ -66,8 +71,11 @@ def setup_platform(
 ) -> None:
     """Set up the departure sensor (YAML configuration - backward compatibility)."""
     planner = vasttrafik.JournyPlanner(config.get(CONF_KEY), config.get(CONF_SECRET))
-    add_entities(
-        (
+
+    # Create departure sensors - no device, entities appear under service directly
+    sensors = []
+    for i, departure in enumerate(config[CONF_DEPARTURES]):
+        sensors.append(
             VasttrafikDepartureSensor(
                 planner,
                 departure.get(CONF_NAME),
@@ -76,43 +84,47 @@ def setup_platform(
                 departure.get(CONF_LINES),
                 departure.get(CONF_TRACKS, []),
                 departure.get(CONF_DELAY),
-                f"yaml_{departure.get(CONF_FROM)}",  # Use a YAML-specific entry ID
+                "yaml_vasttrafik",
+                f"yaml_{i}",  # Unique suffix for YAML sensors
             )
-            for departure in config[CONF_DEPARTURES]
-        ),
-        True,
-    )
+        )
+
+    add_entities(sensors, True)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: VasttrafikConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Västtrafik sensor based on a config entry."""
     planner = entry.runtime_data
 
-    if entry.data.get("is_departure_board"):
-        # This is a departure board entry - create departure sensor
-        sensors = [
-            VasttrafikDepartureSensor(
-                planner,
-                entry.data.get(CONF_NAME),
-                entry.data.get(CONF_FROM),
-                entry.data.get(CONF_HEADING),
-                entry.data.get(CONF_LINES, []),
-                entry.data.get(CONF_TRACKS, []),
-                entry.data.get(CONF_DELAY, DEFAULT_DELAY),
-                entry.entry_id,
+    for subentry in entry.subentries.values():
+        if subentry.subentry_type == "departure_board":
+            async_add_entities(
+                [
+                    VasttrafikDepartureSensor(
+                        planner,
+                        subentry.data.get(CONF_NAME),
+                        subentry.data.get(CONF_FROM),
+                        subentry.data.get(CONF_HEADING),
+                        subentry.data.get(CONF_LINES, []),
+                        subentry.data.get(CONF_TRACKS, []),
+                        subentry.data.get(CONF_DELAY, DEFAULT_DELAY),
+                        entry.entry_id,
+                        subentry.subentry_id,
+                        subentry.subentry_id,
+                    )
+                ],
+                config_subentry_id=subentry.subentry_id,  # Associate with subentry
             )
-        ]
-    else:
-        # This is the main integration - create status sensor and any departure sensors from options
-        sensors = [VasttrafikStatusSensor(planner, entry.title, entry.entry_id)]
 
-        # Add departure sensors from options (for backward compatibility)
-        departures = entry.options.get(CONF_DEPARTURES, [])
-        for departure in departures:
+    # Add departure sensors from options (for backward compatibility)
+    departures = entry.options.get(CONF_DEPARTURES, [])
+    if departures:
+        sensors = []
+        for i, departure in enumerate(departures):
             sensors.append(
                 VasttrafikDepartureSensor(
                     planner,
@@ -122,58 +134,11 @@ async def async_setup_entry(
                     departure.get(CONF_LINES, []),
                     departure.get(CONF_TRACKS, []),
                     departure.get(CONF_DELAY, DEFAULT_DELAY),
-                    f"{entry.entry_id}_{departure.get(CONF_FROM)}",
+                    entry.entry_id,
+                    f"option_{i}",  # Unique ID for option-based sensors
                 )
             )
-
-    async_add_entities(sensors, True)
-
-
-class VasttrafikStatusSensor(SensorEntity):
-    """Implementation of a Västtrafik Status Sensor to show API connectivity."""
-
-    _attr_attribution = "Data provided by Västtrafik"
-    _attr_icon = "mdi:train"
-    _attr_has_entity_name = True
-
-    def __init__(
-        self, planner: vasttrafik.JournyPlanner, name: str, entry_id: str
-    ) -> None:
-        """Initialize the status sensor."""
-        self._planner = planner
-        self._attr_name = "Status"
-        self._attr_unique_id = f"{entry_id}_status"
-        self._state = None
-
-        # Create device info for the main Västtrafik service
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry_id)},
-            name="Västtrafik API",
-            manufacturer="Västtrafik",
-            model="Public Transport API",
-            entry_type="service",
-        )
-
-    @property
-    def native_value(self) -> str | None:
-        """Return the status of the API connection."""
-        return self._state
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self) -> None:
-        """Test the API connection."""
-        try:
-            # Test connection by getting location info for a common station
-            await self.hass.async_add_executor_job(
-                self._planner.location_name, "Centralstationen"
-            )
-            self._state = "Connected"
-        except vasttrafik.Error:
-            _LOGGER.debug("API connection failed")
-            self._state = "Disconnected"
-        except Exception:
-            _LOGGER.exception("Unexpected error testing API connection")
-            self._state = "Error"
+        async_add_entities(sensors, True)
 
 
 class VasttrafikDepartureSensor(SensorEntity):
@@ -181,13 +146,24 @@ class VasttrafikDepartureSensor(SensorEntity):
 
     _attr_attribution = "Data provided by Västtrafik"
     _attr_icon = "mdi:train"
+    _attr_has_entity_name = True
 
     def __init__(
-        self, planner, name, departure, heading, lines, tracks, delay, entry_id
+        self,
+        planner,
+        name,
+        departure,
+        heading,
+        lines,
+        tracks,
+        delay,
+        config_entry_id,
+        unique_suffix=None,
+        subentry_id=None,
     ):
         """Initialize the sensor."""
         self._planner = planner
-        self._attr_name = name if name else "Next departure"
+        self._attr_name = name or f"{departure} Departures"
         self._departure_name = departure
         self._heading_name = heading
         self._departure = None  # Will be resolved on first update
@@ -198,19 +174,46 @@ class VasttrafikDepartureSensor(SensorEntity):
         self._departureboard = None
         self._state = None
         self._attributes = None
-        self._attr_unique_id = (
-            f"{entry_id}_departure_{departure.lower().replace(' ', '_')}"
-        )
-        self._attr_has_entity_name = True
 
-        # Create device info for this departure board
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"departure_{departure.lower().replace(' ', '_')}")},
-            name=f"{departure} Departure Board",
-            manufacturer="Västtrafik",
-            model="Departure Board",
-            entry_type="service",
-        )
+        # Create device info for departure board subentries (similar to Ollama pattern)
+        if subentry_id:
+            # Build descriptive device name with filters (like Ollama shows model)
+            device_name_parts = [f"Departure: {departure}"]
+
+            # Add destination filter if specified
+            if heading:
+                device_name_parts.append(f"→ {heading}")
+
+            # Add line filter if specified
+            if lines:
+                lines_str = ", ".join(str(line) for line in lines)
+                device_name_parts.append(f"Lines: {lines_str}")
+
+            # Add track filter if specified
+            if tracks:
+                tracks_str = ", ".join(str(track) for track in tracks)
+                device_name_parts.append(f"Tracks: {tracks_str}")
+
+            device_name = " • ".join(device_name_parts)
+
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, subentry_id)},
+                name=device_name,
+                manufacturer="Västtrafik",
+                model="Departure Board",
+                entry_type=dr.DeviceEntryType.SERVICE,
+            )
+        else:
+            # No device info for YAML/option-based sensors - entities appear directly under the service
+            self._attr_device_info = None
+
+        # Create unique ID
+        if unique_suffix:
+            self._attr_unique_id = f"{config_entry_id}_{unique_suffix}_departures"
+        else:
+            # Fallback for YAML or option-based sensors
+            safe_departure = departure.lower().replace(" ", "_")
+            self._attr_unique_id = f"{config_entry_id}_{safe_departure}_departures"
 
     def get_station_id(self, location):
         """Get the station ID."""
