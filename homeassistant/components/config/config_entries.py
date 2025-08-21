@@ -767,9 +767,9 @@ async def config_subentry_update(
         return
 
     changes = dict(msg)
+    changes.pop("id")
     changes.pop("type")
     changes.pop("entry_id")
-    changes.pop("id")
     changes.pop("subentry_id")
 
     hass.config_entries.async_update_subentry(entry, subentry, **changes)
