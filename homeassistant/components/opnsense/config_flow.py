@@ -37,6 +37,11 @@ class OPNsenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             user_input = {}
 
+        description_placeholders = {}
+        description_placeholders["doc_url"] = (
+            "https://www.home-assistant.io/integrations/opnsense/"
+        )
+
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
@@ -61,6 +66,7 @@ class OPNsenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors or {},
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
@@ -68,7 +74,7 @@ class OPNsenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is None:
-            return await self._show_setup_form(user_input)
+            return await self._show_setup_form(user_input, None)
 
         await self.async_set_unique_id(user_input[CONF_API_KEY])
         self._abort_if_unique_id_configured()

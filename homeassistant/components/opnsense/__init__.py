@@ -13,7 +13,13 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACE, DOMAIN, OPNSENSE_DATA
+from .const import (
+    CONF_API_SECRET,
+    CONF_TRACKER_INTERFACE,
+    DATA_HASS_CONFIG,
+    DOMAIN,
+    OPNSENSE_DATA,
+)
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -37,13 +43,11 @@ CONFIG_SCHEMA = vol.Schema(
 class OPNsenseData:
     """Shared OPNsense data."""
 
-    hass_config: dict
-
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the OPNsense component."""
     if config.get(DOMAIN) is not None:
-        OPNsenseData.hass_config = config
+        hass.data[DATA_HASS_CONFIG] = config
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
@@ -68,8 +72,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_TRACKER_INTERFACE: tracker_interfaces,
     }
 
-    if tracker_interfaces:
-        await async_load_platform(
-            hass, DEVICE_TRACKER, DOMAIN, tracker_interfaces, OPNsenseData.hass_config
+    if tracker_interfaces and DATA_HASS_CONFIG in hass.data:
+        hass.async_create_task(
+            async_load_platform(
+                hass,
+                DEVICE_TRACKER,
+                DOMAIN,
+                tracker_interfaces,
+                hass.data[DATA_HASS_CONFIG],
+            )
         )
+
     return True
