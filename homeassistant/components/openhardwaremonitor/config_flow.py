@@ -41,11 +41,18 @@ class OpenHardwareMonitorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 await self._async_test_connection(host, port)
             except TimeoutError:
-                errors["base"] = "timeout_connect"
+                errors["base"] = (
+                    "Connection timed out. Make sure the Open Hardware Monitor server is running and accessible, and that the host and port are correct."
+                )
             except requests.exceptions.ConnectionError:
-                errors["base"] = "cannot_connect"
+                errors["base"] = (
+                    "Connection to the Open Hardware Monitor server failed."
+                )
+
             except Exception:  # pylint: disable=broad-except  # noqa: BLE001
-                errors["base"] = "unknown"
+                errors["base"] = (
+                    "An unknown error occurred. Please check the logs for more details."
+                )
             else:
                 return self.async_create_entry(
                     title=f"Open Hardware Monitor ({host})",
