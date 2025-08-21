@@ -282,7 +282,9 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
 
             except (TimeoutError, BleakError):
-                return self.async_abort(reason="cannot_connect")
+                # We don't want to abort a reauth flow when we can't connect, so
+                # we just show the form again with an error.
+                errors["base"] = "cannot_connect"
 
         user_input = {}
 

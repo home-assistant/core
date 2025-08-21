@@ -352,18 +352,14 @@ async def test_successful_reauth(
     assert mock_config_entry.data[CONF_PIN] == "1234"
 
 
-async def test_unable_to_connect(
+async def test_user_unable_to_connect(
     hass: HomeAssistant,
     mock_automower_client: Mock,
-    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we can select a device."""
-
-    mock_config_entry.add_to_hass(hass)
-
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    mock_automower_client.connect.return_value = ResponseResult.UNKNOWN_ERROR
+    mock_automower_client.connect.side_effect = BleakError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -371,19 +367,15 @@ async def test_unable_to_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result = await mock_config_entry.start_reauth_flow(hass)
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
-            CONF_PIN: "5678",
+            CONF_ADDRESS: "00000000-0000-0000-0000-000000000001",
+            CONF_PIN: "1234",
         },
     )
-
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_failed_reauth(
@@ -397,17 +389,11 @@ async def test_failed_reauth(
 
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    mock_automower_client.connect.return_value = ResponseResult.INVALID_PIN
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
     mock_automower_client.connect.side_effect = BleakError
 
     result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -415,7 +401,9 @@ async def test_failed_reauth(
             CONF_PIN: "5678",
         },
     )
-    assert result["type"] is FlowResultType.ABORT
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_duplicate_entry(
