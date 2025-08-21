@@ -2,9 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
-from aiohttp import RequestInfo
-from aiohttp.client_exceptions import ClientError, ClientResponseError
 from botocore.exceptions import EndpointConnectionError, ParamValidationError
+from idrive_e2 import CannotConnect, InvalidAuth
 import pytest
 
 from homeassistant.components.idrive_e2.config_flow import IDriveE2ConfigFlow
@@ -15,7 +14,6 @@ from homeassistant.data_entry_flow import AbortFlow, FlowResultType
 from .const import USER_INPUT
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import URL, CIMultiDict
 
 
 async def _async_start_flow(
@@ -40,49 +38,53 @@ async def _async_start_flow(
         "homeassistant.components.idrive_e2.config_flow.async_get_clientsession",
         return_value=mock_session,
     ):
-        # Mock the exception for the get_region_endpoint_url call
-        if isinstance(exception, ClientError):
-            mock_session.post.side_effect = exception
-            return await flow.async_step_user(
-                {
-                    "access_key_id": user_input["access_key_id"],
-                    "secret_access_key": user_input["secret_access_key"],
-                }
+        is_bucket_exception = isinstance(
+            exception, (ParamValidationError, EndpointConnectionError, ValueError)
+        )
+
+        # Patch the IDriveE2Client class instantiated by the flow for the endpoint URL
+        mock_client = AsyncMock()
+        if exception is not None and not is_bucket_exception:
+            mock_client.get_region_endpoint = AsyncMock(side_effect=exception)
+        else:
+            mock_client.get_region_endpoint = AsyncMock(
+                return_value=user_input[CONF_ENDPOINT_URL]
             )
 
-        # Normal response
-        mock_response = AsyncMock()
-        mock_response.raise_for_status = lambda: None
-        mock_response.json = AsyncMock(
-            return_value={"domain_name": user_input[CONF_ENDPOINT_URL]}
-        )
-        mock_session.post.return_value = mock_response
-
-        patch_kwargs = (
-            {"side_effect": exception} if exception else {"return_value": [selected]}
-        )
         with patch(
-            "homeassistant.components.idrive_e2.config_flow._list_buckets",
-            **patch_kwargs,
+            "homeassistant.components.idrive_e2.config_flow.IDriveE2Client",
+            return_value=mock_client,
         ):
-            result = await flow.async_step_user(
-                {
-                    "access_key_id": user_input["access_key_id"],
-                    "secret_access_key": user_input["secret_access_key"],
-                }
+            patch_kwargs = (
+                {"side_effect": exception}
+                if is_bucket_exception
+                else {"return_value": [selected]}
             )
+            with patch(
+                "homeassistant.components.idrive_e2.config_flow._list_buckets",
+                **patch_kwargs,
+            ):
+                result = await flow.async_step_user(
+                    {
+                        "access_key_id": user_input["access_key_id"],
+                        "secret_access_key": user_input["secret_access_key"],
+                    }
+                )
 
+    # If the error is from the bucket step, the flow returns to the user step (FORM).
+    if is_bucket_exception:
+        return result
+
+    # No exception: proceed into the bucket step
     if not exception:
         assert result["step_id"] == "bucket"
         with patch(
             "homeassistant.components.idrive_e2.config_flow._list_buckets",
             return_value=[selected],
         ):
-            # Show the bucket form
             try:
                 return await flow.async_step_bucket({CONF_BUCKET: selected})
             except Exception as err:
-                # Convert abort flow exception to an abort result
                 if isinstance(err, AbortFlow):
                     return {"type": FlowResultType.ABORT, "reason": err.reason}
                 raise
@@ -135,31 +137,16 @@ async def test_flow_bucket_step_errors(
 @pytest.mark.parametrize(
     ("exception", "expected_error"),
     [
-        (
-            ClientResponseError(
-                request_info=RequestInfo(
-                    url=URL("https://example.com"),
-                    method="POST",
-                    headers=CIMultiDict(),
-                ),
-                history=(),
-                status=401,
-                message="Invalid credentials",
-            ),
-            "invalid_credentials",
-        ),
-        (
-            ClientError(),
-            "cannot_connect",
-        ),
+        (InvalidAuth("Invalid credentials"), "invalid_credentials"),
+        (CannotConnect("cannot connect"), "cannot_connect"),
     ],
 )
-async def test_flow_get_region_endpoint_url_error(
+async def test_flow_get_region_endpoint_error(
     hass: HomeAssistant,
     exception: Exception,
     expected_error: str,
 ) -> None:
-    """Test setup_entry error when calling head_bucket."""
+    """Test user step error mapping when resolving region endpoint via client."""
     result = await _async_start_flow(hass, exception=exception)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}

@@ -4,11 +4,10 @@ from __future__ import annotations
 
 import logging
 from typing import Any
-from urllib.parse import urlparse
 
-import aiohttp
 import boto3
 from botocore.exceptions import ClientError, ConnectionError, ParamValidationError
+from idrive_e2 import CannotConnect, IDriveE2Client, InvalidAuth
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -26,8 +25,6 @@ from .const import (
     CONF_ENDPOINT_URL,
     CONF_SECRET_ACCESS_KEY,
     DOMAIN,
-    GET_REGION_ENDPOINT_URL,
-    GET_REGION_INVALID_CREDENTIALS_CODE,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,17 +51,6 @@ def _list_buckets(endpoint_url: str, access_key: str, secret_key: str) -> list[s
     return [b["Name"] for b in result.get("Buckets", []) if "Name" in b]
 
 
-def _raise_invalid_credentials(resp: Any) -> None:
-    """Raise ClientResponseError for invalid credentials."""
-
-    raise aiohttp.ClientResponseError(
-        request_info=resp.request_info,
-        history=resp.history,
-        status=401,
-        message="Invalid credentials",
-    )
-
-
 class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for IDrive e2."""
 
@@ -81,29 +67,15 @@ class IDriveE2ConfigFlow(ConfigFlow, domain=DOMAIN):
         """First step: prompt for access_key and secret_access_key, then fetch region endpoint."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            http = async_get_clientsession(self.hass)
+            session = async_get_clientsession(self.hass)
+            client = IDriveE2Client(session)
             try:
-                resp = await http.post(
-                    GET_REGION_ENDPOINT_URL,
-                    json={"access_key": user_input[CONF_ACCESS_KEY_ID]},
+                endpoint = await client.get_region_endpoint(
+                    user_input[CONF_ACCESS_KEY_ID]
                 )
-                resp.raise_for_status()
-                payload = await resp.json()
-                if payload.get("resp_code") == GET_REGION_INVALID_CREDENTIALS_CODE:
-                    _raise_invalid_credentials(resp)
-                endpoint_raw = payload.get("domain_name") or ""
-                # Prepend '//' if no scheme so urlparse recognizes the host
-                endpoint_to_parse = (
-                    f"//{endpoint_raw}" if "://" not in endpoint_raw else endpoint_raw
-                )
-                endpoint = urlparse(endpoint_to_parse, scheme="https").geturl()
-            except aiohttp.ClientResponseError as err:
-                errors["base"] = (
-                    "invalid_credentials"
-                    if "Invalid credentials" in str(err)
-                    else "cannot_connect"
-                )
-            except aiohttp.ClientError:
+            except InvalidAuth:
+                errors["base"] = "invalid_credentials"
+            except CannotConnect:
                 errors["base"] = "cannot_connect"
 
             if not errors:
