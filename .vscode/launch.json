@@ -10,12 +10,8 @@
       "request": "launch",
       "module": "homeassistant",
       "justMyCode": false,
-      "args": [
-        "--debug",
-        "-c",
-        "config"
-      ],
-      "preLaunchTask": "Compile English translations"
+      "args": ["--debug", "-c", "config"]
+      //"preLaunchTask": "Compile English translations"
     },
     {
       "name": "Home Assistant (skip pip)",
@@ -23,12 +19,7 @@
       "request": "launch",
       "module": "homeassistant",
       "justMyCode": false,
-      "args": [
-        "--debug",
-        "-c",
-        "config",
-        "--skip-pip"
-      ],
+      "args": ["--debug", "-c", "config", "--skip-pip"],
       "preLaunchTask": "Compile English translations"
     },
     {
@@ -37,9 +28,7 @@
       "request": "launch",
       "module": "pytest",
       "justMyCode": false,
-      "args": [
-        "--picked"
-      ],
+      "args": ["--picked"]
     },
     {
       "name": "Home Assistant: Debug Current Test File",

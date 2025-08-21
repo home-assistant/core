@@ -704,6 +704,7 @@ FLOWS = {
         "voip",
         "volumio",
         "volvo",
+        "volvooncall",
         "vulcan",
         "wake_on_lan",
         "wallbox",
