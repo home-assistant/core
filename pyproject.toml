@@ -27,7 +27,7 @@ dependencies = [
   # Integrations may depend on hassio integration without listing it to
   # change behavior based on presence of supervisor. Deprecated with #127228
   # Lib can be removed with 2025.11
-  "aiohasupervisor==0.3.1",
+  "aiohasupervisor==0.3.2b0",
   "aiohttp==3.12.15",
   "aiohttp_cors==0.8.1",
   "aiohttp-fast-zlib==0.3.0",
@@ -47,7 +47,7 @@ dependencies = [
   "fnv-hash-fast==1.5.0",
   # hass-nabucasa is imported by helpers which don't depend on the cloud
   # integration
-  "hass-nabucasa==0.111.0",
+  "hass-nabucasa==1.0.0",
   # When bumping httpx, please check the version pins of
   # httpcore, anyio, and h11 in gen_requirements_all
   "httpx==0.28.1",
@@ -61,7 +61,7 @@ dependencies = [
   "Pillow==11.3.0",
   "propcache==0.3.2",
   "pyOpenSSL==25.1.0",
-  "orjson==3.11.1",
+  "orjson==3.11.2",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
   "python-slugify==8.0.4",
@@ -74,9 +74,9 @@ dependencies = [
   "typing-extensions>=4.14.0,<5.0",
   "ulid-transform==1.4.0",
   "urllib3>=2.0",
-  "uv==0.7.1",
+  "uv==0.8.9",
   "voluptuous==0.15.2",
-  "voluptuous-serialize==2.6.0",
+  "voluptuous-serialize==2.7.0",
   "voluptuous-openapi==0.1.0",
   "yarl==1.20.1",
   "webrtc-models==0.3.0",
@@ -121,6 +121,7 @@ load-plugins = [
   "hass_async_load_fixtures",
   "hass_decorator",
   "hass_enforce_class_module",
+  "hass_enforce_greek_micro_char",
   "hass_enforce_sorted_platforms",
   "hass_enforce_super_call",
   "hass_enforce_type_hints",

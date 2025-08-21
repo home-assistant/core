@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from automower_ble.protocol import MowerActivity, MowerState
+from automower_ble.protocol import MowerActivity, MowerState, ResponseResult
 
 from homeassistant.components import bluetooth
 from homeassistant.components.lawn_mower import (
@@ -107,7 +107,7 @@ class AutomowerLawnMower(HusqvarnaAutomowerBleEntity, LawnMowerEntity):
             device = bluetooth.async_ble_device_from_address(
                 self.coordinator.hass, self.coordinator.address, connectable=True
             )
-            if not await self.coordinator.mower.connect(device):
+            if await self.coordinator.mower.connect(device) is not ResponseResult.OK:
                 return
 
         await self.coordinator.mower.mower_resume()
@@ -126,7 +126,7 @@ class AutomowerLawnMower(HusqvarnaAutomowerBleEntity, LawnMowerEntity):
             device = bluetooth.async_ble_device_from_address(
                 self.coordinator.hass, self.coordinator.address, connectable=True
             )
-            if not await self.coordinator.mower.connect(device):
+            if await self.coordinator.mower.connect(device) is not ResponseResult.OK:
                 return
 
         await self.coordinator.mower.mower_park()
@@ -143,7 +143,7 @@ class AutomowerLawnMower(HusqvarnaAutomowerBleEntity, LawnMowerEntity):
             device = bluetooth.async_ble_device_from_address(
                 self.coordinator.hass, self.coordinator.address, connectable=True
             )
-            if not await self.coordinator.mower.connect(device):
+            if await self.coordinator.mower.connect(device) is not ResponseResult.OK:
                 return
 
         await self.coordinator.mower.mower_pause()

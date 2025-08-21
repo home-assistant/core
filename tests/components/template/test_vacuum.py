@@ -603,7 +603,9 @@ async def test_battery_level_template(
 )
 @pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
 async def test_battery_level_template_repair(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test battery_level template raises issue."""
     # Ensure trigger entity templates are rendered
@@ -618,6 +620,7 @@ async def test_battery_level_template_repair(
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_placeholders["entity_name"] == TEST_OBJECT_ID
     assert issue.translation_placeholders["entity_id"] == TEST_ENTITY_ID
+    assert "Detected that integration 'template' is setting the" not in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -1294,6 +1297,54 @@ async def test_optimistic_option(
 
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == VacuumActivity.DOCKED
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        (
+            1,
+            {
+                "name": TEST_OBJECT_ID,
+                "state": "{{ states('sensor.test_state') }}",
+                "start": [],
+                **TEMPLATE_VACUUM_ACTIONS,
+                "optimistic": False,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    "service",
+    [
+        vacuum.SERVICE_START,
+        vacuum.SERVICE_PAUSE,
+        vacuum.SERVICE_STOP,
+        vacuum.SERVICE_RETURN_TO_BASE,
+        vacuum.SERVICE_CLEAN_SPOT,
+    ],
+)
+@pytest.mark.usefixtures("setup_vacuum")
+async def test_not_optimistic(
+    hass: HomeAssistant,
+    service: str,
+    calls: list[ServiceCall],
+) -> None:
+    """Test optimistic yaml option set to false."""
+    await hass.services.async_call(
+        vacuum.DOMAIN,
+        service,
+        {"entity_id": TEST_ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_setup_config_entry(
