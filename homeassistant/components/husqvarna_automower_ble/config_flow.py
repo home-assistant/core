@@ -142,7 +142,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                 channel_id, self.address
             ).probe_gatts(device)
         except (BleakError, TimeoutError) as exception:
-            LOGGER.exception(f"Failed to probe device ({self.address}): {exception}")
+            LOGGER.exception("Failed to probe device (%s): %s", self.address, exception)
             return None
 
         title = manufacturer + " " + device_type
@@ -186,7 +186,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             await mower.disconnect()
 
             if response_result is not ResponseResult.OK:
-                LOGGER.debug("cannot connect, response: {response_result}")
+                LOGGER.debug("cannot connect, response: %s", response_result)
 
                 if (
                     response_result is ResponseResult.INVALID_PIN
