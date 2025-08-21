@@ -56,10 +56,8 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self.address: str | None = None
-        self.pin: str | None = None
+    address: str | None = None
+    pin: str | None = None
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
@@ -274,13 +272,10 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                 elif response_result is not ResponseResult.OK:
                     errors["base"] = "cannot_connect"
                 else:
-                    data = {
-                        CONF_ADDRESS: self.address,
-                        CONF_CLIENT_ID: channel_id,
-                        CONF_PIN: self.pin,
-                    }
-
-                    return self.async_update_reload_and_abort(reauth_entry, data=data)
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(),
+                        data=reauth_entry.data | {CONF_PIN: self.pin},
+                    )
 
             except (TimeoutError, BleakError):
                 return self.async_abort(reason="cannot_connect")
