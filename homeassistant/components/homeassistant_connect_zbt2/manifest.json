@@ -1,0 +1,17 @@
+{
+  "domain": "homeassistant_connect_zbt2",
+  "name": "Home Assistant Connect ZBT-2",
+  "codeowners": ["@home-assistant/core"],
+  "config_flow": true,
+  "dependencies": ["hardware", "usb", "homeassistant_hardware"],
+  "documentation": "https://www.home-assistant.io/integrations/homeassistant_connect_zbt2",
+  "integration_type": "hardware",
+  "usb": [
+    {
+      "vid": "10C4",
+      "pid": "EA60",
+      "description": "*zbt-2*",
+      "known_devices": ["ZBT-2"]
+    }
+  ]
+}
