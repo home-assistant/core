@@ -23,7 +23,6 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
-    UnitOfEnergy,
     UnitOfPower,
     UnitOfTime,
 )
@@ -379,28 +378,24 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="total_energy",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
-            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.FORWARD_ENERGY_TOTAL,
             translation_key="total_energy",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
-            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.ADD_ELE,
             translation_key="total_energy",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
-            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.REVERSE_ENERGY_TOTAL,
             translation_key="total_production",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
-            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.SUPPLY_FREQUENCY,
@@ -690,14 +685,12 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="total_energy",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
-            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.PRO_ADD_ELE,
             translation_key="total_production",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
-            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         ),
     ),
     # Air Purifier
@@ -1166,7 +1159,6 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="total_energy",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
-            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.VA_TEMPERATURE,
@@ -1422,14 +1414,12 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="total_energy",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
-            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.REVERSE_ENERGY_TOTAL,
             translation_key="total_production",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
-            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.POWER_TOTAL,
@@ -1541,7 +1531,6 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             translation_key="total_energy",
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
-            suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         ),
         TuyaSensorEntityDescription(
             key=DPCode.POWER_TOTAL,
