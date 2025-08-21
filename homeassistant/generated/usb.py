@@ -7,8 +7,8 @@ USB = [
     {
         "description": "*zbt-2*",
         "domain": "homeassistant_connect_zbt2",
-        "pid": "EA60",
-        "vid": "10C4",
+        "pid": "4001",
+        "vid": "303A",
     },
     {
         "description": "*skyconnect v1.0*",

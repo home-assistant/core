@@ -8,8 +8,8 @@
   "integration_type": "hardware",
   "usb": [
     {
-      "vid": "10C4",
-      "pid": "EA60",
+      "vid": "303A",
+      "pid": "4001",
       "description": "*zbt-2*",
       "known_devices": ["ZBT-2"]
     }
