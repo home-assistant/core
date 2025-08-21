@@ -157,7 +157,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self.pin is not None
 
         channel_id = random.randint(1, 0xFFFFFFFF)
-        mower = Mower(channel_id, self.address, self.pin)
+        mower = Mower(channel_id, self.address, int(self.pin))
 
         return (channel_id, mower)
 
