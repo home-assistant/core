@@ -3,25 +3,31 @@
 from __future__ import annotations
 
 from homeassistant.components.device_tracker import ScannerEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import _LOGGER, DOMAIN
-from .coordinator import VodafoneStationDeviceInfo, VodafoneStationRouter
+from .const import _LOGGER
+from .coordinator import (
+    VodafoneConfigEntry,
+    VodafoneStationDeviceInfo,
+    VodafoneStationRouter,
+)
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VodafoneConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for Vodafone Station component."""
 
     _LOGGER.debug("Start device trackers setup")
-    coordinator: VodafoneStationRouter = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     tracked: set = set()
 

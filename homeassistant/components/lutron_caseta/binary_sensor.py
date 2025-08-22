@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN as CASETA_DOMAIN
+from . import DOMAIN
 from .const import CONFIG_URL, MANUFACTURER, UNASSIGNED_AREA
 from .entity import LutronCasetaEntity
 from .models import LutronCasetaConfigEntry
@@ -49,11 +49,11 @@ class LutronOccupancySensor(LutronCasetaEntity, BinarySensorEntity):
         name = f"{area} {device['device_name']}"
         self._attr_name = name
         self._attr_device_info = DeviceInfo(
-            identifiers={(CASETA_DOMAIN, self.unique_id)},
+            identifiers={(DOMAIN, self.unique_id)},
             manufacturer=MANUFACTURER,
             model="Lutron Occupancy",
             name=self.name,
-            via_device=(CASETA_DOMAIN, self._bridge_device["serial"]),
+            via_device=(DOMAIN, self._bridge_device["serial"]),
             configuration_url=CONFIG_URL,
             entry_type=DeviceEntryType.SERVICE,
         )

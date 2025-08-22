@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.braviatv.const import CONF_USE_PSK, DOMAIN
@@ -46,6 +46,7 @@ async def test_entry_diagnostics(
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,
+        title="BRAVIA TV-Model",
         data={
             CONF_HOST: "localhost",
             CONF_MAC: "AA:BB:CC:DD:EE:FF",

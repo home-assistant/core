@@ -16,6 +16,9 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import ComelitConfigEntry, ComelitVedoSystem
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -47,7 +50,6 @@ class ComelitVedoBinarySensorEntity(
         config_entry_entry_id: str,
     ) -> None:
         """Init sensor entity."""
-        self._api = coordinator.api
         self._zone_index = zone.index
         super().__init__(coordinator)
         # Use config_entry.entry_id as base for unique_id

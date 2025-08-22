@@ -60,6 +60,8 @@ def mock_client():
         client.preconditioning = 15
         client.serial = "chargerid"
         client.ct_connected = True
+        client.cap_available = True
+        client.cap_enabled = True
         client.energy = 1000
         client.device_info = {
             "name": "Ohme Home Pro",

@@ -18,7 +18,7 @@
           "location": "[%key:common::config_flow::data::location%]"
         },
         "data_description": {
-          "location": "Equal or part of name, description or camera id. Be as specific as possible to avoid getting multiple cameras as result"
+          "location": "Equal or part of name, description or camera ID. Be as specific as possible to avoid getting multiple cameras as result"
         }
       },
       "multiple_cameras": {
@@ -60,7 +60,7 @@
             "name": "[%key:common::config_flow::data::location%]"
           },
           "photo_url": {
-            "name": "Photo url"
+            "name": "Photo URL"
           },
           "status": {
             "name": "Status"
@@ -87,7 +87,7 @@
         "name": "Photo time"
       },
       "photo_url": {
-        "name": "Photo url"
+        "name": "Photo URL"
       },
       "status": {
         "name": "Status"

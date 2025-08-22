@@ -1,0 +1,16 @@
+{
+  "documents_total": 420,
+  "documents_inbox": 3,
+  "inbox_tag": 5,
+  "inbox_tags": [2],
+  "document_file_type_counts": [
+    { "mime_type": "application/pdf", "mime_type_count": 419 },
+    { "mime_type": "image/png", "mime_type_count": 1 }
+  ],
+  "character_count": 324234,
+  "tag_count": 43,
+  "correspondent_count": 9659,
+  "document_type_count": 54656,
+  "storage_path_count": 6459,
+  "current_asn": 959
+}

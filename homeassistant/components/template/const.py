@@ -1,24 +1,33 @@
 """Constants for the Template Platform Components."""
 
-from homeassistant.components.blueprint import BLUEPRINT_SCHEMA
-from homeassistant.const import Platform
+import voluptuous as vol
+
+from homeassistant.const import CONF_ICON, CONF_NAME, CONF_UNIQUE_ID, Platform
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-CONF_ACTION = "action"
+CONF_ADVANCED_OPTIONS = "advanced_options"
 CONF_ATTRIBUTE_TEMPLATES = "attribute_templates"
 CONF_ATTRIBUTES = "attributes"
 CONF_AVAILABILITY = "availability"
 CONF_AVAILABILITY_TEMPLATE = "availability_template"
-CONF_CONDITION = "condition"
 CONF_MAX = "max"
 CONF_MIN = "min"
 CONF_OBJECT_ID = "object_id"
 CONF_PICTURE = "picture"
 CONF_PRESS = "press"
 CONF_STEP = "step"
-CONF_TRIGGER = "trigger"
 CONF_TURN_OFF = "turn_off"
 CONF_TURN_ON = "turn_on"
+
+TEMPLATE_ENTITY_BASE_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ICON): cv.template,
+        vol.Optional(CONF_NAME): cv.template,
+        vol.Optional(CONF_PICTURE): cv.template,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
+    }
+)
 
 DOMAIN = "template"
 
@@ -40,8 +49,6 @@ PLATFORMS = [
     Platform.VACUUM,
     Platform.WEATHER,
 ]
-
-TEMPLATE_BLUEPRINT_SCHEMA = BLUEPRINT_SCHEMA
 
 
 class TemplateConfig(dict):

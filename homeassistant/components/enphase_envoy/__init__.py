@@ -2,22 +2,17 @@
 
 from __future__ import annotations
 
-import httpx
+from typing import TYPE_CHECKING
+
 from pyenphase import Envoy
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import (
-    DOMAIN,
-    OPTION_DISABLE_KEEP_ALIVE,
-    OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
-    PLATFORMS,
-)
+from .const import DOMAIN, PLATFORMS
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
 
 
@@ -25,19 +20,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
     """Set up Enphase Envoy from a config entry."""
 
     host = entry.data[CONF_HOST]
-    options = entry.options
-    envoy = (
-        Envoy(
-            host,
-            httpx.AsyncClient(
-                verify=False, limits=httpx.Limits(max_keepalive_connections=0)
-            ),
-        )
-        if options.get(
-            OPTION_DISABLE_KEEP_ALIVE, OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE
-        )
-        else Envoy(host, get_async_client(hass, verify_ssl=False))
-    )
+    session = async_create_clientsession(hass, verify_ssl=False)
+    envoy = Envoy(host, session)
     coordinator = EnphaseUpdateCoordinator(hass, envoy, entry)
 
     await coordinator.async_config_entry_first_refresh()
@@ -60,19 +44,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> b
             },
         )
 
+    # register envoy before via_device is used
+    device_registry = dr.async_get(hass)
+    if TYPE_CHECKING:
+        assert envoy.serial_number
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, envoy.serial_number)},
+        manufacturer="Enphase",
+        name=coordinator.name,
+        model=envoy.envoy_model,
+        sw_version=str(envoy.firmware),
+        hw_version=envoy.part_number,
+        serial_number=envoy.serial_number,
+    )
+
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Reload entry when it is updated.
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-
     return True
-
-
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Reload the config entry when it changed."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> bool:
@@ -80,6 +71,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: EnphaseConfigEntry) -> 
     coordinator = entry.runtime_data
     coordinator.async_cancel_token_refresh()
     coordinator.async_cancel_firmware_refresh()
+    coordinator.async_cancel_mac_verification()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 

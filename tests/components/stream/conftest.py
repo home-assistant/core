@@ -27,6 +27,8 @@ from homeassistant.components.stream.worker import StreamState
 
 from .common import generate_h264_video, stream_teardown
 
+_LOGGER = logging.getLogger(__name__)
+
 TEST_TIMEOUT = 7.0  # Lower than 9s home assistant timeout
 
 
@@ -44,7 +46,7 @@ class WorkerSync:
 
     def resume(self):
         """Allow the worker thread to finalize the stream."""
-        logging.debug("waking blocked worker")
+        _LOGGER.debug("waking blocked worker")
         self._event.set()
 
     def blocking_discontinuity(self, stream_state: StreamState):
@@ -52,7 +54,7 @@ class WorkerSync:
         # Worker is ending the stream, which clears all output buffers.
         # Block the worker thread until the test has a chance to verify
         # the segments under test.
-        logging.debug("blocking worker")
+        _LOGGER.debug("blocking worker")
         if self._event:
             self._event.wait()
 

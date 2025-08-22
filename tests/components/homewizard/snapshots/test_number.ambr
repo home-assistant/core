@@ -50,6 +50,7 @@
     'original_name': 'Status light brightness',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_light_brightness',
     'unique_id': 'HWE-P1_5c2fafabcdef_status_light_brightness',
@@ -78,7 +79,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -88,7 +88,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.03',
     'via_device_id': None,
   })
@@ -144,6 +143,7 @@
     'original_name': 'Status light brightness',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'status_light_brightness',
     'unique_id': 'HWE-P1_5c2fafabcdef_status_light_brightness',
@@ -172,7 +172,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -182,7 +181,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })

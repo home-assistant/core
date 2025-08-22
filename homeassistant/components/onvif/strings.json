@@ -62,12 +62,12 @@
     "step": {
       "onvif_devices": {
         "data": {
-          "extra_arguments": "Extra FFMPEG arguments",
+          "extra_arguments": "Extra FFmpeg arguments",
           "rtsp_transport": "RTSP transport mechanism",
           "use_wallclock_as_timestamps": "Use wall clock as timestamps",
-          "enable_webhooks": "Enable Webhooks"
+          "enable_webhooks": "Enable webhooks"
         },
-        "title": "ONVIF Device Options"
+        "title": "ONVIF device options"
       }
     }
   },

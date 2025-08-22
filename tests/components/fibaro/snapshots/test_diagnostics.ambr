@@ -1,0 +1,57 @@
+# serializer version: 1
+# name: test_config_entry_diagnostics
+  dict({
+    'config': dict({
+      'import_plugins': True,
+    }),
+    'fibaro_devices': list([
+      dict({
+        'fibaro_id': 3,
+        'name': 'Test light',
+        'properties': dict({
+          'value': 20,
+        }),
+      }),
+    ]),
+  })
+# ---
+# name: test_device_diagnostics
+  dict({
+    'config': dict({
+      'import_plugins': True,
+    }),
+    'fibaro_devices': list([
+      dict({
+        'fibaro_id': 3,
+        'name': 'Test light',
+        'properties': dict({
+          'value': 20,
+        }),
+      }),
+    ]),
+  })
+# ---
+# name: test_device_diagnostics_for_hub
+  dict({
+    'config': dict({
+      'import_plugins': True,
+    }),
+    'fibaro_devices': list([
+      dict({
+        'fibaro_id': 3,
+        'name': 'Test light',
+        'properties': dict({
+          'value': 20,
+        }),
+      }),
+      dict({
+        'fibaro_id': 1,
+        'name': 'Test sensor',
+        'properties': dict({
+          'password': '**REDACTED**',
+          'power': 6.6,
+        }),
+      }),
+    ]),
+  })
+# ---

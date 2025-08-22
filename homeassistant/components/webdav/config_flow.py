@@ -5,7 +5,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aiowebdav2.exceptions import UnauthorizedError
+from aiowebdav2.exceptions import (
+    AccessDeniedError,
+    MethodNotSupportedError,
+    UnauthorizedError,
+)
 import voluptuous as vol
 import yarl
 
@@ -65,7 +69,11 @@ class WebDavConfigFlow(ConfigFlow, domain=DOMAIN):
                 result = await client.check()
             except UnauthorizedError:
                 errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
+            except AccessDeniedError:
+                errors["base"] = "access_denied"
+            except MethodNotSupportedError:
+                errors["base"] = "invalid_method"
+            except Exception:
                 _LOGGER.exception("Unexpected error")
                 errors["base"] = "unknown"
             else:

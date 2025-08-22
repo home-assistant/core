@@ -1,6 +1,6 @@
 """Test Ambient PWS diagnostics."""
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant.components.ambient_station import AmbientStationConfigEntry

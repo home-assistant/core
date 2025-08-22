@@ -59,12 +59,12 @@ def use_mocked_zeroconf(mock_async_zeroconf: MagicMock) -> None:
 
 
 @pytest.fixture(autouse=True)
-def mock_setup_entry() -> Generator[None]:
+def mock_setup_entry() -> Generator[Mock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.apple_tv.async_setup_entry", return_value=True
-    ):
-        yield
+    ) as setup_entry:
+        yield setup_entry
 
 
 # User Flows
@@ -1183,7 +1183,9 @@ async def test_zeroconf_mismatch(hass: HomeAssistant, mock_scan: AsyncMock) -> N
 
 
 @pytest.mark.usefixtures("mrp_device", "pairing")
-async def test_reconfigure_update_credentials(hass: HomeAssistant) -> None:
+async def test_reconfigure_update_credentials(
+    hass: HomeAssistant, mock_setup_entry: Mock
+) -> None:
     """Test that reconfigure flow updates config entry."""
     config_entry = MockConfigEntry(
         domain="apple_tv", unique_id="mrpid", data={"identifiers": ["mrpid"]}
@@ -1214,6 +1216,9 @@ async def test_reconfigure_update_credentials(hass: HomeAssistant) -> None:
         "credentials": {Protocol.MRP.value: "mrp_creds"},
         "identifiers": ["mrpid"],
     }
+
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 # Options

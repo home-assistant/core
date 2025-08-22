@@ -541,6 +541,8 @@
           'quest': dict({
             'RSVPNeeded': True,
             'key': 'dustbunnies',
+            'members': dict({
+            }),
             'progress': dict({
               'collect': dict({
               }),

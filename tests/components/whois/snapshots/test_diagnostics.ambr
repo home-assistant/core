@@ -5,7 +5,7 @@
     'dnssec': True,
     'expiration_date': '2023-01-01T00:00:00',
     'last_updated': '2022-01-01T00:00:00+01:00',
-    'status': 'OK',
+    'status': 'ok',
     'statuses': list([
       'OK',
     ]),

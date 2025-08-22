@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/wallbox",
   "iot_class": "cloud_polling",
   "loggers": ["wallbox"],
-  "requirements": ["wallbox==0.8.0"]
+  "requirements": ["wallbox==0.9.0"]
 }

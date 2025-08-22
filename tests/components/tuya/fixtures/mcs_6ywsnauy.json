@@ -1,0 +1,44 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Fen\u00eatre cuisine",
+  "category": "mcs",
+  "product_id": "6ywsnauy",
+  "product_name": "Contact Sensor",
+  "online": true,
+  "sub": true,
+  "time_zone": "+02:00",
+  "active_time": "2025-07-19T11:54:49+00:00",
+  "create_time": "2025-07-19T11:54:49+00:00",
+  "update_time": "2025-07-19T11:54:49+00:00",
+  "function": {},
+  "status_range": {
+    "doorcontact_state": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temper_alarm": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "doorcontact_state": false,
+    "battery_percentage": 93,
+    "temper_alarm": false
+  },
+  "set_up": true,
+  "support_local": true
+}

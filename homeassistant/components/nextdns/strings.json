@@ -4,16 +4,25 @@
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "The API key for your NextDNS account"
         }
       },
       "profiles": {
         "data": {
-          "profile": "Profile"
+          "profile_name": "Profile"
+        },
+        "data_description": {
+          "profile_name": "The NextDNS configuration profile you want to integrate"
         }
       },
       "reauth_confirm": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::nextdns::config::step::user::data_description::api_key%]"
         }
       }
     },
@@ -319,6 +328,9 @@
       "block_zoom": {
         "name": "Block Zoom"
       },
+      "bypass_age_verification": {
+        "name": "Bypass age verification"
+      },
       "cache_boost": {
         "name": "Cache boost"
       },
@@ -358,6 +370,20 @@
       "youtube_restricted_mode": {
         "name": "Force YouTube restricted mode"
       }
+    }
+  },
+  "exceptions": {
+    "auth_error": {
+      "message": "Authentication failed for {entry}, please update your API key"
+    },
+    "cannot_connect": {
+      "message": "An error occurred while connecting to the NextDNS API for {entry}: {error}"
+    },
+    "method_error": {
+      "message": "An error occurred while calling the NextDNS API method for {entity}: {error}"
+    },
+    "update_error": {
+      "message": "An error occurred while retrieving data from the NextDNS API for {entry}: {error}"
     }
   }
 }

@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
-    DOMAIN as HUMIDIFIER_DOMAIN,
+    DOMAIN,
     MODE_ECO,
     MODE_NORMAL,
     SERVICE_SET_HUMIDITY,
@@ -77,7 +77,7 @@ async def test_humidity_validation(
     )
 
     setup_test_component_platform(
-        hass, HUMIDIFIER_DOMAIN, entities=[test_humidifier], from_config_entry=True
+        hass, DOMAIN, entities=[test_humidifier], from_config_entry=True
     )
     await hass.config_entries.async_setup(register_test_integration.entry_id)
     await hass.async_block_till_done()
@@ -90,7 +90,7 @@ async def test_humidity_validation(
         match="Provided humidity 1 is not valid. Accepted range is 50 to 60",
     ) as exc:
         await hass.services.async_call(
-            HUMIDIFIER_DOMAIN,
+            DOMAIN,
             SERVICE_SET_HUMIDITY,
             {
                 "entity_id": "humidifier.test",
@@ -107,7 +107,7 @@ async def test_humidity_validation(
         match="Provided humidity 70 is not valid. Accepted range is 50 to 60",
     ) as exc:
         await hass.services.async_call(
-            HUMIDIFIER_DOMAIN,
+            DOMAIN,
             SERVICE_SET_HUMIDITY,
             {
                 "entity_id": "humidifier.test",

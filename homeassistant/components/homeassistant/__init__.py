@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 import itertools as it
 import logging
+import struct
 from typing import Any
 
 import voluptuous as vol
@@ -16,6 +17,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
+    EVENT_HOMEASSISTANT_STARTED,
     RESTART_EXIT_CODE,
     SERVICE_RELOAD,
     SERVICE_SAVE_PERSISTENT_STATES,
@@ -24,6 +26,7 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
 )
 from homeassistant.core import (
+    Event,
     HomeAssistant,
     ServiceCall,
     ServiceResponse,
@@ -31,14 +34,24 @@ from homeassistant.core import (
     split_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError, Unauthorized, UnknownUser
-from homeassistant.helpers import config_validation as cv, recorder, restore_state
+from homeassistant.helpers import (
+    config_validation as cv,
+    issue_registry as ir,
+    recorder,
+    restore_state,
+)
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
-    async_extract_referenced_entity_ids,
     async_register_admin_service,
 )
 from homeassistant.helpers.signal import KEY_HA_STOP
+from homeassistant.helpers.system_info import async_get_system_info
+from homeassistant.helpers.target import (
+    TargetSelectorData,
+    async_extract_referenced_entity_ids,
+)
 from homeassistant.helpers.template import async_load_custom_templates
 from homeassistant.helpers.typing import ConfigType
 
@@ -81,6 +94,16 @@ SCHEMA_RESTART = vol.Schema({vol.Optional(ATTR_SAFE_MODE, default=False): bool})
 
 SHUTDOWN_SERVICES = (SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART)
 
+DEPRECATION_URL = (
+    "https://www.home-assistant.io/blog/2025/05/22/"
+    "deprecating-core-and-supervised-installation-methods-and-32-bit-systems/"
+)
+
+
+def _is_32_bit() -> bool:
+    size = struct.calcsize("P")
+    return size * 8 == 32
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Set up general services related to Home Assistant."""
@@ -91,7 +114,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     async def async_handle_turn_service(service: ServiceCall) -> None:
         """Handle calls to homeassistant.turn_on/off."""
-        referenced = async_extract_referenced_entity_ids(hass, service)
+        referenced = async_extract_referenced_entity_ids(
+            hass, TargetSelectorData(service.data)
+        )
         all_referenced = referenced.referenced | referenced.indirectly_referenced
 
         # Generic turn on/off method requires entity id
@@ -385,6 +410,51 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     await exposed_entities.async_initialize()
     hass.data[DATA_EXPOSED_ENTITIES] = exposed_entities
     async_set_stop_handler(hass, _async_stop)
+
+    async def _async_check_deprecation(event: Event) -> None:
+        """Check and create deprecation issues after startup."""
+        info = await async_get_system_info(hass)
+
+        installation_type = info["installation_type"][15:]
+        if installation_type in {"Core", "Container"}:
+            deprecated_method = installation_type == "Core"
+            bit32 = _is_32_bit()
+            arch = info["arch"]
+            if bit32 and installation_type == "Container":
+                arch = info.get("container_arch", arch)
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    "deprecated_container",
+                    learn_more_url=DEPRECATION_URL,
+                    is_fixable=False,
+                    severity=IssueSeverity.WARNING,
+                    translation_key="deprecated_container",
+                    translation_placeholders={"arch": arch},
+                )
+            deprecated_architecture = bit32 and installation_type != "Container"
+            if deprecated_method or deprecated_architecture:
+                issue_id = "deprecated"
+                if deprecated_method:
+                    issue_id += "_method"
+                if deprecated_architecture:
+                    issue_id += "_architecture"
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    issue_id,
+                    learn_more_url=DEPRECATION_URL,
+                    is_fixable=False,
+                    severity=IssueSeverity.WARNING,
+                    translation_key=issue_id,
+                    translation_placeholders={
+                        "installation_type": installation_type,
+                        "arch": arch,
+                    },
+                )
+
+    # Delay deprecation check to make sure installation method is determined correctly
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_check_deprecation)
 
     return True
 
