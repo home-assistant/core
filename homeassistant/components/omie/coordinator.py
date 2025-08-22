@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from datetime import date, datetime, time, timedelta
+import datetime as dt
 import logging
 import random
 from zoneinfo import ZoneInfo
@@ -19,17 +19,15 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util.dt import utcnow
 
 from .const import CET, DOMAIN
+from .util import _get_market_dates, _is_published
 
 _LOGGER = logging.getLogger(__name__)
 
-_SCHEDULE_MAX_DELAY = timedelta(seconds=10)
+_SCHEDULE_MAX_DELAY = dt.timedelta(seconds=10)
 """To avoid thundering herd, we will fetch from OMIE up to this much time after the OMIE data becomes available."""
 
-_OMIE_PUBLISH_TIME_CET = time(hour=13, minute=30)
-"""The time by which intraday market results (for the next day) will have been published to omie.es."""
 
-
-class OMIECoordinator(DataUpdateCoordinator[Mapping[date, OMIEResults[SpotData]]]):
+class OMIECoordinator(DataUpdateCoordinator[Mapping[dt.date, OMIEResults[SpotData]]]):
     """Coordinator that manages OMIE data for yesterday, today, and tomorrow."""
 
     def __init__(
@@ -41,7 +39,7 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[date, OMIEResults[SpotData]]
     ) -> None:
         """Initialize OMIE coordinator."""
         super().__init__(hass, _LOGGER, name=f"{DOMAIN}", config_entry=config_entry)
-        self.data: Mapping[date, OMIEResults[SpotData]] = {}
+        self.data: Mapping[dt.date, OMIEResults[SpotData]] = {}
         self._client_session = async_get_clientsession(hass)
 
         # Dependency injection for testing
@@ -57,7 +55,7 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[date, OMIEResults[SpotData]]
             job_type=HassJobType.Coroutinefunction,
         )
 
-    async def _async_update_data(self) -> Mapping[date, OMIEResults[SpotData]]:
+    async def _async_update_data(self) -> Mapping[dt.date, OMIEResults[SpotData]]:
         """Update OMIE data, fetching data as needed and available."""
         now = utcnow()
         relevant_dates = _get_market_dates(ZoneInfo(self.hass.config.time_zone), now)
@@ -98,7 +96,7 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[date, OMIEResults[SpotData]]
             minute=0,
             second=self._schedule_second,
             microsecond=self._schedule_microsecond,
-        ) + timedelta(hours=1)
+        ) + dt.timedelta(hours=1)
 
         next_refresh = next_hour.astimezone()
 
@@ -111,23 +109,3 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[date, OMIEResults[SpotData]]
         self._unsub_refresh = event.async_track_point_in_utc_time(
             self.hass, self.__job, next_refresh
         )
-
-
-def _get_market_dates(local_tz: ZoneInfo, now_time: datetime) -> set[date]:
-    """Returns the intraday market date(s) whose data we need to fetch."""
-    min_max = [_OMIE_PUBLISH_TIME_CET.min, _OMIE_PUBLISH_TIME_CET.max]
-    return {
-        datetime.combine(now_time.astimezone(local_tz), t, tzinfo=local_tz)
-        .astimezone(CET)
-        .date()
-        for t in min_max
-    }
-
-
-def _is_published(market_date: date, fetch_time: datetime) -> bool:
-    """Returns whether OMIE data for a given date is expected to have been published at any point in time."""
-    publish_date = market_date - timedelta(days=1)
-    publish_hour = _OMIE_PUBLISH_TIME_CET
-    publish_time = datetime.combine(publish_date, publish_hour, tzinfo=CET)
-
-    return fetch_time >= publish_time
