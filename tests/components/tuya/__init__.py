@@ -15,7 +15,9 @@ from tests.common import MockConfigEntry
 DEVICE_MOCKS = [
     "bzyd_45idzfufidgee7ir",  # https://github.com/orgs/home-assistant/discussions/717
     "bzyd_ssimhf6r8kgwepfb",  # https://github.com/orgs/home-assistant/discussions/718
+    "ckmkzq_1yyqfw4djv9eii3q",  # https://github.com/home-assistant/core/issues/150856
     "cl_3r8gc33pnqsxfe1g",  # https://github.com/tuya/tuya-home-assistant/issues/754
+    "cl_669wsr2w4cvinbh4",  # https://github.com/home-assistant/core/issues/150856
     "cl_cpbo62rn",  # https://github.com/orgs/home-assistant/discussions/539
     "cl_ebt12ypvexnixvtf",  # https://github.com/tuya/tuya-home-assistant/issues/754
     "cl_g1cp07dsqnbdbbki",  # https://github.com/home-assistant/core/issues/139966
@@ -73,6 +75,7 @@ DEVICE_MOCKS = [
     "dd_gaobbrxqiblcng2p",  # https://github.com/home-assistant/core/issues/149233
     "dj_0gyaslysqfp4gfis",  #  https://github.com/home-assistant/core/issues/149895
     "dj_8szt7whdvwpmxglk",  # https://github.com/home-assistant/core/issues/149704
+    "dj_8ugheslg",  # https://github.com/home-assistant/core/issues/150856
     "dj_8y0aquaa8v6tho8w",  # https://github.com/home-assistant/core/issues/149704
     "dj_AqHUMdcbYzIq1Of4",  # https://github.com/orgs/home-assistant/discussions/539
     "dj_amx1bgdrfab6jngb",  # https://github.com/orgs/home-assistant/discussions/482
@@ -90,6 +93,7 @@ DEVICE_MOCKS = [
     "dj_idnfq7xbx8qewyoa",  # https://github.com/home-assistant/core/issues/149704
     "dj_ilddqqih3tucdk68",  # https://github.com/home-assistant/core/issues/149704
     "dj_j1bgp31cffutizub",  # https://github.com/home-assistant/core/issues/149704
+    "dj_kgaob37tz2muf3mi",  # https://github.com/home-assistant/core/issues/150856
     "dj_lmnt3uyltk1xffrt",  # https://github.com/home-assistant/core/issues/149704
     "dj_mki13ie507rlry4r",  # https://github.com/home-assistant/core/pull/126242
     "dj_nbumqpv8vz61enji",  # https://github.com/home-assistant/core/issues/149704
@@ -176,6 +180,7 @@ DEVICE_MOCKS = [
     "tyndj_pyakuuoc",  # https://github.com/home-assistant/core/issues/149704
     "wfcon_b25mh8sxawsgndck",  # https://github.com/home-assistant/core/issues/149704
     "wfcon_lieerjyy6l4ykjor",  #  https://github.com/home-assistant/core/issues/136055
+    "wg2_2gowdgni",  # https://github.com/home-assistant/core/issues/150856
     "wg2_haclbl0qkqlf2qds",  # https://github.com/orgs/home-assistant/discussions/517
     "wg2_nwxr8qcu4seltoro",  # https://github.com/orgs/home-assistant/discussions/430
     "wg2_setmxeqgs63xwopm",  # https://github.com/orgs/home-assistant/discussions/539

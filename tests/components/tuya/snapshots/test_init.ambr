@@ -309,6 +309,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[4hbnivc4w2rsw966lc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        '4hbnivc4w2rsw966lc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'VIVIDSTORM SCREEN',
+    'model_id': '669wsr2w4cvinbh4',
+    'name': 'VIVIDSTORM SCREEN',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[4pa1uobdjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -2603,6 +2634,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[glsehgu8jd]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'glsehgu8jd',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'POWERASIA',
+    'model_id': '8ugheslg',
+    'name': 'POWERASIA R2',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[gluaktf5gk]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -3092,6 +3154,68 @@
     'model': 'the Smart Dry Plus™ Connect Dehumidifier  (unsupported)',
     'model_id': 'vmxuxszzjwp5smli',
     'name': 'Dehumidifier ',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[im3fum2zt73boagkjd]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'im3fum2zt73boagkjd',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': '',
+    'model_id': 'kgaob37tz2muf3mi',
+    'name': 'Parker Ceiling Fan 1',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[ingdwog22gw]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'ingdwog22gw',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Mesh-Gateway',
+    'model_id': '2gowdgni',
+    'name': 'Mesh-Gateway',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -4456,6 +4580,37 @@
     'model': 'Smart Pet Water Fountain',
     'model_id': 'akln8rb04cav403q',
     'name': 'Water Fountain',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[q3iie9vjd4wfqyy1qzkmkc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'q3iie9vjd4wfqyy1qzkmkc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Garage door ',
+    'model_id': '1yyqfw4djv9eii3q',
+    'name': 'Garage door ',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
