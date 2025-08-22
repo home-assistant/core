@@ -1175,7 +1175,7 @@
       "iot_class": "local_push"
     },
     "daybetter_light_local": {
-      "name": "daybetter lights lhaocal",
+      "name": "DayBetter lights local",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"

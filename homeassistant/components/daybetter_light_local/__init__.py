@@ -46,10 +46,9 @@ async def async_setup_entry(
     await coordinator.async_config_entry_first_refresh()
 
     try:
-        async with asyncio.timeout(delay=DISCOVERY_TIMEOUT):
-            while not coordinator.devices:
-                await asyncio.sleep(delay=1)
-    except TimeoutError as ex:
+        # Trigger the first refresh, and if it fails, delay the integration loading
+        await coordinator.async_config_entry_first_refresh()
+    except Exception as ex:
         raise ConfigEntryNotReady from ex
 
     entry.runtime_data = coordinator

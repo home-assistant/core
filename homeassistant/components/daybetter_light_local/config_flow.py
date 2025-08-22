@@ -1,16 +1,16 @@
-"""Config flow for DayBetter light local."""
-
 from __future__ import annotations
 
 import asyncio
-from contextlib import suppress
 import logging
+from contextlib import suppress
+
+import voluptuous as vol
 
 from daybetter_local_api import DayBetterController
 
+from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_flow
 
 from .const import (
     CONF_LISTENING_PORT_DEFAULT,
@@ -21,6 +21,33 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for DayBetter light local."""
+
+    VERSION = 1
+
+    async def async_step_user(self, user_input=None):
+        """Handle the initial step."""
+        errors = {}
+
+        if user_input is not None:
+            # Normally you'd use something like device_id or MAC address here
+            unique_id = user_input["host"]
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(title="DayBetter Light", data=user_input)
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("host"): str,
+                }
+            ),
+            errors=errors,
+        )
 
 
 async def _async_has_devices(hass: HomeAssistant) -> bool:
@@ -58,8 +85,3 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
         await asyncio.wait_for(cleanup_complete.wait(), 1)
 
     return devices_count > 0
-
-
-config_entry_flow.register_discovery_flow(
-    DOMAIN, "DayBetter light local", _async_has_devices
-)
