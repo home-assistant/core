@@ -24,22 +24,24 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def get_device_list_classic(
-    api, config: Mapping[str, str]
+    api: growattServer.GrowattApi, config: Mapping[str, str]
 ) -> tuple[list[dict[str, str]], str]:
-    """Device list logic for classic API."""
+    """Retrieve the device list for the selected plant."""
     plant_id = config[CONF_PLANT_ID]
 
     # Log in to api and fetch first plant if no plant id is defined.
     try:
         login_response = api.login(config[CONF_USERNAME], config[CONF_PASSWORD])
+        # DEBUG: Log the actual response structure
     except Exception as ex:
+        _LOGGER.error("DEBUG - Login response: %s", login_response)
         raise ConfigEntryError(
             f"Error communicating with Growatt API during login: {ex}"
         ) from ex
 
     if not login_response.get("success"):
-        # If we have a message, include it
         msg = login_response.get("msg", "Unknown error")
+        _LOGGER.debug("Growatt login failed: %s", msg)
         if msg == LOGIN_INVALID_AUTH_CODE:
             raise ConfigEntryAuthFailed("Username, Password or URL may be incorrect!")
         raise ConfigEntryError(f"Growatt login failed: {msg}")
@@ -66,6 +68,7 @@ def get_device_list_classic(
         raise ConfigEntryError(
             f"Error communicating with Growatt API during device list: {ex}"
         ) from ex
+
     return devices, plant_id
 
 
