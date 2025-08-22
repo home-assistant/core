@@ -128,12 +128,14 @@ class HomeAssistantConnectZBT2ConfigFlow(
         description = discovery_info.description
         unique_id = f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
 
-        if await self.async_set_unique_id(unique_id):
-            self._abort_if_unique_id_configured(updates={DEVICE: device})
-
-        discovery_info.device = await self.hass.async_add_executor_job(
+        device = discovery_info.device = await self.hass.async_add_executor_job(
             usb.get_serial_by_id, discovery_info.device
         )
+
+        try:
+            await self.async_set_unique_id(unique_id)
+        finally:
+            self._abort_if_unique_id_configured(updates={DEVICE: device})
 
         self._usb_info = discovery_info
 

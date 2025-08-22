@@ -230,3 +230,35 @@ async def test_duplicate_discovery(hass: HomeAssistant) -> None:
 
     assert result_duplicate["type"] is FlowResultType.ABORT
     assert result_duplicate["reason"] == "already_in_progress"
+
+
+async def test_duplicate_discovery_updates_usb_path(hass: HomeAssistant) -> None:
+    """Test config flow unique_id deduplication updates USB path."""
+    config_entry = MockConfigEntry(
+        domain="homeassistant_connect_zbt2",
+        data={
+            "firmware": "spinel",
+            "firmware_version": "SL-OPENTHREAD/2.4.4.0_GitHub-7074a43e4",
+            "device": "/dev/oldpath",
+            "manufacturer": USB_DATA_ZBT2.manufacturer,
+            "pid": USB_DATA_ZBT2.pid,
+            "product": USB_DATA_ZBT2.description,
+            "serial_number": USB_DATA_ZBT2.serial_number,
+            "vid": USB_DATA_ZBT2.vid,
+        },
+        version=1,
+        minor_version=1,
+        unique_id=f"{USB_DATA_ZBT2.vid}:{USB_DATA_ZBT2.pid}_{USB_DATA_ZBT2.serial_number}_{USB_DATA_ZBT2.manufacturer}_{USB_DATA_ZBT2.description}",
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "usb"}, data=USB_DATA_ZBT2
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert config_entry.data["device"] == USB_DATA_ZBT2.device
