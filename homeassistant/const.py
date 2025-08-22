@@ -609,6 +609,7 @@ class UnitOfPower(StrEnum):
 class UnitOfReactivePower(StrEnum):
     """Reactive power units."""
 
+    MILLIVOLT_AMPERE_REACTIVE = "mvar"
     VOLT_AMPERE_REACTIVE = "var"
     KILO_VOLT_AMPERE_REACTIVE = "kvar"
 
@@ -670,7 +671,7 @@ class UnitOfElectricCurrent(StrEnum):
 class UnitOfElectricPotential(StrEnum):
     """Electric potential units."""
 
-    MICROVOLT = "µV"
+    MICROVOLT = "μV"
     MILLIVOLT = "mV"
     VOLT = "V"
     KILOVOLT = "kV"
@@ -821,7 +822,7 @@ class UnitOfMass(StrEnum):
     GRAMS = "g"
     KILOGRAMS = "kg"
     MILLIGRAMS = "mg"
-    MICROGRAMS = "µg"
+    MICROGRAMS = "μg"
     OUNCES = "oz"
     POUNDS = "lb"
     STONES = "st"
@@ -839,13 +840,13 @@ class UnitOfConductivity(
     """Conductivity units."""
 
     SIEMENS_PER_CM = "S/cm"
-    MICROSIEMENS_PER_CM = "µS/cm"
+    MICROSIEMENS_PER_CM = "μS/cm"
     MILLISIEMENS_PER_CM = "mS/cm"
 
     # Deprecated aliases
     SIEMENS = "S/cm"
     """Deprecated: Please use UnitOfConductivity.SIEMENS_PER_CM"""
-    MICROSIEMENS = "µS/cm"
+    MICROSIEMENS = "μS/cm"
     """Deprecated: Please use UnitOfConductivity.MICROSIEMENS_PER_CM"""
     MILLISIEMENS = "mS/cm"
     """Deprecated: Please use UnitOfConductivity.MILLISIEMENS_PER_CM"""
@@ -917,8 +918,8 @@ class UnitOfPrecipitationDepth(StrEnum):
 
 # Concentration units
 CONCENTRATION_GRAMS_PER_CUBIC_METER: Final = "g/m³"
-CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
 CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = "mg/m³"
+CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "μg/m³"
 CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = "μg/ft³"
 CONCENTRATION_PARTS_PER_CUBIC_METER: Final = "p/m³"
 CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
