@@ -127,7 +127,7 @@ async def test_light_setup_retry(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.daybetter_light_local.DISCOVERY_TIMEOUT",
+        "homeassistant.components.daybetter_light_local.const.DISCOVERY_TIMEOUT",
         0,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
