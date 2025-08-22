@@ -16,6 +16,11 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from .const import DISCOVERY_TIMEOUT
 from .coordinator import DayBetterLocalApiCoordinator, DayBetterLocalConfigEntry
 
+
+
+# Explicitly export constants
+__all__ = ["DISCOVERY_TIMEOUT"]
+
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 
 _LOGGER = logging.getLogger(__name__)
