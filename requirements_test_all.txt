@@ -195,7 +195,7 @@ aioasuswrt==1.4.0
 aioautomower==2.1.2
 
 # homeassistant.components.azure_devops
-aioazuredevops==2.2.1
+aioazuredevops==2.2.2
 
 # homeassistant.components.baf
 aiobafi6==0.9.0
@@ -289,7 +289,7 @@ aiolifx==1.2.1
 aiolookin==1.0.0
 
 # homeassistant.components.lyric
-aiolyric==2.0.1
+aiolyric==2.0.2
 
 # homeassistant.components.mealie
 aiomealie==0.10.1
@@ -1129,7 +1129,7 @@ kegtron-ble==0.4.0
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.8.9.63154
+knx-frontend==2025.8.21.181525
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1965,7 +1965,7 @@ pysmhi==1.0.2
 pysml==0.1.5
 
 # homeassistant.components.smlight
-pysmlight==0.2.7
+pysmlight==0.2.8
 
 # homeassistant.components.snmp
 pysnmp==7.1.21
@@ -2645,7 +2645,7 @@ zeroconf==0.147.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.68
+zha==0.0.69
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.67.1
