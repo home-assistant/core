@@ -169,17 +169,17 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
     @property
     def native_value(self) -> float | int | str | None:
         """Return the current value of the sensor."""
-        sensor_data = self.coordinator.data.get(self.entity_description.key)
-        if isinstance(sensor_data, (list, tuple)) and sensor_data:
-            return sensor_data[0]
+        data = self.get_data()
+        if isinstance(data, (list, tuple)) and data:
+            return data[0]
         return None
 
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
-        if self.entity_description.key == "temperature" and self.coordinator.data:
-            sensor_data = self.coordinator.data.get("temperature")
-            if isinstance(sensor_data, (list, tuple)) and len(sensor_data) > 1:
-                return sensor_data[1]  # °C or °F
+        if self.entity_description.key == "temperature":
+            data = self.get_data()
+            if isinstance(data, (list, tuple)) and len(data) > 1:
+                return data[1]  # °C or °F
 
         return super().native_unit_of_measurement

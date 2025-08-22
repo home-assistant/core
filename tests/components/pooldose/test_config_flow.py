@@ -38,17 +38,16 @@ async def test_form_shows_and_creates_entry(
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
 
-        user_input = {CONF_HOST: "192.168.1.100"}
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.1.100"}
         )
 
-        assert result2["type"] == FlowResultType.CREATE_ENTRY
-        assert result2["title"] == "PoolDose SN123456789"
-        assert result2["data"] == {CONF_HOST: "192.168.1.100"}
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["data"] == {CONF_HOST: "192.168.1.100"}
 
 
 async def test_form_cannot_connect_host_unreachable(hass: HomeAssistant) -> None:

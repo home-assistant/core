@@ -13,12 +13,12 @@ from .coordinator import PooldoseCoordinator
 
 
 def device_info(info: dict | None, unique_id: str) -> DeviceInfo:
-    """Return device info dict for PoolDose device."""
-    info = info or {}
-    api_version = info.get("API_VERSION")
-    if api_version:
-        # Remove trailing slash from API version
-        api_version = api_version[:-1]
+    """Create device info for PoolDose devices."""
+    if info is None:
+        info = {}
+
+    api_version = info.get("API_VERSION", "").removesuffix("/")
+
     return DeviceInfo(
         identifiers={(DOMAIN, unique_id)},
         manufacturer=MANUFACTURER,
@@ -53,7 +53,7 @@ class PooldoseEntity(CoordinatorEntity[PooldoseCoordinator]):
         device_properties: dict[str, Any],
         entity_description: EntityDescription,
     ) -> None:
-        """Initialize the base PoolDose entity."""
+        """Initialize PoolDose entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._attr_unique_id = f"{serial_number}_{entity_description.key}"
@@ -61,9 +61,15 @@ class PooldoseEntity(CoordinatorEntity[PooldoseCoordinator]):
 
     @property
     def available(self) -> bool:
-        """Return True if the sensor is available."""
+        """Return True if the entity is available."""
         return (
             super().available
-            and self.coordinator.data is not None  # must have data
+            and self.coordinator.data is not None
             and self.entity_description.key in self.coordinator.data
         )
+
+    def get_data(self) -> list | tuple | None:
+        """Get data for this entity, only if available."""
+        if not self.available:
+            return None
+        return self.coordinator.data.get(self.entity_description.key)
