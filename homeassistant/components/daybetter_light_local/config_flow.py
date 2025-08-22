@@ -1,26 +1,23 @@
 """Config flow for DayBetter light local."""
 
 
-from __future__ import annotations  # noqa: I001
+from __future__ import annotations
 
 import asyncio
-from contextlib import suppress
 import logging
+from contextlib import suppress
+from typing import Any
 
-from daybetter_local_api import DayBetterController
 import voluptuous as vol
-
+from daybetter_local_api import DayBetterController
 from homeassistant import config_entries
 from homeassistant.components import network
-from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigFlowResult
-from .const import (
-    CONF_LISTENING_PORT_DEFAULT,
-    CONF_MULTICAST_ADDRESS_DEFAULT,
-    CONF_TARGET_PORT_DEFAULT,
-    DISCOVERY_TIMEOUT,
-    DOMAIN,
-)
+from homeassistant.core import HomeAssistant
+
+from .const import (CONF_LISTENING_PORT_DEFAULT,
+                    CONF_MULTICAST_ADDRESS_DEFAULT, CONF_TARGET_PORT_DEFAULT,
+                    DISCOVERY_TIMEOUT, DOMAIN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,17 +27,17 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Normally you'd use something like device_id or MAC address here
             unique_id = user_input["host"]
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(title="DayBetter Light", data=user_input)
-
 
         return self.async_show_form(
             step_id="user",
