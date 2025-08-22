@@ -538,6 +538,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass,
         _LOGGER,
         name=name,
+        config_entry=entry,
         update_method=async_update_data,
         update_interval=SCAN_INTERVAL,
     )
