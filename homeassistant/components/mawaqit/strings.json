@@ -40,9 +40,9 @@
       },
       "select_server": {
         "data": {
-          "password": "Password",
-          "server": "Server",
-          "username": "E-mail"
+          "password": "[%key:common::config_flow::data::password%]",
+          "server": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::email%]"
         },
         "description": "Multiple mosques available, select one:",
         "title": "Select your favourite mosque"
