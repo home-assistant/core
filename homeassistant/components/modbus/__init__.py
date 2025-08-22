@@ -139,6 +139,8 @@ from .const import (
     CONF_SWING_MODE_SWING_VERT,
     CONF_SWING_MODE_VALUES,
     CONF_TARGET_TEMP,
+    CONF_TARGET_TEMP_OFFSET,
+    CONF_TARGET_TEMP_SCALE,
     CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_VERIFY,
     CONF_VIRTUAL_COUNT,
@@ -214,8 +216,6 @@ BASE_STRUCT_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         vol.Optional(CONF_STRUCTURE): cv.string,
         vol.Optional(CONF_SCALE, default=1): vol.Coerce(float),
         vol.Optional(CONF_OFFSET, default=0): vol.Coerce(float),
-        vol.Inclusive(CONF_CURRENT_TEMP_SCALE, "current_temp"): vol.Coerce(float),
-        vol.Inclusive(CONF_CURRENT_TEMP_OFFSET, "current_temp"): vol.Coerce(float),
         vol.Optional(CONF_PRECISION): cv.positive_int,
         vol.Optional(
             CONF_SWAP,
@@ -277,6 +277,10 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
             vol.Exclusive(CONF_HVAC_ONOFF_COIL, "hvac_onoff_type"): cv.positive_int,
             vol.Exclusive(CONF_HVAC_ONOFF_REGISTER, "hvac_onoff_type"): cv.positive_int,
+            vol.Inclusive(CONF_CURRENT_TEMP_SCALE, "current_temp"): vol.Coerce(float),
+            vol.Inclusive(CONF_CURRENT_TEMP_OFFSET, "current_temp"): vol.Coerce(float),
+            vol.Inclusive(CONF_TARGET_TEMP_SCALE, "target_temp"): vol.Coerce(float),
+            vol.Inclusive(CONF_TARGET_TEMP_OFFSET, "target_temp"): vol.Coerce(float),
             vol.Optional(
                 CONF_HVAC_ON_VALUE, default=DEFAULT_HVAC_ON_VALUE
             ): cv.positive_int,

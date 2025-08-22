@@ -85,6 +85,8 @@ from homeassistant.components.modbus.const import (
     CONF_SWING_MODE_SWING_VERT,
     CONF_SWING_MODE_VALUES,
     CONF_TARGET_TEMP,
+    CONF_TARGET_TEMP_OFFSET,
+    CONF_TARGET_TEMP_SCALE,
     CONF_TARGET_TEMP_WRITE_REGISTERS,
     CONF_WRITE_REGISTERS,
     MODBUS_DOMAIN,
@@ -1007,6 +1009,83 @@ async def test_config_current_temp_scale_and_offset(
 
     state = hass.states.get(ENTITY_ID)
     assert state.attributes.get("current_temperature") == result
+
+
+@pytest.mark.parametrize(
+    ("do_config", "result", "register_words"),
+    [
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                    },
+                ]
+            },
+            17,
+            [0, 17],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_TARGET_TEMP_SCALE: 0.01,
+                        CONF_TARGET_TEMP_OFFSET: -5,
+                        CONF_SCALE: 10,
+                        CONF_OFFSET: 20,
+                    },
+                ]
+            },
+            20,
+            [2500],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_TARGET_TEMP_SCALE: 0.1,
+                        CONF_TARGET_TEMP_OFFSET: 5,
+                        CONF_SCALE: 10,
+                        CONF_OFFSET: -20,
+                    },
+                ]
+            },
+            26,
+            [210],
+        ),
+    ],
+)
+async def test_config_target_temp_scale_and_offset(
+    hass: HomeAssistant, mock_modbus_ha, result, register_words
+) -> None:
+    """Test behavior with different configurations for temperature scaling."""
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(register_words)
+
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes.get("temperature") == result
 
 
 @pytest.mark.parametrize(
