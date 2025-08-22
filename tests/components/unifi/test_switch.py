@@ -150,6 +150,7 @@ DEVICE_1 = {
             "portconf_id": "1a1",
             "port_poe": True,
             "up": True,
+            "enable": True,
         },
         {
             "media": "GE",
@@ -164,6 +165,7 @@ DEVICE_1 = {
             "portconf_id": "1a2",
             "port_poe": True,
             "up": True,
+            "enable": True,
         },
         {
             "media": "GE",
@@ -178,6 +180,7 @@ DEVICE_1 = {
             "portconf_id": "1a3",
             "port_poe": False,
             "up": True,
+            "enable": True,
         },
         {
             "media": "GE",
@@ -192,6 +195,7 @@ DEVICE_1 = {
             "portconf_id": "1a4",
             "port_poe": True,
             "up": True,
+            "enable": True,
         },
     ],
     "state": 1,
@@ -1727,6 +1731,7 @@ async def test_port_forwarding_switches(
                         "portconf_id": "1a1",
                         "port_poe": True,
                         "up": True,
+                        "enable": True,
                     },
                 ],
             },
@@ -1815,10 +1820,13 @@ async def test_port_control_switches(
     device_payload: list[dict[str, Any]],
 ) -> None:
     """Test port control entities work."""
+
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
 
     ent_reg_entry = entity_registry.async_get("switch.mock_name_port_1")
-    assert ent_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+    assert (
+        ent_reg_entry.disabled_by == RegistryEntryDisabler.INTEGRATION
+    )  # ✅ Disabled by default
 
     # Enable entity
     entity_registry.async_update_entity(
@@ -1839,9 +1847,7 @@ async def test_port_control_switches(
 
     # Update state object - disable port via port_overrides
     device_1 = deepcopy(device_payload[0])
-    device_1["port_overrides"] = [
-        {"port_idx": 1, "portconf_id": "1a1", "enable": False}
-    ]
+    device_1["port_table"][0]["enable"] = False
     mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
     assert hass.states.get("switch.mock_name_port_1").state == STATE_OFF
@@ -1881,14 +1887,17 @@ async def test_port_control_switches(
     )
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
     await hass.async_block_till_done()
-    assert aioclient_mock.call_count == 2
+    assert aioclient_mock.call_count == 3
     assert aioclient_mock.mock_calls[1][2] == {
         "port_overrides": [
-            {"enable": True, "port_idx": 1, "portconf_id": "1a1"},
-            {"enable": False, "port_idx": 2, "portconf_id": "1a2"},
+            {"port_idx": 1, "enable": True, "portconf_id": "1a1"},
         ]
     }
-
+    assert aioclient_mock.mock_calls[2][2] == {
+        "port_overrides": [
+            {"port_idx": 2, "enable": False, "portconf_id": "1a2"},
+        ]
+    }
     # Device gets disabled
     device_1["disabled"] = True
     mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
