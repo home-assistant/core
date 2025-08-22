@@ -304,7 +304,9 @@ async def async_setup_entry(
 
     # Only create coordinated binary sensors that should poll
     entities = [
-        AmcrestCoordinatedBinarySensor(device.name, device, coordinator, entity_description)
+        AmcrestCoordinatedBinarySensor(
+            device.name, device, coordinator, entity_description
+        )
         for entity_description in BINARY_SENSORS
         if entity_description.should_poll
     ]
@@ -326,3 +328,4 @@ class AmcrestCoordinatedBinarySensor(CoordinatorEntity, AmcrestBinarySensor):
         CoordinatorEntity.__init__(self, coordinator)
         AmcrestBinarySensor.__init__(self, name, device, entity_description)
         self._attr_device_info = device.device_info
+        self._attr_unique_id = f"{device.name}_{entity_description.key}"
