@@ -532,7 +532,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         identifiers={(DOMAIN, entry.entry_id)}, # Add serial??
         manufacturer="Amcrest",
         name=name,
-        configuration_url=f"http://{config_data[CONF_HOST]}",
     )
 
     data_coordinator = DataUpdateCoordinator(
@@ -665,7 +664,6 @@ class AmcrestConfiguredDevice(AmcrestDevice):
             identifiers={(DOMAIN, self.config_entry.entry_id)},
             name=self.name,
             manufacturer="Amcrest",
-            configuration_url=self.config_entry.data[CONF_HOST],
         )
 
     async def async_get_data(self) -> None:
