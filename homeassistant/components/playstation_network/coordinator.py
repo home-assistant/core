@@ -198,7 +198,10 @@ class PlaystationNetworkFriendDataCoordinator(
         """Set up the coordinator."""
         if TYPE_CHECKING:
             assert self.subentry.unique_id
-        self.user = self.psn.psn.user(account_id=self.subentry.unique_id)
+        self.user = self.psn.friends_list.get(
+            self.subentry.unique_id
+        ) or self.psn.psn.user(account_id=self.subentry.unique_id)
+
         self.profile = self.user.profile()
 
     async def _async_setup(self) -> None:

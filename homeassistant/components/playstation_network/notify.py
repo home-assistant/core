@@ -189,7 +189,7 @@ class PlaystationNetworkDirectMessageNotifyEntity(PlaystationNetworkNotifyBaseEn
             key=f"{account_id}_{PlaystationNetworkNotify.DIRECT_MESSAGE}",
             translation_key=PlaystationNetworkNotify.DIRECT_MESSAGE,
             translation_placeholders={
-                CONF_NAME: coordinator.psn.friends_list[self.account_id].online_id
+                CONF_NAME: coordinator.psn.friends_list[account_id].online_id
             },
             entity_registry_enabled_default=False,
         )
