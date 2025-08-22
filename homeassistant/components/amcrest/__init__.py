@@ -638,6 +638,7 @@ class AmcrestConfiguredDevice(AmcrestDevice):
             channel,
         )
         self.hass = hass
+        self.config_entry = config_entry
         self.name = name
         self.serial_number = ""
 
@@ -645,9 +646,10 @@ class AmcrestConfiguredDevice(AmcrestDevice):
     def device_info(self) -> DeviceInfo:
         """Return device info for device registration."""
         return DeviceInfo(
-            identifiers={(DOMAIN, self.serial_number)},
+            identifiers={(DOMAIN, self.config_entry.entry_id)},
             name=self.name,
             manufacturer="Amcrest",
+            configuration_url=self.config_entry.data[CONF_HOST],
         )
 
     async def async_get_data(self) -> None:
