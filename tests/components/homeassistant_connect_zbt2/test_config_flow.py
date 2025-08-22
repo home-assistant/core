@@ -27,6 +27,13 @@ from tests.common import MockConfigEntry
     ("step", "usb_data", "model", "fw_type", "fw_version"),
     [
         (
+            STEP_PICK_FIRMWARE_ZIGBEE,
+            USB_DATA_ZBT2,
+            "Home Assistant Connect ZBT-2",
+            ApplicationType.EZSP,
+            "7.4.4.0 build 0",
+        ),
+        (
             STEP_PICK_FIRMWARE_THREAD,
             USB_DATA_ZBT2,
             "Home Assistant Connect ZBT-2",
