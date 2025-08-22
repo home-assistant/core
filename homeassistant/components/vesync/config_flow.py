@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
@@ -50,7 +51,14 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
 
-        manager = VeSync(username, password)
+        time_zone = str(self.hass.config.time_zone)
+
+        manager = VeSync(
+            username,
+            password,
+            time_zone=time_zone,
+            session=async_get_clientsession(self.hass),
+        )
         try:
             await manager.login()
         except VeSyncError:
@@ -76,7 +84,14 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
 
-            manager = VeSync(username, password)
+            time_zone = str(self.hass.config.time_zone)
+
+            manager = VeSync(
+                username,
+                password,
+                time_zone=time_zone,
+                session=async_get_clientsession(self.hass),
+            )
             try:
                 await manager.login()
             except VeSyncError:
