@@ -42,7 +42,7 @@ EVSE_STATE = {
 }
 
 
-def _get_total_power(data):
+def _get_total_power(data: dict[str, Any]) -> float | None:
     """Calculate total active power from three phases."""
     vitals = data[WALLCONNECTOR_DATA_VITALS]
     if not vitals:
