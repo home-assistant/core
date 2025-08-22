@@ -52,9 +52,9 @@ from homeassistant.util.ulid import ulid_now
 
 from .const import (
     DOMAIN,
-    STT_SAMPLE_CHANNELS,
-    STT_SAMPLE_RATE,
-    STT_SAMPLE_WIDTH,
+    SAMPLE_CHANNELS,
+    SAMPLE_RATE,
+    SAMPLE_WIDTH,
     TTS_SAMPLE_CHANNELS,
     TTS_SAMPLE_RATE,
     TTS_SAMPLE_WIDTH,
@@ -132,7 +132,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
 
         self._client: AsyncTcpClient | None = None
         self._chunk_converter = AudioChunkConverter(
-            rate=STT_SAMPLE_RATE, width=STT_SAMPLE_WIDTH, channels=STT_SAMPLE_CHANNELS
+            rate=SAMPLE_RATE, width=SAMPLE_WIDTH, channels=SAMPLE_CHANNELS
         )
         self._is_pipeline_running = False
         self._pipeline_ended_event = asyncio.Event()
