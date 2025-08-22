@@ -207,7 +207,7 @@ aioasuswrt==1.4.0
 aioautomower==2.1.2
 
 # homeassistant.components.azure_devops
-aioazuredevops==2.2.1
+aioazuredevops==2.2.2
 
 # homeassistant.components.baf
 aiobafi6==0.9.0
@@ -307,7 +307,7 @@ aiolifx==1.2.1
 aiolookin==1.0.0
 
 # homeassistant.components.lyric
-aiolyric==2.0.1
+aiolyric==2.0.2
 
 # homeassistant.components.mealie
 aiomealie==0.10.1
@@ -628,7 +628,7 @@ bizkaibus==0.1.1
 bleak-esphome==3.1.0
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==4.0.2
+bleak-retry-connector==4.3.0
 
 # homeassistant.components.bluetooth
 bleak==1.0.1
@@ -1130,7 +1130,7 @@ ha-silabs-firmware-client==0.2.0
 habiticalib==0.4.2
 
 # homeassistant.components.bluetooth
-habluetooth==5.0.1
+habluetooth==5.1.0
 
 # homeassistant.components.cloud
 hass-nabucasa==1.0.0
@@ -3198,7 +3198,7 @@ zeroconf==0.147.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.68
+zha==0.0.69
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
