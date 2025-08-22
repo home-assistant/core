@@ -1,22 +1,10 @@
 """Common fixtures for the Volvo On Call tests."""
 
-from collections.abc import Generator
-from unittest.mock import patch
-
 import pytest
 
 from homeassistant.components.volvooncall.const import DOMAIN
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def mock_setup_entry() -> Generator[None]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.volvooncall.async_setup_entry", return_value=True
-    ):
-        yield
 
 
 @pytest.fixture

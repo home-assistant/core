@@ -1713,6 +1713,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/volvo/ @thomasddn
 /tests/components/volvo/ @thomasddn
 /homeassistant/components/volvooncall/ @molobrakos @svrooij
+/tests/components/volvooncall/ @molobrakos @svrooij
 /homeassistant/components/vulcan/ @Antoni-Czaplicki
 /tests/components/vulcan/ @Antoni-Czaplicki
 /homeassistant/components/wake_on_lan/ @ntilley905

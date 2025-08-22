@@ -19,7 +19,4 @@ class VolvoOnCallConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
 
-        return self.async_create_entry(
-            title="Volvo On Call will be removed ❌",
-            data={},
-        )
+        return self.async_abort(reason="deprecated")

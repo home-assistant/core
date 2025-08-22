@@ -11,15 +11,14 @@ from .const import DOMAIN
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Volvo On Call integration."""
-    hass.data.setdefault(DOMAIN, {})
 
     # Create repair issue pointing to the new volvo integration
     ir.async_create_issue(
         hass,
         DOMAIN,
         "volvooncall_deprecated",
+        breaks_in_ha_version="2026.3",
         is_fixable=False,
-        issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
         translation_key="volvooncall_deprecated",
     )
@@ -29,10 +28,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    ir.async_delete_issue(
-        hass,
-        DOMAIN,
-        "volvooncall_deprecated",
-    )
+
+    # Only delete the repair issue if this is the last config entry for this domain
+    remaining_entries = [
+        config_entry
+        for config_entry in hass.config_entries.async_entries(DOMAIN)
+        if config_entry.entry_id != entry.entry_id
+    ]
+
+    if not remaining_entries:
+        ir.async_delete_issue(
+            hass,
+            DOMAIN,
+            "volvooncall_deprecated",
+        )
 
     return True
