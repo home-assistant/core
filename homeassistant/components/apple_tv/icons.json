@@ -1,0 +1,13 @@
+{
+  "services": {
+    "set_search_text": {
+      "service": "mdi:magnify"
+    },
+    "append_search_text": {
+      "service": "mdi:magnify-plus"
+    },
+    "clear_search_text": {
+      "service": "mdi:magnify-minus"
+    }
+  }
+}

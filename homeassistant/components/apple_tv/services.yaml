@@ -1,0 +1,29 @@
+set_search_text:
+  target:
+    entity:
+      integration: apple_tv
+      domain: remote
+  fields:
+    text:
+      required: true
+      example: "The Wizard of Oz"
+      selector:
+        text:
+
+append_search_text:
+  target:
+    entity:
+      integration: apple_tv
+      domain: remote
+  fields:
+    text:
+      required: true
+      example: "a Mockingbird"
+      selector:
+        text:
+
+clear_search_text:
+  target:
+    entity:
+      integration: apple_tv
+      domain: remote
