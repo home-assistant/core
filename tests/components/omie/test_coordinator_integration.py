@@ -1,7 +1,7 @@
 """Integration tests for OMIE coordinator fetch behavior."""
 
 from datetime import date
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import ANY
 
 from freezegun import freeze_time
 import pytest
@@ -10,22 +10,6 @@ from homeassistant.components.omie.const import DOMAIN
 from homeassistant.components.omie.coordinator import OMIECoordinator
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def mock_pyomie():
-    """Mock pyomie.spot_price with realistic responses."""
-    with patch("homeassistant.components.omie.coordinator.pyomie") as mock:
-        # Mock successful responses - return different mock objects for each call
-        async def mock_spot_price(session, market_date):
-            mock_result = Mock()
-            mock_result.market_date = market_date
-            mock_result.contents = Mock()
-            mock_result.updated_at = Mock()
-            return mock_result
-
-        mock.spot_price.side_effect = mock_spot_price
-        yield mock
 
 
 @pytest.fixture

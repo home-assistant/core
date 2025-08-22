@@ -34,16 +34,11 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[dt.date, OMIEResults[SpotDat
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        *,
-        spot_price_fetcher=None,
     ) -> None:
         """Initialize OMIE coordinator."""
         super().__init__(hass, _LOGGER, name=f"{DOMAIN}", config_entry=config_entry)
         self.data: Mapping[dt.date, OMIEResults[SpotData]] = {}
         self._client_session = async_get_clientsession(hass)
-
-        # Dependency injection for testing
-        self._spot_price_fetcher = spot_price_fetcher or pyomie.spot_price
 
         # Random delay to avoid thundering herd
         delay_micros = random.randint(0, _SCHEDULE_MAX_DELAY.seconds * 10**6)
@@ -72,7 +67,7 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[dt.date, OMIEResults[SpotDat
             # off to OMIE for anything that's still missing
             for d in {pd for pd in published_dates if pd not in data}:
                 _LOGGER.debug("Fetching data for %s", d)
-                if results := await self._spot_price_fetcher(self._client_session, d):
+                if results := await pyomie.spot_price(self._client_session, d):
                     data.update({d: results})
         except Exception as error:
             raise UpdateFailed(str(error)) from error

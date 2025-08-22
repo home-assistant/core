@@ -118,7 +118,7 @@ def mock_config_entry():
     )
 
 
-def spot_price_fetcher_factory(spot_price_data: dict):
+def spot_price_fetcher(spot_price_data: dict):
     """Return spot price fetcher for any data dictionary.
 
     Args:
@@ -129,10 +129,10 @@ def spot_price_fetcher_factory(spot_price_data: dict):
         for iso_date, mock_result in spot_price_data.items()
     }
 
-    async def spot_price_fetcher(session, requested_date):
+    async def spot_price_fetcher_(session, requested_date):
         return data_by_date.get(requested_date)
 
-    return spot_price_fetcher
+    return spot_price_fetcher_
 
 
 class TestOMIECoordinatorDataMapping:
@@ -143,16 +143,15 @@ class TestOMIECoordinatorDataMapping:
         self,
         hass_madrid: HomeAssistant,
         mock_config_entry: MockConfigEntry,
+        mock_pyomie,
         mock_omie_results_jan15,
     ) -> None:
         """Test that coordinator correctly maps single date data."""
 
-        coordinator = OMIECoordinator(
-            hass_madrid,
-            mock_config_entry,
-            spot_price_fetcher=spot_price_fetcher_factory(
-                {"2024-01-15": mock_omie_results_jan15}
-            ),
+        coordinator = OMIECoordinator(hass_madrid, mock_config_entry)
+
+        mock_pyomie.spot_price.side_effect = spot_price_fetcher(
+            {"2024-01-15": mock_omie_results_jan15}
         )
 
         # Call _async_update_data
@@ -167,13 +166,14 @@ class TestOMIECoordinatorDataMapping:
         self,
         hass_lisbon: HomeAssistant,
         mock_config_entry: MockConfigEntry,
+        mock_pyomie,
         mock_omie_results_jan15,
         mock_omie_results_jan16,
     ) -> None:
         """Test that coordinator correctly maps data for multiple API calls."""
 
         # Test scenario 1: Jan 15
-        spot_price_fetcher = spot_price_fetcher_factory(
+        mock_pyomie.spot_price.side_effect = spot_price_fetcher(
             {
                 "2024-01-15": mock_omie_results_jan15,
                 "2024-01-16": mock_omie_results_jan16,
@@ -183,7 +183,6 @@ class TestOMIECoordinatorDataMapping:
         coordinator = OMIECoordinator(
             hass_lisbon,
             mock_config_entry,
-            spot_price_fetcher=spot_price_fetcher,
         )
 
         result = await coordinator._async_update_data()
@@ -196,11 +195,12 @@ class TestOMIECoordinatorDataMapping:
         self,
         hass_madrid: HomeAssistant,
         mock_config_entry: MockConfigEntry,
+        mock_pyomie,
         mock_omie_results_jan15,
         mock_omie_results_jan16,
     ) -> None:
         """Test that data persists appropriately and only for relevant dates."""
-        spot_price_fetcher = spot_price_fetcher_factory(
+        mock_pyomie.spot_price.side_effect = spot_price_fetcher(
             {
                 "2024-01-15": mock_omie_results_jan15,
                 "2024-01-16": mock_omie_results_jan16,
@@ -209,11 +209,7 @@ class TestOMIECoordinatorDataMapping:
 
         # Test scenario 1: First call at Jan 15 evening
         with freeze_time("2024-01-15 20:30:00"):
-            coordinator = OMIECoordinator(
-                hass_madrid,
-                mock_config_entry,
-                spot_price_fetcher=spot_price_fetcher,
-            )
+            coordinator = OMIECoordinator(hass_madrid, mock_config_entry)
 
             await coordinator.async_refresh()
             assert coordinator.data == {
@@ -231,15 +227,14 @@ class TestOMIECoordinatorDataMapping:
     async def test_none_response_handling(
         self,
         hass_madrid: HomeAssistant,
+        mock_pyomie,
         mock_config_entry: MockConfigEntry,
     ) -> None:
         """Test that coordinator handles None responses from pyomie gracefully."""
 
-        coordinator = OMIECoordinator(
-            hass_madrid,
-            mock_config_entry,
-            spot_price_fetcher=spot_price_fetcher_factory({}),
-        )
+        coordinator = OMIECoordinator(hass_madrid, mock_config_entry)
+
+        mock_pyomie.spot_price.side_effect = spot_price_fetcher({})
 
         # Call _async_update_data
         result = await coordinator._async_update_data()
@@ -252,20 +247,19 @@ class TestOMIECoordinatorDataMapping:
         self,
         hass_lisbon: HomeAssistant,
         mock_config_entry: MockConfigEntry,
+        mock_pyomie,
         mock_omie_results_jan15,
         mock_omie_results_jan16,
     ) -> None:
         """Test that the date key matches the requested date for the API call."""
 
-        coordinator = OMIECoordinator(
-            hass_lisbon,
-            mock_config_entry,
-            spot_price_fetcher=spot_price_fetcher_factory(
-                {
-                    "2024-01-15": mock_omie_results_jan15,
-                    "2024-01-16": mock_omie_results_jan16,
-                }
-            ),
+        coordinator = OMIECoordinator(hass_lisbon, mock_config_entry)
+
+        mock_pyomie.spot_price.side_effect = spot_price_fetcher(
+            {
+                "2024-01-15": mock_omie_results_jan15,
+                "2024-01-16": mock_omie_results_jan16,
+            }
         )
 
         result = await coordinator._async_update_data()
