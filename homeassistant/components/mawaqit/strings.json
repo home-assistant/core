@@ -49,9 +49,9 @@
       },
       "user": {
         "data": {
-          "password": "Password",
-          "server": "Server",
-          "username": "E-mail"
+          "password": "[%key:common::config_flow::data::password%]",
+          "server": "[%key:common::config_flow::data::host%]",
+          "username": "[%key:common::config_flow::data::email%]"
         },
         "description": "Register on https://mawaqit.net/ and connect below. The nearest mosques to your location will be suggested and you will choose your favourite one.",
         "title": "Login to MAWAQIT"
