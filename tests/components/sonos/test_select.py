@@ -23,7 +23,7 @@ from .conftest import create_rendering_control_event
 
 from tests.common import async_fire_time_changed
 
-SELECT_DIALOG_LEVEL_ENTITY = "select.zone_a_dialog_level"
+SELECT_DIALOG_LEVEL_ENTITY = "select.zone_a_speech_enhancement"
 
 
 @pytest.fixture(name="platform_select", autouse=True)

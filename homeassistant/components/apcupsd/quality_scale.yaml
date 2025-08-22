@@ -3,10 +3,7 @@ rules:
   action-setup: done
   appropriate-polling: done
   brands: done
-  common-modules:
-    status: done
-    comment: |
-      Consider deriving a base entity.
+  common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
