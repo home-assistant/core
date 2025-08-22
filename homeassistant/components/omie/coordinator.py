@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import datetime as dt
 from datetime import date, datetime, time, timedelta
 import logging
 import random
@@ -26,6 +25,9 @@ _LOGGER = logging.getLogger(__name__)
 _SCHEDULE_MAX_DELAY = timedelta(seconds=10)
 """To avoid thundering herd, we will fetch from OMIE up to this much time after the OMIE data becomes available."""
 
+_OMIE_PUBLISH_TIME_CET = time(hour=13, minute=30)
+"""The time by which intraday market results (for the next day) will have been published to omie.es."""
+
 
 class OMIECoordinator(DataUpdateCoordinator[Mapping[date, OMIEResults[SpotData]]]):
     """Coordinator that manages OMIE data for yesterday, today, and tomorrow."""
@@ -43,7 +45,6 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[date, OMIEResults[SpotData]]
         super().__init__(hass, _LOGGER, name=f"{DOMAIN}", config_entry=config_entry)
         self.data: Mapping[date, OMIEResults[SpotData]] = {}
         self._client_session = async_get_clientsession(hass)
-        self._unavailable_logged = False
 
         # Dependency injection for testing
         self._spot_price_fetcher = spot_price_fetcher or pyomie.spot_price
@@ -120,7 +121,7 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[date, OMIEResults[SpotData]]
 
 def _get_market_dates(local_tz: ZoneInfo, now_time: datetime) -> set[date]:
     """Returns the intraday market date(s) whose data we need to fetch."""
-    min_max = [time.min, time.max]
+    min_max = [_OMIE_PUBLISH_TIME_CET.min, _OMIE_PUBLISH_TIME_CET.max]
     return {
         datetime.combine(now_time.astimezone(local_tz), t, tzinfo=local_tz)
         .astimezone(CET)
@@ -129,10 +130,10 @@ def _get_market_dates(local_tz: ZoneInfo, now_time: datetime) -> set[date]:
     }
 
 
-def _is_published(market_date: dt.date, fetch_time: dt.datetime) -> bool:
+def _is_published(market_date: date, fetch_time: datetime) -> bool:
     """Returns whether OMIE data for a given date is expected to have been published at any point in time."""
     publish_date = market_date - timedelta(days=1)
-    publish_hour = dt.time(hour=13, minute=30)
-    publish_time = dt.datetime.combine(publish_date, publish_hour, tzinfo=CET)
+    publish_hour = _OMIE_PUBLISH_TIME_CET
+    publish_time = datetime.combine(publish_date, publish_hour, tzinfo=CET)
 
     return fetch_time >= publish_time
