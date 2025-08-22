@@ -325,6 +325,16 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
+    Capability.CUSTOM_WATER_FILTER: {
+        Attribute.WATER_FILTER_USAGE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.WATER_FILTER_USAGE,
+                translation_key="water_filter_usage",
+                native_unit_of_measurement=PERCENTAGE,
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
     Capability.DISHWASHER_OPERATING_STATE: {
         Attribute.MACHINE_STATE: [
             SmartThingsSensorEntityDescription(
@@ -463,6 +473,16 @@ CAPABILITY_TO_SENSORS: dict[
                 native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
                 device_class=SensorDeviceClass.CO2,
                 state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
+    Capability.FINE_DUST_SENSOR: {
+        Attribute.FINE_DUST_LEVEL: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.FINE_DUST_LEVEL,
+                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                state_class=SensorStateClass.MEASUREMENT,
+                device_class=SensorDeviceClass.PM25,
             )
         ]
     },

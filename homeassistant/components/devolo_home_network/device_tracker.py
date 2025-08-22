@@ -28,9 +28,9 @@ async def async_setup_entry(
 ) -> None:
     """Get all devices and sensors and setup them via config entry."""
     device = entry.runtime_data.device
-    coordinators: dict[str, DevoloDataUpdateCoordinator[list[ConnectedStationInfo]]] = (
-        entry.runtime_data.coordinators
-    )
+    coordinators: dict[
+        str, DevoloDataUpdateCoordinator[dict[str, ConnectedStationInfo]]
+    ] = entry.runtime_data.coordinators
     registry = er.async_get(hass)
     tracked = set()
 
@@ -38,16 +38,16 @@ async def async_setup_entry(
     def new_device_callback() -> None:
         """Add new devices if needed."""
         new_entities = []
-        for station in coordinators[CONNECTED_WIFI_CLIENTS].data:
-            if station.mac_address in tracked:
+        for mac_address in coordinators[CONNECTED_WIFI_CLIENTS].data:
+            if mac_address in tracked:
                 continue
 
             new_entities.append(
                 DevoloScannerEntity(
-                    coordinators[CONNECTED_WIFI_CLIENTS], device, station.mac_address
+                    coordinators[CONNECTED_WIFI_CLIENTS], device, mac_address
                 )
             )
-            tracked.add(station.mac_address)
+            tracked.add(mac_address)
         async_add_entities(new_entities)
 
     @callback
@@ -82,7 +82,7 @@ async def async_setup_entry(
 
 # The pylint disable is needed because of https://github.com/pylint-dev/pylint/issues/9138
 class DevoloScannerEntity(  # pylint: disable=hass-enforce-class-module
-    CoordinatorEntity[DevoloDataUpdateCoordinator[list[ConnectedStationInfo]]],
+    CoordinatorEntity[DevoloDataUpdateCoordinator[dict[str, ConnectedStationInfo]]],
     ScannerEntity,
 ):
     """Representation of a devolo device tracker."""
@@ -92,7 +92,7 @@ class DevoloScannerEntity(  # pylint: disable=hass-enforce-class-module
 
     def __init__(
         self,
-        coordinator: DevoloDataUpdateCoordinator[list[ConnectedStationInfo]],
+        coordinator: DevoloDataUpdateCoordinator[dict[str, ConnectedStationInfo]],
         device: Device,
         mac: str,
     ) -> None:
@@ -109,14 +109,8 @@ class DevoloScannerEntity(  # pylint: disable=hass-enforce-class-module
         if not self.coordinator.data:
             return {}
 
-        station = next(
-            (
-                station
-                for station in self.coordinator.data
-                if station.mac_address == self.mac_address
-            ),
-            None,
-        )
+        assert self.mac_address
+        station = self.coordinator.data.get(self.mac_address)
         if station:
             attrs["wifi"] = WIFI_APTYPE.get(station.vap_type, STATE_UNKNOWN)
             attrs["band"] = (
@@ -129,11 +123,8 @@ class DevoloScannerEntity(  # pylint: disable=hass-enforce-class-module
     @property
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
-        return any(
-            station
-            for station in self.coordinator.data
-            if station.mac_address == self.mac_address
-        )
+        assert self.mac_address
+        return self.coordinator.data.get(self.mac_address) is not None
 
     @property
     def unique_id(self) -> str:

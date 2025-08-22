@@ -6,7 +6,7 @@
     'area_id': None,
     'capabilities': dict({
       'max': 450,
-      'min': 0,
+      'min': 250,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 10,
     }),
@@ -27,7 +27,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Boost temperature',
     'platform': 'iron_os',
@@ -42,10 +42,9 @@
 # name: test_state[number.pinecil_boost_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
       'friendly_name': 'Pinecil Boost temperature',
       'max': 450,
-      'min': 0,
+      'min': 250,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 10,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
@@ -95,7 +94,7 @@
     'supported_features': 0,
     'translation_key': <PinecilNumber.CALIBRATION_OFFSET: 'calibration_offset'>,
     'unique_id': 'c0:ff:ee:c0:ff:ee_calibration_offset',
-    'unit_of_measurement': <UnitOfElectricPotential.MICROVOLT: 'µV'>,
+    'unit_of_measurement': <UnitOfElectricPotential.MICROVOLT: 'μV'>,
   })
 # ---
 # name: test_state[number.pinecil_calibration_offset-state]
@@ -106,7 +105,7 @@
       'min': 100,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
-      'unit_of_measurement': <UnitOfElectricPotential.MICROVOLT: 'µV'>,
+      'unit_of_measurement': <UnitOfElectricPotential.MICROVOLT: 'μV'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.pinecil_calibration_offset',
@@ -839,7 +838,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Setpoint temperature',
     'platform': 'iron_os',
@@ -854,7 +853,6 @@
 # name: test_state[number.pinecil_setpoint_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
       'friendly_name': 'Pinecil Setpoint temperature',
       'max': 450,
       'min': 10,
@@ -1015,7 +1013,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Sleep temperature',
     'platform': 'iron_os',
@@ -1030,7 +1028,6 @@
 # name: test_state[number.pinecil_sleep_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
       'friendly_name': 'Pinecil Sleep temperature',
       'max': 450,
       'min': 10,
