@@ -541,6 +541,12 @@
       "volume": {
         "name": "Volume"
       },
+      "volume_speek": {
+        "name": "Volume speek"
+      },
+      "volume_doorbell": {
+        "name": "Volume doorbell"
+      },
       "alarm_volume": {
         "name": "Alarm volume"
       },
