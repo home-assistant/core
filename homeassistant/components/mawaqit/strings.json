@@ -53,7 +53,7 @@
           "server": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::email%]"
         },
-        "description": "Register on https://mawaqit.net/ and connect below. The nearest mosques to your location will be suggested and you will choose your favourite one.",
+        "description": "Register on https://mawaqit.net/ and connect below. The nearest mosques to your location will be suggested and you will choose your favorite one.",
         "title": "Login to MAWAQIT"
       }
     }
