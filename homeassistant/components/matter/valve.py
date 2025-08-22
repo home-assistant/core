@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
 
@@ -22,12 +20,7 @@ from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
-ATTR_FAULT_GENERAL = "fault_general"
-ATTR_FAULT_BLOCKED = "fault_blocked"
-ATTR_FAULT_LEAKING = "fault_leaking"
-
 ValveConfigurationAndControl = clusters.ValveConfigurationAndControl
-
 ValveStateEnum = ValveConfigurationAndControl.Enums.ValveStateEnum
 
 
@@ -64,15 +57,6 @@ class MatterValve(MatterEntity, ValveEntity):
         await self.send_device_command(
             ValveConfigurationAndControl.Commands.Open(targetLevel=position)
         )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes of the entity."""
-        return {
-            ATTR_FAULT_GENERAL: self._attr_fault_general,
-            ATTR_FAULT_BLOCKED: self._attr_fault_blocked,
-            ATTR_FAULT_LEAKING: self._attr_fault_leaking,
-        }
 
     @callback
     def _update_from_device(self) -> None:
