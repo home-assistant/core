@@ -67,10 +67,10 @@ def mock_omie_results_jan15():
         energy_es_pt=[],
         energy_export_es_to_pt=[],
         energy_import_es_from_pt=[],
-        spot_price_es=[47.1, 44.2, 41.5, 39.9, 38.8, 38.1]
-        + [0.0] * 18,  # 6 hours + padding
-        spot_price_pt=[45.5, 42.3, 39.8, 38.2, 37.5, 36.9]
-        + [0.0] * 18,  # 6 hours + padding
+        # format: 34.DDhh for ES
+        # format: 351.DDhh for PT
+        spot_price_es=[1000 * (34 + 15 / 100 + h / 10000) for h in range(24)],
+        spot_price_pt=[1000 * (351 + 15 / 100 + h / 10000) for h in range(24)],
     )
     return OMIEResults(
         updated_at=dt.datetime.now(),
@@ -96,10 +96,10 @@ def mock_omie_results_jan16():
         energy_es_pt=[],
         energy_export_es_to_pt=[],
         energy_import_es_from_pt=[],
-        spot_price_es=[52.3, 49.1, 46.2, 43.8, 42.1, 41.0]
-        + [0.0] * 18,  # 6 hours + padding
-        spot_price_pt=[50.1, 47.8, 44.9, 42.4, 40.7, 39.2]
-        + [0.0] * 18,  # 6 hours + padding
+        # format: 34.DDhh for ES
+        # format: 351.DDhh for PT
+        spot_price_es=[1000 * (34 + 16 / 100 + h / 10000) for h in range(24)],
+        spot_price_pt=[1000 * (351 + 16 / 100 + h / 10000) for h in range(24)],
     )
     return OMIEResults(
         updated_at=dt.datetime.now(),

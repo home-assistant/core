@@ -13,10 +13,11 @@ import pytest
 from homeassistant.components.omie.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from .conftest import spot_price_fetcher
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.fixture
@@ -145,44 +146,145 @@ async def test_sensor_setup(
     assert entity_ids == expected_ids
 
 
-async def test_sensor_state_update(
-    hass: HomeAssistant,
+async def test_sensor_state_lisbon_timezone(
+    hass_lisbon: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_pyomie,
-    mock_coordinator_data,
+    mock_omie_results_jan15,
+    mock_omie_results_jan16,
 ) -> None:
-    """Test sensor state updates with realistic data."""
-    mock_config_entry.add_to_hass(hass)
+    """Test sensor state updates in Lisbon timezone across publication boundary."""
+    mock_config_entry.add_to_hass(hass_lisbon)
 
-    mock_pyomie.spot_price.return_value = mock_coordinator_data
+    mock_pyomie.spot_price.side_effect = spot_price_fetcher(
+        {
+            "2024-01-15": mock_omie_results_jan15,
+            "2024-01-16": mock_omie_results_jan16,
+        }
+    )
 
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    # Step 1: 1 PM CET (before 13:30 CET publication)
+    # Lisbon day spans two CET dates: Jan 15 available, Jan 16 not yet published
+    with freeze_time("2024-01-15T12:01:00Z"):  # 12:01 UTC = 12:01 Lisbon = 13:01 CET
+        assert await hass_lisbon.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass_lisbon.async_block_till_done()
 
-    # Set the coordinator data directly to the expected structure (date -> OMIEResults mapping)
-    test_date = date(2024, 1, 15)
-    coordinator = mock_config_entry.runtime_data
-    coordinator.data = {test_date: mock_coordinator_data}
+        # Only 1 API call for Jan 15 (Jan 16 not yet published at 13:30 CET)
+        assert mock_pyomie.spot_price.call_count == 1
 
-    # Create time for hour 1 (01:30) to get price index 1 from our mock data
-    # Use fixed test date with 01:30 time in UTC
-    with freeze_time("2024-01-15 01:30:00"):
-        # Trigger sensor updates with the mocked time
-        coordinator.async_update_listeners()
+    # Step 2: 2 PM CET (after 13:30 CET publication) - Jan 16 now available
+    with freeze_time("2024-01-15T13:01:00Z"):  # 13:01 UTC = 13:01 Lisbon = 14:01 CET
+        async_fire_time_changed(hass_lisbon, dt_util.utcnow())
+        await hass_lisbon.async_block_till_done()
 
-    # Check sensor states - values should be converted from €/MWh to €/kWh
-    pt_state = hass.states.get("sensor.omie_spot_price_portugal")
-    es_state = hass.states.get("sensor.omie_spot_price_spain")
+        # Additional call for Jan 16 (now published, needed for Lisbon's full day)
+        assert mock_pyomie.spot_price.call_count == 2
 
-    # At 01:30 UTC (= 02:30 CET)
-    # - PT price should be 39.8 €/MWh = 0.0398 €/kWh
-    # - ES price should be 41.5 €/MWh = 0.0415 €/kWh
-    assert pt_state.state == "0.0398"
-    assert es_state.state == "0.0415"
+    # Step 3: 3 PM CET - verify listeners update with existing data, no new API calls
+    with freeze_time("2024-01-15T14:01:00Z"):  # 14:01 UTC = 14:01 Lisbon = 15:01 CET
+        async_fire_time_changed(hass_lisbon, dt_util.utcnow())
+        await hass_lisbon.async_block_till_done()
 
-    # Check units are correct
-    assert pt_state.attributes["unit_of_measurement"] == "€/kWh"
-    assert es_state.attributes["unit_of_measurement"] == "€/kWh"
+        # No additional API calls should be made
+        assert mock_pyomie.spot_price.call_count == 2
+
+        # Check sensor states - values should be converted from €/MWh to €/kWh
+        pt_state_14 = hass_lisbon.states.get("sensor.omie_spot_price_portugal")
+        es_state_14 = hass_lisbon.states.get("sensor.omie_spot_price_spain")
+
+        # At 14:00 UTC (= 14:00 Lisbon = 3 PM CET)
+        assert pt_state_14.state[:8] == "351.1515"  # (PT day 15, hour 15)
+        assert es_state_14.state[:7] == "34.1515"  # (ES day 15, hour 15)
+
+        # Check units are correct
+        assert pt_state_14.attributes["unit_of_measurement"] == "€/kWh"
+        assert es_state_14.attributes["unit_of_measurement"] == "€/kWh"
+
+    # 23 UTC = 23 Lisbon = 00 CET (+1 day)
+    with freeze_time("2024-01-15T23:01:00Z"):
+        async_fire_time_changed(hass_lisbon, dt_util.utcnow())
+        await hass_lisbon.async_block_till_done()
+
+        # No additional API calls should be made, was already fetched at 3 PM CET
+        assert mock_pyomie.spot_price.call_count == 2
+
+        # Check sensor states - values should be converted from €/MWh to €/kWh
+        pt_state_23 = hass_lisbon.states.get("sensor.omie_spot_price_portugal")
+        es_state_23 = hass_lisbon.states.get("sensor.omie_spot_price_spain")
+
+        # At 14:00 UTC (= 14:00 Lisbon = 3 PM CET)
+        assert pt_state_23.state[:8] == "351.16"  # (PT day 16, hour 00)
+        assert es_state_23.state[:7] == "34.16"  # (ES day 16, hour 00)
+
+    # 00 UTC (+1 day) = 00 Lisbon (+1 day) = 01 CET (+1 day)
+    with freeze_time("2024-01-16T00:01:00Z"):
+        async_fire_time_changed(hass_lisbon, dt_util.utcnow())
+        await hass_lisbon.async_block_till_done()
+
+        # No additional API calls should be made, was already fetched at 3 PM CET
+        assert mock_pyomie.spot_price.call_count == 2
+
+        # Check sensor states - values should be converted from €/MWh to €/kWh
+        pt_state_00 = hass_lisbon.states.get("sensor.omie_spot_price_portugal")
+        es_state_00 = hass_lisbon.states.get("sensor.omie_spot_price_spain")
+
+        # At 00 UTC (= 00 Lisbon = 1 AM CET)
+        assert pt_state_00.state[:8] == "351.1601"  # (PT day 16, hour 01)
+        assert es_state_00.state[:7] == "34.1601"  # (ES day 16, hour 01)
+
+
+async def test_sensor_state_madrid_timezone(
+    hass_madrid: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyomie,
+    mock_omie_results_jan15,
+    mock_omie_results_jan16,
+) -> None:
+    """Test sensor state updates in Madrid timezone across publication boundary."""
+    mock_config_entry.add_to_hass(hass_madrid)
+
+    mock_pyomie.spot_price.side_effect = spot_price_fetcher(
+        {
+            "2024-01-15": mock_omie_results_jan15,
+            "2024-01-16": mock_omie_results_jan16,
+        }
+    )
+
+    # Step 1: 1 PM CET (before 13:30 CET publication) - only Jan 15 data available
+    with freeze_time("2024-01-15T12:01:00Z"):  # 12:00 UTC = 1 PM CET (Madrid)
+        assert await hass_madrid.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass_madrid.async_block_till_done()
+
+        # Should only have 1 API call for Jan 15 (Jan 16 not yet published)
+        assert mock_pyomie.spot_price.call_count == 1
+
+    # Step 2: 2 PM CET (after 13:30 CET publication) - Jan 16 data now available
+    with freeze_time("2024-01-15T13:01:00Z"):  # 13:00 UTC = 2 PM CET (Madrid)
+        async_fire_time_changed(hass_madrid, dt_util.utcnow())
+        await hass_madrid.async_block_till_done()
+
+        # No additional call needed - Madrid only needs Jan 15 for the full day
+        assert mock_pyomie.spot_price.call_count == 1
+
+    # Step 3: 3 PM CET - verify listeners update with existing data, no new API calls
+    with freeze_time("2024-01-15T14:01:00Z"):  # 14:00 UTC = 3 PM CET (Madrid)
+        async_fire_time_changed(hass_madrid, dt_util.utcnow())
+        await hass_madrid.async_block_till_done()
+
+        # Still only 1 API call - Madrid doesn't need Jan 16 for Jan 15 prices
+        assert mock_pyomie.spot_price.call_count == 1
+
+        # Check sensor states - values should be converted from €/MWh to €/kWh
+        pt_state = hass_madrid.states.get("sensor.omie_spot_price_portugal")
+        es_state = hass_madrid.states.get("sensor.omie_spot_price_spain")
+
+        # At 14:00 UTC ( = 3 PM CET)
+        assert pt_state.state[:8] == "351.1515"  # (PT day 15, hour 15)
+        assert es_state.state[:7] == "34.1515"  # (ES day 15, hour 15)
+
+        # Check units are correct
+        assert pt_state.attributes["unit_of_measurement"] == "€/kWh"
+        assert es_state.attributes["unit_of_measurement"] == "€/kWh"
 
 
 async def test_sensor_unavailable_when_no_data(
