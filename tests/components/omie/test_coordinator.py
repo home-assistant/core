@@ -259,11 +259,6 @@ def mock_config_entry():
     )
 
 
-def tz_provider(timezone_str: str):
-    """Return timezone provider for any timezone string."""
-    return lambda: ZoneInfo(timezone_str)
-
-
 def spot_price_fetcher_factory(spot_price_data: dict):
     """Return spot price fetcher for any data dictionary.
 
@@ -286,19 +281,18 @@ class TestOMIECoordinatorDataMapping:
 
     async def test_single_date_mapping(
         self,
-        hass: HomeAssistant,
+        hass_madrid: HomeAssistant,
         mock_config_entry: MockConfigEntry,
         mock_omie_results_jan15,
     ) -> None:
         """Test that coordinator correctly maps single date data."""
 
         coordinator = OMIECoordinator(
-            hass,
+            hass_madrid,
             mock_config_entry,
             spot_price_fetcher=spot_price_fetcher_factory(
                 {"2024-01-15": mock_omie_results_jan15}
             ),
-            timezone_provider=tz_provider("Europe/Madrid"),
             current_time_provider=lambda: datetime(2024, 1, 15, 15, 0, 0, tzinfo=UTC),
         )
 
@@ -311,7 +305,7 @@ class TestOMIECoordinatorDataMapping:
 
     async def test_multiple_dates_mapping(
         self,
-        hass: HomeAssistant,
+        hass_lisbon: HomeAssistant,
         mock_config_entry: MockConfigEntry,
         mock_omie_results_jan15,
         mock_omie_results_jan16,
@@ -327,10 +321,9 @@ class TestOMIECoordinatorDataMapping:
         )
 
         coordinator = OMIECoordinator(
-            hass,
+            hass_lisbon,
             mock_config_entry,
             spot_price_fetcher=spot_price_fetcher,
-            timezone_provider=tz_provider("Europe/Lisbon"),
             current_time_provider=lambda: datetime(2024, 1, 15, 15, 0, 0, tzinfo=UTC),
         )
 
@@ -342,7 +335,7 @@ class TestOMIECoordinatorDataMapping:
 
     async def test_data_persistence(
         self,
-        hass: HomeAssistant,
+        hass_madrid: HomeAssistant,
         mock_config_entry: MockConfigEntry,
         mock_omie_results_jan15,
         mock_omie_results_jan16,
@@ -357,10 +350,9 @@ class TestOMIECoordinatorDataMapping:
 
         # Test scenario 1: First call at Jan 15 evening
         coordinator = OMIECoordinator(
-            hass,
+            hass_madrid,
             mock_config_entry,
             spot_price_fetcher=spot_price_fetcher,
-            timezone_provider=tz_provider("Europe/Madrid"),
             current_time_provider=lambda: datetime(2024, 1, 15, 20, 30, 0, tzinfo=UTC),
         )
 
@@ -380,16 +372,15 @@ class TestOMIECoordinatorDataMapping:
 
     async def test_none_response_handling(
         self,
-        hass: HomeAssistant,
+        hass_madrid: HomeAssistant,
         mock_config_entry: MockConfigEntry,
     ) -> None:
         """Test that coordinator handles None responses from pyomie gracefully."""
 
         coordinator = OMIECoordinator(
-            hass,
+            hass_madrid,
             mock_config_entry,
             spot_price_fetcher=spot_price_fetcher_factory({}),
-            timezone_provider=tz_provider("Europe/Madrid"),
             current_time_provider=lambda: datetime(2024, 1, 15, 15, 0, 0, tzinfo=UTC),
         )
 
@@ -401,7 +392,7 @@ class TestOMIECoordinatorDataMapping:
 
     async def test_date_key_correctness(
         self,
-        hass: HomeAssistant,
+        hass_lisbon: HomeAssistant,
         mock_config_entry: MockConfigEntry,
         mock_omie_results_jan15,
         mock_omie_results_jan16,
@@ -409,7 +400,7 @@ class TestOMIECoordinatorDataMapping:
         """Test that the date key matches the requested date for the API call."""
 
         coordinator = OMIECoordinator(
-            hass,
+            hass_lisbon,
             mock_config_entry,
             spot_price_fetcher=spot_price_fetcher_factory(
                 {
@@ -417,7 +408,6 @@ class TestOMIECoordinatorDataMapping:
                     "2024-01-16": mock_omie_results_jan16,
                 }
             ),
-            timezone_provider=tz_provider("Europe/Lisbon"),
             current_time_provider=lambda: datetime(2024, 1, 15, 23, 30, 0, tzinfo=UTC),
         )
 

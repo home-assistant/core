@@ -38,7 +38,6 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[date, OMIEResults[SpotData]]
         config_entry: ConfigEntry,
         *,
         spot_price_fetcher=None,
-        timezone_provider=None,
         current_time_provider=None,
     ) -> None:
         """Initialize OMIE coordinator."""
@@ -48,9 +47,6 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[date, OMIEResults[SpotData]]
 
         # Dependency injection for testing
         self._spot_price_fetcher = spot_price_fetcher or pyomie.spot_price
-        self._timezone_provider = timezone_provider or (
-            lambda: ZoneInfo(hass.config.time_zone)
-        )
         self._current_time_provider = current_time_provider or utcnow
 
         # Random delay to avoid thundering herd
@@ -66,7 +62,7 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[date, OMIEResults[SpotData]]
     async def _async_update_data(self) -> Mapping[date, OMIEResults[SpotData]]:
         """Update OMIE data, fetching data as needed and available."""
         now = self._current_time_provider()
-        relevant_dates = _get_market_dates(self._timezone_provider(), now)
+        relevant_dates = _get_market_dates(ZoneInfo(self.hass.config.time_zone), now)
         published_dates = {date for date in relevant_dates if _is_published(date, now)}
 
         # seed new data with previously-fetched days. these are immutable once fetched.

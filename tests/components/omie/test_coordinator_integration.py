@@ -8,16 +8,8 @@ import pytest
 
 from homeassistant.components.omie.const import DOMAIN
 from homeassistant.components.omie.coordinator import OMIECoordinator
-from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-async def hass_lisbon(hass: HomeAssistant):
-    """Home Assistant configured for Lisbon timezone."""
-    await hass.config.async_set_time_zone("Europe/Lisbon")
-    return hass
 
 
 @pytest.fixture
