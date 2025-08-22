@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "no_mosque": "Sorry, no MAWAQIT mosques were found in your area. Please check your coordinates or remove the existing mosque configuration and set up a new one.",
-      "already_configured": "A single MAWAQIT entry is allowed. If you want to reconfigure your mosque, you can click on \"Configure\" next to the existing entry, or click on the 3 dots  and click on Delete."
+      "already_configured": "A single MAWAQIT entry is allowed. If you want to reconfigure your mosque, you can select \"Configure\" next to the existing entry, or open the 3-dots menu and select Delete."
     },
     "error": {
       "cannot_connect_to_server": "Cannot connect to the server, please retry later.",
