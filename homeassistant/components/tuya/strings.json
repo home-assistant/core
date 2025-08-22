@@ -148,6 +148,9 @@
       "heat_preservation_time": {
         "name": "Heat preservation time"
       },
+      "indexed_irrigation_duration": {
+        "name": "Irrigation duration {index}"
+      },
       "feed": {
         "name": "Feed"
       },
@@ -532,6 +535,18 @@
       "air_pressure": {
         "name": "Air pressure"
       },
+      "precipitation_today": {
+        "name": "Total precipitation today"
+      },
+      "precipitation_intensity": {
+        "name": "[%key:component::sensor::entity_component::precipitation_intensity::name%]"
+      },
+      "uv_index": {
+        "name": "UV index"
+      },
+      "wind_direction": {
+        "name": "[%key:component::sensor::entity_component::wind_direction::name%]"
+      },
       "pm25": {
         "name": "[%key:component::sensor::entity_component::pm25::name%]"
       },
@@ -740,6 +755,9 @@
       },
       "liquid_level": {
         "name": "Liquid level"
+      },
+      "supply_frequency": {
+        "name": "Supply frequency"
       }
     },
     "switch": {
@@ -898,6 +916,11 @@
       },
       "frost_protection": {
         "name": "Frost protection"
+      }
+    },
+    "valve": {
+      "indexed_valve": {
+        "name": "Valve {index}"
       }
     }
   },

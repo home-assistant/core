@@ -390,7 +390,6 @@ def _domains_from_yaml_config(yaml_configuration: dict[str, Any]) -> set[str]:
 
 async def async_devices_payload(hass: HomeAssistant) -> dict:
     """Return the devices payload."""
-    integrations_without_model_id: set[str] = set()
     devices: list[dict[str, Any]] = []
     dev_reg = dr.async_get(hass)
     # Devices that need via device info set
@@ -400,10 +399,6 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
     seen_integrations = set()
 
     for device in dev_reg.devices.values():
-        # Ignore services
-        if device.entry_type:
-            continue
-
         if not device.primary_config_entry:
             continue
 
@@ -413,13 +408,6 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
             continue
 
         seen_integrations.add(config_entry.domain)
-
-        if not device.model_id:
-            integrations_without_model_id.add(config_entry.domain)
-            continue
-
-        if not device.manufacturer:
-            continue
 
         new_indexes[device.id] = len(devices)
         devices.append(
@@ -432,8 +420,10 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
                 "hw_version": device.hw_version,
                 "has_configuration_url": device.configuration_url is not None,
                 "via_device": None,
+                "entry_type": device.entry_type.value if device.entry_type else None,
             }
         )
+
         if device.via_device_id:
             via_devices[device.id] = device.via_device_id
 
@@ -453,15 +443,12 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
     for device_info in devices:
         if integration := integrations.get(device_info["integration"]):
             device_info["is_custom_integration"] = not integration.is_built_in
+            # Include version for custom integrations
+            if not integration.is_built_in and integration.version:
+                device_info["custom_integration_version"] = str(integration.version)
 
     return {
         "version": "home-assistant:1",
-        "no_model_id": sorted(
-            [
-                domain
-                for domain in integrations_without_model_id
-                if domain in integrations and integrations[domain].is_built_in
-            ]
-        ),
+        "home_assistant": HA_VERSION,
         "devices": devices,
     }
