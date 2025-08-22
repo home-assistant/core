@@ -39,10 +39,10 @@ GAS_USAGE_UNITS: dict[str, tuple[UnitOfEnergy | UnitOfVolume, ...]] = {
     ],
     sensor.SensorDeviceClass.GAS: (
         UnitOfVolume.CENTUM_CUBIC_FEET,
-        UnitOfVolume.MILLE_CUBIC_FEET,
         UnitOfVolume.CUBIC_FEET,
         UnitOfVolume.CUBIC_METERS,
         UnitOfVolume.LITERS,
+        UnitOfVolume.MILLE_CUBIC_FEET,
     ),
 }
 GAS_PRICE_UNITS = tuple(
@@ -54,11 +54,11 @@ WATER_USAGE_DEVICE_CLASSES = (sensor.SensorDeviceClass.WATER,)
 WATER_USAGE_UNITS: dict[str, tuple[UnitOfVolume, ...]] = {
     sensor.SensorDeviceClass.WATER: (
         UnitOfVolume.CENTUM_CUBIC_FEET,
-        UnitOfVolume.MILLE_CUBIC_FEET,
         UnitOfVolume.CUBIC_FEET,
         UnitOfVolume.CUBIC_METERS,
         UnitOfVolume.GALLONS,
         UnitOfVolume.LITERS,
+        UnitOfVolume.MILLE_CUBIC_FEET,
     ),
 }
 WATER_PRICE_UNITS = tuple(
