@@ -121,6 +121,9 @@ WSDiscovery==2.1.2
 # homeassistant.components.accuweather
 accuweather==4.2.0
 
+# homeassistant.components.actronair
+actronair-api==0.1.6
+
 # homeassistant.components.adax
 adax==0.4.0
 
@@ -2181,6 +2184,9 @@ qingping-ble==0.10.0
 
 # homeassistant.components.qnap
 qnapstats==0.4.0
+
+# homeassistant.components.actronair
+qrcode==7.3
 
 # homeassistant.components.quantum_gateway
 quantum-gateway==0.0.8
