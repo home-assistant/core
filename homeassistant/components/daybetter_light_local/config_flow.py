@@ -38,7 +38,7 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             ip = user_input["ip"]
-            device_id = user_input.get("device", ip)  # 用 device(MAC) 作 unique_id，fallback ip
+            device_id = user_input.get("device", ip) 
             await self.async_set_unique_id(device_id)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
@@ -55,8 +55,6 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data=discovered,
             )
 
-
-        # 如果没发现设备 → 退回到用户输入
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
@@ -97,7 +95,6 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("No devices discovered")
             return None
 
-        # 拿第一个设备
         device: DayBetterDevice | None = next(iter(controller.devices), None)
         if not device:
             return None
@@ -108,6 +105,6 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return {
             "ip": device.ip,
-            "device": device,  # MAC 地址
+            "device": device,
             "sku": getattr(device, "sku", "unknown"),
         }
