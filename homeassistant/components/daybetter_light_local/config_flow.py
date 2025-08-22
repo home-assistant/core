@@ -1,3 +1,5 @@
+"""Config flow for the DayBetter light local integration."""
+
 from __future__ import annotations
 
 import asyncio
