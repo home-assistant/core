@@ -28,9 +28,9 @@ from homeassistant.components import assist_pipeline, assist_satellite, wyoming
 from homeassistant.components.wyoming.assist_satellite import WyomingAssistSatellite
 from homeassistant.components.wyoming.const import (
     DOMAIN,
-    STT_SAMPLE_CHANNELS,
-    STT_SAMPLE_RATE,
-    STT_SAMPLE_WIDTH,
+    SAMPLE_CHANNELS,
+    SAMPLE_RATE,
+    SAMPLE_WIDTH,
     TTS_SAMPLE_CHANNELS,
     TTS_SAMPLE_RATE,
     TTS_SAMPLE_WIDTH,
@@ -143,9 +143,9 @@ class SatelliteAsyncTcpClient(MockAsyncTcpClient):
         self.timer_finished: TimerFinished | None = None
 
         self._mic_audio_chunk = AudioChunk(
-            rate=STT_SAMPLE_RATE,
-            width=STT_SAMPLE_WIDTH,
-            channels=STT_SAMPLE_CHANNELS,
+            rate=SAMPLE_RATE,
+            width=SAMPLE_WIDTH,
+            channels=SAMPLE_CHANNELS,
             audio=b"chunk",
         ).event()
 
@@ -328,9 +328,9 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
         # Push in some audio
         mock_client.inject_event(
             AudioChunk(
-                rate=STT_SAMPLE_RATE,
-                width=STT_SAMPLE_WIDTH,
-                channels=STT_SAMPLE_CHANNELS,
+                rate=SAMPLE_RATE,
+                width=SAMPLE_WIDTH,
+                channels=SAMPLE_CHANNELS,
                 audio=bytes(1024),
             ).event()
         )
@@ -367,9 +367,9 @@ async def test_satellite_pipeline(hass: HomeAssistant) -> None:
         # Push in some audio
         mock_client.inject_event(
             AudioChunk(
-                rate=STT_SAMPLE_RATE,
-                width=STT_SAMPLE_WIDTH,
-                channels=STT_SAMPLE_CHANNELS,
+                rate=SAMPLE_RATE,
+                width=SAMPLE_WIDTH,
+                channels=SAMPLE_CHANNELS,
                 audio=bytes(1024),
             ).event()
         )
@@ -1587,9 +1587,9 @@ async def test_satellite_tts_streaming(hass: HomeAssistant) -> None:
         # Push in some audio
         mock_client.inject_event(
             AudioChunk(
-                rate=STT_SAMPLE_RATE,
-                width=STT_SAMPLE_WIDTH,
-                channels=STT_SAMPLE_CHANNELS,
+                rate=SAMPLE_RATE,
+                width=SAMPLE_WIDTH,
+                channels=SAMPLE_CHANNELS,
                 audio=bytes(1024),
             ).event()
         )
