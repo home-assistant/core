@@ -1,6 +1,7 @@
 """Config flow for DayBetter light local."""
 
-from __future__ import annotations
+
+from __future__ import annotations  # noqa: I001
 
 import asyncio
 from contextlib import suppress
@@ -12,7 +13,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.core import HomeAssistant
-
+from homeassistant.config_entries import ConfigFlowResult
 from .const import (
     CONF_LISTENING_PORT_DEFAULT,
     CONF_MULTICAST_ADDRESS_DEFAULT,
@@ -29,7 +30,7 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 
@@ -39,6 +40,7 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(title="DayBetter Light", data=user_input)
+
 
         return self.async_show_form(
             step_id="user",
