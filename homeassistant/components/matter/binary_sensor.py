@@ -459,6 +459,7 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ValveConfigurationAndControl.Attributes.ValveFault,
         ),
+    ),
     MatterDiscoverySchema(
         platform=Platform.BINARY_SENSOR,
         entity_description=MatterBinarySensorEntityDescription(
