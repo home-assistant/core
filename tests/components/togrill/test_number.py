@@ -229,7 +229,7 @@ async def test_set_number_disconnected(
     )
     mock_client.is_connected = False
 
-    with pytest.raises(HomeAssistantError, match=""):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
