@@ -81,6 +81,9 @@
       "voltage_c_v": {
         "name": "Phase C voltage"
       },
+      "total_power_w": {
+        "name": "Total power"
+      },
       "session_energy_wh": {
         "name": "Session energy"
       }
