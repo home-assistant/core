@@ -289,7 +289,7 @@ aiolifx==1.2.1
 aiolookin==1.0.0
 
 # homeassistant.components.lyric
-aiolyric==2.0.1
+aiolyric==2.0.2
 
 # homeassistant.components.mealie
 aiomealie==0.10.1
