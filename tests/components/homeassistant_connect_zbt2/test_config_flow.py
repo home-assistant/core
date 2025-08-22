@@ -214,3 +214,19 @@ async def test_options_flow(
         "serial_number": usb_data.serial_number,
         "vid": usb_data.vid,
     }
+
+
+async def test_duplicate_discovery(hass: HomeAssistant) -> None:
+    """Test config flow unique_id deduplication."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "usb"}, data=USB_DATA_ZBT2
+    )
+
+    assert result["type"] is FlowResultType.MENU
+
+    result_duplicate = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "usb"}, data=USB_DATA_ZBT2
+    )
+
+    assert result_duplicate["type"] is FlowResultType.ABORT
+    assert result_duplicate["reason"] == "already_in_progress"
