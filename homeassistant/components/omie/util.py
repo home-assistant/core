@@ -11,7 +11,7 @@ from pyomie.util import localize_hourly_data
 from .const import CET
 
 _OMIE_PUBLISH_TIME_CET = dt.time(hour=13, minute=30)
-"""The time by which intraday market results (for the next day) will have been published to omie.es."""
+"""The time by which day-ahead market results (for the next day) will have been published to omie.es."""
 
 
 def _pick_series_cet(
