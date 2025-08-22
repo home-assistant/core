@@ -13,7 +13,7 @@ from yarl import URL
 from homeassistant import config_entries
 from homeassistant.components.volvo.const import CONF_VIN, DOMAIN
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -115,6 +115,53 @@ async def test_reauth_flow(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reauth_no_stale_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    hass_client_no_auth: ClientSessionGenerator,
+    mock_config_flow_api: VolvoCarsApi,
+) -> None:
+    """Test if reauthentication flow does not use stale data."""
+    old_access_token = mock_config_entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN]
+
+    with patch(
+        "homeassistant.components.volvo.config_flow._create_volvo_cars_api",
+        return_value=mock_config_flow_api,
+    ) as mock_create_volvo_cars_api:
+        result = await mock_config_entry.start_reauth_flow(hass)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+        state = config_entry_oauth2_flow._encode_jwt(
+            hass,
+            {
+                "flow_id": result["flow_id"],
+                "redirect_uri": REDIRECT_URI,
+            },
+        )
+
+        client = await hass_client_no_auth()
+        resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+        assert resp.status == 200
+        assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+        result = await _async_run_flow_to_completion(
+            hass,
+            result,
+            mock_config_flow_api,
+            has_vin_step=False,
+            is_reauth=True,
+        )
+
+        assert mock_create_volvo_cars_api.called
+        call = mock_create_volvo_cars_api.call_args_list[0]
+        access_token_arg = call.args[1]
+        assert old_access_token != access_token_arg
 
 
 async def test_reconfigure_flow(

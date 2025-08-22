@@ -396,7 +396,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.BINARY_SENSOR,
         entity_description=MatterBinarySensorEntityDescription(
             key="DishwasherAlarmDoorError",
-            translation_key="dishwasher_alarm_door",
+            translation_key="alarm_door",
             device_class=BinarySensorDeviceClass.PROBLEM,
             entity_category=EntityCategory.DIAGNOSTIC,
             device_to_ha=lambda x: (
@@ -459,6 +459,19 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.ValveConfigurationAndControl.Attributes.ValveFault,
         ),
+    MatterDiscoverySchema(
+        platform=Platform.BINARY_SENSOR,
+        entity_description=MatterBinarySensorEntityDescription(
+            key="RefrigeratorAlarmDoorOpen",
+            translation_key="alarm_door",
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_to_ha=lambda x: (
+                x == clusters.RefrigeratorAlarm.Bitmaps.AlarmBitmap.kDoorOpen
+            ),
+        ),
+        entity_class=MatterBinarySensor,
+        required_attributes=(clusters.RefrigeratorAlarm.Attributes.State,),
         allow_multi=True,
     ),
 ]
