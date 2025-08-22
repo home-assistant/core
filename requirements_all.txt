@@ -22,7 +22,7 @@ HAP-python==4.9.2
 HATasmota==0.10.0
 
 # homeassistant.components.mastodon
-Mastodon.py==2.1.1
+Mastodon.py==2.1.2
 
 # homeassistant.components.playstation_network
 PSNAWP==3.0.0
@@ -1325,7 +1325,7 @@ lakeside==0.13
 laundrify-aio==1.2.2
 
 # homeassistant.components.lcn
-lcn-frontend==0.2.6
+lcn-frontend==0.2.7
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
