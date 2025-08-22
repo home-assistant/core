@@ -117,11 +117,11 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         """Get the list of available preset modes."""
         if hasattr(self.device, "modes"):
             return sorted(
-                {
+                [
                     mode
                     for mode in self.device.modes
                     if mode in VS_FAN_MODE_PRESET_LIST_HA
-                }
+                ]
             )
         return []
 
