@@ -13,7 +13,6 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.core import HomeAssistant
 
 from .const import (
     CONF_LISTENING_PORT_DEFAULT,
@@ -38,16 +37,26 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            host = DayBetterDevice.ip
-            # NO NULL CHECK: host is required in the schema
-            if not host or not isinstance(host, str) or host.strip() == "":
-                errors["ip"] = "invalid_host"
-            elif not errors:
-                unique_id = host
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(title="DayBetter Light", data=user_input)
+            ip = user_input["ip"]
+            device_id = user_input.get("device", ip)  # 用 device(MAC) 作 unique_id，fallback ip
+            await self.async_set_unique_id(device_id)
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(
+                title=f"DayBetter Light {ip}",
+                data=user_input,
+            )
 
+        discovered = await self._async_discover_device()
+        if discovered:
+            await self.async_set_unique_id(discovered["device"])
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(
+                title=f"DayBetter Light {discovered['ip']}",
+                data=discovered,
+            )
+
+
+        # 如果没发现设备 → 退回到用户输入
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
@@ -59,38 +68,46 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
-async def _async_has_devices(hass: HomeAssistant) -> bool:
-    """Return if there are devices that can be discovered."""
+    async def _async_discover_device(self) -> dict[str, Any] | None:
+        """Discover a DayBetter device and return its info."""
+        adapter = await network.async_get_source_ip(self.hass, network.PUBLIC_TARGET_IP)
+        controller: DayBetterController = DayBetterController(
+            loop=self.hass.loop,
+            logger=_LOGGER,
+            listening_address=adapter,
+            broadcast_address=CONF_MULTICAST_ADDRESS_DEFAULT,
+            broadcast_port=CONF_TARGET_PORT_DEFAULT,
+            listening_port=CONF_LISTENING_PORT_DEFAULT,
+            discovery_enabled=True,
+            discovery_interval=1,
+            update_enabled=False,
+        )
 
-    adapter = await network.async_get_source_ip(hass, network.PUBLIC_TARGET_IP)
-    controller: DayBetterController = DayBetterController(
-        loop=hass.loop,
-        logger=_LOGGER,
-        listening_address=adapter,
-        broadcast_address=CONF_MULTICAST_ADDRESS_DEFAULT,
-        broadcast_port=CONF_TARGET_PORT_DEFAULT,
-        listening_port=CONF_LISTENING_PORT_DEFAULT,
-        discovery_enabled=True,
-        discovery_interval=1,
-        update_enabled=False,
-    )
+        try:
+            await controller.start()
+        except OSError as ex:
+            _LOGGER.error("Controller start failed, errno: %d", ex.errno)
+            return None
 
-    try:
-        await controller.start()
-    except OSError as ex:
-        _LOGGER.error("Start failed, errno: %d", ex.errno)
-        return False
+        try:
+            async with asyncio.timeout(delay=DISCOVERY_TIMEOUT):
+                while not controller.devices:
+                    await asyncio.sleep(delay=1)
+        except TimeoutError:
+            _LOGGER.debug("No devices discovered")
+            return None
 
-    try:
-        async with asyncio.timeout(delay=DISCOVERY_TIMEOUT):
-            while not controller.devices:
-                await asyncio.sleep(delay=1)
-    except TimeoutError:
-        _LOGGER.debug("No devices found")
+        # 拿第一个设备
+        device: DayBetterDevice | None = next(iter(controller.devices), None)
+        if not device:
+            return None
 
-    devices_count = len(controller.devices)
-    cleanup_complete: asyncio.Event = controller.cleanup()
-    with suppress(TimeoutError):
-        await asyncio.wait_for(cleanup_complete.wait(), 1)
+        cleanup_complete: asyncio.Event = controller.cleanup()
+        with suppress(TimeoutError):
+            await asyncio.wait_for(cleanup_complete.wait(), 1)
 
-    return devices_count > 0
+        return {
+            "ip": device.ip,
+            "device": device,  # MAC 地址
+            "sku": getattr(device, "sku", "unknown"),
+        }
