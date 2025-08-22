@@ -93,7 +93,6 @@
               "slow": "mdi:fan-chevron-down",
               "low": "mdi:fan-speed-1",
               "medium": "mdi:fan-speed-2",
-              "mid": "mdi:fan-speed-2",
               "high": "mdi:fan-speed-3",
               "power": "mdi:fan-chevron-up",
               "auto": "mdi:fan-auto"
