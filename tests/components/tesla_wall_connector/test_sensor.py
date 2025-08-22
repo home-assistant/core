@@ -54,6 +54,9 @@ async def test_sensors(hass: HomeAssistant) -> None:
             "sensor.tesla_wall_connector_phase_c_voltage", "232.1", "230"
         ),
         EntityAndExpectedValues(
+            "sensor.tesla_wall_connector_total_power", "7650.3", "5499.5"
+        ),
+        EntityAndExpectedValues(
             "sensor.tesla_wall_connector_session_energy", "1.23456", "0.1122"
         ),
     ]
