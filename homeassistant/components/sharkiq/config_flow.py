@@ -52,8 +52,9 @@ async def _validate_input(
     )
 
     try:
-        async with asyncio.timeout(10):
+        async with asyncio.timeout(15):
             LOGGER.debug("Initialize connection to Ayla networks API")
+            await ayla_api.async_set_cookie()
             await ayla_api.async_sign_in()
     except (TimeoutError, aiohttp.ClientError, TypeError) as error:
         LOGGER.error(error)
