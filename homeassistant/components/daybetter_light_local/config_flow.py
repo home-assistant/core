@@ -41,7 +41,7 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             host = DayBetterDevice.ip
             # NO NULL CHECK: host is required in the schema
             if not host or not isinstance(host, str) or host.strip() == "":
-                errors["host"] = "invalid_host"
+                errors["ip"] = "invalid_host"
             elif not errors:
                 unique_id = host
                 await self.async_set_unique_id(unique_id)
@@ -52,7 +52,7 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required("host"): str,
+                    vol.Required("ip"): str,
                 }
             ),
             errors=errors,
