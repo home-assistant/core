@@ -38,9 +38,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
-      'fault_blocked': False,
-      'fault_general': False,
-      'fault_leaking': False,
       'friendly_name': 'Valve',
       'supported_features': <ValveEntityFeature: 3>,
     }),
