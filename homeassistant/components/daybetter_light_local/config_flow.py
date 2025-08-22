@@ -7,7 +7,7 @@ from contextlib import suppress
 import logging
 from typing import Any
 
-from daybetter_local_api import DayBetterController
+from daybetter_local_api import DayBetterController, DayBetterDevice
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -38,10 +38,15 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            unique_id = user_input["host"]
-            await self.async_set_unique_id(unique_id)
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(title="DayBetter Light", data=user_input)
+            host = DayBetterDevice.ip
+            # NO NULL CHECK: host is required in the schema
+            if not host or not isinstance(host, str) or host.strip() == "":
+                errors["host"] = "invalid_host"
+            elif not errors:
+                unique_id = host
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(title="DayBetter Light", data=user_input)
 
         return self.async_show_form(
             step_id="user",
