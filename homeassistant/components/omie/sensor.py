@@ -103,5 +103,5 @@ async def async_setup_entry(
         OMIEPriceEntity("spot_price_es"),
     ]
 
-    async_add_entities(sensors, update_before_add=True)
+    async_add_entities(sensors)
     await coordinator.async_config_entry_first_refresh()

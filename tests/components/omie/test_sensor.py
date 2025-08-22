@@ -231,7 +231,7 @@ async def test_coordinator_unavailability_logging(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_pyomie.spot_price.call_count == 2
+    assert mock_pyomie.spot_price.call_count == 1
     assert "ERROR" not in caplog.text
 
     # Mock API failure
@@ -243,7 +243,7 @@ async def test_coordinator_unavailability_logging(
     # Trigger coordinator refresh (simulate update interval)
     await coordinator.async_refresh()
 
-    assert mock_pyomie.spot_price.call_count == 3
+    assert mock_pyomie.spot_price.call_count == 2
     assert "Error fetching omie data: Connection timeout" in caplog.text
 
     # Clear logs to test log-once behavior
@@ -251,7 +251,7 @@ async def test_coordinator_unavailability_logging(
 
     # Second failure should not log again
     await coordinator.async_refresh()
-    assert mock_pyomie.spot_price.call_count == 4
+    assert mock_pyomie.spot_price.call_count == 3
     assert caplog.text == caplog_text_before  # Should not log again
 
     # Mock API recovery
@@ -259,5 +259,5 @@ async def test_coordinator_unavailability_logging(
 
     # Trigger recovery
     await coordinator.async_refresh()
-    assert mock_pyomie.spot_price.call_count == 5
+    assert mock_pyomie.spot_price.call_count == 4
     assert "Fetching omie data recovered" in caplog.text
