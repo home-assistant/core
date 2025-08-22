@@ -2,15 +2,19 @@
 
 from datetime import date, datetime
 import json
+import logging
 from unittest.mock import MagicMock, patch
 from zoneinfo import ZoneInfo
 
+from freezegun import freeze_time
 from pyomie.model import OMIEResults, SpotData
 import pytest
 
 from homeassistant.components.omie.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+
+from .conftest import spot_price_fetcher
 
 from tests.common import MockConfigEntry
 
@@ -116,18 +120,15 @@ async def test_sensor_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_coordinator_data,
+    mock_pyomie,
 ) -> None:
     """Test sensor platform setup."""
     mock_config_entry.add_to_hass(hass)
 
-    # Mock pyomie to return our test data
-    with patch(
-        "homeassistant.components.omie.coordinator.pyomie.spot_price"
-    ) as mock_spot_price:
-        mock_spot_price.return_value = mock_coordinator_data
+    mock_pyomie.spot_price.return_value = mock_coordinator_data
 
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Check that entities were created
     entity_registry = er.async_get(hass)
@@ -147,34 +148,27 @@ async def test_sensor_setup(
 async def test_sensor_state_update(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_pyomie,
     mock_coordinator_data,
 ) -> None:
     """Test sensor state updates with realistic data."""
     mock_config_entry.add_to_hass(hass)
 
-    # Mock pyomie to return our test data, then None for subsequent calls
-    with patch(
-        "homeassistant.components.omie.coordinator.pyomie.spot_price"
-    ) as mock_spot_price:
-        mock_spot_price.return_value = mock_coordinator_data
+    mock_pyomie.spot_price.return_value = mock_coordinator_data
 
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        # Set the coordinator data directly to the expected structure (date -> OMIEResults mapping)
-        test_date = date(2024, 1, 15)
-        coordinator = mock_config_entry.runtime_data
-        coordinator.data = {test_date: mock_coordinator_data}
+    # Set the coordinator data directly to the expected structure (date -> OMIEResults mapping)
+    test_date = date(2024, 1, 15)
+    coordinator = mock_config_entry.runtime_data
+    coordinator.data = {test_date: mock_coordinator_data}
 
-        # Mock current time to be during hour 1 (01:30) to get price index 1 from our data
-        with patch("homeassistant.components.omie.sensor.utcnow") as mock_utcnow:
-            # Create time for hour 1 (01:30) to get price index 1 from our mock data
-            # Use fixed test date with 01:30 time in UTC
-            mock_time = datetime(2024, 1, 15, 1, 30, 0, tzinfo=ZoneInfo("UTC"))
-            mock_utcnow.return_value = mock_time
-
-            # Trigger sensor updates with the mocked time
-            coordinator.async_update_listeners()
+    # Create time for hour 1 (01:30) to get price index 1 from our mock data
+    # Use fixed test date with 01:30 time in UTC
+    with freeze_time("2024-01-15 01:30:00"):
+        # Trigger sensor updates with the mocked time
+        coordinator.async_update_listeners()
 
     # Check sensor states - values should be converted from €/MWh to €/kWh
     pt_state = hass.states.get("sensor.omie_spot_price_portugal")
@@ -217,52 +211,53 @@ async def test_sensor_unavailable_when_no_data(
     assert es_state.state == "unavailable"
 
 
+@freeze_time("2024-01-16 12:00:00")
 async def test_coordinator_unavailability_logging(
-    hass: HomeAssistant,
+    hass_madrid: HomeAssistant,
+    mock_pyomie,
+    mock_omie_results_jan16,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test coordinator logs unavailability and recovery appropriately."""
+    caplog.set_level(logging.INFO)
+    hass = hass_madrid
     mock_config_entry.add_to_hass(hass)
 
-    # Set up coordinator with successful initial setup
-    with patch(
-        "homeassistant.components.omie.coordinator.pyomie.spot_price"
-    ) as mock_spot_price:
-        # Initial successful setup
-        mock_spot_price.return_value = None  # No data but no error
+    # Initial successful setup
+    mock_pyomie.spot_price.reset_mock()
+    mock_pyomie.spot_price.side_effect = spot_price_fetcher({})
 
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        # Clear any initial logs
-        caplog.clear()
+    assert mock_pyomie.spot_price.call_count == 2
+    assert "ERROR" not in caplog.text
 
-        # Mock API failure
-        mock_spot_price.side_effect = Exception("Connection timeout")
+    # Mock API failure
+    mock_pyomie.spot_price.side_effect = Exception("Connection timeout")
 
-        # Get coordinator from config entry runtime data
-        coordinator = mock_config_entry.runtime_data
+    # Get coordinator from config entry runtime data
+    coordinator = mock_config_entry.runtime_data
 
-        # Trigger coordinator refresh (simulate update interval)
-        await coordinator.async_refresh()
+    # Trigger coordinator refresh (simulate update interval)
+    await coordinator.async_refresh()
 
-        # Check that error was logged
-        assert "Error fetching omie data: Connection timeout" in caplog.text
+    assert mock_pyomie.spot_price.call_count == 3
+    assert "Error fetching omie data: Connection timeout" in caplog.text
 
-        # Clear logs to test log-once behavior
-        caplog.clear()
+    # Clear logs to test log-once behavior
+    caplog_text_before = caplog.text
 
-        # Second failure should not log again
-        await coordinator.async_refresh()
-        assert "Error fetching omie data" not in caplog.text  # Should not log again
+    # Second failure should not log again
+    await coordinator.async_refresh()
+    assert mock_pyomie.spot_price.call_count == 4
+    assert caplog.text == caplog_text_before  # Should not log again
 
-        # Mock API recovery
-        mock_spot_price.side_effect = None
-        mock_spot_price.return_value = None
+    # Mock API recovery
+    mock_pyomie.spot_price.side_effect = spot_price_fetcher({})
 
-        # Trigger recovery
-        await coordinator.async_refresh()
-
-        # Check recovery message was logged
-        assert "Fetching omie data recovered" in caplog.text
+    # Trigger recovery
+    await coordinator.async_refresh()
+    assert mock_pyomie.spot_price.call_count == 5
+    assert "Fetching omie data recovered" in caplog.text
