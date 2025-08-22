@@ -276,7 +276,9 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.hass, self.address, connectable=True
                 ) or await get_device(self.address)
 
-                (channel_id, mower) = await self.connect_mower(device)
+                mower = Mower(
+                    reauth_entry.data[CONF_CLIENT_ID], self.address, int(self.pin)
+                )
 
                 response_result = await mower.connect(device)
                 await mower.disconnect()
