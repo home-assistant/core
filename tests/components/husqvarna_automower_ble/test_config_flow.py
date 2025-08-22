@@ -317,6 +317,19 @@ async def test_successful_reauth(
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": "invalid_pin"}
 
+    # Try connection error
+    mock_automower_client.connect.return_value = ResponseResult.UNKNOWN_ERROR
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PIN: "5678",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "cannot_connect"}
+
     # Try wrong PIN
     mock_automower_client.connect.return_value = ResponseResult.INVALID_PIN
     result = await hass.config_entries.flow.async_configure(
