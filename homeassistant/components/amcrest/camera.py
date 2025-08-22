@@ -685,3 +685,4 @@ class AmcrestCoordinatedCamera(CoordinatorEntity, AmcrestCam):
         CoordinatorEntity.__init__(self, coordinator)
         AmcrestCam.__init__(self, name, device, ffmpeg)
         self._attr_device_info = device.device_info
+        self._attr_unique_id = f"{device.name}_{name}"
