@@ -32,7 +32,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    discovery,
+)
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -518,6 +522,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return await device.async_get_data()
         except Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+    await async_update_data()
+
+    # manual device registration
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)}, # Add serial??
+        manufacturer="Amcrest",
+        name=name,
+        configuration_url=f"http://{config_data[CONF_HOST]}",
+    )
 
     data_coordinator = DataUpdateCoordinator(
         hass,
