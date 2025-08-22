@@ -95,11 +95,11 @@
       "alarm_door": {
         "name": "Door alarm"
       },
-      "valve_fault_general_fault": {
-        "name": "General fault"
-      },
       "valve_fault_blocked": {
         "name": "Valve blocked"
+      },
+      "valve_fault_general_fault": {
+        "name": "General fault"
       },
       "valve_fault_leaking": {
         "name": "Valve leaking"
