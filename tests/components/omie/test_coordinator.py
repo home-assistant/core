@@ -279,6 +279,7 @@ def spot_price_fetcher_factory(spot_price_data: dict):
 class TestOMIECoordinatorDataMapping:
     """Test OMIECoordinator data mapping functionality."""
 
+    @freeze_time("2024-01-15 15:00:00")
     async def test_single_date_mapping(
         self,
         hass_madrid: HomeAssistant,
@@ -293,7 +294,6 @@ class TestOMIECoordinatorDataMapping:
             spot_price_fetcher=spot_price_fetcher_factory(
                 {"2024-01-15": mock_omie_results_jan15}
             ),
-            current_time_provider=lambda: datetime(2024, 1, 15, 15, 0, 0, tzinfo=UTC),
         )
 
         # Call _async_update_data
@@ -303,6 +303,7 @@ class TestOMIECoordinatorDataMapping:
         expected = {date(2024, 1, 15): mock_omie_results_jan15}
         assert result == expected
 
+    @freeze_time("2024-01-15 15:00:00")
     async def test_multiple_dates_mapping(
         self,
         hass_lisbon: HomeAssistant,
@@ -324,7 +325,6 @@ class TestOMIECoordinatorDataMapping:
             hass_lisbon,
             mock_config_entry,
             spot_price_fetcher=spot_price_fetcher,
-            current_time_provider=lambda: datetime(2024, 1, 15, 15, 0, 0, tzinfo=UTC),
         )
 
         result = await coordinator._async_update_data()
@@ -349,27 +349,26 @@ class TestOMIECoordinatorDataMapping:
         )
 
         # Test scenario 1: First call at Jan 15 evening
-        coordinator = OMIECoordinator(
-            hass_madrid,
-            mock_config_entry,
-            spot_price_fetcher=spot_price_fetcher,
-            current_time_provider=lambda: datetime(2024, 1, 15, 20, 30, 0, tzinfo=UTC),
-        )
+        with freeze_time("2024-01-15 20:30:00"):
+            coordinator = OMIECoordinator(
+                hass_madrid,
+                mock_config_entry,
+                spot_price_fetcher=spot_price_fetcher,
+            )
 
-        await coordinator.async_refresh()
-        assert coordinator.data == {
-            date(2024, 1, 15): mock_omie_results_jan15,
-        }
+            await coordinator.async_refresh()
+            assert coordinator.data == {
+                date(2024, 1, 15): mock_omie_results_jan15,
+            }
 
-        # call again --- next day
-        coordinator._current_time_provider = lambda: datetime(
-            2024, 1, 16, 15, 0, 0, tzinfo=UTC
-        )
-        await coordinator.async_refresh()
-        assert coordinator.data == {
-            date(2024, 1, 16): mock_omie_results_jan16,
-        }
+            # call again --- next day
+            with freeze_time("2024-01-16 15:00:00"):
+                await coordinator.async_refresh()
+                assert coordinator.data == {
+                    date(2024, 1, 16): mock_omie_results_jan16,
+                }
 
+    @freeze_time("2024-01-15 15:00:00")
     async def test_none_response_handling(
         self,
         hass_madrid: HomeAssistant,
@@ -381,7 +380,6 @@ class TestOMIECoordinatorDataMapping:
             hass_madrid,
             mock_config_entry,
             spot_price_fetcher=spot_price_fetcher_factory({}),
-            current_time_provider=lambda: datetime(2024, 1, 15, 15, 0, 0, tzinfo=UTC),
         )
 
         # Call _async_update_data
@@ -390,6 +388,7 @@ class TestOMIECoordinatorDataMapping:
         # Should return empty dict when no data is available
         assert result == {}
 
+    @freeze_time("2024-01-15 23:30:00")
     async def test_date_key_correctness(
         self,
         hass_lisbon: HomeAssistant,
@@ -408,7 +407,6 @@ class TestOMIECoordinatorDataMapping:
                     "2024-01-16": mock_omie_results_jan16,
                 }
             ),
-            current_time_provider=lambda: datetime(2024, 1, 15, 23, 30, 0, tzinfo=UTC),
         )
 
         result = await coordinator._async_update_data()
