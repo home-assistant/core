@@ -90,7 +90,7 @@
   "entity": {
     "sensor": {
       "mosque_info": {
-        "name": "Mosque Information"
+        "name": "Mosque information"
       },
       "prayer_fajr": {
         "name": "Fajr Prayer"
