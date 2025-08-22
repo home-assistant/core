@@ -1,4 +1,4 @@
-"""Test the Home Assistant SkyConnect integration."""
+"""Test the Home Assistant Connect ZBT-2 integration."""
 
 from datetime import timedelta
 from unittest.mock import patch
