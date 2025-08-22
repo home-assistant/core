@@ -1,14 +1,13 @@
-"""Config flow for the DayBetter light local integration."""
+"""Config flow for DayBetter light local."""
 
 from __future__ import annotations
 
 import asyncio
-import logging
 from contextlib import suppress
-
-import voluptuous as vol
+import logging
 
 from daybetter_local_api import DayBetterController
+import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import network
