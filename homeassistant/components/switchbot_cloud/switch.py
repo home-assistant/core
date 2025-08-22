@@ -83,12 +83,9 @@ def _async_make_entity(
     """Make a SwitchBotCloudSwitch or SwitchBotCloudRemoteSwitch."""
     if isinstance(device, Remote):
         return SwitchBotCloudRemoteSwitch(api, device, coordinator)
-    if "Plug" in device.device_type:
+    if device.device_type in ["Plug Mini (US)", "Plug Mini (JP)"]:
         return SwitchBotCloudPlugSwitch(api, device, coordinator)
-    if device.device_type in [
-        "Relay Switch 1PM",
-        "Relay Switch 1",
-    ]:
+    if device.device_type in ["Relay Switch 1PM", "Relay Switch 1", "Plug Mini (EU)"]:
         return SwitchBotCloudRelaySwitchSwitch(api, device, coordinator)
     if "Bot" in device.device_type:
         return SwitchBotCloudSwitch(api, device, coordinator)
