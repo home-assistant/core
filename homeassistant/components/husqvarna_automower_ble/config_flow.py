@@ -57,7 +57,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     address: str | None = None
-    mower_name: str = "-"
+    mower_name: str = ""
     pin: str | None = None
 
     async def async_step_bluetooth(
@@ -78,6 +78,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm Bluetooth discovery."""
+        assert self.address
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -97,7 +98,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                 ),
                 user_input,
             ),
-            description_placeholders={"name": self.mower_name},
+            description_placeholders={"name": self.mower_name or self.address},
             errors=errors,
         )
 
@@ -204,7 +205,9 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
                                 vol.Required(CONF_PIN): str,
                             },
                         ),
-                        description_placeholders={"name": self.mower_name},
+                        description_placeholders={
+                            "name": self.mower_name or self.address
+                        },
                         errors=errors,
                     )
 
