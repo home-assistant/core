@@ -1,4 +1,15 @@
 # serializer version: 1
+# name: test_sensor[System Monitor Battery - attributes]
+  ReadOnlyDict({
+    'device_class': 'battery',
+    'friendly_name': 'System Monitor Battery',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[System Monitor Battery - state]
+  '93'
+# ---
 # name: test_sensor[System Monitor Disk free / - attributes]
   ReadOnlyDict({
     'device_class': 'data_size',
@@ -72,6 +83,17 @@
 # ---
 # name: test_sensor[System Monitor Disk use /media/share - state]
   '300.0'
+# ---
+# name: test_sensor[System Monitor Duration - attributes]
+  ReadOnlyDict({
+    'device_class': 'duration',
+    'friendly_name': 'System Monitor Duration',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_sensor[System Monitor Duration - state]
+  '16628'
 # ---
 # name: test_sensor[System Monitor IPv4 address eth0 - attributes]
   ReadOnlyDict({
@@ -371,4 +393,24 @@
 # ---
 # name: test_sensor[System Monitor Swap use - state]
   '60.0'
+# ---
+# name: test_sensor[System Monitor another-fan fan RPM - attributes]
+  ReadOnlyDict({
+    'friendly_name': 'System Monitor another-fan fan RPM',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'unit_of_measurement': 'rpm',
+  })
+# ---
+# name: test_sensor[System Monitor another-fan fan RPM - state]
+  '1300'
+# ---
+# name: test_sensor[System Monitor cpu-fan fan RPM - attributes]
+  ReadOnlyDict({
+    'friendly_name': 'System Monitor cpu-fan fan RPM',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'unit_of_measurement': 'rpm',
+  })
+# ---
+# name: test_sensor[System Monitor cpu-fan fan RPM - state]
+  '1200'
 # ---

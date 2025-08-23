@@ -219,8 +219,7 @@ def mock_psutil(mock_process: list[MockProcess]) -> Generator:
         mock_psutil.NoSuchProcess = NoSuchProcess
         # mock_psutil.sensors_fans = Mock()
         mock_psutil.sensors_fans.return_value = {
-            "fan1": [sfan("fan1", 1200)],
-            "fan2": [sfan("fan2", 1300)],
+            "asus": [sfan("cpu-fan", 1200), sfan("another-fan", 1300)],
         }
         mock_psutil.sensors_battery.return_value = sbattery(
             percent=93, secsleft=16628, power_plugged=False
