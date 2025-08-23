@@ -11,7 +11,7 @@ from aioamazondevices.exceptions import (
 from aiohttp import ClientSession
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -44,7 +44,6 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         )
         self.api = AmazonEchoApi(
             session,
-            entry.data[CONF_COUNTRY],
             entry.data[CONF_USERNAME],
             entry.data[CONF_PASSWORD],
             entry.data[CONF_LOGIN_DATA],
