@@ -15,7 +15,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import (
     DOMAIN,
@@ -47,7 +47,7 @@ async def _validate_input(
     ayla_api = get_ayla_api(
         username=data[CONF_USERNAME],
         password=data[CONF_PASSWORD],
-        websession=async_get_clientsession(hass),
+        websession=async_create_clientsession(hass),
         europe=(data[CONF_REGION] == SHARKIQ_REGION_EUROPE),
     )
 
