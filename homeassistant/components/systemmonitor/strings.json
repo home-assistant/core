@@ -30,7 +30,7 @@
     },
     "sensor": {
       "battery_left": {
-        "name": "Battery"
+        "name": "Battery remaining"
       },
       "disk_free": {
         "name": "Disk free {mount_point}"
