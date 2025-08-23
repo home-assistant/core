@@ -55,7 +55,6 @@ from .const import (
     CONF_PARITY,
     CONF_STOPBITS,
     DEFAULT_HUB,
-    DEVICE_ID,
     DOMAIN,
     RTUOVERTCP,
     SERIAL,
@@ -130,6 +129,31 @@ async def async_modbus_setup(
     config: ConfigType,
 ) -> bool:
     """Set up Modbus component."""
+
+    if DATA_MODBUS_HUBS in hass.data and config[DOMAIN] == []:
+        hubs = hass.data[DATA_MODBUS_HUBS]
+        for hub in hubs.values():
+            if not await hub.async_setup():
+                return False
+        hub_collect = hass.data[DATA_MODBUS_HUBS]
+    else:
+        hass.data[DATA_MODBUS_HUBS] = hub_collect = {}
+
+    for conf_hub in config[DOMAIN]:
+        my_hub = ModbusHub(hass, conf_hub)
+        hub_collect[conf_hub[CONF_NAME]] = my_hub
+
+        # modbus needs to be activated before components are loaded
+        # to avoid a racing problem
+        if not await my_hub.async_setup():
+            return False
+
+        # load platforms
+        for component, conf_key in PLATFORMS:
+            if conf_key in conf_hub:
+                hass.async_create_task(
+                    async_load_platform(hass, component, DOMAIN, conf_hub, config)
+                )
 
     async def async_stop_modbus(event: Event) -> None:
         """Stop Modbus service."""

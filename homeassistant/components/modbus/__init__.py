@@ -533,7 +533,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     config[DOMAIN] = check_config(hass, config[DOMAIN])
     if not config[DOMAIN]:
         return False
-
     for hub in config[DOMAIN]:
         hass.async_create_task(
             hass.config_entries.flow.async_init(
