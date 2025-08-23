@@ -30,6 +30,7 @@ from homeassistant.const import (
     UnitOfDataRate,
     UnitOfInformation,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
@@ -128,6 +129,14 @@ def get_ip_address(
     return None
 
 
+def battery_seconds_left(entity: SystemMonitorSensor) -> int | None:
+    """Return remaining battery time in seconds."""
+    battery = entity.coordinator.data.battery
+    if not battery or battery.secsleft in BATTERY_REMAIN_UNKNOWNS:
+        return None
+    return battery.secsleft
+
+
 @dataclass(frozen=True, kw_only=True)
 class SysMonitorSensorEntityDescription(SensorEntityDescription):
     """Describes System Monitor sensor entities."""
@@ -142,7 +151,6 @@ class SysMonitorSensorEntityDescription(SensorEntityDescription):
 SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     "battery": SysMonitorSensorEntityDescription(
         key="battery",
-        translation_key="battery",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -151,6 +159,17 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         else None,
         none_is_unavailable=True,
         add_to_update=lambda entity: ("battery", ""),
+    ),
+    "battery_left": SysMonitorSensorEntityDescription(
+        key="battery_left",
+        translation_key="battery_left",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=battery_seconds_left,
+        none_is_unavailable=True,
+        add_to_update=lambda entity: ("battery", ""),
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
     ),
     "disk_free": SysMonitorSensorEntityDescription(
         key="disk_free",
@@ -199,7 +218,7 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
     "fan_rpm": SysMonitorSensorEntityDescription(
         key="fan_rpm",
         translation_key="fan_rpm",
-        placeholder="name",
+        placeholder="fan_name",
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda entity: entity.coordinator.data.fan_rpm[entity.argument],

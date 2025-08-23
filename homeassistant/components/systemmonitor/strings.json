@@ -29,7 +29,7 @@
       }
     },
     "sensor": {
-      "battery": {
+      "battery_left": {
         "name": "Battery"
       },
       "disk_free": {
@@ -42,7 +42,7 @@
         "name": "Disk usage {mount_point}"
       },
       "fan_rpm": {
-        "name": "{name} fan RPM"
+        "name": "{fan_name} fan RPM"
       },
       "ipv4_address": {
         "name": "IPv4 address {ip_address}"
