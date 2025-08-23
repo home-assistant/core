@@ -362,6 +362,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
                 ATTRIBUTE_PROFILE: _get_coffee_profile,
             },
         ),
+        entity_class=MieleProgramIdSensor,
     ),
     MieleSensorDefinition(
         types=(
