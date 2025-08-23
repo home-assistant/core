@@ -15,6 +15,7 @@ from volvocarsapi.models import (
     VolvoAuthException,
     VolvoCarsApiBaseModel,
     VolvoCarsValue,
+    VolvoCarsValueStatusField,
     VolvoCarsVehicle,
 )
 
@@ -34,6 +35,16 @@ _LOGGER = logging.getLogger(__name__)
 
 type VolvoConfigEntry = ConfigEntry[tuple[VolvoBaseCoordinator, ...]]
 type CoordinatorData = dict[str, VolvoCarsApiBaseModel | None]
+
+
+def _is_invalid_api_field(field: VolvoCarsApiBaseModel | None) -> bool:
+    if not field:
+        return True
+
+    if isinstance(field, VolvoCarsValueStatusField) and field.status == "ERROR":
+        return True
+
+    return False
 
 
 class VolvoBaseCoordinator(DataUpdateCoordinator[CoordinatorData]):
@@ -121,7 +132,13 @@ class VolvoBaseCoordinator(DataUpdateCoordinator[CoordinatorData]):
                     translation_key="update_failed",
                 ) from result
 
-            data |= cast(CoordinatorData, result)
+            api_data = cast(CoordinatorData, result)
+            data |= {
+                key: field
+                for key, field in api_data.items()
+                if not _is_invalid_api_field(field)
+            }
+
             valid = True
 
         # Raise an error if not a single API call succeeded
@@ -243,6 +260,8 @@ class VolvoMediumIntervalCoordinator(VolvoBaseCoordinator):
             "Volvo medium interval coordinator",
         )
 
+        self._supported_capabilities: list[str] = []
+
     async def _async_determine_api_calls(
         self,
     ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
@@ -250,6 +269,31 @@ class VolvoMediumIntervalCoordinator(VolvoBaseCoordinator):
             capabilities = await self.api.async_get_energy_capabilities()
 
             if capabilities.get("isSupported", False):
-                return [self.api.async_get_energy_state]
+                self._supported_capabilities = [
+                    key
+                    for key, value in capabilities.items()
+                    if isinstance(value, dict) and value.get("isSupported", False)
+                ]
+
+                return [self._async_get_energy_state]
 
         return []
+
+    async def _async_get_energy_state(
+        self,
+    ) -> dict[str, VolvoCarsValueStatusField | None]:
+        def _mark_ok(
+            field: VolvoCarsValueStatusField | None,
+        ) -> VolvoCarsValueStatusField | None:
+            if field:
+                field.status = "OK"
+
+            return field
+
+        energy_state = await self.api.async_get_energy_state()
+
+        return {
+            key: _mark_ok(value)
+            for key, value in energy_state.items()
+            if key in self._supported_capabilities
+        }

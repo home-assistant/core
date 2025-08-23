@@ -4,16 +4,16 @@ from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from airos.exceptions import (
-    ConnectionAuthenticationError,
-    DataMissingError,
-    DeviceConnectionError,
+    AirOSConnectionAuthenticationError,
+    AirOSDataMissingError,
+    AirOSDeviceConnectionError,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.airos.const import SCAN_INTERVAL
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -31,7 +31,7 @@ async def test_all_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry, [Platform.SENSOR])
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
@@ -39,10 +39,10 @@ async def test_all_entities(
 @pytest.mark.parametrize(
     ("exception"),
     [
-        ConnectionAuthenticationError,
+        AirOSConnectionAuthenticationError,
         TimeoutError,
-        DeviceConnectionError,
-        DataMissingError,
+        AirOSDeviceConnectionError,
+        AirOSDataMissingError,
     ],
 )
 async def test_sensor_update_exception_handling(
@@ -53,7 +53,7 @@ async def test_sensor_update_exception_handling(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test entity update data handles exceptions."""
-    await setup_integration(hass, mock_config_entry)
+    await setup_integration(hass, mock_config_entry, [Platform.SENSOR])
 
     expected_entity_id = "sensor.nanostation_5ac_ap_name_antenna_gain"
     signal_state = hass.states.get(expected_entity_id)
@@ -65,7 +65,7 @@ async def test_sensor_update_exception_handling(
 
     mock_airos_client.login.side_effect = exception
 
-    freezer.tick(timedelta(seconds=SCAN_INTERVAL.total_seconds() + 1))
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL.total_seconds()))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

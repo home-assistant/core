@@ -573,3 +573,18 @@ async def test_elapsed_time_sensor_restored(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "12"
+
+    
+@pytest.mark.parametrize("load_device_file", ["coffee_system.json"])
+@pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_coffee_system_sensor_states(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    setup_platform: None,
+) -> None:
+    """Test coffee system sensor state."""
+
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
