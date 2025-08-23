@@ -1,53 +1,52 @@
 {
   "batteryChargeLevel": {
     "status": "OK",
-    "value": 38,
+    "value": 90.0,
     "unit": "percentage",
-    "updatedAt": "2025-07-02T08:51:23Z"
+    "updatedAt": "2025-08-07T14:30:32Z"
   },
   "electricRange": {
     "status": "OK",
-    "value": 90,
+    "value": 327,
     "unit": "km",
-    "updatedAt": "2025-07-02T08:51:23Z"
+    "updatedAt": "2025-08-07T14:30:32Z"
   },
   "chargerConnectionStatus": {
     "status": "OK",
-    "value": "DISCONNECTED",
-    "updatedAt": "2025-07-02T08:51:23Z"
+    "value": "CONNECTED",
+    "updatedAt": "2025-08-07T14:30:32Z"
   },
   "chargingStatus": {
     "status": "OK",
-    "value": "IDLE",
-    "updatedAt": "2025-07-02T08:51:23Z"
+    "value": "DONE",
+    "updatedAt": "2025-08-07T14:30:32Z"
   },
   "chargingType": {
     "status": "OK",
-    "value": "NONE",
-    "updatedAt": "2025-07-02T08:51:23Z"
+    "value": "AC",
+    "updatedAt": "2025-08-07T14:30:32Z"
   },
   "chargerPowerStatus": {
     "status": "OK",
-    "value": "NO_POWER_AVAILABLE",
-    "updatedAt": "2025-07-02T08:51:23Z"
+    "value": "FAULT",
+    "updatedAt": "2025-08-07T14:30:32Z"
   },
   "estimatedChargingTimeToTargetBatteryChargeLevel": {
     "status": "OK",
-    "value": 0,
+    "value": 2,
     "unit": "minutes",
-    "updatedAt": "2025-07-02T08:51:23Z"
+    "updatedAt": "2025-08-07T14:30:32Z"
   },
   "chargingCurrentLimit": {
-    "status": "OK",
-    "value": 32,
-    "unit": "ampere",
-    "updatedAt": "2024-03-05T08:38:44Z"
+    "status": "ERROR",
+    "code": "NOT_SUPPORTED",
+    "message": "Resource is not supported for this vehicle"
   },
   "targetBatteryChargeLevel": {
     "status": "OK",
     "value": 90,
     "unit": "percentage",
-    "updatedAt": "2024-09-22T09:40:12Z"
+    "updatedAt": "2025-08-07T14:49:50Z"
   },
   "chargingPower": {
     "status": "ERROR",
