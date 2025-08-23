@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import cast
 
@@ -25,6 +26,8 @@ from .const import DEFAULT_AUGUST_BRAND, DOMAIN, PLATFORMS
 from .data import AugustData
 from .gateway import AugustGateway
 from .util import async_create_august_clientsession
+
+_LOGGER = logging.getLogger(__name__)
 
 type AugustConfigEntry = ConfigEntry[AugustData]
 
@@ -51,6 +54,11 @@ def _async_create_yale_brand_migration_issue(
 
 async def async_setup_entry(hass: HomeAssistant, entry: AugustConfigEntry) -> bool:
     """Set up August from a config entry."""
+    # Check if this is a legacy config entry that needs migration to OAuth
+    if "auth_implementation" not in entry.data:
+        # This is a legacy entry using username/password, trigger reauth
+        raise ConfigEntryAuthFailed("Migration to OAuth required")
+
     session = async_create_august_clientsession(hass)
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
