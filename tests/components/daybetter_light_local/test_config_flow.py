@@ -46,7 +46,9 @@ async def test_creating_entry_has_no_devices(
         # Confirmation form
         assert result["type"] is FlowResultType.FORM
 
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "192.168.1.100"}
+        )
         assert result["type"] is FlowResultType.ABORT
 
         await hass.async_block_till_done()
@@ -73,12 +75,12 @@ async def test_creating_entry_has_with_devices(
         )
 
         # Confirmation form
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "192.168.1.100"}
         )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
 
@@ -105,7 +107,9 @@ async def test_creating_entry_errno(
     # Confirmation form
     assert result["type"] is FlowResultType.FORM
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": "192.168.1.100"}
+    )
     assert result["type"] is FlowResultType.ABORT
 
     await hass.async_block_till_done()

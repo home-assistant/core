@@ -1,6 +1,5 @@
 """Test DayBetter light local."""
 
-import asyncio
 from errno import EADDRINUSE, ENETDOWN
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
@@ -140,11 +139,7 @@ async def test_light_setup_retry(
         entry = MockConfigEntry(domain=DOMAIN)
         entry.add_to_hass(hass)
 
-        with patch(
-            "homeassistant.components.daybetter_light_local.config_flow.DISCOVERY_TIMEOUT",
-            side_effect=asyncio.TimeoutError,
-        ):
-            await hass.config_entries.async_setup(entry.entry_id)
+        await hass.config_entries.async_setup(entry.entry_id)
         assert entry.state is ConfigEntryState.SETUP_RETRY
 
 

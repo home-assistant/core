@@ -99,7 +99,6 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await asyncio.wait_for(cleanup_complete.wait(), 1)
 
         return {
-            "ip": device.ip,
             "device": device,
             "sku": getattr(device, "sku", "unknown"),
             "host": device.ip,
