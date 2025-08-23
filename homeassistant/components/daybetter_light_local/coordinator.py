@@ -55,7 +55,8 @@ class DayBetterLocalApiCoordinator(DataUpdateCoordinator[list[DayBetterDevice]])
     async def start(self) -> None:
         """Start the DayBetter coordinator."""
         await self._controller.start()
-        self._controller.send_update_message()
+        # 发送初始发现消息
+        self._controller.send_discovery_message()
 
     async def set_discovery_callback(
         self, callback: Callable[[DayBetterDevice, bool], bool]
@@ -64,7 +65,7 @@ class DayBetterLocalApiCoordinator(DataUpdateCoordinator[list[DayBetterDevice]])
         self._controller.set_device_discovered_callback(callback)
 
     def cleanup(self) -> asyncio.Event:
-        """Stop and cleanup the cooridinator."""
+        """Stop and cleanup the coordinator."""
         return self._controller.cleanup()
 
     async def turn_on(self, device: DayBetterDevice) -> None:
@@ -89,7 +90,7 @@ class DayBetterLocalApiCoordinator(DataUpdateCoordinator[list[DayBetterDevice]])
         """Set light color in kelvin."""
         await device.set_temperature(temperature)
 
-    async def set_scene(self, device: DayBetterController, scene: str) -> None:
+    async def set_scene(self, device: DayBetterDevice, scene: str) -> None:
         """Set light scene."""
         await device.set_scene(scene)
 
@@ -98,11 +99,9 @@ class DayBetterLocalApiCoordinator(DataUpdateCoordinator[list[DayBetterDevice]])
         """Return a list of discovered DayBetter devices."""
         return self._controller.devices
 
-
-async def _async_update_data(self) -> list[DayBetterDevice]:
-    """Update device data."""
-    # 发送发现消息
-    self._controller.send_discovery_message()
-    # 给设备一点时间响应
-    await asyncio.sleep(0.5)
-    return self._controller.devices
+    async def _async_update_data(self) -> list[DayBetterDevice]:
+        """Update device data."""
+        # 发送更新消息并等待设备响应
+        self._controller.send_update_message()
+        await asyncio.sleep(0.5)  # 给设备一点时间响应
+        return self._controller.devices

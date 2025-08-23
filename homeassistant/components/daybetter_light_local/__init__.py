@@ -43,7 +43,7 @@ async def async_setup_entry(
         raise ConfigEntryNotReady from ex
 
     # 检查是否有设备
-    if not coordinator.devices:
+    if not coordinator.data:
         await coordinator.cleanup().wait()
         raise ConfigEntryNotReady("No DayBetter devices found")
 
