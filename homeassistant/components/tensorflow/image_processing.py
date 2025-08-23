@@ -156,9 +156,8 @@ def setup_platform(
         # These imports shouldn't be moved to the top, because they depend on code from the model_dir.
         # (The model_dir is created during the manual setup process. See integration docs.)
 
-        # pylint: disable=import-outside-toplevel
-        from object_detection.builders import model_builder
-        from object_detection.utils import config_util, label_map_util
+        from object_detection.builders import model_builder  # noqa: PLC0415
+        from object_detection.utils import config_util, label_map_util  # noqa: PLC0415
     except ImportError:
         _LOGGER.error(
             "No TensorFlow Object Detection library found! Install or compile "
@@ -169,7 +168,7 @@ def setup_platform(
 
     try:
         # Display warning that PIL will be used if no OpenCV is found.
-        import cv2  # noqa: F401 pylint: disable=import-outside-toplevel
+        import cv2  # noqa: F401, PLC0415
     except ImportError:
         _LOGGER.warning(
             "No OpenCV library found. TensorFlow will process image with "
@@ -354,7 +353,7 @@ class TensorFlowImageProcessor(ImageProcessingEntity):
 
         start = time.perf_counter()
         try:
-            import cv2  # pylint: disable=import-outside-toplevel
+            import cv2  # noqa: PLC0415
 
             img = cv2.imdecode(np.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
             inp = img[:, :, [2, 1, 0]]  # BGR->RGB

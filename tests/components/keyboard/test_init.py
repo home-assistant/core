@@ -13,9 +13,7 @@ async def test_repair_issue_is_created(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test repair issue is created."""
-    from homeassistant.components.keyboard import (  # pylint:disable=import-outside-toplevel
-        DOMAIN,
-    )
+    from homeassistant.components.keyboard import DOMAIN  # noqa: PLC0415
 
     assert await async_setup_component(
         hass,

@@ -25,7 +25,7 @@ from .const import (
     DOMAIN,
     INSTEON_PLATFORMS,
 )
-from .services import async_register_services
+from .services import async_setup_services
 from .utils import (
     add_insteon_events,
     get_device_platforms,
@@ -145,7 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     _LOGGER.debug("Insteon device count: %s", len(devices))
     register_new_device_callback(hass)
-    async_register_services(hass)
+    async_setup_services(hass)
 
     create_insteon_device(hass, devices.modem, entry.entry_id)
 

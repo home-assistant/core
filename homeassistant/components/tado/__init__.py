@@ -35,7 +35,7 @@ from .const import (
 )
 from .coordinator import TadoDataUpdateCoordinator, TadoMobileDeviceUpdateCoordinator
 from .models import TadoData
-from .services import setup_services
+from .services import async_setup_services
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -58,7 +58,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Tado."""
 
-    setup_services(hass)
+    async_setup_services(hass)
     return True
 
 

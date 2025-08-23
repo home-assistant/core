@@ -63,6 +63,7 @@ def _set_time_service(service: ServiceCall) -> None:
     _async_get_elk_panel(service).set_time(dt_util.now())
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Create ElkM1 services."""
 

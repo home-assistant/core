@@ -39,6 +39,18 @@
           "username": "[%key:component::pyload::config::step::user::data_description::username%]",
           "password": "[%key:component::pyload::config::step::user::data_description::password%]"
         }
+      },
+      "hassio_confirm": {
+        "title": "pyLoad via Home Assistant add-on",
+        "description": "Do you want to configure Home Assistant to connect to the pyLoad service provided by the add-on: {addon}?",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "[%key:component::pyload::config::step::user::data_description::username%]",
+          "password": "[%key:component::pyload::config::step::user::data_description::password%]"
+        }
       }
     },
     "error": {

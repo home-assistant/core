@@ -15,7 +15,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.dt import utcnow
 
-from . import FritzDeviceCoverMock, FritzDeviceSwitchMock, FritzEntityBaseMock
+from . import (
+    FritzDeviceCoverMock,
+    FritzDeviceSensorMock,
+    FritzDeviceSwitchMock,
+    FritzEntityBaseMock,
+)
 from .const import MOCK_CONFIG
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -140,3 +145,42 @@ async def test_coordinator_automatic_registry_cleanup(
 
     assert len(er.async_entries_for_config_entry(entity_registry, entry.entry_id)) == 12
     assert len(dr.async_entries_for_config_entry(device_registry, entry.entry_id)) == 1
+
+
+async def test_coordinator_workaround_sub_units_without_main_device(
+    hass: HomeAssistant,
+    fritz: Mock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the workaround for sub units without main device."""
+    fritz().get_devices.return_value = [
+        FritzDeviceSensorMock(
+            ain="bad_device-1",
+            device_and_unit_id=("bad_device", "1"),
+            name="bad_sensor_sub",
+        ),
+        FritzDeviceSensorMock(
+            ain="good_device",
+            device_and_unit_id=("good_device", None),
+            name="good_sensor",
+        ),
+        FritzDeviceSensorMock(
+            ain="good_device-1",
+            device_and_unit_id=("good_device", "1"),
+            name="good_sensor_sub",
+        ),
+    ]
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
+        unique_id="any",
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    assert len(device_entries) == 2
+    assert device_entries[0].identifiers == {(DOMAIN, "good_device")}
+    assert device_entries[1].identifiers == {(DOMAIN, "bad_device")}

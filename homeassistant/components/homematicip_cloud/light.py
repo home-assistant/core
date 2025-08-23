@@ -2,18 +2,25 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
-from homematicip.base.enums import OpticalSignalBehaviour, RGBColorState
+from homematicip.base.enums import (
+    DeviceType,
+    FunctionalChannelType,
+    OpticalSignalBehaviour,
+    RGBColorState,
+)
 from homematicip.base.functionalChannels import NotificationLightChannel
 from homematicip.device import (
     BrandDimmer,
-    BrandSwitchMeasuring,
     BrandSwitchNotificationLight,
+    Device,
     Dimmer,
     DinRailDimmer3,
     FullFlushDimmer,
     PluggableDimmer,
+    SwitchMeasuring,
     WiredDimmer3,
 )
 from packaging.version import Version
@@ -34,6 +41,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .entity import HomematicipGenericEntity
 from .hap import HomematicIPConfigEntry, HomematicipHAP
 
+_logger = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -43,10 +52,21 @@ async def async_setup_entry(
     """Set up the HomematicIP Cloud lights from a config entry."""
     hap = config_entry.runtime_data
     entities: list[HomematicipGenericEntity] = []
+
+    entities.extend(
+        HomematicipLightHS(hap, d, ch.index)
+        for d in hap.home.devices
+        for ch in d.functionalChannels
+        if ch.functionalChannelType == FunctionalChannelType.UNIVERSAL_LIGHT_CHANNEL
+    )
+
     for device in hap.home.devices:
-        if isinstance(device, BrandSwitchMeasuring):
+        if (
+            isinstance(device, SwitchMeasuring)
+            and getattr(device, "deviceType", None) == DeviceType.BRAND_SWITCH_MEASURING
+        ):
             entities.append(HomematicipLightMeasuring(hap, device))
-        elif isinstance(device, BrandSwitchNotificationLight):
+        if isinstance(device, BrandSwitchNotificationLight):
             device_version = Version(device.firmwareVersion)
             entities.append(HomematicipLight(hap, device))
 
@@ -99,6 +119,64 @@ class HomematicipLight(HomematicipGenericEntity, LightEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self._device.turn_off_async()
+
+
+class HomematicipLightHS(HomematicipGenericEntity, LightEntity):
+    """Representation of the HomematicIP light with HS color mode."""
+
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
+
+    def __init__(self, hap: HomematicipHAP, device: Device, channel_index: int) -> None:
+        """Initialize the light entity."""
+        super().__init__(hap, device, channel=channel_index, is_multi_channel=True)
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if light is on."""
+        return self.functional_channel.on
+
+    @property
+    def brightness(self) -> int | None:
+        """Return the current brightness."""
+        return int(self.functional_channel.dimLevel * 255.0)
+
+    @property
+    def hs_color(self) -> tuple[float, float] | None:
+        """Return the hue and saturation color value [float, float]."""
+        if (
+            self.functional_channel.hue is None
+            or self.functional_channel.saturationLevel is None
+        ):
+            return None
+        return (
+            self.functional_channel.hue,
+            self.functional_channel.saturationLevel * 100.0,
+        )
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the light on."""
+
+        hs_color = kwargs.get(ATTR_HS_COLOR, (0.0, 0.0))
+        hue = hs_color[0] % 360.0
+        saturation = hs_color[1] / 100.0
+        dim_level = round(kwargs.get(ATTR_BRIGHTNESS, 255) / 255.0, 2)
+
+        if ATTR_HS_COLOR not in kwargs:
+            hue = self.functional_channel.hue
+            saturation = self.functional_channel.saturationLevel
+
+        if ATTR_BRIGHTNESS not in kwargs:
+            # If no brightness is set, use the current brightness
+            dim_level = self.functional_channel.dimLevel or 1.0
+
+        await self.functional_channel.set_hue_saturation_dim_level_async(
+            hue=hue, saturation_level=saturation, dim_level=dim_level
+        )
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the light off."""
+        await self.functional_channel.set_switch_state_async(on=False)
 
 
 class HomematicipLightMeasuring(HomematicipLight):

@@ -261,7 +261,7 @@ def async_register_supervisor_in_dev_reg(
     params = DeviceInfo(
         identifiers={(DOMAIN, "supervisor")},
         manufacturer="Home Assistant",
-        model=SupervisorEntityModel.SUPERVIOSR,
+        model=SupervisorEntityModel.SUPERVISOR,
         sw_version=supervisor_dict[ATTR_VERSION],
         name="Home Assistant Supervisor",
         entry_type=dr.DeviceEntryType.SERVICE,

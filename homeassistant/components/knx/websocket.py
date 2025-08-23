@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Awaitable, Callable
 from functools import wraps
+import inspect
 from typing import TYPE_CHECKING, Any, Final, overload
 
 import knx_frontend as knx_panel
@@ -14,7 +14,7 @@ from xknxproject.exceptions import XknxProjectException
 
 from homeassistant.components import panel_custom, websocket_api
 from homeassistant.components.http import StaticPathConfig
-from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM
+from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -33,10 +33,11 @@ from .storage.entity_store_validation import (
     EntityStoreValidationSuccess,
     validate_entity_data,
 )
+from .storage.serialize import get_serialized_schema
 from .telegrams import SIGNAL_KNX_TELEGRAM, TelegramDict
 
 if TYPE_CHECKING:
-    from . import KNXModule
+    from .knx_module import KNXModule
 
 URL_BASE: Final = "/knx_static"
 
@@ -57,6 +58,7 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_get_entity_config)
     websocket_api.async_register_command(hass, ws_get_entity_entries)
     websocket_api.async_register_command(hass, ws_create_device)
+    websocket_api.async_register_command(hass, ws_get_schema)
 
     if DOMAIN not in hass.data.get("frontend_panels", {}):
         await hass.http.async_register_static_paths(
@@ -116,7 +118,7 @@ def provide_knx(
             "KNX integration not loaded.",
         )
 
-    if asyncio.iscoroutinefunction(func):
+    if inspect.iscoroutinefunction(func):
 
         @wraps(func)
         async def with_knx(
@@ -360,6 +362,28 @@ def ws_validate_entity(
         return
     connection.send_result(
         msg["id"], EntityStoreValidationSuccess(success=True, entity_id=None)
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "knx/get_schema",
+        vol.Required(CONF_PLATFORM): vol.Coerce(Platform),
+    }
+)
+@websocket_api.async_response
+async def ws_get_schema(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Provide serialized schema for platform."""
+    if schema := get_serialized_schema(msg[CONF_PLATFORM]):
+        connection.send_result(msg["id"], schema)
+        return
+    connection.send_error(
+        msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, "Unknown platform"
     )
 
 
