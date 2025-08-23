@@ -1,6 +1,9 @@
 {
   "entity": {
     "sensor": {
+      "battery": {
+        "default": "mdi:battery"
+      },
       "disk_free": {
         "default": "mdi:harddisk"
       },
@@ -9,6 +12,9 @@
       },
       "disk_use_percent": {
         "default": "mdi:harddisk"
+      },
+      "fan_rpm": {
+        "default": "mdi:fan"
       },
       "ipv4_address": {
         "default": "mdi:ip-network"
