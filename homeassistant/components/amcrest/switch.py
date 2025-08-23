@@ -73,7 +73,7 @@ async def async_setup_entry(
     device = hass.data[DATA_AMCREST][DEVICES][config_entry.entry_id]["device"]
     coordinator = hass.data[DATA_AMCREST][DEVICES][config_entry.entry_id]["coordinator"]
     entities = [
-            AmcrestCoordinatedSwitch(f"{device.name} {description.name}", device, coordinator, description)
+            AmcrestCoordinatedSwitch(device.name, device, coordinator, description)
             for description in SWITCH_TYPES
         ]
     async_add_entities(entities, True)

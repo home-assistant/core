@@ -100,6 +100,7 @@ BINARY_SENSORS: tuple[AmcrestSensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.MOTION,
         event_codes={_CROSSLINE_DETECTED_EVENT_CODE},
         should_poll=True,
+        entity_registry_enabled_default=False,
     ),
     AmcrestSensorEntityDescription(
         key=_MOTION_DETECTED_KEY,
