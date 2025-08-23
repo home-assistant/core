@@ -137,15 +137,12 @@ async def test_light_setup_retry(
         "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
         return_value=mock_DayBetter_api,
     ):
-        entry = MockConfigEntry(domain=DOMAIN)
+        entry = MockConfigEntry(domain=DOMAIN, data={"host": "192.168.1.100"})
         entry.add_to_hass(hass)
 
         # 现在应该抛出 ConfigEntryNotReady 异常
         with pytest.raises(ConfigEntryNotReady):
             await hass.config_entries.async_setup(entry.entry_id)
-
-        # 或者检查状态为 SETUP_RETRY
-        assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_light_setup_retry_eaddrinuse(

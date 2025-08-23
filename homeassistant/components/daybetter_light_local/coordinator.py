@@ -98,9 +98,11 @@ class DayBetterLocalApiCoordinator(DataUpdateCoordinator[list[DayBetterDevice]])
         """Return a list of discovered DayBetter devices."""
         return self._controller.devices
 
-    async def _async_update_data(self) -> list[DayBetterDevice]:
-        """Update device data."""
-        # 发送更新消息并等待设备响应
-        self._controller.send_update_message()
-        await asyncio.sleep(0.1)  # 给设备一点时间响应
-        return self._controller.devices
+
+async def _async_update_data(self) -> list[DayBetterDevice]:
+    """Update device data."""
+    # 发送发现消息
+    self._controller.send_discovery_message()
+    # 给设备一点时间响应
+    await asyncio.sleep(0.5)
+    return self._controller.devices

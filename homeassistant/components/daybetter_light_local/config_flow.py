@@ -37,33 +37,26 @@ async def async_step_user(
     """Handle the initial step."""
     errors: dict[str, str] = {}
 
-    # 检查是否已经配置过（单实例）
-    await self.async_set_unique_id(DOMAIN)
-    self._abort_if_unique_id_configured()
-
     if user_input is not None:
         # 用户提交了表单
         host: str = user_input["host"]
 
-        # 验证主机地址
-        if not host:
-            errors["host"] = "host_required"
-            return self.async_show_form(
-                step_id="user",
-                data_schema=vol.Schema({vol.Required("host"): str}),
-                errors=errors,
-            )
+        # 设置唯一ID并检查是否已配置
+        await self.async_set_unique_id(f"{DOMAIN}_{host}")
+        self._abort_if_unique_id_configured()
 
-        # 创建配置条目
         return self.async_create_entry(
-            title="DayBetter Light Local",
+            title=f"DayBetter Light {host}",
             data={"host": host},
         )
 
     # 首次进入，尝试自动发现
     discovered = await self._async_discover_device()
     if discovered:
-        # 发现设备，直接创建条目（跳过表单）
+        # 发现设备，设置唯一ID并检查是否已配置
+        await self.async_set_unique_id(f"{DOMAIN}_{discovered['host']}")
+        self._abort_if_unique_id_configured()
+
         return self.async_create_entry(
             title=f"DayBetter Light {discovered['host']}",
             data=discovered,
@@ -74,7 +67,6 @@ async def async_step_user(
         step_id="user",
         data_schema=vol.Schema({vol.Required("host"): str}),
         errors=errors,
-        description_placeholders={"discovery_info": "No devices found automatically."},
     )
 
 

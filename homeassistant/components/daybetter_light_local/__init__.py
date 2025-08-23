@@ -26,7 +26,6 @@ async def async_setup_entry(
     """Set up DayBetter light local from a config entry."""
     coordinator = DayBetterLocalApiCoordinator(hass, entry)
 
-    # 先启动coordinator，然后检查设备
     try:
         await coordinator.start()
     except OSError as ex:
@@ -36,15 +35,15 @@ async def async_setup_entry(
         _LOGGER.error("Port %s already in use", LISTENING_PORT)
         raise ConfigEntryNotReady from ex
 
-    # 检查是否有设备
+    # 立即刷新数据以获取设备列表
     try:
-        await coordinator.async_config_entry_first_refresh()
-        devices = coordinator.devices
+        await coordinator.async_refresh()
     except Exception as ex:
         await coordinator.cleanup().wait()
         raise ConfigEntryNotReady from ex
 
-    if not devices:
+    # 检查是否有设备
+    if not coordinator.devices:
         await coordinator.cleanup().wait()
         raise ConfigEntryNotReady("No DayBetter devices found")
 
