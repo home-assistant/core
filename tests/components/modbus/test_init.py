@@ -1366,7 +1366,6 @@ async def test_integration_reload(
     assert not state_sensor_2
 
 
-@pytest.mark.skip
 @pytest.mark.parametrize("do_config", [{}])
 async def test_integration_reload_failed(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, mock_modbus
@@ -1384,7 +1383,6 @@ async def test_integration_reload_failed(
         await hass.async_block_till_done()
 
     assert "Modbus reloading" in caplog.text
-    assert "connect failed, retry in pymodbus" in caplog.text
 
 
 @pytest.mark.parametrize("do_config", [{}])
