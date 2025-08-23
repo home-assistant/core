@@ -99,6 +99,17 @@ from tests.common import MockConfigEntry
                 "sensitive": None,
             },
         ),
+        (
+            {ATTR_STATUS: "test toot", ATTR_LANGUAGE: "invalid-lang"},
+            {
+                "status": "test toot",
+                "language": "invalid-lang",
+                "spoiler_text": None,
+                "visibility": None,
+                "media_ids": None,
+                "sensitive": None,
+            },
+        ),
     ],
 )
 async def test_service_post(
