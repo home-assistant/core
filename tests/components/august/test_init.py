@@ -174,7 +174,7 @@ async def test_load_unload(hass: HomeAssistant) -> None:
 
     august_operative_lock = await _mock_operative_august_lock_detail(hass)
     august_inoperative_lock = await _mock_inoperative_august_lock_detail(hass)
-    config_entry = await _create_august_with_devices(
+    config_entry, _ = await _create_august_with_devices(
         hass, [august_operative_lock, august_inoperative_lock]
     )
 
@@ -193,7 +193,7 @@ async def test_load_triggers_ble_discovery(
     august_lock_with_key = await _mock_lock_with_offline_key(hass)
     august_lock_without_key = await _mock_operative_august_lock_detail(hass)
 
-    config_entry = await _create_august_with_devices(
+    config_entry, _ = await _create_august_with_devices(
         hass, [august_lock_with_key, august_lock_without_key]
     )
     await hass.async_block_till_done()
@@ -218,7 +218,7 @@ async def test_device_remove_devices(
     """Test we can only remove a device that no longer exists."""
     assert await async_setup_component(hass, "config", {})
     august_operative_lock = await _mock_operative_august_lock_detail(hass)
-    config_entry = await _create_august_with_devices(hass, [august_operative_lock])
+    config_entry, _ = await _create_august_with_devices(hass, [august_operative_lock])
     entity = entity_registry.entities["lock.a6697750d607098bae8d6baa11ef8063_name"]
 
     device_entry = device_registry.async_get(entity.device_id)
