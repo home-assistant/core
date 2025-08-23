@@ -100,7 +100,7 @@ async def test_async_new_device_discovery(
     manager._dev_list["fans"].append(fan)
     await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
 
-    assert manager.login.call_count == 1
+    assert manager.get_devices.call_count == 1
     assert hass.data[DOMAIN][VS_MANAGER] == manager
     assert list(hass.data[DOMAIN][VS_MANAGER].devices) == [fan]
 
@@ -108,7 +108,7 @@ async def test_async_new_device_discovery(
     manager._dev_list["humidifiers"].append(humidifier)
     await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
 
-    assert manager.login.call_count == 1
+    assert manager.get_devices.call_count == 2
     assert hass.data[DOMAIN][VS_MANAGER] == manager
     assert list(hass.data[DOMAIN][VS_MANAGER].devices) == [fan, humidifier]
 
