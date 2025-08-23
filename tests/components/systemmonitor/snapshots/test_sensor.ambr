@@ -10,6 +10,17 @@
 # name: test_sensor[System Monitor Battery - state]
   '93'
 # ---
+# name: test_sensor[System Monitor Battery remaining - attributes]
+  ReadOnlyDict({
+    'device_class': 'duration',
+    'friendly_name': 'System Monitor Battery remaining',
+    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensor[System Monitor Battery remaining - state]
+  '277.133333333333'
+# ---
 # name: test_sensor[System Monitor Disk free / - attributes]
   ReadOnlyDict({
     'device_class': 'data_size',
@@ -83,17 +94,6 @@
 # ---
 # name: test_sensor[System Monitor Disk use /media/share - state]
   '300.0'
-# ---
-# name: test_sensor[System Monitor Duration - attributes]
-  ReadOnlyDict({
-    'device_class': 'duration',
-    'friendly_name': 'System Monitor Duration',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
-  })
-# ---
-# name: test_sensor[System Monitor Duration - state]
-  '277.133333333333'
 # ---
 # name: test_sensor[System Monitor IPv4 address eth0 - attributes]
   ReadOnlyDict({
