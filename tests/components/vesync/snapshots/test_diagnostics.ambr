@@ -208,7 +208,7 @@
             'last_updated': str,
             'state': 'unavailable',
           }),
-          'unit_of_measurement': 'None',
+          'unit_of_measurement': None,
         }),
         dict({
           'device_class': None,
@@ -233,7 +233,7 @@
             'last_updated': str,
             'state': 'unavailable',
           }),
-          'unit_of_measurement': 'None',
+          'unit_of_measurement': None,
         }),
         dict({
           'device_class': None,
@@ -260,7 +260,7 @@
             'last_updated': str,
             'state': 'unavailable',
           }),
-          'unit_of_measurement': 'None',
+          'unit_of_measurement': None,
         }),
         dict({
           'device_class': None,
@@ -284,7 +284,7 @@
             'last_updated': str,
             'state': 'unavailable',
           }),
-          'unit_of_measurement': 'None',
+          'unit_of_measurement': None,
         }),
         dict({
           'device_class': None,
@@ -361,7 +361,7 @@
             'last_updated': str,
             'state': 'unavailable',
           }),
-          'unit_of_measurement': 'None',
+          'unit_of_measurement': None,
         }),
       ]),
       'name': 'Test Fan',

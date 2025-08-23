@@ -97,7 +97,7 @@ async def async_get_device_diagnostics(
                 "original_name": entity_entry.original_name,
                 "icon": entity_entry.icon,
                 "original_icon": entity_entry.original_icon,
-                "unit_of_measurement": str(entity_entry.unit_of_measurement),
+                "unit_of_measurement": entity_entry.unit_of_measurement,
                 "state": state_dict,
                 "disabled": entity_entry.disabled,
                 "disabled_by": entity_entry.disabled_by,
