@@ -198,6 +198,20 @@
           "description": "Length of the new password. It will be auto-generated if no password is set."
         }
       }
+    },
+    "dial": {
+      "name": "Dial a phone number",
+      "description": "Let the Fritz!Box dial a phone number. The dial-help of the Fritz!Box must be activated to make this work.",
+      "fields": {
+        "device_id": {
+          "name": "Fritz!Box Device",
+          "description": "Select the Fritz!Box to dial from."
+        },
+        "number": {
+          "name": "Phone number",
+          "description": "Phone number to dial."
+        }
+      }
     }
   },
   "exceptions": {

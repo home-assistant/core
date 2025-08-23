@@ -6,7 +6,10 @@ from fritzconnection.core.exceptions import FritzConnectionException, FritzServi
 import pytest
 
 from homeassistant.components.fritz.const import DOMAIN
-from homeassistant.components.fritz.services import SERVICE_SET_GUEST_WIFI_PW
+from homeassistant.components.fritz.services import (
+    SERVICE_SET_GUEST_WIFI_PW,
+    SERVICE_DIAL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -24,6 +27,7 @@ async def test_setup_services(hass: HomeAssistant) -> None:
     services = hass.services.async_services_for_domain(DOMAIN)
     assert services
     assert SERVICE_SET_GUEST_WIFI_PW in services
+    assert SERVICE_DIAL in services
 
 
 async def test_service_set_guest_wifi_password(
@@ -130,5 +134,112 @@ async def test_service_set_guest_wifi_password_unloaded(
         assert not mock_async_trigger_set_guest_password.called
         assert (
             'ServiceValidationError: Failed to perform action "set_guest_wifi_password". Config entry for target not found'
+            in caplog.text
+        )
+
+async def test_service_dial(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    fc_class_mock,
+    fh_class_mock,
+) -> None:
+    """Test service dial."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "1C:ED:6F:12:34:11")}
+    )
+    assert device
+    with patch(
+        "homeassistant.components.fritz.coordinator.AvmWrapper.async_trigger_dial"
+    ) as mock_async_trigger_dial:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_DIAL, {"device_id": device.id, "number": "1234567890"}
+        )
+        assert mock_async_trigger_dial.called
+
+
+async def test_service_dial_unknown_parameter(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    fc_class_mock,
+    fh_class_mock,
+) -> None:
+    """Test service dial with unknown parameters."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "1C:ED:6F:12:34:11")}
+    )
+    assert device
+
+    with patch(
+        "homeassistant.components.fritz.coordinator.AvmWrapper.async_trigger_dial",
+        side_effect=FritzServiceError("boom"),
+    ) as mock_async_trigger_dial:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_DIAL, {"device_id": device.id, "number": "1234567890"}
+        )
+        assert mock_async_trigger_dial.called
+        assert "HomeAssistantError: Action or parameter unknown" in caplog.text
+
+
+async def test_service_dial_service_not_supported(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    fc_class_mock,
+    fh_class_mock,
+) -> None:
+    """Test service dial with connection error."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "1C:ED:6F:12:34:11")}
+    )
+    assert device
+
+    with patch(
+        "homeassistant.components.fritz.coordinator.AvmWrapper.async_trigger_dial",
+        side_effect=FritzConnectionException("boom"),
+    ) as mock_async_trigger_dial:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_DIAL, {"device_id": device.id, "number": "1234567890"}
+        )
+        assert mock_async_trigger_dial.called
+        assert "HomeAssistantError: Action not supported" in caplog.text
+
+
+async def test_service_dial_unloaded(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test service dial."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.fritz.coordinator.AvmWrapper.async_trigger_dial"
+    ) as mock_async_trigger_dial:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_DIAL, {"device_id": "12345678", "number": "1234567890"}
+        )
+        assert not mock_async_trigger_dial.called
+        assert (
+            f'ServiceValidationError: Failed to perform action "{SERVICE_DIAL}". Config entry for target not found'
             in caplog.text
         )
