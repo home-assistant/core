@@ -136,6 +136,21 @@
     ),
   ])
 # ---
+# name: test_generate_content_service_with_custom_model
+  list([
+    tuple(
+      '',
+      tuple(
+      ),
+      dict({
+        'contents': list([
+          'Test prompt with custom model',
+        ]),
+        'model': 'models/gemini-2.0-flash-exp',
+      }),
+    ),
+  ])
+# ---
 # name: test_generate_content_service_with_image
   list([
     tuple(
