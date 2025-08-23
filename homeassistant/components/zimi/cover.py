@@ -29,12 +29,9 @@ async def async_setup_entry(
     api = config_entry.runtime_data
 
     blinds = [ZimiCover(device, api) for device in api.blinds]
-
-    async_add_entities(blinds)
-
     doors = [ZimiCover(device, api) for device in api.doors]
 
-    async_add_entities(doors)
+    async_add_entities(blinds + doors)
 
 
 class ZimiCover(ZimiEntity, CoverEntity):
