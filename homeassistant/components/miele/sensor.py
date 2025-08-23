@@ -62,6 +62,35 @@ PLATE_COUNT = {
     "KMX": 6,
 }
 
+APPLIANCE_ICONS = {
+    MieleAppliance.WASHING_MACHINE: "mdi:washing-machine",
+    MieleAppliance.TUMBLE_DRYER: "mdi:tumble-dryer",
+    MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL: "mdi:tumble-dryer",
+    MieleAppliance.DISHWASHER: "mdi:dishwasher",
+    MieleAppliance.OVEN: "mdi:chef-hat",
+    MieleAppliance.OVEN_MICROWAVE: "mdi:chef-hat",
+    MieleAppliance.HOB_HIGHLIGHT: "mdi:pot-steam-outline",
+    MieleAppliance.STEAM_OVEN: "mdi:chef-hat",
+    MieleAppliance.MICROWAVE: "mdi:microwave",
+    MieleAppliance.COFFEE_SYSTEM: "mdi:coffee-maker",
+    MieleAppliance.HOOD: "mdi:turbine",
+    MieleAppliance.FRIDGE: "mdi:fridge-industrial-outline",
+    MieleAppliance.FREEZER: "mdi:fridge-industrial-outline",
+    MieleAppliance.FRIDGE_FREEZER: "mdi:fridge-outline",
+    MieleAppliance.ROBOT_VACUUM_CLEANER: "mdi:robot-vacuum",
+    MieleAppliance.WASHER_DRYER: "mdi:washing-machine",
+    MieleAppliance.DISH_WARMER: "mdi:heat-wave",
+    MieleAppliance.HOB_INDUCTION: "mdi:pot-steam-outline",
+    MieleAppliance.STEAM_OVEN_COMBI: "mdi:chef-hat",
+    MieleAppliance.WINE_CABINET: "mdi:glass-wine",
+    MieleAppliance.WINE_CONDITIONING_UNIT: "mdi:glass-wine",
+    MieleAppliance.WINE_STORAGE_CONDITIONING_UNIT: "mdi:glass-wine",
+    MieleAppliance.STEAM_OVEN_MICRO: "mdi:chef-hat",
+    MieleAppliance.DIALOG_OVEN: "mdi:chef-hat",
+    MieleAppliance.WINE_CABINET_FREEZER: "mdi:glass-wine",
+    MieleAppliance.HOB_INDUCT_EXTR: "mdi:pot-steam-outline",
+}
+
 ATTRIBUTE_PROFILE = "profile"
 
 
@@ -100,6 +129,141 @@ def _get_coffee_profile(value: MieleDevice) -> str | None:
     return None
 
 
+class MieleSensor(MieleEntity, SensorEntity):
+    """Representation of a Sensor."""
+
+    entity_description: MieleSensorDescription
+
+    def __init__(
+        self,
+        coordinator: MieleDataUpdateCoordinator,
+        device_id: str,
+        description: MieleSensorDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, device_id, description)
+        if description.unique_id_fn is not None:
+            self._attr_unique_id = description.unique_id_fn(device_id, description)
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.device)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return extra_state_attributes."""
+        if self.entity_description.extra_attributes is None:
+            return None
+        attr = {}
+        for key, value in self.entity_description.extra_attributes.items():
+            attr[key] = value(self.device)
+        return attr
+
+
+class MielePlateSensor(MieleSensor):
+    """Representation of a Sensor."""
+
+    entity_description: MieleSensorDescription
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the plate sensor."""
+        # state_plate_step is [] if all zones are off
+
+        return (
+            PlatePowerStep(
+                cast(
+                    int,
+                    self.device.state_plate_step[
+                        cast(int, self.entity_description.zone) - 1
+                    ].value_raw,
+                )
+            ).name
+            if self.device.state_plate_step
+            else PlatePowerStep.plate_step_0.name
+        )
+
+
+class MieleStatusSensor(MieleSensor):
+    """Representation of the status sensor."""
+
+    def __init__(
+        self,
+        coordinator: MieleDataUpdateCoordinator,
+        device_id: str,
+        description: MieleSensorDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, device_id, description)
+        self._attr_name = None
+        self._attr_icon = APPLIANCE_ICONS.get(
+            MieleAppliance(self.device.device_type),
+            "mdi:state-machine",
+        )
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return STATE_STATUS_TAGS.get(StateStatus(self.device.state_status))
+
+    @property
+    def available(self) -> bool:
+        """Return the availability of the entity."""
+        # This sensor should always be available
+        return True
+
+
+class MielePhaseSensor(MieleSensor):
+    """Representation of the program phase sensor."""
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        ret_val = STATE_PROGRAM_PHASE.get(self.device.device_type, {}).get(
+            self.device.state_program_phase
+        )
+        if ret_val is None:
+            _LOGGER.debug(
+                "Unknown program phase: %s on device type: %s",
+                self.device.state_program_phase,
+                self.device.device_type,
+            )
+        return ret_val
+
+    @property
+    def options(self) -> list[str]:
+        """Return the options list for the actual device type."""
+        return sorted(
+            set(STATE_PROGRAM_PHASE.get(self.device.device_type, {}).values())
+        )
+
+
+class MieleProgramIdSensor(MieleSensor):
+    """Representation of the program id sensor."""
+
+    _unrecorded_attributes = frozenset({ATTRIBUTE_PROFILE})
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        ret_val = STATE_PROGRAM_ID.get(self.device.device_type, {}).get(
+            self.device.state_program_id
+        )
+        if ret_val is None:
+            _LOGGER.debug(
+                "Unknown program id: %s on device type: %s",
+                self.device.state_program_id,
+                self.device.device_type,
+            )
+        return ret_val
+
+    @property
+    def options(self) -> list[str]:
+        """Return the options list for the actual device type."""
+        return sorted(set(STATE_PROGRAM_ID.get(self.device.device_type, {}).values()))
+
+
 @dataclass(frozen=True, kw_only=True)
 class MieleSensorDescription(SensorEntityDescription):
     """Class describing Miele sensor entities."""
@@ -116,6 +280,7 @@ class MieleSensorDefinition:
 
     types: tuple[MieleAppliance, ...]
     description: MieleSensorDescription
+    entity_class: type[MieleSensor] = MieleSensor
 
 
 SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
@@ -157,6 +322,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             device_class=SensorDeviceClass.ENUM,
             options=sorted(set(STATE_STATUS_TAGS.values())),
         ),
+        entity_class=MieleStatusSensor,
     ),
     MieleSensorDefinition(
         types=(
@@ -183,6 +349,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             device_class=SensorDeviceClass.ENUM,
             value_fn=lambda value: value.state_program_id,
         ),
+        entity_class=MieleProgramIdSensor,
     ),
     MieleSensorDefinition(
         types=(MieleAppliance.COFFEE_SYSTEM,),
@@ -195,6 +362,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
                 ATTRIBUTE_PROFILE: _get_coffee_profile,
             },
         ),
+        entity_class=MieleProgramIdSensor,
     ),
     MieleSensorDefinition(
         types=(
@@ -221,6 +389,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             value_fn=lambda value: value.state_program_phase,
             device_class=SensorDeviceClass.ENUM,
         ),
+        entity_class=MielePhaseSensor,
     ),
     MieleSensorDefinition(
         types=(
@@ -559,6 +728,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
                 unique_id_fn=lambda device_id,
                 description: f"{device_id}-{description.key}-{description.zone}",
             ),
+            entity_class=MielePlateSensor,
         )
         for i in range(1, 7)
     ),
@@ -601,15 +771,6 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
     added_devices: set[str] = set()  # device_id
     added_entities: set[str] = set()  # unique_id
-
-    def _get_entity_class(definition: MieleSensorDefinition) -> type[MieleSensor]:
-        """Get the entity class for the sensor."""
-        return {
-            "state_status": MieleStatusSensor,
-            "state_program_id": MieleProgramIdSensor,
-            "state_program_phase": MielePhaseSensor,
-            "state_plate_step": MielePlateSensor,
-        }.get(definition.description.key, MieleSensor)
 
     def _is_entity_registered(unique_id: str) -> bool:
         """Check if the entity is already registered."""
@@ -656,7 +817,7 @@ async def async_setup_entry(
                 if device.device_type not in definition.types:
                     continue
 
-                entity_class = _get_entity_class(definition)
+                entity_class = definition.entity_class
                 unique_id = (
                     definition.description.unique_id_fn(
                         device_id, definition.description
@@ -681,168 +842,3 @@ async def async_setup_entry(
 
     config_entry.async_on_unload(coordinator.async_add_listener(_async_add_devices))
     _async_add_devices()
-
-
-APPLIANCE_ICONS = {
-    MieleAppliance.WASHING_MACHINE: "mdi:washing-machine",
-    MieleAppliance.TUMBLE_DRYER: "mdi:tumble-dryer",
-    MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL: "mdi:tumble-dryer",
-    MieleAppliance.DISHWASHER: "mdi:dishwasher",
-    MieleAppliance.OVEN: "mdi:chef-hat",
-    MieleAppliance.OVEN_MICROWAVE: "mdi:chef-hat",
-    MieleAppliance.HOB_HIGHLIGHT: "mdi:pot-steam-outline",
-    MieleAppliance.STEAM_OVEN: "mdi:chef-hat",
-    MieleAppliance.MICROWAVE: "mdi:microwave",
-    MieleAppliance.COFFEE_SYSTEM: "mdi:coffee-maker",
-    MieleAppliance.HOOD: "mdi:turbine",
-    MieleAppliance.FRIDGE: "mdi:fridge-industrial-outline",
-    MieleAppliance.FREEZER: "mdi:fridge-industrial-outline",
-    MieleAppliance.FRIDGE_FREEZER: "mdi:fridge-outline",
-    MieleAppliance.ROBOT_VACUUM_CLEANER: "mdi:robot-vacuum",
-    MieleAppliance.WASHER_DRYER: "mdi:washing-machine",
-    MieleAppliance.DISH_WARMER: "mdi:heat-wave",
-    MieleAppliance.HOB_INDUCTION: "mdi:pot-steam-outline",
-    MieleAppliance.STEAM_OVEN_COMBI: "mdi:chef-hat",
-    MieleAppliance.WINE_CABINET: "mdi:glass-wine",
-    MieleAppliance.WINE_CONDITIONING_UNIT: "mdi:glass-wine",
-    MieleAppliance.WINE_STORAGE_CONDITIONING_UNIT: "mdi:glass-wine",
-    MieleAppliance.STEAM_OVEN_MICRO: "mdi:chef-hat",
-    MieleAppliance.DIALOG_OVEN: "mdi:chef-hat",
-    MieleAppliance.WINE_CABINET_FREEZER: "mdi:glass-wine",
-    MieleAppliance.HOB_INDUCT_EXTR: "mdi:pot-steam-outline",
-}
-
-
-class MieleSensor(MieleEntity, SensorEntity):
-    """Representation of a Sensor."""
-
-    entity_description: MieleSensorDescription
-
-    def __init__(
-        self,
-        coordinator: MieleDataUpdateCoordinator,
-        device_id: str,
-        description: MieleSensorDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, device_id, description)
-        if description.unique_id_fn is not None:
-            self._attr_unique_id = description.unique_id_fn(device_id, description)
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.device)
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return extra_state_attributes."""
-        if self.entity_description.extra_attributes is None:
-            return None
-        attr = {}
-        for key, value in self.entity_description.extra_attributes.items():
-            attr[key] = value(self.device)
-        return attr
-
-
-class MielePlateSensor(MieleSensor):
-    """Representation of a Sensor."""
-
-    entity_description: MieleSensorDescription
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the plate sensor."""
-        # state_plate_step is [] if all zones are off
-
-        return (
-            PlatePowerStep(
-                cast(
-                    int,
-                    self.device.state_plate_step[
-                        cast(int, self.entity_description.zone) - 1
-                    ].value_raw,
-                )
-            ).name
-            if self.device.state_plate_step
-            else PlatePowerStep.plate_step_0.name
-        )
-
-
-class MieleStatusSensor(MieleSensor):
-    """Representation of the status sensor."""
-
-    def __init__(
-        self,
-        coordinator: MieleDataUpdateCoordinator,
-        device_id: str,
-        description: MieleSensorDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, device_id, description)
-        self._attr_name = None
-        self._attr_icon = APPLIANCE_ICONS.get(
-            MieleAppliance(self.device.device_type),
-            "mdi:state-machine",
-        )
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        return STATE_STATUS_TAGS.get(StateStatus(self.device.state_status))
-
-    @property
-    def available(self) -> bool:
-        """Return the availability of the entity."""
-        # This sensor should always be available
-        return True
-
-
-class MielePhaseSensor(MieleSensor):
-    """Representation of the program phase sensor."""
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        ret_val = STATE_PROGRAM_PHASE.get(self.device.device_type, {}).get(
-            self.device.state_program_phase
-        )
-        if ret_val is None:
-            _LOGGER.debug(
-                "Unknown program phase: %s on device type: %s",
-                self.device.state_program_phase,
-                self.device.device_type,
-            )
-        return ret_val
-
-    @property
-    def options(self) -> list[str]:
-        """Return the options list for the actual device type."""
-        return sorted(
-            set(STATE_PROGRAM_PHASE.get(self.device.device_type, {}).values())
-        )
-
-
-class MieleProgramIdSensor(MieleSensor):
-    """Representation of the program id sensor."""
-
-    _unrecorded_attributes = frozenset({ATTRIBUTE_PROFILE})
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        ret_val = STATE_PROGRAM_ID.get(self.device.device_type, {}).get(
-            self.device.state_program_id
-        )
-        if ret_val is None:
-            _LOGGER.debug(
-                "Unknown program id: %s on device type: %s",
-                self.device.state_program_id,
-                self.device.device_type,
-            )
-        return ret_val
-
-    @property
-    def options(self) -> list[str]:
-        """Return the options list for the actual device type."""
-        return sorted(set(STATE_PROGRAM_ID.get(self.device.device_type, {}).values()))
