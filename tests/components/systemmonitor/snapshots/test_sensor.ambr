@@ -89,11 +89,11 @@
     'device_class': 'duration',
     'friendly_name': 'System Monitor Duration',
     'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
 # name: test_sensor[System Monitor Duration - state]
-  '16628'
+  '277.133333333333'
 # ---
 # name: test_sensor[System Monitor IPv4 address eth0 - attributes]
   ReadOnlyDict({
