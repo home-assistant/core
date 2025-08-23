@@ -60,15 +60,27 @@ async def test_creating_entry_has_with_devices(
 
     mock_DayBetter_api.devices = _get_devices(mock_DayBetter_api)
 
-    with patch(
-        "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
-        return_value=mock_DayBetter_api,
+    # 需要mock发现过程，让自动发现失败，这样才会显示表单
+    with (
+        patch(
+            "homeassistant.components.daybetter_light_local.config_flow.DayBetterConfigFlow._async_discover_device",
+            return_value=None,  # 让自动发现返回None
+        ),
+        patch(
+            "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
+            return_value=mock_DayBetter_api,
+        ),
+        # 确保协调器正确返回设备列表
+        patch(
+            "homeassistant.components.daybetter_light_local.coordinator.DayBetterLocalApiCoordinator.devices",
+            return_value=_get_devices(mock_DayBetter_api),
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        # Confirmation form
+        # 应该显示表单
         assert result["type"] is FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(
@@ -94,19 +106,24 @@ async def test_creating_entry_errno(
     mock_DayBetter_api.start.side_effect = e
     mock_DayBetter_api.devices = _get_devices(mock_DayBetter_api)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    # 同样需要mock自动发现返回None
+    with patch(
+        "homeassistant.components.daybetter_light_local.config_flow.DayBetterConfigFlow._async_discover_device",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
 
-    # Confirmation form
-    assert result["type"] is FlowResultType.FORM
+        # Confirmation form
+        assert result["type"] is FlowResultType.FORM
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"host": "192.168.1.100"}
-    )
-    assert result["type"] is FlowResultType.ABORT
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "192.168.1.100"}
+        )
+        assert result["type"] is FlowResultType.ABORT
 
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
-    assert mock_DayBetter_api.start.call_count == 1
-    mock_setup_entry.assert_not_awaited()
+        assert mock_DayBetter_api.start.call_count == 1
+        mock_setup_entry.assert_not_awaited()

@@ -24,7 +24,8 @@ def fixture_mock_DayBetter_api() -> Generator[AsyncMock]:
     mock_api.set_brightness = AsyncMock()
     mock_api.set_color = AsyncMock()
     mock_api.set_scene = AsyncMock()
-    mock_api._async_update_data = AsyncMock()
+    # 移除这个mock，因为 coordinator.data 是从其他地方获取的
+    # mock_api._async_update_data = AsyncMock(return_value=[])
 
     with (
         patch(

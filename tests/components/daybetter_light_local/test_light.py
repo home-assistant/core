@@ -131,17 +131,22 @@ async def test_light_setup_retry(
 ) -> None:
     """Test setup retry."""
 
+    # 关键：确保协调器的 devices 属性返回空列表
     mock_DayBetter_api.devices = []
 
-    with patch(
-        "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
-        return_value=mock_DayBetter_api,
+    # 确保协调器的 devices 属性返回空列表
+    with (
+        patch(
+            "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
+            return_value=mock_DayBetter_api,
+        ),
+        patch.object(mock_DayBetter_api, "devices", []),
     ):
         entry = MockConfigEntry(domain=DOMAIN, data={"host": "192.168.1.100"})
         entry.add_to_hass(hass)
 
         # 现在应该抛出 ConfigEntryNotReady 异常
-        with pytest.raises(ConfigEntryNotReady):
+        with pytest.raises(ConfigEntryNotReady, match="No DayBetter devices found"):
             await hass.config_entries.async_setup(entry.entry_id)
 
 
