@@ -23,4 +23,5 @@ RESOLUTION_TO_STREAM = {0: "Main", 1: "Extra"}
 PLATFORMS = {
     Platform.CAMERA,
     Platform.BINARY_SENSOR,
-}  # , , Platform.SENSOR, Platform.SWITCH}
+    Platform.SWITCH,
+}  # , , Platform.SENSOR, }
