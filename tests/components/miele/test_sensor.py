@@ -272,6 +272,21 @@ async def test_fan_hob_sensor_states(
     await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
 
 
+@pytest.mark.parametrize("load_device_file", ["coffee_system.json"])
+@pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_coffee_system_sensor_states(
+    hass: HomeAssistant,
+    mock_miele_client: MagicMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    setup_platform: None,
+) -> None:
+    """Test coffee system sensor state."""
+
+    await snapshot_platform(hass, entity_registry, snapshot, setup_platform.entry_id)
+
+
 @pytest.mark.parametrize("load_device_file", ["laundry.json"])
 @pytest.mark.parametrize("platforms", [(SENSOR_DOMAIN,)])
 async def test_laundry_wash_scenario(
