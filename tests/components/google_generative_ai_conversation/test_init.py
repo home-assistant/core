@@ -70,6 +70,43 @@ async def test_generate_content_service_without_images(
 
 
 @pytest.mark.usefixtures("mock_init_component")
+async def test_generate_content_service_with_custom_model(
+    hass: HomeAssistant, snapshot: SnapshotAssertion
+) -> None:
+    """Test generate content service with custom model parameter."""
+    stubbed_generated_content = "Custom model response"
+    custom_model = "models/gemini-2.0-flash-exp"
+    
+    with patch(
+        "google.genai.models.AsyncModels.generate_content",
+        return_value=Mock(
+            text=stubbed_generated_content,
+            prompt_feedback=None,
+            candidates=[Mock()],
+        ),
+    ) as mock_generate:
+        response = await hass.services.async_call(
+            "google_generative_ai_conversation",
+            "generate_content",
+            {
+                "prompt": "Test prompt with custom model",
+                "model": custom_model,
+            },
+            blocking=True,
+            return_response=True,
+        )
+    
+    assert response == {
+        "text": stubbed_generated_content,
+    }
+    
+    # Verify the custom model was used
+    mock_generate.assert_called_once()
+    assert mock_generate.call_args.kwargs["model"] == custom_model
+    assert [tuple(mock_call) for mock_call in mock_generate.mock_calls] == snapshot
+
+
+@pytest.mark.usefixtures("mock_init_component")
 async def test_generate_content_service_with_image(
     hass: HomeAssistant, snapshot: SnapshotAssertion
 ) -> None:

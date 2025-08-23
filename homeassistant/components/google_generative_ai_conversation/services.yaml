@@ -14,3 +14,8 @@ generate_content:
       selector:
         text:
           multiple: true
+    model:
+      required: false
+      example: "models/gemini-2.5-flash"
+      selector:
+        text:

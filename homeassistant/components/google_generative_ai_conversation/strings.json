@@ -169,6 +169,11 @@
           "name": "Attachment filenames",
           "description": "Attachments to add to the prompt (images, PDFs, etc)",
           "example": "/config/www/image.jpg"
+        },
+        "model": {
+          "name": "Model",
+          "description": "The Google AI model to use for content generation",
+          "example": "models/gemini-2.5-flash"
         }
       }
     }
