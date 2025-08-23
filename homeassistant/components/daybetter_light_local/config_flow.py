@@ -38,7 +38,7 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             ip = user_input["ip"]
-            device_id = user_input.get("device", ip) 
+            device_id = user_input.get("device", ip)
             await self.async_set_unique_id(device_id)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
@@ -54,7 +54,6 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 title=f"DayBetter Light {discovered['ip']}",
                 data=discovered,
             )
-
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
