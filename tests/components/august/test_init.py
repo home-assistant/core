@@ -4,7 +4,7 @@ from unittest.mock import Mock
 
 from aiohttp import ClientResponseError
 import pytest
-from yalexs.exceptions import AugustApiAIOHTTPError
+from yalexs.exceptions import AugustApiAIOHTTPError, InvalidAuth
 
 from homeassistant.components.august.const import DOMAIN
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
@@ -56,7 +56,7 @@ async def test_august_late_auth_failure(hass: HomeAssistant) -> None:
     """Test we can detect a late auth failure."""
     config_entry, _ = await _create_august_with_devices(
         hass,
-        authenticate_side_effect=AugustApiAIOHTTPError(
+        authenticate_side_effect=InvalidAuth(
             "authfailed", ClientResponseError(None, None, status=401)
         ),
     )
