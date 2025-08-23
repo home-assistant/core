@@ -9,11 +9,19 @@ from typing import TYPE_CHECKING
 from amcrest import AmcrestError
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_SENSORS, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DATA_AMCREST, DEVICES, SENSOR_SCAN_INTERVAL_SECS, SERVICE_UPDATE
 from .helpers import log_update_error, service_signal
@@ -66,6 +74,21 @@ async def async_setup_platform(
         ],
         True,
     )
+
+# Platform setup for config flow
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Amcrest sensors for a config entry."""
+    device = hass.data[DATA_AMCREST][DEVICES][config_entry.entry_id]["device"]
+    coordinator = hass.data[DATA_AMCREST][DEVICES][config_entry.entry_id]["coordinator"]
+    entities = [
+        AmcrestCoordinatedSensor(device.name, device, coordinator, description)
+        for description in SENSOR_TYPES
+    ]
+    async_add_entities(entities, True)
 
 
 class AmcrestSensor(SensorEntity):
@@ -139,3 +162,19 @@ class AmcrestSensor(SensorEntity):
                 self.async_write_ha_state,
             )
         )
+
+class AmcrestCoordinatedSensor(CoordinatorEntity, AmcrestSensor):
+    """Representation of an Amcrest Camera Sensor tied to DataUpdateCoordinator."""
+
+    def __init__(
+        self,
+        name: str,
+        device: AmcrestDevice,
+        coordinator: DataUpdateCoordinator,
+        entity_description: SensorEntityDescription,
+    ) -> None:
+        """Initialize sensor."""
+        CoordinatorEntity.__init__(self, coordinator)
+        AmcrestSensor.__init__(self, name, device, entity_description)
+        self._attr_device_info = device.device_info
+        self._attr_unique_id = f"{device.name}_{entity_description.key}"
