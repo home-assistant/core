@@ -740,6 +740,16 @@ class MieleSensor(MieleEntity, SensorEntity):
         value = self.entity_description.value_fn(self.device)
         return self.entity_description.default_value if value is None else value
 
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return extra_state_attributes."""
+        if self.entity_description.extra_attributes is None:
+            return None
+        attr = {}
+        for key, value in self.entity_description.extra_attributes.items():
+            attr[key] = value(self.device)
+        return attr
+
 
 class MieleRestorableSensor(MieleSensor, RestoreSensor):
     """Representation of a Sensor whose internal state can be restored."""
@@ -769,16 +779,6 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self._last_value
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return extra_state_attributes."""
-        if self.entity_description.extra_attributes is None:
-            return None
-        attr = {}
-        for key, value in self.entity_description.extra_attributes.items():
-            attr[key] = value(self.device)
-        return attr
 
 
 class MielePlateSensor(MieleSensor):
