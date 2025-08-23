@@ -1,8 +1,8 @@
 {
   "entity": {
     "sensor": {
-      "battery": {
-        "default": "mdi:battery"
+      "battery_left": {
+        "default": "mdi:battery-clock"
       },
       "disk_free": {
         "default": "mdi:harddisk"
