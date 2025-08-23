@@ -64,7 +64,6 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-
     async def _async_discover_device(self) -> dict[str, Any] | None:
         """Discover a DayBetter device and return its info."""
         adapter = await network.async_get_source_ip(self.hass, network.PUBLIC_TARGET_IP)
