@@ -76,7 +76,7 @@ async def test_generate_content_service_with_custom_model(
     """Test generate content service with custom model parameter."""
     stubbed_generated_content = "Custom model response"
     custom_model = "models/gemini-2.0-flash-exp"
-    
+
     with patch(
         "google.genai.models.AsyncModels.generate_content",
         return_value=Mock(
@@ -95,11 +95,11 @@ async def test_generate_content_service_with_custom_model(
             blocking=True,
             return_response=True,
         )
-    
+
     assert response == {
         "text": stubbed_generated_content,
     }
-    
+
     # Verify the custom model was used
     mock_generate.assert_called_once()
     assert mock_generate.call_args.kwargs["model"] == custom_model
