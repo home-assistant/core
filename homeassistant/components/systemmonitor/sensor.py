@@ -626,8 +626,8 @@ async def async_setup_entry(  # noqa: C901
                 )
             )
 
-        for _arg in coordinator.data.fan_rpm:
-            if _type == "fan_rpm":
+        if _type == "fan_rpm":
+            for _arg in coordinator.data.fan_rpm:
                 argument = ""
                 loaded_resources.add(slugify(f"{_type}_{argument}"))
                 entities.append(
