@@ -899,7 +899,10 @@ class MieleTimeSensor(MieleRestorableSensor):
         current_status = StateStatus(self.device.state_status)
 
         # report end-specific value when program ends (some devices are immediately reporting 0...)
-        if current_status == StateStatus.PROGRAM_ENDED and self.entity_description.end_value_fn is not None:
+        if (
+            current_status == StateStatus.PROGRAM_ENDED
+            and self.entity_description.end_value_fn is not None
+        ):
             self._last_value = self.entity_description.end_value_fn(self._last_value)
 
         # keep value when program ends if no function is specified
