@@ -1,5 +1,8 @@
 """Test DayBetter light local."""
 
+import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
+
 from errno import EADDRINUSE, ENETDOWN
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
@@ -40,25 +43,28 @@ async def test_light_known_device(
             capabilities=DEFAULT_CAPABILITIES,
         )
     ]
+    with patch(
+        "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
+        return_value=mock_DayBetter_api,
+    ):
+        entry = MockConfigEntry(domain=DOMAIN)
+        entry.add_to_hass(hass)
 
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+        assert len(hass.states.async_all()) == 1
 
-    assert len(hass.states.async_all()) == 1
+        light = hass.states.get("light.P076")
+        assert light is not None
 
-    light = hass.states.get("light.P076")
-    assert light is not None
+        color_modes = light.attributes[ATTR_SUPPORTED_COLOR_MODES]
+        assert set(color_modes) == {ColorMode.COLOR_TEMP, ColorMode.RGB}
 
-    color_modes = light.attributes[ATTR_SUPPORTED_COLOR_MODES]
-    assert set(color_modes) == {ColorMode.COLOR_TEMP, ColorMode.RGB}
-
-    # Remove
-    assert await hass.config_entries.async_remove(entry.entry_id)
-    await hass.async_block_till_done()
-    assert hass.states.get("light.P076") is None
+        # Remove
+        assert await hass.config_entries.async_remove(entry.entry_id)
+        await hass.async_block_till_done()
+        assert hass.states.get("light.P076") is None
 
 
 async def test_light_unknown_device(
@@ -75,19 +81,22 @@ async def test_light_unknown_device(
             capabilities=None,
         )
     ]
+    with patch(
+        "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
+        return_value=mock_DayBetter_api,
+    ):
+        entry = MockConfigEntry(domain=DOMAIN)
+        entry.add_to_hass(hass)
 
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+        assert len(hass.states.async_all()) == 1
 
-    assert len(hass.states.async_all()) == 1
+        light = hass.states.get("light.XYZK")
+        assert light is not None
 
-    light = hass.states.get("light.XYZK")
-    assert light is not None
-
-    assert light.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
+        assert light.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
 
 
 async def test_light_remove(hass: HomeAssistant, mock_DayBetter_api: AsyncMock) -> None:
@@ -102,18 +111,21 @@ async def test_light_remove(hass: HomeAssistant, mock_DayBetter_api: AsyncMock) 
             capabilities=DEFAULT_CAPABILITIES,
         )
     ]
+    with patch(
+        "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
+        return_value=mock_DayBetter_api,
+    ):
+        entry = MockConfigEntry(domain=DOMAIN)
+        entry.add_to_hass(hass)
 
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        assert hass.states.get("light.P076") is not None
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert hass.states.get("light.P076") is not None
-
-    # Remove 1
-    assert await hass.config_entries.async_remove(entry.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
+        # Remove 1
+        assert await hass.config_entries.async_remove(entry.entry_id)
+        await hass.async_block_till_done()
+        assert len(hass.states.async_all()) == 0
 
 
 async def test_light_setup_retry(
@@ -123,15 +135,20 @@ async def test_light_setup_retry(
 
     mock_DayBetter_api.devices = []
 
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-
     with patch(
-        "homeassistant.components.daybetter_light_local.config_flow.DISCOVERY_TIMEOUT",
-        0,
+        "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
+        return_value=mock_DayBetter_api,
     ):
-        await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+        entry = MockConfigEntry(domain=DOMAIN)
+        entry.add_to_hass(hass)
+
+        with patch(
+            "homeassistant.components.daybetter_light_local.config_flow.DISCOVERY_TIMEOUT",
+            side_effect=asyncio.TimeoutError,
+        ):
+            await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_light_setup_retry_eaddrinuse(
@@ -150,12 +167,15 @@ async def test_light_setup_retry_eaddrinuse(
             capabilities=DEFAULT_CAPABILITIES,
         )
     ]
+    with patch(
+        "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
+        return_value=mock_DayBetter_api,
+    ):
+        entry = MockConfigEntry(domain=DOMAIN)
+        entry.add_to_hass(hass)
 
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
+        await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_light_setup_error(
@@ -174,12 +194,15 @@ async def test_light_setup_error(
             capabilities=DEFAULT_CAPABILITIES,
         )
     ]
+    with patch(
+        "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
+        return_value=mock_DayBetter_api,
+    ):
+        entry = MockConfigEntry(domain=DOMAIN)
+        entry.add_to_hass(hass)
 
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+        await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_light_on_off(hass: HomeAssistant, mock_DayBetter_api: MagicMock) -> None:
@@ -194,49 +217,52 @@ async def test_light_on_off(hass: HomeAssistant, mock_DayBetter_api: MagicMock) 
             capabilities=DEFAULT_CAPABILITIES,
         )
     ]
+    with patch(
+        "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
+        return_value=mock_DayBetter_api,
+    ):
+        entry = MockConfigEntry(domain=DOMAIN)
+        entry.add_to_hass(hass)
 
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+        assert len(hass.states.async_all()) == 1
 
-    assert len(hass.states.async_all()) == 1
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "off"
 
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "off"
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": light.entity_id},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "on"
+        mock_DayBetter_api.turn_on_off.assert_awaited_with(
+            mock_DayBetter_api.devices[0], True
+        )
 
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "on"
-    mock_DayBetter_api.turn_on_off.assert_awaited_with(
-        mock_DayBetter_api.devices[0], True
-    )
+        # Turn off
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {"entity_id": light.entity_id},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
-    # Turn off
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_OFF,
-        {"entity_id": light.entity_id},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "off"
-    mock_DayBetter_api.turn_on_off.assert_awaited_with(
-        mock_DayBetter_api.devices[0], False
-    )
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "off"
+        mock_DayBetter_api.turn_on_off.assert_awaited_with(
+            mock_DayBetter_api.devices[0], False
+        )
 
 
 @pytest.mark.parametrize(
@@ -278,36 +304,39 @@ async def test_turn_on_call_order(
             capabilities=SCENE_CAPABILITIES,
         )
     ]
+    with patch(
+        "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
+        return_value=mock_DayBetter_api,
+    ):
+        entry = MockConfigEntry(domain=DOMAIN)
+        entry.add_to_hass(hass)
 
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+        assert len(hass.states.async_all()) == 1
 
-    assert len(hass.states.async_all()) == 1
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "off"
 
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "off"
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": light.entity_id, ATTR_BRIGHTNESS_PCT: 50, attribute: value},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_BRIGHTNESS_PCT: 50, attribute: value},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    mock_DayBetter_api.assert_has_calls(
-        [
-            call.set_brightness(mock_DayBetter_api.devices[0], 50),
-            getattr(call, mock_call)(
-                mock_DayBetter_api.devices[0], *mock_call_args, **mock_call_kwargs
-            ),
-            call.turn_on_off(mock_DayBetter_api.devices[0], True),
-        ]
-    )
+        mock_DayBetter_api.assert_has_calls(
+            [
+                call.set_brightness(mock_DayBetter_api.devices[0], 50),
+                getattr(call, mock_call)(
+                    mock_DayBetter_api.devices[0], *mock_call_args, **mock_call_kwargs
+                ),
+                call.turn_on_off(mock_DayBetter_api.devices[0], True),
+            ]
+        )
 
 
 async def test_light_brightness(
@@ -323,66 +352,69 @@ async def test_light_brightness(
             capabilities=DEFAULT_CAPABILITIES,
         )
     ]
+    with patch(
+        "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
+        return_value=mock_DayBetter_api,
+    ):
+        entry = MockConfigEntry(domain=DOMAIN)
+        entry.add_to_hass(hass)
 
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+        assert len(hass.states.async_all()) == 1
 
-    assert len(hass.states.async_all()) == 1
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "off"
 
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "off"
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": light.entity_id, "brightness_pct": 50},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, "brightness_pct": 50},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "on"
+        mock_DayBetter_api.set_brightness.assert_awaited_with(
+            mock_DayBetter_api.devices[0], 50
+        )
+        assert light.attributes[ATTR_BRIGHTNESS] == 127
 
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "on"
-    mock_DayBetter_api.set_brightness.assert_awaited_with(
-        mock_DayBetter_api.devices[0], 50
-    )
-    assert light.attributes[ATTR_BRIGHTNESS] == 127
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": light.entity_id, ATTR_BRIGHTNESS: 255},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_BRIGHTNESS: 255},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "on"
+        assert light.attributes[ATTR_BRIGHTNESS] == 255
+        mock_DayBetter_api.set_brightness.assert_awaited_with(
+            mock_DayBetter_api.devices[0], 100
+        )
 
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "on"
-    assert light.attributes[ATTR_BRIGHTNESS] == 255
-    mock_DayBetter_api.set_brightness.assert_awaited_with(
-        mock_DayBetter_api.devices[0], 100
-    )
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": light.entity_id, ATTR_BRIGHTNESS: 255},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_BRIGHTNESS: 255},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "on"
-    assert light.attributes[ATTR_BRIGHTNESS] == 255
-    mock_DayBetter_api.set_brightness.assert_awaited_with(
-        mock_DayBetter_api.devices[0], 100
-    )
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "on"
+        assert light.attributes[ATTR_BRIGHTNESS] == 255
+        mock_DayBetter_api.set_brightness.assert_awaited_with(
+            mock_DayBetter_api.devices[0], 100
+        )
 
 
 async def test_light_color(hass: HomeAssistant, mock_DayBetter_api: MagicMock) -> None:
@@ -396,54 +428,57 @@ async def test_light_color(hass: HomeAssistant, mock_DayBetter_api: MagicMock) -
             capabilities=DEFAULT_CAPABILITIES,
         )
     ]
+    with patch(
+        "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
+        return_value=mock_DayBetter_api,
+    ):
+        entry = MockConfigEntry(domain=DOMAIN)
+        entry.add_to_hass(hass)
 
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+        assert len(hass.states.async_all()) == 1
 
-    assert len(hass.states.async_all()) == 1
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "off"
 
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "off"
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": light.entity_id, ATTR_RGB_COLOR: [100, 255, 50]},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_RGB_COLOR: [100, 255, 50]},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "on"
+        assert light.attributes[ATTR_RGB_COLOR] == (100, 255, 50)
+        assert light.attributes["color_mode"] == ColorMode.RGB
 
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "on"
-    assert light.attributes[ATTR_RGB_COLOR] == (100, 255, 50)
-    assert light.attributes["color_mode"] == ColorMode.RGB
+        mock_DayBetter_api.set_color.assert_awaited_with(
+            mock_DayBetter_api.devices[0], rgb=(100, 255, 50), temperature=None
+        )
 
-    mock_DayBetter_api.set_color.assert_awaited_with(
-        mock_DayBetter_api.devices[0], rgb=(100, 255, 50), temperature=None
-    )
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": light.entity_id, "kelvin": 4400},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, "kelvin": 4400},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "on"
+        assert light.attributes["color_temp_kelvin"] == 4400
+        assert light.attributes["color_mode"] == ColorMode.COLOR_TEMP
 
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "on"
-    assert light.attributes["color_temp_kelvin"] == 4400
-    assert light.attributes["color_mode"] == ColorMode.COLOR_TEMP
-
-    mock_DayBetter_api.set_color.assert_awaited_with(
-        mock_DayBetter_api.devices[0], rgb=None, temperature=4400
-    )
+        mock_DayBetter_api.set_color.assert_awaited_with(
+            mock_DayBetter_api.devices[0], rgb=None, temperature=4400
+        )
 
 
 async def test_scene_on(hass: HomeAssistant, mock_DayBetter_api: MagicMock) -> None:
@@ -458,34 +493,37 @@ async def test_scene_on(hass: HomeAssistant, mock_DayBetter_api: MagicMock) -> N
             capabilities=SCENE_CAPABILITIES,
         )
     ]
+    with patch(
+        "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
+        return_value=mock_DayBetter_api,
+    ):
+        entry = MockConfigEntry(domain=DOMAIN)
+        entry.add_to_hass(hass)
 
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+        assert len(hass.states.async_all()) == 1
 
-    assert len(hass.states.async_all()) == 1
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "off"
 
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "off"
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": light.entity_id, ATTR_EFFECT: "christmas"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_EFFECT: "christmas"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "on"
-    assert light.attributes[ATTR_EFFECT] == "christmas"
-    mock_DayBetter_api.turn_on_off.assert_awaited_with(
-        mock_DayBetter_api.devices[0], True
-    )
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "on"
+        assert light.attributes[ATTR_EFFECT] == "christmas"
+        mock_DayBetter_api.turn_on_off.assert_awaited_with(
+            mock_DayBetter_api.devices[0], True
+        )
 
 
 async def test_scene_restore_rgb(
@@ -502,77 +540,80 @@ async def test_scene_restore_rgb(
             capabilities=SCENE_CAPABILITIES,
         )
     ]
+    with patch(
+        "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
+        return_value=mock_DayBetter_api,
+    ):
+        entry = MockConfigEntry(domain=DOMAIN)
+        entry.add_to_hass(hass)
 
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+        assert len(hass.states.async_all()) == 1
 
-    assert len(hass.states.async_all()) == 1
+        initial_color = (12, 34, 56)
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "off"
 
-    initial_color = (12, 34, 56)
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "off"
+        # Set initial color
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": light.entity_id, ATTR_RGB_COLOR: initial_color},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": light.entity_id, ATTR_BRIGHTNESS: 255},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
-    # Set initial color
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_RGB_COLOR: initial_color},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_BRIGHTNESS: 255},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "on"
+        assert light.attributes[ATTR_RGB_COLOR] == initial_color
+        assert light.attributes[ATTR_BRIGHTNESS] == 255
+        mock_DayBetter_api.turn_on_off.assert_awaited_with(
+            mock_DayBetter_api.devices[0], True
+        )
 
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "on"
-    assert light.attributes[ATTR_RGB_COLOR] == initial_color
-    assert light.attributes[ATTR_BRIGHTNESS] == 255
-    mock_DayBetter_api.turn_on_off.assert_awaited_with(
-        mock_DayBetter_api.devices[0], True
-    )
+        # Activate scene
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": light.entity_id, ATTR_EFFECT: "christmas"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
-    # Activate scene
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_EFFECT: "christmas"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "on"
+        assert light.attributes[ATTR_EFFECT] == "christmas"
+        mock_DayBetter_api.turn_on_off.assert_awaited_with(
+            mock_DayBetter_api.devices[0], True
+        )
 
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "on"
-    assert light.attributes[ATTR_EFFECT] == "christmas"
-    mock_DayBetter_api.turn_on_off.assert_awaited_with(
-        mock_DayBetter_api.devices[0], True
-    )
+        # Deactivate scene
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": light.entity_id, ATTR_EFFECT: "none"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
-    # Deactivate scene
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_EFFECT: "none"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "on"
-    assert light.attributes[ATTR_EFFECT] is None
-    assert light.attributes[ATTR_RGB_COLOR] == initial_color
-    assert light.attributes[ATTR_BRIGHTNESS] == 255
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "on"
+        assert light.attributes[ATTR_EFFECT] is None
+        assert light.attributes[ATTR_RGB_COLOR] == initial_color
+        assert light.attributes[ATTR_BRIGHTNESS] == 255
 
 
 async def test_scene_restore_temperature(
@@ -589,68 +630,71 @@ async def test_scene_restore_temperature(
             capabilities=SCENE_CAPABILITIES,
         )
     ]
+    with patch(
+        "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
+        return_value=mock_DayBetter_api,
+    ):
+        entry = MockConfigEntry(domain=DOMAIN)
+        entry.add_to_hass(hass)
 
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+        assert len(hass.states.async_all()) == 1
 
-    assert len(hass.states.async_all()) == 1
+        initial_color = 3456
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "off"
 
-    initial_color = 3456
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "off"
+        # Set initial color
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": light.entity_id, "color_temp_kelvin": initial_color},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
-    # Set initial color
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, "color_temp_kelvin": initial_color},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "on"
+        assert light.attributes["color_temp_kelvin"] == initial_color
+        mock_DayBetter_api.turn_on_off.assert_awaited_with(
+            mock_DayBetter_api.devices[0], True
+        )
 
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "on"
-    assert light.attributes["color_temp_kelvin"] == initial_color
-    mock_DayBetter_api.turn_on_off.assert_awaited_with(
-        mock_DayBetter_api.devices[0], True
-    )
+        # Activate scene
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": light.entity_id, ATTR_EFFECT: "christmas"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
-    # Activate scene
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_EFFECT: "christmas"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "on"
+        assert light.attributes[ATTR_EFFECT] == "christmas"
+        mock_DayBetter_api.set_scene.assert_awaited_with(
+            mock_DayBetter_api.devices[0], "christmas"
+        )
 
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "on"
-    assert light.attributes[ATTR_EFFECT] == "christmas"
-    mock_DayBetter_api.set_scene.assert_awaited_with(
-        mock_DayBetter_api.devices[0], "christmas"
-    )
+        # Deactivate scene
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": light.entity_id, ATTR_EFFECT: "none"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
-    # Deactivate scene
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_EFFECT: "none"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "on"
-    assert light.attributes[ATTR_EFFECT] is None
-    assert light.attributes["color_temp_kelvin"] == initial_color
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "on"
+        assert light.attributes[ATTR_EFFECT] is None
+        assert light.attributes["color_temp_kelvin"] == initial_color
 
 
 async def test_scene_none(hass: HomeAssistant, mock_DayBetter_api: MagicMock) -> None:
@@ -665,55 +709,58 @@ async def test_scene_none(hass: HomeAssistant, mock_DayBetter_api: MagicMock) ->
             capabilities=SCENE_CAPABILITIES,
         )
     ]
+    with patch(
+        "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
+        return_value=mock_DayBetter_api,
+    ):
+        entry = MockConfigEntry(domain=DOMAIN)
+        entry.add_to_hass(hass)
 
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+        assert len(hass.states.async_all()) == 1
 
-    assert len(hass.states.async_all()) == 1
+        initial_color = (12, 34, 56)
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "off"
 
-    initial_color = (12, 34, 56)
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "off"
+        # Set initial color
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": light.entity_id, ATTR_RGB_COLOR: initial_color},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": light.entity_id, ATTR_BRIGHTNESS: 255},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
-    # Set initial color
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_RGB_COLOR: initial_color},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_BRIGHTNESS: 255},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "on"
+        assert light.attributes[ATTR_RGB_COLOR] == initial_color
+        assert light.attributes[ATTR_BRIGHTNESS] == 255
+        mock_DayBetter_api.turn_on_off.assert_awaited_with(
+            mock_DayBetter_api.devices[0], True
+        )
 
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "on"
-    assert light.attributes[ATTR_RGB_COLOR] == initial_color
-    assert light.attributes[ATTR_BRIGHTNESS] == 255
-    mock_DayBetter_api.turn_on_off.assert_awaited_with(
-        mock_DayBetter_api.devices[0], True
-    )
-
-    # Activate scene
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_EFFECT: "none"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "on"
-    assert light.attributes[ATTR_EFFECT] is None
-    mock_DayBetter_api.set_scene.assert_not_called()
+        # Activate scene
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": light.entity_id, ATTR_EFFECT: "none"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "on"
+        assert light.attributes[ATTR_EFFECT] is None
+        mock_DayBetter_api.set_scene.assert_not_called()

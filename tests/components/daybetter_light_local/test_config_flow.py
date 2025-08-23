@@ -64,20 +64,26 @@ async def test_creating_entry_has_with_devices(
 
     mock_DayBetter_api.devices = _get_devices(mock_DayBetter_api)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
 
-    # Confirmation form
-    assert result["type"] is FlowResultType.FORM
+    with patch(
+        "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
+        return_value=mock_DayBetter_api,
+    ):
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] is FlowResultType.CREATE_ENTRY
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
 
-    await hass.async_block_till_done()
+        # Confirmation form
+        assert result["type"] is FlowResultType.FORM
 
-    mock_DayBetter_api.start.assert_awaited_once()
-    mock_setup_entry.assert_awaited_once()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+
+        await hass.async_block_till_done()
+
+        mock_DayBetter_api.start.assert_awaited_once()
+        mock_setup_entry.assert_awaited_once()
 
 
 async def test_creating_entry_errno(
