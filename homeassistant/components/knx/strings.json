@@ -404,7 +404,7 @@
             },
             "context_timeout": {
               "label": "Context timeout",
-              "description": "The time in seconds between multiple identical telegram payloads would count towards an internal counter. This can be used to automate on mulit-clicks of a button. `0` to disable this feature."
+              "description": "The time in seconds between multiple identical telegram payloads would count towards an internal counter. This can be used to automate on multi-clicks of a button. `0` to disable this feature."
             },
             "reset_after": {
               "label": "Reset after",
@@ -444,7 +444,7 @@
               "label": "Set position"
             },
             "ga_position_state": {
-              "label": "Current Position"
+              "label": "Current position"
             },
             "invert_position": {
               "label": "Invert",
@@ -537,7 +537,7 @@
               },
               "section_red": {
                 "title": "Red",
-                "description": "Control the lights red color. Brightness group address is required."
+                "description": "Controls the light's red color component. Brightness group address is required."
               },
               "ga_red_switch": {
                 "label": "Red switch"
@@ -547,7 +547,7 @@
               },
               "section_green": {
                 "title": "Green",
-                "description": "Control the lights green color. Brightness group address is required."
+                "description": "Controls the light's green color component. Brightness group address is required."
               },
               "ga_green_switch": {
                 "label": "Green switch"
@@ -557,7 +557,7 @@
               },
               "section_blue": {
                 "title": "Blue",
-                "description": "Control the lights blue color. Brightness group address is required."
+                "description": "Controls the light's blue color component. Brightness group address is required."
               },
               "ga_blue_switch": {
                 "label": "Blue switch"
@@ -567,7 +567,7 @@
               },
               "section_white": {
                 "title": "White",
-                "description": "Control the lights white color. Brightness group address is required."
+                "description": "Controls the light's white color component. Brightness group address is required."
               },
               "ga_white_switch": {
                 "label": "White switch"
@@ -577,11 +577,11 @@
               },
               "ga_hue": {
                 "label": "Hue",
-                "description": "Control the lights hue."
+                "description": "Controls the light's hue."
               },
               "ga_saturation": {
                 "label": "Saturation",
-                "description": "Control the lights saturation."
+                "description": "Controls the light's saturation."
               }
             }
           }
