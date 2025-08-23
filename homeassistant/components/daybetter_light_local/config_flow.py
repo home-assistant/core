@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import network
 from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import (
     CONF_LISTENING_PORT_DEFAULT,
@@ -80,7 +81,7 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             adapter = await network.async_get_source_ip(
                 self.hass, network.PUBLIC_TARGET_IP
             )
-        except Exception:
+        except (HomeAssistantError, ValueError, RuntimeError):
             adapter = "0.0.0.0"
 
         controller: DayBetterController = DayBetterController(
