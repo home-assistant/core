@@ -341,7 +341,6 @@ async def make_mock_api(
     api_instance.async_get_user = AsyncMock(return_value={"UserID": "abc"})
     api_instance.async_unlatch_async = AsyncMock()
     api_instance.async_unlatch = AsyncMock()
-    api_instance.async_add_websocket_subscription = AsyncMock()
 
     return api_instance
 
