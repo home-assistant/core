@@ -23,6 +23,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    REVOLUTIONS_PER_MINUTE,
     EntityCategory,
     UnitOfDataRate,
     UnitOfInformation,
@@ -130,6 +131,18 @@ class SysMonitorSensorEntityDescription(SensorEntityDescription):
 
 
 SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
+    "battery": SysMonitorSensorEntityDescription(
+        key="battery",
+        translation_key="battery",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda entity: entity.coordinator.data.battery.percent
+        if entity.coordinator.data.battery
+        else None,
+        none_is_unavailable=True,
+        add_to_update=lambda entity: ("battery", ""),
+    ),
     "disk_free": SysMonitorSensorEntityDescription(
         key="disk_free",
         translation_key="disk_free",
@@ -173,6 +186,16 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         else None,
         none_is_unavailable=True,
         add_to_update=lambda entity: ("disks", entity.argument),
+    ),
+    "fan_rpm": SysMonitorSensorEntityDescription(
+        key="fan_rpm",
+        translation_key="fan_rpm",
+        placeholder="name",
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda entity: entity.coordinator.data.fan_rpm[entity.argument],
+        none_is_unavailable=True,
+        add_to_update=lambda entity: ("fan_rpm", ""),
     ),
     "ipv4_address": SysMonitorSensorEntityDescription(
         key="ipv4_address",
@@ -394,7 +417,7 @@ IO_COUNTER = {
 IF_ADDRS_FAMILY = {"ipv4_address": socket.AF_INET, "ipv6_address": socket.AF_INET6}
 
 
-async def async_setup_entry(
+async def async_setup_entry(  # noqa: C901
     hass: HomeAssistant,
     entry: SystemMonitorConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
@@ -566,6 +589,33 @@ async def async_setup_entry(
                     is_enabled,
                 )
             )
+
+        if _type == "battery":
+            argument = ""
+            loaded_resources.add(slugify(f"{_type}_{argument}"))
+            entities.append(
+                SystemMonitorSensor(
+                    coordinator,
+                    sensor_description,
+                    entry.entry_id,
+                    argument,
+                    False,
+                )
+            )
+
+        for _arg in coordinator.data.fan_rpm:
+            if _type == "fan_rpm":
+                argument = ""
+                loaded_resources.add(slugify(f"{_type}_{argument}"))
+                entities.append(
+                    SystemMonitorSensor(
+                        coordinator,
+                        sensor_description,
+                        entry.entry_id,
+                        _arg,
+                        False,
+                    )
+                )
 
     # Ensure legacy imported disk_* resources are loaded if they are not part
     # of mount points automatically discovered
