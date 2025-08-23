@@ -31,6 +31,8 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.selector import SelectOptionDict
+from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -154,6 +156,83 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def _async_update_service_schema(hass: HomeAssistant, client: Client) -> None:
+    """Update the generate_content service schema with available models."""
+    try:
+        # Fetch available models from Google API
+        api_models_pager = await client.aio.models.list(config={"query_base": True})
+        api_models = [api_model async for api_model in api_models_pager]
+
+        # Filter and sort models for content generation (exclude TTS models)
+        models = [
+            SelectOptionDict(
+                label=api_model.name.lstrip("models/") if api_model.name else "",
+                value=api_model.name,
+            )
+            for api_model in sorted(
+                api_models, key=lambda x: (x.name or "").lstrip("models/")
+            )
+            if (
+                api_model.name
+                and "tts" not in api_model.name.lower()
+                and "vision" not in api_model.name
+                and api_model.supported_actions
+                and "generateContent" in api_model.supported_actions
+            )
+        ]
+
+        # Update the service schema with dynamic model options
+        service_desc = {
+            "name": "Generate content",
+            "description": "Use Google Generative AI to generate content from a prompt and optionally images.",
+            "fields": {
+                "prompt": {
+                    "name": "Prompt",
+                    "description": "The text prompt for generating content.",
+                    "required": True,
+                    "selector": {"text": {"multiline": True}},
+                },
+                "image_filename": {
+                    "name": "Image filename (deprecated)",
+                    "description": "Deprecated: Use 'filenames' instead. Filename(s) of images to include.",
+                    "required": False,
+                    "selector": {"object": {}},
+                },
+                "filenames": {
+                    "name": "Filenames",
+                    "description": "List of filenames to include (images, videos, documents).",
+                    "required": False,
+                    "selector": {"text": {"multiple": True}},
+                },
+                "model": {
+                    "name": "Model",
+                    "description": "The model to use for generating content.",
+                    "required": False,
+                    "default": RECOMMENDED_CHAT_MODEL,
+                    "selector": {
+                        "select": {
+                            "options": models,
+                            "mode": "dropdown",
+                            "custom_value": True,
+                        }
+                    },
+                },
+            },
+        }
+
+        async_set_service_schema(hass, DOMAIN, SERVICE_GENERATE_CONTENT, service_desc)
+        LOGGER.debug(
+            "Updated generate_content service schema with %d models", len(models)
+        )
+
+    except (APIError, ClientError) as err:
+        LOGGER.warning("Failed to fetch models for service schema: %s", err)
+        # Service will continue to work with text input for model selection
+    except Exception:  # noqa: BLE001
+        LOGGER.exception("Unexpected error updating service schema with dynamic models")
+        # Service will continue to work with text input for model selection
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: GoogleGenerativeAIConfigEntry
 ) -> bool:
@@ -177,6 +256,9 @@ async def async_setup_entry(
         entry.runtime_data = client
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Update service schema with available models
+    await _async_update_service_schema(hass, client)
 
     entry.async_on_unload(entry.add_update_listener(async_update_options))
 
