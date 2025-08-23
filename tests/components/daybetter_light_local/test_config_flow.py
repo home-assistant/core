@@ -73,10 +73,12 @@ async def test_creating_entry_has_with_devices(
         )
 
         # Confirmation form
-        assert result["type"] is FlowResultType.FORM
+        assert result["type"] == FlowResultType.FORM
 
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-        assert result["type"] is FlowResultType.CREATE_ENTRY
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"host": "192.168.1.100"}
+        )
+        assert result["type"] == FlowResultType.CREATE_ENTRY
 
         await hass.async_block_till_done()
 

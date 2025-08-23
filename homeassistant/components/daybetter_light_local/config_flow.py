@@ -37,12 +37,12 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            ip = user_input["ip"]
-            device_id = user_input.get("device", ip)
+            host: str = user_input["host"]
+            device_id: str = user_input.get("device", host)
             await self.async_set_unique_id(device_id)
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=f"DayBetter Light {ip}",
+                title=f"DayBetter Light {host}",
                 data=user_input,
             )
 
@@ -51,16 +51,13 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(discovered["device"])
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=f"DayBetter Light {discovered['ip']}",
+                title=f"DayBetter Light {discovered['host']}",
                 data=discovered,
             )
+
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required("ip"): str,
-                }
-            ),
+            data_schema=vol.Schema({vol.Required("host"): str}),
             errors=errors,
         )
 
@@ -105,4 +102,5 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             "ip": device.ip,
             "device": device,
             "sku": getattr(device, "sku", "unknown"),
+            "host": device.ip,
         }
