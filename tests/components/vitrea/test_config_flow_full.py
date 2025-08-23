@@ -24,7 +24,6 @@ def patch_vitrea_client(monkeypatch: pytest.MonkeyPatch) -> None:
     )
 
 
-@pytest.mark.asyncio
 async def test_user_flow_success(hass: HomeAssistant) -> None:
     """Test successful user config flow."""
 
@@ -71,7 +70,6 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
         assert result2["data"] == TEST_USER_INPUT
 
 
-@pytest.mark.asyncio
 async def test_user_flow_connection_error(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -93,7 +91,6 @@ async def test_user_flow_connection_error(
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-@pytest.mark.asyncio
 async def test_user_flow_duplicate_entry(hass: HomeAssistant) -> None:
     """Test duplicate prevention in config flow."""
     # First, set up a mock entry to be detected as a duplicate

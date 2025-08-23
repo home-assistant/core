@@ -35,9 +35,34 @@ def mock_vitrea_client() -> Generator[MagicMock]:
         client.connect = AsyncMock()
         client.disconnect = AsyncMock()
         client.start_read_task = AsyncMock()
-        client.status_request = AsyncMock()
-        client.on = MagicMock()
-        client.off = MagicMock()
+
+        # Store the callback for entity discovery simulation
+        client._status_callback = None
+
+        def mock_on(event_type, callback):
+            """Mock the on method to store the callback."""
+            if event_type == "STATUS":  # VitreaResponse.STATUS
+                client._status_callback = callback
+
+        def mock_off(event_type, callback):
+            """Mock the off method."""
+            if event_type == "STATUS":
+                client._status_callback = None
+
+        async def mock_status_request():
+            """Mock status request that triggers entity discovery."""
+            if client._status_callback:
+                # Simulate discovering a cover entity
+                mock_event = MagicMock()
+                mock_event.node = "01"
+                mock_event.key = "01"
+                mock_event.status = DeviceStatus.BLIND
+                mock_event.data = "050"  # 50% position
+                client._status_callback(mock_event)
+
+        client.on = mock_on
+        client.off = mock_off
+        client.status_request = mock_status_request
         client.blind_open = AsyncMock()
         client.blind_close = AsyncMock()
         client.blind_stop = AsyncMock()
