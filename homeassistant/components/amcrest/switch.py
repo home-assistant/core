@@ -4,11 +4,23 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_SWITCHES
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DATA_AMCREST, DEVICES
 
@@ -22,6 +34,7 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
         key=PRIVACY_MODE_KEY,
         name="Privacy Mode",
         icon="mdi:eye-off",
+        device_class=SwitchDeviceClass.SWITCH
     ),
 )
 
@@ -49,6 +62,21 @@ async def async_setup_platform(
         ],
         True,
     )
+
+# Platform setup for config flow
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up Amcrest switches for a config entry."""
+    device = hass.data[DATA_AMCREST][DEVICES][config_entry.entry_id]["device"]
+    coordinator = hass.data[DATA_AMCREST][DEVICES][config_entry.entry_id]["coordinator"]
+    entities = [
+            AmcrestCoordinatedSwitch(f"{device.name} {description.name}", device, coordinator, description)
+            for description in SWITCH_TYPES
+        ]
+    async_add_entities(entities, True)
 
 
 class AmcrestSwitch(SwitchEntity):
@@ -89,3 +117,19 @@ class AmcrestSwitch(SwitchEntity):
         """Update switch."""
         io_res = (await self._api.async_privacy_config()).splitlines()[0].split("=")[1]
         self._attr_is_on = io_res == "true"
+
+class AmcrestCoordinatedSwitch(CoordinatorEntity, AmcrestSwitch):
+    """Representation of an Amcrest Camera Switch tied to DataUpdateCoordinator."""
+
+    def __init__(
+        self,
+        name: str,
+        device: AmcrestDevice,
+        coordinator: DataUpdateCoordinator,
+        entity_description: SwitchEntityDescription,
+    ) -> None:
+        """Initialize switch."""
+        CoordinatorEntity.__init__(self, coordinator)
+        AmcrestSwitch.__init__(self, name, device, entity_description)
+        self._attr_device_info = device.device_info
+        self._attr_unique_id = f"{device.name}_{entity_description.key}"
