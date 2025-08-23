@@ -535,7 +535,7 @@ async def test_config_wrong_struct_sensor(
             },
             [0x3730, 0x302D, 0x2D35, 0x3032, 0x3032, 0x3120, 0x3A34, 0x3533],
             False,
-            "07-05-2020 14:35",
+            "07-05-2020 14:35",  # FAIL
         ),
         (
             {
@@ -577,7 +577,7 @@ async def test_config_wrong_struct_sensor(
             },
             [0x0201],
             False,
-            str(0x0102),
+            str(0x0102),  # FAIL
         ),
         (
             {
@@ -586,7 +586,7 @@ async def test_config_wrong_struct_sensor(
             },
             [0x0102, 0x0304],
             False,
-            str(0x02010403),
+            str(0x02010403),  # FAIL
         ),
         (
             {
@@ -595,7 +595,7 @@ async def test_config_wrong_struct_sensor(
             },
             [0x0102, 0x0304],
             False,
-            str(0x03040102),
+            str(0x03040102),  # FAIL
         ),
         (
             {
@@ -604,7 +604,7 @@ async def test_config_wrong_struct_sensor(
             },
             [0x0102, 0x0304],
             False,
-            str(0x04030201),
+            str(0x04030201),  # FAIL
         ),
         (
             {
@@ -973,7 +973,7 @@ async def test_virtual_sensor(
             },
             [0x0102, 0x0304],
             False,
-            [str(0x03040102)],
+            [str(0x03040102)],  # FAIL
         ),
         (
             {
@@ -1317,7 +1317,7 @@ async def test_struct_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> No
                 CONF_DATA_TYPE: DataType.UINT16,
             },
             [0x0102],
-            "513",
+            "513",  # FAIL
         ),
         (
             {
@@ -1332,7 +1332,7 @@ async def test_struct_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> No
                 CONF_DATA_TYPE: DataType.UINT32,
             },
             [0x0102, 0x0304],
-            "33620995",
+            "33620995",  # FAIL
         ),
         (
             {
@@ -1340,7 +1340,7 @@ async def test_struct_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> No
                 CONF_DATA_TYPE: DataType.UINT32,
             },
             [0x0102, 0x0304],
-            "50594050",
+            "50594050",  # FAIL
         ),
         (
             {
@@ -1348,7 +1348,7 @@ async def test_struct_sensor(hass: HomeAssistant, mock_do_cycle, expected) -> No
                 CONF_DATA_TYPE: DataType.UINT32,
             },
             [0x0102, 0x0304],
-            "67305985",
+            "67305985",  # FAIL
         ),
     ],
 )

@@ -90,5 +90,26 @@
       "title": "Modbus {sub_1} contain no entities, entry not loaded.",
       "description": "Please add at least one entity to Modbus {sub_1} in your configuration.yaml file and restart Home Assistant to fix this issue."
     }
+  },
+  "config": {
+    "step": {
+      "init": {
+        "title": "Modbus integration",
+        "description": "Modbus integration can currently only be configured via YAML."
+      },
+      "user": {
+        "title": "Modbus install",
+        "description": "Modbus can currently only be installed via YAML."
+      },
+      "reconfigure": {
+        "title": "Modbus reconfigure",
+        "description": "Modbus cannot be reconfigured via the UI but only via YAML."
+      }
+    },
+    "error": {},
+    "abort": {
+      "no_online_config": "Please add \"modbus:\" with configuration to configuration.yaml and restart HomeAssistant.",
+      "no_online_reconfig": "Please update \"modbus:\" in configuration.yaml and reload integration or restart HomeAssistant."
+    }
   }
 }
