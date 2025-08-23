@@ -64,7 +64,7 @@ class AugustConfigFlow(
             email_to_check_lower = reauth_entry.unique_id.casefold()
             if not any(email.casefold() == email_to_check_lower for email in emails):
                 # Email doesn't match - this is a different account
-                self._abort_if_unique_id_mismatch(reason="reauth_invalid_user")
+                return self.async_abort(reason="reauth_invalid_user")
 
         # Email matches or no emails on account, update with new unique ID
         return self.async_update_reload_and_abort(

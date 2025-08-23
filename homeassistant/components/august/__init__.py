@@ -32,6 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 type AugustConfigEntry = ConfigEntry[AugustData]
 
 
+# TODO: remove YALE_HOME migration check
 @callback
 def _async_create_yale_brand_migration_issue(
     hass: HomeAssistant, entry: AugustConfigEntry
@@ -95,6 +96,7 @@ async def async_setup_august(
     """Set up the August component."""
     config = cast(YaleXSConfig, entry.data)
     await august_gateway.async_setup({**config, "brand": DEFAULT_AUGUST_BRAND})
+    # TODO: remove YALE_HOME migration check
     if august_gateway.api.brand == Brand.YALE_HOME:
         _async_create_yale_brand_migration_issue(hass, entry)
     await august_gateway.async_authenticate()
