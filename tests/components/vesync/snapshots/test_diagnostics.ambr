@@ -329,7 +329,7 @@
               'device_class': 'pm25',
               'friendly_name': 'Test Fan PM2.5',
               'state_class': 'measurement',
-              'unit_of_measurement': 'µg/m³',
+              'unit_of_measurement': 'μg/m³',
             }),
             'entity_id': 'sensor.test_fan_pm2_5',
             'last_changed': str,
@@ -337,7 +337,7 @@
             'last_updated': str,
             'state': 'unavailable',
           }),
-          'unit_of_measurement': 'µg/m³',
+          'unit_of_measurement': 'μg/m³',
         }),
         dict({
           'device_class': None,
