@@ -20,6 +20,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
 from .conftest import DEFAULT_CAPABILITIES, SCENE_CAPABILITIES
 
@@ -139,7 +140,11 @@ async def test_light_setup_retry(
         entry = MockConfigEntry(domain=DOMAIN)
         entry.add_to_hass(hass)
 
-        await hass.config_entries.async_setup(entry.entry_id)
+        # 现在应该抛出 ConfigEntryNotReady 异常
+        with pytest.raises(ConfigEntryNotReady):
+            await hass.config_entries.async_setup(entry.entry_id)
+
+        # 或者检查状态为 SETUP_RETRY
         assert entry.state is ConfigEntryState.SETUP_RETRY
 
 

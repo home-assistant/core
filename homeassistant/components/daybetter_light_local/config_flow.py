@@ -30,76 +30,97 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the initial step."""
-        errors: dict[str, str] = {}
 
-        if user_input is not None:
-            host: str = user_input["host"]
-            device_id: str = user_input.get("device", host)
-            await self.async_set_unique_id(device_id)
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(
-                title=f"DayBetter Light {host}",
-                data=user_input,
+async def async_step_user(
+    self, user_input: dict[str, Any] | None = None
+) -> ConfigFlowResult:
+    """Handle the initial step."""
+    errors: dict[str, str] = {}
+
+    # 检查是否已经配置过（单实例）
+    await self.async_set_unique_id(DOMAIN)
+    self._abort_if_unique_id_configured()
+
+    if user_input is not None:
+        # 用户提交了表单
+        host: str = user_input["host"]
+
+        # 验证主机地址
+        if not host:
+            errors["host"] = "host_required"
+            return self.async_show_form(
+                step_id="user",
+                data_schema=vol.Schema({vol.Required("host"): str}),
+                errors=errors,
             )
 
-        discovered = await self._async_discover_device()
-        if discovered:
-            await self.async_set_unique_id(discovered["device"])
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(
-                title=f"DayBetter Light {discovered['host']}",
-                data=discovered,
-            )
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema({vol.Required("host"): str}),
-            errors=errors,
+        # 创建配置条目
+        return self.async_create_entry(
+            title="DayBetter Light Local",
+            data={"host": host},
         )
 
-    async def _async_discover_device(self) -> dict[str, Any] | None:
-        """Discover a DayBetter device and return its info."""
+    # 首次进入，尝试自动发现
+    discovered = await self._async_discover_device()
+    if discovered:
+        # 发现设备，直接创建条目（跳过表单）
+        return self.async_create_entry(
+            title=f"DayBetter Light {discovered['host']}",
+            data=discovered,
+        )
+
+    # 没有发现设备，显示表单
+    return self.async_show_form(
+        step_id="user",
+        data_schema=vol.Schema({vol.Required("host"): str}),
+        errors=errors,
+        description_placeholders={"discovery_info": "No devices found automatically."},
+    )
+
+
+async def _async_discover_device(self) -> dict[str, Any] | None:
+    """Discover a DayBetter device and return its info."""
+    try:
         adapter = await network.async_get_source_ip(self.hass, network.PUBLIC_TARGET_IP)
-        controller: DayBetterController = DayBetterController(
-            loop=self.hass.loop,
-            logger=_LOGGER,
-            listening_address=adapter,
-            broadcast_address=CONF_MULTICAST_ADDRESS_DEFAULT,
-            broadcast_port=CONF_TARGET_PORT_DEFAULT,
-            listening_port=CONF_LISTENING_PORT_DEFAULT,
-            discovery_enabled=True,
-            discovery_interval=1,
-            update_enabled=False,
-        )
+    except OSError:
+        adapter = "0.0.0.0"
 
-        try:
-            await controller.start()
-        except OSError as ex:
-            _LOGGER.error("Controller start failed, errno: %d", ex.errno)
-            return None
+    controller: DayBetterController = DayBetterController(
+        loop=self.hass.loop,
+        logger=_LOGGER,
+        listening_address=adapter,
+        broadcast_address=CONF_MULTICAST_ADDRESS_DEFAULT,
+        broadcast_port=CONF_TARGET_PORT_DEFAULT,
+        listening_port=CONF_LISTENING_PORT_DEFAULT,
+        discovery_enabled=True,
+        discovery_interval=1,
+        update_enabled=False,
+    )
+
+    discovered_device = None
+    try:
+        await controller.start()
 
         try:
             async with asyncio.timeout(delay=DISCOVERY_TIMEOUT):
                 while not controller.devices:
-                    await asyncio.sleep(delay=1)
+                    await asyncio.sleep(0.1)
         except TimeoutError:
             _LOGGER.debug("No devices discovered")
-            return None
+        finally:
+            device: DayBetterDevice | None = next(iter(controller.devices), None)
+            if device:
+                discovered_device = {
+                    "device": device.fingerprint,
+                    "sku": getattr(device, "sku", "unknown"),
+                    "host": device.ip,
+                }
 
-        device: DayBetterDevice | None = next(iter(controller.devices), None)
-        if not device:
-            return None
-
+    except OSError as ex:
+        _LOGGER.error("Controller start failed, errno: %d", ex.errno)
+    finally:
         cleanup_complete: asyncio.Event = controller.cleanup()
         with suppress(TimeoutError):
             await asyncio.wait_for(cleanup_complete.wait(), 1)
 
-        return {
-            "device": device,
-            "sku": getattr(device, "sku", "unknown"),
-            "host": device.ip,
-        }
+    return discovered_device
