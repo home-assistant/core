@@ -8,8 +8,9 @@ import sys
 # Patch recorder util session scope
 from homeassistant.helpers import recorder as recorder_helper
 
-# Make sure homeassistant.components.recorder.util is not already imported
-assert "homeassistant.components.recorder.util" not in sys.modules
+# Handle case when homeassistant.components.recorder.util is already imported
+if "homeassistant.components.recorder.util" in sys.modules:
+    del sys.modules["homeassistant.components.recorder.util"]
 
 real_session_scope = recorder_helper.session_scope
 

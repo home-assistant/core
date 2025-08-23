@@ -44,13 +44,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: GridConnectConfigEntry) 
             for device in devices:
                 _LOGGER.info("Processing device: %s, %s", device.name, device.address)
             # Add further processing logic as needed
-        else:
-            # Forward the configuration entry to the defined platforms
-            await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
-
-            entry.runtime_data = {"key": "value"}  # Replace with actual runtime data
-
             return True
+
+        # Forward the configuration entry to the defined platforms
+        await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+        entry.runtime_data = {"key": "value"}  # Replace with actual runtime data
+        return True
 
     except AuthenticationError as err:
         raise ConfigEntryAuthFailed("Authentication failed") from err

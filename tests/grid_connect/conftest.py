@@ -109,7 +109,7 @@ def event_loop_policy():
 
 
 @pytest.fixture(scope="session", autouse=True)
-def force_selector_event_loop_for_homeassistant(monkeypatch: pytest.MonkeyPatch):
+def force_selector_event_loop_for_homeassistant():
     """Deprecated: handled in pytest_configure for earlier application."""
     return
 

@@ -1,5 +1,6 @@
 """Integration tests for Grid Connect integration."""
 
+import logging
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
@@ -26,8 +27,9 @@ async def test_async_setup_entry(hass: HomeAssistant):
 
     # Integration should be loaded
     assert entry.state == ConfigEntryState.LOADED
-    # runtime_data should be set
-    assert entry.runtime_data == {"key": "value"}
+    # runtime_data should be set when not using bluetooth
+    if not entry.data.get("use_bluetooth"):
+        assert entry.runtime_data == {"key": "value"}
 
     # Check that no devices or entities present initially
     dev_reg = dr.async_get(hass)
@@ -44,14 +46,17 @@ async def test_async_setup_component(hass: HomeAssistant):
 @pytest.mark.asyncio
 async def test_async_setup_entry_use_bluetooth(hass: HomeAssistant, caplog):
     """Test setup entry with use_bluetooth True."""
-    import logging
     caplog.set_level(logging.INFO)
     devices = [SimpleNamespace(name="Device1", address="Addr1")]
+
     # Patch Bluetooth discovery
     with patch("homeassistant.components.grid_connect.discover_bluetooth_devices", AsyncMock(return_value=devices)):
         entry = MockConfigEntry(domain=DOMAIN, data={"use_bluetooth": True})
         entry.add_to_hass(hass)
+        # Setup the integration
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-    # Verify log output for processing devices
-    assert "Processing device: Device1, Addr1" in caplog.text
+        # Verify the entry was loaded successfully
+        assert entry.state == ConfigEntryState.LOADED
+        # Verify log output for processing devices
+        assert "Processing device: Device1, Addr1" in caplog.text

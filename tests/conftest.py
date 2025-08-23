@@ -157,7 +157,9 @@ asyncio.set_event_loop_policy = lambda policy: None
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     """Register custom pytest options."""
-    parser.addoption("--dburl", action="store", default="sqlite://")
+    # Only add --dburl if it's not already added
+    if not any(opt.dest == "dburl" for opt in parser._anonymous.options):
+        parser.addoption("--dburl", action="store", default="sqlite://")
 
 
 def pytest_configure(config: pytest.Config) -> None:
@@ -1287,7 +1289,7 @@ def disable_translations_once(
     translations_once.start()
 
 
-@pytest_asyncio.fixture(autouse=True, scope="session")
+@pytest_asyncio.fixture(autouse=True, scope="function")
 async def mock_zeroconf_resolver() -> AsyncGenerator[_patch]:
     """Mock out the zeroconf resolver."""
     resolver = AsyncResolver()
