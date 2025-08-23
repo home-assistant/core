@@ -4,6 +4,7 @@ from unittest.mock import Mock
 
 from aiohttp import ClientResponseError
 import pytest
+from yalexs.const import Brand
 from yalexs.exceptions import AugustApiAIOHTTPError, InvalidAuth
 
 from homeassistant.components.august.const import DOMAIN
@@ -18,7 +19,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from .mocks import (
@@ -30,6 +35,7 @@ from .mocks import (
     _mock_operative_august_lock_detail,
 )
 
+from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
 
@@ -232,3 +238,49 @@ async def test_device_remove_devices(
     )
     response = await client.remove_device(dead_device_entry.id, config_entry.entry_id)
     assert response["success"]
+
+
+async def test_brand_migration_issue(hass: HomeAssistant) -> None:
+    """Test removing the brand migration issue."""
+    august_operative_lock = await _mock_operative_august_lock_detail(hass)
+    config_entry, _ = await _create_august_with_devices(
+        hass, [august_operative_lock], brand=Brand.YALE_HOME
+    )
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    issue_reg = ir.async_get(hass)
+
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    assert not issue_reg.async_get_issue(DOMAIN, "yale_brand_migration")
+
+
+async def test_oauth_migration_on_legacy_entry(hass: HomeAssistant) -> None:
+    """Test that legacy config entry triggers OAuth migration."""
+    # Create a legacy config entry without auth_implementation
+    legacy_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "login_method": "email",
+            "username": "test@example.com",
+            "password": "test-password",
+            "install_id": None,
+            "timeout": 10,
+            "access_token_cache_file": ".test@example.com.august.conf",
+        },
+        unique_id="test@example.com",
+    )
+    legacy_entry.add_to_hass(hass)
+
+    # Try to setup the entry - should fail with auth error and trigger reauth
+    await hass.config_entries.async_setup(legacy_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Entry should be in setup_error state
+    assert legacy_entry.state is ConfigEntryState.SETUP_ERROR
+
+    # A reauth flow should be started
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "pick_implementation"
+    assert flows[0]["context"]["source"] == "reauth"
