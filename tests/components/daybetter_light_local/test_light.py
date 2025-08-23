@@ -1,8 +1,6 @@
 """Test DayBetter light local."""
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, patch
-
 from errno import EADDRINUSE, ENETDOWN
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
@@ -139,7 +137,6 @@ async def test_light_setup_retry(
         "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
         return_value=mock_DayBetter_api,
     ):
-
         entry = MockConfigEntry(domain=DOMAIN)
         entry.add_to_hass(hass)
 

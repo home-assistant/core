@@ -64,12 +64,10 @@ async def test_creating_entry_has_with_devices(
 
     mock_DayBetter_api.devices = _get_devices(mock_DayBetter_api)
 
-
     with patch(
         "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
         return_value=mock_DayBetter_api,
     ):
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
