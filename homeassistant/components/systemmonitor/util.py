@@ -3,7 +3,7 @@
 import logging
 import os
 
-from psutil._common import shwtemp
+from psutil._common import sfan, shwtemp
 import psutil_home_assistant as ha_psutil
 
 from homeassistant.core import HomeAssistant
@@ -78,6 +78,7 @@ def read_cpu_temperature(temps: dict[str, list[shwtemp]]) -> float | None:
     entry: shwtemp
 
     _LOGGER.debug("CPU Temperatures: %s", temps)
+    # {'acpitz': [shwtemp(label='', current=47.0, high=103.0, critical=103.0)] }
     for name, entries in temps.items():
         for i, entry in enumerate(entries, start=1):
             # In case the label is empty (e.g. on Raspberry PI 4),
@@ -89,3 +90,20 @@ def read_cpu_temperature(temps: dict[str, list[shwtemp]]) -> float | None:
                 return round(entry.current, 1)
 
     return None
+
+
+def read_fan_rpm(fans: dict[str, list[sfan]]) -> dict[str, int]:
+    """Attempt to read fan speed."""
+    entry: sfan
+
+    _LOGGER.debug("Fan rpm: %s", fans)
+    if not fans:
+        return {}
+    # {'asus': [sfan(label='cpu_fan', current=3200)] }
+    sensor_fans: dict[str, int] = {}
+    for name, entries in fans.items():
+        for entry in entries:
+            _label = name if not entry.label else entry.label
+            sensor_fans[_label] = round(entry.current, 0)
+
+    return sensor_fans

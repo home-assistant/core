@@ -7,7 +7,16 @@ import socket
 from unittest.mock import AsyncMock, Mock, NonCallableMock, patch
 
 from psutil import NoSuchProcess, Process
-from psutil._common import sdiskpart, sdiskusage, shwtemp, snetio, snicaddr, sswap
+from psutil._common import (
+    sbattery,
+    sdiskpart,
+    sdiskusage,
+    sfan,
+    shwtemp,
+    snetio,
+    snicaddr,
+    sswap,
+)
 import pytest
 
 from homeassistant.components.systemmonitor.const import DOMAIN
@@ -208,6 +217,14 @@ def mock_psutil(mock_process: list[MockProcess]) -> Generator:
         ]
         mock_psutil.boot_time.return_value = 1708786800.0
         mock_psutil.NoSuchProcess = NoSuchProcess
+        # mock_psutil.sensors_fans = Mock()
+        mock_psutil.sensors_fans.return_value = {
+            "fan1": [sfan("fan1", 1200)],
+            "fan2": [sfan("fan2", 1300)],
+        }
+        mock_psutil.sensors_battery.return_value = sbattery(
+            percent=93, secsleft=16628, power_plugged=False
+        )
         yield mock_psutil
 
 
