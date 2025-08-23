@@ -16,10 +16,6 @@ To add AirPatrol to your installation, go to **Configuration** >> **Integrations
 
 ## Features
 
-### Sensors
-- **Temperature**: Current room temperature from each AirPatrol unit
-- **Humidity**: Current room humidity from each AirPatrol unit
-- **Status**: Online/offline status of the integration
 
 ## Removal
 
@@ -46,7 +42,3 @@ This will force a fresh fetch of device data from the AirPatrol API.
 - Verify your AirPatrol credentials are correct
 - Check your internet connection
 - Ensure the AirPatrol service is available
-
-### Sensor Issues
-- If sensors show "unavailable", try reloading the integration
-- Check that your AirPatrol units are properly configured and online

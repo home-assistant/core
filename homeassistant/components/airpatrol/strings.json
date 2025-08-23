@@ -22,18 +22,5 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "Reauthentication was successful!"
     }
-  },
-  "entity": {
-    "sensor": {
-      "status": {
-        "name": "Status"
-      },
-      "temperature": {
-        "name": "Temperature"
-      },
-      "humidity": {
-        "name": "Humidity"
-      }
-    }
   }
 }
