@@ -20,6 +20,7 @@ from homeassistant.components.sensor import (
 from homeassistant.components.switch import (
     DEVICE_CLASSES_SCHEMA as SWITCH_DEVICE_CLASSES_SCHEMA,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_BINARY_SENSORS,
@@ -546,5 +547,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await async_modbus_setup(hass, reload_config)
 
     async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
-
     return await async_modbus_setup(hass, config)
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up from a config entry."""
+    _LOGGER.debug("modbus_cf async_setup_entry")
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    _LOGGER.debug("modbus_cf async_unload_entry")
+    return True
