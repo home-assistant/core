@@ -16,6 +16,21 @@ To add AirPatrol to your installation, go to **Configuration** >> **Integrations
 
 ## Features
 
+### Climate Control
+Each AirPatrol unit provides a climate entity with the following features:
+- **HVAC Modes**: Heat, Cool, and Off
+- **Temperature Control**: Set target temperature (16°C - 30°C)
+- **Fan Speed**: Low, Medium, and High fan speeds
+- **Swing Mode**: On/Off swing control
+- **Current Temperature**: Real-time room temperature display
+- **HVAC Action**: Shows current heating/cooling action
+
+### Climate Controls
+- **Set Temperature**: Adjust the target temperature for heating/cooling
+- **Change HVAC Mode**: Switch between heat, cool, and off modes
+- **Adjust Fan Speed**: Control the fan speed (low, medium, high)
+- **Toggle Swing**: Turn swing mode on or off
+- **Turn On/Off**: Quick controls to turn the unit on or off
 
 ## Removal
 
@@ -42,3 +57,8 @@ This will force a fresh fetch of device data from the AirPatrol API.
 - Verify your AirPatrol credentials are correct
 - Check your internet connection
 - Ensure the AirPatrol service is available
+
+### Climate Control Issues
+- Make sure your AirPatrol unit supports the climate features you're trying to use
+- Check that the unit is online and responding
+- Try reloading the integration to refresh the connection

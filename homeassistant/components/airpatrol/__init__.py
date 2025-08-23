@@ -7,11 +7,14 @@ import logging
 from airpatrol.api import AirPatrolAPI
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import AirPatrolDataUpdateCoordinator
+
+PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
 _LOGGER = logging.getLogger(__name__)
 
