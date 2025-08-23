@@ -8,7 +8,7 @@
       'fan_modes': list([
         'low',
         'high',
-        'mid',
+        'medium',
       ]),
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -65,11 +65,11 @@
     'attributes': ReadOnlyDict({
       'current_humidity': 40,
       'current_temperature': 77,
-      'fan_mode': 'mid',
+      'fan_mode': 'medium',
       'fan_modes': list([
         'low',
         'high',
-        'mid',
+        'medium',
       ]),
       'friendly_name': 'Test air conditioner',
       'hvac_modes': list([

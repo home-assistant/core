@@ -29,6 +29,7 @@ from openai.types.responses import (
     ResponseWebSearchCallInProgressEvent,
     ResponseWebSearchCallSearchingEvent,
 )
+from openai.types.responses.response_code_interpreter_tool_call import OutputLogs
 from openai.types.responses.response_function_web_search import ActionSearch
 from openai.types.responses.response_reasoning_item import Summary
 
@@ -320,7 +321,7 @@ def create_web_search_item(id: str, output_index: int) -> list[ResponseStreamEve
 
 
 def create_code_interpreter_item(
-    id: str, code: str | list[str], output_index: int
+    id: str, code: str | list[str], output_index: int, logs: str | None = None
 ) -> list[ResponseStreamEvent]:
     """Create a message item."""
     if isinstance(code, str):
@@ -388,7 +389,7 @@ def create_code_interpreter_item(
                     id=id,
                     code=code,
                     container_id=container_id,
-                    outputs=None,
+                    outputs=[OutputLogs(type="logs", logs=logs)] if logs else None,
                     status="completed",
                     type="code_interpreter_call",
                 ),
