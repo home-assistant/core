@@ -175,7 +175,7 @@ class DeconzHub:
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             identifiers={(DOMAIN, f"{self.api.config.bridge_id}-host")},
-            connections={(CONNECTION_NETWORK_MAC, self.api.config.mac)},
+            connections={(CONNECTION_NETWORK_MAC, cast(str, self.api.config.mac))},
         )
 
         # Gateway service
