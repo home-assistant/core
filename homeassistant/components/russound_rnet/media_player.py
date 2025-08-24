@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ class RussoundRNETDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self, hass, russ, sources, zone_id, extra):
+    def __init__(self , _, russ, sources, zone_id, extra) -> None:
         """Initialise the Russound RNET device."""
         self._attr_name = extra["name"]
         self._russ = russ
@@ -93,7 +93,7 @@ class RussoundRNETDevice(MediaPlayerEntity):
         self._zone_id = (zone_id - 1) % 6 + 1
 
         # Stable unique_id so entity/device get registered once
-        self._attr_unique_id = f"rnet_{self._controller_id}_zone_{self._zone_id}"  # <-- NEW
+        self._attr_unique_id = f"rnet_{self._controller_id}_zone_{self._zone_id}"
 
     # Expose a per-zone device
     @property
