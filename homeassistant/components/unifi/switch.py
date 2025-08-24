@@ -160,7 +160,7 @@ def async_outlet_switching_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
 
 
 @callback
-def async_port_switching_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
+def async_port_control_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Determine if a port supports switching."""
     port = hub.api.ports[obj_id]
     # Only allow switching for physical ports that exist
@@ -371,7 +371,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         is_on_fn=lambda hub, port: bool(port.enabled),
         name_fn=lambda port: port.name,
         object_fn=lambda api, obj_id: api.ports[obj_id],
-        supported_fn=async_port_switching_supported_fn,
+        supported_fn=async_port_control_supported_fn,
         unique_id_fn=lambda hub, obj_id: f"port-{obj_id}",
     ),
     UnifiSwitchEntityDescription[Wlans, Wlan](
