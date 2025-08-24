@@ -147,9 +147,6 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         entry: ConfigEntry = self._get_reconfigure_entry()
 
-        if not entry:
-            return self.async_abort(reason="entry_not_found")
-
         if user_input is not None:
             new_input = entry.data | user_input
 
