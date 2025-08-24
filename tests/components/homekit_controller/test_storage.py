@@ -98,13 +98,12 @@ async def test_storage_is_saved_on_stop(
 
     entity_map: EntityMapStorage = hass.data[ENTITY_MAP]
     hkid = "00:00:00:00:00:00"
-    storage_key = "homekit_controller-entity-map"
 
     # Verify the device is in memory
     assert hkid in entity_map.storage_data
 
     # Clear the storage to verify it gets saved on stop
-    hass_storage.pop(storage_key, None)
+    hass_storage.pop(ENTITY_MAP, None)
 
     # Make a change to trigger a save
     entity_map.async_create_or_update_map(hkid, 2, [])  # Update config_num
@@ -114,7 +113,7 @@ async def test_storage_is_saved_on_stop(
     await hass.async_block_till_done()
 
     # Verify the storage was saved
-    assert storage_key in hass_storage
-    assert hkid in hass_storage[storage_key]["data"]["pairings"]
+    assert ENTITY_MAP in hass_storage
+    assert hkid in hass_storage[ENTITY_MAP]["data"]["pairings"]
     # Verify the updated data was saved
-    assert hass_storage[storage_key]["data"]["pairings"][hkid]["config_num"] == 2
+    assert hass_storage[ENTITY_MAP]["data"]["pairings"][hkid]["config_num"] == 2
