@@ -43,13 +43,13 @@ async def test_storage_is_removed(
     entity_map.async_create_or_update_map(hkid, 1, [])
     assert hkid in entity_map.storage_data
     await flush_store(entity_map.store)
-    assert hkid in hass_storage["homekit_controller-entity-map"]["data"]["pairings"]
+    assert hkid in hass_storage[ENTITY_MAP]["data"]["pairings"]
 
     entity_map.async_delete_map(hkid)
     assert hkid not in hass.data[ENTITY_MAP].storage_data
     await flush_store(entity_map.store)
 
-    assert hass_storage["homekit_controller-entity-map"]["data"]["pairings"] == {}
+    assert hass_storage[ENTITY_MAP]["data"]["pairings"] == {}
 
 
 async def test_storage_is_removed_idempotent(hass: HomeAssistant) -> None:
@@ -87,7 +87,7 @@ async def test_storage_is_updated_on_add(
 
     # Is saved out to store?
     await flush_store(entity_map.store)
-    assert hkid in hass_storage["homekit_controller-entity-map"]["data"]["pairings"]
+    assert hkid in hass_storage[ENTITY_MAP]["data"]["pairings"]
 
 
 async def test_storage_is_saved_on_stop(
