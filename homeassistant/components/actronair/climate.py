@@ -227,11 +227,11 @@ class ActronZoneClimate(BaseClimateEntity):
         return status.zones[self._zone_id]
 
     @property
-    def hvac_mode(self) -> HVACMode:
+    def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode."""
         if self._zone.is_active:
             mode = self._zone.hvac_mode
-            return HVAC_MODE_MAPPING_ACTRONAIR_TO_HA.get(mode, HVACMode.OFF)
+            return HVAC_MODE_MAPPING_ACTRONAIR_TO_HA.get(mode)
         return HVACMode.OFF
 
     @property
