@@ -5,6 +5,7 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
+from propcache.api import cached_property
 from pyatv.const import InputAction, KeyboardFocusState
 import voluptuous as vol
 
@@ -77,8 +78,8 @@ async def async_setup_entry(
 class AppleTVRemote(AppleTVEntity, RemoteEntity):
     """Device that sends commands to an Apple TV."""
 
-    @property
-    def is_on(self) -> bool:  # pyright: ignore[reportIncompatibleVariableOverride]
+    @cached_property
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self.atv is not None
 
