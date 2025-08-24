@@ -22,7 +22,7 @@ HAP-python==4.9.2
 HATasmota==0.10.0
 
 # homeassistant.components.mastodon
-Mastodon.py==2.1.1
+Mastodon.py==2.1.2
 
 # homeassistant.components.playstation_network
 PSNAWP==3.0.0
@@ -185,7 +185,7 @@ aioairzone-cloud==0.7.1
 aioairzone==1.0.0
 
 # homeassistant.components.alexa_devices
-aioamazondevices==4.0.0
+aioamazondevices==5.0.0
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -207,7 +207,7 @@ aioasuswrt==1.4.0
 aioautomower==2.1.2
 
 # homeassistant.components.azure_devops
-aioazuredevops==2.2.1
+aioazuredevops==2.2.2
 
 # homeassistant.components.baf
 aiobafi6==0.9.0
@@ -307,7 +307,7 @@ aiolifx==1.2.1
 aiolookin==1.0.0
 
 # homeassistant.components.lyric
-aiolyric==2.0.1
+aiolyric==2.0.2
 
 # homeassistant.components.mealie
 aiomealie==0.10.1
@@ -528,7 +528,7 @@ arris-tg2492lg==2.2.0
 asmog==0.0.6
 
 # homeassistant.components.asuswrt
-asusrouter==1.19.0
+asusrouter==1.20.0
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
@@ -628,7 +628,7 @@ bizkaibus==0.1.1
 bleak-esphome==3.1.0
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==4.0.2
+bleak-retry-connector==4.3.0
 
 # homeassistant.components.bluetooth
 bleak==1.0.1
@@ -1127,10 +1127,10 @@ ha-philipsjs==3.2.2
 ha-silabs-firmware-client==0.2.0
 
 # homeassistant.components.habitica
-habiticalib==0.4.2
+habiticalib==0.4.3
 
 # homeassistant.components.bluetooth
-habluetooth==5.0.1
+habluetooth==5.1.0
 
 # homeassistant.components.cloud
 hass-nabucasa==1.0.0
@@ -1174,7 +1174,7 @@ hole==0.9.0
 holidays==0.79
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250811.0
+home-assistant-frontend==20250811.1
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.7.30
@@ -1307,7 +1307,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.8.9.63154
+knx-frontend==2025.8.21.181525
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1325,7 +1325,7 @@ lakeside==0.13
 laundrify-aio==1.2.2
 
 # homeassistant.components.lcn
-lcn-frontend==0.2.6
+lcn-frontend==0.2.7
 
 # homeassistant.components.ld2410_ble
 ld2410-ble==0.1.1
@@ -1591,7 +1591,7 @@ ondilo==0.5.0
 onedrive-personal-sdk==0.0.14
 
 # homeassistant.components.onvif
-onvif-zeep-async==4.0.3
+onvif-zeep-async==4.0.4
 
 # homeassistant.components.opengarage
 open-garage==0.2.0
@@ -2359,7 +2359,7 @@ pysmhi==1.0.2
 pysml==0.1.5
 
 # homeassistant.components.smlight
-pysmlight==0.2.7
+pysmlight==0.2.8
 
 # homeassistant.components.snmp
 pysnmp==7.1.21
@@ -2473,7 +2473,7 @@ python-miio==0.5.12
 python-mpd2==3.1.1
 
 # homeassistant.components.mystrom
-python-mystrom==2.4.0
+python-mystrom==2.5.0
 
 # homeassistant.components.open_router
 python-open-router==0.3.1
@@ -3162,7 +3162,7 @@ yalexs-ble==3.1.2
 
 # homeassistant.components.august
 # homeassistant.components.yale
-yalexs==8.11.1
+yalexs==8.12.0
 
 # homeassistant.components.yeelight
 yeelight==0.7.16
@@ -3198,7 +3198,7 @@ zeroconf==0.147.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.68
+zha==0.0.69
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
