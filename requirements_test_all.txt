@@ -452,6 +452,9 @@ airtouch5py==0.3.0
 # homeassistant.components.altruist
 altruistclient==0.1.1
 
+# homeassistant.components.airzone_mqtt
+airzone-mqtt==0.0.4
+
 # homeassistant.components.amberelectric
 amberelectric==2.0.12
 
