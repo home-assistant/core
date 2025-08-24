@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 import logging
 from typing import Any, Final, cast
 
@@ -30,6 +31,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from .const import (
     COFFEE_SYSTEM_PROFILE,
@@ -102,12 +104,38 @@ def _get_coffee_profile(value: MieleDevice) -> str | None:
     return None
 
 
+def _convert_timestamp(value_list: list[int], adding: bool = True) -> datetime | None:
+    """Convert raw values representing time into timestamp."""
+    now = dt_util.now()
+    duration = _convert_duration(value_list)
+    if duration is None or duration == 0:
+        return None
+    delta = timedelta(minutes=duration)
+    return (now + delta if adding else now - delta).replace(second=0, microsecond=0)
+
+
+def _convert_finish_timestamp(
+    remaining_time_list: list[int], start_time_list: list[int]
+) -> datetime | None:
+    """Convert raw values representing time into finish timestamp."""
+    now = dt_util.now()
+    program_duration = _convert_duration(remaining_time_list)
+    delayed_start_duration = _convert_duration(start_time_list)
+    if program_duration is None or program_duration == 0:
+        return None
+    duration = program_duration + (
+        delayed_start_duration if delayed_start_duration is not None else 0
+    )
+    delta = timedelta(minutes=duration)
+    return (now + delta).replace(second=0, microsecond=0)
+
+
 @dataclass(frozen=True, kw_only=True)
 class MieleSensorDescription(SensorEntityDescription):
     """Class describing Miele sensor entities."""
 
-    value_fn: Callable[[MieleDevice], StateType]
-    end_value_fn: Callable[[StateType], StateType] | None = None
+    value_fn: Callable[[MieleDevice], StateType | datetime]
+    end_value_fn: Callable[[StateType | datetime], StateType | datetime] | None = None
     extra_attributes: dict[str, Callable[[MieleDevice], StateType]] | None = None
     zone: int | None = None
     unique_id_fn: Callable[[str, MieleSensorDescription], str] | None = None
@@ -372,6 +400,35 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
     MieleSensorDefinition(
         types=(
             MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.WASHING_MACHINE_SEMI_PROFESSIONAL,
+            MieleAppliance.TUMBLE_DRYER,
+            MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL,
+            MieleAppliance.DISHWASHER,
+            MieleAppliance.OVEN,
+            MieleAppliance.OVEN_MICROWAVE,
+            MieleAppliance.STEAM_OVEN,
+            MieleAppliance.MICROWAVE,
+            MieleAppliance.ROBOT_VACUUM_CLEANER,
+            MieleAppliance.WASHER_DRYER,
+            MieleAppliance.STEAM_OVEN_COMBI,
+            MieleAppliance.STEAM_OVEN_MICRO,
+            MieleAppliance.DIALOG_OVEN,
+            MieleAppliance.STEAM_OVEN_MK2,
+        ),
+        description=MieleSensorDescription(
+            key="state_remaining_time_abs",
+            translation_key="finish",
+            value_fn=lambda value: _convert_finish_timestamp(
+                value.state_remaining_time, value.state_start_time
+            ),
+            end_value_fn=lambda last_value: last_value,
+            device_class=SensorDeviceClass.TIMESTAMP,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.WASHING_MACHINE,
             MieleAppliance.TUMBLE_DRYER,
             MieleAppliance.DISHWASHER,
             MieleAppliance.OVEN,
@@ -392,6 +449,33 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             end_value_fn=lambda last_value: last_value,
             device_class=SensorDeviceClass.DURATION,
             native_unit_of_measurement=UnitOfTime.MINUTES,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.TUMBLE_DRYER,
+            MieleAppliance.DISHWASHER,
+            MieleAppliance.OVEN,
+            MieleAppliance.OVEN_MICROWAVE,
+            MieleAppliance.STEAM_OVEN,
+            MieleAppliance.MICROWAVE,
+            MieleAppliance.WASHER_DRYER,
+            MieleAppliance.STEAM_OVEN_COMBI,
+            MieleAppliance.STEAM_OVEN_MICRO,
+            MieleAppliance.DIALOG_OVEN,
+            MieleAppliance.ROBOT_VACUUM_CLEANER,
+            MieleAppliance.STEAM_OVEN_MK2,
+        ),
+        description=MieleSensorDescription(
+            key="state_elapsed_time_abs",
+            translation_key="started",
+            value_fn=lambda value: _convert_timestamp(
+                value.state_elapsed_time, adding=False
+            ),
+            end_value_fn=lambda last_value: last_value,
+            device_class=SensorDeviceClass.TIMESTAMP,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
@@ -422,6 +506,33 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             entity_category=EntityCategory.DIAGNOSTIC,
             suggested_display_precision=2,
             suggested_unit_of_measurement=UnitOfTime.HOURS,
+        ),
+    ),
+    MieleSensorDefinition(
+        types=(
+            MieleAppliance.WASHING_MACHINE,
+            MieleAppliance.WASHING_MACHINE_SEMI_PROFESSIONAL,
+            MieleAppliance.TUMBLE_DRYER,
+            MieleAppliance.TUMBLE_DRYER_SEMI_PROFESSIONAL,
+            MieleAppliance.DISHWASHER,
+            MieleAppliance.DISH_WARMER,
+            MieleAppliance.OVEN,
+            MieleAppliance.OVEN_MICROWAVE,
+            MieleAppliance.STEAM_OVEN,
+            MieleAppliance.MICROWAVE,
+            MieleAppliance.WASHER_DRYER,
+            MieleAppliance.STEAM_OVEN_COMBI,
+            MieleAppliance.STEAM_OVEN_MICRO,
+            MieleAppliance.DIALOG_OVEN,
+            MieleAppliance.STEAM_OVEN_MK2,
+        ),
+        description=MieleSensorDescription(
+            key="state_start_time_abs",
+            translation_key="programmed_start",
+            value_fn=lambda value: _convert_timestamp(value.state_start_time),
+            end_value_fn=lambda last_value: last_value,
+            device_class=SensorDeviceClass.TIMESTAMP,
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ),
     MieleSensorDefinition(
@@ -614,6 +725,9 @@ async def async_setup_entry(
             "state_program_phase": MielePhaseSensor,
             "state_plate_step": MielePlateSensor,
             "state_elapsed_time": MieleTimeSensor,
+            "finish": MieleAbsoluteTimeSensor,
+            "programmed_start": MieleAbsoluteTimeSensor,
+            "started": MieleAbsoluteTimeSensor,
         }.get(definition.description.key, MieleSensor)
 
     def _is_entity_registered(unique_id: str) -> bool:
@@ -735,7 +849,7 @@ class MieleSensor(MieleEntity, SensorEntity):
             self._attr_unique_id = description.unique_id_fn(device_id, description)
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.device)
 
@@ -753,7 +867,7 @@ class MieleSensor(MieleEntity, SensorEntity):
 class MieleRestorableSensor(MieleSensor, RestoreSensor):
     """Representation of a Sensor whose internal state can be restored."""
 
-    _last_value: StateType
+    _last_value: StateType | datetime
     _initialized: bool
 
     def __init__(
@@ -778,7 +892,7 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
             self._initialized = True
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         if self._last_value is None and not self._initialized:
             self._update_last_value()
@@ -927,3 +1041,41 @@ class MieleTimeSensor(MieleRestorableSensor):
         # otherwise, cache value and return it
         else:
             self._last_value = current_value
+
+
+class MieleAbsoluteTimeSensor(MieleRestorableSensor):
+    """Representation of absolute time sensors handling precision correctness."""
+
+    _previous_value: StateType | datetime
+
+    def _update_last_value(self) -> None:
+        """Update the last value of the sensor."""
+        current_value = self.entity_description.value_fn(self.device)
+        current_status = StateStatus(self.device.state_status)
+
+        # return cached value if differs only of 90s as debounching,
+        # since API is reporting at minute precision, in order to
+        # avoid changing value too frequently
+        if (
+            self._previous_value is not None
+            and current_value is not None
+            and (
+                cast(datetime, self._previous_value) - timedelta(seconds=90)
+                < cast(datetime, current_value)
+                < cast(datetime, self._previous_value) + timedelta(seconds=90)
+            )
+        ):
+            self._last_value = self._previous_value
+
+        # keep value when program ends if no function is specified
+        elif current_status == StateStatus.PROGRAM_ENDED:
+            pass
+
+        # force unknown when appliance is not working (some devices are keeping last value until a new cycle starts)
+        elif current_status in (StateStatus.OFF, StateStatus.ON, StateStatus.IDLE):
+            self._last_value = None
+
+        # otherwise, cache value and return it
+        else:
+            self._last_value = current_value
+            self._previous_value = current_value
