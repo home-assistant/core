@@ -1,11 +1,17 @@
 """The Actron Air Neo integration."""
 
-from homeassistant.const import Platform
+from actron_neo_api import (
+    ActronAirNeoACSystem,
+    ActronNeoAPI,
+    ActronNeoAPIError,
+    ActronNeoAuthError,
+)
+
+from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import _LOGGER
 from .coordinator import (
-    ActronNeoApiClient,
     ActronNeoConfigEntry,
     ActronNeoRuntimeData,
     ActronNeoSystemCoordinator,
@@ -17,18 +23,28 @@ PLATFORM = [Platform.CLIMATE]
 async def async_setup_entry(hass: HomeAssistant, entry: ActronNeoConfigEntry) -> bool:
     """Set up Actron Air Neo integration from a config entry."""
 
-    api_client = ActronNeoApiClient(hass, entry)
-    await api_client.async_setup()
+    api = ActronNeoAPI(refresh_token=entry.data[CONF_API_TOKEN])
+    systems: list[ActronAirNeoACSystem] = []
+
+    try:
+        systems = await api.get_ac_systems()
+        await api.update_status()
+    except ActronNeoAuthError:
+        _LOGGER.error("Authentication error while setting up Actron Neo integration")
+        raise
+    except ActronNeoAPIError as err:
+        _LOGGER.error("API error while setting up Actron Neo integration: %s", err)
+        raise
 
     system_coordinators: dict[str, ActronNeoSystemCoordinator] = {}
-    for system in api_client.systems:
-        coordinator = ActronNeoSystemCoordinator(hass, entry, api_client, system)
+    for system in systems:
+        coordinator = ActronNeoSystemCoordinator(hass, entry, api, system)
         _LOGGER.debug("Setting up coordinator for system: %s", system["serial"])
         await coordinator.async_config_entry_first_refresh()
         system_coordinators[system["serial"]] = coordinator
 
     entry.runtime_data = ActronNeoRuntimeData(
-        api_client=api_client,
+        api=api,
         system_coordinators=system_coordinators,
     )
 
