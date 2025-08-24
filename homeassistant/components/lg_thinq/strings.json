@@ -120,7 +120,7 @@
             "state": {
               "slow": "Slow",
               "low": "[%key:common::state::low%]",
-              "mid": "[%key:common::state::medium%]",
+              "medium": "[%key:common::state::medium%]",
               "high": "[%key:common::state::high%]",
               "power": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
               "auto": "[%key:common::state::auto%]"
