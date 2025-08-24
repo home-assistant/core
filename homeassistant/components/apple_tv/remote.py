@@ -122,32 +122,45 @@ class AppleTVRemote(AppleTVEntity, RemoteEntity):
 
                 await asyncio.sleep(delay)
 
+    def ok_to_change_text(self) -> bool:
+        """Check the status of the keyboard."""
+        if not self.atv:
+            _LOGGER.error("Unable to set text, not connected to Apple TV")
+            return False
+
+        if not self.atv.keyboard:
+            _LOGGER.error("Keyboard not available on Apple TV")
+            return False
+
+        if self.atv.keyboard.text_focus_state != KeyboardFocusState.Focused:
+            _LOGGER.error("Keyboard not focused on Apple TV")
+            return False
+
+        return True
+
     async def async_set_search_text(self, text: str) -> None:
         """Set the search text on the Apple TV."""
-        if self.atv is None or self.atv.keyboard is None:
-            _LOGGER.error("Keyboard not available on Apple TV")
-        elif self.atv.keyboard.text_focus_state != KeyboardFocusState.Focused:
-            _LOGGER.error("Keyboard not focused on Apple TV")
-        else:
-            _LOGGER.debug("Setting search text to '%s'", text)
-            await self.atv.keyboard.text_set(text)
+        if not self.ok_to_change_text():
+            return
+
+        assert self.atv is not None
+        _LOGGER.debug("Setting search text to '%s'", text)
+        await self.atv.keyboard.text_set(text)
 
     async def async_append_search_text(self, text: str) -> None:
         """Append text to the current search text on the Apple TV."""
-        if self.atv is None or self.atv.keyboard is None:
-            _LOGGER.error("Keyboard not available on Apple TV")
-        elif self.atv.keyboard.text_focus_state != KeyboardFocusState.Focused:
-            _LOGGER.error("Keyboard not focused on Apple TV")
-        else:
-            _LOGGER.debug("Appending search text '%s'", text)
-            await self.atv.keyboard.text_append(text)
+        if not self.ok_to_change_text():
+            return
+
+        assert self.atv is not None
+        _LOGGER.debug("Appending search text '%s'", text)
+        await self.atv.keyboard.text_append(text)
 
     async def async_clear_search_text(self) -> None:
         """Clear the current search text on the Apple TV."""
-        if self.atv is None or self.atv.keyboard is None:
-            _LOGGER.error("Keyboard not available on Apple TV")
-        elif self.atv.keyboard.text_focus_state != KeyboardFocusState.Focused:
-            _LOGGER.error("Keyboard not focused on Apple TV")
-        else:
-            _LOGGER.debug("Clearing search text")
-            await self.atv.keyboard.text_clear()
+        if not self.ok_to_change_text():
+            return
+
+        assert self.atv is not None
+        _LOGGER.debug("Clearing search text")
+        await self.atv.keyboard.text_clear()
