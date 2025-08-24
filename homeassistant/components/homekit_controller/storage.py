@@ -49,6 +49,10 @@ class EntityMapStorage:
 
         self.storage_data = raw_storage.get("pairings", {})
 
+    async def async_save(self) -> None:
+        """Save the pairing cache data."""
+        await self.store.async_save(self._data_to_save())
+
     def get_map(self, homekit_id: str) -> Pairing | None:
         """Get a pairing cache item."""
         return self.storage_data.get(homekit_id)

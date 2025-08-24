@@ -294,7 +294,6 @@ class HKDevice:
             await self.pairing.async_populate_accessories_state(
                 force_update=True, attempts=attempts
             )
-            self._async_start_polling()
 
         entry.async_on_unload(pairing.dispatcher_connect(self.process_new_events))
         entry.async_on_unload(
@@ -306,6 +305,12 @@ class HKDevice:
         entry.async_on_unload(self._async_cancel_subscription_timer)
 
         await self.async_process_entity_map()
+
+        if transport != Transport.BLE:
+            # Do a single poll to make sure the chars are
+            # up to date so we don't restore old data.
+            await self.async_update()
+            self._async_start_polling()
 
         # If everything is up to date, we can create the entities
         # since we know the data is not stale.
