@@ -521,6 +521,8 @@ DISCOVERY_SCHEMAS = [
             }.get,
         ),
         entity_class=MatterAttributeSelectEntity,
-        required_attributes=(clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,),
+        required_attributes=(
+            clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,
+        ),
     ),
 ]
