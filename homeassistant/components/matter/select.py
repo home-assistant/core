@@ -502,4 +502,25 @@ DISCOVERY_SCHEMAS = [
             clusters.PumpConfigurationAndControl.Attributes.OperationMode,
         ),
     ),
+    MatterDiscoverySchema(
+        platform=Platform.SELECT,
+        entity_description=MatterSelectEntityDescription(
+            key="BooleanStateConfigurationCurrentSensitivityLevel",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="sensitivity_level",
+            options=["high", "standard", "low"],
+            device_to_ha={
+                0: "high",
+                1: "standard",
+                2: "low",
+            }.get,
+            ha_to_device={
+                "high": 0,
+                "standard": 1,
+                "low": 2,
+            }.get,
+        ),
+        entity_class=MatterAttributeSelectEntity,
+        required_attributes=(clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,),
+    ),
 ]
