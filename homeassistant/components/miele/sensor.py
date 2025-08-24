@@ -614,6 +614,8 @@ async def async_setup_entry(
             "state_program_phase": MielePhaseSensor,
             "state_plate_step": MielePlateSensor,
             "state_elapsed_time": MieleTimeSensor,
+            "current_energy_consumption": MieleConsumptionSensor,
+            "current_water_consumption": MieleConsumptionSensor,
         }.get(definition.description.key, MieleSensor)
 
     def _is_entity_registered(unique_id: str) -> bool:
@@ -754,6 +756,7 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
     """Representation of a Sensor whose internal state can be restored."""
 
     _last_value: StateType
+    _initialized: bool
 
     def __init__(
         self,
@@ -764,20 +767,36 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
         """Initialize the sensor."""
         super().__init__(coordinator, device_id, description)
         self._last_value = None
+        self._initialized = False
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
 
-        # recover last value from cache
+        # recover last value from cache when adding entity
         last_value = await self.async_get_last_state()
         if last_value and last_value.state != STATE_UNKNOWN:
             self._last_value = last_value.state
+            self._initialized = True
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
+        if self._last_value is None and not self._initialized:
+            self._update_last_value()
+            self._initialized = True
         return self._last_value
+
+    def _update_last_value(self) -> None:
+        """Update the last value of the sensor."""
+        self._last_value = self.entity_description.value_fn(self.device)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_last_value()
+        self._initialized = True
+        super()._handle_coordinator_update()
 
 
 class MielePlateSensor(MieleSensor):
@@ -886,9 +905,8 @@ class MieleProgramIdSensor(MieleSensor):
 class MieleTimeSensor(MieleRestorableSensor):
     """Representation of time sensors keeping state from cache."""
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _update_last_value(self) -> None:
+        """Update the last value of the sensor."""
 
         current_value = self.entity_description.value_fn(self.device)
         current_status = StateStatus(self.device.state_status)
@@ -912,4 +930,37 @@ class MieleTimeSensor(MieleRestorableSensor):
         else:
             self._last_value = current_value
 
-        super()._handle_coordinator_update()
+
+class MieleConsumptionSensor(MieleRestorableSensor):
+    """Representation of consumption sensors keeping state from cache."""
+
+    _is_reporting: bool = False
+
+    def _update_last_value(self) -> None:
+        """Update the last value of the sensor."""
+        current_value = self.entity_description.value_fn(self.device)
+        current_status = StateStatus(self.device.state_status)
+
+        # force unknown when appliance is not able to report consumption
+        if current_status in (
+            StateStatus.ON,
+            StateStatus.OFF,
+            StateStatus.PROGRAMMED,
+            StateStatus.WAITING_TO_START,
+            StateStatus.IDLE,
+            StateStatus.SERVICE,
+        ):
+            self._is_reporting = False
+            self._last_value = None
+
+        # appliance might report the last value for consumption of previous cycle and it will report 0
+        # only after a while, so it is necessary to force 0 until we see the 0 value coming from API
+        if (
+            current_status in (StateStatus.IN_USE, StateStatus.PAUSE)
+            and current_value is not None
+            and cast(int, current_value) > 0
+            and not self._is_reporting
+        ):
+            self._last_value = 0
+
+        self._last_value = current_value

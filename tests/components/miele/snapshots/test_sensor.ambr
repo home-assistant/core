@@ -2723,7 +2723,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0',
   })
 # ---
 # name: test_sensor_states[platforms0][sensor.oven_program-entry]
