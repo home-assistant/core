@@ -60,4 +60,4 @@ class ToGrillEventEntity(ToGrillEntity, EventEntity):
         if packet.probe != self._probe_number:
             return
 
-        self._trigger_event(slugify(message.name))
+        self._trigger_event(message.name.lower())
