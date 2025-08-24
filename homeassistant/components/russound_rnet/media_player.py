@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity import DeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,6 +91,20 @@ class RussoundRNETDevice(MediaPlayerEntity):
         self._controller_id = str(math.ceil(zone_id / 6))
         # Each zone resets to 1-6 per controller
         self._zone_id = (zone_id - 1) % 6 + 1
+
+        # Stable unique_id so entity/device get registered once
+        self._attr_unique_id = f"rnet_{self._controller_id}_zone_{self._zone_id}"  # <-- NEW
+
+    # Expose a per-zone device
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device information for this Russound zone."""
+        return DeviceInfo(
+            identifiers={("russound_rnet", f"{self._controller_id}-{self._zone_id}")},
+            name=self._attr_name,
+            manufacturer="Russound",
+            model="RNET",
+        )
 
     def update(self) -> None:
         """Retrieve latest state."""
