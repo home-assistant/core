@@ -518,7 +518,6 @@ async def test_grouped_lights(
         }
         mock_bridge_v2.api.emit_event("update", event)
     await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     # The light should now be on and have the properties we've set
     test_light = hass.states.get(test_light_id)
@@ -528,7 +527,7 @@ async def test_grouped_lights(
     assert test_light.attributes["brightness"] == 255
     assert test_light.attributes["xy_color"] == (0.123, 0.123)
 
-    # While we have a group on, test the color aggregation logic
+    # While we have a group on, test the color aggregation logic, XY first
 
     # Turn off one of the bulbs in the group
     # "hue_light_with_color_and_color_temperature_1" corresponds to "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1"
@@ -540,8 +539,6 @@ async def test_grouped_lights(
         {"entity_id": single_light_id},
         blocking=True,
     )
-
-    # Simulate the individual light turning off event
     event = {
         "id": "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
         "type": "light",
@@ -550,21 +547,19 @@ async def test_grouped_lights(
     mock_bridge_v2.api.emit_event("update", event)
     await hass.async_block_till_done()
 
-    # The group should still show the same xy_color since other lights maintain their color
+    # The group should still show the same XY color since other lights maintain their color
     test_light = hass.states.get(test_light_id)
     assert test_light is not None
     assert test_light.state == "on"
     assert test_light.attributes["xy_color"] == (0.123, 0.123)
 
-    # Turn the light back on with a white color (different from the rest of the group)
+    # Turn the light back on with a white XY color (different from the rest of the group)
     await hass.services.async_call(
         "light",
         "turn_on",
         {"entity_id": single_light_id, "xy_color": [0.3127, 0.3290]},
         blocking=True,
     )
-
-    # Simulate the individual light turning on with a white color
     event = {
         "id": "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
         "type": "light",
@@ -574,7 +569,7 @@ async def test_grouped_lights(
     mock_bridge_v2.api.emit_event("update", event)
     await hass.async_block_till_done()
 
-    # Now the group xy_color should be the average of all three lights:
+    # Now the group XY color should be the average of all three lights:
     # Light 1: (0.3127, 0.3290) - white
     # Light 2: (0.123, 0.123)
     # Light 3: (0.123, 0.123)
@@ -583,7 +578,7 @@ async def test_grouped_lights(
     expected_x = round((0.3127 + 0.123 + 0.123) / 3, 4)
     expected_y = round((0.3290 + 0.123 + 0.123) / 3, 4)
 
-    # Check that the group color is now the average of all lights
+    # Check that the group XY color is now the average of all lights
     test_light = hass.states.get(test_light_id)
     assert test_light is not None
     assert test_light.state == "on"
@@ -625,7 +620,270 @@ async def test_grouped_lights(
     assert abs(group_x - expected_x_two_lights) < 0.001
     assert abs(group_y - expected_y_two_lights) < 0.001
 
-    # Group light left on so continue testing the turn off service on a grouped light as before
+    # Test colour temperature aggregation
+    # Set all three lights to colour temperature mode with different mirek values
+    for mirek, light_name, light_id in zip(
+        [300, 250, 200],
+        [
+            "light.hue_light_with_color_and_color_temperature_1",
+            "light.hue_light_with_color_and_color_temperature_2",
+            "light.hue_light_with_color_and_color_temperature_gradient",
+        ],
+        [
+            "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
+            "b3fe71ef-d0ef-48de-9355-d9e604377df0",
+            "8015b17f-8336-415b-966a-b364bd082397",
+        ],
+        strict=True,
+    ):
+        await hass.services.async_call(
+            "light",
+            "turn_on",
+            {
+                "entity_id": light_name,
+                "color_temp": mirek,
+            },
+            blocking=True,
+        )
+        # Emit update event with matching mirek value
+        mock_bridge_v2.api.emit_event(
+            "update",
+            {
+                "id": light_id,
+                "type": "light",
+                "on": {"on": True},
+                "color_temperature": {"mirek": mirek, "mirek_valid": True},
+            },
+        )
+    await hass.async_block_till_done()
+
+    test_light = hass.states.get(test_light_id)
+    assert test_light is not None
+    assert test_light.state == "on"
+    assert test_light.attributes["color_mode"] == ColorMode.COLOR_TEMP
+
+    # Expected average kelvin calculation:
+    # 300 mirek ≈ 3333K, 250 mirek ≈ 4000K, 200 mirek ≈ 5000K
+    expected_avg_kelvin = round((3333 + 4000 + 5000) / 3)
+    assert abs(test_light.attributes["color_temp_kelvin"] - expected_avg_kelvin) <= 5
+
+    # Switch light 3 off and check average kelvin temperature of remaining two lights
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {"entity_id": "light.hue_light_with_color_and_color_temperature_gradient"},
+        blocking=True,
+    )
+    event = {
+        "id": "8015b17f-8336-415b-966a-b364bd082397",
+        "type": "light",
+        "on": {"on": False},
+    }
+    mock_bridge_v2.api.emit_event("update", event)
+    await hass.async_block_till_done()
+
+    test_light = hass.states.get(test_light_id)
+    assert test_light is not None
+    assert test_light.state == "on"
+    assert test_light.attributes["color_mode"] == ColorMode.COLOR_TEMP
+
+    # Expected average kelvin calculation:
+    # 300 mirek ≈ 3333K, 250 mirek ≈ 4000K
+    expected_avg_kelvin = round((3333 + 4000) / 2)
+    assert abs(test_light.attributes["color_temp_kelvin"] - expected_avg_kelvin) <= 5
+
+    # Turn light 3 back on in XY mode and verify majority still favours COLOR_TEMP
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": "light.hue_light_with_color_and_color_temperature_gradient",
+            "xy_color": [0.123, 0.123],
+        },
+        blocking=True,
+    )
+    mock_bridge_v2.api.emit_event(
+        "update",
+        {
+            "id": "8015b17f-8336-415b-966a-b364bd082397",
+            "type": "light",
+            "on": {"on": True},
+            "color": {"xy": {"x": 0.123, "y": 0.123}},
+            "color_temperature": {
+                "mirek": None,
+                "mirek_valid": False,
+            },
+        },
+    )
+    await hass.async_block_till_done()
+
+    test_light = hass.states.get(test_light_id)
+    assert test_light.attributes["color_mode"] == ColorMode.COLOR_TEMP
+
+    # Switch light 2 to XY mode to flip the majority
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {
+            "entity_id": "light.hue_light_with_color_and_color_temperature_2",
+            "xy_color": [0.321, 0.321],
+        },
+        blocking=True,
+    )
+    mock_bridge_v2.api.emit_event(
+        "update",
+        {
+            "id": "b3fe71ef-d0ef-48de-9355-d9e604377df0",
+            "type": "light",
+            "on": {"on": True},
+            "color": {"xy": {"x": 0.321, "y": 0.321}},
+            "color_temperature": {
+                "mirek": None,
+                "mirek_valid": False,
+            },
+        },
+    )
+    await hass.async_block_till_done()
+
+    test_light = hass.states.get(test_light_id)
+    assert test_light.attributes["color_mode"] == ColorMode.XY
+
+    # Test brightness aggregation with different brightness levels
+    mock_bridge_v2.mock_requests.clear()
+
+    # Set all three lights to different brightness levels
+    for brightness, light_name, light_id in zip(
+        [90.0, 60.0, 30.0],
+        [
+            "light.hue_light_with_color_and_color_temperature_1",
+            "light.hue_light_with_color_and_color_temperature_2",
+            "light.hue_light_with_color_and_color_temperature_gradient",
+        ],
+        [
+            "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
+            "b3fe71ef-d0ef-48de-9355-d9e604377df0",
+            "8015b17f-8336-415b-966a-b364bd082397",
+        ],
+        strict=True,
+    ):
+        await hass.services.async_call(
+            "light",
+            "turn_on",
+            {
+                "entity_id": light_name,
+                "brightness": brightness,
+            },
+            blocking=True,
+        )
+        # Emit update event with matching brightness value
+        mock_bridge_v2.api.emit_event(
+            "update",
+            {
+                "id": light_id,
+                "type": "light",
+                "on": {"on": True},
+                "dimming": {"brightness": brightness},
+            },
+        )
+    await hass.async_block_till_done()
+
+    # Check that the group brightness is the average of all three lights
+    # Expected average: (90 + 60 + 30) / 3 = 60% -> 153 (60% of 255)
+    expected_brightness = round(((90 + 60 + 30) / 3 / 100) * 255)
+
+    test_light = hass.states.get(test_light_id)
+    assert test_light is not None
+    assert test_light.state == "on"
+    assert test_light.attributes["brightness"] == expected_brightness
+
+    # Turn off the dimmest light 3 (30% brightness) while keeping the other two on
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {"entity_id": "light.hue_light_with_color_and_color_temperature_gradient"},
+        blocking=True,
+    )
+    event = {
+        "id": "8015b17f-8336-415b-966a-b364bd082397",
+        "type": "light",
+        "on": {"on": False},
+    }
+    mock_bridge_v2.api.emit_event("update", event)
+    await hass.async_block_till_done()
+
+    # Check that the group brightness is now the average of the two remaining lights
+    # Expected average: (90 + 60) / 2 = 75% -> 191 (75% of 255)
+    expected_brightness_two_lights = round(((90 + 60) / 2 / 100) * 255)
+
+    test_light = hass.states.get(test_light_id)
+    assert test_light is not None
+    assert test_light.state == "on"
+    assert test_light.attributes["brightness"] == expected_brightness_two_lights
+
+    # Turn off light 2 (60% brightness), leaving only the brightest one
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {"entity_id": "light.hue_light_with_color_and_color_temperature_2"},
+        blocking=True,
+    )
+    event = {
+        "id": "b3fe71ef-d0ef-48de-9355-d9e604377df0",
+        "type": "light",
+        "on": {"on": False},
+    }
+    mock_bridge_v2.api.emit_event("update", event)
+    await hass.async_block_till_done()
+
+    # Check that the group brightness is now just the remaining light's brightness
+    # Expected brightness: 90% -> 230 (round(90 / 100 * 255))
+    expected_brightness_one_light = round((90 / 100) * 255)
+
+    test_light = hass.states.get(test_light_id)
+    assert test_light is not None
+    assert test_light.state == "on"
+    assert test_light.attributes["brightness"] == expected_brightness_one_light
+
+    # Set all three lights back to 100% brightness for consistency with later tests
+    for light_name, light_id in zip(
+        [
+            "light.hue_light_with_color_and_color_temperature_1",
+            "light.hue_light_with_color_and_color_temperature_2",
+            "light.hue_light_with_color_and_color_temperature_gradient",
+        ],
+        [
+            "02cba059-9c2c-4d45-97e4-4f79b1bfbaa1",
+            "b3fe71ef-d0ef-48de-9355-d9e604377df0",
+            "8015b17f-8336-415b-966a-b364bd082397",
+        ],
+        strict=True,
+    ):
+        await hass.services.async_call(
+            "light",
+            "turn_on",
+            {
+                "entity_id": light_name,
+                "brightness": 100.0,
+            },
+            blocking=True,
+        )
+        # Emit update event with matching brightness value
+        mock_bridge_v2.api.emit_event(
+            "update",
+            {
+                "id": light_id,
+                "type": "light",
+                "on": {"on": True},
+                "dimming": {"brightness": 100.0},
+            },
+        )
+    await hass.async_block_till_done()
+
+    # Verify group is back to 100% brightness
+    test_light = hass.states.get(test_light_id)
+    assert test_light is not None
+    assert test_light.state == "on"
+    assert test_light.attributes["brightness"] == 255
 
     # Test calling the turn off service on a grouped light.
     mock_bridge_v2.mock_requests.clear()
