@@ -493,21 +493,20 @@ async def test_reconfigure_successful(
     """Test successful reconfigure flow."""
     mock_config_entry.add_to_hass(hass)
 
-    result1 = await mock_config_entry.start_reconfigure_flow(hass)
+    start_result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert start_result["type"] is FlowResultType.FORM
+    assert start_result["step_id"] == "reconfigure"
 
-    assert result1["type"] is FlowResultType.FORM
-    assert result1["step_id"] == "reconfigure"
-
-    result2 = await hass.config_entries.flow.async_configure(
-        result1["flow_id"],
+    configure_result = await hass.config_entries.flow.async_configure(
+        start_result["flow_id"],
         {
             CONF_URL: "http://new_url:8096",
             CONF_USERNAME: "new_user",
             CONF_PASSWORD: "new_password",
         },
     )
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "reconfigure_successful"
+    assert configure_result["type"] is FlowResultType.ABORT
+    assert configure_result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_USERNAME] == "new_user"
     assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
     assert mock_config_entry.data[CONF_URL] == "http://new_url:8096"
