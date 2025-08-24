@@ -103,7 +103,7 @@ async def test_storage_is_saved_on_stop(
     assert hkid in entity_map.storage_data
 
     # Clear the storage to verify it gets saved on stop
-    hass_storage.pop(ENTITY_MAP, None)
+    del hass_storage[ENTITY_MAP]
 
     # Make a change to trigger a save
     entity_map.async_create_or_update_map(hkid, 2, [])  # Update config_num
