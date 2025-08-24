@@ -110,7 +110,6 @@ class MieleSensorDescription(SensorEntityDescription):
     end_value_fn: Callable[[StateType], StateType] | None = None
     extra_attributes: dict[str, Callable[[MieleDevice], StateType]] | None = None
     zone: int | None = None
-    end_value_fn: Callable[[StateType], StateType] | None = None
     unique_id_fn: Callable[[str, MieleSensorDescription], str] | None = None
 
 
@@ -759,6 +758,7 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
     """Representation of a Sensor whose internal state can be restored."""
 
     _last_value: StateType
+    _initialized: bool
 
     def __init__(
         self,
@@ -769,20 +769,36 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
         """Initialize the sensor."""
         super().__init__(coordinator, device_id, description)
         self._last_value = None
+        self._initialized = False
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
 
-        # recover last value from cache
+        # recover last value from cache when adding entity
         last_value = await self.async_get_last_state()
         if last_value and last_value.state != STATE_UNKNOWN:
             self._last_value = last_value.state
+            self._initialized = True
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
+        if self._last_value is None and not self._initialized:
+            self._update_last_value()
+            self._initialized = True
         return self._last_value
+
+    def _update_last_value(self) -> None:
+        """Update the last value of the sensor."""
+        self._last_value = self.entity_description.value_fn(self.device)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_last_value()
+        self._initialized = True
+        super()._handle_coordinator_update()
 
 
 class MielePlateSensor(MieleSensor):
@@ -891,9 +907,8 @@ class MieleProgramIdSensor(MieleSensor):
 class MieleTimeSensor(MieleRestorableSensor):
     """Representation of time sensors keeping state from cache."""
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _update_last_value(self) -> None:
+        """Update the last value of the sensor."""
 
         current_value = self.entity_description.value_fn(self.device)
         current_status = StateStatus(self.device.state_status)
@@ -916,5 +931,3 @@ class MieleTimeSensor(MieleRestorableSensor):
         # otherwise, cache value and return it
         else:
             self._last_value = current_value
-
-        super()._handle_coordinator_update()
