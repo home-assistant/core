@@ -148,8 +148,6 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
         entry: ConfigEntry = self._get_reconfigure_entry()
 
         if user_input is not None:
-            new_input = entry.data | user_input
-
             if self.client_device_id is None:
                 # Keep the same client id if we have one.
                 # Q: Do we ever not have one?
@@ -158,11 +156,17 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
                     or _generate_client_device_id()
                 )
 
-            self._abort_if_unique_id_mismatch()
+            new_input = {
+                **entry.data,
+                **user_input,
+                CONF_CLIENT_DEVICE_ID: self.client_device_id,
+            }
 
             client = create_client(device_id=self.client_device_id)
             try:
-                await validate_input(self.hass, new_input, client)
+                user_id, _connect_result = await validate_input(
+                    self.hass, new_input, client
+                )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -171,6 +175,8 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
                 _LOGGER.exception("Unexpected exception")
             else:
+                await self.async_set_unique_id(user_id)
+                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(entry, data=new_input)
 
         return self.async_show_form(

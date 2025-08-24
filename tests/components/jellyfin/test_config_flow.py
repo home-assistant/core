@@ -488,6 +488,7 @@ async def test_reconfigure_successful(
     hass: HomeAssistant,
     mock_jellyfin: MagicMock,
     mock_config_entry: MockConfigEntry,
+    mock_client_device_id: MagicMock,
     mock_client: MagicMock,
 ) -> None:
     """Test successful reconfigure flow."""
@@ -554,7 +555,7 @@ async def test_reconfigure_flow_failure(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    result2 = await hass.config_entries.flow.async_configure(
+    configure_result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_URL: "dummy-url",
@@ -562,8 +563,8 @@ async def test_reconfigure_flow_failure(
             CONF_PASSWORD: "dummy-pass",
         },
     )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": expected_error}
+    assert configure_result["type"] is FlowResultType.FORM
+    assert configure_result["errors"] == {"base": expected_error}
 
     # A failed reconfigure should not modify the config entry
     assert mock_config_entry.data[CONF_USERNAME] == "test-username"
@@ -597,7 +598,7 @@ async def test_reconfigure_flow_exceptions(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    result2 = await hass.config_entries.flow.async_configure(
+    configure_result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_URL: "dummy-url",
@@ -605,10 +606,65 @@ async def test_reconfigure_flow_exceptions(
             CONF_PASSWORD: "dummy-pass",
         },
     )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": expected_error}
+    assert configure_result["type"] is FlowResultType.FORM
+    assert configure_result["errors"] == {"base": expected_error}
 
     # A failed reconfigure should not modify the config entry
     assert mock_config_entry.data[CONF_USERNAME] == "test-username"
     assert mock_config_entry.data[CONF_PASSWORD] == "test-password"
     assert mock_config_entry.data[CONF_URL] == "https://example.com"
+
+
+async def test_reconfigure_keep_client_id(
+    hass: HomeAssistant,
+    mock_jellyfin: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test multiple reconfigures from the  reconfigure flow."""
+    mock_config_entry.add_to_hass(hass)
+    prev_unique_id = mock_config_entry.unique_id
+
+    start_result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert start_result["type"] is FlowResultType.FORM
+    assert start_result["step_id"] == "reconfigure"
+
+    configure_result = await hass.config_entries.flow.async_configure(
+        start_result["flow_id"],
+        {
+            CONF_URL: "http://new_url:8096",
+            CONF_USERNAME: "new_user",
+            CONF_PASSWORD: "new_password",
+        },
+    )
+    assert configure_result["type"] is FlowResultType.ABORT
+    assert configure_result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_USERNAME] == "new_user"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
+    assert mock_config_entry.data[CONF_URL] == "http://new_url:8096"
+    assert mock_config_entry.data[CONF_CLIENT_DEVICE_ID] != "TEST-UUID"
+    assert mock_config_entry.unique_id == prev_unique_id
+    previous_client_id = mock_config_entry.data[CONF_CLIENT_DEVICE_ID]
+
+    # Reconfigure again, and verify we keep the same client id
+
+    restart_result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert restart_result["type"] is FlowResultType.FORM
+    assert restart_result["step_id"] == "reconfigure"
+
+    reconfigure_result = await hass.config_entries.flow.async_configure(
+        restart_result["flow_id"],
+        {
+            CONF_URL: "http://newer_url:8097",
+            CONF_USERNAME: "new_user",
+            CONF_PASSWORD: "new_password2",
+        },
+    )
+
+    assert reconfigure_result["type"] is FlowResultType.ABORT
+    assert reconfigure_result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_USERNAME] == "new_user"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new_password2"
+    assert mock_config_entry.data[CONF_URL] == "http://newer_url:8097"
+    assert mock_config_entry.data[CONF_CLIENT_DEVICE_ID] == previous_client_id
+    assert mock_config_entry.unique_id == prev_unique_id
