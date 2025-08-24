@@ -1,1 +1,1 @@
-"""Tests for the Actron Air Neo integration."""
+"""Tests for the Actron Air integration."""
