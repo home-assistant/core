@@ -13,7 +13,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -178,7 +178,7 @@ class ActronSystemClimate(BaseClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the temperature."""
-        temp = kwargs.get("temperature")
+        temp = kwargs.get(ATTR_TEMPERATURE)
         await self._status.user_aircon_settings.set_temperature(temperature=temp)
 
 
