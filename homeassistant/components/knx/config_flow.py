@@ -452,25 +452,9 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors[CONF_KNX_LOCAL_IP] = "invalid_ip_address"
 
             selected_tunneling_type = user_input[CONF_KNX_TUNNELING_TYPE]
-            if not errors:
-                try:
-                    self._selected_tunnel = await request_description(
-                        gateway_ip=_host_ip,
-                        gateway_port=user_input[CONF_PORT],
-                        local_ip=_local_ip,
-                        route_back=user_input[CONF_KNX_ROUTE_BACK],
-                    )
-                except CommunicationError:
-                    errors["base"] = "cannot_connect"
-                else:
-                    if bool(self._selected_tunnel.tunnelling_requires_secure) is not (
-                        selected_tunneling_type == CONF_KNX_TUNNELING_TCP_SECURE
-                    ) or (
-                        selected_tunneling_type == CONF_KNX_TUNNELING_TCP
-                        and not self._selected_tunnel.supports_tunnelling_tcp
-                    ):
-                        errors[CONF_KNX_TUNNELING_TYPE] = "unsupported_tunnel_type"
-
+            # Do not check for gateway capabilities as the protocol for this
+            # check might not be available. Just apply directly what is asked by
+            # the user.
             if not errors:
                 self.new_entry_data = KNXConfigEntryData(
                     connection_type=selected_tunneling_type,
