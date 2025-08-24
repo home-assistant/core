@@ -137,13 +137,13 @@ class ActronSystemClimate(BaseClimateEntity):
         return self.coordinator.data
 
     @property
-    def hvac_mode(self) -> HVACMode:
+    def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode."""
         if not self._status.user_aircon_settings.is_on:
             return HVACMode.OFF
 
         mode = self._status.user_aircon_settings.mode
-        return HVAC_MODE_MAPPING_ACTRONAIR_TO_HA.get(mode, HVACMode.OFF)
+        return HVAC_MODE_MAPPING_ACTRONAIR_TO_HA.get(mode)
 
     @property
     def fan_mode(self) -> str | None:
