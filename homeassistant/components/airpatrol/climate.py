@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from homeassistant.components.climate import (
@@ -13,22 +12,18 @@ from homeassistant.components.climate import (
     SWING_ON,
     ClimateEntity,
     ClimateEntityFeature,
-    HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from . import AirPatrolConfigEntry
+from .const import LOGGER
 from .coordinator import AirPatrolDataUpdateCoordinator
+from .entity import AirPatrolEntity
 
 PARALLEL_UPDATES = 0
-
-_LOGGER = logging.getLogger(__name__)
 
 # HVAC modes supported by AirPatrol
 HVAC_MODES = {
@@ -53,30 +48,26 @@ SWING_MODES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: AirPatrolConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AirPatrol climate entities."""
-    coordinator: AirPatrolDataUpdateCoordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data
     # Create climate entities for each unit
-    entities = []
-    client = await coordinator.async_get_api_client()
-    units = await client.get_data()
-    entities = [
-        AirPatrolClimate(coordinator, unit, unit["unit_id"])
-        for unit in units
-        if "climate" in unit
-    ]
+    units = coordinator.data or []
 
-    async_add_entities(entities)
+    async_add_entities(
+        [
+            AirPatrolClimate(coordinator, unit, unit["unit_id"])
+            for unit in units
+            if "climate" in unit
+        ]
+    )
 
 
-class AirPatrolClimate(
-    CoordinatorEntity[AirPatrolDataUpdateCoordinator], ClimateEntity
-):
+class AirPatrolClimate(AirPatrolEntity, ClimateEntity):
     """AirPatrol climate entity."""
 
-    _attr_has_entity_name = True
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
@@ -85,6 +76,11 @@ class AirPatrolClimate(
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF]
+    _attr_fan_modes = [FAN_LOW, FAN_HIGH, FAN_AUTO]
+    _attr_swing_modes = [SWING_ON, SWING_OFF]
+    _attr_min_temp = 16.0
+    _attr_max_temp = 30.0
 
     def __init__(
         self,
@@ -93,9 +89,7 @@ class AirPatrolClimate(
         unit_id: str,
     ) -> None:
         """Initialize the climate entity."""
-        super().__init__(coordinator)
-        self._unit = unit
-        self._unit_id = unit_id
+        super().__init__(coordinator, unit, unit_id)
         unique_id = getattr(coordinator.config_entry, "unique_id", None)
         self._attr_unique_id = (
             f"{unique_id}_{unit_id}_climate"
@@ -104,31 +98,14 @@ class AirPatrolClimate(
         )
         self._attr_translation_key = "climate"
         self._unavailable_logged = False
-        # Set device info
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unit_id)},
-            name=unit["name"],
-            manufacturer=unit["manufacturer"],
-            model=unit["model"],
-        )
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        is_available = (
-            super().available
-            and self.coordinator.data is not None
-            and any(
-                isinstance(u, dict) and u.get("unit_id") == self._unit_id
-                for u in self.coordinator.data
-            )
-            and "climate" in self._unit
-        )
+        is_available = super().available and "climate" in self._unit
         if not is_available and not self._unavailable_logged:
-            _LOGGER.info("The climate entity '%s' is unavailable", self._attr_unique_id)
             self._unavailable_logged = True
         elif self._unavailable_logged:
-            _LOGGER.info("The climate entity '%s' is back online", self._attr_unique_id)
             self._unavailable_logged = False
         return is_available
 
@@ -140,7 +117,7 @@ class AirPatrolClimate(
             try:
                 return float(humidity)
             except (ValueError, TypeError):
-                _LOGGER.error("Failed to convert humidity to float: %s", humidity)
+                LOGGER.error("Failed to convert humidity to float: %s", humidity)
         return None
 
     @property
@@ -151,7 +128,7 @@ class AirPatrolClimate(
             try:
                 return float(temp)
             except (ValueError, TypeError):
-                _LOGGER.error("Failed to convert temperature to float: %s", temp)
+                LOGGER.error("Failed to convert temperature to float: %s", temp)
         return None
 
     @property
@@ -163,7 +140,7 @@ class AirPatrolClimate(
             try:
                 return float(temp)
             except (ValueError, TypeError):
-                _LOGGER.error("Failed to convert temperature to float: %s", temp)
+                LOGGER.error("Failed to convert temperature to float: %s", temp)
         return None
 
     @property
@@ -177,23 +154,6 @@ class AirPatrolClimate(
         if pump_power == "off":
             return HVACMode.OFF
         return HVAC_MODES.get(pump_mode, HVACMode.HEAT)
-
-    @property
-    def hvac_action(self) -> HVACAction | None:
-        """Return the current HVAC action."""
-        climate_data = self._unit.get("climate", {})
-        params = climate_data.get("ParametersData", {})
-        pump_power = params.get("PumpPower", "off")
-        pump_mode = params.get("PumpMode", "heat")
-
-        if pump_power == "off":
-            return HVACAction.OFF
-
-        if pump_mode == "heat":
-            return HVACAction.HEATING
-        if pump_mode == "cool":
-            return HVACAction.COOLING
-        return HVACAction.IDLE
 
     @property
     def fan_mode(self) -> str | None:
@@ -210,31 +170,6 @@ class AirPatrolClimate(
         params = climate_data.get("ParametersData", {})
         swing = params.get("Swing", "off")
         return SWING_MODES.get(swing, SWING_OFF)
-
-    @property
-    def hvac_modes(self) -> list[HVACMode]:
-        """Return the list of available HVAC modes."""
-        return [HVACMode.HEAT, HVACMode.COOL, HVACMode.OFF]
-
-    @property
-    def fan_modes(self) -> list[str]:
-        """Return the list of available fan modes."""
-        return [FAN_LOW, FAN_HIGH, FAN_AUTO]
-
-    @property
-    def swing_modes(self) -> list[str]:
-        """Return the list of available swing modes."""
-        return [SWING_ON, SWING_OFF]
-
-    @property
-    def min_temp(self) -> float:
-        """Return the minimum temperature."""
-        return 16.0
-
-    @property
-    def max_temp(self) -> float:
-        """Return the maximum temperature."""
-        return 30.0
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -304,8 +239,7 @@ class AirPatrolClimate(
         new_climate_data = self.climate_data().copy()
         new_climate_data["ParametersData"] = params
 
-        client = await self.coordinator.async_get_api_client()
-        response_data = await client.set_unit_climate_data(
+        response_data = await self.coordinator.api.set_unit_climate_data(
             self._unit_id, new_climate_data
         )
         # Update local data with the response data

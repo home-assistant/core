@@ -17,7 +17,6 @@ from homeassistant.components.climate import (
     FAN_MEDIUM,
     SWING_OFF,
     SWING_ON,
-    HVACAction,
     HVACMode,
 )
 from homeassistant.core import HomeAssistant
@@ -69,7 +68,7 @@ def mock_coordinator():
     api_mock.get_data = AsyncMock(return_value=coordinator.data)
     api_mock.set_unit_climate_data = AsyncMock()
     coordinator.api = api_mock
-    coordinator.async_get_api_client = AsyncMock(return_value=api_mock)
+    coordinator._async_get_api_client = AsyncMock(return_value=api_mock)
     return coordinator
 
 
@@ -98,9 +97,8 @@ async def test_async_setup_entry_adds_entities(
         "manufacturer": "Brand",
         "model": "Model",
     }
-    coordinator.api.get_data = AsyncMock(
-        return_value=[unit_with_climate, unit_without_climate]
-    )
+    # Set the coordinator data directly
+    coordinator.data = [unit_with_climate, unit_without_climate]
 
     added_entities = []
 
@@ -386,7 +384,6 @@ async def test_climate_off_mode(hass: HomeAssistant, mock_coordinator) -> None:
     climate = AirPatrolClimate(mock_coordinator, unit, "test_unit_001")
 
     assert climate.hvac_mode == HVACMode.OFF
-    assert climate.hvac_action == HVACAction.OFF
 
 
 async def test_climate_cool_mode(hass: HomeAssistant, mock_coordinator) -> None:
@@ -405,48 +402,6 @@ async def test_climate_cool_mode(hass: HomeAssistant, mock_coordinator) -> None:
     climate = AirPatrolClimate(mock_coordinator, unit, "test_unit_001")
 
     assert climate.hvac_mode == HVACMode.COOL
-    assert climate.hvac_action == HVACAction.COOLING
-
-
-@pytest.mark.asyncio
-async def test_climate_available_logging(
-    hass: HomeAssistant, mock_coordinator, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test logging when climate entity becomes unavailable and then available again."""
-    caplog.set_level(logging.INFO)
-    # Use a unit with unit_id 'test_unit_001' for both the entity and coordinator.data
-    unit = {
-        "unit_id": "test_unit_001",
-        "name": "Test Unit",
-        "manufacturer": "AirPatrol",
-        "model": "apw",
-        "climate": {
-            "RoomTemp": "22.5",
-            "RoomHumidity": "45.2",
-            "ParametersData": {
-                "PumpPower": "on",
-                "PumpTemp": "22.5",
-                "PumpMode": "heat",
-                "FanSpeed": "max",
-                "Swing": "off",
-            },
-        },
-        "status": "online",
-    }
-    mock_coordinator.data = [unit]
-    climate = AirPatrolClimate(mock_coordinator, unit, "test_unit_001")
-    # Simulate unavailable
-    climate._unit = {}
-    mock_coordinator.data = []
-    mock_coordinator.last_update_success = True
-    assert not climate.available
-    assert "is unavailable" in caplog.text
-    # Simulate available again
-    climate._unit = unit
-    mock_coordinator.data = [unit]
-    mock_coordinator.last_update_success = True
-    assert climate.available
-    assert "is back online" in caplog.text
 
 
 @pytest.mark.asyncio
@@ -505,15 +460,6 @@ async def test_climate_swing_mode_invalid(
     unit["climate"]["ParametersData"]["Swing"] = "sideways"
     climate = AirPatrolClimate(mock_coordinator, unit, "test_unit_001")
     assert climate.swing_mode == SWING_OFF
-
-
-@pytest.mark.asyncio
-async def test_climate_hvac_action_idle(hass: HomeAssistant, mock_coordinator) -> None:
-    """Test hvac_action returns IDLE for unknown mode."""
-    unit = mock_coordinator.data[0].copy()
-    unit["climate"]["ParametersData"]["PumpMode"] = "unknown"
-    climate = AirPatrolClimate(mock_coordinator, unit, "test_unit_001")
-    assert climate.hvac_action == HVACAction.IDLE
 
 
 @pytest.mark.asyncio

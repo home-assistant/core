@@ -21,7 +21,7 @@ class AirPatrolDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]
     """Class to manage fetching AirPatrol data."""
 
     config_entry: AirPatrolConfigEntry
-    api: AirPatrolAPI | None = None
+    api: AirPatrolAPI
 
     def __init__(self, hass: HomeAssistant, config_entry: AirPatrolConfigEntry) -> None:
         """Initialize."""
@@ -29,35 +29,36 @@ class AirPatrolDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]
         super().__init__(
             hass,
             LOGGER,
-            name=f"{DOMAIN.capitalize()} {config_entry.data['email']}",
+            name=f"{DOMAIN.capitalize()} {config_entry.title}",
             update_interval=SCAN_INTERVAL,
             config_entry=config_entry,
         )
 
+    async def _async_setup(self):
+        try:
+            self.api = await self._async_get_api_client()
+        except AirPatrolAuthenticationError as auth_err:
+            raise ConfigEntryAuthFailed(
+                "Authentication with AirPatrol failed during setup"
+            ) from auth_err
+        except AirPatrolError as api_err:
+            raise UpdateFailed(
+                f"Error communicating with AirPatrol API: {api_err}"
+            ) from api_err
+
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Fetch data from API."""
         try:
-            client = await self.async_get_api_client()
-            return await client.get_data()
+            return await self.api.get_data()
         except AirPatrolAuthenticationError:
-            try:
-                await self._async_refresh_client()
-                client = await self.async_get_api_client()
-                return await client.get_data()
-            except AirPatrolAuthenticationError as refresh_err:
-                raise ConfigEntryAuthFailed(
-                    "Authentication with AirPatrol failed after token refresh"
-                ) from refresh_err
+            return await self._async_retry_get_data()
         except AirPatrolError as err:
             raise UpdateFailed(
                 f"Error communicating with AirPatrol API: {err}"
             ) from err
 
-    async def async_get_api_client(self) -> AirPatrolAPI:
+    async def _async_get_api_client(self) -> AirPatrolAPI:
         """Get the AirPatrol API client."""
-        if self.api:
-            return self.api
-
         session = async_get_clientsession(self.hass)
         # Check if we have a stored access token
         if "access_token" in self.config_entry.data:
@@ -68,13 +69,13 @@ class AirPatrolDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]
             # Validate the token is still valid by making a test API call
             await api.get_data()
             LOGGER.debug("Using stored access token for authentication")
-            self.api = api
         else:
             api = await self._async_refresh_client()
 
         return api
 
     async def _async_refresh_client(self) -> AirPatrolAPI:
+        """Refresh the AirPatrol API client and update the access token."""
         session = async_get_clientsession(self.hass)
         api = await AirPatrolAPI.authenticate(
             session,
@@ -89,6 +90,14 @@ class AirPatrolDataUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]
                 "access_token": api.get_access_token(),
             },
         )
-
-        self.api = api
         return api
+
+    async def _async_retry_get_data(self) -> list[dict[str, Any]]:
+        """Attempts to refresh a new token and fetch data."""
+        try:
+            self.api = await self._async_refresh_client()
+            return await self.api.get_data()
+        except AirPatrolAuthenticationError as refresh_err:
+            raise ConfigEntryAuthFailed(
+                "Authentication with AirPatrol failed after token refresh"
+            ) from refresh_err

@@ -74,7 +74,8 @@ async def test_async_step_reauth_confirm_success(
     ) as mock_session:
         mock_session.return_value = AsyncMock()
         with patch(
-            "homeassistant.components.airpatrol.config_flow.AirPatrolAPI.authenticate"
+            "homeassistant.components.airpatrol.config_flow.AirPatrolAPI.authenticate",
+            new_callable=AsyncMock,
         ) as mock_auth:
             mock_api = MagicMock()
             mock_api.get_access_token.return_value = "new_access_token"
@@ -113,7 +114,8 @@ async def test_async_step_reauth_confirm_invalid_auth(
     ) as mock_session:
         mock_session.return_value = AsyncMock()
         with patch(
-            "homeassistant.components.airpatrol.config_flow.AirPatrolAPI.authenticate"
+            "homeassistant.components.airpatrol.config_flow.AirPatrolAPI.authenticate",
+            new_callable=AsyncMock,
         ) as mock_auth:
             mock_auth.side_effect = AirPatrolAuthenticationError("fail")
             user_input = {
@@ -146,7 +148,8 @@ async def test_user_flow_success(
 
         # Mock the static authenticate method
         with patch(
-            "homeassistant.components.airpatrol.config_flow.AirPatrolAPI.authenticate"
+            "homeassistant.components.airpatrol.config_flow.AirPatrolAPI.authenticate",
+            new_callable=AsyncMock,
         ) as mock_auth:
             mock_api = MagicMock()
             mock_api.get_access_token.return_value = "test_access_token"
@@ -158,7 +161,7 @@ async def test_user_flow_success(
             )
 
             assert result["type"] == FlowResultType.CREATE_ENTRY
-            assert result["title"] == "airpatrol"
+            assert result["title"] == TEST_USER_INPUT[CONF_EMAIL]
             assert result["data"] == {
                 **TEST_USER_INPUT,
                 "access_token": "test_access_token",
@@ -183,7 +186,8 @@ async def test_user_flow_invalid_auth(
 
         # Mock the static authenticate method to raise an exception
         with patch(
-            "homeassistant.components.airpatrol.config_flow.AirPatrolAPI.authenticate"
+            "homeassistant.components.airpatrol.config_flow.AirPatrolAPI.authenticate",
+            new_callable=AsyncMock,
         ) as mock_auth:
             mock_auth.side_effect = AirPatrolAuthenticationError(
                 "Authentication failed"
@@ -214,7 +218,8 @@ async def test_user_flow_connection_error(
 
         # Mock the static authenticate method to raise an exception
         with patch(
-            "homeassistant.components.airpatrol.config_flow.AirPatrolAPI.authenticate"
+            "homeassistant.components.airpatrol.config_flow.AirPatrolAPI.authenticate",
+            new_callable=AsyncMock,
         ) as mock_auth:
             mock_auth.side_effect = Exception("Connection failed")
 
@@ -251,7 +256,8 @@ async def test_user_flow_already_configured(
 
         # Mock the static authenticate method
         with patch(
-            "homeassistant.components.airpatrol.config_flow.AirPatrolAPI.authenticate"
+            "homeassistant.components.airpatrol.config_flow.AirPatrolAPI.authenticate",
+            new_callable=AsyncMock,
         ) as mock_auth:
             mock_api = MagicMock()
             mock_api.get_unique_id.return_value = "test_unique_id"
@@ -278,7 +284,8 @@ async def test_user_flow_cannot_connect(
     ) as mock_session:
         mock_session.return_value = AsyncMock()
         with patch(
-            "homeassistant.components.airpatrol.config_flow.AirPatrolAPI.authenticate"
+            "homeassistant.components.airpatrol.config_flow.AirPatrolAPI.authenticate",
+            new_callable=AsyncMock,
         ) as mock_auth:
             mock_auth.side_effect = AirPatrolError("fail")
             result = await hass.config_entries.flow.async_configure(
@@ -301,7 +308,8 @@ async def test_user_flow_invalid_auth_error(
     ) as mock_session:
         mock_session.return_value = AsyncMock()
         with patch(
-            "homeassistant.components.airpatrol.config_flow.AirPatrolAPI.authenticate"
+            "homeassistant.components.airpatrol.config_flow.AirPatrolAPI.authenticate",
+            new_callable=AsyncMock,
         ) as mock_auth:
             mock_auth.side_effect = AirPatrolAuthenticationError("fail")
             result = await hass.config_entries.flow.async_configure(

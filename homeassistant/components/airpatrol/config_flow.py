@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
 from typing import Any
 
 from airpatrol.api import AirPatrolAPI, AirPatrolAuthenticationError, AirPatrolError
@@ -12,18 +11,29 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import TextSelector
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_EMAIL): TextSelector(),
-        vol.Required(CONF_PASSWORD): TextSelector(),
+        vol.Required(CONF_EMAIL): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.EMAIL,
+                autocomplete="username",
+            )
+        ),
+        vol.Required(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            )
+        ),
     }
 )
 
@@ -46,11 +56,7 @@ async def validate_api(
         errors["base"] = "invalid_auth"
     except AirPatrolError:
         errors["base"] = "cannot_connect"
-    except AbortFlow:
-        # Re-raise AbortFlow exceptions (like already_configured)
-        raise
-    except Exception:
-        _LOGGER.exception("Unexpected exception")
+    except Exception:  # noqa: BLE001
         errors["base"] = "unknown"
     return (access_token, unique_id, errors)
 
@@ -72,7 +78,9 @@ class AirPatrolConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input["access_token"] = access_token
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=DOMAIN, data=user_input)
+                return self.async_create_entry(
+                    title=user_input[CONF_EMAIL], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -94,12 +102,12 @@ class AirPatrolConfigFlow(ConfigFlow, domain=DOMAIN):
             # If the user confirmed, proceed with reauthentication
             access_token, unique_id, errors = await validate_api(self.hass, user_input)
             if access_token and unique_id:
-                reauth_entry = self._get_reauth_entry()
-                if unique_id == reauth_entry.unique_id:
-                    user_input["access_token"] = access_token
-                    return self.async_update_reload_and_abort(
-                        reauth_entry, data_updates=user_input
-                    )
+                await self.async_set_unique_id(unique_id)
+                self._abort_if_unique_id_mismatch()
+                user_input["access_token"] = access_token
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data_updates=user_input
+                )
         return self.async_show_form(
             step_id="reauth_confirm", data_schema=DATA_SCHEMA, errors=errors
         )

@@ -25,6 +25,7 @@ def make_config_entry(data=None):
         entry_id="test_entry_id",
         data=data,
         unique_id="uniqueid",
+        title=data["email"],
     )
 
 
@@ -52,6 +53,7 @@ async def test_update_data_with_stored_token(
         return_value=mock_api,
     ):
         coordinator = AirPatrolDataUpdateCoordinator(hass, entry)
+        await coordinator._async_setup()
         result = await coordinator._async_update_data()
         assert result == [{"id": 1}]
         mock_api.get_data.assert_awaited()
@@ -67,11 +69,13 @@ async def test_update_data_refresh_token_success(
     with (
         patch(
             "homeassistant.components.airpatrol.coordinator.AirPatrolAPI.authenticate",
+            new_callable=AsyncMock,
             return_value=mock_api,
         ),
         patch.object(hass.config_entries, "async_update_entry") as mock_update_entry,
     ):
         coordinator = AirPatrolDataUpdateCoordinator(hass, entry)
+        await coordinator._async_setup()
         result = await coordinator._async_update_data()
         assert result == [{"id": 1}]
         mock_api.get_data.assert_awaited()
@@ -83,17 +87,23 @@ async def test_update_data_auth_failure(hass: HomeAssistant) -> None:
     """Test permanent authentication failure."""
     entry = make_config_entry()
     entry.add_to_hass(hass)
+    api = AsyncMock(spec=AirPatrolAPI)
+    api.get_access_token.return_value = "token"
+    api.get_unique_id.return_value = "uniqueid"
     with (
         patch(
             "homeassistant.components.airpatrol.coordinator.AirPatrolAPI",
-            side_effect=AirPatrolAuthenticationError,
+            return_value=api,
         ),
         patch(
             "homeassistant.components.airpatrol.coordinator.AirPatrolAPI.authenticate",
-            side_effect=AirPatrolAuthenticationError,
+            new_callable=AsyncMock,
+            return_value=api,
         ),
     ):
         coordinator = AirPatrolDataUpdateCoordinator(hass, entry)
+        await coordinator._async_setup()
+        api.get_data.side_effect = AirPatrolAuthenticationError("fail")
         with pytest.raises(ConfigEntryAuthFailed):
             await coordinator._async_update_data()
 
@@ -106,12 +116,13 @@ async def test_update_data_api_error(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
     api = AsyncMock(spec=AirPatrolAPI)
-    api.get_data.side_effect = AirPatrolError("fail")
     with patch(
         "homeassistant.components.airpatrol.coordinator.AirPatrolAPI",
         return_value=api,
     ):
         coordinator = AirPatrolDataUpdateCoordinator(hass, entry)
+        await coordinator._async_setup()
+        api.get_data.side_effect = AirPatrolError("fail")
         with pytest.raises(
             UpdateFailed, match="Error communicating with AirPatrol API: fail"
         ):
@@ -126,7 +137,4 @@ def test_coordinator_update_interval(hass: HomeAssistant) -> None:
     assert coordinator.update_interval == SCAN_INTERVAL
     assert coordinator.config_entry == entry
     # Accept both 'AirPatrol' and 'Airpatrol' for compatibility with coordinator capitalization
-    assert coordinator.name in [
-        f"AirPatrol {entry.data['email']}",
-        f"Airpatrol {entry.data['email']}",
-    ]
+    assert coordinator.name == f"{DOMAIN.capitalize()} {entry.data['email']}"
