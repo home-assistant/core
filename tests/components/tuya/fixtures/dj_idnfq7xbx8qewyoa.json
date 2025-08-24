@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "bf599f5cffe1a5985depyk",
   "name": "AB1",
   "category": "dj",
   "product_id": "idnfq7xbx8qewyoa",
