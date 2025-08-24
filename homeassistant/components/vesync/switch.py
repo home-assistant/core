@@ -125,7 +125,8 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
         """Turn the entity off."""
         if not await self.entity_description.off_fn(self.device):
             raise HomeAssistantError(
-                "An error occurred while turning off:" + self.device.last_response
+                "An error occurred while turning off:"
+                + self.device.last_response.message
             )
 
         self.schedule_update_ha_state()
@@ -134,7 +135,8 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
         """Turn the entity on."""
         if not await self.entity_description.on_fn(self.device):
             raise HomeAssistantError(
-                "An error occurred while turning on:" + self.device.last_response
+                "An error occurred while turning on:"
+                + self.device.last_response.message
             )
 
         self.schedule_update_ha_state()
