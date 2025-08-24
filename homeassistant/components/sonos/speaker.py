@@ -156,7 +156,6 @@ class SonosSpeaker:
         self.bass: int | None = None
         self.treble: int | None = None
         self.loudness: bool | None = None
-        self.group_volume: int | None = None
 
         # Home theater
         self.audio_delay: int | None = None
@@ -568,7 +567,6 @@ class SonosSpeaker:
             self.volume = int(volume["Master"])
             if "LF" in volume and "RF" in volume:
                 self.balance = (int(volume["LF"]), int(volume["RF"]))
-            self.group_volume = self.soco.group.volume
 
         if "mute" in variables:
             self.muted = variables["mute"]["Master"] == "1"
