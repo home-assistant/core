@@ -24,10 +24,7 @@ class ToGrillEntity(CoordinatorEntity[ToGrillCoordinator]):
     ) -> None:
         """Initialize coordinator entity."""
         super().__init__(coordinator)
-        if probe_number is None:
-            self._attr_device_info = coordinator.device_info
-        else:
-            self._attr_device_info = coordinator.get_probe_device(probe_number)
+        self._attr_device_info = coordinator.get_device_info(probe_number)
 
     def _get_client(self) -> Client:
         client = self.coordinator.client

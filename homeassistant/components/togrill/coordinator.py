@@ -76,9 +76,6 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
         )
         self.address: str = config_entry.data[CONF_ADDRESS]
         self.data = {}
-        self.device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{self.address}")},
-        )
         self._packet_listeners: list[Callable[[Packet], None]] = []
 
         device_registry = dr.async_get(self.hass)
@@ -99,8 +96,14 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
             )
         )
 
-    def get_probe_device(self, probe_number: int) -> DeviceInfo:
-        """Return device info for a probe."""
+    def get_device_info(self, probe_number: int | None) -> DeviceInfo:
+        """Return device info."""
+
+        if probe_number is None:
+            return DeviceInfo(
+                identifiers={(DOMAIN, f"{self.address}")},
+            )
+
         return DeviceInfo(
             translation_key="probe",
             translation_placeholders={
