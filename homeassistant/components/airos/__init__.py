@@ -27,7 +27,7 @@ _PLATFORMS: list[Platform] = [
 async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> bool:
     """Set up Ubiquiti airOS from a config entry."""
 
-    # Added CONF_SSL and CONF_VERIFY_SSL to version 1
+    # Added CONF_SSL and CONF_VERIFY_SSL if missing
     if CONF_SSL not in entry.data or CONF_VERIFY_SSL not in entry.data:
         new_data = {**entry.data}
         new_data.setdefault(CONF_SSL, DEFAULT_SSL)
