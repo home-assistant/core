@@ -1,17 +1,9 @@
 """Test the Hue BLE config flow."""
 
-from contextlib import nullcontext as does_not_raise
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
 
-from homeassistant.components.hue_ble.config_flow import (
-    CannotConnect,
-    InvalidAuth,
-    NotFound,
-    ScannerNotAvailable,
-    validate_input,
-)
 from homeassistant.components.hue_ble.const import DOMAIN, URL_PAIRING_MODE
 from homeassistant.config_entries import SOURCE_BLUETOOTH
 from homeassistant.const import CONF_MAC, CONF_NAME
@@ -21,18 +13,17 @@ from homeassistant.helpers import device_registry as dr
 
 from . import HUE_BLE_SERVICE_INFO, TEST_DEVICE_MAC, TEST_DEVICE_NAME
 
-from tests.components.bluetooth import generate_ble_device
+from tests.components.bluetooth import BLEDevice, generate_ble_device
 
 
 @pytest.mark.parametrize(
     (
-        "return_device_result",
-        "scanner_count_result",
-        "connect_result",
-        "authenticated_result",
-        "connected_result",
-        "poll_state_result",
-        "expected_result",
+        "mock_return_device",
+        "mock_scanner_count",
+        "mock_connect",
+        "mock_authenticated",
+        "mock_connected",
+        "mock_poll_state",
     ),
     [
         (
@@ -42,34 +33,6 @@ from tests.components.bluetooth import generate_ble_device
             True,
             True,
             (True, []),
-            does_not_raise(),
-        ),
-        (
-            None,
-            0,
-            True,
-            True,
-            True,
-            (True, []),
-            pytest.raises(ScannerNotAvailable),
-        ),
-        (
-            None,
-            1,
-            True,
-            True,
-            True,
-            (True, []),
-            pytest.raises(NotFound),
-        ),
-        (
-            generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
-            1,
-            True,
-            False,
-            True,
-            (True, []),
-            pytest.raises(InvalidAuth),
         ),
         (
             generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
@@ -78,76 +41,23 @@ from tests.components.bluetooth import generate_ble_device
             None,
             True,
             (True, []),
-            does_not_raise(),
-        ),
-        (
-            generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
-            1,
-            True,
-            True,
-            False,
-            (True, []),
-            pytest.raises(CannotConnect),
-        ),
-        (
-            generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
-            1,
-            True,
-            True,
-            True,
-            (True, ["Error :P"]),
-            pytest.raises(CannotConnect),
         ),
     ],
     ids=[
-        "good_data",
-        "no_scanners",
-        "not_found",
-        "invalid_auth",
-        "unknown_auth_status",
-        "cannot_connect",
-        "failed_poll",
+        "normal",
+        "unknown_auth",
     ],
 )
-async def test_validation(
+async def test_bluetooth_form(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    return_device_result,
-    scanner_count_result,
-    connect_result,
-    authenticated_result,
-    connected_result,
-    poll_state_result,
-    expected_result,
+    mock_return_device: BLEDevice | None,
+    mock_scanner_count: int,
+    mock_connect: Exception | bool,
+    mock_authenticated: bool | None,
+    mock_connected: bool,
+    mock_poll_state: Exception | tuple[bool, list[Exception]],
 ) -> None:
-    """Test input validation."""
-    with (
-        patch(
-            "homeassistant.components.hue_ble.config_flow.async_ble_device_from_address",
-            return_value=return_device_result,
-        ),
-        patch(
-            "homeassistant.components.hue_ble.config_flow.async_scanner_count",
-            return_value=scanner_count_result,
-        ),
-        patch(
-            "homeassistant.components.hue_ble.config_flow.HueBleLight",
-            autospec=True,
-            authenticated=authenticated_result,
-            connected=connected_result,
-        ) as mock_obj,
-    ):
-        client = mock_obj.return_value
-        client.connect.return_value = connect_result
-        client.authenticated = authenticated_result
-        client.connected = connected_result
-        client.poll_state.return_value = poll_state_result
-
-        with expected_result:
-            await validate_input(hass, TEST_DEVICE_MAC)
-
-
-async def test_bluetooth_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test bluetooth discovery form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -163,9 +73,33 @@ async def test_bluetooth_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
         "url_pairing_mode": URL_PAIRING_MODE,
     }
 
-    with patch(
-        "homeassistant.components.hue_ble.config_flow.validate_input",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.hue_ble.config_flow.async_ble_device_from_address",
+            return_value=mock_return_device,
+        ),
+        patch(
+            "homeassistant.components.hue_ble.config_flow.async_scanner_count",
+            return_value=mock_scanner_count,
+        ),
+        patch(
+            "homeassistant.components.hue_ble.config_flow.HueBleLight.connect",
+            side_effect=[mock_connect],
+        ),
+        patch(
+            "homeassistant.components.hue_ble.config_flow.HueBleLight.poll_state",
+            side_effect=[mock_poll_state],
+        ),
+        patch(
+            "homeassistant.components.hue_ble.config_flow.HueBleLight.connected",
+            new_callable=PropertyMock,
+            return_value=mock_connected,
+        ),
+        patch(
+            "homeassistant.components.hue_ble.config_flow.HueBleLight.authenticated",
+            new_callable=PropertyMock,
+            return_value=mock_authenticated,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -182,60 +116,118 @@ async def test_bluetooth_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "error_message"),
+    (
+        "mock_return_device",
+        "mock_scanner_count",
+        "mock_connect",
+        "mock_authenticated",
+        "mock_connected",
+        "mock_poll_state",
+        "error_message",
+    ),
     [
-        (CannotConnect, "cannot_connect"),
-        (InvalidAuth, "invalid_auth"),
-        (ScannerNotAvailable, "no_scanners"),
-        (NotFound, "not_found"),
-        (Exception, "unknown"),
+        (None, 0, True, True, True, (True, []), "no_scanners"),
+        (None, 1, True, True, True, (True, []), "not_found"),
+        (
+            generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
+            1,
+            True,
+            False,
+            True,
+            (True, []),
+            "invalid_auth",
+        ),
+        (
+            generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
+            1,
+            True,
+            True,
+            False,
+            (True, []),
+            "cannot_connect",
+        ),
+        (
+            generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
+            1,
+            True,
+            True,
+            True,
+            (True, ["ERROR!"]),
+            "cannot_connect",
+        ),
+        (
+            generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
+            1,
+            Exception,
+            None,
+            True,
+            (True, []),
+            "unknown",
+        ),
     ],
     ids=[
+        "no_scanners",
+        "not_found",
+        "invalid_auth",
         "cannot_connect",
-        "device_not_authenticated",
-        "scanner_not_avaliable",
-        "device_not_found",
+        "cannot_poll",
         "unknown",
     ],
 )
 async def test_bluetooth_form_exception(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, side_effect, error_message
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_return_device: BLEDevice | None,
+    mock_scanner_count: int,
+    mock_connect: Exception | bool,
+    mock_authenticated: bool | None,
+    mock_connected: bool,
+    mock_poll_state: Exception | tuple[bool, list[Exception]],
+    error_message: str,
 ) -> None:
     """Test bluetooth discovery form with errors."""
 
-    result = await hass.config_entries.flow.async_init(
+    form_init = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
         data=HUE_BLE_SERVICE_INFO,
     )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "confirm"
+    assert form_init["type"] is FlowResultType.FORM
+    assert form_init["step_id"] == "confirm"
 
-    with patch(
-        "homeassistant.components.hue_ble.config_flow.validate_input",
-        side_effect=side_effect,
+    with (
+        patch(
+            "homeassistant.components.hue_ble.config_flow.async_ble_device_from_address",
+            return_value=mock_return_device,
+        ),
+        patch(
+            "homeassistant.components.hue_ble.config_flow.async_scanner_count",
+            return_value=mock_scanner_count,
+        ),
+        patch(
+            "homeassistant.components.hue_ble.config_flow.HueBleLight.connect",
+            side_effect=[mock_connect],
+        ),
+        patch(
+            "homeassistant.components.hue_ble.config_flow.HueBleLight.poll_state",
+            side_effect=[mock_poll_state],
+        ),
+        patch(
+            "homeassistant.components.hue_ble.config_flow.HueBleLight.connected",
+            new_callable=PropertyMock,
+            return_value=mock_connected,
+        ),
+        patch(
+            "homeassistant.components.hue_ble.config_flow.HueBleLight.authenticated",
+            new_callable=PropertyMock,
+            return_value=mock_authenticated,
+        ),
     ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
+        form_confirm = await hass.config_entries.flow.async_configure(
+            form_init["flow_id"],
             {},
         )
         await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": error_message}
-
-    with patch(
-        "homeassistant.components.hue_ble.config_flow.validate_input",
-        return_value=True,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {},
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_DEVICE_NAME
-    assert result["result"].unique_id == dr.format_mac(TEST_DEVICE_MAC)
-
-    assert len(mock_setup_entry.mock_calls) == 1
+        assert form_confirm["type"] is FlowResultType.FORM
+        assert form_confirm["errors"] == {"base": error_message}
