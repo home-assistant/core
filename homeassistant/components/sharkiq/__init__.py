@@ -114,15 +114,24 @@ async def do_auth0_login(session: aiohttp.ClientSession, username: str, password
 # ------------------------------
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Initialize the SharkIQ platform via config entry."""
-    if CONF_REGION not in config_entry.data:
-        hass.config_entries.async_update_entry(
-            config_entry,
-            data={**config_entry.data, CONF_REGION: SHARKIQ_REGION_DEFAULT},
-        )
 
     session = async_create_clientsession(hass)
 
-    # Run Auth0 login to verify credentials and fetch tokens
+    # ---- Region handling with legacy support ----
+    region = config_entry.data.get(CONF_REGION, SHARKIQ_REGION_DEFAULT)
+
+    # Legacy compatibility: anything not "europe" or "elsewhere" gets reset to "elsewhere"
+    if region not in (SHARKIQ_REGION_EUROPE, SHARKIQ_REGION_ELSEWHERE):
+        LOGGER.warning("Unknown region '%s' in config entry, defaulting to 'elsewhere'", region)
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data={**config_entry.data, CONF_REGION: SHARKIQ_REGION_ELSEWHERE},
+        )
+        region = SHARKIQ_REGION_ELSEWHERE
+
+    europe = (region == SHARKIQ_REGION_EUROPE)
+
+    # ---- Auth0 login ----
     try:
         tokens = await do_auth0_login(session, config_entry.data[CONF_USERNAME], config_entry.data[CONF_PASSWORD])
         LOGGER.debug("Got tokens during setup: %s", list(tokens.keys()))
@@ -130,28 +139,27 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         LOGGER.error("Auth0 login failed: %s", exc)
         raise exceptions.ConfigEntryNotReady from exc
 
-    # Initialize Ayla API client (still required for device comms)
+    # ---- Initialize Ayla API client ----
     ayla_api = get_ayla_api(
         username=config_entry.data[CONF_USERNAME],
         password=config_entry.data[CONF_PASSWORD],
         websession=session,
-        europe=(config_entry.data[CONF_REGION] == SHARKIQ_REGION_EUROPE),
+        europe=europe,
     )
 
     try:
         async with asyncio.timeout(API_TIMEOUT):
-            # We’ve already done Auth0 login, so just set cookie
             await ayla_api.async_set_cookie()
     except TimeoutError as exc:
         LOGGER.error("Timeout expired setting cookie")
         raise CannotConnect from exc
 
-    # Discover devices
+    # ---- Discover devices ----
     shark_vacs = await ayla_api.async_get_devices(False)
     device_names = ", ".join(d.name for d in shark_vacs)
     LOGGER.debug("Found %d Shark IQ device(s): %s", len(shark_vacs), device_names)
 
-    # Coordinator setup
+    # ---- Coordinator setup ----
     coordinator = SharkIqUpdateCoordinator(hass, config_entry, ayla_api, shark_vacs)
     await coordinator.async_config_entry_first_refresh()
 
@@ -160,6 +168,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
+
 
 
 async def async_disconnect_or_timeout(coordinator: SharkIqUpdateCoordinator):
