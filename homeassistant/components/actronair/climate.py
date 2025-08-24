@@ -181,10 +181,6 @@ class ActronSystemClimate(BaseClimateEntity):
         temp = kwargs.get("temperature")
         await self._status.user_aircon_settings.set_temperature(temperature=temp)
 
-    async def async_turn_on_continuous(self, continuous: bool) -> None:
-        """Set the continuous mode."""
-        await self._status.user_aircon_settings.set_continuous_mode(enabled=continuous)
-
 
 class ActronZoneClimate(BaseClimateEntity):
     """Representation of a zone within the Actron Air system."""
