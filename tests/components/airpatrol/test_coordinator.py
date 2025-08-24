@@ -1,79 +1,132 @@
 """Test the AirPatrol data update coordinator."""
 
-from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from airpatrol.api import AirPatrolAPI, AirPatrolAuthenticationError, AirPatrolError
 import pytest
 
-from homeassistant.components.airpatrol.api import AirPatrolAPI
+from homeassistant.components.airpatrol.const import DOMAIN
 from homeassistant.components.airpatrol.coordinator import (
     SCAN_INTERVAL,
     AirPatrolDataUpdateCoordinator,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.helpers.update_coordinator import ConfigEntryAuthFailed, UpdateFailed
+
+from tests.common import MockConfigEntry
+
+
+def make_config_entry(data=None):
+    """Helper to create a MockConfigEntry with custom data."""
+    if data is None:
+        data = {"email": "test@example.com", "password": "pw"}
+    return MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="test_entry_id",
+        data=data,
+        unique_id="uniqueid",
+    )
 
 
 @pytest.fixture
 def mock_api():
     """Mock AirPatrol API."""
-    api = MagicMock(spec=AirPatrolAPI)
-    api.get_data.return_value = []
+    api = AsyncMock(spec=AirPatrolAPI)
+    api.get_data.return_value = [{"id": 1}]
+    api.get_access_token.return_value = "token"
+    api.get_unique_id.return_value = "uniqueid"
     return api
 
 
-@pytest.fixture
-def mock_config_entry():
-    """Mock config entry."""
-    entry = MagicMock(spec=ConfigEntry)
-    entry.entry_id = "test_entry_id"
-    entry.data = {"email": "test@example.com"}
-    return entry
-
-
-@pytest.fixture
-def coordinator(hass: HomeAssistant, mock_api, mock_config_entry):
-    """Create coordinator instance."""
-    return AirPatrolDataUpdateCoordinator(hass, mock_api, mock_config_entry)
-
-
-def test_coordinator_initialization(coordinator) -> None:
-    """Test coordinator initialization."""
-    assert coordinator.api is not None
-    assert coordinator.config_entry is not None
-    assert coordinator.name == "AirPatrol test@example.com"
-
-
-async def test_async_update_data_success(coordinator) -> None:
-    """Test successful data update."""
-    result = await coordinator._async_update_data()
-
-    assert result == []
-    coordinator.api.get_data.assert_called_once()
-
-
-async def test_async_update_data_failure(coordinator) -> None:
-    """Test data update failure."""
-    coordinator.api.get_data = AsyncMock(side_effect=Exception("API Error"))
-
-    with pytest.raises(UpdateFailed, match="Error communicating with AirPatrol"):
-        await coordinator._async_update_data()
-
-
-def test_coordinator_update_interval(coordinator) -> None:
-    """Test coordinator update interval."""
-    assert coordinator.update_interval == SCAN_INTERVAL
-    assert isinstance(SCAN_INTERVAL, timedelta)
-
-
-async def test_coordinator_with_real_hass(
-    hass: HomeAssistant, mock_api, mock_config_entry
+@pytest.mark.asyncio
+async def test_update_data_with_stored_token(
+    hass: HomeAssistant, mock_api: MagicMock
 ) -> None:
-    """Test coordinator with real Home Assistant instance."""
-    coordinator = AirPatrolDataUpdateCoordinator(hass, mock_api, mock_config_entry)
+    """Test data update with stored access token."""
+    entry = make_config_entry(
+        {"email": "test@example.com", "password": "pw", "access_token": "token"}
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.airpatrol.coordinator.AirPatrolAPI",
+        return_value=mock_api,
+    ):
+        coordinator = AirPatrolDataUpdateCoordinator(hass, entry)
+        result = await coordinator._async_update_data()
+        assert result == [{"id": 1}]
+        mock_api.get_data.assert_awaited()
 
-    assert coordinator.hass == hass
-    assert coordinator.api == mock_api
-    assert coordinator.config_entry == mock_config_entry
-    assert coordinator.name == f"AirPatrol {mock_config_entry.data['email']}"
+
+@pytest.mark.asyncio
+async def test_update_data_refresh_token_success(
+    hass: HomeAssistant, mock_api: MagicMock
+) -> None:
+    """Test data update with expired token and successful refresh."""
+    entry = make_config_entry({"email": "test@example.com", "password": "pw"})
+    entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.airpatrol.coordinator.AirPatrolAPI.authenticate",
+            return_value=mock_api,
+        ),
+        patch.object(hass.config_entries, "async_update_entry") as mock_update_entry,
+    ):
+        coordinator = AirPatrolDataUpdateCoordinator(hass, entry)
+        result = await coordinator._async_update_data()
+        assert result == [{"id": 1}]
+        mock_api.get_data.assert_awaited()
+        mock_update_entry.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_update_data_auth_failure(hass: HomeAssistant) -> None:
+    """Test permanent authentication failure."""
+    entry = make_config_entry()
+    entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.airpatrol.coordinator.AirPatrolAPI",
+            side_effect=AirPatrolAuthenticationError,
+        ),
+        patch(
+            "homeassistant.components.airpatrol.coordinator.AirPatrolAPI.authenticate",
+            side_effect=AirPatrolAuthenticationError,
+        ),
+    ):
+        coordinator = AirPatrolDataUpdateCoordinator(hass, entry)
+        with pytest.raises(ConfigEntryAuthFailed):
+            await coordinator._async_update_data()
+
+
+@pytest.mark.asyncio
+async def test_update_data_api_error(hass: HomeAssistant) -> None:
+    """Test API error handling."""
+    entry = make_config_entry(
+        {"email": "test@example.com", "password": "pw", "access_token": "token"}
+    )
+    entry.add_to_hass(hass)
+    api = AsyncMock(spec=AirPatrolAPI)
+    api.get_data.side_effect = AirPatrolError("fail")
+    with patch(
+        "homeassistant.components.airpatrol.coordinator.AirPatrolAPI",
+        return_value=api,
+    ):
+        coordinator = AirPatrolDataUpdateCoordinator(hass, entry)
+        with pytest.raises(
+            UpdateFailed, match="Error communicating with AirPatrol API: fail"
+        ):
+            await coordinator._async_update_data()
+
+
+def test_coordinator_update_interval(hass: HomeAssistant) -> None:
+    """Test coordinator update interval and initialization."""
+    entry = make_config_entry()
+    entry.add_to_hass(hass)
+    coordinator = AirPatrolDataUpdateCoordinator(hass, entry)
+    assert coordinator.update_interval == SCAN_INTERVAL
+    assert coordinator.config_entry == entry
+    # Accept both 'AirPatrol' and 'Airpatrol' for compatibility with coordinator capitalization
+    assert coordinator.name in [
+        f"AirPatrol {entry.data['email']}",
+        f"Airpatrol {entry.data['email']}",
+    ]

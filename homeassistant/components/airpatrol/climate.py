@@ -6,9 +6,9 @@ import logging
 from typing import Any
 
 from homeassistant.components.climate import (
+    FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
-    FAN_MEDIUM,
     SWING_OFF,
     SWING_ON,
     ClimateEntity,
@@ -40,8 +40,8 @@ HVAC_MODES = {
 # Fan speeds supported by AirPatrol
 FAN_MODES = {
     "min": FAN_LOW,
-    "med": FAN_MEDIUM,
     "max": FAN_HIGH,
+    "auto": FAN_AUTO,
 }
 
 # Swing modes supported by AirPatrol
@@ -60,7 +60,8 @@ async def async_setup_entry(
     coordinator: AirPatrolDataUpdateCoordinator = config_entry.runtime_data
     # Create climate entities for each unit
     entities = []
-    units = await coordinator.api.get_data()
+    client = await coordinator.async_get_api_client()
+    units = await client.get_data()
     entities = [
         AirPatrolClimate(coordinator, unit, unit["unit_id"])
         for unit in units
@@ -218,7 +219,7 @@ class AirPatrolClimate(
     @property
     def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
-        return [FAN_LOW, FAN_MEDIUM, FAN_HIGH]
+        return [FAN_LOW, FAN_HIGH, FAN_AUTO]
 
     @property
     def swing_modes(self) -> list[str]:
@@ -237,8 +238,7 @@ class AirPatrolClimate(
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        climate_data = self._unit.get("climate", {})
-        params = climate_data.get("ParametersData", {}).copy()
+        params = self.params().copy()
 
         if ATTR_TEMPERATURE in kwargs:
             # Convert temperature to AirPatrol format (string with 3 decimal places)
@@ -246,20 +246,11 @@ class AirPatrolClimate(
             params["PumpTemp"] = f"{temp:.3f}"
 
         # Update the climate data
-        new_climate_data = climate_data.copy()
-        new_climate_data["ParametersData"] = params
-
-        response_data = await self.coordinator.api.set_unit_climate_data(
-            self._unit_id, new_climate_data
-        )
-        # Update local data with the response data
-        self._unit["climate"] = response_data
-        self.async_write_ha_state()
+        await self._async_set_params(params)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        climate_data = self._unit.get("climate", {})
-        params = climate_data.get("ParametersData", {}).copy()
+        params = self.params().copy()
 
         if hvac_mode == HVACMode.OFF:
             params["PumpPower"] = "off"
@@ -272,61 +263,33 @@ class AirPatrolClimate(
                 params["PumpMode"] = "cool"
 
         # Update the climate data
-        new_climate_data = climate_data.copy()
-        new_climate_data["ParametersData"] = params
-
-        response_data = await self.coordinator.api.set_unit_climate_data(
-            self._unit_id, new_climate_data
-        )
-        # Update local data with the response data
-        self._unit["climate"] = response_data
-        self.async_write_ha_state()
+        await self._async_set_params(params)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        climate_data = self._unit.get("climate", {})
-        params = climate_data.get("ParametersData", {}).copy()
+        params = self.params().copy()
 
         # Map fan mode to AirPatrol fan speed
         if fan_mode == FAN_LOW:
             params["FanSpeed"] = "min"
-        elif fan_mode == FAN_MEDIUM:
-            params["FanSpeed"] = "med"
         elif fan_mode == FAN_HIGH:
             params["FanSpeed"] = "max"
+        elif fan_mode == FAN_AUTO:
+            params["FanSpeed"] = "auto"
 
         # Update the climate data
-        new_climate_data = climate_data.copy()
-        new_climate_data["ParametersData"] = params
-
-        response_data = await self.coordinator.api.set_unit_climate_data(
-            self._unit_id, new_climate_data
-        )
-        # Update local data with the response data
-        self._unit["climate"] = response_data
-        self.async_write_ha_state()
+        await self._async_set_params(params)
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing mode."""
-        climate_data = self._unit.get("climate", {})
-        params = climate_data.get("ParametersData", {}).copy()
+        params = self.params().copy()
 
         # Map swing mode to AirPatrol swing setting
-        if swing_mode == SWING_ON:
-            params["Swing"] = "auto"
-        elif swing_mode == SWING_OFF:
-            params["Swing"] = "off"
+        if swing_mode in [SWING_ON, SWING_OFF]:
+            params["Swing"] = swing_mode
 
         # Update the climate data
-        new_climate_data = climate_data.copy()
-        new_climate_data["ParametersData"] = params
-
-        response_data = await self.coordinator.api.set_unit_climate_data(
-            self._unit_id, new_climate_data
-        )
-        # Update local data with the response data
-        self._unit["climate"] = response_data
-        self.async_write_ha_state()
+        await self._async_set_params(params)
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
@@ -335,3 +298,24 @@ class AirPatrolClimate(
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
         await self.async_set_hvac_mode(HVACMode.OFF)
+
+    async def _async_set_params(self, params: dict[str, Any]) -> None:
+        """Set the unit to dry mode."""
+        new_climate_data = self.climate_data().copy()
+        new_climate_data["ParametersData"] = params
+
+        client = await self.coordinator.async_get_api_client()
+        response_data = await client.set_unit_climate_data(
+            self._unit_id, new_climate_data
+        )
+        # Update local data with the response data
+        self._unit["climate"] = response_data
+        self.async_write_ha_state()
+
+    def params(self) -> dict[str, Any]:
+        """Return the current parameters for the climate entity."""
+        return self.climate_data().get("ParametersData", {})
+
+    def climate_data(self) -> dict[str, Any]:
+        """Return the current climate data for the entity."""
+        return self._unit.get("climate", {})

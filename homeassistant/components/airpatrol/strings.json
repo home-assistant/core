@@ -11,6 +11,17 @@
           "email": "Your AirPatrol email address",
           "password": "Your AirPatrol password"
         }
+      },
+      "reauth_confirm": {
+        "description": "Reauthenticate with AirPatrol",
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "Your AirPatrol email address",
+          "password": "Your AirPatrol password"
+        }
       }
     },
     "error": {

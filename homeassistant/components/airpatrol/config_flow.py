@@ -6,25 +6,53 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from airpatrol.api import AirPatrolAPI, AirPatrolAuthenticationError
+from airpatrol.api import AirPatrolAPI, AirPatrolAuthenticationError, AirPatrolError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import AbortFlow
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import TextSelector
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_EMAIL): str,
-        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_EMAIL): TextSelector(),
+        vol.Required(CONF_PASSWORD): TextSelector(),
     }
 )
+
+
+async def validate_api(
+    hass: HomeAssistant, user_input: dict[str, str]
+) -> tuple[str | None, str | None, dict[str, str]]:
+    """Validate the API connection."""
+    errors: dict[str, str] = {}
+    session = async_get_clientsession(hass)
+    access_token = None
+    unique_id = None
+    try:
+        api = await AirPatrolAPI.authenticate(
+            session, user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
+        )
+        access_token = api.get_access_token()
+        unique_id = api.get_unique_id()
+    except AirPatrolAuthenticationError:
+        errors["base"] = "invalid_auth"
+    except AirPatrolError:
+        errors["base"] = "cannot_connect"
+    except AbortFlow:
+        # Re-raise AbortFlow exceptions (like already_configured)
+        raise
+    except Exception:
+        _LOGGER.exception("Unexpected exception")
+        errors["base"] = "unknown"
+    return (access_token, unique_id, errors)
 
 
 class AirPatrolConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -38,84 +66,40 @@ class AirPatrolConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            try:
-                # Test the connection before creating the entry
-                session = async_get_clientsession(self.hass)
-
-                api = await AirPatrolAPI.authenticate(
-                    session, user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
-                )
+            access_token, unique_id, errors = await validate_api(self.hass, user_input)
+            if access_token and unique_id:
                 # Store the access token in the config entry
-                user_input["access_token"] = api.get_access_token()
-                await self.async_set_unique_id(api.get_unique_id())
+                user_input["access_token"] = access_token
+                await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
-
-            except AirPatrolAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except AbortFlow:
-                # Re-raise AbortFlow exceptions (like already_configured)
-                raise
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
                 return self.async_create_entry(title=DOMAIN, data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
     async def async_step_reauth(
         self, user_input: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauthentication with new credentials."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauthentication confirmation."""
         errors: dict[str, str] = {}
-        entry = self.context.get("entry")
-        if user_input is not None:
-            try:
-                session = async_get_clientsession(self.hass)
-                api = await AirPatrolAPI.authenticate(
-                    session, user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
-                )
 
-                if isinstance(entry, ConfigEntry):
-                    self.hass.config_entries.async_update_entry(
-                        entry,
-                        data={
-                            **entry.data,
-                            CONF_EMAIL: user_input[CONF_EMAIL],
-                            CONF_PASSWORD: user_input[CONF_PASSWORD],
-                            "access_token": api.get_access_token(),
-                        },
+        if user_input:
+            # If the user confirmed, proceed with reauthentication
+            access_token, unique_id, errors = await validate_api(self.hass, user_input)
+            if access_token and unique_id:
+                reauth_entry = self._get_reauth_entry()
+                if unique_id == reauth_entry.unique_id:
+                    user_input["access_token"] = access_token
+                    return self.async_update_reload_and_abort(
+                        reauth_entry, data_updates=user_input
                     )
-                    await self.hass.config_entries.async_reload(entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
-            except AirPatrolAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception during reauth")
-                errors["base"] = "unknown"
-
-        # Show the form (pre-fill with existing email if available)
-        email = ""
-
-        if isinstance(entry, ConfigEntry):
-            email = entry.data.get(CONF_EMAIL, "")
         return self.async_show_form(
-            step_id="reauth",
-            data_schema=STEP_USER_DATA_SCHEMA,
-            errors=errors,
-            description_placeholders={"email": email},
+            step_id="reauth_confirm", data_schema=DATA_SCHEMA, errors=errors
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""

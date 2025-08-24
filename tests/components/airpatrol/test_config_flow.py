@@ -2,11 +2,10 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from airpatrol.api import AirPatrolAuthenticationError, AirPatrolError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.airpatrol.api import AirPatrolAuthenticationError
-from homeassistant.components.airpatrol.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.airpatrol.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -55,6 +54,78 @@ def mock_config_entry():
         },
         unique_id="test_user_id",
     )
+
+
+@pytest.mark.asyncio
+async def test_async_step_reauth_confirm_success(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test successful reauthentication via async_step_reauth_confirm."""
+    mock_config_entry.add_to_hass(hass)
+    flow = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "reauth", "entry_id": mock_config_entry.entry_id}
+    )
+    # Should show the reauth_confirm form
+    assert flow["type"] == "form"
+    assert flow["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.airpatrol.config_flow.async_get_clientsession"
+    ) as mock_session:
+        mock_session.return_value = AsyncMock()
+        with patch(
+            "homeassistant.components.airpatrol.config_flow.AirPatrolAPI.authenticate"
+        ) as mock_auth:
+            mock_api = MagicMock()
+            mock_api.get_access_token.return_value = "new_access_token"
+            mock_api.get_unique_id.return_value = mock_config_entry.unique_id
+            mock_auth.return_value = mock_api
+
+            user_input = {
+                CONF_EMAIL: "test@example.com",
+                CONF_PASSWORD: "new_password",
+            }
+            result = await hass.config_entries.flow.async_configure(
+                flow["flow_id"], user_input=user_input
+            )
+            assert result["type"] == "abort"
+            assert result["reason"] == "reauth_successful"
+            # The config entry should be updated with the new password and access token
+            entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+            assert entry.data[CONF_PASSWORD] == "new_password"
+            assert entry.data["access_token"] == "new_access_token"
+
+
+@pytest.mark.asyncio
+async def test_async_step_reauth_confirm_invalid_auth(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reauthentication failure due to invalid credentials."""
+    mock_config_entry.add_to_hass(hass)
+    flow = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "reauth", "entry_id": mock_config_entry.entry_id}
+    )
+    assert flow["type"] == "form"
+    assert flow["step_id"] == "reauth_confirm"
+
+    with patch(
+        "homeassistant.components.airpatrol.config_flow.async_get_clientsession"
+    ) as mock_session:
+        mock_session.return_value = AsyncMock()
+        with patch(
+            "homeassistant.components.airpatrol.config_flow.AirPatrolAPI.authenticate"
+        ) as mock_auth:
+            mock_auth.side_effect = AirPatrolAuthenticationError("fail")
+            user_input = {
+                CONF_EMAIL: "test@example.com",
+                CONF_PASSWORD: "bad_password",
+            }
+            result = await hass.config_entries.flow.async_configure(
+                flow["flow_id"], user_input=user_input
+            )
+            assert result["type"] == "form"
+            assert result["step_id"] == "reauth_confirm"
+            assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_user_flow_success(
@@ -198,7 +269,7 @@ async def test_user_flow_already_configured(
 async def test_user_flow_cannot_connect(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test user flow with CannotConnect error."""
+    """Test user flow with AirPatrolError error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
     )
@@ -209,7 +280,7 @@ async def test_user_flow_cannot_connect(
         with patch(
             "homeassistant.components.airpatrol.config_flow.AirPatrolAPI.authenticate"
         ) as mock_auth:
-            mock_auth.side_effect = CannotConnect("fail")
+            mock_auth.side_effect = AirPatrolError("fail")
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"], user_input=TEST_USER_INPUT
             )
@@ -221,7 +292,7 @@ async def test_user_flow_cannot_connect(
 async def test_user_flow_invalid_auth_error(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test user flow with InvalidAuth error."""
+    """Test user flow with AirPatrolAuthenticationError error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
     )
@@ -232,7 +303,7 @@ async def test_user_flow_invalid_auth_error(
         with patch(
             "homeassistant.components.airpatrol.config_flow.AirPatrolAPI.authenticate"
         ) as mock_auth:
-            mock_auth.side_effect = InvalidAuth("fail")
+            mock_auth.side_effect = AirPatrolAuthenticationError("fail")
             result = await hass.config_entries.flow.async_configure(
                 result["flow_id"], user_input=TEST_USER_INPUT
             )
