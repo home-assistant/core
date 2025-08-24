@@ -427,6 +427,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await notify_service.leave_chat(context=service.context, **kwargs)
         elif msgtype == SERVICE_SET_MESSAGE_REACTION:
             await notify_service.set_message_reaction(context=service.context, **kwargs)
+        elif msgtype == SERVICE_EDIT_MESSAGE_MEDIA:
+            await notify_service.edit_message_media(context=service.context, **kwargs)
         else:
             await notify_service.edit_message(
                 msgtype, context=service.context, **kwargs

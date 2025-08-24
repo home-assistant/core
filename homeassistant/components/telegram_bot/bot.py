@@ -15,6 +15,7 @@ from telegram import (
     CallbackQuery,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    InputMediaPhoto,
     InputPollOption,
     Message,
     ReplyKeyboardMarkup,
@@ -526,6 +527,52 @@ class TelegramNotificationService:
             # change last msg_id for deque(n_msgs)?
             self._last_message_id[chat_id] -= 1
         return deleted
+
+    async def edit_message_media(
+        self,
+        media_type: str,
+        chat_id: int | None = None,
+        context: Context | None = None,
+        **kwargs: Any,
+    ) -> Any:
+        "Edit message media of a previously sent message."
+        chat_id = self.get_target_chat_ids(chat_id)[0]
+        message_id, inline_message_id = self._get_msg_ids(kwargs, chat_id)
+        params = self._get_msg_kwargs(kwargs)
+        _LOGGER.debug(
+            "Edit message media %s in chat ID %s with params: %s",
+            message_id or inline_message_id,
+            chat_id,
+            params,
+        )
+
+        file_content = await load_data(
+            self.hass,
+            url=kwargs.get(ATTR_URL),
+            filepath=kwargs.get(ATTR_FILE),
+            username=kwargs.get(ATTR_USERNAME, ""),
+            password=kwargs.get(ATTR_PASSWORD, ""),
+            authentication=kwargs.get(ATTR_AUTHENTICATION),
+            verify_ssl=(
+                get_default_context()
+                if kwargs.get(ATTR_VERIFY_SSL, False)
+                else get_default_no_verify_context()
+            ),
+        )
+        media = InputMediaPhoto(file_content)
+
+        return await self._send_msg(
+            self.bot.edit_message_media,
+            "Error editing message media",
+            params[ATTR_MESSAGE_TAG],
+            media=media,
+            chat_id=chat_id,
+            message_id=message_id,
+            inline_message_id=inline_message_id,
+            reply_markup=params[ATTR_REPLYMARKUP],
+            read_timeout=params[ATTR_TIMEOUT],
+            context=context,
+        )
 
     async def edit_message(
         self,
