@@ -12,7 +12,7 @@ from typing import Any, cast
 from aioasuswrt.asuswrt import AsusWrt as AsusWrtLegacy
 from aiohttp import ClientSession
 from asusrouter import AsusRouter, AsusRouterError
-from asusrouter.config import ARConfig, ARConfigKey
+from asusrouter.config import ARConfigKey
 from asusrouter.modules.client import AsusClient
 from asusrouter.modules.data import AsusData
 from asusrouter.modules.homeassistant import convert_to_ha_data, convert_to_ha_sensors
@@ -315,11 +315,14 @@ class AsusWrtHttpBridge(AsusWrtBridge):
     def __init__(self, conf: dict[str, Any], session: ClientSession) -> None:
         """Initialize Bridge that use HTTP library."""
         super().__init__(conf[CONF_HOST])
-        self._api = self._get_api(conf, session)
-        self._configure_api()
+        # Get API configuration
+        config = self._get_api_config()
+        self._api = self._get_api(conf, session, config)
 
     @staticmethod
-    def _get_api(conf: dict[str, Any], session: ClientSession) -> AsusRouter:
+    def _get_api(
+        conf: dict[str, Any], session: ClientSession, config: dict[ARConfigKey, Any]
+    ) -> AsusRouter:
         """Get the AsusRouter API."""
         return AsusRouter(
             hostname=conf[CONF_HOST],
@@ -328,21 +331,18 @@ class AsusWrtHttpBridge(AsusWrtBridge):
             use_ssl=conf[CONF_PROTOCOL] == PROTOCOL_HTTPS,
             port=conf.get(CONF_PORT),
             session=session,
+            config=config,
         )
 
-    def _configure_api(self) -> None:
-        """Configure the API.
-
-        This method configures AsusRouter library using the in-built global
-        runtime settings of the package `ARConfig` and its `ARConfigKey` properties.
-        """
-        # Enable automatic temperature data correction.
-        # Required for some new firmware versions reporting values
-        # several orders of magnitude lower (e.g. 0.069 °C for actual 69 °C).
-        ARConfig.set(ARConfigKey.OPTIMISTIC_TEMPERATURE, True)
-        # Disable `warning`-level log message when temperature is corrected
-        # by setting it to already notified.
-        ARConfig.set(ARConfigKey.NOTIFIED_OPTIMISTIC_TEMPERATURE, True)
+    def _get_api_config(self) -> dict[ARConfigKey, Any]:
+        """Get configuration for the API."""
+        return {
+            # Enable automatic temperature data correction in the library
+            ARConfigKey.OPTIMISTIC_TEMPERATURE: True,
+            # Disable `warning`-level log message when temperature
+            # is corrected by setting it to already notified.
+            ARConfigKey.NOTIFIED_OPTIMISTIC_TEMPERATURE: True,
+        }
 
     @property
     def is_connected(self) -> bool:
