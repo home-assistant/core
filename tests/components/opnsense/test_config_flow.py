@@ -35,7 +35,7 @@ async def test_import(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["result"].unique_id == CONFIG_DATA[CONF_API_KEY]
         assert result["title"] == TITLE
 
@@ -47,7 +47,7 @@ async def test_user(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     with (
@@ -68,7 +68,7 @@ async def test_user(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["result"].unique_id == CONFIG_DATA[CONF_API_KEY]
         assert result["title"] == TITLE
 
@@ -88,7 +88,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
         context={"source": SOURCE_USER},
         data=CONFIG_DATA,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     result = await hass.config_entries.flow.async_init(
@@ -96,7 +96,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant) -> None:
         context={"source": SOURCE_IMPORT},
         data=CONFIG_DATA,
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -112,7 +112,7 @@ async def test_on_api_error(hass: HomeAssistant) -> None:
             data=CONFIG_DATA,
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
 
 
@@ -133,7 +133,7 @@ async def test_on_invalid_interface(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": "invalid_interface"}
 
 
@@ -148,5 +148,5 @@ async def test_on_unknown_error(hass: HomeAssistant) -> None:
             context={"source": SOURCE_USER},
             data=CONFIG_DATA,
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": "unknown"}

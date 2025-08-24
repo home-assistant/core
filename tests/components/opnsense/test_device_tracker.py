@@ -16,7 +16,7 @@ async def test_get_scanner(
     hass: HomeAssistant, mock_device_tracker_conf: list[Device]
 ) -> None:
     """Test creating an opnsense scanner."""
-    opnsense.OPNsenseData.hass_config = {"foo": "bar"}
+    hass.data[opnsense.DATA_HASS_CONFIG] = {"foo": "bar"}
 
     with (
         patch("homeassistant.components.opnsense.diagnostics") as mock_diagnostics,
