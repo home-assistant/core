@@ -219,7 +219,12 @@ def get_next_friday():
 
     If today is Friday, return the next Friday.
 
-    :return: A datetime.date object representing the next Friday.
+    """Return the date of the next Friday after today.
+
+    This function always returns the Friday of the following week if today is Friday,
+    i.e., it never returns today's date. If today is any other day, it returns the upcoming Friday.
+
+    :return: A datetime.date object representing the next Friday (never today).
     """
     today = datetime.today().date()
     days_until_friday = (
