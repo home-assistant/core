@@ -67,8 +67,8 @@ def _calculate_time_to_service(field: VolvoCarsValue) -> int:
 
 def _charging_power_value(field: VolvoCarsValue) -> int:
     return (
-        int(field.value)
-        if isinstance(field, VolvoCarsValueStatusField) and field.status == "OK"
+        field.value
+        if isinstance(field, VolvoCarsValueStatusField) and isinstance(field.value, int)
         else 0
     )
 
@@ -107,6 +107,7 @@ _DESCRIPTIONS: tuple[VolvoSensorDescription, ...] = (
             "power_saving_mode",
         ],
         value_fn=_availability_status,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     # statistics endpoint
     VolvoSensorDescription(

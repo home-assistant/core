@@ -2,7 +2,7 @@
 
 from unittest.mock import Mock
 
-from bleak import BleakError
+from automower_ble.protocol import ResponseResult
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -46,7 +46,7 @@ async def test_setup_retry_connect(
 ) -> None:
     """Test setup creates expected devices."""
 
-    mock_automower_client.connect.return_value = False
+    mock_automower_client.connect.side_effect = TimeoutError
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -55,14 +55,13 @@ async def test_setup_retry_connect(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_failed_connect(
+async def test_setup_unknown_error(
     hass: HomeAssistant,
     mock_automower_client: Mock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test setup creates expected devices."""
-
-    mock_automower_client.connect.side_effect = BleakError
+    """Test setup fails when we receive an error from the device."""
+    mock_automower_client.connect.return_value = ResponseResult.UNKNOWN_ERROR
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
