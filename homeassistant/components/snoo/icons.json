@@ -1,0 +1,5 @@
+{
+  "services": {
+    "log_diaper_change": { "service": "mdi:diaper-outline" }
+  }
+}
