@@ -27,6 +27,7 @@ from .const import (
     PLATFORMS,
     SHARKIQ_REGION_DEFAULT,
     SHARKIQ_REGION_EUROPE,
+    SHARKIQ_REGION_ELSEWHERE,
 )
 from .coordinator import SharkIqUpdateCoordinator
 
