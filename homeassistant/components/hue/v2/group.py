@@ -334,16 +334,18 @@ class GroupedHueLight(HueBaseEntity, LightEntity):
             avg_temp = temp_total / lights_in_colortemp_mode
             self._attr_color_temp_kelvin = round(avg_temp)
         # pick a winner for the current color mode based on the majority of on lights
-        # if there is no winner (all off) pick the best mode from group capabilities
+        # if there is no winner pick the highest mode from group capabilities
         if lights_in_xy_mode > 0 and lights_in_xy_mode >= lights_in_colortemp_mode:
             self._attr_color_mode = ColorMode.XY
-        elif lights_in_colortemp_mode > 0 and (
-            lights_in_colortemp_mode > lights_in_xy_mode
-            or lights_with_color_temp_support > 0
+        elif (
+            lights_in_colortemp_mode > 0
+            and lights_in_colortemp_mode > lights_in_xy_mode
         ):
             self._attr_color_mode = ColorMode.COLOR_TEMP
         elif lights_with_color_support > 0:
             self._attr_color_mode = ColorMode.XY
+        elif lights_with_color_temp_support > 0:
+            self._attr_color_mode = ColorMode.COLOR_TEMP
         elif lights_with_dimming_support > 0:
             self._attr_color_mode = ColorMode.BRIGHTNESS
         else:
