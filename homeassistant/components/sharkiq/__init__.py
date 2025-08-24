@@ -122,7 +122,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     session = async_create_clientsession(hass)
 
-    # Run Auth0 login
+    # Run Auth0 login to verify credentials and fetch tokens
     try:
         tokens = await do_auth0_login(session, config_entry.data[CONF_USERNAME], config_entry.data[CONF_PASSWORD])
         LOGGER.debug("Got tokens during setup: %s", list(tokens.keys()))
@@ -130,7 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         LOGGER.error("Auth0 login failed: %s", exc)
         raise exceptions.ConfigEntryNotReady from exc
 
-    # Create Ayla API client (still needed for device communication)
+    # Initialize Ayla API client (still required for device comms)
     ayla_api = get_ayla_api(
         username=config_entry.data[CONF_USERNAME],
         password=config_entry.data[CONF_PASSWORD],
@@ -138,19 +138,20 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         europe=(config_entry.data[CONF_REGION] == SHARKIQ_REGION_EUROPE),
     )
 
-    # TODO: Ideally we’d inject tokens into ayla_api instead of calling sign_in
     try:
         async with asyncio.timeout(API_TIMEOUT):
+            # We’ve already done Auth0 login, so just set cookie
             await ayla_api.async_set_cookie()
-            # Skip ayla_api.async_sign_in() – we already did Auth0 login
     except TimeoutError as exc:
         LOGGER.error("Timeout expired setting cookie")
         raise CannotConnect from exc
 
+    # Discover devices
     shark_vacs = await ayla_api.async_get_devices(False)
     device_names = ", ".join(d.name for d in shark_vacs)
     LOGGER.debug("Found %d Shark IQ device(s): %s", len(shark_vacs), device_names)
 
+    # Coordinator setup
     coordinator = SharkIqUpdateCoordinator(hass, config_entry, ayla_api, shark_vacs)
     await coordinator.async_config_entry_first_refresh()
 
