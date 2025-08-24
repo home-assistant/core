@@ -98,11 +98,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "ampio": {"asmog": {"async-timeout"}},
     "apache_kafka": {"aiokafka": {"async-timeout"}},
     "apple_tv": {"pyatv": {"async-timeout"}},
-    "azure_devops": {
-        # https://github.com/timmo001/aioazuredevops/issues/67
-        # aioazuredevops > incremental > setuptools
-        "incremental": {"setuptools"}
-    },
     "blackbird": {
         # https://github.com/koolsb/pyblackbird/issues/12
         # pyblackbird > pyserial-asyncio
@@ -204,11 +199,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "async-upnp-client": {"async-timeout"},
     },
     "loqed": {"loqedapi": {"async-timeout"}},
-    "lyric": {
-        # https://github.com/timmo001/aiolyric/issues/115
-        # aiolyric > incremental > setuptools
-        "incremental": {"setuptools"}
-    },
     "matter": {"python-matter-server": {"async-timeout"}},
     "mediaroom": {"pymediaroom": {"async-timeout"}},
     "met": {"pymetno": {"async-timeout"}},
