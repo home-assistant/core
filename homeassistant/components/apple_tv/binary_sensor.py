@@ -10,7 +10,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AppleTvConfigEntry, AppleTVManager
+from . import AppleTvConfigEntry
 from .entity import AppleTVEntity
 
 
@@ -30,10 +30,7 @@ async def async_setup_entry(
 class AppleTVKeyboardFocused(AppleTVEntity, BinarySensorEntity, KeyboardListener):
     """Binary sensor for Text input focused."""
 
-    def __init__(self, name: str, identifier: str, manager: AppleTVManager) -> None:
-        """Initialize the Apple TV Keyboard Focused sensor."""
-        super().__init__(name, identifier, manager)
-        self._attr_name = "Keyboard focused"  # type: ignore[assignment]
+    _attr_translation_key = "keyboard_focused"
 
     @callback
     def async_device_connected(self, atv: AppleTV) -> None:
@@ -41,15 +38,13 @@ class AppleTVKeyboardFocused(AppleTVEntity, BinarySensorEntity, KeyboardListener
         # Listen to keyboard updates
         atv.keyboard.listener = self
         # Set initial state based on current focus state
-        self.async_update_state(
-            atv.keyboard.text_focus_state == KeyboardFocusState.Focused
-        )
+        self._update_state(atv.keyboard.text_focus_state == KeyboardFocusState.Focused)
 
     @callback
     def async_device_disconnected(self) -> None:
         """Handle when connection was lost to device."""
         self._attr_is_on = False
-        self.async_update_state(False)
+        self._update_state(False)
 
     def focusstate_update(
         self, old_state: KeyboardFocusState, new_state: KeyboardFocusState
@@ -58,10 +53,9 @@ class AppleTVKeyboardFocused(AppleTVEntity, BinarySensorEntity, KeyboardListener
 
         This is a callback function from pyatv.interface.KeyboardListener.
         """
-        self.async_update_state(new_state == KeyboardFocusState.Focused)
+        self._update_state(new_state == KeyboardFocusState.Focused)
 
-    def async_update_state(self, new_state: bool) -> None:
+    def _update_state(self, new_state: bool) -> None:
         """Update and report."""
         self._attr_is_on = new_state
-        self._attr_icon = "mdi:keyboard" if new_state else "mdi:keyboard-off"
         self.async_write_ha_state()

@@ -1,4 +1,14 @@
 {
+  "entity": {
+    "binary_sensor": {
+      "keyboard_focused": {
+        "default": "mdi:keyboard",
+        "state": {
+          "off": "mdi:keyboard-off"
+        }
+      }
+    }
+  },
   "services": {
     "set_search_text": {
       "service": "mdi:magnify"
