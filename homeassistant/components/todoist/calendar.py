@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import date, datetime, timedelta
 import logging
 from typing import Any
@@ -18,8 +19,16 @@ from homeassistant.components.calendar import (
     CalendarEntity,
     CalendarEvent,
 )
+from homeassistant.components.zone.const import ATTR_RADIUS
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ID, CONF_NAME, CONF_TOKEN, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
+    CONF_ID,
+    CONF_NAME,
+    CONF_TOKEN,
+    EVENT_HOMEASSISTANT_STOP,
+)
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -42,6 +51,7 @@ from .const import (
     CONF_PROJECT_LABEL_WHITELIST,
     CONF_PROJECT_WHITELIST,
     CONTENT,
+    CREATE_SECTION,
     DESCRIPTION,
     DOMAIN,
     DUE_DATE,
@@ -57,6 +67,15 @@ from .const import (
     REMINDER_DATE,
     REMINDER_DATE_LANG,
     REMINDER_DATE_STRING,
+    REMINDER_LATITUDE,
+    REMINDER_LOCATION_DIRECTION,
+    REMINDER_LOCATION_DIRECTION_ENTER,
+    REMINDER_LOCATION_NAME,
+    REMINDER_LOCATION_VALID_DIRECTIONS,
+    REMINDER_LONGITUDE,
+    REMINDER_RADIUS,
+    REMINDER_USERS,
+    REMINDER_ZONE,
     SECTION_NAME,
     SERVICE_NEW_TASK,
     START,
@@ -67,24 +86,87 @@ from .types import CalData, CustomProject, ProjectData, TodoistEvent
 
 _LOGGER = logging.getLogger(__name__)
 
-NEW_TASK_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONTENT): cv.string,
-        vol.Optional(DESCRIPTION): cv.string,
-        vol.Optional(PROJECT_NAME, default="inbox"): vol.All(cv.string, vol.Lower),
-        vol.Optional(SECTION_NAME): vol.All(cv.string, vol.Lower),
-        vol.Optional(LABELS): cv.ensure_list_csv,
-        vol.Optional(ASSIGNEE): cv.string,
-        vol.Optional(PRIORITY): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
-        vol.Exclusive(DUE_DATE_STRING, "due_date"): cv.string,
-        vol.Optional(DUE_DATE_LANG): vol.All(cv.string, vol.In(DUE_DATE_VALID_LANGS)),
-        vol.Exclusive(DUE_DATE, "due_date"): cv.string,
-        vol.Exclusive(REMINDER_DATE_STRING, "reminder_date"): cv.string,
-        vol.Optional(REMINDER_DATE_LANG): vol.All(
-            cv.string, vol.In(DUE_DATE_VALID_LANGS)
-        ),
-        vol.Exclusive(REMINDER_DATE, "reminder_date"): cv.string,
-    }
+
+def validate_reminder_location(data: dict) -> dict:
+    """Validate that reminder_zone and coordinate-based fields are mutually exclusive."""
+    has_zone = REMINDER_ZONE in data
+    has_coordinates = (
+        REMINDER_LOCATION_NAME in data
+        or REMINDER_LATITUDE in data
+        or REMINDER_LONGITUDE in data
+        or REMINDER_RADIUS in data
+    )
+
+    # Ensure mutual exclusivity between reminder_zone and coordinate-based fields
+    if has_zone and has_coordinates:
+        raise vol.Invalid(
+            f"You cannot specify both {REMINDER_ZONE} and coordinate-based fields "
+            f"({REMINDER_LOCATION_NAME}, {REMINDER_LATITUDE}, {REMINDER_LONGITUDE}, {REMINDER_RADIUS})"
+        )
+
+    # Ensure all coordinate-based fields are provided together
+    if has_coordinates:
+        if not all(
+            key in data
+            for key in (
+                REMINDER_LOCATION_NAME,
+                REMINDER_LATITUDE,
+                REMINDER_LONGITUDE,
+                REMINDER_RADIUS,
+            )
+        ):
+            raise vol.Invalid(
+                f"If using coordinate-based fields, all of {REMINDER_LOCATION_NAME}, {REMINDER_LATITUDE}, "
+                f"{REMINDER_LONGITUDE}, and {REMINDER_RADIUS} must be provided"
+            )
+
+    # Ensure REMINDER_LOCATION_DIRECTION is only set if has_zone or has_coordinates
+    if REMINDER_LOCATION_DIRECTION in data and not (has_zone or has_coordinates):
+        raise vol.Invalid(
+            f"{REMINDER_LOCATION_DIRECTION} can only be set if either {REMINDER_ZONE} "
+            f"or coordinate-based fields ({REMINDER_LOCATION_NAME}, {REMINDER_LATITUDE}, {REMINDER_LONGITUDE}, {REMINDER_RADIUS}) are provided"
+        )
+
+    # Set default for REMINDER_LOCATION_DIRECTION if not provided and valid context exists
+    if (has_zone or has_coordinates) and REMINDER_LOCATION_DIRECTION not in data:
+        data[REMINDER_LOCATION_DIRECTION] = REMINDER_LOCATION_DIRECTION_ENTER
+
+    return data
+
+
+NEW_TASK_SERVICE_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required(CONTENT): cv.string,
+            vol.Optional(DESCRIPTION): cv.string,
+            vol.Optional(PROJECT_NAME, default="inbox"): vol.All(cv.string, vol.Lower),
+            vol.Optional(SECTION_NAME): vol.Any(cv.string, None),
+            vol.Optional(CREATE_SECTION, default=True): cv.boolean,
+            vol.Optional(LABELS): cv.ensure_list_csv,
+            vol.Optional(ASSIGNEE): cv.string,
+            vol.Optional(PRIORITY): vol.All(vol.Coerce(int), vol.Range(min=1, max=4)),
+            vol.Exclusive(DUE_DATE_STRING, "due_date"): cv.string,
+            vol.Optional(DUE_DATE_LANG): vol.All(
+                cv.string, vol.In(DUE_DATE_VALID_LANGS)
+            ),
+            vol.Exclusive(DUE_DATE, "due_date"): cv.string,
+            vol.Exclusive(REMINDER_DATE_STRING, "reminder_date"): cv.string,
+            vol.Optional(REMINDER_DATE_LANG): vol.All(
+                cv.string, vol.In(DUE_DATE_VALID_LANGS)
+            ),
+            vol.Exclusive(REMINDER_DATE, "reminder_date"): cv.string,
+            vol.Optional(REMINDER_ZONE): cv.entity_id,
+            vol.Optional(REMINDER_LOCATION_NAME): cv.string,
+            vol.Optional(REMINDER_LATITUDE): cv.latitude,
+            vol.Optional(REMINDER_LONGITUDE): cv.longitude,
+            vol.Optional(REMINDER_RADIUS): vol.All(vol.Coerce(int), vol.Range(min=1)),
+            vol.Optional(REMINDER_LOCATION_DIRECTION): vol.All(
+                cv.string, vol.In(REMINDER_LOCATION_VALID_DIRECTIONS)
+            ),
+            vol.Optional(REMINDER_USERS): vol.All(cv.ensure_list, [cv.string]),
+        }
+    ),
+    validate_reminder_location,
 )
 
 PLATFORM_SCHEMA = CALENDAR_PLATFORM_SCHEMA.extend(
@@ -240,20 +322,34 @@ def async_register_services(  # noqa: C901
         section_id: str | None = None
         if SECTION_NAME in call.data:
             section_name = call.data[SECTION_NAME]
-            sections = await coordinator.async_get_sections(project_id)
-            for section in sections:
-                if section_name == section.name.lower():
-                    section_id = section.id
-                    break
-            if section_id is None:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="section_invalid",
-                    translation_placeholders={
-                        "section": section_name,
-                        "project": project_name,
-                    },
-                )
+            if section_name is not None:
+                sections = await coordinator.async_get_sections(project_id)
+                for section in sections:
+                    if section_name.lower() == section.name.lower():
+                        section_id = section.id
+                        break
+
+                if section_id is None:
+                    # Handle section creation if it does not exist and create_section is True
+                    if call.data.get(CREATE_SECTION, True):
+                        new_section = await coordinator.api.add_section(
+                            section_name, project_id
+                        )
+                        section_id = new_section.id
+                        _LOGGER.debug(
+                            "Created new section '%s' in project '%s'",
+                            section_name,
+                            project_name,
+                        )
+                    else:
+                        raise ServiceValidationError(
+                            translation_domain=DOMAIN,
+                            translation_key="section_invalid",
+                            translation_placeholders={
+                                "section": section_name,
+                                "project": project_name,
+                            },
+                        )
 
         # Create the task
         content = call.data[CONTENT]
@@ -268,11 +364,16 @@ def async_register_services(  # noqa: C901
         if task_labels := call.data.get(LABELS):
             data["labels"] = task_labels
 
-        if ASSIGNEE in call.data:
+        collaborator_id_lookup = None
+        if ASSIGNEE in call.data or REMINDER_USERS in call.data:
             collaborators = await coordinator.api.get_collaborators(project_id)
             collaborator_id_lookup = {
                 collab.name.lower(): collab.id for collab in collaborators
             }
+
+        if ASSIGNEE in call.data:
+            if collaborator_id_lookup is None:
+                raise ValueError("Collaborators not fetched")
             task_assignee = call.data[ASSIGNEE].lower()
             if task_assignee in collaborator_id_lookup:
                 data["assignee_id"] = collaborator_id_lookup[task_assignee]
@@ -304,10 +405,27 @@ def async_register_services(  # noqa: C901
 
         api_task = await coordinator.api.add_task(content, **data)
 
-        # @NOTE: The rest-api doesn't support reminders, this works manually using
-        # the sync api, in order to keep functional parity with the component.
-        # https://developer.todoist.com/sync/v9/#reminders
-        sync_url = get_sync_url("sync")
+        async def add_reminder(reminder_data: dict) -> None:
+            """Add a reminder to the task."""
+            reminder_command = {
+                "type": "reminder_add",
+                "temp_id": str(uuid.uuid1()),
+                "uuid": str(uuid.uuid1()),
+                "args": reminder_data,
+            }
+
+            headers = create_headers(token=coordinator.token, with_content=True)
+            # @NOTE: The rest-api doesn't support reminders, this works manually using
+            # the sync api, in order to keep functional parity with the component.
+            # https://developer.todoist.com/sync/v9/#reminders
+            sync_url = get_sync_url("sync")
+            response = await session.post(
+                sync_url, headers=headers, json={"commands": [reminder_command]}
+            )
+            return await response.json()
+
+        reminders: list[dict[str, Any]] = []
+
         _reminder_due: dict = {}
         if REMINDER_DATE_STRING in call.data:
             _reminder_due["string"] = call.data[REMINDER_DATE_STRING]
@@ -329,26 +447,90 @@ def async_register_services(  # noqa: C901
             date_format = "%Y-%m-%dT%H:%M:%S"
             _reminder_due["date"] = datetime.strftime(due_date, date_format)
 
-        async def add_reminder(reminder_due: dict):
-            reminder_data = {
-                "commands": [
-                    {
-                        "type": "reminder_add",
-                        "temp_id": str(uuid.uuid1()),
-                        "uuid": str(uuid.uuid1()),
-                        "args": {
-                            "item_id": api_task.id,
-                            "type": "absolute",
-                            "due": reminder_due,
-                        },
-                    }
-                ]
-            }
-            headers = create_headers(token=coordinator.token, with_content=True)
-            return await session.post(sync_url, headers=headers, json=reminder_data)
-
         if _reminder_due:
-            await add_reminder(_reminder_due)
+            reminders.append(
+                {
+                    "item_id": api_task.id,
+                    "type": "absolute",
+                    "due": _reminder_due,
+                }
+            )
+
+        if (
+            REMINDER_ZONE in call.data
+            or {REMINDER_LATITUDE, REMINDER_LONGITUDE, REMINDER_RADIUS}
+            <= call.data.keys()
+        ):
+            _location_data: dict[str, Any]
+            if REMINDER_ZONE in call.data:
+                zone_entity = hass.states.get(call.data[REMINDER_ZONE])
+                if not zone_entity:
+                    raise ValueError(f"Zone '{call.data[REMINDER_ZONE]}' not found")
+                _location_data = {
+                    "name": str(zone_entity.name),
+                    "loc_lat": str(zone_entity.attributes[ATTR_LATITUDE]),
+                    "loc_long": str(zone_entity.attributes[ATTR_LONGITUDE]),
+                    "loc_trigger": str(call.data[REMINDER_LOCATION_DIRECTION]),
+                    "radius": int(zone_entity.attributes[ATTR_RADIUS]),
+                }
+            else:
+                _location_data = {
+                    "name": str(call.data[REMINDER_LOCATION_NAME]),
+                    "loc_lat": str(call.data[REMINDER_LATITUDE]),
+                    "loc_long": str(call.data[REMINDER_LONGITUDE]),
+                    "loc_trigger": str(call.data[REMINDER_LOCATION_DIRECTION]),
+                    "radius": int(call.data[REMINDER_RADIUS]),
+                }
+
+            reminder_data: dict[str, Any] = {
+                "item_id": api_task.id,
+                "type": "location",
+            }
+            reminder_data.update(_location_data)
+            reminders.append(reminder_data)
+
+        if REMINDER_USERS in call.data and not reminders:
+            _LOGGER.error(
+                "`%s` provided but no supporting reminder parameters were provided",
+                REMINDER_USERS,
+            )
+            return
+
+        final_reminders = []
+        if REMINDER_USERS in call.data:
+            if collaborator_id_lookup is None:
+                _LOGGER.error("Collaborators not fetched")
+            else:
+                for reminder in reminders:
+                    for person in call.data[REMINDER_USERS]:
+                        if person.lower() in collaborator_id_lookup:
+                            user_reminder = reminder.copy()
+                            user_reminder["notify_uid"] = collaborator_id_lookup[
+                                person.lower()
+                            ]
+                            final_reminders.append(user_reminder)
+                        else:
+                            _LOGGER.error(
+                                "User is not part of the shared project. user: %s",
+                                person,
+                            )
+        else:
+            final_reminders = reminders
+
+        if final_reminders:
+            responses = await asyncio.gather(
+                *(add_reminder(reminder) for reminder in final_reminders),
+                return_exceptions=True,
+            )
+            for i, response in enumerate(responses):
+                if isinstance(response, Exception):
+                    _LOGGER.error("Error adding reminder %d: %s", i, response)
+                else:
+                    _LOGGER.debug(
+                        "Response from Todoist Sync API for reminder %d: %s",
+                        i,
+                        response,
+                    )
 
         _LOGGER.debug("Created Todoist task: %s", call.data[CONTENT])
 
