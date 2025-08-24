@@ -492,6 +492,7 @@ async def test_reconfigure_successful(
 ) -> None:
     """Test successful reconfigure flow."""
     mock_config_entry.add_to_hass(hass)
+    prev_unique_id = mock_config_entry.unique_id
 
     start_result = await mock_config_entry.start_reconfigure_flow(hass)
     assert start_result["type"] is FlowResultType.FORM
@@ -510,6 +511,8 @@ async def test_reconfigure_successful(
     assert mock_config_entry.data[CONF_USERNAME] == "new_user"
     assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
     assert mock_config_entry.data[CONF_URL] == "http://new_url:8096"
+    assert mock_config_entry.data[CONF_CLIENT_DEVICE_ID] == "TEST-UUID"
+    assert mock_config_entry.unique_id == prev_unique_id
 
 
 @pytest.mark.parametrize(

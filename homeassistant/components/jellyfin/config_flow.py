@@ -151,7 +151,14 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
             new_input = entry.data | user_input
 
             if self.client_device_id is None:
-                self.client_device_id = _generate_client_device_id()
+                # Keep the same client id if we have one.
+                # Q: Do we ever not have one?
+                self.client_device_id = (
+                    entry.data.get(CONF_CLIENT_DEVICE_ID)
+                    or _generate_client_device_id()
+                )
+
+            self._abort_if_unique_id_mismatch()
 
             client = create_client(device_id=self.client_device_id)
             try:
