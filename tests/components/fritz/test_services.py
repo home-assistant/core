@@ -2,7 +2,11 @@
 
 from unittest.mock import patch
 
-from fritzconnection.core.exceptions import FritzConnectionException, FritzServiceError
+from fritzconnection.core.exceptions import (
+    FritzConnectionException,
+    FritzServiceError,
+    FritzActionFailedError,
+)
 import pytest
 
 from homeassistant.components.fritz.const import DOMAIN
@@ -137,6 +141,7 @@ async def test_service_set_guest_wifi_password_unloaded(
             in caplog.text
         )
 
+
 async def test_service_dial(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -222,6 +227,39 @@ async def test_service_dial_service_not_supported(
         )
         assert mock_async_trigger_dial.called
         assert "HomeAssistantError: Action not supported" in caplog.text
+
+
+async def test_service_dial_failed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    fc_class_mock,
+    fh_class_mock,
+) -> None:
+    """Test dial service when the dial help is disabled."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_DATA)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, "1C:ED:6F:12:34:11")}
+    )
+    assert device
+
+    with patch(
+        "homeassistant.components.fritz.coordinator.AvmWrapper.async_trigger_dial",
+        side_effect=FritzActionFailedError("boom"),
+    ) as mock_async_trigger_dial:
+        await hass.services.async_call(
+            DOMAIN, SERVICE_DIAL, {"device_id": device.id, "number": "1234567890"}
+        )
+        assert mock_async_trigger_dial.called
+        assert (
+            "HomeAssistantError: Failed to dial, check if the dial-help of the Fritz!Box is activated"
+            in caplog.text
+        )
 
 
 async def test_service_dial_unloaded(
