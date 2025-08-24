@@ -245,3 +245,29 @@ async def test_user_form_exception(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_implemented"
+
+
+async def test_bluetooth_form_exception_alrerady_set_up(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test bluetooth discovery form when device is already set up."""
+
+    await test_bluetooth_form(
+        hass,
+        mock_setup_entry,
+        generate_ble_device(TEST_DEVICE_NAME, TEST_DEVICE_MAC),
+        1,
+        True,
+        True,
+        True,
+        (True, []),
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=HUE_BLE_SERVICE_INFO,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
