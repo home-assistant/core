@@ -1,13 +1,12 @@
 """Support for OPNsense Routers."""
 
-from dataclasses import dataclass
+import logging
 
 from pyopnsense import diagnostics
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -38,21 +37,19 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-
-@dataclass
-class OPNsenseData:
-    """Shared OPNsense data."""
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the OPNsense component."""
+    hass.data[DATA_HASS_CONFIG] = config
     if config.get(DOMAIN) is not None:
-        hass.data[DATA_HASS_CONFIG] = config
         hass.async_create_task(
             hass.config_entries.flow.async_init(
                 DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
             )
         )
+
     return True
 
 
@@ -72,15 +69,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_TRACKER_INTERFACE: tracker_interfaces,
     }
 
-    if tracker_interfaces and DATA_HASS_CONFIG in hass.data:
+    if tracker_interfaces:
+        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data
         hass.async_create_task(
             async_load_platform(
                 hass,
-                DEVICE_TRACKER,
+                Platform.DEVICE_TRACKER,
                 DOMAIN,
                 tracker_interfaces,
                 hass.data[DATA_HASS_CONFIG],
             )
         )
+    else:
+        _LOGGER.warning("No interfaces to track")
 
     return True
