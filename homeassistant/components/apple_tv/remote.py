@@ -20,11 +20,13 @@ from homeassistant.components.remote import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AppleTvConfigEntry
 from .const import (
+    DOMAIN,
     SERVICE_APPEND_SEARCH_TEXT,
     SERVICE_CLEAR_SEARCH_TEXT,
     SERVICE_SET_SEARCH_TEXT,
@@ -129,8 +131,9 @@ class AppleTVRemote(AppleTVEntity, RemoteEntity):
             return False
 
         if not self.atv.keyboard:
-            _LOGGER.error("Keyboard not available on Apple TV")
-            return False
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="keyboard_not_supported"
+            )
 
         if self.atv.keyboard.text_focus_state != KeyboardFocusState.Focused:
             _LOGGER.error("Keyboard not focused on Apple TV")

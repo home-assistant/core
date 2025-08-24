@@ -97,5 +97,10 @@
       "name": "Clear Search Text",
       "description": "Clear the current search text on the Apple TV."
     }
+  },
+  "exceptions": {
+    "keyboard_not_supported": {
+      "message": "Keyboard is not supported on your Apple TV."
+    }
   }
 }
