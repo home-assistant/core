@@ -8,7 +8,7 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "api_secret": "API Secret",
+          "api_secret": "API secret",
           "ssl": "[%key:common::config_flow::data::ssl%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
           "tracker_interfaces": "Interface(s) to use for tracking devices"
