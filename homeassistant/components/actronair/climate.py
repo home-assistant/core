@@ -224,7 +224,7 @@ class ActronZoneClimate(BaseClimateEntity):
     def _zone(self) -> ActronAirNeoZone:
         """Get the current zone data from the coordinator."""
         status = self.coordinator.data
-        return status.zones.get(self._zone_id)
+        return status.zones[self._zone_id]
 
     @property
     def hvac_mode(self) -> HVACMode:
