@@ -43,7 +43,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Ubiquiti airOS."""
 
-    VERSION = 2
+    VERSION = 1
 
     async def async_step_user(
         self,

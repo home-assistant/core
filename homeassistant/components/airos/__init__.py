@@ -27,6 +27,14 @@ _PLATFORMS: list[Platform] = [
 async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> bool:
     """Set up Ubiquiti airOS from a config entry."""
 
+    # Added CONF_SSL and CONF_VERIFY_SSL to version 1
+    if CONF_SSL not in entry.data or CONF_VERIFY_SSL not in entry.data:
+        new_data = {**entry.data}
+        new_data.setdefault(CONF_SSL, DEFAULT_SSL)
+        new_data.setdefault(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
+
+        hass.config_entries.async_update_entry(entry, data=new_data)
+
     # By default airOS 8 comes with self-signed SSL certificates,
     # with no option in the web UI to change or upload a custom certificate.
     session = async_get_clientsession(hass, verify_ssl=entry.data[CONF_VERIFY_SSL])
@@ -45,23 +53,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> boo
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
-
-    return True
-
-
-async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> bool:
-    """Migrate old config entry."""
-
-    if entry.version == 1:
-        new_data = {**entry.data}
-        new_data.setdefault(CONF_SSL, DEFAULT_SSL)
-        new_data.setdefault(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
-
-        hass.config_entries.async_update_entry(
-            entry,
-            data=new_data,
-            version=2,
-        )
 
     return True
 
