@@ -34,6 +34,7 @@ from homeassistant.components.weather import (
 from homeassistant.const import (
     CONF_NAME,
     CONF_TEMPERATURE_UNIT,
+    CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -151,6 +152,7 @@ PLATFORM_SCHEMA = vol.Schema(
         vol.Optional(CONF_PRESSURE_UNIT): vol.In(PressureConverter.VALID_UNITS),
         vol.Required(CONF_TEMPERATURE_TEMPLATE): cv.template,
         vol.Optional(CONF_TEMPERATURE_UNIT): vol.In(TemperatureConverter.VALID_UNITS),
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_VISIBILITY_TEMPLATE): cv.template,
         vol.Optional(CONF_VISIBILITY_UNIT): vol.In(DistanceConverter.VALID_UNITS),
         vol.Optional(CONF_WIND_BEARING_TEMPLATE): cv.template,

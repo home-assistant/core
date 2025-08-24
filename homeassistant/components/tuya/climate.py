@@ -27,6 +27,7 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DPCode, DPType
 from .entity import TuyaEntity
 from .models import IntegerTypeData
+from .util import get_dpcode
 
 TUYA_HVAC_TO_HA = {
     "auto": HVACMode.HEAT_COOL,
@@ -229,7 +230,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 self._attr_hvac_modes.append(description.switch_only_hvac_mode)
                 self._attr_preset_modes = unknown_hvac_modes
                 self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
-        elif self.find_dpcode(DPCode.SWITCH, prefer_function=True):
+        elif get_dpcode(self.device, DPCode.SWITCH):
             self._attr_hvac_modes = [
                 HVACMode.OFF,
                 description.switch_only_hvac_mode,
@@ -252,7 +253,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # Determine fan modes
         self._fan_mode_dp_code: str | None = None
         if enum_type := self.find_dpcode(
-            (DPCode.FAN_SPEED_ENUM, DPCode.WINDSPEED),
+            (DPCode.FAN_SPEED_ENUM, DPCode.LEVEL, DPCode.WINDSPEED),
             dptype=DPType.ENUM,
             prefer_function=True,
         ):
@@ -261,24 +262,24 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             self._fan_mode_dp_code = enum_type.dpcode
 
         # Determine swing modes
-        if self.find_dpcode(
+        if get_dpcode(
+            self.device,
             (
                 DPCode.SHAKE,
                 DPCode.SWING,
                 DPCode.SWITCH_HORIZONTAL,
                 DPCode.SWITCH_VERTICAL,
             ),
-            prefer_function=True,
         ):
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
             self._attr_swing_modes = [SWING_OFF]
-            if self.find_dpcode((DPCode.SHAKE, DPCode.SWING), prefer_function=True):
+            if get_dpcode(self.device, (DPCode.SHAKE, DPCode.SWING)):
                 self._attr_swing_modes.append(SWING_ON)
 
-            if self.find_dpcode(DPCode.SWITCH_HORIZONTAL, prefer_function=True):
+            if get_dpcode(self.device, DPCode.SWITCH_HORIZONTAL):
                 self._attr_swing_modes.append(SWING_HORIZONTAL)
 
-            if self.find_dpcode(DPCode.SWITCH_VERTICAL, prefer_function=True):
+            if get_dpcode(self.device, DPCode.SWITCH_VERTICAL):
                 self._attr_swing_modes.append(SWING_VERTICAL)
 
         if DPCode.SWITCH in self.device.function:

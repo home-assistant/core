@@ -1103,13 +1103,13 @@ class EntityRegistry(BaseRegistry):
             entities = async_entries_for_device(
                 self, event.data["device_id"], include_disabled_entities=True
             )
-            removed_device = event.data["device"]
+            removed_device_dict = event.data["device"]
             for entity in entities:
                 config_entry_id = entity.config_entry_id
                 if (
-                    config_entry_id in removed_device.config_entries
+                    config_entry_id in removed_device_dict["config_entries"]
                     and entity.config_subentry_id
-                    in removed_device.config_entries_subentries[config_entry_id]
+                    in removed_device_dict["config_entries_subentries"][config_entry_id]
                 ):
                     self.async_remove(entity.entity_id)
                 else:
@@ -1613,9 +1613,17 @@ class EntityRegistry(BaseRegistry):
         for key, deleted_entity in list(self.deleted_entities.items()):
             if config_entry_id != deleted_entity.config_entry_id:
                 continue
+            # Clear disabled_by if it was disabled by the config entry
+            if deleted_entity.disabled_by is RegistryEntryDisabler.CONFIG_ENTRY:
+                disabled_by = None
+            else:
+                disabled_by = deleted_entity.disabled_by
             # Add a time stamp when the deleted entity became orphaned
             self.deleted_entities[key] = attr.evolve(
-                deleted_entity, orphaned_timestamp=now_time, config_entry_id=None
+                deleted_entity,
+                orphaned_timestamp=now_time,
+                config_entry_id=None,
+                disabled_by=disabled_by,
             )
             self.async_schedule_save()
 

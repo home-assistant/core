@@ -65,9 +65,11 @@ class MockVehicle:
         if is_electric_vehicle:
             self.battery_level = 42
             self.battery_range = 150
+            self.is_charging = True
         else:
             self.battery_level = 0
             self.battery_range = 0
+            self.is_charging = False
 
 
 @pytest.fixture

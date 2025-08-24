@@ -74,6 +74,7 @@ class SmartTubController:
             self._hass,
             _LOGGER,
             name=DOMAIN,
+            config_entry=entry,
             update_method=self.async_update_data,
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
