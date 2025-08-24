@@ -43,13 +43,13 @@ async def test_storage_is_removed(
     entity_map.async_create_or_update_map(hkid, 1, [])
     assert hkid in entity_map.storage_data
     await flush_store(entity_map.store)
-    assert hkid in hass_storage[ENTITY_MAP]["data"]["pairings"]
+    assert hkid in hass_storage["homekit_controller-entity-map"]["data"]["pairings"]
 
     entity_map.async_delete_map(hkid)
     assert hkid not in hass.data[ENTITY_MAP].storage_data
     await flush_store(entity_map.store)
 
-    assert hass_storage[ENTITY_MAP]["data"]["pairings"] == {}
+    assert hass_storage["homekit_controller-entity-map"]["data"]["pairings"] == {}
 
 
 async def test_storage_is_removed_idempotent(hass: HomeAssistant) -> None:
@@ -87,4 +87,34 @@ async def test_storage_is_updated_on_add(
 
     # Is saved out to store?
     await flush_store(entity_map.store)
-    assert hkid in hass_storage[ENTITY_MAP]["data"]["pairings"]
+    assert hkid in hass_storage["homekit_controller-entity-map"]["data"]["pairings"]
+
+
+async def test_storage_is_saved_on_stop(
+    hass: HomeAssistant, hass_storage: dict[str, Any], get_next_aid: Callable[[], int]
+) -> None:
+    """Test entity map storage is saved when Home Assistant stops."""
+    await setup_test_component(hass, get_next_aid(), create_lightbulb_service)
+
+    entity_map: EntityMapStorage = hass.data[ENTITY_MAP]
+    hkid = "00:00:00:00:00:00"
+    storage_key = "homekit_controller-entity-map"
+
+    # Verify the device is in memory
+    assert hkid in entity_map.storage_data
+
+    # Clear the storage to verify it gets saved on stop
+    hass_storage.pop(storage_key, None)
+
+    # Make a change to trigger a save
+    entity_map.async_create_or_update_map(hkid, 2, [])  # Update config_num
+
+    # Simulate Home Assistant stopping (sets the state and fires the event)
+    await hass.async_stop()
+    await hass.async_block_till_done()
+
+    # Verify the storage was saved
+    assert storage_key in hass_storage
+    assert hkid in hass_storage[storage_key]["data"]["pairings"]
+    # Verify the updated data was saved
+    assert hass_storage[storage_key]["data"]["pairings"][hkid]["config_num"] == 2

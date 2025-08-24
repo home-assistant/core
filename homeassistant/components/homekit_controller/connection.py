@@ -228,7 +228,9 @@ class HKDevice:
         _LOGGER.debug(
             "Called async_set_available_state with %s for %s", available, self.unique_id
         )
-        if self.available == available:
+        # Don't mark entities as unavailable during shutdown to preserve their last known state
+        # Also skip if the availability state hasn't changed
+        if (self.hass.is_stopping and not available) or self.available == available:
             return
         self.available = available
         for callback_ in self._availability_callbacks:
@@ -716,9 +718,11 @@ class HKDevice:
         """Stop interacting with device and prepare for removal from hass."""
         await self.pairing.shutdown()
 
-        await self.hass.config_entries.async_unload_platforms(
-            self.config_entry, self.platforms
-        )
+        # Skip platform unloading during shutdown to preserve entity states
+        if not self.hass.is_stopping:
+            await self.hass.config_entries.async_unload_platforms(
+                self.config_entry, self.platforms
+            )
 
     def process_config_changed(self, config_num: int) -> None:
         """Handle a config change notification from the pairing."""
