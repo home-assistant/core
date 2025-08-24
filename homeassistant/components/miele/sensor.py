@@ -955,7 +955,7 @@ class MieleConsumptionSensor(MieleRestorableSensor):
 
         # appliance might report the last value for consumption of previous cycle and it will report 0
         # only after a while, so it is necessary to force 0 until we see the 0 value coming from API
-        if (
+        elif (
             current_status in (StateStatus.IN_USE, StateStatus.PAUSE)
             and current_value is not None
             and cast(int, current_value) > 0
@@ -963,4 +963,10 @@ class MieleConsumptionSensor(MieleRestorableSensor):
         ):
             self._last_value = 0
 
-        self._last_value = current_value
+        # keep value when program ends
+        elif current_status == StateStatus.PROGRAM_ENDED:
+            pass
+
+        else:
+            self._last_value = current_value
+            self._is_reporting = True
