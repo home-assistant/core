@@ -14,14 +14,14 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
 )
 from homeassistant.core import Context, CoreState, Event, HomeAssistant, callback
-from homeassistant.helpers import condition, discovery, trigger as trigger_helper
+from homeassistant.helpers import condition, trigger as trigger_helper
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.trace import trace_get
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, PLATFORMS
+from .const import DOMAIN, TemplateConfig
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
 
     REMOVE_TRIGGER = object()
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
+    def __init__(self, hass: HomeAssistant, config: TemplateConfig) -> None:
         """Instantiate trigger data."""
         super().__init__(
             hass, _LOGGER, config_entry=None, name="Trigger Update Coordinator"
@@ -75,19 +75,6 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
             self._unsub_start = self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_START, self._attach_triggers
             )
-
-        for platform_domain in PLATFORMS:
-            if platform_domain in self.config:
-                self.hass.async_create_task(
-                    discovery.async_load_platform(
-                        self.hass,
-                        platform_domain,
-                        DOMAIN,
-                        {"coordinator": self, "entities": self.config[platform_domain]},
-                        hass_config,
-                    ),
-                    eager_start=True,
-                )
 
     async def _attach_triggers(self, start_event: Event | None = None) -> None:
         """Attach the triggers."""

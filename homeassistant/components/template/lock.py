@@ -108,7 +108,6 @@ async def async_setup_platform(
         LOCK_DOMAIN,
         config,
         StateLockEntity,
-        TriggerLockEntity,
         async_add_entities,
         discovery_info,
         LEGACY_FIELDS,
@@ -123,9 +122,11 @@ async def async_setup_entry(
     """Initialize config entry."""
     await async_setup_template_entry(
         hass,
+        LOCK_DOMAIN,
         config_entry,
         async_add_entities,
         StateLockEntity,
+        TriggerLockEntity,
         LOCK_CONFIG_ENTRY_SCHEMA,
     )
 

@@ -172,7 +172,6 @@ async def async_setup_platform(
         COVER_DOMAIN,
         config,
         StateCoverEntity,
-        TriggerCoverEntity,
         async_add_entities,
         discovery_info,
         LEGACY_FIELDS,
@@ -188,9 +187,11 @@ async def async_setup_entry(
     """Initialize config entry."""
     await async_setup_template_entry(
         hass,
+        COVER_DOMAIN,
         config_entry,
         async_add_entities,
         StateCoverEntity,
+        TriggerCoverEntity,
         COVER_CONFIG_ENTRY_SCHEMA,
         True,
     )

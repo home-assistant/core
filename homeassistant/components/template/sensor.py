@@ -173,7 +173,6 @@ async def async_setup_platform(
         SENSOR_DOMAIN,
         config,
         StateSensorEntity,
-        TriggerSensorEntity,
         async_add_entities,
         discovery_info,
         LEGACY_FIELDS,
@@ -189,9 +188,11 @@ async def async_setup_entry(
     """Initialize config entry."""
     await async_setup_template_entry(
         hass,
+        SENSOR_DOMAIN,
         config_entry,
         async_add_entities,
         StateSensorEntity,
+        TriggerSensorEntity,
         SENSOR_CONFIG_ENTRY_SCHEMA,
     )
 

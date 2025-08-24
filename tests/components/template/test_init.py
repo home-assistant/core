@@ -191,7 +191,13 @@ async def test_reloadable_handles_partial_valid_config(hass: HomeAssistant) -> N
                         "value_template": "{{ states.sensor.test_sensor.state }}"
                     },
                 },
-            }
+            },
+            "template": {
+                "sensor": {
+                    "name": "my template",
+                    "state": "{{ states.sensor.test_sensor.state }}",
+                },
+            },
         },
     ],
 )
@@ -215,8 +221,9 @@ async def test_reloadable_multiple_platforms(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     assert hass.states.get("sensor.state").state == "mytest"
+    assert hass.states.get("sensor.my_template").state == "mytest"
     assert hass.states.get("binary_sensor.state").state == "off"
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 4
 
     await async_yaml_patch_helper(hass, "sensor_configuration.yaml")
     assert len(hass.states.async_all()) == 4

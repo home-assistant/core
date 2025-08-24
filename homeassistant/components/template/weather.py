@@ -31,6 +31,7 @@ from homeassistant.components.weather import (
     WeatherEntity,
     WeatherEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
     CONF_TEMPERATURE_UNIT,
@@ -41,7 +42,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_conversion import (
@@ -52,7 +56,7 @@ from homeassistant.util.unit_conversion import (
 )
 
 from .coordinator import TriggerUpdateCoordinator
-from .helpers import async_setup_template_platform
+from .helpers import async_setup_template_entry, async_setup_template_platform
 from .template_entity import TemplateEntity, make_template_entity_common_modern_schema
 from .trigger_entity import TriggerEntity
 
@@ -175,10 +179,26 @@ async def async_setup_platform(
         WEATHER_DOMAIN,
         config,
         StateWeatherEntity,
-        TriggerWeatherEntity,
         async_add_entities,
         discovery_info,
         {},
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Initialize config entry."""
+    await async_setup_template_entry(
+        hass,
+        WEATHER_DOMAIN,
+        config_entry,
+        async_add_entities,
+        StateWeatherEntity,
+        TriggerWeatherEntity,
+        vol.Schema({}),
     )
 
 

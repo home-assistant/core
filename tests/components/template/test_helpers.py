@@ -8,11 +8,9 @@ from homeassistant.components.template.alarm_control_panel import (
 from homeassistant.components.template.binary_sensor import (
     LEGACY_FIELDS as BINARY_SENSOR_LEGACY_FIELDS,
 )
-from homeassistant.components.template.button import StateButtonEntity
 from homeassistant.components.template.cover import LEGACY_FIELDS as COVER_LEGACY_FIELDS
 from homeassistant.components.template.fan import LEGACY_FIELDS as FAN_LEGACY_FIELDS
 from homeassistant.components.template.helpers import (
-    async_setup_template_platform,
     rewrite_legacy_to_modern_config,
     rewrite_legacy_to_modern_configs,
 )
@@ -28,7 +26,6 @@ from homeassistant.components.template.vacuum import (
     LEGACY_FIELDS as VACUUM_LEGACY_FIELDS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.template import Template
 
 
@@ -326,19 +323,3 @@ async def test_friendly_name_template_legacy_to_modern_configs(
             "name": Template("{{ 'foo bar' }}", hass),
         }
     ] == altered_configs
-
-
-async def test_platform_not_ready(
-    hass: HomeAssistant,
-) -> None:
-    """Test async_setup_template_platform raises PlatformNotReady when trigger object is None."""
-    with pytest.raises(PlatformNotReady):
-        await async_setup_template_platform(
-            hass,
-            "button",
-            {},
-            StateButtonEntity,
-            None,
-            None,
-            {"coordinator": None, "entities": []},
-        )

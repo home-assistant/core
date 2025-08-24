@@ -156,7 +156,6 @@ async def async_setup_platform(
         VACUUM_DOMAIN,
         config,
         TemplateStateVacuumEntity,
-        TriggerVacuumEntity,
         async_add_entities,
         discovery_info,
         LEGACY_FIELDS,
@@ -172,9 +171,11 @@ async def async_setup_entry(
     """Initialize config entry."""
     await async_setup_template_entry(
         hass,
+        VACUUM_DOMAIN,
         config_entry,
         async_add_entities,
         TemplateStateVacuumEntity,
+        TriggerVacuumEntity,
         VACUUM_CONFIG_ENTRY_SCHEMA,
     )
 
