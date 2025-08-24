@@ -91,7 +91,6 @@ class BaseClimateEntity(CoordinatorEntity[ActronNeoSystemCoordinator], ClimateEn
         """Initialize an Actron Air Neo unit."""
         super().__init__(coordinator)
         self._serial_number = coordinator.serial_number
-        self._name = name
 
 
 class ActronSystemClimate(BaseClimateEntity):
