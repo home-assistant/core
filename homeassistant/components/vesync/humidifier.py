@@ -150,7 +150,8 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         """Set the target humidity of the device."""
         if not await self.device.set_humidity(humidity):
             raise HomeAssistantError(
-                f"An error occurred while setting humidity {humidity}."
+                f"An error occurred while setting humidity {humidity}:"
+                + self.device.last_response.message
             )
 
     async def async_set_mode(self, mode: str) -> None:
@@ -160,7 +161,10 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
                 f"{mode} is not one of the valid available modes: {self.available_modes}"
             )
         if not await self.device.set_humidity_mode(self._get_vs_mode(mode)):
-            raise HomeAssistantError(f"An error occurred while setting mode {mode}.")
+            raise HomeAssistantError(
+                f"An error occurred while setting mode {mode}:"
+                + self.device.last_response.message
+            )
 
         if mode == MODE_SLEEP:
             # We successfully changed the mode. Consider it a success even if display operation fails.
@@ -176,7 +180,10 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         """Turn the device on."""
         success = await self.device.turn_on()
         if not success:
-            raise HomeAssistantError("An error occurred while turning on.")
+            raise HomeAssistantError(
+                "An error occurred while turning on:"
+                + self.device.last_response.message
+            )
 
         self.schedule_update_ha_state()
 
@@ -184,7 +191,10 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         """Turn the device off."""
         success = await self.device.turn_off()
         if not success:
-            raise HomeAssistantError("An error occurred while turning off.")
+            raise HomeAssistantError(
+                "An error occurred while turning off:"
+                + self.device.last_response.message
+            )
 
         self.schedule_update_ha_state()
 

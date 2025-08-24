@@ -163,25 +163,37 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         if percentage == 0:
             # Turning off is a special case: do not set speed or mode
             if not await self.device.turn_off():
-                raise HomeAssistantError("An error occurred while turning off.")
+                raise HomeAssistantError(
+                    "An error occurred while turning off:"
+                    + self.device.last_response.message
+                )
             self.schedule_update_ha_state()
             return
 
         # If the fan is off, turn it on first
         if not self.device.is_on:
             if not await self.device.turn_on():
-                raise HomeAssistantError("An error occurred while turning on.")
+                raise HomeAssistantError(
+                    "An error occurred while turning on:"
+                    + self.device.last_response.message
+                )
 
         # Switch to manual mode if not already set
         if self.device.state.mode != VS_FAN_MODE_MANUAL:
             if not await self.device.set_manual_mode():
-                raise HomeAssistantError("An error occurred while setting manual mode.")
+                raise HomeAssistantError(
+                    "An error occurred while setting manual mode."
+                    + self.device.last_response.message
+                )
 
         # Calculate the speed level and set it
         if not await self.device.set_fan_speed(
             percentage_to_ordered_list_item(self.device.fan_levels, percentage)
         ):
-            raise HomeAssistantError("An error occurred while changing fan speed.")
+            raise HomeAssistantError(
+                "An error occurred while changing fan speed:"
+                + self.device.last_response.message
+            )
 
         self.schedule_update_ha_state()
 
@@ -209,7 +221,10 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         elif preset_mode == VS_FAN_MODE_NORMAL:
             success = await self.device.normal_mode()
         if not success:
-            raise HomeAssistantError("An error occurred while setting preset mode.")
+            raise HomeAssistantError(
+                "An error occurred while setting preset mode:"
+                + self.device.last_response.message
+            )
 
         self.schedule_update_ha_state()
 
@@ -231,5 +246,8 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         """Turn the device off."""
         success = await self.device.turn_off()
         if not success:
-            raise HomeAssistantError("An error occurred while turning off.")
+            raise HomeAssistantError(
+                "An error occurred while turning off: "
+                + self.device.last_response.message
+            )
         self.schedule_update_ha_state()
