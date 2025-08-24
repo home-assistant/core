@@ -101,7 +101,7 @@ class ToGrillCoordinator(DataUpdateCoordinator[dict[tuple[int, int | None], Pack
 
         if probe_number is None:
             return DeviceInfo(
-                identifiers={(DOMAIN, f"{self.address}")},
+                identifiers={(DOMAIN, self.address)},
             )
 
         return DeviceInfo(
