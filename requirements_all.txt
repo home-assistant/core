@@ -1388,7 +1388,7 @@ lupupy==0.3.2
 lw12==0.9.2
 
 # homeassistant.components.scrape
-lxml==6.0.0
+lxml==6.0.1
 
 # homeassistant.components.matrix
 matrix-nio==0.25.2
