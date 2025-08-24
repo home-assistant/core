@@ -5,6 +5,10 @@ from typing import Any
 from actron_neo_api import ActronAirNeoStatus, ActronAirNeoZone
 
 from homeassistant.components.climate import (
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
@@ -21,10 +25,10 @@ from .coordinator import ActronNeoConfigEntry, ActronNeoSystemCoordinator
 PARALLEL_UPDATES = 0
 
 FAN_MODE_MAPPING_ACTRONAIR_TO_HA = {
-    "AUTO": "auto",
-    "LOW": "low",
-    "MED": "medium",
-    "HIGH": "high",
+    "AUTO": FAN_AUTO,
+    "LOW": FAN_LOW,
+    "MED": FAN_MEDIUM,
+    "HIGH": FAN_HIGH,
 }
 FAN_MODE_MAPPING_HA_TO_ACTRONAIR = {
     v: k for k, v in FAN_MODE_MAPPING_ACTRONAIR_TO_HA.items()
