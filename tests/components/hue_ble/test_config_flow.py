@@ -176,6 +176,7 @@ async def test_bluetooth_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_DEVICE_NAME
     assert result["result"].unique_id == dr.format_mac(TEST_DEVICE_MAC)
+    assert result["result"].data == {}
 
     assert len(mock_setup_entry.mock_calls) == 1
 
