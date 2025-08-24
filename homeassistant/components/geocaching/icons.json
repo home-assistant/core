@@ -15,6 +15,24 @@
       },
       "awarded_favorite_points": {
         "default": "mdi:heart"
+      },
+      "cache_name": {
+        "default": "mdi:label"
+      },
+      "cache_owner": {
+        "default": "mdi:account"
+      },
+      "cache_found_date": {
+        "default": "mdi:calendar-search"
+      },
+      "cache_found": {
+        "default": "mdi:package-variant-closed-check"
+      },
+      "cache_favorite_points": {
+        "default": "mdi:star-check"
+      },
+      "cache_hidden_date": {
+        "default": "mdi:calendar-badge"
       }
     }
   }
