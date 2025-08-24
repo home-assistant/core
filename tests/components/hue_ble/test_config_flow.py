@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, PropertyMock, patch
 
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components.hue_ble.const import DOMAIN, URL_PAIRING_MODE
 from homeassistant.config_entries import SOURCE_BLUETOOTH
 from homeassistant.const import CONF_MAC, CONF_NAME
@@ -231,3 +232,16 @@ async def test_bluetooth_form_exception(
 
         assert form_confirm["type"] is FlowResultType.FORM
         assert form_confirm["errors"] == {"base": error_message}
+
+
+async def test_user_form_exception(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test the user form raises a discovery only error."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "not_implemented"
