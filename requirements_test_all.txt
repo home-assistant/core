@@ -122,7 +122,7 @@ WSDiscovery==2.1.2
 accuweather==4.2.0
 
 # homeassistant.components.actronair
-actron-neo-api==0.1.83
+actron-neo-api==0.1.84
 
 # homeassistant.components.adax
 adax==0.4.0
