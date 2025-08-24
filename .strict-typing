@@ -382,6 +382,7 @@ homeassistant.components.openai_conversation.*
 homeassistant.components.openexchangerates.*
 homeassistant.components.opensky.*
 homeassistant.components.openuv.*
+homeassistant.components.opnsense.*
 homeassistant.components.opower.*
 homeassistant.components.oralb.*
 homeassistant.components.otbr.*
