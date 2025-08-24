@@ -62,7 +62,12 @@ async def do_auth0_login(session: aiohttp.ClientSession, username: str, password
 
     # 2. /u/login
     login_url = f"{AUTH_DOMAIN}/u/login?state={state}"
-    form_data = {"state": state, "username": username, "password": password, "action": "default"}
+    form_data = {
+        "state": state,
+        "username": username,
+        "password": password,
+        "action": "default",
+    }
     async with session.post(login_url, headers=HEADERS, data=form_data, allow_redirects=False) as resp:
         redirect_url = resp.headers.get("Location")
 
@@ -123,7 +128,7 @@ async def _validate_input(hass, data) -> dict[str, str]:
     try:
         tokens = await do_auth0_login(session, data[CONF_USERNAME], data[CONF_PASSWORD])
         LOGGER.debug("Got tokens in config flow: %s", list(tokens.keys()))
-    except InvalidAuth as err:
+    except InvalidAuth:
         raise
     except Exception as err:
         raise CannotConnect from err
