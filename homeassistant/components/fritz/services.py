@@ -6,6 +6,7 @@ from fritzconnection.core.exceptions import (
     FritzActionError,
     FritzConnectionException,
     FritzServiceError,
+    FritzActionFailedError,
 )
 from fritzconnection.lib.fritzwlan import DEFAULT_PASSWORD_LENGTH
 import voluptuous as vol
@@ -98,8 +99,12 @@ async def _async_dial(service_call: ServiceCall) -> None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="service_parameter_unknown"
             ) from ex
+        except FritzActionFailedError as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN, translation_key="service_dial_failed"
+            ) from ex
         except FritzConnectionException as ex:
-            raise HomeAssistantError(  # Check if dial-help of the Fritz!Box is activated
+            raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="service_not_supported"
             ) from ex
 
