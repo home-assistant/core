@@ -27,6 +27,7 @@ Mastodon.py==2.1.1
 # homeassistant.components.playstation_network
 PSNAWP==3.0.0
 
+# homeassistant.components.ai_task
 # homeassistant.components.doods
 # homeassistant.components.generic
 # homeassistant.components.image_upload

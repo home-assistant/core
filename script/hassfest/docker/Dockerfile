@@ -28,6 +28,7 @@ RUN --mount=from=ghcr.io/astral-sh/uv:0.8.9,source=/uv,target=/bin/uv \
         pipdeptree==2.26.1 \
         tqdm==4.67.1 \
         ruff==0.12.1 \
+        Pillow==11.3.0 \
         PyTurboJPEG==1.8.0 \
         go2rtc-client==0.2.1 \
         ha-ffmpeg==3.2.2 \
