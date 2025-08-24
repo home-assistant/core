@@ -32,7 +32,11 @@ class OPNsenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
     data: Any | None = None
 
-    async def _show_setup_form(self, user_input=None, errors=None):
+    async def _show_setup_form(
+        self,
+        user_input: (dict[Any, Any] | None) = None,
+        errors: (dict[Any, Any] | None) = None,
+    ) -> ConfigFlowResult:
         """Show the setup form to the user."""
         if user_input is None:
             user_input = {}
@@ -127,6 +131,8 @@ class OPNsenseConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._show_setup_form(user_input, errors)
 
-    async def async_step_import(self, import_config) -> ConfigFlowResult:
+    async def async_step_import(
+        self, import_config: (dict[str, Any] | None)
+    ) -> ConfigFlowResult:
         """Import a config entry."""
         return await self.async_step_user(import_config)
