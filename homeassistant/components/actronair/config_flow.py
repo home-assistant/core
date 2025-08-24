@@ -16,7 +16,7 @@ class ActronNeoConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._api: ActronNeoAPI = None
+        self._api: ActronNeoAPI | None = None
         self._device_code: str | None = None
         self._user_code: str = ""
         self._verification_uri: str = ""
