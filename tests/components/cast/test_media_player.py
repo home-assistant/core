@@ -18,6 +18,7 @@ import yarl
 from homeassistant.components import media_player, tts
 from homeassistant.components.cast import media_player as cast
 from homeassistant.components.cast.const import (
+    DOMAIN,
     SIGNAL_HASS_CAST_SHOW_VIEW,
     HomeAssistantControllerData,
 )
@@ -45,7 +46,7 @@ from homeassistant.setup import async_setup_component
 from tests.common import (
     MockConfigEntry,
     assert_setup_component,
-    load_fixture,
+    async_load_fixture,
     mock_platform,
 )
 from tests.components.media_player import common
@@ -1348,7 +1349,7 @@ async def test_entity_play_media_playlist(
 ) -> None:
     """Test playing media."""
     entity_id = "media_player.speaker"
-    aioclient_mock.get(url, text=load_fixture(fixture, "cast"))
+    aioclient_mock.get(url, text=await async_load_fixture(hass, fixture, DOMAIN))
 
     await async_process_ha_core_config(
         hass,

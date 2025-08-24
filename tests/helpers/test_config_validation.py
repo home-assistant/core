@@ -1460,11 +1460,6 @@ def test_key_value_schemas_with_default() -> None:
     [
         ({"delay": "{{ invalid"}, "should be format 'HH:MM'"),
         ({"wait_template": "{{ invalid"}, "invalid template"),
-        ({"condition": "invalid"}, "Unexpected value for condition: 'invalid'"),
-        (
-            {"condition": "not", "conditions": {"condition": "invalid"}},
-            "Unexpected value for condition: 'invalid'",
-        ),
         # The validation error message could be improved to explain that this is not
         # a valid shorthand template
         (
@@ -1496,7 +1491,7 @@ def test_key_value_schemas_with_default() -> None:
 )
 @pytest.mark.usefixtures("hass")
 def test_script(caplog: pytest.LogCaptureFixture, config: dict, error: str) -> None:
-    """Test script validation is user friendly."""
+    """Test script action validation is user friendly."""
     with pytest.raises(vol.Invalid, match=error):
         cv.script_action(config)
 

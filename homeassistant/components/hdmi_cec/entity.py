@@ -57,7 +57,7 @@ class CecEntity(Entity):
         self._attr_available = False
         self.schedule_update_ha_state(False)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register HDMI callbacks after initialization."""
         self._device.set_update_callback(self._update)
         self.hass.bus.async_listen(

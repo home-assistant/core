@@ -22,6 +22,7 @@ async def test_subscribe_discovery(
 
     async def mock_start(
         callback: Callable[[aiodhcpwatcher.DHCPRequest], None],
+        if_indexes: list[int] | None = None,
     ) -> None:
         """Mock start."""
         nonlocal saved_callback

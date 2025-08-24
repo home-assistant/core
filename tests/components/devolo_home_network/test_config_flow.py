@@ -303,5 +303,4 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"
     assert len(mock_setup_entry.mock_calls) == 1
-
-    await hass.config_entries.async_unload(entry.entry_id)
+    assert entry.data[CONF_PASSWORD] == "test-right-password"

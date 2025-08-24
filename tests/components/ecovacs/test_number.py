@@ -6,7 +6,7 @@ from deebot_client.command import Command
 from deebot_client.commands.json import SetCutDirection, SetVolume
 from deebot_client.events import CutDirectionEvent, Event, VolumeEvent
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController

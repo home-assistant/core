@@ -74,8 +74,8 @@ PHASE_DAY = "day"
 _PHASE_UPDATES = {
     PHASE_NIGHT: timedelta(minutes=4 * 5),
     PHASE_ASTRONOMICAL_TWILIGHT: timedelta(minutes=4 * 2),
-    PHASE_NAUTICAL_TWILIGHT: timedelta(minutes=4 * 2),
-    PHASE_TWILIGHT: timedelta(minutes=4),
+    PHASE_NAUTICAL_TWILIGHT: timedelta(minutes=4),
+    PHASE_TWILIGHT: timedelta(minutes=2),
     PHASE_SMALL_DAY: timedelta(minutes=2),
     PHASE_DAY: timedelta(minutes=4),
 }

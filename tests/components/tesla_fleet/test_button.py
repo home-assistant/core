@@ -4,7 +4,7 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import NotOnWhitelistFault
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS

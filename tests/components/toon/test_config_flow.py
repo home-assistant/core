@@ -27,13 +27,12 @@ async def setup_component(hass: HomeAssistant) -> None:
         {"external_url": "https://example.com"},
     )
 
-    with patch("os.path.isfile", return_value=False):
-        assert await async_setup_component(
-            hass,
-            DOMAIN,
-            {DOMAIN: {CONF_CLIENT_ID: "client", CONF_CLIENT_SECRET: "secret"}},
-        )
-        await hass.async_block_till_done()
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {DOMAIN: {CONF_CLIENT_ID: "client", CONF_CLIENT_SECRET: "secret"}},
+    )
+    await hass.async_block_till_done()
 
 
 async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:

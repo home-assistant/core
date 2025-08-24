@@ -8,7 +8,7 @@
       'fan_modes': list([
         'low',
         'high',
-        'mid',
+        'medium',
       ]),
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -18,6 +18,7 @@
       'max_temp': 86,
       'min_temp': 64,
       'preset_modes': list([
+        'none',
         'air_clean',
       ]),
       'swing_horizontal_modes': list([
@@ -52,6 +53,7 @@
     'original_name': None,
     'platform': 'lg_thinq',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 955>,
     'translation_key': <ExtendedProperty.CLIMATE_AIR_CONDITIONER: 'climate_air_conditioner'>,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_climate_air_conditioner',
@@ -63,11 +65,11 @@
     'attributes': ReadOnlyDict({
       'current_humidity': 40,
       'current_temperature': 77,
-      'fan_mode': 'mid',
+      'fan_mode': 'medium',
       'fan_modes': list([
         'low',
         'high',
-        'mid',
+        'medium',
       ]),
       'friendly_name': 'Test air conditioner',
       'hvac_modes': list([
@@ -77,8 +79,9 @@
       ]),
       'max_temp': 86,
       'min_temp': 64,
-      'preset_mode': None,
+      'preset_mode': 'none',
       'preset_modes': list([
+        'none',
         'air_clean',
       ]),
       'supported_features': <ClimateEntityFeature: 955>,

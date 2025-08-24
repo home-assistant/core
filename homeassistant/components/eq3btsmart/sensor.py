@@ -3,7 +3,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING
 
 from eq3btsmart.models import Status
 
@@ -40,9 +39,7 @@ SENSOR_ENTITY_DESCRIPTIONS = [
     Eq3SensorEntityDescription(
         key=ENTITY_KEY_AWAY_UNTIL,
         translation_key=ENTITY_KEY_AWAY_UNTIL,
-        value_func=lambda status: (
-            status.away_until.value if status.away_until else None
-        ),
+        value_func=lambda status: (status.away_until if status.away_until else None),
         device_class=SensorDeviceClass.DATE,
     ),
 ]
@@ -77,8 +74,5 @@ class Eq3SensorEntity(Eq3Entity, SensorEntity):
     @property
     def native_value(self) -> int | datetime | None:
         """Return the value reported by the sensor."""
-
-        if TYPE_CHECKING:
-            assert self._thermostat.status is not None
 
         return self.entity_description.value_func(self._thermostat.status)

@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
 
 from music_assistant_client import MusicAssistantClient
@@ -31,7 +32,7 @@ if TYPE_CHECKING:
 
     from homeassistant.helpers.typing import ConfigType
 
-PLATFORMS = [Platform.MEDIA_PLAYER]
+PLATFORMS = [Platform.BUTTON, Platform.MEDIA_PLAYER]
 
 CONNECT_TIMEOUT = 10
 LISTEN_READY_TIMEOUT = 30
@@ -39,6 +40,7 @@ LISTEN_READY_TIMEOUT = 30
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type MusicAssistantConfigEntry = ConfigEntry[MusicAssistantEntryData]
+type PlayerAddCallback = Callable[[str], None]
 
 
 @dataclass
@@ -47,6 +49,8 @@ class MusicAssistantEntryData:
 
     mass: MusicAssistantClient
     listen_task: asyncio.Task
+    discovered_players: set[str] = field(default_factory=set)
+    platform_handlers: dict[Platform, PlayerAddCallback] = field(default_factory=dict)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -121,6 +125,33 @@ async def async_setup_entry(
 
     # initialize platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # register listener for new players
+    async def handle_player_added(event: MassEvent) -> None:
+        """Handle Mass Player Added event."""
+        if TYPE_CHECKING:
+            assert event.object_id is not None
+        if event.object_id in entry.runtime_data.discovered_players:
+            return
+        player = mass.players.get(event.object_id)
+        if TYPE_CHECKING:
+            assert player is not None
+        if not player.expose_to_ha:
+            return
+        entry.runtime_data.discovered_players.add(event.object_id)
+        # run callback for each platform
+        for callback in entry.runtime_data.platform_handlers.values():
+            callback(event.object_id)
+
+    entry.async_on_unload(mass.subscribe(handle_player_added, EventType.PLAYER_ADDED))
+
+    # add all current players
+    for player in mass.players:
+        if not player.expose_to_ha:
+            continue
+        entry.runtime_data.discovered_players.add(player.player_id)
+        for callback in entry.runtime_data.platform_handlers.values():
+            callback(player.player_id)
 
     # register listener for removed players
     async def handle_player_removed(event: MassEvent) -> None:

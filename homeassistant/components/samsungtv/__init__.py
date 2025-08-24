@@ -21,26 +21,19 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 
-from .bridge import (
-    SamsungTVBridge,
-    async_get_device_info,
-    mac_from_device_info,
-    model_requires_encryption,
-)
+from .bridge import SamsungTVBridge, mac_from_device_info, model_requires_encryption
 from .const import (
     CONF_SESSION_ID,
     CONF_SSDP_MAIN_TV_AGENT_LOCATION,
     CONF_SSDP_RENDERING_CONTROL_LOCATION,
     DOMAIN,
     ENTRY_RELOAD_COOLDOWN,
-    LEGACY_PORT,
     LOGGER,
     METHOD_ENCRYPTED_WEBSOCKET,
-    METHOD_LEGACY,
     UPNP_SVC_MAIN_TV_AGENT,
     UPNP_SVC_RENDERING_CONTROL,
 )
@@ -51,7 +44,7 @@ PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
 
 @callback
 def _async_get_device_bridge(
-    hass: HomeAssistant, data: dict[str, Any]
+    hass: HomeAssistant, data: Mapping[str, Any]
 ) -> SamsungTVBridge:
     """Get device bridge."""
     return SamsungTVBridge.get_bridge(
@@ -178,40 +171,18 @@ async def _async_create_bridge_with_updated_data(
     hass: HomeAssistant, entry: SamsungTVConfigEntry
 ) -> SamsungTVBridge:
     """Create a bridge object and update any missing data in the config entry."""
-    updated_data: dict[str, str | int] = {}
+    updated_data: dict[str, str] = {}
     host: str = entry.data[CONF_HOST]
-    port: int | None = entry.data.get(CONF_PORT)
-    method: str | None = entry.data.get(CONF_METHOD)
-    load_info_attempted = False
+    method: str = entry.data[CONF_METHOD]
     info: dict[str, Any] | None = None
 
-    if not port or not method:
-        LOGGER.debug("Attempting to get port or method for %s", host)
-        if method == METHOD_LEGACY:
-            port = LEGACY_PORT
-        else:
-            # When we imported from yaml we didn't setup the method
-            # because we didn't know it
-            _result, port, method, info = await async_get_device_info(hass, host)
-            load_info_attempted = True
-            if not port or not method:
-                raise ConfigEntryNotReady(
-                    translation_domain=DOMAIN,
-                    translation_key="failed_to_determine_connection_method",
-                )
-
-        LOGGER.debug("Updated port to %s and method to %s for %s", port, method, host)
-        updated_data[CONF_PORT] = port
-        updated_data[CONF_METHOD] = method
-
-    bridge = _async_get_device_bridge(hass, {**entry.data, **updated_data})
+    bridge = _async_get_device_bridge(hass, entry.data)
 
     mac: str | None = entry.data.get(CONF_MAC)
     model: str | None = entry.data.get(CONF_MODEL)
+    # Incorrect MAC cleanup introduced in #110599, can be removed in 2026.3
     mac_is_incorrectly_formatted = mac and dr.format_mac(mac) != mac
-    if (
-        not mac or not model or mac_is_incorrectly_formatted
-    ) and not load_info_attempted:
+    if not mac or not model or mac_is_incorrectly_formatted:
         info = await bridge.async_device_info()
 
     if not mac or mac_is_incorrectly_formatted:

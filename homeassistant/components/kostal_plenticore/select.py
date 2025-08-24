@@ -7,15 +7,13 @@ from datetime import timedelta
 import logging
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import Plenticore, SelectDataUpdateCoordinator
+from .coordinator import PlenticoreConfigEntry, SelectDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,11 +41,11 @@ SELECT_SETTINGS_DATA = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: PlenticoreConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add kostal plenticore Select widget."""
-    plenticore: Plenticore = hass.data[DOMAIN][entry.entry_id]
+    plenticore = entry.runtime_data
 
     available_settings_data = await plenticore.client.get_settings()
     select_data_update_coordinator = SelectDataUpdateCoordinator(

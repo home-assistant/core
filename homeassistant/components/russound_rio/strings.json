@@ -40,12 +40,42 @@
       "wrong_device": "This Russound controller does not match the existing device ID. Please make sure you entered the correct IP address."
     }
   },
+  "entity": {
+    "number": {
+      "balance": {
+        "name": "Balance"
+      },
+      "bass": {
+        "name": "Bass"
+      },
+      "treble": {
+        "name": "Treble"
+      },
+      "turn_on_volume": {
+        "name": "Turn-on volume"
+      }
+    },
+    "switch": {
+      "loudness": {
+        "name": "Loudness"
+      }
+    }
+  },
   "exceptions": {
     "entry_cannot_connect": {
       "message": "Error while connecting to {host}:{port}"
     },
     "command_error": {
       "message": "Error executing {function_name} on entity {entity_id}"
+    },
+    "unsupported_media_type": {
+      "message": "Unsupported media type for Russound zone: {media_type}"
+    },
+    "missing_preset": {
+      "message": "The specified preset is not available for this source: {preset_id}"
+    },
+    "preset_non_integer": {
+      "message": "Preset must be an integer, got: {preset_id}"
     }
   }
 }

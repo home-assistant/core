@@ -10,7 +10,7 @@ from homeassistant.util import dt as dt_util
 
 from .common import TEST_REPOSITORY
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
+from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_SENSOR_ENTITY = "sensor.octocat_hello_world_latest_release"
@@ -27,9 +27,9 @@ async def test_sensor_updates_with_empty_release_array(
     state = hass.states.get(TEST_SENSOR_ENTITY)
     assert state.state == "v1.0.0"
 
-    response_json = json.loads(load_fixture("graphql.json", DOMAIN))
+    response_json = json.loads(await async_load_fixture(hass, "graphql.json", DOMAIN))
     response_json["data"]["repository"]["release"] = None
-    headers = json.loads(load_fixture("base_headers.json", DOMAIN))
+    headers = json.loads(await async_load_fixture(hass, "base_headers.json", DOMAIN))
 
     aioclient_mock.clear_requests()
     aioclient_mock.get(

@@ -52,7 +52,7 @@ async def stream_generator(
 
 
 def create_messages(
-    content_blocks: list[RawMessageStreamEvent],
+    content_blocks: list[RawMessageStreamEvent], stop_reason="end_turn"
 ) -> list[RawMessageStreamEvent]:
     """Create a stream of messages with the specified content blocks."""
     return [
@@ -70,7 +70,7 @@ def create_messages(
         *content_blocks,
         RawMessageDeltaEvent(
             type="message_delta",
-            delta=Delta(stop_reason="end_turn", stop_sequence=""),
+            delta=Delta(stop_reason=stop_reason, stop_sequence=""),
             usage=MessageDeltaUsage(output_tokens=0),
         ),
         RawMessageStopEvent(type="message_stop"),
@@ -180,21 +180,23 @@ async def test_entity(
     mock_init_component,
 ) -> None:
     """Test entity properties."""
-    state = hass.states.get("conversation.claude")
+    state = hass.states.get("conversation.claude_conversation")
     assert state
     assert state.attributes["supported_features"] == 0
 
-    hass.config_entries.async_update_entry(
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
         mock_config_entry,
-        options={
-            **mock_config_entry.options,
+        subentry,
+        data={
+            **subentry.data,
             CONF_LLM_HASS_API: "assist",
         },
     )
     with patch("anthropic.resources.models.AsyncModels.retrieve"):
         await hass.config_entries.async_reload(mock_config_entry.entry_id)
 
-    state = hass.states.get("conversation.claude")
+    state = hass.states.get("conversation.claude_conversation")
     assert state
     assert (
         state.attributes["supported_features"]
@@ -218,10 +220,10 @@ async def test_error_handling(
         ),
     ):
         result = await conversation.async_converse(
-            hass, "hello", None, Context(), agent_id="conversation.claude"
+            hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type == intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown", result
 
 
@@ -229,9 +231,11 @@ async def test_template_error(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that template error handling works."""
-    hass.config_entries.async_update_entry(
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
         mock_config_entry,
-        options={
+        subentry,
+        data={
             "prompt": "talk like a {% if True %}smarthome{% else %}pirate please.",
         },
     )
@@ -244,10 +248,10 @@ async def test_template_error(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         result = await conversation.async_converse(
-            hass, "hello", None, Context(), agent_id="conversation.claude"
+            hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type == intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown", result
 
 
@@ -260,9 +264,11 @@ async def test_template_variables(
     mock_user.id = "12345"
     mock_user.name = "Test User"
 
-    hass.config_entries.async_update_entry(
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
         mock_config_entry,
-        options={
+        subentry,
+        data={
             "prompt": (
                 "The user name is {{ user_name }}. "
                 "The user id is {{ llm_context.context.user_id }}."
@@ -286,12 +292,10 @@ async def test_template_variables(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         result = await conversation.async_converse(
-            hass, "hello", None, context, agent_id="conversation.claude"
+            hass, "hello", None, context, agent_id="conversation.claude_conversation"
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
-        result
-    )
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.speech["plain"]["speech"]
         == "Okay, let me take care of that for you."
@@ -306,11 +310,13 @@ async def test_conversation_agent(
     mock_init_component,
 ) -> None:
     """Test Anthropic Agent."""
-    agent = conversation.agent_manager.async_get_agent(hass, "conversation.claude")
+    agent = conversation.agent_manager.async_get_agent(
+        hass, "conversation.claude_conversation"
+    )
     assert agent.supported_languages == "*"
 
 
-@patch("homeassistant.components.anthropic.conversation.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
 @pytest.mark.parametrize(
     ("tool_call_json_parts", "expected_call_tool_args"),
     [
@@ -334,7 +340,7 @@ async def test_function_call(
     expected_call_tool_args: dict[str, Any],
 ) -> None:
     """Test function call from the assistant."""
-    agent_id = "conversation.claude"
+    agent_id = "conversation.claude_conversation"
     context = Context()
 
     mock_tool = AsyncMock()
@@ -369,7 +375,8 @@ async def test_function_call(
                         "test_tool",
                         tool_call_json_parts,
                     ),
-                ]
+                ],
+                stop_reason="tool_use",
             )
         )
 
@@ -416,7 +423,6 @@ async def test_function_call(
         llm.LLMContext(
             platform="anthropic",
             context=context,
-            user_prompt="Please call the test function",
             language="en",
             assistant="conversation",
             device_id=None,
@@ -424,7 +430,7 @@ async def test_function_call(
     )
 
 
-@patch("homeassistant.components.anthropic.conversation.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
 async def test_function_exception(
     mock_get_tools,
     hass: HomeAssistant,
@@ -432,7 +438,7 @@ async def test_function_exception(
     mock_init_component,
 ) -> None:
     """Test function call with exception."""
-    agent_id = "conversation.claude"
+    agent_id = "conversation.claude_conversation"
     context = Context()
 
     mock_tool = AsyncMock()
@@ -468,7 +474,8 @@ async def test_function_exception(
                         "test_tool",
                         ['{"param1": "test_value"}'],
                     ),
-                ]
+                ],
+                stop_reason="tool_use",
             )
         )
 
@@ -510,7 +517,6 @@ async def test_function_exception(
         llm.LLMContext(
             platform="anthropic",
             context=context,
-            user_prompt="Please call the test function",
             language="en",
             assistant="conversation",
             device_id=None,
@@ -538,7 +544,7 @@ async def test_assist_api_tools_conversion(
     ):
         assert await async_setup_component(hass, component, {})
 
-    agent_id = "conversation.claude"
+    agent_id = "conversation.claude_conversation"
     with patch(
         "anthropic.resources.messages.AsyncMessages.create",
         new_callable=AsyncMock,
@@ -563,17 +569,19 @@ async def test_unknown_hass_api(
     mock_init_component,
 ) -> None:
     """Test when we reference an API that no longer exists."""
-    hass.config_entries.async_update_entry(
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
         mock_config_entry,
-        options={
-            **mock_config_entry.options,
+        subentry,
+        data={
+            **subentry.data,
             CONF_LLM_HASS_API: "non-existing",
         },
     )
     await hass.async_block_till_done()
 
     result = await conversation.async_converse(
-        hass, "hello", "1234", Context(), agent_id="conversation.claude"
+        hass, "hello", "1234", Context(), agent_id="conversation.claude_conversation"
     )
 
     assert result == snapshot
@@ -599,17 +607,25 @@ async def test_conversation_id(
         side_effect=create_stream_generator,
     ):
         result = await conversation.async_converse(
-            hass, "hello", "1234", Context(), agent_id="conversation.claude"
+            hass,
+            "hello",
+            "1234",
+            Context(),
+            agent_id="conversation.claude_conversation",
         )
 
         result = await conversation.async_converse(
-            hass, "hello", None, None, agent_id="conversation.claude"
+            hass, "hello", None, None, agent_id="conversation.claude_conversation"
         )
 
         conversation_id = result.conversation_id
 
         result = await conversation.async_converse(
-            hass, "hello", conversation_id, None, agent_id="conversation.claude"
+            hass,
+            "hello",
+            conversation_id,
+            None,
+            agent_id="conversation.claude_conversation",
         )
 
         assert result.conversation_id == conversation_id
@@ -617,16 +633,54 @@ async def test_conversation_id(
         unknown_id = ulid_util.ulid()
 
         result = await conversation.async_converse(
-            hass, "hello", unknown_id, None, agent_id="conversation.claude"
+            hass, "hello", unknown_id, None, agent_id="conversation.claude_conversation"
         )
 
         assert result.conversation_id != unknown_id
 
         result = await conversation.async_converse(
-            hass, "hello", "koala", None, agent_id="conversation.claude"
+            hass, "hello", "koala", None, agent_id="conversation.claude_conversation"
         )
 
         assert result.conversation_id == "koala"
+
+
+async def test_refusal(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test refusal due to potential policy violation."""
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        new_callable=AsyncMock,
+        return_value=stream_generator(
+            create_messages(
+                [
+                    *create_content_block(
+                        0,
+                        ["Certainly! To take over the world you need just a simple "],
+                    ),
+                ],
+                stop_reason="refusal",
+            ),
+        ),
+    ):
+        result = await conversation.async_converse(
+            hass,
+            "ANTHROPIC_MAGIC_STRING_TRIGGER_REFUSAL_1FAEFB6177B4672DEE07F9D3AFC62588CCD"
+            "2631EDCF22E8CCC1FB35B501C9C86",
+            None,
+            Context(),
+            agent_id="conversation.claude_conversation",
+        )
+
+    assert result.response.response_type == intent.IntentResponseType.ERROR
+    assert result.response.error_code == "unknown"
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "Potential policy violation detected"
+    )
 
 
 async def test_extended_thinking(
@@ -659,7 +713,7 @@ async def test_extended_thinking(
         ),
     ):
         result = await conversation.async_converse(
-            hass, "hello", None, Context(), agent_id="conversation.claude"
+            hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
         )
 
     chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
@@ -674,6 +728,7 @@ async def test_redacted_thinking(
     hass: HomeAssistant,
     mock_config_entry_with_extended_thinking: MockConfigEntry,
     mock_init_component,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test extended thinking with redacted thinking blocks."""
     with patch(
@@ -696,17 +751,17 @@ async def test_redacted_thinking(
             "8432ECCCE4C1253D5E2D82641AC0E52CC2876CB",
             None,
             Context(),
-            agent_id="conversation.claude",
+            agent_id="conversation.claude_conversation",
         )
 
     chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
         result.conversation_id
     )
-    assert len(chat_log.content) == 3
-    assert chat_log.content[2].content == "How can I help you today?"
+    # Don't test the prompt because it's not deterministic
+    assert chat_log.content[1:] == snapshot
 
 
-@patch("homeassistant.components.anthropic.conversation.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
 async def test_extended_thinking_tool_call(
     mock_get_tools,
     hass: HomeAssistant,
@@ -715,7 +770,7 @@ async def test_extended_thinking_tool_call(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that thinking blocks and their order are preserved in with tool calls."""
-    agent_id = "conversation.claude"
+    agent_id = "conversation.claude_conversation"
     context = Context()
 
     mock_tool = AsyncMock()
@@ -766,7 +821,8 @@ async def test_extended_thinking_tool_call(
                         "test_tool",
                         ['{"para', 'm1": "test_valu', 'e"}'],
                     ),
-                ]
+                ],
+                stop_reason="tool_use",
             )
         )
 
@@ -804,7 +860,8 @@ async def test_extended_thinking_tool_call(
             conversation.chat_log.SystemContent("You are a helpful assistant."),
             conversation.chat_log.UserContent("What shape is a donut?"),
             conversation.chat_log.AssistantContent(
-                agent_id="conversation.claude", content="A donut is a torus."
+                agent_id="conversation.claude_conversation",
+                content="A donut is a torus.",
             ),
         ],
         [
@@ -812,10 +869,11 @@ async def test_extended_thinking_tool_call(
             conversation.chat_log.UserContent("What shape is a donut?"),
             conversation.chat_log.UserContent("Can you tell me?"),
             conversation.chat_log.AssistantContent(
-                agent_id="conversation.claude", content="A donut is a torus."
+                agent_id="conversation.claude_conversation",
+                content="A donut is a torus.",
             ),
             conversation.chat_log.AssistantContent(
-                agent_id="conversation.claude", content="Hope this helps."
+                agent_id="conversation.claude_conversation", content="Hope this helps."
             ),
         ],
         [
@@ -824,20 +882,21 @@ async def test_extended_thinking_tool_call(
             conversation.chat_log.UserContent("Can you tell me?"),
             conversation.chat_log.UserContent("Please?"),
             conversation.chat_log.AssistantContent(
-                agent_id="conversation.claude", content="A donut is a torus."
+                agent_id="conversation.claude_conversation",
+                content="A donut is a torus.",
             ),
             conversation.chat_log.AssistantContent(
-                agent_id="conversation.claude", content="Hope this helps."
+                agent_id="conversation.claude_conversation", content="Hope this helps."
             ),
             conversation.chat_log.AssistantContent(
-                agent_id="conversation.claude", content="You are welcome."
+                agent_id="conversation.claude_conversation", content="You are welcome."
             ),
         ],
         [
             conversation.chat_log.SystemContent("You are a helpful assistant."),
             conversation.chat_log.UserContent("Turn off the lights and make me coffee"),
             conversation.chat_log.AssistantContent(
-                agent_id="conversation.claude",
+                agent_id="conversation.claude_conversation",
                 content="Sure.",
                 tool_calls=[
                     llm.ToolInput(
@@ -854,19 +913,19 @@ async def test_extended_thinking_tool_call(
             ),
             conversation.chat_log.UserContent("Thank you"),
             conversation.chat_log.ToolResultContent(
-                agent_id="conversation.claude",
+                agent_id="conversation.claude_conversation",
                 tool_call_id="mock-tool-call-id",
                 tool_name="HassTurnOff",
                 tool_result={"success": True, "response": "Lights are off."},
             ),
             conversation.chat_log.ToolResultContent(
-                agent_id="conversation.claude",
+                agent_id="conversation.claude_conversation",
                 tool_call_id="mock-tool-call-id-2",
                 tool_name="MakeCoffee",
                 tool_result={"success": False, "response": "Not enough milk."},
             ),
             conversation.chat_log.AssistantContent(
-                agent_id="conversation.claude",
+                agent_id="conversation.claude_conversation",
                 content="Should I add milk to the shopping list?",
             ),
         ],
@@ -903,7 +962,7 @@ async def test_history_conversion(
             "Are you sure?",
             conversation_id,
             Context(),
-            agent_id="conversation.claude",
+            agent_id="conversation.claude_conversation",
         )
 
         assert mock_create.mock_calls[0][2]["messages"] == snapshot

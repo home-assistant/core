@@ -46,10 +46,8 @@ def run(args: list[str]) -> int:
 
     config_dir = extract_config_dir()
 
-    loop = asyncio.get_event_loop()
-
     if not is_virtual_env():
-        loop.run_until_complete(async_mount_local_lib_path(config_dir))
+        asyncio.run(async_mount_local_lib_path(config_dir))
 
     _pip_kwargs = pip_kwargs(config_dir)
 
