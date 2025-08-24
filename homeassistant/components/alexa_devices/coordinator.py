@@ -66,7 +66,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
                 translation_key="cannot_retrieve_data_with_error",
                 translation_placeholders={"error": repr(err)},
             ) from err
-        except CannotAuthenticate as err:
+        except (CannotAuthenticate, TypeError) as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
