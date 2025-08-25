@@ -28,6 +28,7 @@ PATHS_WITHOUT_AUTH = (
     "/api/tts_proxy/",
     "/api/esphome/ffmpeg_proxy/",
     "/api/assist_satellite/static/",
+    "/api/assist_pipeline/static/",
 )
 
 
