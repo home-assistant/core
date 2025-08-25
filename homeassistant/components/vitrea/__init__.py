@@ -45,9 +45,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: VitreaConfigEntry) -> bo
         )
         monitor = VitreaClient(host, port)
 
-        # Test connection before proceeding with setup
-        await monitor.connect()
-
         # Initialize runtime data with the client and empty entity lists
         entry.runtime_data = VitreaRuntimeData(client=monitor, covers=[])
 
@@ -67,7 +64,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: VitreaConfigEntry) -> bo
                 )
 
         monitor.on(VitreaResponse.STATUS, handle_new_entity)
-        await monitor.start_read_task()
+
+        await monitor.connect()
 
         # Request status to discover entities
         await monitor.status_request()
@@ -76,11 +74,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: VitreaConfigEntry) -> bo
         # Vitrea sends slowly the status response for each node/key
         # we wait as long as entities are being discovered, but with shorter intervals
         entity_count = 0
-        max_discovery_time = 30  # Reduced from 60 to 30 seconds
+        max_discovery_time = 90  # a typical 20 nodes setup can take up to 60 seconds
         discovery_start = time.monotonic()
 
         while True:
-            await asyncio.sleep(5)  # Single wait period - increased to 5 seconds for better settling
+            await asyncio.sleep(
+                5
+            )  # Single wait period - increased to 5 seconds for better settling
 
             if len(entities) == entity_count:
                 # No new entities discovered in this cycle - discovery likely complete

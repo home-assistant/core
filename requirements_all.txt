@@ -3052,7 +3052,7 @@ venstarcolortouch==0.21
 vilfo-api-client==0.5.0
 
 # homeassistant.components.vitrea
-vitreaclient==0.1.8
+vitreaclient==0.2.0
 
 # homeassistant.components.voip
 voip-utils==0.3.4
