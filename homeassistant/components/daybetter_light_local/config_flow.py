@@ -128,7 +128,7 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         device_options = {
             str(i): device["name"] for i, device in enumerate(self.discovered_devices)
         }
-        device_options["manual"] = "Manually enter the IP address"
+        device_options["manual"] = "手动输入IP地址"
 
         return self.async_show_form(
             step_id="user",
@@ -203,7 +203,8 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, user_input):
+    async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from configuration.yaml."""
         # 这里可以实现从YAML导入的逻辑
+        # 暂时直接转到用户步骤
         return await self.async_step_user(user_input)
