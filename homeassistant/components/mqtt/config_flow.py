@@ -774,11 +774,7 @@ _CODE_VALIDATION_MODE = {
 
 @callback
 def default_alarm_control_panel_code(config: dict[str, Any]) -> str:
-    """Return alarm control panel code based on the stored code and desired code mode.
-
-    Updates the magic values for for the `code` options in case remove code
-    validation is selected.
-    """
+    """Return alarm control panel code based on the stored code and code mode."""
     code: str
     if config["alarm_control_panel_code_mode"] in _CODE_VALIDATION_MODE:
         # Return magic value for remote code validation
