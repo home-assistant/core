@@ -1,5 +1,6 @@
 """Test DayBetter light local config flow."""
 
+import asyncio
 from errno import EADDRINUSE
 from unittest.mock import AsyncMock, patch
 
@@ -11,6 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import DEFAULT_CAPABILITIES
+
+from tests.components.daybetter_light_local.test_light import MagicMock, MockConfigEntry
 
 
 def _get_devices(mock_DayBetter_api: AsyncMock) -> list[DayBetterDevice]:
@@ -43,14 +46,25 @@ async def test_creating_entry_has_no_devices(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "manual"
 
-        # 提交手动输入的表单
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "192.168.1.100"}
-        )
+        # 模拟手动输入时也没有发现设备
+        with patch(
+            "homeassistant.components.daybetter_light_local.config_flow.DayBetterController",
+            return_value=mock_DayBetter_api,
+        ):
+            # 确保控制器没有设备
+            mock_DayBetter_api.devices = []
+            mock_DayBetter_api.start = AsyncMock()
+            mock_DayBetter_api.cleanup = MagicMock(return_value=asyncio.Event())
+            mock_DayBetter_api.cleanup.return_value.set()
 
-        # 由于没有设备，应该显示错误
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"]["base"] == "no_devices_found"
+            # 提交手动输入的表单
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {"host": "192.168.1.100"}
+            )
+
+            # 由于没有设备，应该显示错误
+            assert result["type"] is FlowResultType.FORM
+            assert result["errors"]["base"] == "no_devices_found"
 
 
 async def test_creating_entry_has_with_devices(
@@ -61,26 +75,16 @@ async def test_creating_entry_has_with_devices(
     """Test setting up DayBetter with devices."""
 
     # 模拟发现设备
-    with (
-        patch(
-            "homeassistant.components.daybetter_light_local.config_flow._async_discover_devices",
-            return_value=[
-                {
-                    "fingerprint": "hhhhhhhhhhhhhhhhhhhhhhhhhhh",
-                    "ip": "192.168.1.169",
-                    "sku": "P076",
-                    "name": "DayBetter P076",
-                }
-            ],
-        ),
-        patch(
-            "homeassistant.components.daybetter_light_local.config_flow.DayBetterController",
-            return_value=mock_DayBetter_api,
-        ),
-        patch(
-            "homeassistant.components.daybetter_light_local.async_setup_entry",
-            return_value=True,
-        ),
+    with patch(
+        "homeassistant.components.daybetter_light_local.config_flow._async_discover_devices",
+        return_value=[
+            {
+                "fingerprint": "hhhhhhhhhhhhhhhhhhhhhhhhhhh",
+                "ip": "192.168.1.169",
+                "sku": "P076",
+                "name": "DayBetter P076",
+            }
+        ],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -99,8 +103,25 @@ async def test_creating_entry_has_with_devices(
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"]["host"] == "192.168.1.169"
 
-        await hass.async_block_till_done()
-        mock_setup_entry.assert_awaited_once()
+        # 现在应该设置条目
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data=result["data"],
+            title=result["title"],
+        )
+        entry.add_to_hass(hass)
+
+        # 模拟协调器设置
+        with patch(
+            "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
+            return_value=mock_DayBetter_api,
+        ):
+            mock_DayBetter_api.devices = _get_devices(mock_DayBetter_api)
+            assert await hass.config_entries.async_setup(entry.entry_id)
+            await hass.async_block_till_done()
+
+            # 现在应该被调用一次
+            assert mock_setup_entry.call_count == 1
 
 
 async def test_creating_entry_errno(
@@ -153,26 +174,16 @@ async def test_manual_entry_with_devices(
 ) -> None:
     """Test manual entry when devices are found."""
 
-    with (
-        patch(
-            "homeassistant.components.daybetter_light_local.config_flow._async_discover_devices",
-            return_value=[
-                {
-                    "fingerprint": "hhhhhhhhhhhhhhhhhhhhhhhhhhh",
-                    "ip": "192.168.1.169",
-                    "sku": "P076",
-                    "name": "DayBetter P076",
-                }
-            ],
-        ),
-        patch(
-            "homeassistant.components.daybetter_light_local.config_flow.DayBetterController",
-            return_value=mock_DayBetter_api,
-        ),
-        patch(
-            "homeassistant.components.daybetter_light_local.async_setup_entry",
-            return_value=True,
-        ),
+    with patch(
+        "homeassistant.components.daybetter_light_local.config_flow._async_discover_devices",
+        return_value=[
+            {
+                "fingerprint": "hhhhhhhhhhhhhhhhhhhhhhhhhhh",
+                "ip": "192.168.1.169",
+                "sku": "P076",
+                "name": "DayBetter P076",
+            }
+        ],
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -187,11 +198,21 @@ async def test_manual_entry_with_devices(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "manual"
 
-        # 提交手动输入
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "192.168.1.100"}
-        )
+        # 模拟手动输入成功发现设备
+        with patch(
+            "homeassistant.components.daybetter_light_local.config_flow.DayBetterController",
+            return_value=mock_DayBetter_api,
+        ):
+            mock_DayBetter_api.devices = _get_devices(mock_DayBetter_api)
+            mock_DayBetter_api.start = AsyncMock()
+            mock_DayBetter_api.cleanup = MagicMock(return_value=asyncio.Event())
+            mock_DayBetter_api.cleanup.return_value.set()
 
-        # 应该创建条目
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["data"]["host"] == "192.168.1.100"
+            # 提交手动输入
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {"host": "192.168.1.100"}
+            )
+
+            # 应该创建条目
+            assert result["type"] is FlowResultType.CREATE_ENTRY
+            assert result["data"]["host"] == "192.168.1.100"

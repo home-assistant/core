@@ -149,7 +149,7 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not host or host.strip() == "":
                 errors["base"] = "invalid_host"
             else:
-                # 验证连接
+                controller = None
                 try:
                     controller = DayBetterController(
                         loop=self.hass.loop,
@@ -165,7 +165,14 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                     await controller.start()
                     controller.send_discovery_message()
-                    await asyncio.sleep(1)  # 等待发现
+
+                    # 等待设备发现
+                    try:
+                        async with asyncio.timeout(DISCOVERY_TIMEOUT):
+                            while not controller.devices:
+                                await asyncio.sleep(0.1)
+                    except TimeoutError:
+                        _LOGGER.debug("No devices discovered within timeout")
 
                     if not controller.devices:
                         errors["base"] = "no_devices_found"
@@ -177,35 +184,26 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         await self.async_set_unique_id(unique_id)
                         self._abort_if_unique_id_configured()
 
-                        cleanup_complete = controller.cleanup()
-                        with suppress(TimeoutError):
-                            await asyncio.wait_for(cleanup_complete.wait(), 1)
-
                         return self.async_create_entry(
                             title=f"DayBetter Light {host}",
                             data={"host": host},
                         )
 
                 except OSError as ex:
+                    _LOGGER.error("Controller start failed, errno: %d", ex.errno)
                     if ex.errno == EADDRINUSE:
                         errors["base"] = "address_in_use"
                     else:
                         errors["base"] = "connection_failed"
-
                 finally:
-                    if "controller" in locals():
+                    if controller:
                         cleanup_complete = controller.cleanup()
                         with suppress(TimeoutError):
                             await asyncio.wait_for(cleanup_complete.wait(), 1)
 
-        # 修复：确保 schema 包含 host 字段
         return self.async_show_form(
             step_id="manual",
-            data_schema=vol.Schema(
-                {
-                    vol.Required("host"): str  # 确保这里定义了 host 字段
-                }
-            ),
+            data_schema=vol.Schema({vol.Required("host"): str}),
             errors=errors,
         )
 
