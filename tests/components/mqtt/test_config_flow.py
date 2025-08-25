@@ -41,6 +41,7 @@ from .common import (
     MOCK_COVER_SUBENTRY_DATA_SINGLE,
     MOCK_FAN_SUBENTRY_DATA_SINGLE,
     MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE,
+    MOCK_LOCK_SUBENTRY_DATA_SINGLE,
     MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
     MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME,
     MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
@@ -3347,6 +3348,55 @@ async def test_migrate_of_incompatible_config_entry(
             ),
             "Milk notifier Basic light",
         ),
+        (
+            MOCK_LOCK_SUBENTRY_DATA_SINGLE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Lock"},
+            {},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "code_format": "^\\d{4}$",
+                "optimistic": True,
+                "retain": False,
+                "lock_payload_settings": {
+                    "payload_open": "OPEN",
+                    "payload_lock": "LOCK",
+                    "payload_unlock": "UNLOCK",
+                    "payload_reset": "None",
+                    "state_jammed": "JAMMED",
+                    "state_locked": "LOCKED",
+                    "state_locking": "LOCKING",
+                    "state_unlocked": "UNLOCKED",
+                    "state_unlocking": "UNLOCKING",
+                },
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "code_format": "(",
+                    },
+                    {"code_format": "invalid_regular_expression"},
+                ),
+            ),
+            "Milk notifier Lock",
+        ),
+        # MOCK_LOCK_SUBENTRY_DATA_SINGLE
     ],
     ids=[
         "binary_sensor",
@@ -3362,11 +3412,13 @@ async def test_migrate_of_incompatible_config_entry(
         "sensor_total",
         "switch",
         "light_basic_kelvin",
+        "lock",
     ],
 )
 async def test_subentry_configflow(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    mock_reload_after_entry_update: MagicMock,
     config_subentries_data: dict[str, Any],
     mock_device_user_input: dict[str, Any],
     mock_entity_user_input: dict[str, Any],
@@ -3501,6 +3553,10 @@ async def test_subentry_configflow(
         assert subentry_device_data[option] == value
 
     await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Assert the entry is reloaded to set up the entity
+    assert len(mock_reload_after_entry_update.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
@@ -3641,6 +3697,7 @@ async def test_subentry_reconfigure_remove_entity(
 async def test_subentry_reconfigure_edit_entity_multi_entitites(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
+    mock_reload_after_entry_update: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     user_input_mqtt: dict[str, Any],
@@ -3757,6 +3814,10 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
     assert new_components[object_list[0]] == components[object_list[0]]
     for key, value in user_input_mqtt.items():
         assert new_components[object_list[1]][key] == value
+
+    # Assert the entry is reloaded to set up the entity
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert len(mock_reload_after_entry_update.mock_calls) == 1
 
 
 @pytest.mark.parametrize(
