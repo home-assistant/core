@@ -1301,6 +1301,68 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[VA4QyBNZHkJ2Xa4hjd]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'VA4QyBNZHkJ2Xa4hjd',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Smart Dimmer Switch',
+    'model_id': 'h4aX2JkHZNByQ4AV',
+    'name': 'Entry Stairs',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[YQLkAe7nyyAxXHiAzc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'YQLkAe7nyyAxXHiAzc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Mini Smart Plug',
+    'model_id': 'AiHXxAyyn7eAkLQY',
+    'name': 'Solar Heater Pump',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[ZgXzZULP6dDp4Atvgcdsw]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -1766,6 +1828,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[bl5cuqxnqzkfs]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'bl5cuqxnqzkfs',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Smart Water Timer',
+    'model_id': 'nxquc5lb',
+    'name': 'Smart Water Timer',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[buzituffc13pgb1jjd]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -2131,6 +2224,37 @@
     'model': 'YFA-05C',
     'model_id': 'vdadlnmsorlhw4td',
     'name': 'Sove',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[dvdtmcoil5yopaljjzm]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'dvdtmcoil5yopaljjzm',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'ISV-100W2.0 (unsupported)',
+    'model_id': 'jlapoy5liocmtdvd',
+    'name': 'ISV-100W2.0',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -2534,6 +2658,37 @@
     'model': 'Smart Power Strip',
     'model_id': 'tsbguim4trl6fa7g',
     'name': 'Keller',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[ggimpv4dqzkfs]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'ggimpv4dqzkfs',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Valve Controller',
+    'model_id': 'd4vpmigg',
+    'name': 'Garden Valve Yard',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -2968,6 +3123,37 @@
     'model': 'Temperature Sensor',
     'model_id': 'iq4ygaai',
     'name': 'Bassin',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[idztlaspsms815moqkynw]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'idztlaspsms815moqkynw',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Smart IR (unsupported)',
+    'model_id': 'om518smspsaltzdi',
+    'name': 'Smart IR Theater',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -4215,6 +4401,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[okwwus27jhqqe2mijbgs]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'okwwus27jhqqe2mijbgs',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Outdoor siren',
+    'model_id': 'im2eqqhj72suwwko',
+    'name': 'Siren',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[ol8xwtcj42eg18bdbrnz]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -5231,6 +5448,37 @@
     'model': 'Tank A Level',
     'model_id': 'wtzwyhkev3b4ubns',
     'name': 'House Water Level',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[srp7cfjtn6sshwmt2gw]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'srp7cfjtn6sshwmt2gw',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Gateway (unsupported)',
+    'model_id': 'tmwhss6ntjfc7prs',
+    'name': 'Gateway',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
@@ -6409,6 +6657,37 @@
     'model': 'V20',
     'model_id': 'lr33znaodtyarrrz',
     'name': 'V20',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[zspc4q1ut7swycnyzc]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        'zspc4q1ut7swycnyzc',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Wi-Fi hub',
+    'model_id': 'yncyws7tu1q4cpsz',
+    'name': 'Wi-Fi hub',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
