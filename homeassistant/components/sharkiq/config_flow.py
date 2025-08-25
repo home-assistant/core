@@ -3,7 +3,8 @@
 import urllib.parse
 import voluptuous as vol
 import aiohttp
-from sharkiq import Auth0Client
+from sharkiq import Auth0Client SharkIqAuthError
+
 
 from homeassistant import exceptions
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -52,16 +53,25 @@ SHARKIQ_SCHEMA = vol.Schema(
 
 async def _validate_input(hass, data) -> dict[str, str]:
     """Validate the user input allows us to connect."""
-    session = aiohttp_client.async_create_clientsession(hass)
+    session = aiohttp_client.async_get_clientsession(hass)
     try:
-        tokens = await Auth0Client.do_auth0_login(session, data[CONF_USERNAME], data[CONF_PASSWORD])
+        LOGGER.debug("Starting Auth0 login for %s", data[CONF_USERNAME])
+        tokens = await Auth0Client.do_auth0_login(
+            session,
+            data[CONF_USERNAME],
+            data[CONF_PASSWORD],
+        )
         LOGGER.debug("Got tokens in config flow: %s", list(tokens.keys()))
-    except InvalidAuth:
-        raise
+    except SharkIqAuthError:
+        # map dependency’s error to HA’s InvalidAuth
+        raise InvalidAuth
     except Exception as err:
+        LOGGER.exception("Auth flow crashed: %s", err)
         raise CannotConnect from err
 
     return {"title": data[CONF_USERNAME]}
+
+
 
 
 class SharkIqConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -83,9 +93,14 @@ class SharkIqConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except Exception:  # fallback
                 errors["base"] = "unknown"
+            except Exception as err:
+                LOGGER.exception("Auth flow crashed: %s", err)
+                raise CannotConnect from err
 
         return self.async_show_form(
             step_id="user",
             data_schema=SHARKIQ_SCHEMA,
             errors=errors,
         )
+
+

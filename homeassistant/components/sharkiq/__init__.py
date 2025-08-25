@@ -1,11 +1,7 @@
-"""Shark IQ Integration."""
+from __future__ import annotations
 
 import asyncio
-import urllib.parse
 from contextlib import suppress
-from sharkiq import Auth0Client
-
-import aiohttp
 
 from sharkiq import (
     AylaApi,
@@ -13,13 +9,14 @@ from sharkiq import (
     SharkIqAuthExpiringError,
     SharkIqNotAuthedError,
     get_ayla_api,
+    Auth0Client,
 )
 
 from homeassistant import exceptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     API_TIMEOUT,
@@ -28,7 +25,7 @@ from .const import (
     PLATFORMS,
     SHARKIQ_REGION_DEFAULT,
     SHARKIQ_REGION_EUROPE,
-    SHARKIQ_REGION_ELSEWHERE,
+    SHARKIQ_REGION_ELSEWHERE
 )
 from .coordinator import SharkIqUpdateCoordinator
 
@@ -45,7 +42,7 @@ class CannotConnect(exceptions.HomeAssistantError):
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Initialize the SharkIQ platform via config entry."""
 
-    session = async_create_clientsession(hass)
+    session = async_get_clientsession(hass)
 
     # ---- Region handling with legacy support ----
     region = config_entry.data.get(CONF_REGION, SHARKIQ_REGION_DEFAULT)
@@ -61,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     # ---- Auth0 validation ----
     try:
-        tokens = await Auth0Client.do_auth0_login(session, data[CONF_USERNAME], data[CONF_PASSWORD])
+        tokens = await Auth0Client.do_auth0_login(session, config_entry.data[CONF_USERNAME], config_entry.data[CONF_PASSWORD])
         LOGGER.debug("Got tokens during setup: %s", list(tokens.keys()))
     except Exception as exc:
         LOGGER.error("Auth0 login failed: %s", exc)
