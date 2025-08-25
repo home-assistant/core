@@ -21,7 +21,7 @@
         }
       },
       "reauth_confirm": {
-        "description": "Please confirm the PIN for {name}.\nMake sure the mower is in pairing mode and the PIN is correct.",
+        "description": "Please confirm the PIN for {name}.",
         "data": {
           "pin": "[%key:component::husqvarna_automower_ble::config::step::user::data::pin%]"
         },
