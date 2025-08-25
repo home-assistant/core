@@ -640,7 +640,7 @@
           "device_id": "[%key:common::config_flow::data::device%]",
           "name": "[%key:common::config_flow::data::name%]",
           "event_type": "[%key:component::template::config::step::event::data::event_type%]",
-          "event_types": "[%component::event::entity_component::_::state_attributes::event_types::name%]"
+          "event_types": "[%key:component::event::entity_component::_::state_attributes::event_types::name%]"
         },
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",

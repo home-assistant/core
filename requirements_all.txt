@@ -100,7 +100,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.8.0
 
 # homeassistant.components.vicare
-PyViCare==2.50.0
+PyViCare==2.51.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -1140,7 +1140,7 @@ hass-splunk==0.1.1
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
-hassil==3.1.0
+hassil==3.2.0
 
 # homeassistant.components.jewish_calendar
 hdate[astral]==1.1.2
