@@ -357,7 +357,6 @@ def _get_unmatched_slots(
     {
         vol.Required("type"): "conversation/agent/homeassistant/language_scores",
         vol.Optional("language"): str,
-        vol.Optional("country"): str,
     }
 )
 @websocket_api.async_response
@@ -368,10 +367,9 @@ async def websocket_hass_agent_language_scores(
 ) -> None:
     """Get support scores per language."""
     language = msg.get("language", hass.config.language)
-    country = msg.get("country", hass.config.country)
 
     scores = await hass.async_add_executor_job(get_language_scores)
-    matching_langs = language_util.matches(language, scores.keys(), country=country)
+    matching_langs = language_util.matches(language, scores.keys())
     preferred_lang = matching_langs[0] if matching_langs else language
     result = {
         "languages": {

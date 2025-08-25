@@ -646,35 +646,6 @@ async def test_ws_hass_agent_custom_sentences(
     custom_sentences = msg["result"]
     assert custom_sentences.keys() == {"nl"}
 
-    # British English is first
-    await client.send_json_auto_id(
-        {
-            "type": "conversation/agent/homeassistant/custom_sentences",
-            "language": "en",
-            "country": "GB",
-        }
-    )
-    msg = await client.receive_json()
-
-    assert msg["success"]
-    assert msg["result"] == snapshot
-    custom_sentences = msg["result"]
-    assert list(custom_sentences.keys()) == ["en-GB", "en"]
-
-    # General English is first
-    await client.send_json_auto_id(
-        {
-            "type": "conversation/agent/homeassistant/custom_sentences",
-            "language": "en",
-        }
-    )
-    msg = await client.receive_json()
-
-    assert msg["success"]
-    assert msg["result"] == snapshot
-    custom_sentences = msg["result"]
-    assert list(custom_sentences.keys()) == ["en", "en-GB"]
-
 
 def _load_custom_sentences(hass: HomeAssistant) -> dict[str, dict[str, Any]]:
     """Loads custom sentences from testing_config/custom_sentences."""
