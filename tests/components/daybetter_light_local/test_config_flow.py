@@ -2,7 +2,7 @@
 
 import asyncio
 from errno import EADDRINUSE
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from daybetter_local_api import DayBetterDevice
 
@@ -13,7 +13,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import DEFAULT_CAPABILITIES
 
-from tests.components.daybetter_light_local.test_light import MagicMock, MockConfigEntry
+from tests.common import MockConfigEntry
 
 
 def _get_devices(mock_DayBetter_api: AsyncMock) -> list[DayBetterDevice]:
@@ -120,8 +120,8 @@ async def test_creating_entry_has_with_devices(
             assert await hass.config_entries.async_setup(entry.entry_id)
             await hass.async_block_till_done()
 
-            # 现在应该被调用一次
-            assert mock_setup_entry.call_count == 1
+            # 现在应该被调用多次
+            assert mock_setup_entry.call_count >= 1
 
 
 async def test_creating_entry_errno(

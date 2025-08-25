@@ -7,14 +7,17 @@
           "device": "Select device"
         },
         "data_description": {
-          "host": "Select a DayBetter device to add or enter IP address manually."
+          "host": "Select a DayBetter device to add or enter IP address manually.",
+          "device": "Select a DayBetter device to add or enter IP address manually."
         }
       },
       "manual": {
         "data": {
           "host": "Host IP Address"
         },
-        "description": "Enter the IP address of your DayBetter light controller"
+        "data_description": {
+          "host": "Select a DayBetter device to add or enter IP address manually."
+        }
       }
     },
     "abort": {
