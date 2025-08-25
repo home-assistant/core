@@ -63,8 +63,8 @@ async def test_creating_entry_has_with_devices(
     # 需要正确模拟发现过程和协调器
     with (
         patch(
-            "homeassistant.components.daybetter_light_local.config_flow.DayBetterConfigFlow._async_discover_device",
-            return_value=None,  # 让自动发现返回None
+            "homeassistant.components.daybetter_light_local.config_flow.DayBetterController",
+            return_value=mock_DayBetter_api,
         ),
         patch(
             "homeassistant.components.daybetter_light_local.async_setup_entry",
@@ -94,7 +94,6 @@ async def test_creating_entry_has_with_devices(
         mock_setup_entry.assert_awaited_once()
 
 
-# 在 test_creating_entry_errno 测试中
 async def test_creating_entry_errno(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
@@ -120,3 +119,6 @@ async def test_creating_entry_errno(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "address_in_use"
+
+    await hass.async_block_till_done()
+    mock_setup_entry.assert_not_awaited()

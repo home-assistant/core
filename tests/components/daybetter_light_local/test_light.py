@@ -134,9 +134,15 @@ async def test_light_setup_retry(
     # 确保协调器的 devices 属性返回空列表
     mock_DayBetter_api.devices = []
 
-    with patch(
-        "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
-        return_value=mock_DayBetter_api,
+    with (
+        patch(
+            "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
+            return_value=mock_DayBetter_api,
+        ),
+        patch(
+            "homeassistant.components.daybetter_light_local.coordinator.DayBetterLocalApiCoordinator._async_update_data",
+            return_value=[],  # 确保更新数据也返回空
+        ),
     ):
         entry = MockConfigEntry(domain=DOMAIN, data={"host": "192.168.1.100"})
         entry.add_to_hass(hass)
