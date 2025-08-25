@@ -1,17 +1,17 @@
 {
   "config": {
     "step": {
-        "user": {
+      "user": {
         "data": {
-          "device": "Select equipment"
+          "device": "Select device"
         },
-        "description": "Select the DayBetter device you want to add or manually enter the IP address"
+        "description": "Select a DayBetter device to add or enter IP address manually"
       },
       "manual": {
         "data": {
-          "host": "Host IP address"
+          "host": "Host IP Address"
         },
-        "description": "Please enter the IP address of the DayBetter lighting controller"
+        "description": "Enter the IP address of your DayBetter light controller"
       }
     },
     "abort": {
