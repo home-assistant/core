@@ -2,15 +2,19 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import asdict
+from pathlib import Path
 from typing import Any
 
 from aiohttp import web
 from hassil.recognize import MISSING_ENTITY, RecognizeResult
 from hassil.string_matcher import UnmatchedRangeEntity, UnmatchedTextEntity
+from hassil.util import merge_dict
 from home_assistant_intents import get_language_scores
 import voluptuous as vol
+from yaml import safe_load
 
 from homeassistant.components import http, websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
@@ -45,6 +49,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_list_sentences)
     websocket_api.async_register_command(hass, websocket_hass_agent_debug)
     websocket_api.async_register_command(hass, websocket_hass_agent_language_scores)
+    websocket_api.async_register_command(hass, websocket_hass_agent_custom_sentences)
 
 
 @websocket_api.websocket_command(
@@ -375,6 +380,46 @@ async def websocket_hass_agent_language_scores(
         "preferred_language": preferred_lang,
     }
 
+    connection.send_result(msg["id"], result)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "conversation/agent/homeassistant/custom_sentences",
+        vol.Optional("language"): str,
+        vol.Optional("country"): str,
+    }
+)
+@websocket_api.async_response
+async def websocket_hass_agent_custom_sentences(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Get user-defined custom sentences."""
+    custom_sentences_dir = Path(hass.config.path("custom_sentences"))
+    language = msg.get("language")
+    country = msg.get("country")
+
+    def load_custom_sentences():
+        lang_dirs = [d for d in custom_sentences_dir.iterdir() if d.is_dir()]
+        custom_langs = [d.name for d in lang_dirs]
+
+        if language:
+            lang_dirs = [
+                custom_sentences_dir / lang_match
+                for lang_match in language_util.matches(language, custom_langs, country)
+            ]
+
+        lang_intents = defaultdict(dict)
+        for lang_dir in lang_dirs:
+            for sentence_path in lang_dir.glob("*.yaml"):
+                with open(sentence_path, encoding="utf-8") as sentence_file:
+                    merge_dict(lang_intents[lang_dir.name], safe_load(sentence_file))
+
+        return lang_intents
+
+    result = await hass.async_add_executor_job(load_custom_sentences)
     connection.send_result(msg["id"], result)
 
 

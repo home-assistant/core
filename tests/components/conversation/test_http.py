@@ -1,11 +1,15 @@
 """The tests for the HTTP API of the Conversation component."""
 
+from collections import defaultdict
 from http import HTTPStatus
+from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
+from hassil.util import merge_dict
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from yaml import safe_load
 
 from homeassistant.components.conversation import default_agent
 from homeassistant.components.conversation.const import (
@@ -594,3 +598,94 @@ async def test_ws_hass_language_scores_with_filter(
     # GB English should be preferred
     result = msg["result"]
     assert result["preferred_language"] == "en-GB"
+
+
+async def test_ws_hass_agent_custom_sentences(
+    hass: HomeAssistant,
+    init_components,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test homeassistant agent websocket command to get custom sentences."""
+
+    # Expecting in testing_config/custom_sentences:
+    # - /en/beer.yaml
+    # - /en-GB/beer.yaml
+    # - /nl/beer.yaml
+    expected_intents = await hass.async_add_executor_job(_load_custom_sentences, hass)
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "conversation/agent/homeassistant/custom_sentences",
+        }
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == snapshot
+
+    # All languages should be loaded
+    custom_sentences = msg["result"]
+    assert custom_sentences.keys() == {"en", "en-GB", "nl"}
+
+    # Each language contains the merged YAML as a dict
+    for lang, actual_intents in custom_sentences.items():
+        assert lang in expected_intents
+        assert actual_intents == expected_intents[lang]
+
+    # Only Dutch
+    await client.send_json_auto_id(
+        {"type": "conversation/agent/homeassistant/custom_sentences", "language": "nl"}
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == snapshot
+    custom_sentences = msg["result"]
+    assert custom_sentences.keys() == {"nl"}
+
+    # British English is first
+    await client.send_json_auto_id(
+        {
+            "type": "conversation/agent/homeassistant/custom_sentences",
+            "language": "en",
+            "country": "GB",
+        }
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == snapshot
+    custom_sentences = msg["result"]
+    assert list(custom_sentences.keys()) == ["en-GB", "en"]
+
+    # General English is first
+    await client.send_json_auto_id(
+        {
+            "type": "conversation/agent/homeassistant/custom_sentences",
+            "language": "en",
+        }
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == snapshot
+    custom_sentences = msg["result"]
+    assert list(custom_sentences.keys()) == ["en", "en-GB"]
+
+
+def _load_custom_sentences(hass: HomeAssistant) -> dict[str, dict[str, Any]]:
+    """Loads custom sentences from testing_config/custom_sentences."""
+    custom_sentences = defaultdict(dict)
+    custom_sentences_dir = Path(hass.config.path("custom_sentences"))
+    for lang_dir in custom_sentences_dir.iterdir():
+        if not lang_dir.is_dir():
+            continue
+
+        for yaml_path in lang_dir.glob("*.yaml"):
+            with open(yaml_path, encoding="utf-8") as yaml_file:
+                merge_dict(custom_sentences[lang_dir.name], safe_load(yaml_file))
+
+    return custom_sentences
