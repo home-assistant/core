@@ -3,20 +3,18 @@
 from collections.abc import Mapping
 import datetime as dt
 import logging
-import random
 from zoneinfo import ZoneInfo
 
 import pyomie.main as pyomie
 from pyomie.model import OMIEResults, SpotData
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HassJob, HassJobType, HomeAssistant, callback
-from homeassistant.helpers import event
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import utcnow
 
-from .const import CET, DOMAIN
+from .const import DOMAIN
 from .util import _get_market_dates, _is_published
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,19 +32,15 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[dt.date, OMIEResults[SpotDat
         config_entry: ConfigEntry,
     ) -> None:
         """Initialize OMIE coordinator."""
-        super().__init__(hass, _LOGGER, name=f"{DOMAIN}", config_entry=config_entry)
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}",
+            config_entry=config_entry,
+            update_interval=dt.timedelta(minutes=1),
+        )
         self.data: Mapping[dt.date, OMIEResults[SpotData]] = {}
         self._client_session = async_get_clientsession(hass)
-
-        # Random delay to avoid thundering herd
-        delay_micros = random.randint(0, _SCHEDULE_MAX_DELAY.seconds * 10**6)
-        self._schedule_second = delay_micros // 10**6
-        self._schedule_microsecond = delay_micros % 10**6
-        self.__job = HassJob(
-            self._handle_refresh_interval,
-            "OMIECoordinator",
-            job_type=HassJobType.Coroutinefunction,
-        )
 
     async def _async_update_data(self) -> Mapping[dt.date, OMIEResults[SpotData]]:
         """Update OMIE data, fetching data as needed and available."""
@@ -64,41 +58,12 @@ class OMIECoordinator(DataUpdateCoordinator[Mapping[dt.date, OMIEResults[SpotDat
         try:
             # off to OMIE for anything that's still missing
             for d in {pd for pd in published_dates if pd not in data}:
-                _LOGGER.debug("Fetching data for %s", d)
+                _LOGGER.info("Fetching OMIE data for %s", d)
                 if results := await pyomie.spot_price(self._client_session, d):
+                    _LOGGER.debug("pyomie.spot_price returned: %s", results)
                     data.update({d: results})
         except Exception as error:
             raise UpdateFailed(str(error)) from error
 
         _LOGGER.debug("_async_update_data: %s", data)
         return data
-
-    @callback
-    def _schedule_refresh(self) -> None:
-        """Schedule the next refresh at the top of the next hour."""
-        if self.config_entry and self.config_entry.pref_disable_polling:
-            return
-
-        # We do not cancel the debouncer here. If the refresh interval is shorter
-        # than the debouncer cooldown, this would cause the debounce to never be called
-        self._async_unsub_refresh()
-
-        # Schedule for the next hour boundary
-        now_cet = utcnow().astimezone(CET)
-        next_hour = now_cet.replace(
-            minute=0,
-            second=self._schedule_second,
-            microsecond=self._schedule_microsecond,
-        ) + dt.timedelta(hours=1)
-
-        next_refresh = next_hour.astimezone()
-
-        _LOGGER.debug(
-            "Scheduling next refresh at %s (CET: %s)",
-            next_refresh,
-            next_hour,
-        )
-
-        self._unsub_refresh = event.async_track_point_in_utc_time(
-            self.hass, self.__job, next_refresh
-        )

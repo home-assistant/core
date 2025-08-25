@@ -348,13 +348,11 @@ async def test_coordinator_unavailability_logging(
     assert mock_pyomie.spot_price.call_count == 2
     assert "Error fetching omie data: Connection timeout" in caplog.text
 
-    # Clear logs to test log-once behavior
-    caplog_text_before = caplog.text
-
     # Second failure should not log again
+    caplog.clear()
     await coordinator.async_refresh()
     assert mock_pyomie.spot_price.call_count == 3
-    assert caplog.text == caplog_text_before  # Should not log again
+    assert "Error" not in caplog.text  # Should not log again
 
     # Mock API recovery
     mock_pyomie.spot_price.side_effect = spot_price_fetcher({})
