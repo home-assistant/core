@@ -1460,12 +1460,18 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             if config_entry_id not in config_entries:
                 continue
             if config_entries == {config_entry_id}:
+                # Clear disabled_by if it was disabled by the config entry
+                if deleted_device.disabled_by is DeviceEntryDisabler.CONFIG_ENTRY:
+                    disabled_by = None
+                else:
+                    disabled_by = deleted_device.disabled_by
                 # Add a time stamp when the deleted device became orphaned
                 self.deleted_devices[deleted_device.id] = attr.evolve(
                     deleted_device,
                     orphaned_timestamp=now_time,
                     config_entries=set(),
                     config_entries_subentries={},
+                    disabled_by=disabled_by,
                 )
             else:
                 config_entries = config_entries - {config_entry_id}
