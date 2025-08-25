@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import asyncio
+import logging
+LOGGER = logging.getLogger(__name__)
+
 from contextlib import suppress
 
 from sharkiq import (
@@ -21,7 +24,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import (
     API_TIMEOUT,
     DOMAIN,
-    LOGGER,
     PLATFORMS,
     SHARKIQ_REGION_DEFAULT,
     SHARKIQ_REGION_EUROPE,
