@@ -11,17 +11,18 @@ from fluss_api import (
 import pytest
 
 from homeassistant.components.fluss import PLATFORMS, async_setup_entry
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState, MockConfigEntry
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 
 @pytest.fixture
 async def mock_entry():
     """Mock Fluss+ API entry."""
-    entry = AsyncMock(spec=ConfigEntry)
-    entry.data = {"api_key": "test_api_key"}
-    entry.entry_id = "test_entry_id"
-    entry.runtime_data = None  # Will be set during setup
+    entry = MockConfigEntry(
+        domain="fluss",
+        data={"api_key": "test_api_key"},
+        entry_id="test_entry_id",
+    )
     entry.state = ConfigEntryState.NOT_LOADED
     return entry
 
@@ -41,7 +42,7 @@ async def test_async_setup_entry_authentication_error(mock_hass, mock_entry) -> 
 
 @pytest.mark.asyncio
 async def test_async_setup_entry_communication_error(mock_hass, mock_entry) -> None:
-    """Mock Communication Error."""
+    """Test communication error raises ConfigEntryNotReady."""
     with (
         patch(
             "homeassistant.components.fluss.FlussApiClient",
@@ -54,7 +55,7 @@ async def test_async_setup_entry_communication_error(mock_hass, mock_entry) -> N
 
 @pytest.mark.asyncio
 async def test_async_setup_entry_general_error(mock_hass, mock_entry) -> None:
-    """Mock General Error."""
+    """Test general error raises ConfigEntryNotReady."""
     with (
         patch(
             "homeassistant.components.fluss.FlussApiClient",
