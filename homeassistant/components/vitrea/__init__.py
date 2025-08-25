@@ -78,9 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VitreaConfigEntry) -> bo
         discovery_start = time.monotonic()
 
         while True:
-            await asyncio.sleep(
-                5
-            )  # Single wait period - increased to 5 seconds for better settling
+            await asyncio.sleep(5)
 
             if len(entities) == entity_count:
                 # No new entities discovered in this cycle - discovery likely complete
