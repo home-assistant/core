@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Iterable
 import dataclasses
-from enum import Enum
-from functools import cache, partial
 import inspect
 import logging
+from collections.abc import Callable, Coroutine, Iterable
+from enum import Enum
+from functools import cache, partial
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, TypedDict, cast, override
 
@@ -53,12 +53,16 @@ from homeassistant.util.yaml.loader import JSON_TYPE
 
 from . import (
     config_validation as cv,
+)
+from . import (
     device_registry,
     entity_registry,
     selector,
-    target as target_helpers,
     template,
     translation,
+)
+from . import (
+    target as target_helpers,
 )
 from .deprecation import deprecated_class, deprecated_function
 from .selector import TargetSelector
@@ -1124,13 +1128,7 @@ def _validate_entity_service_schema(
     if schema is None or isinstance(schema, dict):
         return cv.make_entity_service_schema(schema)
     if not cv.is_entity_service_schema(schema):
-        from .frame import ReportBehavior, report_usage  # noqa: PLC0415
-
-        report_usage(
-            "registers an entity service with a non entity service schema",
-            core_behavior=ReportBehavior.LOG,
-            breaks_in_ha_version="2025.9",
-        )
+        raise HomeAssistantError("The schema is not an entity service schema")
     return schema
 
 
