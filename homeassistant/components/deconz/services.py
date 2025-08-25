@@ -120,8 +120,8 @@ async def async_configure_service(hub: DeconzHub, data: ReadOnlyDict) -> None:
         "field": "/lights/1/state",
         "data": {"on": true}
     }
-    See Dresden Elektroniks REST API documentation for details:
-    http://dresden-elektronik.github.io/deconz-rest-doc/rest/
+    See deCONZ REST-API documentation for details:
+    https://dresden-elektronik.github.io/deconz-rest-doc/
     """
     field = data.get(SERVICE_FIELD, "")
     entity_id = data.get(SERVICE_ENTITY)
