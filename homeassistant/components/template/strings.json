@@ -136,6 +136,32 @@
         },
         "title": "Template cover"
       },
+      "event": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "device_class": "[%key:component::template::common::device_class%]",
+          "event_type": "Last fired event type",
+          "event_types": "[%key:component::event::entity_component::_::state_attributes::event_types::name%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "event_type": "Defines a template for the type of the event.",
+          "event_types": "Defines a template for a list of available event types."
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::common::advanced_options%]",
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
+            }
+          }
+        },
+        "title": "Template event"
+      },
       "fan": {
         "data": {
           "device_id": "[%key:common::config_flow::data::device%]",
@@ -358,6 +384,7 @@
           "binary_sensor": "Template a binary sensor",
           "button": "Template a button",
           "cover": "Template a cover",
+          "event": "Template an event",
           "fan": "Template a fan",
           "image": "Template an image",
           "light": "Template a light",
@@ -564,6 +591,31 @@
           }
         },
         "title": "[%key:component::template::config::step::cover::title%]"
+      },
+      "event": {
+        "data": {
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "event_type": "[%key:component::template::config::step::event::data::event_type%]",
+          "event_types": "[%component::event::entity_component::_::state_attributes::event_types::name%]"
+        },
+        "data_description": {
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "event_type": "[%key:component::template::config::step::event::data_description::event_type%]",
+          "event_types": "[%key:component::template::config::step::event::data_description::event_types%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "name": "[%key:component::template::common::advanced_options%]",
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            },
+            "data_description": {
+              "availability": "[%key:component::template::common::availability_description%]"
+            }
+          }
+        },
+        "title": "[%key:component::template::config::step::event::title%]"
       },
       "fan": {
         "data": {
@@ -903,6 +955,13 @@
         "shade": "[%key:component::cover::entity_component::shade::name%]",
         "shutter": "[%key:component::cover::entity_component::shutter::name%]",
         "window": "[%key:component::cover::entity_component::window::name%]"
+      }
+    },
+    "event_device_class": {
+      "options": {
+        "doorbell": "[%key:component::event::entity_component::doorbell::name%]",
+        "button": "[%key:component::event::entity_component::button::name%]",
+        "motion": "[%key:component::event::entity_component::motion::name%]"
       }
     },
     "sensor_device_class": {

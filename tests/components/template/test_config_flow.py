@@ -150,6 +150,16 @@ BINARY_SENSOR_OPTIONS = {
             {},
         ),
         (
+            "event",
+            {"event_type": "{{ states('event.one') }}"},
+            "2024-07-09T00:00:00.000+00:00",
+            {"one": "single", "two": "double"},
+            {},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {},
+        ),
+        (
             "fan",
             {"state": "{{ states('fan.one') }}"},
             "on",
@@ -361,6 +371,12 @@ async def test_config_flow(
             {"state": "{{ 'open' }}"},
             {"set_cover_position": []},
             {"set_cover_position": []},
+        ),
+        (
+            "event",
+            {"event_type": "{{ 'single' }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
         ),
         (
             "fan",
@@ -581,6 +597,16 @@ async def test_config_flow_device(
             {"set_cover_position": []},
             {"set_cover_position": []},
             "state",
+        ),
+        (
+            "event",
+            {"event_type": "{{ states('event.one') }}"},
+            {"event_type": "{{ states('event.two') }}"},
+            ["2024-07-09T00:00:00.000+00:00", "2024-07-09T00:00:00.000+00:00"],
+            {"one": "single", "two": "double"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            "event_type",
         ),
         (
             "fan",
@@ -1468,6 +1494,12 @@ async def test_option_flow_sensor_preview_config_entry_removed(
             {"state": "{{ states('cover.one') }}"},
             {"set_cover_position": []},
             {"set_cover_position": []},
+        ),
+        (
+            "event",
+            {"event_type": "{{ 'single' }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
+            {"event_types": "{{ ['single', 'double'] }}"},
         ),
         (
             "fan",

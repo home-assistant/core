@@ -21,42 +21,47 @@ from .conftest import KNXTestKit
 from tests.typing import WebSocketGenerator
 
 
-async def test_knx_info_command(
+async def test_knx_get_base_data_command(
     hass: HomeAssistant, knx: KNXTestKit, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test knx/info command."""
+    """Test knx/get_base_data command."""
     await knx.setup_integration()
     client = await hass_ws_client(hass)
-    await client.send_json_auto_id({"type": "knx/info"})
+    await client.send_json_auto_id({"type": "knx/get_base_data"})
 
     res = await client.receive_json()
     assert res["success"], res
-    assert res["result"]["version"] is not None
-    assert res["result"]["connected"]
-    assert res["result"]["current_address"] == "0.0.0"
-    assert res["result"]["project"] is None
+    assert res["result"]["connection_info"]["version"] is not None
+    assert res["result"]["connection_info"]["connected"]
+    assert res["result"]["connection_info"]["current_address"] == "0.0.0"
+    assert res["result"]["project_info"] is None
+    assert not SUPPORTED_PLATFORMS_UI.difference(res["result"]["supported_platforms"])
 
 
 @pytest.mark.usefixtures("load_knxproj")
-async def test_knx_info_command_with_project(
+async def test_knx_get_base_data_command_with_project(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test knx/info command with loaded project."""
+    """Test knx/get_base_data command with loaded project."""
     await knx.setup_integration()
     client = await hass_ws_client(hass)
-    await client.send_json_auto_id({"type": "knx/info"})
+    await client.send_json_auto_id({"type": "knx/get_base_data"})
 
     res = await client.receive_json()
     assert res["success"], res
-    assert res["result"]["version"] is not None
-    assert res["result"]["connected"]
-    assert res["result"]["current_address"] == "0.0.0"
-    assert res["result"]["project"] is not None
-    assert res["result"]["project"]["name"] == "Fixture"
-    assert res["result"]["project"]["last_modified"] == "2023-04-30T09:04:04.4043671Z"
-    assert res["result"]["project"]["tool_version"] == "5.7.1428.39779"
+
+    connection_info = res["result"]["connection_info"]
+    assert connection_info["version"] is not None
+    assert connection_info["connected"]
+    assert connection_info["current_address"] == "0.0.0"
+
+    project_info = res["result"]["project_info"]
+    assert project_info is not None
+    assert project_info["name"] == "Fixture"
+    assert project_info["last_modified"] == "2023-04-30T09:04:04.4043671Z"
+    assert project_info["tool_version"] == "5.7.1428.39779"
 
 
 async def test_knx_project_file_process(
@@ -165,8 +170,24 @@ async def test_knx_get_project(
     await client.send_json_auto_id({"type": "knx/get_knx_project"})
     res = await client.receive_json()
     assert res["success"], res
-    assert res["result"]["project_loaded"] is True
-    assert res["result"]["knxproject"] == project_data
+    assert res["result"] == project_data
+
+
+async def test_knx_get_project_no_project(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    project_data: dict[str, Any],
+) -> None:
+    """Test retrieval of kxnproject from store."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+    assert not hass.data[KNX_MODULE_KEY].project.loaded
+
+    await client.send_json_auto_id({"type": "knx/get_knx_project"})
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"] is None
 
 
 async def test_knx_group_monitor_info_command(
@@ -414,7 +435,7 @@ async def test_knx_get_schema(
 @pytest.mark.parametrize(
     "endpoint",
     [
-        "knx/info",  # sync ws-command
+        "knx/get_base_data",  # sync ws-command
         "knx/get_knx_project",  # async ws-command
     ],
 )
