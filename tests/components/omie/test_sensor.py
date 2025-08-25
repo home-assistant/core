@@ -189,8 +189,8 @@ async def test_sensor_state_lisbon_timezone(
         assert mock_pyomie.spot_price.call_count == 2
 
         # Check sensor states - values should be converted from €/MWh to €/kWh
-        pt_state_14 = hass_lisbon.states.get("sensor.omie_spot_price_portugal")
-        es_state_14 = hass_lisbon.states.get("sensor.omie_spot_price_spain")
+        pt_state_14 = hass_lisbon.states.get("sensor.omie_portugal_spot_price")
+        es_state_14 = hass_lisbon.states.get("sensor.omie_spain_spot_price")
 
         # At 14:00 UTC (= 14:00 Lisbon = 3 PM CET)
         assert pt_state_14.state[:8] == "351.1515"  # (PT day 15, hour 15)
@@ -209,8 +209,8 @@ async def test_sensor_state_lisbon_timezone(
         assert mock_pyomie.spot_price.call_count == 2
 
         # Check sensor states - values should be converted from €/MWh to €/kWh
-        pt_state_23 = hass_lisbon.states.get("sensor.omie_spot_price_portugal")
-        es_state_23 = hass_lisbon.states.get("sensor.omie_spot_price_spain")
+        pt_state_23 = hass_lisbon.states.get("sensor.omie_portugal_spot_price")
+        es_state_23 = hass_lisbon.states.get("sensor.omie_spain_spot_price")
 
         # At 14:00 UTC (= 14:00 Lisbon = 3 PM CET)
         assert pt_state_23.state[:8] == "351.16"  # (PT day 16, hour 00)
@@ -225,8 +225,8 @@ async def test_sensor_state_lisbon_timezone(
         assert mock_pyomie.spot_price.call_count == 2
 
         # Check sensor states - values should be converted from €/MWh to €/kWh
-        pt_state_00 = hass_lisbon.states.get("sensor.omie_spot_price_portugal")
-        es_state_00 = hass_lisbon.states.get("sensor.omie_spot_price_spain")
+        pt_state_00 = hass_lisbon.states.get("sensor.omie_portugal_spot_price")
+        es_state_00 = hass_lisbon.states.get("sensor.omie_spain_spot_price")
 
         # At 00 UTC (= 00 Lisbon = 1 AM CET)
         assert pt_state_00.state[:8] == "351.1601"  # (PT day 16, hour 01)
@@ -275,8 +275,8 @@ async def test_sensor_state_madrid_timezone(
         assert mock_pyomie.spot_price.call_count == 1
 
         # Check sensor states - values should be converted from €/MWh to €/kWh
-        pt_state = hass_madrid.states.get("sensor.omie_spot_price_portugal")
-        es_state = hass_madrid.states.get("sensor.omie_spot_price_spain")
+        pt_state = hass_madrid.states.get("sensor.omie_portugal_spot_price")
+        es_state = hass_madrid.states.get("sensor.omie_spain_spot_price")
 
         # At 14:00 UTC ( = 3 PM CET)
         assert pt_state.state[:8] == "351.1515"  # (PT day 15, hour 15)
@@ -306,8 +306,8 @@ async def test_sensor_unavailable_when_no_data(
         await hass.async_block_till_done()
 
     # Both sensors should be unavailable
-    pt_state = hass.states.get("sensor.omie_spot_price_portugal")
-    es_state = hass.states.get("sensor.omie_spot_price_spain")
+    pt_state = hass.states.get("sensor.omie_portugal_spot_price")
+    es_state = hass.states.get("sensor.omie_spain_spot_price")
 
     assert pt_state.state == "unavailable"
     assert es_state.state == "unavailable"
