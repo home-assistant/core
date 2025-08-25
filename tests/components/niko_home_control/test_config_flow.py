@@ -95,7 +95,7 @@ async def test_duplicate_reconfigure_entry(
     mock_niko_home_control_connection: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test uniqueness."""
+    """Test reconfigure to other existing entry."""
     mock_config_entry.add_to_hass(hass)
     another_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -136,7 +136,7 @@ async def test_reconfigure(
     assert result["reason"] == "reconfigure_successful"
 
 
-async def test_async_step_reconfigure_cannot_connect(
+async def test_reconfigure_cannot_connect(
     hass: HomeAssistant,
     mock_niko_home_control_connection: AsyncMock,
     mock_config_entry: MockConfigEntry,
