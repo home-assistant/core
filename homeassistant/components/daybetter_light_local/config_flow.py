@@ -130,7 +130,7 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             devices = await _async_discover_devices(self.hass, host)
 
             if not devices:
-                errors["base"] = "address_in_use"
+                errors["base"] = "no_devices_found"
             else:
                 device = devices[0]
                 unique_id = device["fingerprint"] or host

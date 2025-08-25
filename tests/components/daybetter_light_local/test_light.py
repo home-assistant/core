@@ -1,7 +1,7 @@
 """Test DayBetter light local integration."""
 
 from errno import EADDRINUSE, ENETDOWN
-from unittest.mock import AsyncMock, call, patch
+from unittest.mock import AsyncMock, PropertyMock, call, patch
 
 from daybetter_local_api import DayBetterDevice
 import pytest
@@ -50,7 +50,9 @@ def create_mock_device(
 
 
 # ----------------------------- Tests -----------------------------
-async def test_light_known_device(hass: HomeAssistant, mock_DayBetter_api: AsyncMock):
+async def test_light_known_device(
+    hass: HomeAssistant, mock_DayBetter_api: AsyncMock
+) -> None:
     """Test adding a known device."""
 
     device = create_mock_device(mock_DayBetter_api, capabilities=DEFAULT_CAPABILITIES)
@@ -77,7 +79,9 @@ async def test_light_known_device(hass: HomeAssistant, mock_DayBetter_api: Async
         assert hass.states.get("light.P076") is None
 
 
-async def test_light_unknown_device(hass: HomeAssistant, mock_DayBetter_api: AsyncMock):
+async def test_light_unknown_device(
+    hass: HomeAssistant, mock_DayBetter_api: AsyncMock
+) -> None:
     """Test adding an unknown device."""
 
     device = create_mock_device(
@@ -100,7 +104,7 @@ async def test_light_unknown_device(hass: HomeAssistant, mock_DayBetter_api: Asy
         assert light.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
 
 
-async def test_light_remove(hass: HomeAssistant, mock_DayBetter_api: AsyncMock):
+async def test_light_remove(hass: HomeAssistant, mock_DayBetter_api: AsyncMock) -> None:
     """Test removing a device."""
 
     device = create_mock_device(mock_DayBetter_api, capabilities=DEFAULT_CAPABILITIES)
@@ -123,7 +127,9 @@ async def test_light_remove(hass: HomeAssistant, mock_DayBetter_api: AsyncMock):
         assert len(hass.states.async_all()) == 0
 
 
-async def test_light_setup_retry(hass: HomeAssistant, mock_DayBetter_api: AsyncMock):
+async def test_light_setup_retry(
+    hass: HomeAssistant, mock_DayBetter_api: AsyncMock
+) -> None:
     """Test setup retry when no devices are found."""
 
     mock_DayBetter_api.devices = []
@@ -139,7 +145,7 @@ async def test_light_setup_retry(hass: HomeAssistant, mock_DayBetter_api: AsyncM
         ),
         patch(
             "homeassistant.components.daybetter_light_local.coordinator.DayBetterLocalApiCoordinator.devices",
-            new_callable=property,
+            new_callable=PropertyMock,
             return_value=[],
         ),
     ):
@@ -152,7 +158,7 @@ async def test_light_setup_retry(hass: HomeAssistant, mock_DayBetter_api: AsyncM
 
 async def test_light_setup_retry_eaddrinuse(
     hass: HomeAssistant, mock_DayBetter_api: AsyncMock
-):
+) -> None:
     """Test setup retry on address already in use."""
 
     mock_DayBetter_api.devices = [
@@ -170,7 +176,9 @@ async def test_light_setup_retry_eaddrinuse(
         assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_light_setup_error(hass: HomeAssistant, mock_DayBetter_api: AsyncMock):
+async def test_light_setup_error(
+    hass: HomeAssistant, mock_DayBetter_api: AsyncMock
+) -> None:
     """Test setup failure due to network down."""
 
     mock_DayBetter_api.devices = [
@@ -183,10 +191,10 @@ async def test_light_setup_error(hass: HomeAssistant, mock_DayBetter_api: AsyncM
         entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state is ConfigEntryState.SETUP_ERROR
+        assert entry.state == ConfigEntryState.SETUP_ERROR
 
 
-async def test_light_on_off(hass: HomeAssistant, mock_DayBetter_api: AsyncMock):
+async def test_light_on_off(hass: HomeAssistant, mock_DayBetter_api: AsyncMock) -> None:
     """Test turning light on and off."""
 
     device = create_mock_device(mock_DayBetter_api, capabilities=DEFAULT_CAPABILITIES)
@@ -259,7 +267,7 @@ async def test_turn_on_call_order(
     mock_call: str,
     mock_call_args,
     mock_call_kwargs,
-):
+) -> None:
     """Test turn_on calls correct methods in order."""
 
     device = create_mock_device(mock_DayBetter_api, capabilities=SCENE_CAPABILITIES)
@@ -297,7 +305,9 @@ async def test_turn_on_call_order(
 
 
 # ----------------------------- Brightness Tests -----------------------------
-async def test_light_brightness(hass: HomeAssistant, mock_DayBetter_api: AsyncMock):
+async def test_light_brightness(
+    hass: HomeAssistant, mock_DayBetter_api: AsyncMock
+) -> None:
     """Test changing brightness."""
     device = create_mock_device(mock_DayBetter_api, capabilities=DEFAULT_CAPABILITIES)
     mock_DayBetter_api.devices = [device]
@@ -338,7 +348,7 @@ async def test_light_brightness(hass: HomeAssistant, mock_DayBetter_api: AsyncMo
 
 
 # ----------------------------- Color Tests -----------------------------
-async def test_light_color(hass: HomeAssistant, mock_DayBetter_api: AsyncMock):
+async def test_light_color(hass: HomeAssistant, mock_DayBetter_api: AsyncMock) -> None:
     """Test setting RGB and color temperature."""
     device = create_mock_device(mock_DayBetter_api, capabilities=DEFAULT_CAPABILITIES)
     mock_DayBetter_api.devices = [device]
@@ -385,7 +395,7 @@ async def test_light_color(hass: HomeAssistant, mock_DayBetter_api: AsyncMock):
 
 
 # ----------------------------- Scene Tests -----------------------------
-async def test_scene_on(hass: HomeAssistant, mock_DayBetter_api: AsyncMock):
+async def test_scene_on(hass: HomeAssistant, mock_DayBetter_api: AsyncMock) -> None:
     """Test turning on a scene."""
     device = create_mock_device(mock_DayBetter_api, capabilities=SCENE_CAPABILITIES)
     mock_DayBetter_api.devices = [device]
@@ -415,7 +425,9 @@ async def test_scene_on(hass: HomeAssistant, mock_DayBetter_api: AsyncMock):
         mock_DayBetter_api.turn_on_off.assert_awaited_with(device, True)
 
 
-async def test_scene_restore_rgb(hass: HomeAssistant, mock_DayBetter_api: AsyncMock):
+async def test_scene_restore_rgb(
+    hass: HomeAssistant, mock_DayBetter_api: AsyncMock
+) -> None:
     """Test restoring previous RGB color after scene ends."""
     device = create_mock_device(mock_DayBetter_api, capabilities=SCENE_CAPABILITIES)
     mock_DayBetter_api.devices = [device]
@@ -467,7 +479,7 @@ async def test_scene_restore_rgb(hass: HomeAssistant, mock_DayBetter_api: AsyncM
 
 async def test_scene_restore_temperature(
     hass: HomeAssistant, mock_DayBetter_api: AsyncMock
-):
+) -> None:
     """Test restoring previous color temperature after scene ends."""
     device = create_mock_device(mock_DayBetter_api, capabilities=SCENE_CAPABILITIES)
     mock_DayBetter_api.devices = [device]
@@ -512,7 +524,7 @@ async def test_scene_restore_temperature(
         assert light.attributes[ATTR_COLOR_TEMP_KELVIN] == initial_temp
 
 
-async def test_scene_none(hass: HomeAssistant, mock_DayBetter_api: AsyncMock):
+async def test_scene_none(hass: HomeAssistant, mock_DayBetter_api: AsyncMock) -> None:
     """Test activating 'none' scene does not call set_scene."""
     device = create_mock_device(mock_DayBetter_api, capabilities=SCENE_CAPABILITIES)
     mock_DayBetter_api.devices = [device]
