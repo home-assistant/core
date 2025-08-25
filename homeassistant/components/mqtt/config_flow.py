@@ -781,15 +781,15 @@ def default_alarm_control_panel_code(config: dict[str, Any]) -> str:
     """
 
     code_validation_mode: str = config["alarm_control_panel_code_mode"]
-    default: str = config.get(CONF_CODE, "")
+    code: str = config.get(CONF_CODE, "")
     if code_validation_mode in _CODE_VALIDATION_MODE:
-        # Set magic value for remote code validation
-        default = _CODE_VALIDATION_MODE[config["alarm_control_panel_code_mode"]]
-    elif config.get(CONF_CODE, "") in _CODE_VALIDATION_MODE.values():
-        # Filter out magic values for remote code validation
-        default = ""
+        # Return magic value for remote code validation
+        return _CODE_VALIDATION_MODE[config["alarm_control_panel_code_mode"]]
+    if code in _CODE_VALIDATION_MODE.values():
+        # Remove magic value for remote code validation
+        return ""
 
-    return default
+    return code
 
 
 @callback
