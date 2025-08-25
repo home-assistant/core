@@ -109,11 +109,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pycmus > pbr > setuptools
         "pbr": {"setuptools"}
     },
-    "concord232": {
-        # https://bugs.launchpad.net/python-stevedore/+bug/2111694
-        # concord232 > stevedore > pbr > setuptools
-        "pbr": {"setuptools"}
-    },
     "delijn": {"pydelijn": {"async-timeout"}},
     "devialet": {"async-upnp-client": {"async-timeout"}},
     "dlna_dmr": {"async-upnp-client": {"async-timeout"}},
@@ -226,11 +221,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "nibe_heatpump": {"nibe": {"async-timeout"}},
     "norway_air": {"pymetno": {"async-timeout"}},
-    "nx584": {
-        # https://bugs.launchpad.net/python-stevedore/+bug/2111694
-        # pynx584 > stevedore > pbr > setuptools
-        "pbr": {"setuptools"}
-    },
     "opengarage": {"open-garage": {"async-timeout"}},
     "openhome": {"async-upnp-client": {"async-timeout"}},
     "opensensemap": {"opensensemap-api": {"async-timeout"}},
