@@ -52,7 +52,7 @@ def mock_pyomie():
 
 
 @pytest.fixture
-def mock_omie_results_jan15():
+def mock_omie_results_jan15() -> OMIEResults:
     """Return mock OMIEResults for 2024-01-15."""
     test_date = dt.date(2024, 1, 15)
     spot_data = SpotData(
@@ -81,7 +81,7 @@ def mock_omie_results_jan15():
 
 
 @pytest.fixture
-def mock_omie_results_jan16():
+def mock_omie_results_jan16() -> OMIEResults:
     """Return mock OMIEResults for 2024-01-16."""
     test_date = dt.date(2024, 1, 16)
     spot_data = SpotData(
@@ -120,7 +120,7 @@ def spot_price_fetcher(spot_price_data: dict):
         for iso_date, mock_result in spot_price_data.items()
     }
 
-    async def spot_price_fetcher_(session, requested_date):
+    async def spot_price_fetcher_(session, requested_date) -> OMIEResults:
         return data_by_date.get(requested_date)
 
     return spot_price_fetcher_

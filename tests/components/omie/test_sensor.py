@@ -1,13 +1,9 @@
 """Test the OMIE sensor platform."""
 
-from datetime import date, datetime
-import json
 import logging
 from unittest.mock import MagicMock, patch
-from zoneinfo import ZoneInfo
 
 from freezegun import freeze_time
-from pyomie.model import OMIEResults, SpotData
 import pytest
 
 from homeassistant.components.omie.const import DOMAIN
@@ -30,103 +26,15 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
-@pytest.fixture
-def mock_coordinator_data():
-    """Return mock OMIEResults that pyomie.spot_price would return."""
-    # Use fixed test date for deterministic testing
-    today = date(2024, 1, 15)
-
-    # hourly price data (24 hours in €/MWh)
-    hourly_prices_pt = [
-        45.5,
-        42.3,
-        39.8,
-        38.2,
-        37.5,
-        36.9,
-        41.2,
-        48.7,
-        55.3,
-        62.1,
-        68.4,
-        72.6,
-        75.1,
-        78.3,
-        76.8,
-        74.2,
-        82.5,
-        85.7,
-        89.3,
-        87.1,
-        65.8,
-        58.4,
-        52.1,
-        48.7,
-    ]
-
-    hourly_prices_es = [
-        47.1,
-        44.2,
-        41.5,
-        39.9,
-        38.8,
-        38.1,
-        42.8,
-        50.3,
-        57.2,
-        64.7,
-        70.2,
-        74.8,
-        77.5,
-        80.1,
-        78.6,
-        76.0,
-        84.2,
-        87.8,
-        91.4,
-        89.1,
-        67.5,
-        60.1,
-        54.3,
-        50.4,
-    ]
-
-    # Create proper SpotData structure
-    spot_data = SpotData(
-        url="https://example.com",
-        market_date=today.isoformat(),
-        header="Test Data",
-        energy_total_es_pt=[],
-        energy_purchases_es=[],
-        energy_purchases_pt=[],
-        energy_sales_es=[],
-        energy_sales_pt=[],
-        energy_es_pt=[],
-        energy_export_es_to_pt=[],
-        energy_import_es_from_pt=[],
-        spot_price_es=hourly_prices_es,  # The data our sensors need
-        spot_price_pt=hourly_prices_pt,  # The data our sensors need
-    )
-
-    # Return OMIEResults directly (what pyomie.spot_price returns)
-    return OMIEResults(
-        updated_at=datetime(2024, 1, 15, 12, 0, 0, tzinfo=ZoneInfo("Europe/Lisbon")),
-        market_date=today,
-        contents=spot_data,
-        raw=json.dumps(spot_data),
-    )
-
-
 async def test_sensor_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_coordinator_data,
     mock_pyomie,
 ) -> None:
     """Test sensor platform setup."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_pyomie.spot_price.return_value = mock_coordinator_data
+    mock_pyomie.spot_price.side_effect = spot_price_fetcher({})
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
