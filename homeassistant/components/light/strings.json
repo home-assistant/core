@@ -134,9 +134,9 @@
   "selector": {
     "behavior": {
       "options": {
-        "all": "All",
-        "any": "Any",
-        "one": "One"
+        "first": "First",
+        "last": "Last",
+        "any": "Any"
       }
     },
     "color_name": {
