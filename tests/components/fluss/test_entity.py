@@ -1,195 +1,71 @@
 """Test Script for Fluss Entity."""
 
-import logging
-from unittest.mock import AsyncMock, Mock, patch
+from __future__ import annotations
+
+from typing import Any
+from unittest.mock import MagicMock, patch
 
 from fluss_api import FlussApiClientCommunicationError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.fluss.button import FlussButton
-from homeassistant.components.fluss.const import DOMAIN
 from homeassistant.components.fluss.entity import FlussEntity
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-CONF_ADDRESS = "address"
-CONF_API_KEY = "api_key"
-
-logger = logging.getLogger(__name__)
+from .conftest import mock_coordinator
 
 
 @pytest.fixture
 def mock_entity_description() -> EntityDescription:
-    """Return a mock entity description."""
-    return EntityDescription(key="mock_key")
-
-
-@pytest.fixture
-def mock_entry() -> ConfigEntry:
-    """Return a mock config entry."""
-    entry = Mock(spec=ConfigEntry)
-    entry.entry_id = "test_entry"
-    entry.data = {"api_key": "mock_api_key", "address": "mock_address"}
-    entry.domain = DOMAIN
-    entry.update_listeners = []
-    entry.state = ConfigEntryState.LOADED
-    return entry
-
-
-@pytest.fixture
-def mock_config_entries() -> Mock:
-    """Return a mock ConfigEntries."""
-    config_entries = Mock()
-    config_entries.async_get_entry = Mock(return_value=None)
-    config_entries.async_update_entry = AsyncMock()
-    config_entries.async_entries = Mock(return_value=[])
-    return config_entries
-
-
-@pytest.fixture
-def mock_fluss_button() -> Mock:
-    """Return a mock FlussButton."""
-    button = Mock(spec=FlussButton)
-    button.unique_id = "mock_unique_id"
-    button.async_update = AsyncMock()
-    return button
+    """Mock entity description."""
+    return EntityDescription(key="test_key", name="Test Entity")
 
 
 @pytest.mark.asyncio
-async def test_fluss_entity_initialization(
+async def test_fluss_entity_init(
     hass: HomeAssistant,
-    mock_fluss_button: Mock,
-    mock_entry: ConfigEntry,
+    mock_coordinator: DataUpdateCoordinator[dict[str, Any]],
     mock_entity_description: EntityDescription,
-    mock_config_entries: Mock,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test FlussEntity initialization and attribute setup."""
-    hass.config_entries = mock_config_entries
+    """Test entity initialization."""
+    device: dict[str, Any] = {"deviceId": "1", "deviceName": "Test Device"}
+    entity = FlussEntity(mock_coordinator, "1", device)
 
-    entity = FlussEntity(
-        hass=hass,
-        device=mock_fluss_button,
-        entry=mock_entry,
-        entity_description=mock_entity_description,
-    )
-    entity._attr_unique_id = (
-        f"{mock_fluss_button.unique_id}_{mock_entity_description.key}"
-    )
-
-    expected_unique_id = f"{mock_fluss_button.unique_id}_{mock_entity_description.key}"
-    assert entity.unique_id == expected_unique_id
+    assert entity.unique_id == "1"
+    assert entity.device_info == snapshot
+    assert entity.device == device
 
 
 @pytest.mark.asyncio
-async def test_fluss_entity_update_entry_data(
+async def test_fluss_entity_async_update_success(
     hass: HomeAssistant,
-    mock_fluss_button: Mock,
-    mock_entry: ConfigEntry,
+    mock_coordinator: DataUpdateCoordinator[dict[str, Any]],
     mock_entity_description: EntityDescription,
-    mock_config_entries: Mock,
 ) -> None:
-    """Test FlussEntity updates entry data correctly."""
-    mock_entry.data = {CONF_ADDRESS: "original_unique_id"}
-    hass.config_entries = mock_config_entries
+    """Test successful async update."""
+    device: dict[str, Any] = {"deviceId": "1", "deviceName": "Test Device"}
+    entity = FlussEntity(mock_coordinator, "1", device)
 
-    mock_fluss_button.unique_id = "new_unique_id"
-
-    with patch.object(hass.config_entries, "async_update_entry") as mock_update_entry:
-        entity = FlussEntity(
-            hass=hass,
-            device=mock_fluss_button,
-            entry=mock_entry,
-            entity_description=mock_entity_description,
-        )
-
-        entity._update_entry_data()
-
-        mock_update_entry.assert_called_once_with(
-            mock_entry, data={"address": "new_unique_id"}
-        )
-
-
-@pytest.mark.asyncio
-async def test_fluss_entity_no_update_needed(
-    hass: HomeAssistant,
-    mock_fluss_button: Mock,
-    mock_entity_description: EntityDescription,
-    mock_config_entries: Mock,
-) -> None:
-    """Test FlussEntity when no update to address is needed."""
-    mock_entry = Mock(spec=ConfigEntry)
-    mock_entry.entry_id = "test_entry"
-    mock_entry.data = {CONF_ADDRESS: "mock_unique_id"}
-    hass.config_entries = mock_config_entries
-
-    mock_fluss_button.unique_id = "mock_unique_id"
-
-    with patch.object(hass.config_entries, "async_update_entry") as mock_update_entry:
-        entity = FlussEntity(
-            hass=hass,
-            device=mock_fluss_button,
-            entry=mock_entry,
-            entity_description=mock_entity_description,
-        )
-        entity._update_entry_data()
-        mock_update_entry.assert_not_called()
-
-
-@pytest.mark.asyncio
-async def test_fluss_entity_async_update(
-    hass: HomeAssistant,
-    mock_fluss_button: Mock,
-    mock_entry: ConfigEntry,
-    mock_entity_description: EntityDescription,
-    mock_config_entries: Mock,
-) -> None:
-    """Test FlussEntity async_update method."""
-    hass.config_entries = mock_config_entries
-
-    # Initialize the entity
-    entity = FlussEntity(
-        hass=hass,
-        device=mock_fluss_button,
-        entry=mock_entry,
-        entity_description=mock_entity_description,
-    )
-
-    # Mock the async_update method of the device
-    mock_fluss_button.async_update = AsyncMock()
-
-    # Call the async_update method of the entity
-    await entity.async_update()
-
-    # Assert that the async_update method of the device was called
-    mock_fluss_button.async_update.assert_called_once()
+    with patch.object(mock_coordinator, "async_request_refresh") as mock_refresh:
+        await entity.async_update()
+        mock_refresh.assert_called_once()
 
 
 @pytest.mark.asyncio
 async def test_fluss_entity_async_update_error(
     hass: HomeAssistant,
-    mock_fluss_button: Mock,
-    mock_entry: ConfigEntry,
+    mock_coordinator: DataUpdateCoordinator[dict[str, Any]],
     mock_entity_description: EntityDescription,
-    mock_config_entries: Mock,
 ) -> None:
-    """Test FlussEntity async_update method with communication error."""
-    hass.config_entries = mock_config_entries
+    """Test async update with communication error."""
+    device: dict[str, Any] = {"deviceId": "1", "deviceName": "Test Device"}
+    entity = FlussEntity(mock_coordinator, "1", device)
 
-    # Initialize the entity
-    entity = FlussEntity(
-        hass=hass,
-        device=mock_fluss_button,
-        entry=mock_entry,
-        entity_description=mock_entity_description,
-    )
-
-    # Simulate a communication error during async_update
-    mock_fluss_button.async_update.side_effect = FlussApiClientCommunicationError()
-
-    # Patch the logger to catch the error log
-    with patch("homeassistant.components.fluss.entity._LOGGER.error") as mock_logger:
+    with patch.object(
+        mock_coordinator, "async_request_refresh", side_effect=FlussApiClientCommunicationError
+    ), patch("homeassistant.components.fluss.entity.LOGGER.error") as mock_logger:
         await entity.async_update()
-        mock_logger.assert_called_once_with(
-            "Failed to update device: %s", mock_fluss_button
-        )
+        mock_logger.assert_called_once()
