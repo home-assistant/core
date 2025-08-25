@@ -55,7 +55,16 @@
             "state": {
               "probe_acknowledge": "Alarm acknowledged",
               "probe_alarm": "Alarm triggered",
-              "probe_disconnected": "Probe disconnected"
+              "probe_disconnected": "Probe disconnected",
+              "device_low_power": "Device has low battery",
+              "device_high_temp": "Device has too high temperature",
+              "probe_below_minimum": "Temperature too low",
+              "probe_above_maximum": "Temperature too high",
+              "ignition_failure": "Ignition failure",
+              "ambient_low_temp": "Ambient temperature too low",
+              "ambient_over_heat": "Ambient temperature too high",
+              "ambient_cool_down": "Ambient temperature cooldown",
+              "probe_timer_alarm": "Timer alarm"
             }
           }
         }
