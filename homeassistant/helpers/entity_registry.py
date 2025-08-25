@@ -1622,17 +1622,9 @@ class EntityRegistry(BaseRegistry):
         for key, deleted_entity in list(self.deleted_entities.items()):
             if config_entry_id != deleted_entity.config_entry_id:
                 continue
-            # Clear disabled_by if it was disabled by the config entry
-            if deleted_entity.disabled_by is RegistryEntryDisabler.CONFIG_ENTRY:
-                disabled_by = None
-            else:
-                disabled_by = deleted_entity.disabled_by
             # Add a time stamp when the deleted entity became orphaned
             self.deleted_entities[key] = attr.evolve(
-                deleted_entity,
-                orphaned_timestamp=now_time,
-                config_entry_id=None,
-                disabled_by=disabled_by,
+                deleted_entity, orphaned_timestamp=now_time, config_entry_id=None
             )
             self.async_schedule_save()
 
