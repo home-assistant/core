@@ -61,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     # ---- Auth0 validation ----
     try:
-        tokens = await Auth0Client.do_login(session, data[CONF_USERNAME], data[CONF_PASSWORD])
+        tokens = await Auth0Client.do_auth0_login(session, data[CONF_USERNAME], data[CONF_PASSWORD])
         LOGGER.debug("Got tokens during setup: %s", list(tokens.keys()))
     except Exception as exc:
         LOGGER.error("Auth0 login failed: %s", exc)
