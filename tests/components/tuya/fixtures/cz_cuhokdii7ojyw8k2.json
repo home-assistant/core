@@ -1,10 +1,8 @@
 {
   "endpoint": "https://apigw.tuyaeu.com",
-  "terminal_id": "REDACTED",
   "mqtt_connected": true,
   "disabled_by": null,
   "disabled_polling": false,
-  "id": "53703774d8f15ba9efd3",
   "name": "Buitenverlichting",
   "category": "cz",
   "product_id": "cuhokdii7ojyw8k2",

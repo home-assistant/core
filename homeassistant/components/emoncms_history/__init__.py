@@ -1,10 +1,11 @@
 """Support for sending data to Emoncms."""
 
-from datetime import timedelta
-from http import HTTPStatus
+from datetime import datetime, timedelta
+from functools import partial
 import logging
 
-import requests
+import aiohttp
+from pyemoncms import EmoncmsClient
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -17,9 +18,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, state as state_helper
-from homeassistant.helpers.event import track_point_in_time
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,61 +43,51 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_send_to_emoncms(
+    hass: HomeAssistant,
+    emoncms_client: EmoncmsClient,
+    whitelist: list[str],
+    node: str | int,
+    _: datetime,
+) -> None:
+    """Send data to Emoncms."""
+    payload_dict = {}
+
+    for entity_id in whitelist:
+        state = hass.states.get(entity_id)
+        if state is None or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE):
+            continue
+        try:
+            payload_dict[entity_id] = state_helper.state_as_number(state)
+        except ValueError:
+            continue
+
+    if payload_dict:
+        try:
+            await emoncms_client.async_input_post(data=payload_dict, node=node)
+        except (aiohttp.ClientError, TimeoutError) as err:
+            _LOGGER.warning("Network error when sending data to Emoncms: %s", err)
+        except ValueError as err:
+            _LOGGER.warning("Value error when preparing data for Emoncms: %s", err)
+        else:
+            _LOGGER.debug("Sent data to Emoncms: %s", payload_dict)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Emoncms history component."""
     conf = config[DOMAIN]
     whitelist = conf.get(CONF_WHITELIST)
+    input_node = str(conf.get(CONF_INPUTNODE))
 
-    def send_data(url, apikey, node, payload):
-        """Send payload data to Emoncms."""
-        try:
-            fullurl = f"{url}/input/post.json"
-            data = {"apikey": apikey, "data": payload}
-            parameters = {"node": node}
-            req = requests.post(
-                fullurl, params=parameters, data=data, allow_redirects=True, timeout=5
-            )
+    emoncms_client = EmoncmsClient(
+        url=conf.get(CONF_URL),
+        api_key=conf.get(CONF_API_KEY),
+        session=async_get_clientsession(hass),
+    )
+    async_track_time_interval(
+        hass,
+        partial(async_send_to_emoncms, hass, emoncms_client, whitelist, input_node),
+        timedelta(seconds=conf.get(CONF_SCAN_INTERVAL)),
+    )
 
-        except requests.exceptions.RequestException:
-            _LOGGER.error("Error saving data '%s' to '%s'", payload, fullurl)
-
-        else:
-            if req.status_code != HTTPStatus.OK:
-                _LOGGER.error(
-                    "Error saving data %s to %s (http status code = %d)",
-                    payload,
-                    fullurl,
-                    req.status_code,
-                )
-
-    def update_emoncms(time):
-        """Send whitelisted entities states regularly to Emoncms."""
-        payload_dict = {}
-
-        for entity_id in whitelist:
-            state = hass.states.get(entity_id)
-
-            if state is None or state.state in (STATE_UNKNOWN, "", STATE_UNAVAILABLE):
-                continue
-
-            try:
-                payload_dict[entity_id] = state_helper.state_as_number(state)
-            except ValueError:
-                continue
-
-        if payload_dict:
-            payload = ",".join(f"{key}:{val}" for key, val in payload_dict.items())
-
-            send_data(
-                conf.get(CONF_URL),
-                conf.get(CONF_API_KEY),
-                str(conf.get(CONF_INPUTNODE)),
-                f"{{{payload}}}",
-            )
-
-        track_point_in_time(
-            hass, update_emoncms, time + timedelta(seconds=conf.get(CONF_SCAN_INTERVAL))
-        )
-
-    update_emoncms(dt_util.utcnow())
     return True
