@@ -1,0 +1,6 @@
+language: "en"
+intents:
+  OrderBeer:
+    data:
+      - sentences:
+          - "lager please"

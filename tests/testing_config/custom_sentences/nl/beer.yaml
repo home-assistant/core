@@ -1,0 +1,6 @@
+language: "nl"
+intents:
+  OrderBeer:
+    data:
+      - sentences:
+          - "biertje"
