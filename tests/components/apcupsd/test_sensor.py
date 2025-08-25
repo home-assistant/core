@@ -59,7 +59,10 @@ async def test_state_update(hass: HomeAssistant) -> None:
 
 
 async def test_manual_update_entity(hass: HomeAssistant) -> None:
-    """Test manual update entity via service homeassistant/update_entity."""
+    """Test multiple simultaneous manual update entity via service homeassistant/update_entity.
+
+    We should only do network call once for the multiple simultaneous update entity services.
+    """
     await async_init_integration(hass)
 
     device_slug = slugify(MOCK_STATUS["UPSNAME"])
@@ -101,37 +104,6 @@ async def test_manual_update_entity(hass: HomeAssistant) -> None:
         assert state
         assert state.state != STATE_UNAVAILABLE
         assert state.state == "15.0"
-
-
-async def test_multiple_manual_update_entity(hass: HomeAssistant) -> None:
-    """Test multiple simultaneous manual update entity via service homeassistant/update_entity.
-
-    We should only do network call once for the multiple simultaneous update entity services.
-    """
-    await async_init_integration(hass)
-
-    device_slug = slugify(MOCK_STATUS["UPSNAME"])
-    # Setup HASS for calling the update_entity service.
-    await async_setup_component(hass, "homeassistant", {})
-
-    with patch(
-        "aioapcaccess.request_status", return_value=MOCK_STATUS
-    ) as mock_request_status:
-        # Fast-forward time to just pass the initial debouncer cooldown.
-        future = utcnow() + timedelta(seconds=REQUEST_REFRESH_COOLDOWN)
-        async_fire_time_changed(hass, future)
-        await hass.services.async_call(
-            "homeassistant",
-            "update_entity",
-            {
-                ATTR_ENTITY_ID: [
-                    f"sensor.{device_slug}_load",
-                    f"sensor.{device_slug}_input_voltage",
-                ]
-            },
-            blocking=True,
-        )
-        assert mock_request_status.call_count == 1
 
 
 async def test_sensor_unknown(hass: HomeAssistant) -> None:
