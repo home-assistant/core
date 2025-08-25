@@ -12,7 +12,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from .coordinator import PooldoseCoordinator
 
@@ -43,9 +42,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> 
     try:
         client_status = await client.connect()
     except TimeoutError as err:
-        raise UpdateFailed(f"Timeout connecting to PoolDose device: {err}") from err
+        raise ConfigEntryNotReady(
+            f"Timeout connecting to PoolDose device: {err}"
+        ) from err
     except (ConnectionError, OSError) as err:
-        raise UpdateFailed(f"Failed to connect to PoolDose device: {err}") from err
+        raise ConfigEntryNotReady(
+            f"Failed to connect to PoolDose device: {err}"
+        ) from err
 
     if client_status != RequestStatus.SUCCESS:
         raise ConfigEntryNotReady(

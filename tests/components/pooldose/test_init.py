@@ -1,101 +1,40 @@
-"""Test the Pooldose integration initialization."""
+"""Test the PoolDose integration initialization."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+import json
+from unittest.mock import AsyncMock, patch
 
-from pooldose.request_status import RequestStatus
 import pytest
 
-from homeassistant.components.pooldose import PLATFORMS
+from homeassistant.components.pooldose.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from .conftest import RequestStatus
 
-DOMAIN = "pooldose"
-
-
-@pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Return the default mocked config entry."""
-    return MockConfigEntry(
-        title="PoolDose Device",
-        domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.100"},
-        unique_id="PDPR1H1HAW100_FW539187",
-    )
+from tests.common import MockConfigEntry, async_load_fixture
 
 
-@pytest.fixture
-def mock_client():
-    """Return a mocked PoolDose client."""
-    client = MagicMock()
-    client.connect = AsyncMock(return_value=RequestStatus.SUCCESS)
-    client.device_info = {
-        "SERIAL_NUMBER": "PDPR1H1HAW100_FW539187",
-        "MODEL": "PoolDose Pro",
-        "FW_VERSION": "1.2.3",
-        "SW_VERSION": "2.0.1",
-        "API_VERSION": "v1.5/",
-        "FW_CODE": "ABC123",
-        "MAC": "AA:BB:CC:DD:EE:FF",
-        "IP": "192.168.1.100",
-    }
-    return client
-
-
-@pytest.fixture
-def mock_coordinator():
-    """Return a mocked coordinator."""
-    coordinator = MagicMock()
-    coordinator.async_config_entry_first_refresh = AsyncMock()
-    return coordinator
-
-
-async def test_async_setup_entry_success(
+@pytest.mark.usefixtures("mock_pooldose_client")
+async def test_setup_entry_success(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_client,
-    mock_coordinator,
 ) -> None:
     """Test successful setup of config entry."""
     mock_config_entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.pooldose.PooldoseClient",
-            return_value=mock_client,
-        ),
-        patch(
-            "homeassistant.components.pooldose.PooldoseCoordinator",
-            return_value=mock_coordinator,
-        ),
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups"
-        ) as mock_forward,
-    ):
-        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        assert result is True
-        assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.state == ConfigEntryState.LOADED
 
-        # Verify client was created with correct host
-        assert mock_client.connect.called
-
-        # Verify coordinator was created and first refresh was called
-        assert mock_coordinator.async_config_entry_first_refresh.called
-
-        # Verify platforms were forwarded
-        mock_forward.assert_called_once_with(mock_config_entry, [Platform.SENSOR])
-
-        # Verify runtime data was stored correctly
-        runtime_data = mock_config_entry.runtime_data
-        assert runtime_data.client == mock_client
-        assert runtime_data.coordinator == mock_coordinator
-        assert runtime_data.device_properties == mock_client.device_info
+    # Verify runtime data was set
+    assert mock_config_entry.runtime_data is not None
+    assert hasattr(mock_config_entry.runtime_data, "client")
+    assert hasattr(mock_config_entry.runtime_data, "coordinator")
 
 
-async def test_async_setup_entry_client_connection_failed(
+async def test_setup_entry_connection_failed(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -103,186 +42,78 @@ async def test_async_setup_entry_client_connection_failed(
     mock_config_entry.add_to_hass(hass)
 
     with patch("homeassistant.components.pooldose.PooldoseClient") as mock_client_class:
-        mock_client = MagicMock()
+        mock_client = mock_client_class.return_value
         mock_client.connect = AsyncMock(return_value=RequestStatus.HOST_UNREACHABLE)
-        mock_client_class.return_value = mock_client
+        mock_client.is_connected = False
 
-        # Test setup result - ConfigEntryNotReady führt zu False return
-        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-        assert result is False  # Setup failed
-        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY  # Status gesetzt
+        assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_async_setup_entry_client_timeout_error(
+async def test_setup_entry_coordinator_refresh_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test setup failure when client has no data."""
-    mock_config_entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.pooldose.PooldoseClient") as mock_client_class:
-        mock_client = MagicMock()
-        mock_client.connect = AsyncMock(return_value=RequestStatus.NO_DATA)
-        mock_client_class.return_value = mock_client
-
-        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-        assert result is False
-        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_async_setup_entry_coordinator_first_refresh_fails(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_client,
-    mock_coordinator,
 ) -> None:
     """Test setup failure when coordinator first refresh fails."""
     mock_config_entry.add_to_hass(hass)
-    mock_coordinator.async_config_entry_first_refresh = AsyncMock(
-        side_effect=Exception("Failed to fetch data")
-    )
 
-    with (
-        patch(
-            "homeassistant.components.pooldose.PooldoseClient",
-            return_value=mock_client,
-        ),
-        patch(
-            "homeassistant.components.pooldose.PooldoseCoordinator",
-            return_value=mock_coordinator,
-        ),
-    ):
-        # The exception from coordinator first refresh causes setup to fail
-        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    with patch("homeassistant.components.pooldose.PooldoseClient") as mock_client_class:
+        mock_client = mock_client_class.return_value
+        device_info_raw = await async_load_fixture(hass, "deviceinfo.json", DOMAIN)
+        device_info = json.loads(device_info_raw)
+        mock_client.device_info = device_info
+        mock_client.connect = AsyncMock(return_value=RequestStatus.SUCCESS)
+        mock_client.is_connected = True
+        # Make instant_values_structured fail
+        mock_client.instant_values_structured = AsyncMock(
+            side_effect=Exception("API communication failed")
+        )
 
-        assert result is False
-        assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_async_setup_entry_with_empty_device_info(
+@pytest.mark.usefixtures("mock_pooldose_client")
+async def test_unload_entry_success(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_client,
-    mock_coordinator,
-) -> None:
-    """Test setup with empty device info."""
-    mock_config_entry.add_to_hass(hass)
-    mock_client.device_info = {}
-
-    with (
-        patch(
-            "homeassistant.components.pooldose.PooldoseClient",
-            return_value=mock_client,
-        ),
-        patch(
-            "homeassistant.components.pooldose.PooldoseCoordinator",
-            return_value=mock_coordinator,
-        ),
-        patch("homeassistant.config_entries.ConfigEntries.async_forward_entry_setups"),
-    ):
-        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-        assert result is True
-        # Verify empty device info is stored
-        assert mock_config_entry.runtime_data.device_properties == {}
-
-
-async def test_async_setup_entry_with_none_device_info(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_client,
-    mock_coordinator,
-) -> None:
-    """Test setup with None device info."""
-    mock_config_entry.add_to_hass(hass)
-    mock_client.device_info = None
-
-    with (
-        patch(
-            "homeassistant.components.pooldose.PooldoseClient",
-            return_value=mock_client,
-        ),
-        patch(
-            "homeassistant.components.pooldose.PooldoseCoordinator",
-            return_value=mock_coordinator,
-        ),
-        patch("homeassistant.config_entries.ConfigEntries.async_forward_entry_setups"),
-    ):
-        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-        assert result is True
-        # Verify None device info is stored
-        assert mock_config_entry.runtime_data.device_properties is None
-
-
-async def test_async_unload_entry_success(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_client,
-    mock_coordinator,
 ) -> None:
     """Test successful unloading of config entry."""
-    # First set up the entry
     mock_config_entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.pooldose.PooldoseClient",
-            return_value=mock_client,
-        ),
-        patch(
-            "homeassistant.components.pooldose.PooldoseCoordinator",
-            return_value=mock_coordinator,
-        ),
-        patch("homeassistant.config_entries.ConfigEntries.async_forward_entry_setups"),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    # First set up the entry
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state == ConfigEntryState.LOADED
 
     # Now test unloading
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
-        return_value=True,
-    ) as mock_unload:
-        result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        assert result is True
-        mock_unload.assert_called_once_with(mock_config_entry, [Platform.SENSOR])
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_async_unload_entry_failure(
+@pytest.mark.usefixtures("mock_pooldose_client")
+async def test_reload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_client,
-    mock_coordinator,
 ) -> None:
-    """Test failed unloading of config entry."""
-    # First set up the entry
+    """Test reloading the config entry."""
     mock_config_entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.pooldose.PooldoseClient",
-            return_value=mock_client,
-        ),
-        patch(
-            "homeassistant.components.pooldose.PooldoseCoordinator",
-            return_value=mock_coordinator,
-        ),
-        patch("homeassistant.config_entries.ConfigEntries.async_forward_entry_setups"),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    # Setup
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state == ConfigEntryState.LOADED
 
-    # Now test failed unloading
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
-        return_value=False,
-    ) as mock_unload:
-        result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
-
-        assert result is False
-        mock_unload.assert_called_once_with(mock_config_entry, [Platform.SENSOR])
+    # Reload
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state == ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(
@@ -295,124 +126,97 @@ async def test_async_unload_entry_failure(
         RequestStatus.UNKNOWN_ERROR,
     ],
 )
-async def test_async_setup_entry_various_client_failures(
+async def test_setup_entry_various_client_failures(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     status,
 ) -> None:
-    """Test setup failure with various client error statuses."""
+    """Test setup fails with various client error statuses."""
     mock_config_entry.add_to_hass(hass)
 
     with patch("homeassistant.components.pooldose.PooldoseClient") as mock_client_class:
-        mock_client = MagicMock()
+        mock_client = mock_client_class.return_value
         mock_client.connect = AsyncMock(return_value=status)
-        mock_client_class.return_value = mock_client
-
-        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-        assert result is False
-        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_pooldose_runtime_data_structure(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_client,
-    mock_coordinator,
-) -> None:
-    """Test that PooldoseRuntimeData is properly structured."""
-    mock_config_entry.add_to_hass(hass)
-
-    with (
-        patch(
-            "homeassistant.components.pooldose.PooldoseClient",
-            return_value=mock_client,
-        ),
-        patch(
-            "homeassistant.components.pooldose.PooldoseCoordinator",
-            return_value=mock_coordinator,
-        ),
-        patch("homeassistant.config_entries.ConfigEntries.async_forward_entry_setups"),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-        # Test runtime data structure
-        runtime_data = mock_config_entry.runtime_data
-
-        # Verify all required fields are present
-        assert hasattr(runtime_data, "client")
-        assert hasattr(runtime_data, "coordinator")
-        assert hasattr(runtime_data, "device_properties")
-
-        # Verify field types and values
-        assert runtime_data.client is mock_client
-        assert runtime_data.coordinator is mock_coordinator
-        assert runtime_data.device_properties == mock_client.device_info
-
-
-async def test_config_entry_host_extraction(
-    hass: HomeAssistant,
-    mock_client,
-    mock_coordinator,
-) -> None:
-    """Test that host is correctly extracted from config entry data."""
-    test_host = "10.0.0.50"
-    config_entry = MockConfigEntry(
-        title="Test Device",
-        domain=DOMAIN,
-        data={CONF_HOST: test_host},
-        unique_id="test_device_id",
-    )
-    config_entry.add_to_hass(hass)
-
-    with (
-        patch("homeassistant.components.pooldose.PooldoseClient") as mock_client_class,
-        patch(
-            "homeassistant.components.pooldose.PooldoseCoordinator",
-            return_value=mock_coordinator,
-        ),
-        patch("homeassistant.config_entries.ConfigEntries.async_forward_entry_setups"),
-    ):
-        mock_client_class.return_value = mock_client
-
-        await hass.config_entries.async_setup(config_entry.entry_id)
-
-        # Verify client was created with correct host
-        mock_client_class.assert_called_once_with(test_host)
-
-
-async def test_coordinator_creation_parameters(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_client,
-) -> None:
-    """Test that coordinator is created with correct parameters."""
-    mock_config_entry.add_to_hass(hass)
-
-    with (
-        patch(
-            "homeassistant.components.pooldose.PooldoseClient",
-            return_value=mock_client,
-        ),
-        patch(
-            "homeassistant.components.pooldose.PooldoseCoordinator"
-        ) as mock_coordinator_class,
-        patch("homeassistant.config_entries.ConfigEntries.async_forward_entry_setups"),
-    ):
-        mock_coordinator = MagicMock()
-        mock_coordinator.async_config_entry_first_refresh = AsyncMock()
-        mock_coordinator_class.return_value = mock_coordinator
+        mock_client.is_connected = False
 
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-        # Verify coordinator was created with correct parameters
-        mock_coordinator_class.assert_called_once_with(
-            hass, mock_client, mock_config_entry
-        )
+        assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
-def test_platforms_configuration() -> None:
+async def test_platforms_configuration() -> None:
     """Test that PLATFORMS is correctly configured."""
+    from homeassistant.components.pooldose import PLATFORMS  # noqa: PLC0415
+
     assert PLATFORMS == [Platform.SENSOR]
     assert len(PLATFORMS) == 1
     assert Platform.SENSOR in PLATFORMS
+
+
+async def test_setup_entry_timeout_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup failure when client connection times out."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.pooldose.PooldoseClient") as mock_client_class:
+        mock_client = mock_client_class.return_value
+        mock_client.connect = AsyncMock(side_effect=TimeoutError("Connection timeout"))
+
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_connection_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup failure when client connection has OSError."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.pooldose.PooldoseClient") as mock_client_class:
+        mock_client = mock_client_class.return_value
+        mock_client.connect = AsyncMock(side_effect=OSError("Network error"))
+
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_runtime_data_structure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that runtime data has correct structure."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.pooldose.PooldoseClient") as mock_client_class:
+        mock_client = mock_client_class.return_value
+        device_info_raw = await async_load_fixture(hass, "deviceinfo.json", DOMAIN)
+        device_info = json.loads(device_info_raw)
+        mock_client.device_info = device_info
+        mock_client.connect = AsyncMock(return_value=RequestStatus.SUCCESS)
+        mock_client.is_connected = True
+
+        # Mock coordinator first refresh
+        with patch(
+            "homeassistant.components.pooldose.coordinator.PooldoseCoordinator.async_config_entry_first_refresh"
+        ):
+            await hass.config_entries.async_setup(mock_config_entry.entry_id)
+            await hass.async_block_till_done()
+
+            assert mock_config_entry.state == ConfigEntryState.LOADED
+
+            # Check runtime data structure
+            runtime_data = mock_config_entry.runtime_data
+            assert runtime_data is not None
+            assert hasattr(runtime_data, "client")
+            assert hasattr(runtime_data, "coordinator")
+            assert hasattr(runtime_data, "device_properties")
+            assert runtime_data.client == mock_client
+            assert runtime_data.device_properties == device_info

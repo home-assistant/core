@@ -1,176 +1,258 @@
-"""Test the Pooldose coordinator."""
+"""Test the PoolDose coordinator."""
 
-from pooldose.request_status import RequestStatus
+import json
+from unittest.mock import AsyncMock, patch
+
 import pytest
 
-from homeassistant.components.pooldose.coordinator import PooldoseCoordinator
+from homeassistant.components.pooldose.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .conftest import SERIAL_NUMBER
+from .conftest import RequestStatus
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_load_fixture
 
 
-async def test_coordinator_setup_success(
+@pytest.mark.usefixtures("mock_pooldose_client")
+async def test_coordinator_integration_setup(
     hass: HomeAssistant,
-    mock_pooldose_client,
     mock_config_entry: MockConfigEntry,
-    mock_instant_values: dict,
-    mock_device_info,
 ) -> None:
-    """Test successful coordinator setup and data fetch."""
-    mock_pooldose_client.instant_values.return_value = (
-        RequestStatus.SUCCESS,
-        mock_instant_values,
-    )
+    """Test coordinator is properly set up through integration."""
+    mock_config_entry.add_to_hass(hass)
 
-    coordinator = PooldoseCoordinator(
-        hass,
-        mock_pooldose_client,
-        mock_config_entry,
-    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    await coordinator._async_setup()
-    assert coordinator.device_info == mock_pooldose_client.device_info
+    # Verify coordinator exists in runtime_data
+    assert mock_config_entry.runtime_data is not None
+    assert hasattr(mock_config_entry.runtime_data, "coordinator")
+    assert hasattr(mock_config_entry.runtime_data, "client")
 
-    assert coordinator.device_info["serial_number"] == SERIAL_NUMBER
-    assert coordinator.device_info["identifiers"] == {("pooldose", SERIAL_NUMBER)}
-
-    await coordinator.async_refresh()
-    assert coordinator.data is not None
+    coordinator = mock_config_entry.runtime_data.coordinator
     assert coordinator.last_update_success is True
+    assert coordinator.data is not None
 
+
+@pytest.mark.usefixtures("mock_pooldose_client")
+async def test_coordinator_data_structure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test coordinator data has expected structure from fixtures."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data.coordinator
     data = coordinator.data
+
+    # Verify data structure matches fixture
     assert isinstance(data, dict)
-    assert "deviceInfo" in data
-    assert data["deviceInfo"]["dwi_status"] == "ok"
+    assert "sensor" in data
+    assert "binary_sensor" in data
+    assert "number" in data
+    assert "switch" in data
 
-    mock_pooldose_client.instant_values.assert_called_once()
+    # Check specific sensor data
+    assert "temperature" in data["sensor"]
+    assert data["sensor"]["temperature"]["value"] == 25
+    assert data["sensor"]["temperature"]["unit"] == "°C"
 
 
-async def test_coordinator_device_info_persistence(
+async def test_coordinator_update_failure_handling(
     hass: HomeAssistant,
-    mock_pooldose_client,
     mock_config_entry: MockConfigEntry,
-    mock_device_info,
-) -> None:
-    """Test that device info is properly stored and accessible."""
-    coordinator = PooldoseCoordinator(
-        hass,
-        mock_pooldose_client,
-        mock_config_entry,
-    )
-
-    await coordinator._async_setup()
-
-    device_info = coordinator.device_info
-    assert device_info["identifiers"] == {("pooldose", SERIAL_NUMBER)}
-    assert device_info["name"] == "PoolDose Device"
-    assert device_info["manufacturer"] == "SEKO"
-    assert device_info["model"] == "PDPR1H1HAW100"
-    assert device_info["serial_number"] == SERIAL_NUMBER
-    assert device_info["hw_version"] == "FW539187"
-
-
-async def test_coordinator_handles_connection_error(
-    hass: HomeAssistant,
     mock_pooldose_client,
-    mock_config_entry: MockConfigEntry,
-    mock_device_info,
 ) -> None:
-    """Test that the coordinator handles connection errors gracefully."""
-    mock_pooldose_client.instant_values.side_effect = ConnectionError(
-        "Connection failed"
-    )
+    """Test coordinator handles update failures gracefully."""
+    mock_config_entry.add_to_hass(hass)
 
-    coordinator = PooldoseCoordinator(
-        hass,
-        mock_pooldose_client,
-        mock_config_entry,
-    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    # Set up the coordinator first to initialize device_info
-    await coordinator._async_setup()
+    coordinator = mock_config_entry.runtime_data.coordinator
 
-    await coordinator.async_refresh()
-
-    assert coordinator.last_update_success is False
-    assert coordinator.data is None
-
-    assert coordinator.device_info["serial_number"] == SERIAL_NUMBER
-    mock_pooldose_client.instant_values.assert_called_once()
-
-
-async def test_coordinator_handles_api_error_status(
-    hass: HomeAssistant,
-    mock_pooldose_client,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test that the coordinator handles API error status."""
-    mock_pooldose_client.instant_values.return_value = (
-        RequestStatus.API_VERSION_UNSUPPORTED,
+    # Simulate connection failure
+    mock_pooldose_client.instant_values_structured.return_value = (
+        RequestStatus.HOST_UNREACHABLE,
         None,
     )
 
-    coordinator = PooldoseCoordinator(
-        hass,
-        mock_pooldose_client,
-        mock_config_entry,
+    # Trigger coordinator refresh
+    await coordinator.async_refresh()
+
+    # Coordinator should handle the failure gracefully
+    assert coordinator.last_update_success is False
+
+
+async def test_coordinator_data_refresh(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pooldose_client,
+) -> None:
+    """Test coordinator data refreshes properly."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data.coordinator
+
+    # Initial state
+    assert coordinator.data["sensor"]["temperature"]["value"] == 25
+
+    # Update mock data
+    new_data = json.loads(await async_load_fixture(hass, "instantvalues.json", DOMAIN))
+    new_data["sensor"]["temperature"]["value"] = 30
+    mock_pooldose_client.instant_values_structured.return_value = (
+        RequestStatus.SUCCESS,
+        new_data,
+    )
+
+    # Trigger refresh
+    await coordinator.async_refresh()
+
+    # Verify data updated
+    assert coordinator.data["sensor"]["temperature"]["value"] == 30
+
+
+@pytest.mark.parametrize(
+    "error_status",
+    [
+        RequestStatus.API_VERSION_UNSUPPORTED,
+        RequestStatus.NO_DATA,
+        RequestStatus.UNKNOWN_ERROR,
+    ],
+)
+async def test_coordinator_handles_various_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pooldose_client,
+    error_status: str,
+) -> None:
+    """Test coordinator handles various API error statuses."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = mock_config_entry.runtime_data.coordinator
+
+    # Simulate API error
+    mock_pooldose_client.instant_values_structured.return_value = (
+        error_status,
+        None,
     )
 
     await coordinator.async_refresh()
 
+    # Should fail gracefully
     assert coordinator.last_update_success is False
-    assert coordinator.data is None
-    mock_pooldose_client.instant_values.assert_called_once()
 
 
-async def test_coordinator_internal_update_method(
+async def test_coordinator_timeout_error(
     hass: HomeAssistant,
-    mock_pooldose_client,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the internal _async_update_data method directly."""
-    coordinator = PooldoseCoordinator(
-        hass,
-        mock_pooldose_client,
-        mock_config_entry,
-    )
+    """Test coordinator handles timeout errors during data fetch."""
+    mock_config_entry.add_to_hass(hass)
 
-    mock_pooldose_client.instant_values.side_effect = ConnectionError(
-        "Connection failed"
-    )
+    with patch("homeassistant.components.pooldose.PooldoseClient") as mock_client_class:
+        mock_client = mock_client_class.return_value
+        device_info_raw = await async_load_fixture(hass, "deviceinfo.json", DOMAIN)
+        device_info = json.loads(device_info_raw)
+        mock_client.device_info = device_info
+        mock_client.connect = AsyncMock(return_value=RequestStatus.SUCCESS)
+        mock_client.is_connected = True
+        mock_client.instant_values_structured = AsyncMock(
+            side_effect=TimeoutError("Request timeout")
+        )
 
-    with pytest.raises(
-        UpdateFailed, match="Failed to connect to PoolDose device while fetching data"
-    ):
-        await coordinator._async_update_data()
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    mock_pooldose_client.instant_values.side_effect = TimeoutError("Request timed out")
+        assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
 
-    with pytest.raises(
-        UpdateFailed, match="Timeout fetching data from PoolDose device"
-    ):
-        await coordinator._async_update_data()
 
-    mock_pooldose_client.instant_values.side_effect = OSError("Network unreachable")
+async def test_coordinator_connection_error_during_fetch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test coordinator handles connection errors during data fetch."""
+    mock_config_entry.add_to_hass(hass)
 
-    with pytest.raises(
-        UpdateFailed, match="Failed to connect to PoolDose device while fetching data"
-    ):
-        await coordinator._async_update_data()
+    with patch("homeassistant.components.pooldose.PooldoseClient") as mock_client_class:
+        mock_client = mock_client_class.return_value
+        device_info_raw = await async_load_fixture(hass, "deviceinfo.json", DOMAIN)
+        device_info = json.loads(device_info_raw)
+        mock_client.device_info = device_info
+        mock_client.connect = AsyncMock(return_value=RequestStatus.SUCCESS)
+        mock_client.is_connected = True
+        mock_client.instant_values_structured = AsyncMock(
+            side_effect=OSError("Network unreachable")
+        )
 
-    mock_pooldose_client.instant_values.side_effect = None
-    mock_pooldose_client.instant_values.return_value = (
-        RequestStatus.API_VERSION_UNSUPPORTED,
-        None,
-    )
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    with pytest.raises(UpdateFailed, match="API returned status"):
-        await coordinator._async_update_data()
+        assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
 
-    mock_pooldose_client.instant_values.return_value = (RequestStatus.SUCCESS, None)
 
-    with pytest.raises(UpdateFailed, match="No data received from API"):
-        await coordinator._async_update_data()
+async def test_coordinator_none_data_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test coordinator handles None data from API."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.pooldose.PooldoseClient") as mock_client_class:
+        mock_client = mock_client_class.return_value
+        device_info_raw = await async_load_fixture(hass, "deviceinfo.json", DOMAIN)
+        device_info = json.loads(device_info_raw)
+        mock_client.device_info = device_info
+        mock_client.connect = AsyncMock(return_value=RequestStatus.SUCCESS)
+        mock_client.is_connected = True
+        mock_client.instant_values_structured = AsyncMock(
+            return_value=(RequestStatus.SUCCESS, None)
+        )
+
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_coordinator_setup_called(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that coordinator _async_setup is called and device_info is set."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.pooldose.PooldoseClient") as mock_client_class:
+        mock_client = mock_client_class.return_value
+        device_info_raw = await async_load_fixture(hass, "deviceinfo.json", DOMAIN)
+        device_info = json.loads(device_info_raw)
+        mock_client.device_info = device_info
+        mock_client.connect = AsyncMock(return_value=RequestStatus.SUCCESS)
+        mock_client.is_connected = True
+
+        instant_values_raw = await async_load_fixture(
+            hass, "instantvalues.json", DOMAIN
+        )
+        instant_values_data = json.loads(instant_values_raw)
+        mock_client.instant_values_structured = AsyncMock(
+            return_value=(RequestStatus.SUCCESS, instant_values_data)
+        )
+
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.state == ConfigEntryState.LOADED
+
+        # Check that coordinator setup was called and device_info is set
+        coordinator = mock_config_entry.runtime_data.coordinator
+        assert coordinator.device_info == device_info

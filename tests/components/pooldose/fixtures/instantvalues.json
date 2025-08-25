@@ -12,10 +12,6 @@
       "value": 718,
       "unit": "mV"
     },
-    "cl": {
-      "value": 0.1,
-      "unit": "ppm"
-    },
     "ph_type_dosing": {
       "value": "alcalyne",
       "unit": null
