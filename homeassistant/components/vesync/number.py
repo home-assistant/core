@@ -13,6 +13,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -123,5 +124,8 @@ class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         # Doesn't set correct on mine.  Needs testing.
-        if await self.entity_description.set_value_fn(self.device, value):
-            await self.coordinator.async_request_refresh()
+        if not await self.entity_description.set_value_fn(self.device, value):
+            raise HomeAssistantError(
+                "An error occurred while setting:" + self.device.last_response.message
+            )
+        await self.coordinator.async_request_refresh()
