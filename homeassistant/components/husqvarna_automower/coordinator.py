@@ -63,6 +63,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         self.new_areas_callbacks: list[Callable[[str, set[int]], None]] = []
         self.pong: datetime | None = None
         self.websocket_alive: bool = False
+        self.websocket_callbacks: list[Callable[[bool], None]] = []
         self._watchdog_task: asyncio.Task | None = None
 
     @override
@@ -199,12 +200,17 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         )
 
     async def _pong_watchdog(self) -> None:
+        """Watchdog to check for pong messages."""
         _LOGGER.debug("Watchdog started")
         try:
             while True:
                 _LOGGER.debug("Sending ping")
-                self.websocket_alive = await self.api.send_empty_message()
-                _LOGGER.debug("Ping result: %s", self.websocket_alive)
+                is_alive = await self.api.send_empty_message()
+                _LOGGER.debug("Ping result: %s", is_alive)
+                if self.websocket_alive != is_alive:
+                    self.websocket_alive = is_alive
+                    for ws_callback in self.websocket_callbacks:
+                        ws_callback(is_alive)
 
                 await asyncio.sleep(60)
                 _LOGGER.debug("Websocket alive %s", self.websocket_alive)
