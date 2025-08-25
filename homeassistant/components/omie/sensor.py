@@ -43,6 +43,45 @@ class OMIEPriceEntityDescription(SensorEntityDescription):
         )
 
 
+class OMIEPriceSensor(CoordinatorEntity[OMIECoordinator], SensorEntity):
+    """OMIE price sensor."""
+
+    def __init__(
+        self, coordinator: OMIECoordinator, device_info: DeviceInfo, key: str
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self.entity_description = OMIEPriceEntityDescription(key)
+        self._attr_device_info = device_info
+        self._attr_unique_id = slugify(f"{key}")
+        self._attr_should_poll = False
+        self._attr_attribution = _ATTRIBUTION
+
+    def _handle_coordinator_update(self) -> None:
+        """Update this sensor's state from the coordinator results."""
+        self._attr_native_value = self._get_current_hour_value()
+        super()._handle_coordinator_update()
+
+    def _get_current_hour_value(self) -> float | None:
+        """Get current hour's price value from coordinator data."""
+        # to work out the start of the current hour we truncate from minutes downwards
+        # rather than create a new datetime to ensure correctness across DST boundaries
+        hass_now = utcnow().astimezone(self._hass_tzinfo())
+        hour_start = hass_now.replace(minute=0, second=0, microsecond=0)
+        hour_start_cet = hour_start.astimezone(CET)
+
+        series_name = self.entity_description.key
+        day_hours_raw = self.coordinator.data.get(hour_start_cet.date())
+        day_hours_cet = _pick_series_cet(day_hours_raw, series_name)
+
+        # Convert to €/kWh
+        value_mwh = day_hours_cet.get(hour_start_cet)
+        return value_mwh / 1000 if value_mwh is not None else None
+
+    def _hass_tzinfo(self) -> ZoneInfo:
+        return ZoneInfo(self.coordinator.hass.config.time_zone)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -58,43 +97,9 @@ async def async_setup_entry(
         name="OMIE",
     )
 
-    def hass_tzinfo() -> ZoneInfo:
-        return ZoneInfo(hass.config.time_zone)
-
-    class OMIEPriceEntity(CoordinatorEntity[OMIECoordinator], SensorEntity):
-        def __init__(self, key: str) -> None:
-            """Initialize the sensor."""
-            super().__init__(coordinator)
-            self.entity_description = OMIEPriceEntityDescription(key)
-            self._attr_device_info = device_info
-            self._attr_unique_id = slugify(f"{key}")
-            self._attr_should_poll = False
-            self._attr_attribution = _ATTRIBUTION
-
-        def _handle_coordinator_update(self) -> None:
-            """Update this sensor's state from the coordinator results."""
-            self._attr_native_value = self._get_current_hour_value()
-            super()._handle_coordinator_update()
-
-        def _get_current_hour_value(self) -> float | None:
-            """Get current hour's price value from coordinator data."""
-            # to work out the start of the current hour we truncate from minutes downwards
-            # rather than create a new datetime to ensure correctness across DST boundaries
-            hass_now = utcnow().astimezone(hass_tzinfo())
-            hour_start = hass_now.replace(minute=0, second=0, microsecond=0)
-            hour_start_cet = hour_start.astimezone(CET)
-
-            series_name = self.entity_description.key
-            day_hours_raw = coordinator.data.get(hour_start_cet.date())
-            day_hours_cet = _pick_series_cet(day_hours_raw, series_name)
-
-            # Convert to €/kWh
-            value_mwh = day_hours_cet.get(hour_start_cet)
-            return value_mwh / 1000 if value_mwh is not None else None
-
     sensors = [
-        OMIEPriceEntity("spot_price_pt"),
-        OMIEPriceEntity("spot_price_es"),
+        OMIEPriceSensor(coordinator, device_info, "spot_price_pt"),
+        OMIEPriceSensor(coordinator, device_info, "spot_price_es"),
     ]
 
     async_add_entities(sensors)
