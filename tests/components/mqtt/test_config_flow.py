@@ -2729,7 +2729,6 @@ async def test_migrate_of_incompatible_config_entry(
                 "state_topic": "test-topic",
                 "command_template": "{{action}}",
                 "value_template": "{{ value_json.value }}",
-                "code": "REMOTE_CODE",
                 "code_arm_required": True,
                 "code_disarm_required": True,
                 "code_trigger_required": True,
@@ -2760,7 +2759,6 @@ async def test_migrate_of_incompatible_config_entry(
                 "state_topic": "test-topic",
                 "command_template": "{{action}}",
                 "value_template": "{{ value_json.value }}",
-                "code": "REMOTE_CODE_TEXT",
                 "code_arm_required": True,
                 "code_disarm_required": True,
                 "code_trigger_required": True,
@@ -3948,6 +3946,67 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
         (
             (
                 ConfigSubentryData(
+                    data=MOCK_ALARM_CONTROL_PANEL_LOCAL_CODE_SUBENTRY_DATA_SINGLE,
+                    subentry_type="device",
+                    title="Mock subentry",
+                ),
+            ),
+            (),
+            {
+                "alarm_control_panel_code_mode": "remote_code",
+                "supported_features": ["arm_home", "arm_away", "arm_custom_bypass"],
+            },
+            {
+                "command_topic": "test-topic1-updated",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic1-updated",
+                "value_template": "{{ value }}",
+                "retain": True,
+            },
+            {
+                "command_topic": "test-topic1-updated",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic1-updated",
+                "value_template": "{{ value }}",
+                "retain": True,
+                "code": "REMOTE_CODE",
+            },
+            {"entity_picture"},
+        ),
+        (
+            (
+                ConfigSubentryData(
+                    data=MOCK_ALARM_CONTROL_PANEL_REMOTE_CODE_SUBENTRY_DATA_SINGLE,
+                    subentry_type="device",
+                    title="Mock subentry",
+                ),
+            ),
+            (),
+            {
+                "alarm_control_panel_code_mode": "local_code",
+                "supported_features": ["arm_home", "arm_away", "arm_custom_bypass"],
+            },
+            {
+                "command_topic": "test-topic1-updated",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic1-updated",
+                "value_template": "{{ value }}",
+                "code": "1234",
+                "retain": True,
+            },
+            {
+                "command_topic": "test-topic1-updated",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic1-updated",
+                "value_template": "{{ value }}",
+                "code": "1234",
+                "retain": True,
+            },
+            {"entity_picture"},
+        ),
+        (
+            (
+                ConfigSubentryData(
                     data=MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
                     subentry_type="device",
                     title="Mock subentry",
@@ -4168,7 +4227,15 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
             {"entity_picture"},
         ),
     ],
-    ids=["notify", "sensor", "light_basic", "climate_single", "climate_high_low"],
+    ids=[
+        "alarm_control_panel_local_code",
+        "alarm_control_panel_remote_code",
+        "notify",
+        "sensor",
+        "light_basic",
+        "climate_single",
+        "climate_high_low",
+    ],
 )
 async def test_subentry_reconfigure_edit_entity_single_entity(
     hass: HomeAssistant,
@@ -4238,7 +4305,6 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
         user_input={},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "entity_platform_config"
 
     # entity platform config flow step
     assert result["step_id"] == "entity_platform_config"

@@ -774,14 +774,20 @@ _CODE_VALIDATION_MODE = {
 
 @callback
 def default_alarm_control_panel_code(config: dict[str, Any]) -> str:
-    """Return alarm control panel code based on the stored code and desired code mode."""
+    """Return alarm control panel code based on the stored code and desired code mode.
+
+    Updates the magic values for for the `code` options in case remove code
+    validation is selected.
+    """
 
     code_validation_mode: str = config["alarm_control_panel_code_mode"]
-    code: str = config.get(CONF_CODE, "")
-
-    default = _CODE_VALIDATION_MODE.get(code_validation_mode, code)
+    default: str = config.get(CONF_CODE, "")
     if code_validation_mode in _CODE_VALIDATION_MODE:
-        config[CONF_CODE] = default
+        # Set magic value for remote code validation
+        default = _CODE_VALIDATION_MODE[config["alarm_control_panel_code_mode"]]
+    elif config.get(CONF_CODE, "") in _CODE_VALIDATION_MODE.values():
+        # Filter out magic values for remote code validation
+        default = ""
 
     return default
 
@@ -981,6 +987,7 @@ class PlatformField:
         vol.UNDEFINED
     )
     is_schema_default: bool = False
+    include_in_config: bool = False
     exclude_from_reconfig: bool = False
     exclude_from_config: bool = False
     conditions: tuple[dict[str, Any], ...] | None = None
@@ -1270,7 +1277,9 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
         CONF_CODE: PlatformField(
             selector=PASSWORD_SELECTOR,
             required=True,
+            include_in_config=True,
             default=default_alarm_control_panel_code,
+            conditions=({"alarm_control_panel_code_mode": "local_code"},),
         ),
         CONF_CODE_ARM_REQUIRED: PlatformField(
             selector=BOOLEAN_SELECTOR,
@@ -3127,13 +3136,24 @@ def data_schema_from_fields(
     data_schema: dict[Any, Any] = {}
     all_data_element_options: set[Any] = set()
     no_reconfig_options: set[Any] = set()
+
+    defaults: dict[str, Any] = {}
+    for field_name, field_details in data_schema_fields.items():
+        default = defaults[field_name] = get_default(field_details)
+        if not field_details.include_in_config or component_data is None:
+            continue
+        component_data[field_name] = default
+
     for schema_section in sections:
+        # Always calculate the default values
+        # Getting the default value may update the subentry data,
+        # even when and option is filtered out
         data_schema_element = {
-            vol.Required(field_name, default=get_default(field_details))
+            vol.Required(field_name, default=defaults[field_name])
             if field_details.required
             else vol.Optional(
                 field_name,
-                default=get_default(field_details)
+                default=defaults[field_name]
                 if field_details.default is not None
                 else vol.UNDEFINED,
             ): field_details.selector(component_data_with_user_input or {})
@@ -3182,12 +3202,16 @@ def data_schema_from_fields(
         )
 
     # Reset all fields from the component_data not in the schema
+    # except for options that should stay included
     if component_data:
         filtered_fields = (
             set(data_schema_fields) - all_data_element_options - no_reconfig_options
         )
         for field in filtered_fields:
-            if field in component_data:
+            if (
+                field in component_data
+                and not data_schema_fields[field].include_in_config
+            ):
                 del component_data[field]
     return vol.Schema(data_schema)
 
@@ -3749,6 +3773,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             for field, platform_field in data_schema_fields.items()
             if field in (set(component_data) - set(config))
             and not platform_field.exclude_from_reconfig
+            and not platform_field.include_in_config
         ):
             component_data.pop(field)
         component_data.update(merged_user_input)
@@ -4064,7 +4089,10 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             )
             component_data.update(subentry_default_data)
             for key, platform_field in platform_fields.items():
-                if not platform_field.exclude_from_config:
+                if (
+                    not platform_field.exclude_from_config
+                    or platform_field.include_in_config
+                ):
                     continue
                 if key in component_data:
                     component_data.pop(key)

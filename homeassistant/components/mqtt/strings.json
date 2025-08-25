@@ -269,7 +269,7 @@
             "unit_of_measurement": "Unit of measurement"
           },
           "data_description": {
-            "alarm_control_panel_code_mode": "Configures how the alarm control panel validates the code. A local code is configured with the entity and is validated by Home Assistant. A remote code is sent to the device and validated remotely.",
+            "alarm_control_panel_code_mode": "Configures how the alarm control panel validates the code. A local code is configured with the entity and is validated by Home Assistant. A remote code is sent to the device and validated remotely. [Learn more.]({url}#code)",
             "climate_feature_action": "The climate supports reporting the current action.",
             "climate_feature_current_humidity": "The climate supports reporting the current humidity.",
             "climate_feature_current_temperature": "The climate supports reporting the current temperature.",
@@ -349,7 +349,7 @@
           "data_description": {
             "blue_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract blue color from the state payload value. Expected result of the template is an integer from 0-255 range.",
             "brightness_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract brightness from the state payload value. Expected result of the template is an integer from 0-255 range.",
-            "code": "Specifies a code to enable or disable the alarm in the frontend. Note that if the code is validated locally, it blocks sending MQTT message commands to the remote device if the code validation fails. For remote code validation, the code is configured to either one of the special values `REMOTE_CODE` (numeric code) or `REMOTE_CODE_TEXT` (text code). In this case, local code validation is bypassed but the frontend will still show a numeric or text code dialog. Use the command template to send the code to the remote device. Example configurations for remote code validation can be found [here]({url}#configurations-with-remote-code-validation). [Learn more.]({url}#code)",
+            "code": "Specifies a code to enable or disable the alarm in the frontend. Note that this blocks sending MQTT message commands to the remote device if the code validation fails. [Learn more.]({url}#code)",
             "code_format": "A regular expression to validate a supplied code when it is set during the action to open, lock or unlock the MQTT lock. [Learn more.]({url}#code_format)",
             "code_arm_required": "If set, the code is required to arm the alarm. If not set, the code is not validated.",
             "code_disarm_required": "If set, the code is required to disarm the alarm. If not set, the code is not validated.",
