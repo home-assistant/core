@@ -12,6 +12,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.button import ButtonDeviceClass
 from homeassistant.components.cover import CoverDeviceClass
+from homeassistant.components.event import EventDeviceClass
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASS_STATE_CLASSES,
@@ -73,6 +74,7 @@ from .cover import (
     STOP_ACTION,
     async_create_preview_cover,
 )
+from .event import CONF_EVENT_TYPE, CONF_EVENT_TYPES, async_create_preview_event
 from .fan import (
     CONF_OFF_ACTION,
     CONF_ON_ACTION,
@@ -212,6 +214,24 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                         options=[cls.value for cls in CoverDeviceClass],
                         mode=selector.SelectSelectorMode.DROPDOWN,
                         translation_key="cover_device_class",
+                        sort=True,
+                    ),
+                )
+            }
+
+    if domain == Platform.EVENT:
+        schema |= {
+            vol.Required(CONF_EVENT_TYPE): selector.TemplateSelector(),
+            vol.Required(CONF_EVENT_TYPES): selector.TemplateSelector(),
+        }
+
+        if flow_type == "config":
+            schema |= {
+                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=[cls.value for cls in EventDeviceClass],
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                        translation_key="event_device_class",
                         sort=True,
                     ),
                 )
@@ -480,6 +500,7 @@ TEMPLATE_TYPES = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.COVER,
+    Platform.EVENT,
     Platform.FAN,
     Platform.IMAGE,
     Platform.LIGHT,
@@ -512,6 +533,11 @@ CONFIG_FLOW = {
         config_schema(Platform.COVER),
         preview="template",
         validate_user_input=validate_user_input(Platform.COVER),
+    ),
+    Platform.EVENT: SchemaFlowFormStep(
+        config_schema(Platform.EVENT),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.EVENT),
     ),
     Platform.FAN: SchemaFlowFormStep(
         config_schema(Platform.FAN),
@@ -587,6 +613,11 @@ OPTIONS_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.COVER),
     ),
+    Platform.EVENT: SchemaFlowFormStep(
+        options_schema(Platform.EVENT),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.EVENT),
+    ),
     Platform.FAN: SchemaFlowFormStep(
         options_schema(Platform.FAN),
         preview="template",
@@ -646,6 +677,7 @@ CREATE_PREVIEW_ENTITY: dict[
     Platform.ALARM_CONTROL_PANEL: async_create_preview_alarm_control_panel,
     Platform.BINARY_SENSOR: async_create_preview_binary_sensor,
     Platform.COVER: async_create_preview_cover,
+    Platform.EVENT: async_create_preview_event,
     Platform.FAN: async_create_preview_fan,
     Platform.LIGHT: async_create_preview_light,
     Platform.LOCK: async_create_preview_lock,
