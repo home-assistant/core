@@ -12,8 +12,9 @@ import voluptuous as vol
 from homeassistant.const import CONF_PLATFORM, CONF_WEBHOOK_ID
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import (
     DEFAULT_METHODS,
@@ -33,7 +34,7 @@ CONF_LOCAL_ONLY = "local_only"
 TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "webhook",
-        vol.Required(CONF_WEBHOOK_ID): cv.string,
+        vol.Required(CONF_WEBHOOK_ID): cv.template,
         vol.Optional(CONF_ALLOWED_METHODS): vol.All(
             cv.ensure_list,
             [vol.All(vol.Upper, vol.In(SUPPORTED_METHODS))],
@@ -83,7 +84,13 @@ async def async_attach_trigger(
     trigger_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Trigger based on incoming webhooks."""
-    webhook_id: str = config[CONF_WEBHOOK_ID]
+    variables: TemplateVarsType | None = None
+    if trigger_info:
+        variables = trigger_info.get("variables")
+    webhook_id_template: Template = config[CONF_WEBHOOK_ID]
+    webhook_id: str = webhook_id_template.async_render(
+        variables, limited=True, parse_result=False
+    )
     local_only = config.get(CONF_LOCAL_ONLY, True)
     allowed_methods = config.get(CONF_ALLOWED_METHODS, DEFAULT_METHODS)
     job = HassJob(action)
