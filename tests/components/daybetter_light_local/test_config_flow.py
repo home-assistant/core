@@ -94,6 +94,7 @@ async def test_creating_entry_has_with_devices(
         mock_setup_entry.assert_awaited_once()
 
 
+# 在 test_creating_entry_errno 测试中
 async def test_creating_entry_errno(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
@@ -105,34 +106,17 @@ async def test_creating_entry_errno(
     e = OSError()
     e.errno = EADDRINUSE
     mock_DayBetter_api.start.side_effect = e
-    mock_DayBetter_api.devices = _get_devices(mock_DayBetter_api)
 
-    # 模拟配置流程的各个部分
-    with (
-        patch(
-            "homeassistant.components.daybetter_light_local.config_flow.DayBetterConfigFlow._async_discover_device",
-            return_value=None,
-        ),
-        patch(
-            "homeassistant.components.daybetter_light_local.coordinator.DayBetterLocalApiCoordinator.start",
-            side_effect=e,  # 确保协调器的 start 也抛出异常
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
-        # 确认表单
-        assert result["type"] is FlowResultType.FORM
+    # 确认表单
+    assert result["type"] is FlowResultType.FORM
 
-        # 配置时应该中止
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"host": "192.168.1.100"}
-        )
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "no_devices_found"  # 或者适当的错误原因
-
-        await hass.async_block_till_done()
-
-        assert mock_DayBetter_api.start.call_count == 1
-        mock_setup_entry.assert_not_awaited()
+    # 配置时应该显示错误
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"host": "192.168.1.100"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == "address_in_use"

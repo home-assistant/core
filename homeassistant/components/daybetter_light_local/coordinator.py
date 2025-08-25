@@ -40,9 +40,13 @@ class DayBetterLocalApiCoordinator(DataUpdateCoordinator[list[DayBetterDevice]])
             update_interval=SCAN_INTERVAL,
         )
 
+        # 从配置条目获取主机地址，如果没有则使用默认值
+        host = config_entry.data.get("host", "0.0.0.0")
+
         self._controller = DayBetterController(
             loop=hass.loop,
             logger=_LOGGER,
+            listening_address=host,  # 使用配置的主机地址
             broadcast_address=CONF_MULTICAST_ADDRESS_DEFAULT,
             broadcast_port=CONF_TARGET_PORT_DEFAULT,
             listening_port=CONF_LISTENING_PORT_DEFAULT,
@@ -98,12 +102,12 @@ class DayBetterLocalApiCoordinator(DataUpdateCoordinator[list[DayBetterDevice]])
     def devices(self) -> list[DayBetterDevice]:
         """Return a list of discovered DayBetter devices."""
         # 确保返回控制器的设备列表
-        return getattr(self._controller, "devices", [])
+        return list(self._controller.devices) if self._controller.devices else []
 
     async def _async_update_data(self) -> list[DayBetterDevice]:
         """Update device data."""
         # 发送更新消息并等待设备响应
         self._controller.send_update_message()
         await asyncio.sleep(0.5)  # 给设备一点时间响应
-        # 确保返回设备列表，而不是 None
+        # 确保返回设备列表
         return list(self._controller.devices) if self._controller.devices else []
