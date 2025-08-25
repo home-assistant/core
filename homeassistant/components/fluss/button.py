@@ -30,14 +30,6 @@ async def async_setup_entry(
 class FlussButton(FlussEntity, ButtonEntity):
     """Representation of a Fluss button device."""
 
-    def __init__(
-        self,
-        coordinator: FlussDataUpdateCoordinator,
-        device_id: str,
-        device: dict,
-    ) -> None:
-        """Initialize the button."""
-        super().__init__(coordinator, device_id, device)
 
     async def async_press(self) -> None:
         """Handle the button press."""
