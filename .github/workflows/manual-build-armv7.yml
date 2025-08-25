@@ -1,4 +1,4 @@
-name: Build images
+name: Manual build armv7
 
 # yamllint disable-line rule:truthy
 on:
