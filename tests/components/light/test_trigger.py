@@ -104,18 +104,20 @@ async def target_lights(hass: HomeAssistant) -> None:
         ({ATTR_DEVICE_ID: "test_device"}, "light.device_light"),
     ],
 )
-@pytest.mark.parametrize("state", [STATE_ON, STATE_OFF])
+@pytest.mark.parametrize(
+    ("state", "reverse_state"), [(STATE_ON, STATE_OFF), (STATE_OFF, STATE_ON)]
+)
 async def test_light_state_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
     trigger_target_config: dict,
     entity_id: str,
     state: str,
+    reverse_state: str,
 ) -> None:
     """Test that the light state trigger fires when any light state changes to a specific state."""
     await async_setup_component(hass, "light", {})
 
-    reverse_state = STATE_OFF if state == STATE_ON else STATE_ON
     hass.states.async_set(entity_id, reverse_state)
 
     await async_setup_component(
@@ -160,7 +162,9 @@ async def test_light_state_trigger_behavior_any(
         ({ATTR_DEVICE_ID: "test_device"}, "light.device_light"),
     ],
 )
-@pytest.mark.parametrize("state", [STATE_ON, STATE_OFF])
+@pytest.mark.parametrize(
+    ("state", "reverse_state"), [(STATE_ON, STATE_OFF), (STATE_OFF, STATE_ON)]
+)
 async def test_light_state_trigger_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
@@ -168,11 +172,11 @@ async def test_light_state_trigger_behavior_first(
     trigger_target_config: dict,
     entity_id: str,
     state: str,
+    reverse_state: str,
 ) -> None:
     """Test that the light state trigger fires when the first light changes to a specific state."""
     await async_setup_component(hass, "light", {})
 
-    reverse_state = STATE_OFF if state == STATE_ON else STATE_ON
     for other_entity_id in target_lights:
         hass.states.async_set(other_entity_id, reverse_state)
         await hass.async_block_till_done()
@@ -229,7 +233,9 @@ async def test_light_state_trigger_behavior_first(
         ({ATTR_DEVICE_ID: "test_device"}, "light.device_light"),
     ],
 )
-@pytest.mark.parametrize("state", [STATE_ON, STATE_OFF])
+@pytest.mark.parametrize(
+    ("state", "reverse_state"), [(STATE_ON, STATE_OFF), (STATE_OFF, STATE_ON)]
+)
 async def test_light_state_trigger_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
@@ -237,11 +243,11 @@ async def test_light_state_trigger_behavior_last(
     trigger_target_config: dict,
     entity_id: str,
     state: str,
+    reverse_state: str,
 ) -> None:
     """Test that the light state trigger fires when the last light changes to a specific state."""
     await async_setup_component(hass, "light", {})
 
-    reverse_state = STATE_OFF if state == STATE_ON else STATE_ON
     for other_entity_id in target_lights:
         hass.states.async_set(other_entity_id, reverse_state)
     await hass.async_block_till_done()
