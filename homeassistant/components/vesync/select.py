@@ -168,7 +168,5 @@ class VeSyncSelectEntity(VeSyncBaseEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Set an option."""
         if not await self.entity_description.select_option_fn(self.device, option):
-            raise HomeAssistantError(
-                "An error occurred while setting:" + self.device.last_response.message
-            )
+            raise HomeAssistantError(self.device.last_response.message)
         await self.coordinator.async_request_refresh()

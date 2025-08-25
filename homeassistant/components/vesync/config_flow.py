@@ -1,6 +1,7 @@
 """Config flow utilities."""
 
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 from pyvesync import VeSync
@@ -14,6 +15,8 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -61,7 +64,8 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
         )
         try:
             await manager.login()
-        except VeSyncError:
+        except VeSyncError as e:
+            _LOGGER.error("VeSync login failed: %s", str(e))
             return self._show_form(errors={"base": "invalid_auth"})
 
         return self.async_create_entry(
@@ -94,7 +98,8 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             try:
                 await manager.login()
-            except VeSyncError:
+            except VeSyncError as e:
+                _LOGGER.error("VeSync login failed: %s", str(e))
                 return self.async_show_form(
                     step_id="reauth_confirm",
                     data_schema=DATA_SCHEMA,

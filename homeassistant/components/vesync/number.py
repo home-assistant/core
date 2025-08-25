@@ -125,7 +125,5 @@ class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
         """Set new value."""
         # Doesn't set correct on mine.  Needs testing.
         if not await self.entity_description.set_value_fn(self.device, value):
-            raise HomeAssistantError(
-                "An error occurred while setting:" + self.device.last_response.message
-            )
+            raise HomeAssistantError(self.device.last_response.message)
         await self.coordinator.async_request_refresh()
