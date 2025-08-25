@@ -1878,13 +1878,13 @@ async def test_register_entity_service_none_schema(
 
 
 async def test_register_entity_service_non_entity_service_schema(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
 ) -> None:
     """Test attempting to register a service with a non entity service schema."""
     entity_platform = MockEntityPlatform(
         hass, domain="mock_integration", platform_name="mock_platform", platform=None
     )
-    expected_message = "registers an entity service with a non entity service schema"
+    expected_message = "The schema is not an entity service schema"
 
     for idx, schema in enumerate(
         (
@@ -1893,9 +1893,10 @@ async def test_register_entity_service_non_entity_service_schema(
             vol.Any(vol.Schema({"some": str})),
         )
     ):
-        entity_platform.async_register_entity_service(f"hello_{idx}", schema, Mock())
-        assert expected_message in caplog.text
-        caplog.clear()
+        with pytest.raises(HomeAssistantError, match=expected_message):
+            entity_platform.async_register_entity_service(
+                f"hello_{idx}", schema, Mock()
+            )
 
     for idx, schema in enumerate(
         (
@@ -1907,7 +1908,6 @@ async def test_register_entity_service_non_entity_service_schema(
         entity_platform.async_register_entity_service(
             f"test_service_{idx}", schema, Mock()
         )
-        assert expected_message not in caplog.text
 
 
 @pytest.mark.parametrize("update_before_add", [True, False])
