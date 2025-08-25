@@ -52,24 +52,27 @@ class PooldoseEntity(CoordinatorEntity[PooldoseCoordinator]):
         serial_number: str,
         device_properties: dict[str, Any],
         entity_description: EntityDescription,
+        platform_name: str,
     ) -> None:
         """Initialize PoolDose entity."""
         super().__init__(coordinator)
         self.entity_description = entity_description
+        self.platform_name = platform_name
         self._attr_unique_id = f"{serial_number}_{entity_description.key}"
         self._attr_device_info = device_info(device_properties, serial_number)
 
     @property
     def available(self) -> bool:
         """Return True if the entity is available."""
-        return (
-            super().available
-            and self.coordinator.data is not None
-            and self.entity_description.key in self.coordinator.data
-        )
+        if not super().available or self.coordinator.data is None:
+            return False
+        # Check if the entity type exists in coordinator data
+        platform_data = self.coordinator.data.get(self.platform_name, {})
+        return self.entity_description.key in platform_data
 
-    def get_data(self) -> list | tuple | None:
+    def get_data(self) -> dict | None:
         """Get data for this entity, only if available."""
         if not self.available:
             return None
-        return self.coordinator.data.get(self.entity_description.key)
+        platform_data = self.coordinator.data.get(self.platform_name, {})
+        return platform_data.get(self.entity_description.key)

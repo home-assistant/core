@@ -40,11 +40,12 @@ class PooldoseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Set up the coordinator."""
         # Update device info after successful connection
         self.device_info = self.client.device_info
+        _LOGGER.debug("Device info: %s", self.device_info)
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the PoolDose API."""
         try:
-            status, instant_values = await self.client.instant_values()
+            status, instant_values = await self.client.instant_values_structured()
         except TimeoutError as err:
             raise UpdateFailed(
                 f"Timeout fetching data from PoolDose device: {err}"
@@ -60,4 +61,5 @@ class PooldoseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if instant_values is None:
             raise UpdateFailed("No data received from API")
 
+        _LOGGER.debug("Instant values structured: %s", instant_values)
         return instant_values
