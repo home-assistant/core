@@ -357,6 +357,7 @@ def _get_unmatched_slots(
     {
         vol.Required("type"): "conversation/agent/homeassistant/language_scores",
         vol.Optional("language"): str,
+        vol.Optional("country"): str,
     }
 )
 @websocket_api.async_response
@@ -367,9 +368,10 @@ async def websocket_hass_agent_language_scores(
 ) -> None:
     """Get support scores per language."""
     language = msg.get("language", hass.config.language)
+    country = msg.get("country", hass.config.country)
 
     scores = await hass.async_add_executor_job(get_language_scores)
-    matching_langs = language_util.matches(language, scores.keys())
+    matching_langs = language_util.matches(language, scores.keys(), country=country)
     preferred_lang = matching_langs[0] if matching_langs else language
     result = {
         "languages": {
@@ -385,7 +387,6 @@ async def websocket_hass_agent_language_scores(
     {
         vol.Required("type"): "conversation/agent/homeassistant/custom_sentences",
         vol.Optional("language"): str,
-        vol.Optional("country"): str,
     }
 )
 @websocket_api.async_response
@@ -397,7 +398,6 @@ async def websocket_hass_agent_custom_sentences(
     """Get user-defined custom sentences."""
     custom_sentences_dir = Path(hass.config.path("custom_sentences"))
     language = msg.get("language")
-    country = msg.get("country")
 
     def load_custom_sentences():
         lang_dirs = [d for d in custom_sentences_dir.iterdir() if d.is_dir()]
@@ -406,7 +406,7 @@ async def websocket_hass_agent_custom_sentences(
         if language:
             lang_dirs = [
                 custom_sentences_dir / lang_match
-                for lang_match in language_util.matches(language, custom_langs, country)
+                for lang_match in language_util.matches(language, custom_langs)
             ]
 
         lang_intents = defaultdict(dict)
