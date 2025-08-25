@@ -421,7 +421,6 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             value_fn=lambda value: _convert_finish_timestamp(
                 value.state_remaining_time, value.state_start_time
             ),
-            end_value_fn=lambda last_value: last_value,
             device_class=SensorDeviceClass.TIMESTAMP,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
@@ -474,7 +473,6 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             value_fn=lambda value: _convert_timestamp(
                 value.state_elapsed_time, adding=False
             ),
-            end_value_fn=lambda last_value: last_value,
             device_class=SensorDeviceClass.TIMESTAMP,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
@@ -530,7 +528,6 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             key="state_start_time_abs",
             translation_key="programmed_start",
             value_fn=lambda value: _convert_timestamp(value.state_start_time),
-            end_value_fn=lambda last_value: last_value,
             device_class=SensorDeviceClass.TIMESTAMP,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
@@ -725,9 +722,9 @@ async def async_setup_entry(
             "state_program_phase": MielePhaseSensor,
             "state_plate_step": MielePlateSensor,
             "state_elapsed_time": MieleTimeSensor,
-            "finish": MieleAbsoluteTimeSensor,
-            "programmed_start": MieleAbsoluteTimeSensor,
-            "started": MieleAbsoluteTimeSensor,
+            "state_remaining_time_abs": MieleAbsoluteTimeSensor,
+            "state_elapsed_time_abs": MieleAbsoluteTimeSensor,
+            "state_start_time_abs": MieleAbsoluteTimeSensor,
         }.get(definition.description.key, MieleSensor)
 
     def _is_entity_registered(unique_id: str) -> bool:
@@ -888,8 +885,12 @@ class MieleRestorableSensor(MieleSensor, RestoreSensor):
         # recover last value from cache when adding entity
         last_value = await self.async_get_last_state()
         if last_value and last_value.state != STATE_UNKNOWN:
-            self._last_value = last_value.state
+            self._restore_last_value(last_value.state)
             self._initialized = True
+
+    def _restore_last_value(self, last_value: str) -> None:
+        """Restore the last value from cache."""
+        self._last_value = last_value
 
     @property
     def native_value(self) -> StateType | datetime:
@@ -1046,7 +1047,11 @@ class MieleTimeSensor(MieleRestorableSensor):
 class MieleAbsoluteTimeSensor(MieleRestorableSensor):
     """Representation of absolute time sensors handling precision correctness."""
 
-    _previous_value: StateType | datetime
+    _previous_value: StateType | datetime = None
+
+    def _restore_last_value(self, last_value: str) -> None:
+        """Restore the last value from cache."""
+        self._last_value = datetime.fromisoformat(last_value)
 
     def _update_last_value(self) -> None:
         """Update the last value of the sensor."""
@@ -1055,7 +1060,7 @@ class MieleAbsoluteTimeSensor(MieleRestorableSensor):
 
         # return cached value if differs only of 90s as debounching,
         # since API is reporting at minute precision, in order to
-        # avoid changing value too frequently
+        # avoid changing value too frequently, or if program ended
         if (
             self._previous_value is not None
             and current_value is not None
@@ -1064,11 +1069,7 @@ class MieleAbsoluteTimeSensor(MieleRestorableSensor):
                 < cast(datetime, current_value)
                 < cast(datetime, self._previous_value) + timedelta(seconds=90)
             )
-        ):
-            self._last_value = self._previous_value
-
-        # keep value when program ends if no function is specified
-        elif current_status == StateStatus.PROGRAM_ENDED:
+        ) or current_status == StateStatus.PROGRAM_ENDED:
             pass
 
         # force unknown when appliance is not working (some devices are keeping last value until a new cycle starts)
