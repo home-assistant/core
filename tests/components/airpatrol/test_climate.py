@@ -1,7 +1,6 @@
 """Test the AirPatrol climate platform."""
 
 import contextlib
-import logging
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -420,17 +419,6 @@ async def test_climate_set_temperature_api_error(
 
 
 @pytest.mark.asyncio
-async def test_climate_current_temperature_invalid(
-    hass: HomeAssistant, mock_coordinator
-) -> None:
-    """Test current_temperature with invalid value."""
-    unit = mock_coordinator.data[0].copy()
-    unit["climate"]["RoomTemp"] = "not_a_float"
-    climate = AirPatrolClimate(mock_coordinator, unit, "test_unit_001")
-    assert climate.current_temperature is None
-
-
-@pytest.mark.asyncio
 async def test_climate_target_temperature_missing(
     hass: HomeAssistant, mock_coordinator
 ) -> None:
@@ -463,6 +451,17 @@ async def test_climate_swing_mode_invalid(
 
 
 @pytest.mark.asyncio
+async def test_climate_current_temperature(
+    hass: HomeAssistant, mock_coordinator
+) -> None:
+    """Test current_temperature returns correct float value."""
+    unit = mock_coordinator.data[0].copy()
+    unit["climate"]["RoomTemp"] = "22.5"
+    climate = AirPatrolClimate(mock_coordinator, unit, "test_unit_001")
+    assert climate.current_temperature == 22.5
+
+
+@pytest.mark.asyncio
 async def test_climate_current_humidity(hass: HomeAssistant, mock_coordinator) -> None:
     """Test current_humidity returns correct float value."""
     unit = mock_coordinator.data[0].copy()
@@ -480,16 +479,3 @@ async def test_climate_current_humidity_missing(
     unit["climate"].pop("RoomHumidity", None)
     climate = AirPatrolClimate(mock_coordinator, unit, "test_unit_001")
     assert climate.current_humidity is None
-
-
-@pytest.mark.asyncio
-async def test_climate_current_humidity_invalid(
-    hass: HomeAssistant, mock_coordinator, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test current_humidity returns None and logs error if RoomHumidity is invalid."""
-    unit = mock_coordinator.data[0].copy()
-    unit["climate"]["RoomHumidity"] = "not_a_float"
-    climate = AirPatrolClimate(mock_coordinator, unit, "test_unit_001")
-    with caplog.at_level(logging.ERROR):
-        assert climate.current_humidity is None
-        assert "Failed to convert humidity to float" in caplog.text

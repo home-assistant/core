@@ -19,7 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AirPatrolConfigEntry
-from .const import LOGGER
 from .coordinator import AirPatrolDataUpdateCoordinator
 from .entity import AirPatrolEntity
 
@@ -114,10 +113,7 @@ class AirPatrolClimate(AirPatrolEntity, ClimateEntity):
         """Return the current humidity."""
         climate_data = self._unit.get("climate", {})
         if humidity := climate_data.get("RoomHumidity"):
-            try:
-                return float(humidity)
-            except (ValueError, TypeError):
-                LOGGER.error("Failed to convert humidity to float: %s", humidity)
+            return float(humidity)
         return None
 
     @property
@@ -125,10 +121,7 @@ class AirPatrolClimate(AirPatrolEntity, ClimateEntity):
         """Return the current temperature."""
         climate_data = self._unit.get("climate", {})
         if temp := climate_data.get("RoomTemp"):
-            try:
-                return float(temp)
-            except (ValueError, TypeError):
-                LOGGER.error("Failed to convert temperature to float: %s", temp)
+            return float(temp)
         return None
 
     @property
@@ -137,10 +130,7 @@ class AirPatrolClimate(AirPatrolEntity, ClimateEntity):
         climate_data = self._unit.get("climate", {})
         params = climate_data.get("ParametersData", {})
         if temp := params.get("PumpTemp"):
-            try:
-                return float(temp)
-            except (ValueError, TypeError):
-                LOGGER.error("Failed to convert temperature to float: %s", temp)
+            return float(temp)
         return None
 
     @property
