@@ -1,8 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
-LOGGER = logging.getLogger(__name__)
 
 from contextlib import suppress
 
