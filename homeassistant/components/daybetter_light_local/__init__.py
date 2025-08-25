@@ -26,7 +26,6 @@ async def async_setup_entry(
     """Set up DayBetter light local from a config entry."""
     coordinator = DayBetterLocalApiCoordinator(hass, entry)
 
-
     await coordinator.async_config_entry_first_refresh()
 
     if not coordinator.devices:  # 设备列表为空
