@@ -8,6 +8,7 @@ from daybetter_local_api import DayBetterController, DayBetterDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -20,7 +21,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-type DayBetterLocalConfigEntry = ConfigEntry[DayBetterLocalApiCoordinator]
+type DayBetterLocalConfigEntry = ConfigEntry["DayBetterLocalApiCoordinator"]
 
 
 class DayBetterLocalApiCoordinator(DataUpdateCoordinator[list[DayBetterDevice]]):
@@ -31,7 +32,7 @@ class DayBetterLocalApiCoordinator(DataUpdateCoordinator[list[DayBetterDevice]])
     def __init__(
         self, hass: HomeAssistant, config_entry: DayBetterLocalConfigEntry
     ) -> None:
-        """Initialize my coordinator."""
+        """Initialize coordinator."""
         super().__init__(
             hass=hass,
             logger=_LOGGER,
@@ -40,13 +41,14 @@ class DayBetterLocalApiCoordinator(DataUpdateCoordinator[list[DayBetterDevice]])
             update_interval=SCAN_INTERVAL,
         )
 
-        # 从配置条目获取主机地址，如果没有则使用默认值
-        host = config_entry.data.get("host", "0.0.0.0")
+        host = config_entry.data.get("host")
+        if not host:
+            raise ConfigEntryNotReady("Missing host in config entry")
 
         self._controller = DayBetterController(
             loop=hass.loop,
             logger=_LOGGER,
-            listening_address=host,  # 使用配置的主机地址
+            listening_address=host,
             broadcast_address=CONF_MULTICAST_ADDRESS_DEFAULT,
             broadcast_port=CONF_TARGET_PORT_DEFAULT,
             listening_port=CONF_LISTENING_PORT_DEFAULT,
@@ -57,57 +59,27 @@ class DayBetterLocalApiCoordinator(DataUpdateCoordinator[list[DayBetterDevice]])
         )
 
     async def start(self) -> None:
-        """Start the DayBetter coordinator."""
+        """Start the controller and trigger discovery."""
         await self._controller.start()
-        # 发送初始发现消息
         self._controller.send_discovery_message()
 
     async def set_discovery_callback(
         self, callback: Callable[[DayBetterDevice, bool], bool]
     ) -> None:
-        """Set discovery callback for automatic DayBetter light discovery."""
+        """Set discovery callback for automatic device discovery."""
         self._controller.set_device_discovered_callback(callback)
 
     def cleanup(self) -> asyncio.Event:
-        """Stop and cleanup the coordinator."""
+        """Stop and cleanup the controller. Returns an asyncio.Event when done."""
         return self._controller.cleanup()
-
-    async def turn_on(self, device: DayBetterDevice) -> None:
-        """Turn on the light."""
-        await device.turn_on()
-
-    async def turn_off(self, device: DayBetterDevice) -> None:
-        """Turn off the light."""
-        await device.turn_off()
-
-    async def set_brightness(self, device: DayBetterDevice, brightness: int) -> None:
-        """Set light brightness."""
-        await device.set_brightness(brightness)
-
-    async def set_rgb_color(
-        self, device: DayBetterDevice, red: int, green: int, blue: int
-    ) -> None:
-        """Set light RGB color."""
-        await device.set_rgb_color(red, green, blue)
-
-    async def set_temperature(self, device: DayBetterDevice, temperature: int) -> None:
-        """Set light color in kelvin."""
-        await device.set_temperature(temperature)
-
-    async def set_scene(self, device: DayBetterDevice, scene: str) -> None:
-        """Set light scene."""
-        await device.set_scene(scene)
 
     @property
     def devices(self) -> list[DayBetterDevice]:
-        """Return a list of discovered DayBetter devices."""
-        # 确保返回控制器的设备列表
-        return list(self._controller.devices) if self._controller.devices else []
+        """Return currently known devices (from latest refresh)."""
+        return self.data or list(self._controller.devices or [])
 
     async def _async_update_data(self) -> list[DayBetterDevice]:
-        """Update device data."""
-        # 发送更新消息并等待设备响应
+        """Update device data from the controller."""
         self._controller.send_update_message()
-        await asyncio.sleep(0.5)  # 给设备一点时间响应
-        # 确保返回设备列表
-        return list(self._controller.devices) if self._controller.devices else []
+        await asyncio.sleep(0.5)  # FIXME: could be improved with event/wait_for
+        return list(self._controller.devices or [])

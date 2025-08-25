@@ -20,7 +20,7 @@ def _get_devices(mock_DayBetter_api: AsyncMock) -> list[DayBetterDevice]:
     return [
         DayBetterDevice(
             controller=mock_DayBetter_api,
-            ip="192.168.1.169",
+            ip="192.168.1.100",
             fingerprint="hhhhhhhhhhhhhhhhhhhhhhhhhhh",
             sku="P076",
             capabilities=DEFAULT_CAPABILITIES,
@@ -80,7 +80,7 @@ async def test_creating_entry_has_with_devices(
         return_value=[
             {
                 "fingerprint": "hhhhhhhhhhhhhhhhhhhhhhhhhhh",
-                "ip": "192.168.1.169",
+                "ip": "192.168.1.100",
                 "sku": "P076",
                 "name": "DayBetter P076",
             }
@@ -96,12 +96,12 @@ async def test_creating_entry_has_with_devices(
 
         # 选择第一个设备
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"device": "0"}
+            result["flow_id"], {"device": "hhhhhhhhhhhhhhhhhhhhhhhhhhh"}
         )
 
         # 应该创建条目
         assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["data"]["host"] == "192.168.1.169"
+        assert result["data"]["host"] == "192.168.1.100"
 
         # 现在应该设置条目
         entry = MockConfigEntry(
@@ -179,7 +179,7 @@ async def test_manual_entry_with_devices(
         return_value=[
             {
                 "fingerprint": "hhhhhhhhhhhhhhhhhhhhhhhhhhh",
-                "ip": "192.168.1.169",
+                "ip": "192.168.1.100",
                 "sku": "P076",
                 "name": "DayBetter P076",
             }

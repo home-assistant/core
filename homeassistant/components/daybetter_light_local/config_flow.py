@@ -109,14 +109,14 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # build device choices
         device_options = {
-            dev["fingerprint"]: f"{dev['name']} ({dev['ip']})"
-            for dev in self.discovered_devices
+            str(i): f"{dev['name']} ({dev['ip']})"
+            for i, dev in enumerate(self.discovered_devices)
         }
         device_options["manual"] = "Manually enter IP address"
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required("device"): vol.In(device_options)}),
+            data_schema=vol.Schema({vol.Required("host"): vol.In(device_options)}),
         )
 
     async def async_step_manual(
@@ -130,7 +130,7 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             devices = await _async_discover_devices(self.hass, host)
 
             if not devices:
-                errors["base"] = "no_devices_found"
+                errors["base"] = "address_in_use"
             else:
                 device = devices[0]
                 unique_id = device["fingerprint"] or host
@@ -139,7 +139,7 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 return self.async_create_entry(
                     title=device["name"],
-                    data={"host": device["ip"]},
+                    data={"host": host},  # 用用户输入的，而不是 device.ip
                 )
 
         return self.async_show_form(
@@ -161,5 +161,5 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(
             title=device["name"],
-            data={"host": device["ip"]},
+            data={"host": device["ip"]},  # 用用户输入的，而不是 device.ip
         )

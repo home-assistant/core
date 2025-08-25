@@ -35,7 +35,7 @@ async def test_light_known_device(
     mock_DayBetter_api.devices = [
         DayBetterDevice(
             controller=mock_DayBetter_api,
-            ip="192.168.1.169",
+            ip="192.168.1.100",
             fingerprint="hhhhhhhhhhhh",
             sku="P076",
             capabilities=DEFAULT_CAPABILITIES,
@@ -103,7 +103,7 @@ async def test_light_remove(hass: HomeAssistant, mock_DayBetter_api: AsyncMock) 
     mock_DayBetter_api.devices = [
         DayBetterDevice(
             controller=mock_DayBetter_api,
-            ip="192.168.1.169",
+            ip="192.168.1.100",
             fingerprint="hhhhhhhhhhhhh",
             sku="P076",
             capabilities=DEFAULT_CAPABILITIES,
@@ -166,7 +166,7 @@ async def test_light_setup_retry_eaddrinuse(
     mock_DayBetter_api.devices = [
         DayBetterDevice(
             controller=mock_DayBetter_api,
-            ip="192.168.1.169",
+            ip="192.168.1.100",
             fingerprint="hhhhhhhhhhhhh",
             sku="P076",
             capabilities=DEFAULT_CAPABILITIES,
@@ -193,7 +193,7 @@ async def test_light_setup_error(
     mock_DayBetter_api.devices = [
         DayBetterDevice(
             controller=mock_DayBetter_api,
-            ip="192.168.1.169",
+            ip="192.168.1.100",
             fingerprint="hhhhhhhhhhhhh",
             sku="P076",
             capabilities=DEFAULT_CAPABILITIES,
@@ -216,7 +216,7 @@ async def test_light_on_off(hass: HomeAssistant, mock_DayBetter_api: MagicMock) 
     mock_DayBetter_api.devices = [
         DayBetterDevice(
             controller=mock_DayBetter_api,
-            ip="192.168.1.169",
+            ip="192.168.1.100",
             fingerprint="hhhhhhhhhhhhh",
             sku="P076",
             capabilities=DEFAULT_CAPABILITIES,
@@ -303,7 +303,7 @@ async def test_turn_on_call_order(
     mock_DayBetter_api.devices = [
         DayBetterDevice(
             controller=mock_DayBetter_api,
-            ip="192.168.1.169",
+            ip="192.168.1.100",
             fingerprint="hhhhhhhhhhhhh",
             sku="P076",
             capabilities=SCENE_CAPABILITIES,
@@ -351,7 +351,7 @@ async def test_light_brightness(
     mock_DayBetter_api.devices = [
         DayBetterDevice(
             controller=mock_DayBetter_api,
-            ip="192.168.1.169",
+            ip="192.168.1.100",
             fingerprint="hhhhhhhhhhhhhh",
             sku="P076",
             capabilities=DEFAULT_CAPABILITIES,
@@ -427,7 +427,7 @@ async def test_light_color(hass: HomeAssistant, mock_DayBetter_api: MagicMock) -
     mock_DayBetter_api.devices = [
         DayBetterDevice(
             controller=mock_DayBetter_api,
-            ip="192.168.1.169",
+            ip="192.168.1.100",
             fingerprint="hhhhhhhhhhhhhh",
             sku="P076",
             capabilities=DEFAULT_CAPABILITIES,
@@ -492,7 +492,7 @@ async def test_scene_on(hass: HomeAssistant, mock_DayBetter_api: MagicMock) -> N
     mock_DayBetter_api.devices = [
         DayBetterDevice(
             controller=mock_DayBetter_api,
-            ip="192.168.1.169",
+            ip="192.168.1.100",
             fingerprint="hhhhhhhhhhhhhh",
             sku="P076",
             capabilities=SCENE_CAPABILITIES,
@@ -539,7 +539,7 @@ async def test_scene_restore_rgb(
     mock_DayBetter_api.devices = [
         DayBetterDevice(
             controller=mock_DayBetter_api,
-            ip="192.168.1.169",
+            ip="192.168.1.100",
             fingerprint="asdawdqwdqwd",
             sku="P076",
             capabilities=SCENE_CAPABILITIES,
@@ -629,7 +629,7 @@ async def test_scene_restore_temperature(
     mock_DayBetter_api.devices = [
         DayBetterDevice(
             controller=mock_DayBetter_api,
-            ip="192.168.1.169",
+            ip="192.168.1.100",
             fingerprint="asdawdqwdqwd",
             sku="P076",
             capabilities=SCENE_CAPABILITIES,
@@ -708,7 +708,7 @@ async def test_scene_none(hass: HomeAssistant, mock_DayBetter_api: MagicMock) ->
     mock_DayBetter_api.devices = [
         DayBetterDevice(
             controller=mock_DayBetter_api,
-            ip="192.168.1.169",
+            ip="192.168.1.100",
             fingerprint="hhhhhhhhhhhhhhh",
             sku="P076",
             capabilities=SCENE_CAPABILITIES,
