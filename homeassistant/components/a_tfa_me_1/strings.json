@@ -1,0 +1,41 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Setup TFA.me station",
+        "description": "Please enter IP or station ID of your TFA.me station.\n- 9 digit station ID: 'XXX-XXX-XXX'\n- mDNS name:'tfa-me-XXX-XXX-XXX.local'\n- Get IP: Press and hold button '+' for 5 seconds at your device.",
+        "data": {
+          "host": "IP or host name",
+          "interval": "Request interval (Seconds)",
+          "ip_address": "IP address or station ID",
+          "multiple_entities": "Sensors received via different stations are different entities. When you have only one station don't check this box."
+        },
+        "data_description": {
+          "ip_address": "Enter the IP address or mDNS hostname of your TFA.me station",
+          "interval": "Polling interval in seconds (10–3600)",
+          "multiple_entities": "Whether to split measurements into multiple entities."
+        }
+      }
+    },
+    "error": {
+      "invalid_host": "Invalid IP or station ID.",
+      "invalid_interval": "Invalid update interval.",
+      "invalid_ip_host": "Invalid IP or station ID.",
+      "cannot_connect": "Cannot connect to the station.",
+      "invalid_multiple_entities": "Invalid value for multiple entities",
+      "unknown": "Unexpected error."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Modify options, perform action",
+        "description": "Select a menu entry.",
+        "data": {
+          "select_option": "Select an option:",
+          "interval": "Request interval (Seconds)"
+        }
+      }
+    }
+  }
+}

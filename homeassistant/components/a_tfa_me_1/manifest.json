@@ -1,0 +1,12 @@
+{
+  "domain": "a_tfa_me_1",
+  "name": "TFA.me station",
+  "after_dependencies": ["sensor"],
+  "codeowners": ["@DrMatthiasBlaschke"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/a_tfa_me_1",
+  "integration_type": "hub",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": []
+}

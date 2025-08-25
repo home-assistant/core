@@ -24,6 +24,7 @@ FLOWS = {
         "utility_meter",
     ],
     "integration": [
+        "a_tfa_me_1",
         "abode",
         "acaia",
         "accuweather",

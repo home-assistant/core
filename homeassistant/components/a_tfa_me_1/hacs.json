@@ -1,0 +1,9 @@
+{
+  "name": "TFA.me custom integration",
+  "description": "A integration for TFA.me device for Home Assistant",
+  "domain": "a_tfa_me_1",
+  "repository": "https://github.com/DrMatthiasBlaschke/a_tfa_me_1",
+  "documentation": "https://github.com/DrMatthiasBlaschke/a_tfa_me_1",
+  "requirements": [],
+  "codeowners": ["@DrMatthiasBlaschke"]
+}
