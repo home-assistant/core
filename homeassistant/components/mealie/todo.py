@@ -130,6 +130,7 @@ class MealieShoppingListTodoListEntity(MealieEntity, TodoListEntity):
             list_id=self._shopping_list_id,
             note=item.summary.strip() if item.summary else item.summary,
             position=position,
+            quantity=0.0,
         )
         try:
             await self.coordinator.client.add_shopping_item(new_shopping_item)
