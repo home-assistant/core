@@ -284,7 +284,7 @@ async def test_water_valve(
     matter_node: MatterNode,
 ) -> None:
     """Test valve alarms."""
-    # ValveFault defalut state
+    # ValveFault default state
     state = hass.states.get("binary_sensor.valve_general_fault")
     assert state
     assert state.state == "off"
