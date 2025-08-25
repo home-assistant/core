@@ -792,15 +792,15 @@
       "fields": {
         "config_entry_id": {
           "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]",
-          "description": "The config entry representing the Telegram bot to edit the message."
+          "description": "The config entry representing the Telegram bot to edit the message media."
         },
         "message_id": {
-          "name": "Message ID",
-          "description": "ID of the message to edit."
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::message_id::name%]",
+          "description": "[%key:component::telegram_bot::services::edit_message::fields::message_id::description%]"
         },
         "chat_id": {
-          "name": "Chat ID",
-          "description": "ID of the chat where to edit the message."
+          "name": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::name%]",
+          "description": "[%key:component::telegram_bot::services::edit_message::fields::chat_id::description%]"
         },
         "media_type": {
           "name": "Media type",
@@ -808,30 +808,34 @@
         },
         "url": {
           "name": "[%key:common::config_flow::data::url%]",
-          "description": "Remote path to an image."
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::url::description%]"
         },
         "file": {
-          "name": "File",
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::file::name%]",
           "description": "Local path to an image."
+        },
+        "caption": {
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::caption::name%]",
+          "description": "The title of the media."
         },
         "username": {
           "name": "[%key:common::config_flow::data::username%]",
-          "description": "Username for a URL that requires 'Basic' or 'Digest' authentication."
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::username::description%]"
         },
         "password": {
           "name": "[%key:common::config_flow::data::password%]",
-          "description": "Password (or bearer token) for a URL that requires authentication."
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::password::description%]"
         },
         "authentication": {
-          "name": "Authentication method",
-          "description": "Define which authentication method to use. Set to 'Basic' for HTTP basic authentication, 'Digest' for HTTP digest authentication, or 'Bearer token' for OAuth 2.0 bearer token authentication."
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::authentication::name%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::authentication::description%]"
         },
         "verify_ssl": {
-          "name": "Verify SSL",
-          "description": "Enable or disable SSL certificate verification. Disable if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server."
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::verify_ssl::name%]",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::verify_ssl::description%]"
         },
         "timeout": {
-          "name": "Read timeout",
+          "name": "[%key:component::telegram_bot::services::send_photo::fields::timeout::name%]",
           "description": "Timeout for sending the media in seconds."
         },
         "inline_keyboard": {

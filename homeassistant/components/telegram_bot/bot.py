@@ -15,7 +15,12 @@ from telegram import (
     CallbackQuery,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    InputMedia,
+    InputMediaAnimation,
+    InputMediaAudio,
+    InputMediaDocument,
     InputMediaPhoto,
+    InputMediaVideo,
     InputPollOption,
     Message,
     ReplyKeyboardMarkup,
@@ -23,7 +28,7 @@ from telegram import (
     Update,
     User,
 )
-from telegram.constants import ParseMode
+from telegram.constants import InputMediaType, ParseMode
 from telegram.error import TelegramError
 from telegram.ext import CallbackContext, filters
 from telegram.request import HTTPXRequest
@@ -559,7 +564,25 @@ class TelegramNotificationService:
                 else get_default_no_verify_context()
             ),
         )
-        media = InputMediaPhoto(file_content)
+
+        media: InputMedia
+        if media_type == InputMediaType.ANIMATION:
+            media = InputMediaAnimation(file_content, caption=kwargs.get(ATTR_CAPTION))
+        elif media_type == InputMediaType.AUDIO:
+            media = InputMediaAudio(file_content, caption=kwargs.get(ATTR_CAPTION))
+        elif media_type == InputMediaType.DOCUMENT:
+            media = InputMediaDocument(file_content, caption=kwargs.get(ATTR_CAPTION))
+        elif media_type == InputMediaType.PHOTO:
+            media = InputMediaPhoto(file_content, caption=kwargs.get(ATTR_CAPTION))
+        elif media_type == InputMediaType.VIDEO:
+            media = InputMediaVideo(file_content, caption=kwargs.get(ATTR_CAPTION))
+        else:
+            raise ServiceValidationError(
+                "Invalid media type",
+                translation_domain=DOMAIN,
+                translation_key="invalid_media_type",
+                translation_placeholders={"media_type": media_type},
+            )
 
         return await self._send_msg(
             self.bot.edit_message_media,

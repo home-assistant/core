@@ -210,6 +210,8 @@ SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA = vol.Schema(
             cv.positive_int, vol.All(cv.string, "last")
         ),
         vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
+        vol.Optional(ATTR_TIMEOUT): cv.positive_int,
+        vol.Optional(ATTR_CAPTION): cv.string,
         vol.Required(ATTR_MEDIA_TYPE): vol.In(
             (
                 InputMediaType.ANIMATION,
@@ -226,7 +228,8 @@ SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA = vol.Schema(
         vol.Optional(ATTR_AUTHENTICATION): cv.string,
         vol.Optional(ATTR_VERIFY_SSL): cv.boolean,
         vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
-    }
+    },
+    extra=vol.ALLOW_EXTRA,
 )
 
 SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema(
