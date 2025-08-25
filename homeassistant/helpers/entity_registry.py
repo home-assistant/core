@@ -1280,6 +1280,20 @@ class EntityRegistry(BaseRegistry):
                 unique_id=new_unique_id,
             )
 
+        if disabled_by is UNDEFINED and config_entry_id is not UNDEFINED:
+            if config_entry_id:
+                config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
+                if TYPE_CHECKING:
+                    # We've checked the config_entry exists in _validate_item
+                    assert config_entry is not None
+                if config_entry.disabled_by:
+                    if old.disabled_by is None:
+                        new_values["disabled_by"] = RegistryEntryDisabler.CONFIG_ENTRY
+                elif old.disabled_by == RegistryEntryDisabler.CONFIG_ENTRY:
+                    new_values["disabled_by"] = None
+            elif old.disabled_by == RegistryEntryDisabler.CONFIG_ENTRY:
+                new_values["disabled_by"] = None
+
         if new_entity_id is not UNDEFINED and new_entity_id != old.entity_id:
             if not self._entity_id_available(new_entity_id):
                 raise ValueError("Entity with this ID is already registered")
