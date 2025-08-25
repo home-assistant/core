@@ -1,7 +1,6 @@
 """Sensor for the OMIE - Spain and Portugal electricity prices integration."""
 
 from dataclasses import dataclass
-from zoneinfo import ZoneInfo
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -15,11 +14,10 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
-from homeassistant.util.dt import utcnow
 
-from .const import CET, DOMAIN
+from .const import DOMAIN
 from .coordinator import OMIECoordinator
-from .util import _pick_series_cet
+from .util import _current_hour_CET, _pick_series_cet
 
 PARALLEL_UPDATES = 0
 
@@ -47,13 +45,16 @@ class OMIEPriceSensor(CoordinatorEntity[OMIECoordinator], SensorEntity):
     """OMIE price sensor."""
 
     def __init__(
-        self, coordinator: OMIECoordinator, device_info: DeviceInfo, key: str
+        self,
+        coordinator: OMIECoordinator,
+        device_info: DeviceInfo,
+        pyomie_series_name: str,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = OMIEPriceEntityDescription(key)
+        super().__init__(coordinator, context=pyomie_series_name)
+        self.entity_description = OMIEPriceEntityDescription(key=pyomie_series_name)
         self._attr_device_info = device_info
-        self._attr_unique_id = slugify(f"{key}")
+        self._attr_unique_id = slugify(f"{pyomie_series_name}")
         self._attr_should_poll = False
         self._attr_attribution = _ATTRIBUTION
 
@@ -64,22 +65,15 @@ class OMIEPriceSensor(CoordinatorEntity[OMIECoordinator], SensorEntity):
 
     def _get_current_hour_value(self) -> float | None:
         """Get current hour's price value from coordinator data."""
-        # to work out the start of the current hour we truncate from minutes downwards
-        # rather than create a new datetime to ensure correctness across DST boundaries
-        hass_now = utcnow().astimezone(self._hass_tzinfo())
-        hour_start = hass_now.replace(minute=0, second=0, microsecond=0)
-        hour_start_cet = hour_start.astimezone(CET)
+        current_hour_cet = _current_hour_CET()
+        current_date_cet = current_hour_cet.date()
 
-        series_name = self.entity_description.key
-        day_hours_raw = self.coordinator.data.get(hour_start_cet.date())
-        day_hours_cet = _pick_series_cet(day_hours_raw, series_name)
+        pyomie_results = self.coordinator.data.get(current_date_cet)
+        pyomie_hours = _pick_series_cet(pyomie_results, self.coordinator_context)
 
         # Convert to €/kWh
-        value_mwh = day_hours_cet.get(hour_start_cet)
+        value_mwh = pyomie_hours.get(current_hour_cet)
         return value_mwh / 1000 if value_mwh is not None else None
-
-    def _hass_tzinfo(self) -> ZoneInfo:
-        return ZoneInfo(self.coordinator.hass.config.time_zone)
 
 
 async def async_setup_entry(
@@ -98,8 +92,8 @@ async def async_setup_entry(
     )
 
     sensors = [
-        OMIEPriceSensor(coordinator, device_info, "spot_price_pt"),
-        OMIEPriceSensor(coordinator, device_info, "spot_price_es"),
+        OMIEPriceSensor(coordinator, device_info, pyomie_series_name="spot_price_pt"),
+        OMIEPriceSensor(coordinator, device_info, pyomie_series_name="spot_price_es"),
     ]
 
     async_add_entities(sensors)

@@ -6,10 +6,20 @@ from zoneinfo import ZoneInfo
 from pyomie.model import OMIEResults, _DataT
 from pyomie.util import localize_hourly_data
 
+from homeassistant.util.dt import utcnow
+
 from .const import CET
 
 _OMIE_PUBLISH_TIME_CET = dt.time(hour=13, minute=30)
 """The time by which day-ahead market results (for the next day) will have been published to omie.es."""
+
+
+def _current_hour_CET() -> dt.datetime:
+    """Returns the current hour in CET with minutes, seconds and microseconds equal to 0."""
+    # to work out the start of the current hour we truncate from minutes downwards
+    # rather than create a new datetime to ensure correctness across DST boundaries
+    hour_start = utcnow().replace(minute=0, second=0, microsecond=0)
+    return hour_start.astimezone(CET)
 
 
 def _pick_series_cet(
