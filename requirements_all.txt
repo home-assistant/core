@@ -1307,7 +1307,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.8.21.181525
+knx-frontend==2025.8.24.205840
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -3043,7 +3043,7 @@ vegehub==0.1.24
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2025.5.0
+velbus-aio==2025.8.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.21
