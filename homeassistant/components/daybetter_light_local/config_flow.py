@@ -128,8 +128,9 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         device_options = {
             str(i): device["name"] for i, device in enumerate(self.discovered_devices)
         }
-        device_options["manual"] = "手动输入IP地址"
+        device_options["manual"] = "Manually enter the IP address"
 
+        # 修复：确保 schema 包含 device 字段
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required("device"): vol.In(device_options)}),
@@ -197,9 +198,14 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         with suppress(TimeoutError):
                             await asyncio.wait_for(cleanup_complete.wait(), 1)
 
+        # 修复：确保 schema 包含 host 字段
         return self.async_show_form(
             step_id="manual",
-            data_schema=vol.Schema({vol.Required("host"): str}),
+            data_schema=vol.Schema(
+                {
+                    vol.Required("host"): str  # 确保这里定义了 host 字段
+                }
+            ),
             errors=errors,
         )
 
