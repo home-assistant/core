@@ -305,17 +305,41 @@ async def test_water_valve(
     assert state
     assert state.state == "on"
 
+    state = hass.states.get("binary_sensor.valve_valve_blocked")
+    assert state
+    assert state.state == "off"
+
+    state = hass.states.get("binary_sensor.valve_valve_leaking")
+    assert state
+    assert state.state == "off"
+
     # ValveFault valve_blocked test
     set_node_attribute(matter_node, 1, 129, 9, 2)
     await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.valve_general_fault")
+    assert state
+    assert state.state == "off"
 
     state = hass.states.get("binary_sensor.valve_valve_blocked")
     assert state
     assert state.state == "on"
 
+    state = hass.states.get("binary_sensor.valve_valve_leaking")
+    assert state
+    assert state.state == "off"
+
     # ValveFault valve_leaking test
     set_node_attribute(matter_node, 1, 129, 9, 4)
     await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("binary_sensor.valve_general_fault")
+    assert state
+    assert state.state == "off"
+
+    state = hass.states.get("binary_sensor.valve_valve_blocked")
+    assert state
+    assert state.state == "off"
 
     state = hass.states.get("binary_sensor.valve_valve_leaking")
     assert state
