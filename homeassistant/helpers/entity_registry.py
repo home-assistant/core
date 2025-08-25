@@ -959,6 +959,15 @@ class EntityRegistry(BaseRegistry):
             created_at = deleted_entity.created_at
             device_class = deleted_entity.device_class
             disabled_by = deleted_entity.disabled_by
+            # Adjust disabled_by based on config entry state
+            if config_entry and config_entry is not UNDEFINED:
+                if config_entry.disabled_by:
+                    if disabled_by is None:
+                        disabled_by = RegistryEntryDisabler.CONFIG_ENTRY
+                elif disabled_by == RegistryEntryDisabler.CONFIG_ENTRY:
+                    disabled_by = None
+            elif disabled_by == RegistryEntryDisabler.CONFIG_ENTRY:
+                disabled_by = None
             # Restore entity_id if it's available
             if self._entity_id_available(deleted_entity.entity_id):
                 entity_id = deleted_entity.entity_id
