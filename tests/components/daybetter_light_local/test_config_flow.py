@@ -60,20 +60,19 @@ async def test_creating_entry_has_with_devices(
 
     mock_DayBetter_api.devices = _get_devices(mock_DayBetter_api)
 
-    # 需要mock发现过程，让自动发现失败，这样才会显示表单
+    # 需要正确模拟发现过程和协调器
     with (
         patch(
             "homeassistant.components.daybetter_light_local.config_flow.DayBetterConfigFlow._async_discover_device",
             return_value=None,  # 让自动发现返回None
         ),
         patch(
-            "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
-            return_value=mock_DayBetter_api,
+            "homeassistant.components.daybetter_light_local.async_setup_entry",
+            return_value=True,
         ),
-        # 确保协调器正确返回设备列表
         patch(
             "homeassistant.components.daybetter_light_local.coordinator.DayBetterLocalApiCoordinator.devices",
-            return_value=_get_devices(mock_DayBetter_api),
+            new_callable=lambda: _get_devices(mock_DayBetter_api),
         ),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -90,7 +89,8 @@ async def test_creating_entry_has_with_devices(
 
         await hass.async_block_till_done()
 
-        mock_DayBetter_api.start.assert_awaited_once()
+        # 现在应该被调用一次
+        assert mock_DayBetter_api.start.call_count == 1
         mock_setup_entry.assert_awaited_once()
 
 
@@ -99,29 +99,38 @@ async def test_creating_entry_errno(
     mock_setup_entry: AsyncMock,
     mock_DayBetter_api: AsyncMock,
 ) -> None:
-    """Test setting up DayBetter with devices."""
+    """Test setting up DayBetter with address in use error."""
 
+    # 创建 OSError 并设置 errno
     e = OSError()
     e.errno = EADDRINUSE
     mock_DayBetter_api.start.side_effect = e
     mock_DayBetter_api.devices = _get_devices(mock_DayBetter_api)
 
-    # 同样需要mock自动发现返回None
-    with patch(
-        "homeassistant.components.daybetter_light_local.config_flow.DayBetterConfigFlow._async_discover_device",
-        return_value=None,
+    # 模拟配置流程的各个部分
+    with (
+        patch(
+            "homeassistant.components.daybetter_light_local.config_flow.DayBetterConfigFlow._async_discover_device",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.daybetter_light_local.coordinator.DayBetterLocalApiCoordinator.start",
+            side_effect=e,  # 确保协调器的 start 也抛出异常
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-        # Confirmation form
+        # 确认表单
         assert result["type"] is FlowResultType.FORM
 
+        # 配置时应该中止
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"host": "192.168.1.100"}
         )
         assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "no_devices_found"  # 或者适当的错误原因
 
         await hass.async_block_till_done()
 

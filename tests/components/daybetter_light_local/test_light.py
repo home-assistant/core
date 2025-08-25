@@ -104,7 +104,7 @@ async def test_light_remove(hass: HomeAssistant, mock_DayBetter_api: AsyncMock) 
         DayBetterDevice(
             controller=mock_DayBetter_api,
             ip="192.168.1.169",
-            fingerprint="asdawdqwdqwd1",
+            fingerprint="hhhhhhhhhhhhh",
             sku="P076",
             capabilities=DEFAULT_CAPABILITIES,
         )
@@ -131,16 +131,12 @@ async def test_light_setup_retry(
 ) -> None:
     """Test setup retry."""
 
-    # 关键：确保协调器的 devices 属性返回空列表
+    # 确保协调器的 devices 属性返回空列表
     mock_DayBetter_api.devices = []
 
-    # 确保协调器的 devices 属性返回空列表
-    with (
-        patch(
-            "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
-            return_value=mock_DayBetter_api,
-        ),
-        patch.object(mock_DayBetter_api, "devices", []),
+    with patch(
+        "homeassistant.components.daybetter_light_local.coordinator.DayBetterController",
+        return_value=mock_DayBetter_api,
     ):
         entry = MockConfigEntry(domain=DOMAIN, data={"host": "192.168.1.100"})
         entry.add_to_hass(hass)
@@ -161,7 +157,7 @@ async def test_light_setup_retry_eaddrinuse(
         DayBetterDevice(
             controller=mock_DayBetter_api,
             ip="192.168.1.169",
-            fingerprint="asdawdqwdqwd",
+            fingerprint="hhhhhhhhhhhhh",
             sku="P076",
             capabilities=DEFAULT_CAPABILITIES,
         )
@@ -188,7 +184,7 @@ async def test_light_setup_error(
         DayBetterDevice(
             controller=mock_DayBetter_api,
             ip="192.168.1.169",
-            fingerprint="asdawdqwdqwd",
+            fingerprint="hhhhhhhhhhhhh",
             sku="P076",
             capabilities=DEFAULT_CAPABILITIES,
         )
