@@ -1535,8 +1535,8 @@ async def test_update_entity_disabled_by(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     new_config_entry_disabled_by: config_entries.ConfigEntryDisabler | None,
-    entity_disabled_by_initial: dr.DeviceEntryDisabler | None,
-    entity_disabled_by_updated: dr.DeviceEntryDisabler | None,
+    entity_disabled_by_initial: er.RegistryEntryDisabler | None,
+    entity_disabled_by_updated: er.RegistryEntryDisabler | None,
 ) -> None:
     """Check how the disabled_by flag is treated when updating an entity."""
     config_entry_1 = MockConfigEntry(domain="light")
@@ -1629,8 +1629,8 @@ async def test_update_entity_disabled_by_2(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    entity_disabled_by_initial: dr.DeviceEntryDisabler | None,
-    entity_disabled_by_updated: dr.DeviceEntryDisabler | None,
+    entity_disabled_by_initial: er.RegistryEntryDisabler | None,
+    entity_disabled_by_updated: er.RegistryEntryDisabler | None,
 ) -> None:
     """Check how the disabled_by flag is treated when updating an entity.
 
