@@ -136,31 +136,15 @@ async def test_reconfigure(
     assert result["reason"] == "reconfigure_successful"
 
 
-async def test_reconfigure_cannot_connect(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test the cannot connect error."""
-    mock_config_entry.add_to_hass(hass)
-
-    result = await mock_config_entry.start_reconfigure_flow(hass)
-    with patch(
-        "homeassistant.components.niko_home_control.config_flow.NHCController.connect",
-        side_effect=Exception,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: "192.168.0.122"},
-        )
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
-async def test_async_step_reconfigure_success(
+async def test_async_step_reconfigure_cannot_connect(
     hass: HomeAssistant,
     mock_niko_home_control_connection: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test successful reconfiguration."""
+    """Test reconfiguration with connection error."""
     mock_config_entry.add_to_hass(hass)
+
+    mock_niko_home_control_connection.connect.side_effect = Exception("cannot_connect")
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
@@ -172,30 +156,15 @@ async def test_async_step_reconfigure_success(
         {CONF_HOST: "192.168.0.122"},
     )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_niko_home_control_connection.connect.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.0.122"},
+    )
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-
-
-async def test_async_step_reconfigure_cannot_connect(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test reconfiguration with connection error."""
-    mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.niko_home_control.config_flow.test_connection",
-        return_value="cannot_connect",
-    ):
-        result = await mock_config_entry.start_reconfigure_flow(hass)
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {}
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: "192.168.0.122"},
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": "cannot_connect"}
