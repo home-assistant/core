@@ -1,23 +1,19 @@
-"""Tests for the LG Thinq climate platform."""
+"""Tests for the LG ThinQ switch platform."""
 
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from . import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-@pytest.mark.parametrize("device_fixture", ["air_conditioner"])
-async def test_climate_entities(
+async def test_switch_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     devices: AsyncMock,
@@ -26,8 +22,7 @@ async def test_climate_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
-    hass.config.units = US_CUSTOMARY_SYSTEM
-    with patch("homeassistant.components.lg_thinq.PLATFORMS", [Platform.CLIMATE]):
+    with patch("homeassistant.components.lg_thinq.PLATFORMS", [Platform.SWITCH]):
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
