@@ -99,6 +99,7 @@ def _backward_compat_schema(value: Any | None) -> Any:
 
 
 CONFIG_SECTION_SCHEMA = vol.All(
+    _backward_compat_schema,
     vol.Schema(
         {
             vol.Optional(CONF_ACTIONS): cv.SCRIPT_SCHEMA,
@@ -198,28 +199,27 @@ async def _async_resolve_template_config(
             for prop in (CONF_NAME, CONF_UNIQUE_ID):
                 if prop in config:
                     config[platform][prop] = config.pop(prop)
-            # For regular template entities, CONF_VARIABLES should be removed because they just
-            # house input results for template entities.  For Trigger based template entities
-            # CONF_VARIABLES should not be removed because the variables are always
-            # executed between the trigger and action.
+            # State based template entities remove CONF_VARIABLES because they pass
+            # blueprint inputs to the template entities. Trigger based template entities
+            # retain CONF_VARIABLES because the variables are always executed between
+            # the trigger and action.
             if CONF_TRIGGERS not in config and CONF_VARIABLES in config:
                 section_variables = config.pop(CONF_VARIABLES)
+                platform_variables = config[platform].pop(CONF_VARIABLES, {})
 
-                # State based template entities have 2 layers of variables.  Variables at the section level
-                # and variables at the entity level should be merged together at the entity level.
-                config[platform][CONF_VARIABLES] = (
-                    {
-                        **section_variables,
-                        **config[platform].pop(CONF_VARIABLES),
-                    }
-                    if CONF_VARIABLES in config[platform]
-                    else section_variables
-                )
+                # State based template entities have 2 layers of variables. Variables at
+                # the section level and variables at the entity level should be merged
+                # together at the entity level. Entity variables take precedence over
+                # section variables.
+                config[platform][CONF_VARIABLES] = {
+                    **section_variables,
+                    **platform_variables,
+                }
 
         raw_config = dict(config)
 
-    # For Trigger based template entities CONF_VARIABLES should not be altered because the variables
-    # are always executed between the trigger and action.
+    # Trigger based template entities retain CONF_VARIABLES because the variables are
+    # always executed between the trigger and action.
     elif CONF_TRIGGERS not in config and CONF_VARIABLES in config:
         # State based template entities have 2 layers of variables.  Variables at the section level
         # and variables at the entity level should be merged together at the entity level.

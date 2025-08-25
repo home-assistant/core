@@ -96,6 +96,25 @@ async def test_invalid_schema(hass: HomeAssistant, config: dict) -> None:
         (
             {
                 "variables": {"a": 1},
+                "button": [
+                    {
+                        "press": {
+                            "service": "test.automation",
+                            "data_template": {"caller": "{{ this.entity_id }}"},
+                        },
+                        "variables": {"a": 2, "b": 2},
+                        "device_class": "restart",
+                        "unique_id": "test",
+                        "name": "test",
+                        "icon": "mdi:test",
+                    }
+                ],
+            },
+            {"a": 2, "b": 2},
+        ),
+        (
+            {
+                "variables": {"a": 1},
                 "button": {
                     "press": {
                         "service": "test.automation",

@@ -130,7 +130,7 @@ async def test_script_variables_from_coordinator(hass: HomeAssistant) -> None:
         hass,
         {
             "variables": ScriptVariables(
-                {"a": template.Template("{{ states('sensor.test') }}", hass)}
+                {"a": template.Template("{{ states('sensor.test') }}", hass), "c": 0}
             )
         },
     )
@@ -139,16 +139,23 @@ async def test_script_variables_from_coordinator(hass: HomeAssistant) -> None:
         coordinator,
         {
             "state": template.Template("{{ 'on' }}", hass),
-            "variables": ScriptVariables({"b": template.Template("{{ a + 1 }}", hass)}),
+            "variables": ScriptVariables(
+                {"b": template.Template("{{ a + 1 }}", hass), "c": 1}
+            ),
         },
     )
     await coordinator._handle_triggered({})
     entity._process_data()
-    assert entity._render_script_variables() == {"a": 1, "b": 2}
+    assert entity._render_script_variables() == {"a": 1, "b": 2, "c": 1}
 
     hass.states.async_set("sensor.test", "2")
 
     await coordinator._handle_triggered({"value": STATE_ON})
     entity._process_data()
 
-    assert entity._render_script_variables() == {"value": STATE_ON, "a": 2, "b": 3}
+    assert entity._render_script_variables() == {
+        "value": STATE_ON,
+        "a": 2,
+        "b": 3,
+        "c": 1,
+    }
