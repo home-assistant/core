@@ -107,5 +107,5 @@ class DayBetterLocalApiCoordinator(DataUpdateCoordinator[list[DayBetterDevice]])
     async def _async_update_data(self) -> list[DayBetterDevice]:
         """Update device data from the controller."""
         self._controller.send_update_message()
-        await asyncio.sleep(0.5)  # FIXME: could be improved with event/wait_for
+        await asyncio.sleep(0.5)
         return list(self._controller.devices or [])
