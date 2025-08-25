@@ -59,7 +59,7 @@ async def test_state_update(hass: HomeAssistant) -> None:
 
 
 async def test_manual_update_entity(hass: HomeAssistant) -> None:
-    """Test manual update entity via service homeassistant/update_entity.
+    """Test multiple simultaneous manual update entity via service homeassistant/update_entity.
 
     We should only do network call once for the multiple simultaneous update entity services.
     """
