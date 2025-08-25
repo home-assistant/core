@@ -1365,6 +1365,257 @@ async def test_update_entity(
         entry = updated_entry
 
 
+@pytest.mark.parametrize(
+    (
+        "new_config_entry_disabled_by",
+        "entity_disabled_by_initial",
+        "entity_disabled_by_updated",
+    ),
+    [
+        (
+            None,
+            None,
+            None,
+        ),
+        # Config entry not disabled, entity was disabled by config entry.
+        # Entity not disabled when updated.
+        (
+            None,
+            er.RegistryEntryDisabler.CONFIG_ENTRY,
+            None,
+        ),
+        (
+            None,
+            er.RegistryEntryDisabler.DEVICE,
+            er.RegistryEntryDisabler.DEVICE,
+        ),
+        (
+            None,
+            er.RegistryEntryDisabler.HASS,
+            er.RegistryEntryDisabler.HASS,
+        ),
+        (
+            None,
+            er.RegistryEntryDisabler.INTEGRATION,
+            er.RegistryEntryDisabler.INTEGRATION,
+        ),
+        (
+            None,
+            er.RegistryEntryDisabler.USER,
+            er.RegistryEntryDisabler.USER,
+        ),
+        # Config entry disabled, entity not disabled.
+        # Entity disabled by config entry when updated.
+        (
+            config_entries.ConfigEntryDisabler.USER,
+            None,
+            er.RegistryEntryDisabler.CONFIG_ENTRY,
+        ),
+        (
+            config_entries.ConfigEntryDisabler.USER,
+            er.RegistryEntryDisabler.CONFIG_ENTRY,
+            er.RegistryEntryDisabler.CONFIG_ENTRY,
+        ),
+        (
+            config_entries.ConfigEntryDisabler.USER,
+            er.RegistryEntryDisabler.DEVICE,
+            er.RegistryEntryDisabler.DEVICE,
+        ),
+        (
+            config_entries.ConfigEntryDisabler.USER,
+            er.RegistryEntryDisabler.HASS,
+            er.RegistryEntryDisabler.HASS,
+        ),
+        (
+            config_entries.ConfigEntryDisabler.USER,
+            er.RegistryEntryDisabler.INTEGRATION,
+            er.RegistryEntryDisabler.INTEGRATION,
+        ),
+        (
+            config_entries.ConfigEntryDisabler.USER,
+            er.RegistryEntryDisabler.USER,
+            er.RegistryEntryDisabler.USER,
+        ),
+    ],
+)
+@pytest.mark.usefixtures("freezer")
+async def test_update_entity_disabled_by(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    new_config_entry_disabled_by: config_entries.ConfigEntryDisabler | None,
+    entity_disabled_by_initial: er.RegistryEntryDisabler | None,
+    entity_disabled_by_updated: er.RegistryEntryDisabler | None,
+) -> None:
+    """Check how the disabled_by flag is treated when updating an entity."""
+    config_entry_1 = MockConfigEntry(domain="light")
+    config_entry_1.add_to_hass(hass)
+    config_entry_2 = MockConfigEntry(
+        domain="light", disabled_by=new_config_entry_disabled_by
+    )
+    config_entry_2.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry_1.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "1234",
+        capabilities={"key1": "value1"},
+        config_entry=config_entry_1,
+        config_subentry_id=None,
+        device_id=device_entry.id,
+        disabled_by=entity_disabled_by_initial,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        get_initial_options=lambda: {"test_domain": {"key1": "value1"}},
+        has_entity_name=True,
+        hidden_by=er.RegistryEntryHider.INTEGRATION,
+        original_device_class="device_class_1",
+        original_icon="original_icon_1",
+        original_name="original_name_1",
+        suggested_object_id="hue_5678",
+        supported_features=1,
+        translation_key="translation_key_1",
+        unit_of_measurement="unit_1",
+    )
+
+    # Update entity
+    entry_updated = entity_registry.async_update_entity(
+        entry.entity_id,
+        capabilities={"key2": "value2"},
+        config_entry_id=config_entry_2.entry_id,
+    )
+    assert entry != entry_updated
+
+    assert entry_updated == er.RegistryEntry(
+        entity_id="light.hue_5678",
+        unique_id="1234",
+        platform="hue",
+        aliases=set(),
+        area_id=None,
+        categories={},
+        capabilities={"key2": "value2"},
+        config_entry_id=config_entry_2.entry_id,
+        config_subentry_id=None,
+        created_at=utcnow(),
+        device_class=None,
+        device_id=device_entry.id,
+        disabled_by=entity_disabled_by_updated,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        has_entity_name=True,
+        hidden_by=er.RegistryEntryHider.INTEGRATION,
+        icon=None,
+        id=entry.id,
+        labels=set(),
+        modified_at=utcnow(),
+        name=None,
+        options={"test_domain": {"key1": "value1"}},
+        original_device_class="device_class_1",
+        original_icon="original_icon_1",
+        original_name="original_name_1",
+        suggested_object_id="hue_5678",
+        supported_features=1,
+        translation_key="translation_key_1",
+        unit_of_measurement="unit_1",
+    )
+
+
+@pytest.mark.parametrize(
+    ("entity_disabled_by_initial", "entity_disabled_by_updated"),
+    [
+        (None, None),
+        # Entity was disabled by config entry, entity not disabled when updated.
+        (er.RegistryEntryDisabler.CONFIG_ENTRY, None),
+        (er.RegistryEntryDisabler.DEVICE, er.RegistryEntryDisabler.DEVICE),
+        (er.RegistryEntryDisabler.HASS, er.RegistryEntryDisabler.HASS),
+        (er.RegistryEntryDisabler.INTEGRATION, er.RegistryEntryDisabler.INTEGRATION),
+        (er.RegistryEntryDisabler.USER, er.RegistryEntryDisabler.USER),
+    ],
+)
+@pytest.mark.usefixtures("freezer")
+async def test_update_entity_disabled_by_2(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    entity_disabled_by_initial: er.RegistryEntryDisabler | None,
+    entity_disabled_by_updated: er.RegistryEntryDisabler | None,
+) -> None:
+    """Check how the disabled_by flag is treated when updating an entity.
+
+    In this test, the entity is updated without a config entry.
+    """
+    config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "1234",
+        capabilities={"key1": "value1"},
+        config_entry=config_entry,
+        config_subentry_id=None,
+        device_id=device_entry.id,
+        disabled_by=entity_disabled_by_initial,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        get_initial_options=lambda: {"test_domain": {"key1": "value1"}},
+        has_entity_name=True,
+        hidden_by=er.RegistryEntryHider.INTEGRATION,
+        original_device_class="device_class_1",
+        original_icon="original_icon_1",
+        original_name="original_name_1",
+        suggested_object_id="hue_5678",
+        supported_features=1,
+        translation_key="translation_key_1",
+        unit_of_measurement="unit_1",
+    )
+
+    # Update entity
+    entry_updated = entity_registry.async_update_entity(
+        entry.entity_id,
+        capabilities={"key2": "value2"},
+        config_entry_id=None,
+    )
+
+    assert entry != entry_updated
+    # entity_id and user customizations are restored. new integration options are
+    # respected.
+    assert entry_updated == er.RegistryEntry(
+        entity_id="light.hue_5678",
+        unique_id="1234",
+        platform="hue",
+        aliases=set(),
+        area_id=None,
+        categories={},
+        capabilities={"key2": "value2"},
+        config_entry_id=None,
+        config_subentry_id=None,
+        created_at=utcnow(),
+        device_class=None,
+        device_id=device_entry.id,
+        disabled_by=entity_disabled_by_updated,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        has_entity_name=True,
+        hidden_by=er.RegistryEntryHider.INTEGRATION,
+        icon=None,
+        id=entry.id,
+        labels=set(),
+        modified_at=utcnow(),
+        name=None,
+        options={"test_domain": {"key1": "value1"}},
+        original_device_class="device_class_1",
+        original_icon="original_icon_1",
+        original_name="original_name_1",
+        suggested_object_id="hue_5678",
+        supported_features=1,
+        translation_key="translation_key_1",
+        unit_of_measurement="unit_1",
+    )
+
+
 async def test_update_entity_options(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
