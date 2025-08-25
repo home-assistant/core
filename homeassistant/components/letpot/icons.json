@@ -20,6 +20,14 @@
         }
       }
     },
+    "number": {
+      "light_brightness": {
+        "default": "mdi:brightness-5"
+      },
+      "plant_days": {
+        "default": "mdi:calendar-blank"
+      }
+    },
     "select": {
       "display_temperature_unit": {
         "default": "mdi:thermometer-lines"
