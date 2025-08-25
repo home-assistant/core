@@ -16,7 +16,7 @@ Adax-local==0.1.5
 DoorBirdPy==3.0.8
 
 # homeassistant.components.homekit
-HAP-python==4.9.2
+HAP-python==5.0.0
 
 # homeassistant.components.tasmota
 HATasmota==0.10.0
