@@ -9,7 +9,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CURRENCY_EURO, UnitOfEnergy
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -58,10 +58,18 @@ class OMIEPriceSensor(CoordinatorEntity[OMIECoordinator], SensorEntity):
         self._attr_should_poll = False
         self._attr_attribution = _ATTRIBUTION
 
+    @callback
     def _handle_coordinator_update(self) -> None:
         """Update this sensor's state from the coordinator results."""
-        self._attr_native_value = self._get_current_hour_value()
+        value = self._get_current_hour_value()
+        self._attr_available = value is not None
+        self._attr_native_value = value if self._attr_available else None
         super()._handle_coordinator_update()
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and self._attr_available
 
     def _get_current_hour_value(self) -> float | None:
         """Get current hour's price value from coordinator data."""

@@ -1,9 +1,10 @@
 """Test the OMIE sensor platform."""
 
+import datetime as dt
 import logging
-from unittest.mock import MagicMock, patch
 
 from freezegun import freeze_time
+from pyomie.model import OMIEResults
 import pytest
 
 from homeassistant.components.omie.const import DOMAIN
@@ -195,23 +196,70 @@ async def test_sensor_state_madrid_timezone(
         assert es_state.attributes["unit_of_measurement"] == "€/kWh"
 
 
-async def test_sensor_unavailable_when_no_data(
+async def test_sensor_unavailable_when_pyomie_throws(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_pyomie,
 ) -> None:
     """Test sensor becomes unavailable when no data is available."""
     mock_config_entry.add_to_hass(hass)
 
-    # Mock coordinator with no data
-    with patch(
-        "homeassistant.components.omie.coordinator.OMIECoordinator"
-    ) as mock_coordinator_class:
-        mock_coordinator = mock_coordinator_class.return_value
-        mock_coordinator.data = {}  # No data
-        mock_coordinator.async_add_listener = MagicMock()
+    mock_pyomie.spot_price.side_effect = Exception("something bad")
 
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Both sensors should be unavailable
+    pt_state = hass.states.get("sensor.omie_portugal_spot_price")
+    es_state = hass.states.get("sensor.omie_spain_spot_price")
+
+    assert pt_state.state == "unavailable"
+    assert es_state.state == "unavailable"
+
+
+async def test_sensor_unavailable_when_pyomie_returns_none(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyomie,
+) -> None:
+    """Test sensor becomes unavailable when no data is available."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_pyomie.spot_price.side_effect = spot_price_fetcher({})
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Both sensors should be unavailable
+    pt_state = hass.states.get("sensor.omie_portugal_spot_price")
+    es_state = hass.states.get("sensor.omie_spain_spot_price")
+
+    assert pt_state.state == "unavailable"
+    assert es_state.state == "unavailable"
+
+
+@freeze_time("2024-01-15T12:01:00Z")
+async def test_sensor_unavailable_when_pyomie_returns_incomplete_data(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyomie,
+) -> None:
+    """Test sensor becomes unavailable when no data is available."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_pyomie.spot_price.side_effect = spot_price_fetcher(
+        {
+            "2024-01-15": OMIEResults(
+                updated_at=dt.datetime.now(),
+                market_date=dt.date.fromisoformat("2024-01-15"),
+                contents=None,
+                raw="",
+            )
+        }
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Both sensors should be unavailable
     pt_state = hass.states.get("sensor.omie_portugal_spot_price")
