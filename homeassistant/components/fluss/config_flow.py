@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from fluss_api import (
@@ -17,16 +16,13 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, LOGGER
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): cv.string})
 
 
 class FlussConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fluss+."""
-
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -36,13 +32,15 @@ class FlussConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                FlussApiClient(user_input[CONF_API_KEY], session=async_get_clientsession(self.hass))
+                FlussApiClient(
+                    user_input[CONF_API_KEY], session=async_get_clientsession(self.hass)
+                )
             except FlussApiClientCommunicationError:
                 errors["base"] = "cannot_connect"
             except FlussApiClientAuthenticationError:
                 errors["base"] = "invalid_auth"
             except Exception:
-                _LOGGER.exception("Unexpected exception occurred")
+                LOGGER.exception("Unexpected exception occurred")
                 errors["base"] = "unknown"
             if not errors:
                 return self.async_create_entry(

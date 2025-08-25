@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
-import logging
 from typing import Any
 
 from fluss_api import (
@@ -19,7 +17,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify
 
-UPDATE_INTERVAL = 60  # seconds
+from .const import LOGGER, UPDATE_INTERVAL_TIMEDELTA
 
 
 class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -35,26 +33,23 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise ConfigEntryAuthFailed from e
         except (FlussApiClientCommunicationError, FlussApiClientError) as e:
             raise ConfigEntryNotReady from e
-        except Exception as e:
-            raise ConfigEntryNotReady(
-                f"Failed to initialize Fluss API client: {e}"
-            ) from e
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             name=f"Fluss+ ({slugify(api_key[:8])})",
             config_entry=config_entry,
-            update_interval=timedelta(seconds=UPDATE_INTERVAL),
+            update_interval=UPDATE_INTERVAL_TIMEDELTA,
         )
 
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Fetch data from the Fluss API and return as a dictionary keyed by deviceId."""
         try:
             devices = await self.api.async_get_devices()
-            return {
-                device["deviceId"]: device
-                for device in devices.get("devices", [])
-                if isinstance(device, dict) and "deviceId" in device
-            }
         except FlussApiClientError as err:
             raise UpdateFailed(f"Error fetching Fluss devices: {err}") from err
+
+        return {
+            device["deviceId"]: device
+            for device in devices.get("devices", [])
+            if isinstance(device, dict) and "deviceId" in device
+        }
