@@ -73,6 +73,32 @@ class DayBetterLocalApiCoordinator(DataUpdateCoordinator[list[DayBetterDevice]])
         """Stop and cleanup the controller. Returns an asyncio.Event when done."""
         return self._controller.cleanup()
 
+    async def turn_on(self, device: DayBetterDevice) -> None:
+        """Turn on the light."""
+        await device.turn_on()
+
+    async def turn_off(self, device: DayBetterDevice) -> None:
+        """Turn off the light."""
+        await device.turn_off()
+
+    async def set_brightness(self, device: DayBetterDevice, brightness: int) -> None:
+        """Set light brightness."""
+        await device.set_brightness(brightness)
+
+    async def set_rgb_color(
+        self, device: DayBetterDevice, red: int, green: int, blue: int
+    ) -> None:
+        """Set light RGB color."""
+        await device.set_rgb_color(red, green, blue)
+
+    async def set_temperature(self, device: DayBetterDevice, temperature: int) -> None:
+        """Set light color in kelvin."""
+        await device.set_temperature(temperature)
+
+    async def set_scene(self, device: DayBetterDevice, scene: str) -> None:
+        """Set light scene."""
+        await device.set_scene(scene)
+
     @property
     def devices(self) -> list[DayBetterDevice]:
         """Return currently known devices (from latest refresh)."""
