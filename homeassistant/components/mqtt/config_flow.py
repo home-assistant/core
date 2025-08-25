@@ -779,13 +779,11 @@ def default_alarm_control_panel_code(config: dict[str, Any]) -> str:
     Updates the magic values for for the `code` options in case remove code
     validation is selected.
     """
-
-    code_validation_mode: str = config["alarm_control_panel_code_mode"]
-    code: str = config.get(CONF_CODE, "")
-    if code_validation_mode in _CODE_VALIDATION_MODE:
+    code: str
+    if config["alarm_control_panel_code_mode"] in _CODE_VALIDATION_MODE:
         # Return magic value for remote code validation
         return _CODE_VALIDATION_MODE[config["alarm_control_panel_code_mode"]]
-    if code in _CODE_VALIDATION_MODE.values():
+    if (code := config.get(CONF_CODE, "")) in _CODE_VALIDATION_MODE.values():
         # Remove magic value for remote code validation
         return ""
 
