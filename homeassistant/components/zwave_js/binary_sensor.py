@@ -60,13 +60,8 @@ NOTIFICATION_GAS = "18"
 class NotificationZWaveJSEntityDescription(BinarySensorEntityDescription):
     """Represent a Z-Wave JS binary sensor entity description."""
 
-    not_states: set[str] = field(default_factory=set)
+    not_states: set[str] = field(default_factory=lambda: {"0"})
     states: tuple[str, ...] | None = None
-
-    def __post_init__(self) -> None:
-        """Initialize the entity description."""
-        # 0 is the idle state for notifications, so we always ignore it
-        self.not_states.add("0")
 
 
 @dataclass(frozen=True, kw_only=True)
