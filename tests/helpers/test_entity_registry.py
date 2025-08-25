@@ -3069,8 +3069,8 @@ async def test_restore_entity_disabled_by(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     config_entry_disabled_by: config_entries.ConfigEntryDisabler | None,
-    entity_disabled_by_initial: dr.DeviceEntryDisabler | None,
-    entity_disabled_by_restored: dr.DeviceEntryDisabler | None,
+    entity_disabled_by_initial: er.RegistryEntryDisabler | None,
+    entity_disabled_by_restored: er.RegistryEntryDisabler | None,
 ) -> None:
     """Check how the disabled_by flag is treated when restoring an entity."""
     update_events = async_capture_events(hass, er.EVENT_ENTITY_REGISTRY_UPDATED)
@@ -3192,8 +3192,8 @@ async def test_restore_entity_disabled_by_2(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    entity_disabled_by_initial: dr.DeviceEntryDisabler | None,
-    entity_disabled_by_restored: dr.DeviceEntryDisabler | None,
+    entity_disabled_by_initial: er.RegistryEntryDisabler | None,
+    entity_disabled_by_restored: er.RegistryEntryDisabler | None,
 ) -> None:
     """Check how the disabled_by flag is treated when restoring an entity.
 
