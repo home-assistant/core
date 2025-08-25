@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.unique_id)},
-        name=entry.title,
+        name=info.name,
         manufacturer="Lunatone",
         sw_version=info.version,
         configuration_url=entry.data[CONF_URL],
