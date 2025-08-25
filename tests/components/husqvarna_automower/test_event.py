@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from copy import deepcopy
 from datetime import UTC, datetime
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, PropertyMock, patch
 
 from aioautomower.model import MowerAttributes, SingleMessageData
 from aioautomower.model.model_message import Message, Severity, SingleMessageAttributes
@@ -58,95 +58,100 @@ async def test_event(
     state = hass.states.get("event.test_mower_1_message")
     assert state is None
 
-    # Simulate a new message for this mower and check entity creation
-    message = SingleMessageData(
-        type="messages",
-        id=TEST_MOWER_ID,
-        attributes=SingleMessageAttributes(
-            message=Message(
-                time=datetime(2025, 7, 13, 15, 30, tzinfo=UTC),
-                code="wheel_motor_overloaded_rear_left",
-                severity=Severity.ERROR,
-                latitude=49.0,
-                longitude=10.0,
-            )
-        ),
-    )
+    with patch(
+        "homeassistant.components.husqvarna_automower.event.AutomowerMessageEventEntity.available",
+        new_callable=PropertyMock,
+        return_value=True,
+    ):
+        # Simulate a new message for this mower and check entity creation
+        message = SingleMessageData(
+            type="messages",
+            id=TEST_MOWER_ID,
+            attributes=SingleMessageAttributes(
+                message=Message(
+                    time=datetime(2025, 7, 13, 15, 30, tzinfo=UTC),
+                    code="wheel_motor_overloaded_rear_left",
+                    severity=Severity.ERROR,
+                    latitude=49.0,
+                    longitude=10.0,
+                )
+            ),
+        )
 
-    for cb in callbacks:
-        cb(message)
-    await hass.async_block_till_done()
-    state = hass.states.get("event.test_mower_1_message")
-    assert state is not None
-    assert state.attributes[ATTR_EVENT_TYPE] == "wheel_motor_overloaded_rear_left"
+        for cb in callbacks:
+            cb(message)
+        await hass.async_block_till_done()
+        state = hass.states.get("event.test_mower_1_message")
+        assert state is not None
+        assert state.attributes[ATTR_EVENT_TYPE] == "wheel_motor_overloaded_rear_left"
 
-    # Reload the config entry to ensure the entity is created again
-    await hass.config_entries.async_reload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    state = hass.states.get("event.test_mower_1_message")
-    assert state is not None
-    assert state.attributes[ATTR_EVENT_TYPE] == "wheel_motor_overloaded_rear_left"
+        # Reload the config entry to ensure the entity is created again
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+        state = hass.states.get("event.test_mower_1_message")
+        assert state is not None
+        assert state.attributes[ATTR_EVENT_TYPE] == "wheel_motor_overloaded_rear_left"
 
-    # Check updating event with a new message
-    message = SingleMessageData(
-        type="messages",
-        id=TEST_MOWER_ID,
-        attributes=SingleMessageAttributes(
-            message=Message(
-                time=datetime(2025, 7, 13, 16, 00, tzinfo=UTC),
-                code="alarm_mower_lifted",
-                severity=Severity.ERROR,
-                latitude=48.0,
-                longitude=11.0,
-            )
-        ),
-    )
+        # Check updating event with a new message
+        message = SingleMessageData(
+            type="messages",
+            id=TEST_MOWER_ID,
+            attributes=SingleMessageAttributes(
+                message=Message(
+                    time=datetime(2025, 7, 13, 16, 00, tzinfo=UTC),
+                    code="alarm_mower_lifted",
+                    severity=Severity.ERROR,
+                    latitude=48.0,
+                    longitude=11.0,
+                )
+            ),
+        )
 
-    for cb in callbacks:
-        cb(message)
-    await hass.async_block_till_done()
-    state = hass.states.get("event.test_mower_1_message")
-    assert state is not None
-    assert state.attributes[ATTR_EVENT_TYPE] == "alarm_mower_lifted"
+        for cb in callbacks:
+            cb(message)
+        await hass.async_block_till_done()
+        state = hass.states.get("event.test_mower_1_message")
+        assert state is not None
+        assert state.attributes[ATTR_EVENT_TYPE] == "alarm_mower_lifted"
 
-    # Check message for another mower, creates an new entity and dont
-    # change the state of the first entity
-    message = SingleMessageData(
-        type="messages",
-        id="1234",
-        attributes=SingleMessageAttributes(
-            message=Message(
-                time=datetime(2025, 7, 13, 16, 00, tzinfo=UTC),
-                code="battery_problem",
-                severity=Severity.ERROR,
-                latitude=48.0,
-                longitude=11.0,
-            )
-        ),
-    )
+        # Check message for another mower, creates an new entity and dont
+        # change the state of the first entity
+        message = SingleMessageData(
+            type="messages",
+            id="1234",
+            attributes=SingleMessageAttributes(
+                message=Message(
+                    time=datetime(2025, 7, 13, 16, 00, tzinfo=UTC),
+                    code="battery_problem",
+                    severity=Severity.ERROR,
+                    latitude=48.0,
+                    longitude=11.0,
+                )
+            ),
+        )
 
-    for cb in callbacks:
-        cb(message)
-    await hass.async_block_till_done()
-    entry = entity_registry.async_get("event.test_mower_1_message")
-    assert entry is not None
-    assert state.attributes[ATTR_EVENT_TYPE] == "alarm_mower_lifted"
-    state = hass.states.get("event.test_mower_2_message")
-    assert state is not None
-    assert state.attributes[ATTR_EVENT_TYPE] == "battery_problem"
+        for cb in callbacks:
+            cb(message)
+        await hass.async_block_till_done()
+        entry = entity_registry.async_get("event.test_mower_1_message")
+        assert entry is not None
+        assert state.attributes[ATTR_EVENT_TYPE] == "alarm_mower_lifted"
+        state = hass.states.get("event.test_mower_2_message")
+        assert state is not None
+        assert state.attributes[ATTR_EVENT_TYPE] == "battery_problem"
 
-    # Check event entity is removed, when the mower is removed
-    values_copy = deepcopy(values)
-    values_copy.pop("1234")
-    mock_automower_client.get_status.return_value = values_copy
-    freezer.tick(SCAN_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    state = hass.states.get("event.test_mower_2_message")
-    assert state is None
-    entry = entity_registry.async_get("event.test_mower_2_message")
-    assert entry is None
+        # Check event entity is removed, when the mower is removed
+        values_copy = deepcopy(values)
+        values_copy.pop("1234")
+        mock_automower_client.get_status.return_value = values_copy
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        state = hass.states.get("event.test_mower_2_message")
+        assert state is None
+        entry = entity_registry.async_get("event.test_mower_2_message")
+        assert entry is None
 
 
 @pytest.mark.freeze_time(datetime(2023, 6, 5, 12))
@@ -182,25 +187,30 @@ async def test_event_snapshot(
         # Ensure callback was registered for the test mower
         assert mock_automower_client.register_single_message_callback.called
 
-        # Simulate a new message for this mower
-        message = SingleMessageData(
-            type="messages",
-            id=TEST_MOWER_ID,
-            attributes=SingleMessageAttributes(
-                message=Message(
-                    time=datetime(2025, 7, 13, 15, 30, tzinfo=UTC),
-                    code="wheel_motor_overloaded_rear_left",
-                    severity=Severity.ERROR,
-                    latitude=49.0,
-                    longitude=10.0,
-                )
-            ),
-        )
+        with patch(
+            "homeassistant.components.husqvarna_automower.event.AutomowerMessageEventEntity.available",
+            new_callable=PropertyMock,
+            return_value=True,
+        ):
+            # Simulate a new message for this mower
+            message = SingleMessageData(
+                type="messages",
+                id=TEST_MOWER_ID,
+                attributes=SingleMessageAttributes(
+                    message=Message(
+                        time=datetime(2025, 7, 13, 15, 30, tzinfo=UTC),
+                        code="wheel_motor_overloaded_rear_left",
+                        severity=Severity.ERROR,
+                        latitude=49.0,
+                        longitude=10.0,
+                    )
+                ),
+            )
 
-        for cb in callbacks:
-            cb(message)
-        await hass.async_block_till_done()
+            for cb in callbacks:
+                cb(message)
+            await hass.async_block_till_done()
 
-        await snapshot_platform(
-            hass, entity_registry, snapshot, mock_config_entry.entry_id
-        )
+            await snapshot_platform(
+                hass, entity_registry, snapshot, mock_config_entry.entry_id
+            )
