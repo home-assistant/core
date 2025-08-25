@@ -427,6 +427,12 @@ def fortrezz_ssa1_siren_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("fortrezz_ssa1_siren_state.json", DOMAIN)
 
 
+@pytest.fixture(name="fortrezz_ssa2_siren_state", scope="package")
+def fortrezz_ssa2_siren_state_fixture() -> dict[str, Any]:
+    """Load the fortrezz ssa2 siren node state fixture data."""
+    return load_json_object_fixture("fortrezz_ssa2_siren_state.json", DOMAIN)
+
+
 @pytest.fixture(name="fortrezz_ssa3_siren_state", scope="package")
 def fortrezz_ssa3_siren_state_fixture() -> dict[str, Any]:
     """Load the fortrezz ssa3 siren node state fixture data."""
@@ -565,12 +571,6 @@ def mock_listen_block_fixture() -> asyncio.Event:
     return asyncio.Event()
 
 
-@pytest.fixture(name="listen_result")
-def listen_result_fixture() -> asyncio.Future[None]:
-    """Mock a listen result."""
-    return asyncio.Future()
-
-
 @pytest.fixture(name="client")
 def mock_client_fixture(
     controller_state: dict[str, Any],
@@ -578,7 +578,6 @@ def mock_client_fixture(
     version_state: dict[str, Any],
     log_config_state: dict[str, Any],
     listen_block: asyncio.Event,
-    listen_result: asyncio.Future[None],
 ):
     """Mock a client."""
     with patch(
@@ -587,15 +586,16 @@ def mock_client_fixture(
         client = client_class.return_value
 
         async def connect():
+            listen_block.clear()
             await asyncio.sleep(0)
             client.connected = True
 
         async def listen(driver_ready: asyncio.Event) -> None:
             driver_ready.set()
             await listen_block.wait()
-            await listen_result
 
         async def disconnect():
+            listen_block.set()
             client.connected = False
 
         client.connect = AsyncMock(side_effect=connect)
@@ -1220,6 +1220,14 @@ def lock_popp_electric_strike_lock_control_fixture(
 def fortrezz_ssa1_siren_fixture(client, fortrezz_ssa1_siren_state) -> Node:
     """Mock a fortrezz ssa1 siren node."""
     node = Node(client, copy.deepcopy(fortrezz_ssa1_siren_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="fortrezz_ssa2_siren")
+def fortrezz_ssa2_siren_fixture(client, fortrezz_ssa2_siren_state) -> Node:
+    """Mock a fortrezz ssa2 siren node."""
+    node = Node(client, copy.deepcopy(fortrezz_ssa2_siren_state))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
