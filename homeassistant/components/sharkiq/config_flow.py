@@ -54,7 +54,7 @@ async def _validate_input(hass, data) -> dict[str, str]:
     """Validate the user input allows us to connect."""
     session = aiohttp_client.async_create_clientsession(hass)
     try:
-        tokens = await Auth0Client.do_login(session, data[CONF_USERNAME], data[CONF_PASSWORD])
+        tokens = await Auth0Client.do_auth0_login(session, data[CONF_USERNAME], data[CONF_PASSWORD])
         LOGGER.debug("Got tokens in config flow: %s", list(tokens.keys()))
     except InvalidAuth:
         raise
