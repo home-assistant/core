@@ -172,6 +172,7 @@ DEVICE_MOCKS = [
     "sfkzq_rzklytdei8i8vo37",  #  https://github.com/home-assistant/core/issues/146164
     "sgbj_im2eqqhj72suwwko",  # https://github.com/home-assistant/core/issues/151082
     "sgbj_ulv4nnue7gqp0rjk",  # https://github.com/home-assistant/core/issues/149704
+    "sj_rzeSU2h9uoklxEwq",  # https://github.com/home-assistant/core/issues/150683
     "sj_tgvtvdoc",  # https://github.com/orgs/home-assistant/discussions/482
     "sp_drezasavompxpcgm",  # https://github.com/home-assistant/core/issues/149704
     "sp_nzauwyj3mcnjnf35",  #  https://github.com/home-assistant/core/issues/141278
