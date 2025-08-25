@@ -19,7 +19,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify
 
-_LOGGER = logging.getLogger(__package__)
 UPDATE_INTERVAL = 60  # seconds
 
 
