@@ -201,15 +201,15 @@
     },
     "dial": {
       "name": "Dial a phone number",
-      "description": "Let the Fritz!Box dial a phone number. The dial-help of the Fritz!Box must be activated to make this work.",
+      "description": "Makes the Fritz!Box dial a phone number. The dial-help service of the Fritz!Box must be activated to make this work.",
       "fields": {
         "device_id": {
-          "name": "Fritz!Box Device",
+          "name": "Fritz!Box device",
           "description": "Select the Fritz!Box to dial from."
         },
         "number": {
           "name": "Phone number",
-          "description": "Phone number to dial."
+          "description": "The phone number to dial."
         }
       }
     }
@@ -219,7 +219,7 @@
       "message": "Failed to perform action \"{service}\". Config entry for target not found"
     },
     "service_dial_failed": {
-      "message": "Failed to dial, check if the dial-help of the Fritz!Box is activated"
+      "message": "Failed to dial, check if the dial-help service of the Fritz!Box is activated"
     },
     "service_parameter_unknown": {
       "message": "Action or parameter unknown"
