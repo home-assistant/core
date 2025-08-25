@@ -1,7 +1,5 @@
 """Utility functions for OMIE - Spain and Portugal electricity prices integration."""
 
-from __future__ import annotations
-
 import datetime as dt
 from zoneinfo import ZoneInfo
 

@@ -1,7 +1,5 @@
 """Coordinator for the OMIE - Spain and Portugal electricity prices integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import datetime as dt
 import logging

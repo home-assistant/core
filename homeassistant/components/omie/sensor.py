@@ -1,9 +1,6 @@
 """Sensor for the OMIE - Spain and Portugal electricity prices integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-import logging
 from zoneinfo import ZoneInfo
 
 from homeassistant.components.sensor import (
@@ -24,7 +21,6 @@ from .const import CET, DOMAIN
 from .coordinator import OMIECoordinator
 from .util import _pick_series_cet
 
-_LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 _ATTRIBUTION = "Data provided by OMIE.es"
@@ -59,9 +55,7 @@ async def async_setup_entry(
         configuration_url="https://www.omie.es/en/market-results",
         entry_type=DeviceEntryType.SERVICE,
         identifiers={(DOMAIN, entry.entry_id)},
-        manufacturer="OMI Group",
         name="OMIE",
-        model="MIBEL market results",
     )
 
     def hass_tzinfo() -> ZoneInfo:
