@@ -59,7 +59,8 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
             self._attr_translation_key = (
                 f"{entity_description.translation_key}_for_location"
             )
-        # For determining control conditions according to device's state
+        # For determining control conditions according to device's state per location
+        # attributes are state, operation_mode, device_is_on, power_on_enabled, remote_control_enabled
         self.device_state = coordinator.api.get_device_state(self.location)
 
     @property
@@ -112,18 +113,14 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
 
     def check_control_condition(
         self, switch: str | None = None, state_condition: list[str] | None = None
-    ) -> None:
+    ) -> bool:
         """For determining control conditions according to device's state."""
         if self.device_state is None:
-            return
-        # 1. is_on, 2. remote_control_enabled, 3. state_condition
-        _LOGGER.debug(
-            "check_control_condition switch=%s, device_state=%s",
-            switch,
-            self.device_state.dump(),
-        )
+            # There are no restrictions on controlling devices that do not have a current_state
+            return True
+        # Check 1)is_on, 2)remote_control_enabled, 3)state_condition
         if switch == SERVICE_TURN_OFF:
-            return
+            return True
         if switch == SERVICE_TURN_ON and not self.device_state.power_on_enabled:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -145,3 +142,4 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
                 translation_key="command_not_supported_in_state",
                 translation_placeholders={"state": self.device_state.state},
             )
+        return True

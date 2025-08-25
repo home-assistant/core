@@ -216,6 +216,4 @@ class ThinQSelectEntity(ThinQEntity, SelectEntity):
             self.property_id,
             option,
         )
-        # check device's condition
-        self.check_control_condition()
         await self.async_call_api(self.coordinator.api.post(self.property_id, option))

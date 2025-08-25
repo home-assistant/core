@@ -604,6 +604,13 @@ class ThinQSensorEntity(ThinQEntity, SensorEntity):
         if entity_description.device_class == SensorDeviceClass.ENUM:
             self._attr_options = self.data.options
 
+        self._device_state: str | None = None
+        self._device_state_id = (
+            ThinQProperty.CURRENT_STATE
+            if self.location is None
+            else f"{self.location}_{ThinQProperty.CURRENT_STATE}"
+        )
+
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()
@@ -614,16 +621,15 @@ class ThinQSensorEntity(ThinQEntity, SensorEntity):
             local_now = datetime.now(
                 tz=dt_util.get_time_zone(self.coordinator.hass.config.time_zone)
             )
+            self._device_state = (
+                self.coordinator.data[self._device_state_id].value
+                if self._device_state_id in self.coordinator.data
+                else None
+            )
             if value in [0, None, time.min] or (
-                self.device_state is not None
-                and self.device_state.state in ["initial", "end", "power_off"]
+                self._device_state == "power_off"
                 and self.entity_description.key
-                in [
-                    TimerProperty.RELATIVE_TO_START_WM,
-                    TimerProperty.RELATIVE_TO_STOP_WM,
-                    TimerProperty.REMAIN,
-                    TimerProperty.TOTAL,
-                ]
+                in [TimerProperty.REMAIN, TimerProperty.TOTAL]
             ):
                 # Reset to None when power_off
                 value = None

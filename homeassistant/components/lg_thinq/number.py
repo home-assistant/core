@@ -214,6 +214,5 @@ class ThinQNumberEntity(ThinQEntity, NumberEntity):
             self.property_id,
             value,
         )
-        # check device's condition
-        self.check_control_condition()
+
         await self.async_call_api(self.coordinator.api.post(self.property_id, value))

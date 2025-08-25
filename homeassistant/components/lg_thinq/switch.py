@@ -277,7 +277,9 @@ class ThinQSwitchEntity(ThinQEntity, SwitchEntity):
             self.entity_description.on_key,
         )
         # check device's condition
-        self.check_control_condition(switch=SERVICE_TURN_ON)
+        if not self.check_control_condition(switch=SERVICE_TURN_ON):
+            return
+
         if (on_command := self.entity_description.on_key) is not None:
             await self.async_call_api(
                 self.coordinator.api.post(self.property_id, on_command)
@@ -296,7 +298,9 @@ class ThinQSwitchEntity(ThinQEntity, SwitchEntity):
             self.entity_description.off_key,
         )
         # check device's condition
-        self.check_control_condition(switch=SERVICE_TURN_OFF)
+        if not self.check_control_condition(switch=SERVICE_TURN_OFF):
+            return
+
         if (off_command := self.entity_description.off_key) is not None:
             await self.async_call_api(
                 self.coordinator.api.post(self.property_id, off_command)
