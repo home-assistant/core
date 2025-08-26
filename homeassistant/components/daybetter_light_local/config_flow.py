@@ -6,7 +6,7 @@ import asyncio
 from contextlib import suppress
 from errno import EADDRINUSE
 import logging
-from typing import Any
+from typing import Any, cast
 
 from daybetter_local_api import DayBetterController
 import voluptuous as vol
@@ -127,22 +127,25 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             host = user_input["host"].strip()
-            devices = await _async_discover_devices(self.hass, host)
+            devices_or_error = await _async_discover_devices(self.hass, host)
 
-            if devices == "address_in_use":
-                errors["base"] = "address_in_use"
-            elif not devices:
-                errors["base"] = "no_devices_found"
+            if isinstance(devices_or_error, str):
+                # 错误情况：address_in_use
+                errors["base"] = devices_or_error
             else:
-                device = devices[0]
-                unique_id = device["fingerprint"] or host
-                await self.async_set_unique_id(unique_id)
-                self._abort_if_unique_id_configured()
+                devices = cast(list[dict[str, Any]], devices_or_error)
+                if not devices:
+                    errors["base"] = "no_devices_found"
+                else:
+                    device = devices[0]
+                    unique_id = str(device.get("fingerprint") or host)
+                    await self.async_set_unique_id(unique_id)
+                    self._abort_if_unique_id_configured()
 
-                return self.async_create_entry(
-                    title=device["name"],
-                    data={"host": host},
-                )
+                    return self.async_create_entry(
+                        title=str(device.get("name", host)),
+                        data={"host": host},
+                    )
 
         return self.async_show_form(
             step_id="manual",
