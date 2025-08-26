@@ -81,6 +81,10 @@
         '0': 1,
         'null': 1,
       }),
+      '609': dict({
+        '0': 1,
+        'null': 1,
+      }),
       'DingDongOpt': dict({
         '0': 2,
         'null': 2,
@@ -175,10 +179,6 @@
       }),
       'GetPtzGuard': dict({
         '0': 2,
-        'null': 2,
-      }),
-      'GetPush': dict({
-        '0': 1,
         'null': 2,
       }),
       'GetRec': dict({
