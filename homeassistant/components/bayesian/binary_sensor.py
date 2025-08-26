@@ -72,8 +72,7 @@ from .issues import raise_mirrored_entries, raise_no_prob_given_false
 _LOGGER = logging.getLogger(__name__)
 
 
-def above_greater_than_below(config: dict[str, Any]) -> dict[str, Any]:
-    """If the observation is of type/platform NUMERIC_STATE then ensure that the value give for 'above' is not greater than that for 'below'. Also check that at least one of the two is specified."""
+    """If the observation is of type/platform NUMERIC_STATE then ensure that the value given for 'above' is not greater than that for 'below'. Also check that at least one of the two is specified."""
     if config[CONF_PLATFORM] == CONF_NUMERIC_STATE:
         above = config.get(CONF_ABOVE)
         below = config.get(CONF_BELOW)
@@ -110,8 +109,7 @@ NUMERIC_STATE_SCHEMA = vol.All(
 )
 
 
-def no_overlapping(configs: list[dict]) -> list[dict]:
-    "For a list of observations ensure that there are no overlapping intervals for NUMERIC_STATE observations for the same entity."
+    """For a list of observations ensure that there are no overlapping intervals for NUMERIC_STATE observations for the same entity."""
     numeric_configs = [
         config for config in configs if config[CONF_PLATFORM] == CONF_NUMERIC_STATE
     ]
