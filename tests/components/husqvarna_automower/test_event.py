@@ -183,7 +183,6 @@ async def test_event_snapshot(
     hass: HomeAssistant,
     mock_automower_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -220,9 +219,6 @@ async def test_event_snapshot(
         # Start the watchdog and let it run once
         for cb in ws_ready_callbacks:
             cb()
-        await hass.async_block_till_done()
-        freezer.tick(1)
-        async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
         # Ensure callback was registered for the test mower

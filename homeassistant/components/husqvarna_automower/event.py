@@ -122,4 +122,5 @@ class AutomowerMessageEventEntity(AutomowerBaseEntity, EventEntity):
         if self.websocket_alive == is_alive:
             return
         self.websocket_alive = is_alive
+        _LOGGER.debug("WebSocket status changed to %s, updating entity state", is_alive)
         self.async_write_ha_state()
