@@ -541,8 +541,8 @@
       "volume": {
         "name": "Volume"
       },
-      "volume_speek": {
-        "name": "Volume speek"
+      "volume_speak": {
+        "name": "Volume speak"
       },
       "volume_doorbell": {
         "name": "Volume doorbell"
