@@ -205,14 +205,15 @@ DEVICE_CLASSES = [cls.value for cls in MediaPlayerDeviceClass]
 def _promote_media_fields(data: dict[str, Any]) -> dict[str, Any]:
     """If 'media' key exists, promote its fields to the top level."""
     if ATTR_MEDIA in data and isinstance(data[ATTR_MEDIA], dict):
+        if ATTR_MEDIA_CONTENT_TYPE in data or ATTR_MEDIA_CONTENT_ID in data:
+            raise vol.Invalid(
+                f"Play media cannot contain '{ATTR_MEDIA}' and '{ATTR_MEDIA_CONTENT_ID}' or '{ATTR_MEDIA_CONTENT_TYPE}'"
+            )
         media_data = data[ATTR_MEDIA]
-        # Only overwrite if not already present
-        if (
-            ATTR_MEDIA_CONTENT_TYPE not in data
-            and ATTR_MEDIA_CONTENT_TYPE in media_data
-        ):
+
+        if ATTR_MEDIA_CONTENT_TYPE in media_data:
             data[ATTR_MEDIA_CONTENT_TYPE] = media_data[ATTR_MEDIA_CONTENT_TYPE]
-        if ATTR_MEDIA_CONTENT_ID not in data and ATTR_MEDIA_CONTENT_ID in media_data:
+        if ATTR_MEDIA_CONTENT_ID in media_data:
             data[ATTR_MEDIA_CONTENT_ID] = media_data[ATTR_MEDIA_CONTENT_ID]
 
         del data[ATTR_MEDIA]

@@ -692,3 +692,18 @@ async def test_play_media_via_selector(hass: HomeAssistant) -> None:
 
     assert len(mock_play_media.mock_calls) == 2
     assert mock_play_media.mock_calls[0].args == mock_play_media.mock_calls[1].args
+
+    with pytest.raises(vol.Invalid, match="Play media cannot contain 'media'"):
+        await hass.services.async_call(
+            "media_player",
+            "play_media",
+            {
+                "media_content_id": "1234",
+                "entity_id": "media_player.bedroom",
+                "media": {
+                    "media_content_type": "music",
+                    "media_content_id": "1234",
+                },
+            },
+            blocking=True,
+        )
