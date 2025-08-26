@@ -47,7 +47,6 @@
     }),
     'entry': dict({
       'data': dict({
-        'country': 'IT',
         'login_data': dict({
           'session': 'test-session',
         }),

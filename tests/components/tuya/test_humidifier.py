@@ -9,13 +9,14 @@ from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice
 
 from homeassistant.components.humidifier import (
+    ATTR_HUMIDITY,
     DOMAIN as HUMIDIFIER_DOMAIN,
     SERVICE_SET_HUMIDITY,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
 from homeassistant.components.tuya import ManagerCompat
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -59,9 +60,9 @@ async def test_turn_on(
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
         SERVICE_TURN_ON,
-        {"entity_id": entity_id},
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
     )
-    await hass.async_block_till_done()
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id, [{"code": "switch", "value": True}]
     )
@@ -86,9 +87,9 @@ async def test_turn_off(
     await hass.services.async_call(
         HUMIDIFIER_DOMAIN,
         SERVICE_TURN_OFF,
-        {"entity_id": entity_id},
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
     )
-    await hass.async_block_till_done()
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id, [{"code": "switch", "value": False}]
     )
@@ -114,11 +115,11 @@ async def test_set_humidity(
         HUMIDIFIER_DOMAIN,
         SERVICE_SET_HUMIDITY,
         {
-            "entity_id": entity_id,
-            "humidity": 50,
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_HUMIDITY: 50,
         },
+        blocking=True,
     )
-    await hass.async_block_till_done()
     mock_manager.send_commands.assert_called_once_with(
         mock_device.id, [{"code": "dehumidify_set_value", "value": 50}]
     )
@@ -149,7 +150,7 @@ async def test_turn_on_unsupported(
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
             SERVICE_TURN_ON,
-            {"entity_id": entity_id},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
     assert err.value.translation_key == "action_dpcode_not_found"
@@ -184,7 +185,7 @@ async def test_turn_off_unsupported(
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
             SERVICE_TURN_OFF,
-            {"entity_id": entity_id},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
     assert err.value.translation_key == "action_dpcode_not_found"
@@ -220,8 +221,8 @@ async def test_set_humidity_unsupported(
             HUMIDIFIER_DOMAIN,
             SERVICE_SET_HUMIDITY,
             {
-                "entity_id": entity_id,
-                "humidity": 50,
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_HUMIDITY: 50,
             },
             blocking=True,
         )
