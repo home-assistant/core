@@ -52,7 +52,7 @@ def mock_vitrea_client() -> Generator[MagicMock]:
         async def mock_status_request():
             """Mock status request that triggers entity discovery."""
             if client._status_callback:
-                # Simulate discovering a cover entity
+                # Simulate discovering a cover entity immediately
                 mock_event = MagicMock()
                 mock_event.node = "01"
                 mock_event.key = "01"
@@ -97,3 +97,10 @@ def mock_cover_event():
     event.status = DeviceStatus.BLIND
     event.data = "050"  # 50% position
     return event
+
+
+@pytest.fixture(autouse=True)
+def patch_asyncio_sleep():
+    """Patch asyncio.sleep for all tests in this module."""
+    with patch("asyncio.sleep", return_value=None):
+        yield

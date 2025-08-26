@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 import logging
-import sys
 import time
 
 from vitreaclient import DeviceStatus, VitreaClient, VitreaResponse
@@ -17,6 +16,9 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 # Import entity classes - only cover for simplified integration
 from .cover import VitreaCover
+
+SLEEP_INTERVAL: int = 4
+MAX_DISCOVERY_TIME: int = 90
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,23 +77,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: VitreaConfigEntry) -> bo
         # Vitrea sends slowly the status response for each node/key
         # we wait as long as entities are being discovered, but with shorter intervals
         entity_count = 0
-        max_discovery_time = 90  # a typical 20 nodes setup can take up to 60 seconds
         discovery_start = time.monotonic()
 
-        # Use shorter intervals to satisfy testing
-        sleep_interval = 4 # could also do 0.1 if "pytest" in sys.modules else 3
-
         while True:
-            await asyncio.sleep(sleep_interval)
+            await asyncio.sleep(SLEEP_INTERVAL)
 
             if len(entities) == entity_count:
                 # No new entities discovered in this cycle - discovery likely complete
                 break
 
-            if time.monotonic() - discovery_start > max_discovery_time:
+            if time.monotonic() - discovery_start > MAX_DISCOVERY_TIME:
                 _LOGGER.warning(
                     "Entity discovery timed out after %d seconds. Proceeding with %d entities: %s",
-                    max_discovery_time,
+                    MAX_DISCOVERY_TIME,
                     len(entities),
                     entities,
                 )
@@ -129,11 +127,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: VitreaConfigEntry) -> b
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
 
-    if unload_ok:
-        # Clean up the monitor and any resources from runtime_data
-        if hasattr(entry.runtime_data.client, "disconnect"):
+    # Only clean up if runtime_data exists
+    runtime_data = getattr(entry, "runtime_data", None)
+    if unload_ok and runtime_data is not None:
+        if hasattr(runtime_data.client, "disconnect"):
             try:
-                await entry.runtime_data.client.disconnect()
+                await runtime_data.client.disconnect()
             except (ConnectionError, TimeoutError) as ex:
                 _LOGGER.warning("Error disconnecting Vitrea client: %s", ex)
 
