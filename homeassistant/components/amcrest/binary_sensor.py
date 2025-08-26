@@ -339,36 +339,25 @@ class AmcrestCoordinatedBinarySensor(CoordinatorEntity, AmcrestBinarySensor):
         if not self.coordinator.last_update_success:
             return
 
-        key = self.entity_description.key
-        coordinator_data = self.coordinator.data
-
-        # Map entity keys to coordinator data
-        if key == _ONLINE_KEY:
-            self._attr_is_on = coordinator_data.get("online", False)
-        elif key == "audio_detected":
-            self._attr_is_on = coordinator_data.get("audio_detected", False)
-        elif key == "motion_detected":
-            self._attr_is_on = coordinator_data.get("motion_detected", False)
-        elif key == "crossline_detected":
-            self._attr_is_on = coordinator_data.get("crossline_detected", False)
-        else:
-            # For any sensors not yet mapped to coordinator, fall back to original method
-            await super().async_update()
+        self._update_data_from_coordinator()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         # Update state based on coordinator data
+        self._update_data_from_coordinator()
+
+        super()._handle_coordinator_update()
+
+    def _update_data_from_coordinator(self) -> None:
         key = self.entity_description.key
         coordinator_data = self.coordinator.data
 
         if key == _ONLINE_KEY:
             self._attr_is_on = coordinator_data.get("online", False)
-        elif key == "audio_detected":
+        elif key.startswith(_AUDIO_DETECTED_KEY):
             self._attr_is_on = coordinator_data.get("audio_detected", False)
-        elif key == "motion_detected":
+        elif key.startswith(_MOTION_DETECTED_KEY):
             self._attr_is_on = coordinator_data.get("motion_detected", False)
-        elif key == "crossline_detected":
+        elif key.startswith(_CROSSLINE_DETECTED_KEY):
             self._attr_is_on = coordinator_data.get("crossline_detected", False)
-
-        super()._handle_coordinator_update()
