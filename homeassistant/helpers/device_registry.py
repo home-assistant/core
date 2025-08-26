@@ -476,20 +476,27 @@ class DeletedDeviceEntry:
 
     def to_device_entry(
         self,
-        config_entry_id: str,
+        config_entry: ConfigEntry,
         config_subentry_id: str | None,
         connections: set[tuple[str, str]],
         identifiers: set[tuple[str, str]],
     ) -> DeviceEntry:
         """Create DeviceEntry from DeletedDeviceEntry."""
+        # Adjust disabled_by based on config entry state
+        disabled_by = self.disabled_by
+        if config_entry.disabled_by:
+            if disabled_by is None:
+                disabled_by = DeviceEntryDisabler.CONFIG_ENTRY
+        elif disabled_by == DeviceEntryDisabler.CONFIG_ENTRY:
+            disabled_by = None
         return DeviceEntry(
             area_id=self.area_id,
             # type ignores: likely https://github.com/python/mypy/issues/8625
-            config_entries={config_entry_id},  # type: ignore[arg-type]
-            config_entries_subentries={config_entry_id: {config_subentry_id}},
+            config_entries={config_entry.entry_id},  # type: ignore[arg-type]
+            config_entries_subentries={config_entry.entry_id: {config_subentry_id}},
             connections=self.connections & connections,  # type: ignore[arg-type]
             created_at=self.created_at,
-            disabled_by=self.disabled_by,
+            disabled_by=disabled_by,
             identifiers=self.identifiers & identifiers,  # type: ignore[arg-type]
             id=self.id,
             is_new=True,
@@ -922,7 +929,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             else:
                 self.deleted_devices.pop(deleted_device.id)
                 device = deleted_device.to_device_entry(
-                    config_entry_id,
+                    config_entry,
                     # Interpret not specifying a subentry as None
                     config_subentry_id if config_subentry_id is not UNDEFINED else None,
                     connections,
@@ -1108,6 +1115,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 config_entries_subentries = old.config_entries_subentries | {
                     add_config_entry_id: {add_config_subentry_id}
                 }
+                # Enable the device if it was disabled by config entry and we're adding
+                # a non disabled config entry
+                if (
+                    # mypy says add_config_entry can be None. That's impossible, because we
+                    # raise above if that happens
+                    not add_config_entry.disabled_by  # type: ignore[union-attr]
+                    and old.disabled_by is DeviceEntryDisabler.CONFIG_ENTRY
+                ):
+                    new_values["disabled_by"] = None
+                    old_values["disabled_by"] = old.disabled_by
             elif (
                 add_config_subentry_id
                 not in old.config_entries_subentries[add_config_entry_id]
@@ -1149,6 +1166,22 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     old_values["primary_config_entry"] = old.primary_config_entry
 
                 config_entries = config_entries - {remove_config_entry_id}
+
+                # Disable the device if it is enabled and all remaining config entries
+                # are disabled
+                has_enabled_config_entries = any(
+                    config_entry.disabled_by is None
+                    for config_entry_id in config_entries
+                    if (
+                        config_entry := self.hass.config_entries.async_get_entry(
+                            config_entry_id
+                        )
+                    )
+                    is not None
+                )
+                if not has_enabled_config_entries and old.disabled_by is None:
+                    new_values["disabled_by"] = DeviceEntryDisabler.CONFIG_ENTRY
+                    old_values["disabled_by"] = old.disabled_by
 
         if config_entries != old.config_entries:
             new_values["config_entries"] = config_entries
@@ -1460,18 +1493,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             if config_entry_id not in config_entries:
                 continue
             if config_entries == {config_entry_id}:
-                # Clear disabled_by if it was disabled by the config entry
-                if deleted_device.disabled_by is DeviceEntryDisabler.CONFIG_ENTRY:
-                    disabled_by = None
-                else:
-                    disabled_by = deleted_device.disabled_by
                 # Add a time stamp when the deleted device became orphaned
                 self.deleted_devices[deleted_device.id] = attr.evolve(
                     deleted_device,
                     orphaned_timestamp=now_time,
                     config_entries=set(),
                     config_entries_subentries={},
-                    disabled_by=disabled_by,
                 )
             else:
                 config_entries = config_entries - {config_entry_id}
