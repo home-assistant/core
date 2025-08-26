@@ -140,17 +140,9 @@ class AmcrestCoordinatedSwitch(CoordinatorEntity, AmcrestSwitch):
 
     async def async_update(self) -> None:
         """Update the switch state using coordinator data."""
-        # Don't call parent async_update, use coordinator data instead
-        if self.coordinator.data and "privacy_mode" in self.coordinator.data:
-            privacy_mode = self.coordinator.data["privacy_mode"]
-            if privacy_mode is not None:
-                self._attr_is_on = privacy_mode
-            else:
-                # Fall back to direct API call if coordinator data is unavailable
-                await super().async_update()
-        else:
-            # Fall back to direct API call if coordinator data is unavailable
-            await super().async_update()
+        privacy_mode = self.coordinator.data["privacy_mode"]
+        if privacy_mode is not None:
+            self._attr_is_on = privacy_mode
 
     @property
     def available(self) -> bool:
