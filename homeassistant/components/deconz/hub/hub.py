@@ -171,12 +171,6 @@ class DeconzHub:
         """Update device registry."""
         device_registry = dr.async_get(self.hass)
 
-        # Host device
-        device_registry.async_get_or_create(
-            config_entry_id=self.config_entry.entry_id,
-            identifiers={(DOMAIN, f"{self.api.config.bridge_id}-host")},
-        )
-
         # Gateway service
         configuration_url = f"http://{self.config.host}:{self.config.port}"
         if self.config_entry.source == SOURCE_HASSIO:
@@ -190,7 +184,7 @@ class DeconzHub:
             model=self.api.config.model_id,
             name=self.api.config.name,
             sw_version=self.api.config.software_version,
-            via_device=(DOMAIN, f"{self.api.config.bridge_id}-host"),
+            via_device=(DOMAIN, self.api.config.bridge_id),
         )
 
     @staticmethod
