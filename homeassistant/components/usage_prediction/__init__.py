@@ -67,21 +67,17 @@ async def get_cached_common_control(
     # Create a unique storage key for this user
     storage_key = f"{STORAGE_KEY_PREFIX}.{user_id}"
 
-    # Get or create store for this user
     if storage_key not in hass.data[DOMAIN]:
-        hass.data[DOMAIN][storage_key] = Store[dict[str, Any]](
-            hass, STORAGE_VERSION, storage_key, private=True
-        )
+        store = Store[dict[str, Any]](hass, STORAGE_VERSION, storage_key)
+        cached_data: dict[str, Any] | None = await store.async_load()
+        hass.data[DOMAIN][storage_key] = cached_data
 
-    store: Store[dict[str, Any]] = hass.data[DOMAIN][storage_key]
-
-    # Load cached data
-    cached_data = await store.async_load()
+    cached_data = hass.data[DOMAIN].get(storage_key)
 
     # Check if cache is valid (less than 24 hours old)
     now = dt_util.utcnow()
     if cached_data is not None:
-        cached_time = dt_util.parse_datetime(cached_data.get("timestamp", ""))
+        cached_time = dt_util.parse_datetime(cached_data["timestamp"])
         if cached_time and (now - cached_time) < CACHE_DURATION:
             # Cache is still valid, return the cached predictions
             return cached_data["predictions"]
@@ -90,12 +86,14 @@ async def get_cached_common_control(
     predictions = await common_control.async_predict_common_control(hass, user_id)
 
     # Store the new data with timestamp
-    cache_data = {
+    cached_data = {
         "timestamp": now.isoformat(),
         "predictions": predictions,
     }
 
     # Save to cache
-    await store.async_save(cache_data)
+    store = Store[dict[str, Any]](hass, STORAGE_VERSION, storage_key)
+    store.async_delay_save(lambda: cached_data)
+    hass.data[DOMAIN][storage_key] = cached_data
 
     return predictions
