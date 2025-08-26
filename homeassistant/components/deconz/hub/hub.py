@@ -184,7 +184,6 @@ class DeconzHub:
             model=self.api.config.model_id,
             name=self.api.config.name,
             sw_version=self.api.config.software_version,
-            via_device=(DOMAIN, self.api.config.bridge_id),
         )
 
     @staticmethod
