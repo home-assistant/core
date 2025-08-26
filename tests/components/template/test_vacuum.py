@@ -15,7 +15,7 @@ from homeassistant.components.vacuum import (
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 
@@ -587,6 +587,40 @@ async def test_battery_level_template(
     await hass.async_block_till_done()
 
     _verify(hass, STATE_UNKNOWN, expected)
+
+
+@pytest.mark.parametrize(
+    ("count", "state_template", "extra_config", "attribute_template"),
+    [(1, "{{ states('sensor.test_state') }}", {}, "{{ 50 }}")],
+)
+@pytest.mark.parametrize(
+    ("style", "attribute"),
+    [
+        (ConfigurationStyle.LEGACY, "battery_level_template"),
+        (ConfigurationStyle.MODERN, "battery_level"),
+        (ConfigurationStyle.TRIGGER, "battery_level"),
+    ],
+)
+@pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
+async def test_battery_level_template_repair(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test battery_level template raises issue."""
+    # Ensure trigger entity templates are rendered
+    hass.states.async_set(TEST_STATE_SENSOR, VacuumActivity.DOCKED)
+    await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(
+        "template", f"deprecated_battery_level_{TEST_ENTITY_ID}"
+    )
+    assert issue.domain == "template"
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_placeholders["entity_name"] == TEST_OBJECT_ID
+    assert issue.translation_placeholders["entity_id"] == TEST_ENTITY_ID
+    assert "Detected that integration 'template' is setting the" not in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -1263,6 +1297,54 @@ async def test_optimistic_option(
 
     state = hass.states.get(TEST_ENTITY_ID)
     assert state.state == VacuumActivity.DOCKED
+
+
+@pytest.mark.parametrize(
+    ("count", "vacuum_config"),
+    [
+        (
+            1,
+            {
+                "name": TEST_OBJECT_ID,
+                "state": "{{ states('sensor.test_state') }}",
+                "start": [],
+                **TEMPLATE_VACUUM_ACTIONS,
+                "optimistic": False,
+            },
+        )
+    ],
+)
+@pytest.mark.parametrize(
+    "style",
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+)
+@pytest.mark.parametrize(
+    "service",
+    [
+        vacuum.SERVICE_START,
+        vacuum.SERVICE_PAUSE,
+        vacuum.SERVICE_STOP,
+        vacuum.SERVICE_RETURN_TO_BASE,
+        vacuum.SERVICE_CLEAN_SPOT,
+    ],
+)
+@pytest.mark.usefixtures("setup_vacuum")
+async def test_not_optimistic(
+    hass: HomeAssistant,
+    service: str,
+    calls: list[ServiceCall],
+) -> None:
+    """Test optimistic yaml option set to false."""
+    await hass.services.async_call(
+        vacuum.DOMAIN,
+        service,
+        {"entity_id": TEST_ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_setup_config_entry(

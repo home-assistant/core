@@ -39,3 +39,13 @@ def mock_after_command_refresh():
         "homeassistant.components.switchbot_cloud.const.AFTER_COMMAND_REFRESH", 0
     ):
         yield
+
+
+@pytest.fixture(scope="package", autouse=True)
+def mock_after_command_refresh_for_cover():
+    """Mock after command refresh."""
+    with patch(
+        "homeassistant.components.switchbot_cloud.const.COVER_ENTITY_AFTER_COMMAND_REFRESH",
+        0,
+    ):
+        yield

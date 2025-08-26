@@ -1,5 +1,9 @@
 {
   "issues": {
+    "deprecated_vacuum_battery_feature": {
+      "title": "Deprecated battery feature used",
+      "description": "Vacuum entity {entity_id} implements the battery feature which is deprecated. This will stop working in Home Assistant 2026.2. Implement a separate entity for the battery state instead. To fix the issue, remove the `battery` feature from the configured supported features, and restart Home Assistant."
+    },
     "invalid_platform_config": {
       "title": "Invalid config found for MQTT {domain} item",
       "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
@@ -304,6 +308,7 @@
           "data": {
             "blue_template": "Blue template",
             "brightness_template": "Brightness template",
+            "code_format": "Code format",
             "command_template": "Command template",
             "command_topic": "Command topic",
             "command_off_template": "Command \"off\" template",
@@ -336,6 +341,7 @@
           "data_description": {
             "blue_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract blue color from the state payload value. Expected result of the template is an integer from 0-255 range.",
             "brightness_template": "[Template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract brightness from the state payload value. Expected result of the template is an integer from 0-255 range.",
+            "code_format": "A regular expression to validate a supplied code when it is set during the action to open, lock or unlock the MQTT lock. [Learn more.]({url}#code_format)",
             "command_off_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) for \"off\" state changes. Available variables are: `state` and `transition`.",
             "command_on_template": "The [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) for \"on\" state changes. Available variables: `state`, `brightness`, `color_temp`, `red`, `green`, `blue`, `hue`, `sat`, `flash`, `transition` and `effect`. Values `red`, `green`, `blue` and `brightness` are provided as integers from range 0-255. Value of `hue` is provided as float from range 0-360. Value of `sat` is provided as float from range 0-100. Value of `color_temp` is provided as integer representing Kelvin units.",
             "command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be published at the command topic.",
@@ -590,6 +596,31 @@
                 "brightness_scale": "Defines the maximum brightness value (i.e., 100%) of the maximum brightness.",
                 "brightness_state_topic": "The MQTT topic subscribed to receive brightness state values. [Learn more.]({url}#brightness_state_topic)",
                 "brightness_value_template": "Defines a [template](https://www.home-assistant.io/docs/configuration/templating/#using-value-templates-with-mqtt) to extract the brightness value."
+              }
+            },
+            "lock_payload_settings": {
+              "name": "Lock payload settings",
+              "data": {
+                "payload_lock": "Payload \"lock\"",
+                "payload_open": "Payload \"open\"",
+                "payload_reset": "Payload \"reset\"",
+                "payload_unlock": "Payload \"unlock\"",
+                "state_jammed": "State \"jammed\"",
+                "state_locked": "State \"locked\"",
+                "state_locking": "State \"locking\"",
+                "state_unlocked": "State \"unlocked\"",
+                "state_unlocking": "State \"unlocking\""
+              },
+              "data_description": {
+                "payload_lock": "The payload sent when a \"lock\" command is issued.",
+                "payload_open": "The payload sent when an \"open\" command is issued. Set this payload if your lock supports the \"open\" action.",
+                "payload_reset": "The payload received at the state topic that resets the lock to an unknown state.",
+                "payload_unlock": "The payload sent when an \"unlock\" command is issued.",
+                "state_jammed": "The payload received at the state topic that represents the \"jammed\" state.",
+                "state_locked": "The payload received at the state topic that represents the \"locked\" state.",
+                "state_locking": "The payload received at the state topic that represents the \"locking\" state.",
+                "state_unlocked": "The payload received at the state topic that represents the \"unlocked\" state.",
+                "state_unlocking": "The payload received at the state topic that represents the \"unlocking\" state."
               }
             },
             "fan_direction_settings": {
@@ -907,6 +938,7 @@
         "fan_speed_range_max_must_be_greater_than_speed_range_min": "Speed range max must be greater than speed range min",
         "fan_preset_mode_reset_in_preset_modes_list": "Payload \"reset preset mode\" is not a valid as a preset mode",
         "invalid_input": "Invalid value",
+        "invalid_regular_expression": "Must be a valid regular expression",
         "invalid_subscribe_topic": "Invalid subscribe topic",
         "invalid_template": "Invalid template",
         "invalid_supported_color_modes": "Invalid supported color modes selection",
@@ -1197,6 +1229,7 @@
         "cover": "[%key:component::cover::title%]",
         "fan": "[%key:component::fan::title%]",
         "light": "[%key:component::light::title%]",
+        "lock": "[%key:component::lock::title%]",
         "notify": "[%key:component::notify::title%]",
         "sensor": "[%key:component::sensor::title%]",
         "switch": "[%key:component::switch::title%]"
@@ -1285,7 +1318,7 @@
     }
   },
   "triggers": {
-    "mqtt": {
+    "_": {
       "name": "MQTT",
       "description": "When a specific message is received on a given MQTT topic.",
       "description_configured": "When an MQTT message has been received",
