@@ -33,7 +33,7 @@ class PortainerEndpointEntity(PortainerCoordinatorEntity):
             },
             manufacturer=DEFAULT_NAME,
             model="Endpoint",
-            name=self._device_info.endpoint.name,
+            name=device_info.endpoint.name,
         )
 
 
