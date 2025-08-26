@@ -381,6 +381,7 @@ async def async_setup_entry(
         for entity_description in CHIME_SELECT_ENTITIES
         for chime in reolink_data.host.api.chime_list
         if entity_description.supported(chime)
+        if entity_description.supported(chime) and chime.channel is not None
     )
     async_add_entities(entities)
 
