@@ -1377,6 +1377,7 @@ async def test_position_updates(
     entity_id = "media_player.zone_a"
     state = hass.states.get(entity_id)
 
+    assert state.attributes[ATTR_MEDIA_POSITION] == 42
     # Updated at should be recent
     now = datetime.now(UTC)
     updated_at = state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT]
