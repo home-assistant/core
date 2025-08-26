@@ -151,9 +151,9 @@ NUMBER_ENTITIES = (
         method=lambda api, ch, value: api.set_volume(ch, volume=int(value)),
     ),
     ReolinkNumberEntityDescription(
-        key="volume_speek",
+        key="volume_speak",
         cmd_key="GetAudioCfg",
-        translation_key="volume_speek",
+        translation_key="volume_speak",
         entity_category=EntityCategory.CONFIG,
         native_step=1,
         native_min_value=0,
