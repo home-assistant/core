@@ -542,10 +542,10 @@
         "name": "Volume"
       },
       "volume_speak": {
-        "name": "Volume speak"
+        "name": "Speak volume"
       },
       "volume_doorbell": {
-        "name": "Volume doorbell"
+        "name": "Doorbell volume"
       },
       "alarm_volume": {
         "name": "Alarm volume"
