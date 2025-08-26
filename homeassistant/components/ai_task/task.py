@@ -89,19 +89,20 @@ async def _resolve_attachments(
                 )
             )
 
-    if created_files:
+    if not created_files:
+        return resolved_attachments
 
-        def cleanup_files() -> None:
-            """Cleanup temporary files."""
-            for file in created_files:
-                file.unlink(missing_ok=True)
+    def cleanup_files() -> None:
+        """Cleanup temporary files."""
+        for file in created_files:
+            file.unlink(missing_ok=True)
 
-        @callback
-        def cleanup_files_callback() -> None:
-            """Cleanup temporary files."""
-            hass.async_add_executor_job(cleanup_files)
+    @callback
+    def cleanup_files_callback() -> None:
+        """Cleanup temporary files."""
+        hass.async_add_executor_job(cleanup_files)
 
-        session.async_on_cleanup(cleanup_files_callback)
+    session.async_on_cleanup(cleanup_files_callback)
 
     return resolved_attachments
 
