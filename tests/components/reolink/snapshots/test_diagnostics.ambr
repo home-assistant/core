@@ -98,8 +98,8 @@
         'null': 1,
       }),
       'GetAudioCfg': dict({
-        '0': 2,
-        'null': 2,
+        '0': 4,
+        'null': 4,
       }),
       'GetAutoFocus': dict({
         '0': 1,
