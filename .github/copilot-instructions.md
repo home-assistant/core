@@ -1128,8 +1128,15 @@ async def init_integration(
 ) -> MockConfigEntry:
     """Set up the integration for testing."""
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    
+    context = nullcontext()
+    if platform := getattr(request, "param", None):
+        context = patch("homeassistant.components.my_integration.PLATFORMS", [platform])
+
+    with context:
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
     return mock_config_entry
 ```
 
