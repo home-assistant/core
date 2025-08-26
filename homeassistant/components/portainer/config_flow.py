@@ -35,10 +35,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
 
-    api_url = f"{data[CONF_HOST]}"
-
     client = Portainer(
-        api_url=api_url,
+        api_url=data[CONF_HOST],
         api_key=data[CONF_API_KEY],
         session=async_get_clientsession(hass),
     )
@@ -52,9 +50,7 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
     except PortainerTimeoutError as err:
         raise PortainerTimeout from err
 
-    _LOGGER.debug("Connected to Portainer API: %s", api_url)
-
-    portainer_data: list[dict[str, Any]] = []
+    _LOGGER.debug("Connected to Portainer API: %s", data[CONF_HOST])
 
     for endpoint in endpoints:
         assert endpoint.id
@@ -62,18 +58,8 @@ async def _validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str
         _LOGGER.debug(
             "Found %d containers on endpoint %s", len(containers), endpoint.name
         )
-        portainer_data.append(
-            {
-                "id": endpoint.id,
-                "name": endpoint.name,
-                "containers": containers,
-            }
-        )
 
-    return {
-        "title": api_url,
-        "portainer": portainer_data,
-    }
+    return {"title": data[CONF_HOST]}
 
 
 class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):

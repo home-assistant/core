@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from aiohttp import CookieJar
 from pyportainer import Portainer
 
 from homeassistant.config_entries import ConfigEntry
@@ -23,7 +22,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     session = async_create_clientsession(
         hass,
         entry.data[CONF_VERIFY_SSL],
-        cookie_jar=CookieJar(unsafe=True),
     )
     client = Portainer(
         api_url=entry.data[CONF_HOST],

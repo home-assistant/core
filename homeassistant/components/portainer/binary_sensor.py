@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from pyportainer.models.docker import DockerContainer
 
@@ -37,7 +37,7 @@ CONTAINER_SENSORS: tuple[PortainerBinarySensorEntityDescription, ...] = (
     PortainerBinarySensorEntityDescription(
         key="status",
         translation_key="status",
-        state_fn=lambda data: bool(data.state == "running"),
+        state_fn=lambda data: data.state == "running",
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -47,9 +47,7 @@ ENDPOINT_SENSORS: tuple[PortainerBinarySensorEntityDescription, ...] = (
     PortainerBinarySensorEntityDescription(
         key="status",
         translation_key="status",
-        state_fn=lambda data: bool(
-            data.endpoint.status == 1
-        ),  # 1 = Running | 2 = Stopped
+        state_fn=lambda data: data.endpoint.status == 1,  # 1 = Running | 2 = Stopped
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -76,20 +74,20 @@ async def async_setup_entry(
         )
 
         assert endpoint.containers
-        for container in endpoint.containers.values():
-            entities.extend(
-                [
-                    PortainerContainerSensor(
-                        coordinator=coordinator,
-                        entity_description=entity_description,
-                        device_info=container,
-                        via_device=endpoint,
-                    )
-                    for entity_description in CONTAINER_SENSORS
-                ]
-            )
+        entities.extend(
+            [
+                PortainerContainerSensor(
+                    coordinator=coordinator,
+                    entity_description=entity_description,
+                    device_info=container,
+                    via_device=endpoint,
+                )
+                for container in endpoint.containers.values()
+                for entity_description in CONTAINER_SENSORS
+            ]
+        )
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class PortainerEndpointSensor(PortainerEndpointEntity, BinarySensorEntity):
@@ -110,14 +108,17 @@ class PortainerEndpointSensor(PortainerEndpointEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.id}_{entity_description.key}"
 
     @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return super().available and self.device_id in self.coordinator.data
+
+    @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        if TYPE_CHECKING:
-            assert self.device_id
 
         return (
             self.entity_description.state_fn(device_info)
-            if (device_info := self.coordinator.data.get(self.device_id))
+            if (device_info := self.coordinator.data[self.device_id])
             else None
         )
 
@@ -141,11 +142,13 @@ class PortainerContainerSensor(PortainerContainerEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.id}_{entity_description.key}"
 
     @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return super().available and self.endpoint_id in self.coordinator.data
+
+    @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
-        if TYPE_CHECKING:
-            assert self.device_id
-            assert self.endpoint_id
 
         return (
             self.entity_description.state_fn(device_info)

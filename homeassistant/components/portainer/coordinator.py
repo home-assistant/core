@@ -44,7 +44,6 @@ class PortainerCoordinatorData:
 class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorData]]):
     """Data Update Coordinator for Portainer."""
 
-    portainer: Portainer
     config_entry: PortainerConfigEntry
 
     def __init__(
@@ -94,9 +93,8 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
 
         try:
             endpoints = await self.portainer.get_endpoints()
-            _LOGGER.debug("Fetched endpoints: %s", endpoints)
         except PortainerAuthenticationError as err:
-            _LOGGER.exception("Authentication error")
+            _LOGGER.error("Authentication error: %s", repr(err))
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
@@ -108,11 +106,11 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 translation_key="cannot_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
+        else:
+            _LOGGER.debug("Fetched endpoints: %s", endpoints)
 
         mapped_endpoints: dict[int, PortainerCoordinatorData] = {}
         for endpoint in endpoints:
-            if TYPE_CHECKING:
-                assert endpoint.id
             try:
                 containers = await self.portainer.get_containers(endpoint.id)
             except PortainerConnectionError as err:
