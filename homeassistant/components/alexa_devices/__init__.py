@@ -42,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
 
 async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bool:
     """Migrate old entry."""
-    if entry.version == 1 and entry.minor_version == 0:
+    if entry.version == 1 and entry.minor_version == 1:
         _LOGGER.debug(
             "Migrating from version %s.%s", entry.version, entry.minor_version
         )
@@ -56,12 +56,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> 
         new_data.update({"site": f"https://www.amazon.{domain}"})
 
         hass.config_entries.async_update_entry(
-            entry, data=new_data, version=1, minor_version=1
+            entry, data=new_data, version=1, minor_version=2
         )
 
-    _LOGGER.info(
-        "Migration to version %s.%s successful", entry.version, entry.minor_version
-    )
+        _LOGGER.info(
+            "Migration to version %s.%s successful", entry.version, entry.minor_version
+        )
 
     return True
 
