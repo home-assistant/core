@@ -38,6 +38,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.COVER,
+    Platform.EVENT,
     Platform.FAN,
     Platform.IMAGE,
     Platform.LIGHT,
@@ -46,6 +47,7 @@ PLATFORMS = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.UPDATE,
     Platform.VACUUM,
     Platform.WEATHER,
 ]
