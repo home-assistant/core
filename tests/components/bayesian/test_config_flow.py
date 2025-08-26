@@ -258,6 +258,7 @@ async def test_single_state_observation(hass: HomeAssistant) -> None:
         assert result["step_id"] == OBSERVATION_SELECTOR
         assert result["type"] is FlowResultType.MENU
         assert result["flow_id"] is not None
+        assert result["menu_options"] == ["state", "numeric_state", "template"]
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"next_step_id": str(ObservationTypes.STATE)}
@@ -275,9 +276,23 @@ async def test_single_state_observation(hass: HomeAssistant) -> None:
                 CONF_P_GIVEN_T: 40,
                 CONF_P_GIVEN_F: 0.5,
                 CONF_NAME: "Kitchen Motion",
-                "add_another": False,
             },
         )
+
+        assert result["step_id"] == OBSERVATION_SELECTOR
+        assert result["type"] is FlowResultType.MENU
+        assert result["flow_id"] is not None
+        assert result["menu_options"] == [
+            "state",
+            "numeric_state",
+            "template",
+            "finish",
+        ]
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "finish"}
+        )
+        await hass.async_block_till_done()
 
         entry_id = result["result"].entry_id
         config_entry = hass.config_entries.async_get_entry(entry_id)
@@ -350,9 +365,22 @@ async def test_single_numeric_state_observation(hass: HomeAssistant) -> None:
                 CONF_P_GIVEN_T: 95,
                 CONF_P_GIVEN_F: 8,
                 CONF_NAME: "20 - 35 outside",
-                "add_another": False,
             },
         )
+        assert result["step_id"] == OBSERVATION_SELECTOR
+        assert result["type"] is FlowResultType.MENU
+        assert result["flow_id"] is not None
+        assert result["menu_options"] == [
+            "state",
+            "numeric_state",
+            "template",
+            "finish",
+        ]
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "finish"}
+        )
+        await hass.async_block_till_done()
         config_entry = result["result"]
         assert config_entry.options == {
             CONF_NAME: "Nice day",
@@ -421,7 +449,6 @@ async def test_multi_numeric_state_observation(hass: HomeAssistant) -> None:
                 CONF_P_GIVEN_T: 95,
                 CONF_P_GIVEN_F: 8,
                 CONF_NAME: "20 - 35 outside",
-                "add_another": True,
             },
         )
 
@@ -444,7 +471,6 @@ async def test_multi_numeric_state_observation(hass: HomeAssistant) -> None:
                 CONF_P_GIVEN_T: 95,
                 CONF_P_GIVEN_F: 8,
                 CONF_NAME: "30 - 40 outside",
-                "add_another": False,
             },
         )
         await hass.async_block_till_done()
@@ -462,7 +488,6 @@ async def test_multi_numeric_state_observation(hass: HomeAssistant) -> None:
                 CONF_P_GIVEN_T: 95,
                 CONF_P_GIVEN_F: 8,
                 CONF_NAME: "35 - 40 outside",
-                "add_another": False,
             },
         )
         await hass.async_block_till_done()
@@ -479,8 +504,20 @@ async def test_multi_numeric_state_observation(hass: HomeAssistant) -> None:
                 CONF_P_GIVEN_T: 70,
                 CONF_P_GIVEN_F: 20,
                 CONF_NAME: "35 - 40 outside",
-                "add_another": False,
             },
+        )
+        assert result["step_id"] == OBSERVATION_SELECTOR
+        assert result["type"] is FlowResultType.MENU
+        assert result["flow_id"] is not None
+        assert result["menu_options"] == [
+            "state",
+            "numeric_state",
+            "template",
+            "finish",
+        ]
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "finish"}
         )
         await hass.async_block_till_done()
 
@@ -567,6 +604,20 @@ async def test_single_template_observation(hass: HomeAssistant) -> None:
                 CONF_NAME: "Not seen in last 5 minutes",
             },
         )
+        assert result["step_id"] == OBSERVATION_SELECTOR
+        assert result["type"] is FlowResultType.MENU
+        assert result["flow_id"] is not None
+        assert result["menu_options"] == [
+            "state",
+            "numeric_state",
+            "template",
+            "finish",
+        ]
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "finish"}
+        )
+        await hass.async_block_till_done()
         config_entry = result["result"]
         assert config_entry.version == 1
         assert config_entry.options == {
@@ -1059,7 +1110,6 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
                     CONF_P_GIVEN_T: 0,
                     CONF_P_GIVEN_F: 60,
                     CONF_NAME: "Work laptop on network",
-                    "add_another": False,
                 },
             )
         assert CONF_P_GIVEN_T in excinfo.value.path
@@ -1075,7 +1125,6 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
                     CONF_P_GIVEN_T: 60,
                     CONF_P_GIVEN_F: 100,
                     CONF_NAME: "Work laptop on network",
-                    "add_another": False,
                 },
             )
         assert CONF_P_GIVEN_F in excinfo.value.path
@@ -1092,7 +1141,6 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
                 CONF_P_GIVEN_T: 60,
                 CONF_P_GIVEN_F: 60,
                 CONF_NAME: "Work laptop on network",
-                "add_another": False,
             },
         )
         await hass.async_block_till_done()
@@ -1108,7 +1156,6 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
                 CONF_P_GIVEN_T: 60,
                 CONF_P_GIVEN_F: 70,
                 CONF_NAME: "Work laptop on network",
-                "add_another": True,
             },
         )
         await hass.async_block_till_done()
@@ -1126,7 +1173,6 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
                 CONF_P_GIVEN_T: 85,
                 CONF_P_GIVEN_F: 85,
                 CONF_NAME: "Office is bright",
-                "add_another": False,
             },
         )
         await hass.async_block_till_done()
@@ -1141,7 +1187,6 @@ async def test_invalid_configs(hass: HomeAssistant) -> None:
                 CONF_P_GIVEN_T: 85,
                 CONF_P_GIVEN_F: 10,
                 CONF_NAME: "Office is bright",
-                "add_another": True,
             },
         )
         await hass.async_block_till_done()

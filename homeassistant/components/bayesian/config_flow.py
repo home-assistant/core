@@ -51,7 +51,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import selector, translation
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -264,8 +263,6 @@ TEMPLATE_SUBSCHEMA = vol.Schema(
     },
 ).extend(OBSERVATION_BOILERPLATE.schema)
 
-ADD_ANOTHER_BOX_SCHEMA = vol.Schema({vol.Optional("add_another"): cv.boolean})
-
 
 def _convert_percentages_to_fractions(
     data: dict[str, str | float | int],
@@ -384,10 +381,6 @@ async def _validate_subentry_from_config_entry(
         CONF_OBSERVATIONS, []
     )
 
-    # add_another is really just a variable for controlling the flow
-    # It is only shown in the ConfigFlow and not the Subentry Flow
-    add_another: bool = user_input.pop("add_another", False)
-
     if handler.parent_handler.cur_step is not None:
         user_input[CONF_PLATFORM] = handler.parent_handler.cur_step["step_id"]
         user_input = _validate_observation_subentry(
@@ -396,7 +389,7 @@ async def _validate_subentry_from_config_entry(
             other_subentries=handler.options[CONF_OBSERVATIONS],
         )
     observations.append(user_input)
-    return {"add_another": True} if add_another else {}
+    return {}
 
 
 async def _get_description_placeholders(
@@ -426,13 +419,12 @@ async def _get_description_placeholders(
     }
 
 
-async def _add_more_or_end(
-    user_input: dict[str, Any],
-) -> str | None:
-    """Choose whether to add another observation or end the flow."""
-    if user_input.get("add_another", False):
-        return OBSERVATION_SELECTOR
-    return None
+async def _get_observation_menu_options(handler: SchemaCommonFlowHandler) -> list[str]:
+    """Return the menu options for the observation selector."""
+    options = [typ.value for typ in ObservationTypes]
+    if handler.options.get(CONF_OBSERVATIONS):
+        options.append("finish")
+    return options
 
 
 CONFIG_FLOW: dict[str, SchemaFlowMenuStep | SchemaFlowFormStep] = {
@@ -443,11 +435,11 @@ CONFIG_FLOW: dict[str, SchemaFlowMenuStep | SchemaFlowFormStep] = {
         description_placeholders=_get_description_placeholders,
     ),
     str(OBSERVATION_SELECTOR): SchemaFlowMenuStep(
-        [typ.value for typ in ObservationTypes]
+        _get_observation_menu_options,
     ),
     str(ObservationTypes.STATE): SchemaFlowFormStep(
-        STATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema),
-        next_step=_add_more_or_end,
+        STATE_SUBSCHEMA,
+        next_step=str(OBSERVATION_SELECTOR),
         validate_user_input=_validate_subentry_from_config_entry,
         # Prevent the name of the bayesian sensor from being used as the suggested
         # name of the observations
@@ -455,19 +447,20 @@ CONFIG_FLOW: dict[str, SchemaFlowMenuStep | SchemaFlowFormStep] = {
         description_placeholders=_get_description_placeholders,
     ),
     str(ObservationTypes.NUMERIC_STATE): SchemaFlowFormStep(
-        NUMERIC_STATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema),
-        next_step=_add_more_or_end,
+        NUMERIC_STATE_SUBSCHEMA,
+        next_step=str(OBSERVATION_SELECTOR),
         validate_user_input=_validate_subentry_from_config_entry,
         suggested_values=None,
         description_placeholders=_get_description_placeholders,
     ),
     str(ObservationTypes.TEMPLATE): SchemaFlowFormStep(
-        TEMPLATE_SUBSCHEMA.extend(ADD_ANOTHER_BOX_SCHEMA.schema),
-        next_step=_add_more_or_end,
+        TEMPLATE_SUBSCHEMA,
+        next_step=str(OBSERVATION_SELECTOR),
         validate_user_input=_validate_subentry_from_config_entry,
         suggested_values=None,
         description_placeholders=_get_description_placeholders,
     ),
+    "finish": SchemaFlowFormStep(),
 }
 
 
