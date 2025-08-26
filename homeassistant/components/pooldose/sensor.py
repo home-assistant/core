@@ -145,16 +145,19 @@ async def async_setup_entry(
     if TYPE_CHECKING:
         assert config_entry.unique_id is not None
 
-    coordinator = config_entry.runtime_data.coordinator
+    coordinator = config_entry.runtime_data
     data = coordinator.data
     serial_number = config_entry.unique_id
-    device_properties = config_entry.runtime_data.device_properties
 
     sensor_data = data.get(PLATFORM_NAME, {}) if data else {}
 
     async_add_entities(
         PooldoseSensor(
-            coordinator, serial_number, device_properties, description, PLATFORM_NAME
+            coordinator,
+            serial_number,
+            coordinator.device_info,
+            description,
+            PLATFORM_NAME,
         )
         for description in SENSOR_DESCRIPTIONS
         if description.key in sensor_data

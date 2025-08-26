@@ -2,34 +2,20 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 
 from pooldose.client import PooldoseClient
 from pooldose.request_status import RequestStatus
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .coordinator import PooldoseCoordinator
+from .coordinator import PooldoseConfigEntry, PooldoseCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-
-@dataclass
-class PooldoseRuntimeData:
-    """Runtime data for Pooldose integration."""
-
-    client: PooldoseClient
-    coordinator: PooldoseCoordinator
-    device_properties: dict[str, str | None]
-
-
-type PooldoseConfigEntry = ConfigEntry[PooldoseRuntimeData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> bool:
@@ -59,15 +45,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PooldoseConfigEntry) -> 
     coordinator = PooldoseCoordinator(hass, client, entry)
     await coordinator.async_config_entry_first_refresh()
 
-    # Get device info from client after successful connection
-    device_properties = client.device_info
-
     # Store runtime data
-    entry.runtime_data = PooldoseRuntimeData(
-        client=client,
-        coordinator=coordinator,
-        device_properties=device_properties,
-    )
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -1,7 +1,7 @@
 """Test the PoolDose config flow."""
 
-import json
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import Any
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -13,147 +13,115 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import RequestStatus
 
-from tests.common import MockConfigEntry, async_load_fixture
+from tests.common import MockConfigEntry
 
 
-async def test_form_shows_and_creates_entry(hass: HomeAssistant) -> None:
-    """Test that the form is shown and entry is created on valid input."""
-    # Mock successful client setup
-    mock_client = MagicMock()
-    device_info_raw = await async_load_fixture(hass, "deviceinfo.json", DOMAIN)
-    device_info = json.loads(device_info_raw)
-    mock_client.device_info = device_info
-    mock_client.connect = AsyncMock(return_value=RequestStatus.SUCCESS)
-    mock_client.check_apiversion_supported = MagicMock(
-        return_value=(RequestStatus.SUCCESS, {})
+async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test the full config flow."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    mock_client.is_connected = True
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.pooldose.config_flow.PooldoseClient",
-        return_value=mock_client,
-    ):
-        # Start flow
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        assert result["type"] == FlowResultType.FORM
-        assert result["step_id"] == "user"
-
-        # Submit form
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_HOST: "192.168.1.100"},
-        )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == "PoolDose TEST123456789"
-        assert result["data"] == {CONF_HOST: "192.168.1.100"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.100"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "PoolDose TEST123456789"
+    assert result["data"] == {CONF_HOST: "192.168.1.100"}
+    assert result["result"].unique_id == "TEST123456789"
 
 
-async def test_form_cannot_connect_host_unreachable(hass: HomeAssistant) -> None:
-    """Test that the form shows an error if the device is unreachable."""
-    mock_client = MagicMock()
-    mock_client.connect = AsyncMock(return_value=RequestStatus.HOST_UNREACHABLE)
-    mock_client.is_connected = False
+async def test_device_unreachable(
+    hass: HomeAssistant, mock_pooldose_client: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test that the form shows error when device is unreachable."""
+    mock_pooldose_client.is_connected = False
+    mock_pooldose_client.connect.return_value = RequestStatus.HOST_UNREACHABLE
 
-    with patch(
-        "homeassistant.components.pooldose.config_flow.PooldoseClient",
-        return_value=mock_client,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_HOST: "192.168.1.100"},
-        )
-        assert result["type"] == FlowResultType.FORM
-        assert result["errors"] == {"base": "cannot_connect"}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.100"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    mock_pooldose_client.is_connected = True
+    mock_pooldose_client.connect.return_value = RequestStatus.SUCCESS
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.100"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_form_api_version_unsupported(hass: HomeAssistant) -> None:
+async def test_api_version_unsupported(
+    hass: HomeAssistant, mock_pooldose_client: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
     """Test that the form shows error when API version is unsupported."""
-    mock_client = MagicMock()
-    api_versions = {"api_version_is": "v0.9", "api_version_should": "v1.0"}
-    mock_client.connect = AsyncMock(return_value=RequestStatus.SUCCESS)
-    mock_client.check_apiversion_supported = MagicMock(
-        return_value=(RequestStatus.API_VERSION_UNSUPPORTED, api_versions)
+    mock_pooldose_client.check_apiversion_supported.return_value = (
+        RequestStatus.API_VERSION_UNSUPPORTED,
+        {"api_version_is": "v0.9", "api_version_should": "v1.0"},
     )
-    mock_client.is_connected = True
 
-    with patch(
-        "homeassistant.components.pooldose.config_flow.PooldoseClient",
-        return_value=mock_client,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_HOST: "192.168.1.100"},
-        )
-        assert result["type"] == FlowResultType.FORM
-        assert result["errors"] == {"base": "api_not_supported"}
-
-
-async def test_duplicate_entry_aborts(hass: HomeAssistant) -> None:
-    """Test that the flow aborts if the device is already configured."""
-    # Create existing entry
-    existing_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="TEST123456789",
-        data={CONF_HOST: "192.168.1.50"},
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    existing_entry.add_to_hass(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
-    mock_client = MagicMock()
-    device_info_raw = await async_load_fixture(hass, "deviceinfo.json", DOMAIN)
-    device_info = json.loads(device_info_raw)
-    mock_client.device_info = device_info
-    mock_client.connect = AsyncMock(return_value=RequestStatus.SUCCESS)
-    mock_client.check_apiversion_supported = MagicMock(
-        return_value=(RequestStatus.SUCCESS, {})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.100"}
     )
-    mock_client.is_connected = True
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "api_not_supported"}
 
-    with patch(
-        "homeassistant.components.pooldose.config_flow.PooldoseClient",
-        return_value=mock_client,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_HOST: "192.168.1.100"},
-        )
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
+    mock_pooldose_client.is_connected = True
+    mock_pooldose_client.check_apiversion_supported.return_value = (
+        RequestStatus.SUCCESS,
+        {},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.100"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_form_no_device_info(hass: HomeAssistant) -> None:
+async def test_form_no_device_info(
+    hass: HomeAssistant,
+    mock_pooldose_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    device_info: dict[str, Any],
+) -> None:
     """Test that the form shows error when device_info is None."""
-    mock_client = MagicMock()
-    mock_client.device_info = None
-    mock_client.connect = AsyncMock(return_value=RequestStatus.SUCCESS)
-    mock_client.check_apiversion_supported = MagicMock(
-        return_value=(RequestStatus.SUCCESS, {})
-    )
-    mock_client.is_connected = True
+    mock_pooldose_client.device_info = None
 
-    with patch(
-        "homeassistant.components.pooldose.config_flow.PooldoseClient",
-        return_value=mock_client,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_HOST: "192.168.1.100"},
-        )
-        assert result["type"] == FlowResultType.FORM
-        assert result["errors"] == {"base": "no_device_info"}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.100"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "no_device_info"}
+
+    mock_pooldose_client.device_info = device_info
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.100"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -164,122 +132,108 @@ async def test_form_no_device_info(hass: HomeAssistant) -> None:
         (RequestStatus.UNKNOWN_ERROR, "cannot_connect"),
     ],
 )
-async def test_form_connection_errors(
-    hass: HomeAssistant, client_status: str, expected_error: str
+async def test_connection_errors(
+    hass: HomeAssistant,
+    mock_pooldose_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    client_status: str,
+    expected_error: str,
 ) -> None:
-    """Test form handles different connection error statuses."""
-    mock_client = MagicMock()
-    mock_client.connect = AsyncMock(return_value=client_status)
-    mock_client.is_connected = False
+    """Test that the form shows appropriate errors for various connection issues."""
+    mock_pooldose_client.connect.return_value = client_status
 
-    with patch(
-        "homeassistant.components.pooldose.config_flow.PooldoseClient",
-        return_value=mock_client,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_HOST: "192.168.1.100"},
-        )
-        assert result["type"] == FlowResultType.FORM
-        assert result["errors"] == {"base": expected_error}
-
-
-async def test_form_retry_after_error(hass: HomeAssistant) -> None:
-    """Test that user can retry after connection error."""
-    # Start flow
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    flow_id = result["flow_id"]
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
-    # First attempt fails
-    mock_client_fail = MagicMock()
-    mock_client_fail.connect = AsyncMock(return_value=RequestStatus.HOST_UNREACHABLE)
-    mock_client_fail.is_connected = False
-
-    with patch(
-        "homeassistant.components.pooldose.config_flow.PooldoseClient",
-        return_value=mock_client_fail,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            flow_id,
-            user_input={CONF_HOST: "192.168.1.100"},
-        )
-        assert result["type"] == FlowResultType.FORM
-        assert result["errors"] == {"base": "cannot_connect"}
-
-    # Second attempt succeeds
-    mock_client_success = MagicMock()
-    device_info_raw = await async_load_fixture(hass, "deviceinfo.json", DOMAIN)
-    device_info = json.loads(device_info_raw)
-    mock_client_success.device_info = device_info
-    mock_client_success.connect = AsyncMock(return_value=RequestStatus.SUCCESS)
-    mock_client_success.check_apiversion_supported = MagicMock(
-        return_value=(RequestStatus.SUCCESS, {})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.100"}
     )
-    mock_client_success.is_connected = True
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
 
-    with patch(
-        "homeassistant.components.pooldose.config_flow.PooldoseClient",
-        return_value=mock_client_success,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            flow_id,
-            user_input={CONF_HOST: "192.168.1.100"},
-        )
-        assert result["type"] == FlowResultType.CREATE_ENTRY
-        assert result["title"] == "PoolDose TEST123456789"
+    mock_pooldose_client.connect.return_value = RequestStatus.SUCCESS
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.100"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_form_api_no_data_error(hass: HomeAssistant) -> None:
+async def test_api_no_data(
+    hass: HomeAssistant, mock_pooldose_client: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
     """Test that the form shows error when API returns NO_DATA."""
-    mock_client = MagicMock()
-    mock_client.connect = AsyncMock(return_value=RequestStatus.SUCCESS)
-    mock_client.check_apiversion_supported = MagicMock(
-        return_value=(RequestStatus.NO_DATA, {})
+    mock_pooldose_client.check_apiversion_supported.return_value = (
+        RequestStatus.NO_DATA,
+        {},
     )
-    mock_client.is_connected = True
 
-    with patch(
-        "homeassistant.components.pooldose.config_flow.PooldoseClient",
-        return_value=mock_client,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_HOST: "192.168.1.100"},
-        )
-        assert result["type"] == FlowResultType.FORM
-        assert result["errors"] == {"base": "api_not_set"}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.100"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "api_not_set"}
+
+    mock_pooldose_client.check_apiversion_supported.return_value = (
+        RequestStatus.SUCCESS,
+        {},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.100"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_form_no_serial_number(hass: HomeAssistant) -> None:
+async def test_form_no_serial_number(
+    hass: HomeAssistant,
+    mock_pooldose_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    device_info: dict[str, Any],
+) -> None:
     """Test that the form shows error when device_info has no serial number."""
-    mock_client = MagicMock()
-    # Device info without SERIAL_NUMBER
-    device_info = {"NAME": "Pool Device", "MODEL": "POOL DOSE"}
-    mock_client.device_info = device_info
-    mock_client.connect = AsyncMock(return_value=RequestStatus.SUCCESS)
-    mock_client.check_apiversion_supported = MagicMock(
-        return_value=(RequestStatus.SUCCESS, {})
-    )
-    mock_client.is_connected = True
+    mock_pooldose_client.device_info = {"NAME": "Pool Device", "MODEL": "POOL DOSE"}
 
-    with patch(
-        "homeassistant.components.pooldose.config_flow.PooldoseClient",
-        return_value=mock_client,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_HOST: "192.168.1.100"},
-        )
-        assert result["type"] == FlowResultType.FORM
-        assert result["errors"] == {"base": "no_serial_number"}
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.100"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "no_serial_number"}
+
+    mock_pooldose_client.device_info = device_info
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.100"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_duplicate_entry_aborts(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that the flow aborts if the device is already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.100"}
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

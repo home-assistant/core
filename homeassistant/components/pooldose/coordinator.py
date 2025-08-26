@@ -15,15 +15,19 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 _LOGGER = logging.getLogger(__name__)
 
+type PooldoseConfigEntry = ConfigEntry[PooldoseCoordinator]
+
 
 class PooldoseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for PoolDose integration."""
+
+    device_info: dict[str, Any]
 
     def __init__(
         self,
         hass: HomeAssistant,
         client: PooldoseClient,
-        config_entry: ConfigEntry,
+        config_entry: PooldoseConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -34,7 +38,6 @@ class PooldoseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=config_entry,
         )
         self.client = client
-        self.device_info: dict[str, Any]
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
