@@ -96,6 +96,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     entity_component = EntityComponent[AITaskEntity](_LOGGER, DOMAIN, hass)
     hass.data[DATA_COMPONENT] = entity_component
     hass.data[DATA_PREFERENCES] = AITaskPreferences(hass)
+    hass.data[DATA_IMAGES] = {}
     await hass.data[DATA_PREFERENCES].async_load()
     async_setup_http(hass)
     hass.http.register_view(ImageView)
@@ -222,7 +223,7 @@ class ImageView(HomeAssistantView):
     ) -> web.Response:
         """Serve image."""
         hass = request.app[KEY_HASS]
-        image_storage = hass.data.setdefault(DATA_IMAGES, {})
+        image_storage = hass.data[DATA_IMAGES]
         image_data = image_storage.get(filename)
 
         if image_data is None:
@@ -248,7 +249,7 @@ class ThumbnailView(HomeAssistantView):
     ) -> web.Response:
         """Serve image."""
         hass = request.app[KEY_HASS]
-        image_storage = hass.data.setdefault(DATA_IMAGES, {})
+        image_storage = hass.data[DATA_IMAGES]
         image_data = image_storage.get(filename)
 
         if image_data is None:

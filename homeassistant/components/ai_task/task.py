@@ -214,7 +214,7 @@ async def async_generate_image(
     if service_result.get("revised_prompt") is None:
         service_result["revised_prompt"] = instructions
 
-    image_storage = hass.data.setdefault(DATA_IMAGES, {})
+    image_storage = hass.data[DATA_IMAGES]
 
     if len(image_storage) + 1 > MAX_IMAGES:
         _cleanup_images(image_storage, len(image_storage) + 1 - MAX_IMAGES)

@@ -37,7 +37,7 @@ class ImageMediaSource(MediaSource):
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
-        image_storage = self.hass.data.setdefault(DATA_IMAGES, {})
+        image_storage = self.hass.data[DATA_IMAGES]
         image = image_storage.get(item.identifier)
 
         if image is None:
@@ -53,7 +53,7 @@ class ImageMediaSource(MediaSource):
         if item.identifier:
             raise BrowseError("Unknown item")
 
-        image_storage = self.hass.data.setdefault(DATA_IMAGES, {})
+        image_storage = self.hass.data[DATA_IMAGES]
 
         children = [
             BrowseMediaSource(
