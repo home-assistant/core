@@ -91,7 +91,6 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a ProxmoxVE instance from a config entry."""
-    _LOGGER.debug("Config entry data: %s", entry.data)
 
     def build_client() -> ProxmoxAPI:
         """Build the Proxmox client connection."""
@@ -135,15 +134,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.async_add_executor_job(build_client)
 
     coordinators: dict[
-        str, dict[str, dict[int, DataUpdateCoordinator[dict[str, Any] | None]]]
-    ] = {}
+        str, Any
+    ] = {}  # Explicit Any, should be updated once we make a dedicated DUC
     entry.runtime_data = coordinators
 
     # Create a coordinator for each vm/container
     host_name = entry.data[CONF_HOST]
     coordinators[host_name] = {}
 
-    proxmox_client = hass.data[PROXMOX_CLIENTS][host_name]
+    proxmox_client: ProxmoxAPI = hass.data[PROXMOX_CLIENTS][host_name]
     proxmox = proxmox_client.get_api_client()
 
     updated_nodes: list[dict[str, Any]] = []
@@ -164,17 +163,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
             continue
 
-        # Update the node configuration with the fetched VMs and containers
         updated_node = {
             CONF_NODE: node_name,
             CONF_VMS: [vm["vmid"] for vm in vms],
             CONF_CONTAINERS: [container["vmid"] for container in containers],
         }
         updated_nodes.append(updated_node)
-
-        # Update the ConfigEntry with the new CONF_NODES
-        new_data = {**entry.data, CONF_NODES: updated_nodes}
-        hass.config_entries.async_update_entry(entry, data=new_data)
 
         for vm in vms:
             coordinator = create_coordinator_container_vm(
