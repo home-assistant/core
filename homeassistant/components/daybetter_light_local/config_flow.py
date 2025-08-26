@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def _async_discover_devices(
     hass: HomeAssistant, host: str | None = None
-) -> list[dict[str, Any]]:
+) -> list[dict[str, Any]] | str:
     """Discover DayBetter devices. If host is given, probe only that host."""
 
     try:
@@ -75,7 +75,7 @@ async def _async_discover_devices(
     except OSError as ex:
         _LOGGER.error("Failed to start controller, errno: %d", ex.errno)
         if ex.errno == EADDRINUSE:
-            _LOGGER.error("Port %d already in use", CONF_LISTENING_PORT_DEFAULT)
+            return "address_in_use"  # 👈 特殊返回
     finally:
         cleanup = controller.cleanup()
         with suppress(TimeoutError):
@@ -109,14 +109,14 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # build device choices
         device_options = {
-            str(i): f"{dev['name']} ({dev['ip']})"
-            for i, dev in enumerate(self.discovered_devices)
+            dev["fingerprint"]: f"{dev['name']} ({dev['ip']})"
+            for dev in self.discovered_devices
         }
         device_options["manual"] = "Manually enter IP address"
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({vol.Required("host"): vol.In(device_options)}),
+            data_schema=vol.Schema({vol.Required("device"): vol.In(device_options)}),
         )
 
     async def async_step_manual(
@@ -129,7 +129,9 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             host = user_input["host"].strip()
             devices = await _async_discover_devices(self.hass, host)
 
-            if not devices:
+            if devices == "address_in_use":
+                errors["base"] = "address_in_use"
+            elif not devices:
                 errors["base"] = "no_devices_found"
             else:
                 device = devices[0]
@@ -139,7 +141,7 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                 return self.async_create_entry(
                     title=device["name"],
-                    data={"host": host},  # 用用户输入的，而不是 device.ip
+                    data={"host": host},
                 )
 
         return self.async_show_form(
