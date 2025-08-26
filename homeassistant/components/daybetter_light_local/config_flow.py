@@ -6,7 +6,7 @@ import asyncio
 from contextlib import suppress
 from errno import EADDRINUSE
 import logging
-from typing import Any, cast
+from typing import Any
 
 from daybetter_local_api import DayBetterController
 import voluptuous as vol
@@ -103,7 +103,14 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._async_create_entry_from_discovery(user_input["device"])
 
         # try discovery
-        self.discovered_devices = await _async_discover_devices(self.hass)
+        devices_or_error = await _async_discover_devices(self.hass)
+        if isinstance(devices_or_error, str):
+            self.discovered_devices = []
+            self.discovery_error = devices_or_error
+        else:
+            self.discovered_devices = devices_or_error
+            self.discovery_error = None
+
         if not self.discovered_devices:
             return await self.async_step_manual()
 
@@ -133,7 +140,7 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # 错误情况：address_in_use
                 errors["base"] = devices_or_error
             else:
-                devices = cast(list[dict[str, Any]], devices_or_error)
+                devices: list[dict[str, Any]] = devices_or_error
                 if not devices:
                     errors["base"] = "no_devices_found"
                 else:
