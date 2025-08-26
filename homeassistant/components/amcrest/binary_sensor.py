@@ -293,6 +293,7 @@ class AmcrestBinarySensor(BinarySensorEntity):
                     )
                 )
 
+
 # Platform setup for config flow
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -329,4 +330,45 @@ class AmcrestCoordinatedBinarySensor(CoordinatorEntity, AmcrestBinarySensor):
         CoordinatorEntity.__init__(self, coordinator)
         AmcrestBinarySensor.__init__(self, name, device, entity_description)
         self._attr_device_info = device.device_info
-        self._attr_unique_id = f"{device.name}_{entity_description.key}"
+        # Use serial number for unique ID if available, otherwise fall back to device name
+        identifier = device.serial_number if device.serial_number else device.name
+        self._attr_unique_id = f"{identifier}_{entity_description.key}"
+
+    async def async_update(self) -> None:
+        """Update the entity using coordinator data."""
+        if not self.coordinator.last_update_success:
+            return
+
+        key = self.entity_description.key
+        coordinator_data = self.coordinator.data
+
+        # Map entity keys to coordinator data
+        if key == _ONLINE_KEY:
+            self._attr_is_on = coordinator_data.get("online", False)
+        elif key == "audio_detected":
+            self._attr_is_on = coordinator_data.get("audio_detected", False)
+        elif key == "motion_detected":
+            self._attr_is_on = coordinator_data.get("motion_detected", False)
+        elif key == "crossline_detected":
+            self._attr_is_on = coordinator_data.get("crossline_detected", False)
+        else:
+            # For any sensors not yet mapped to coordinator, fall back to original method
+            await super().async_update()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        # Update state based on coordinator data
+        key = self.entity_description.key
+        coordinator_data = self.coordinator.data
+
+        if key == _ONLINE_KEY:
+            self._attr_is_on = coordinator_data.get("online", False)
+        elif key == "audio_detected":
+            self._attr_is_on = coordinator_data.get("audio_detected", False)
+        elif key == "motion_detected":
+            self._attr_is_on = coordinator_data.get("motion_detected", False)
+        elif key == "crossline_detected":
+            self._attr_is_on = coordinator_data.get("crossline_detected", False)
+
+        super()._handle_coordinator_update()

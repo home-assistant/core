@@ -7,6 +7,8 @@ from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any
 
+from amcrest import AmcrestError
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -70,6 +72,60 @@ class AmcrestDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 api.async_day_night_color,
             )
 
+            # Get binary sensor data - online status and event detection
+            # Online status: test connectivity with current_time
+            try:
+                await api.async_current_time
+                online = True
+            except AmcrestError:
+                online = False
+
+            # Get event detection states for binary sensors
+            (
+                audio_detected,
+                motion_detected,
+                crossline_detected,
+            ) = await asyncio.gather(
+                # Check for audio events (AudioMutation or AudioIntensity)
+                self._check_audio_events(api),
+                # Check for motion event (VideoMotion)
+                api.async_event_channels_happened("VideoMotion"),
+                # Check for crossline event (CrossLineDetection)
+                api.async_event_channels_happened("CrossLineDetection"),
+                return_exceptions=True,
+            )
+
+            # Handle exceptions from event checks
+            if isinstance(audio_detected, Exception):
+                audio_detected = False
+            if isinstance(motion_detected, Exception):
+                motion_detected = False
+            if isinstance(crossline_detected, Exception):
+                crossline_detected = False
+
+            # Get sensor data - PTZ presets and storage
+            (
+                ptz_presets_count,
+                storage_info,
+            ) = await asyncio.gather(
+                api.async_ptz_presets_count,
+                api.async_storage_all,
+                return_exceptions=True,
+            )
+
+            # Handle exceptions from sensor data
+            if isinstance(ptz_presets_count, Exception):
+                ptz_presets_count = None
+            if isinstance(storage_info, Exception):
+                storage_info = None
+
+            # Get switch data - privacy mode
+            try:
+                privacy_config = await api.async_privacy_config()
+                privacy_mode = privacy_config.splitlines()[0].split("=")[1] == "true"
+            except AmcrestError:
+                privacy_mode = None
+
         except Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
         else:
@@ -87,4 +143,25 @@ class AmcrestDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "audio_enabled": audio_enabled,
                 "motion_recording_enabled": motion_recording_enabled,
                 "color_bw": color_bw,
+                # Binary sensor data
+                "online": online,
+                "audio_detected": audio_detected,
+                "motion_detected": motion_detected,
+                "crossline_detected": crossline_detected,
+                # Sensor data
+                "ptz_presets_count": ptz_presets_count,
+                "storage_info": storage_info,
+                # Switch data
+                "privacy_mode": privacy_mode,
             }
+
+    async def _check_audio_events(self, api) -> bool:
+        """Check for audio events (AudioMutation or AudioIntensity)."""
+        try:
+            for event_code in ["AudioMutation", "AudioIntensity"]:
+                if await api.async_event_channels_happened(event_code):
+                    return True
+        except AmcrestError:
+            return False
+        else:
+            return False
