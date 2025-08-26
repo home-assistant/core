@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
 from typing import Any
 
 from chip.clusters import Objects as clusters
@@ -23,8 +22,6 @@ from .const import LOGGER
 from .entity import MatterEntity
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
-
-ATTR_USER_INDEX: str = "user_index"
 
 DOOR_LOCK_OPERATION_SOURCE = {
     # mapping from operation source id's to textual representation
@@ -61,7 +58,6 @@ class MatterLock(MatterEntity, LockEntity):
     _feature_map: int | None = None
     _optimistic_timer: asyncio.TimerHandle | None = None
     _platform_translation_key = "lock"
-    _attr_user_index: int | None = None
     _attr_changed_by = "Unknown"
 
     async def async_added_to_hass(self) -> None:
@@ -107,26 +103,12 @@ class MatterLock(MatterEntity, LockEntity):
                 self._attr_changed_by = DOOR_LOCK_OPERATION_SOURCE.get(
                     operation_source, "Unknown"
                 )
-                # update the user index attribute to indicate which user performed the operation
-                self._attr_user_index = nodeEventData.get("userIndex")
                 self.async_write_ha_state()
             case (
                 clusters.DoorLock.Events.LockOperationError.event_id
             ):  # Lock cluster event 3
                 # if an operation error occurs, clear the optimistic state
                 self._reset_optimistic_state(write_state=True)
-
-    @property
-    def user_index(self) -> int | None:
-        """Return the user index for the lock."""
-        return self._attr_user_index
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return the additional user_index state attribute of the lock."""
-        attrs = dict((super().extra_state_attributes or {}).items())
-        attrs[ATTR_USER_INDEX] = self._attr_user_index
-        return attrs
 
     @property
     def code_format(self) -> str | None:
