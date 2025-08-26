@@ -92,6 +92,7 @@ class DayBetterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the DayBetter config flow."""
         self.discovered_devices: list[dict[str, Any]] = []
+        self.discovery_error: str | None = None  # 允许 str 或 None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
