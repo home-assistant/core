@@ -41,12 +41,6 @@ class MusicAssistantFavoriteButton(MusicAssistantEntity, ButtonEntity):
         translation_key="favorite_now_playing",
     )
 
-    @property
-    def available(self) -> bool:
-        """Return availability of entity."""
-        # mark the button as unavailable if the player has no current media item
-        return super().available and self.player.current_media is not None
-
     @catch_musicassistant_error
     async def async_press(self) -> None:
         """Handle the button press command."""

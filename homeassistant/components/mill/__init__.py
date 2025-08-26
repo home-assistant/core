@@ -43,6 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         historic_data_coordinator = MillHistoricDataUpdateCoordinator(
             hass,
+            entry,
             mill_data_connection=mill_data_connection,
         )
         historic_data_coordinator.async_add_listener(lambda: None)

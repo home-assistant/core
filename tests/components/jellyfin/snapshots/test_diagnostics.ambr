@@ -182,6 +182,7 @@
           'SupportedCommands': list([
             'VolumeSet',
             'Mute',
+            'PlayMediaSource',
           ]),
           'SupportsContentUploading': True,
           'SupportsMediaControl': True,

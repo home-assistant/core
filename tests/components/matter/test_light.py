@@ -131,6 +131,15 @@ async def test_dimmable_light(
 ) -> None:
     """Test a dimmable light."""
 
+    # Test for currentLevel is None
+    set_node_attribute(matter_node, 1, 8, 0, None)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
+    assert state.attributes["brightness"] is None
+
     # Test that the light brightness is 50 (out of 254)
     set_node_attribute(matter_node, 1, 8, 0, 50)
     await trigger_subscription_callback(hass, matter_client)

@@ -363,7 +363,7 @@
           "discharging": "[%key:common::state::discharging%]",
           "idle": "[%key:common::state::idle%]",
           "charging": "[%key:common::state::charging%]",
-          "full": "Full"
+          "full": "[%key:common::state::full%]"
         }
       },
       "acb_available_energy": {
@@ -407,6 +407,12 @@
       },
       "last_report_duration": {
         "name": "Last report duration"
+      },
+      "grid_status": {
+        "name": "[%key:component::enphase_envoy::entity::binary_sensor::grid_status::name%]"
+      },
+      "mid_state": {
+        "name": "MID state"
       }
     },
     "switch": {

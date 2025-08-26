@@ -50,9 +50,29 @@
         "name": "Music surround level"
       }
     },
+    "select": {
+      "speech_dialog_level": {
+        "name": "Speech enhancement",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "high": "[%key:common::state::high%]",
+          "max": "Max"
+        }
+      }
+    },
     "sensor": {
       "audio_input_format": {
         "name": "Audio input format"
+      },
+      "power_source": {
+        "name": "Power source",
+        "state": {
+          "battery": "Battery",
+          "charging_base": "Charging base",
+          "usb": "USB"
+        }
       }
     },
     "switch": {
@@ -203,6 +223,9 @@
     },
     "timeout_join": {
       "message": "Timeout while waiting for Sonos player to join the group {group_description}"
+    },
+    "invalid_alarm_id": {
+      "message": "Alarm {alarm_id} does not exist and cannot be updated."
     }
   }
 }

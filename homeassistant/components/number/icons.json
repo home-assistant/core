@@ -3,6 +3,9 @@
     "_": {
       "default": "mdi:ray-vertex"
     },
+    "absolute_humidity": {
+      "default": "mdi:water-opacity"
+    },
     "apparent_power": {
       "default": "mdi:flash"
     },

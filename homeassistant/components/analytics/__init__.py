@@ -14,6 +14,7 @@ from homeassistant.util.hass_dict import HassKey
 
 from .analytics import Analytics
 from .const import ATTR_ONBOARDED, ATTR_PREFERENCES, DOMAIN, INTERVAL, PREFERENCE_SCHEMA
+from .http import AnalyticsDevicesView
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -54,6 +55,8 @@ async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
 
     websocket_api.async_register_command(hass, websocket_analytics)
     websocket_api.async_register_command(hass, websocket_analytics_preferences)
+
+    hass.http.register_view(AnalyticsDevicesView)
 
     hass.data[DATA_COMPONENT] = analytics
     return True

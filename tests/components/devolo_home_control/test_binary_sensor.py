@@ -5,9 +5,10 @@ from unittest.mock import patch
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
+from homeassistant.components.devolo_home_control.const import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import configure_integration
 from .mocks import (
@@ -19,7 +20,10 @@ from .mocks import (
 
 
 async def test_binary_sensor(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test setup and state change of a binary sensor device."""
     entry = configure_integration(hass)
@@ -54,6 +58,12 @@ async def test_binary_sensor(
     assert (
         hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_door").state == STATE_UNAVAILABLE
     )
+
+    # Emulate websocket message: device was deleted
+    test_gateway.publisher.dispatch("Test", ("Test", "del"))
+    await hass.async_block_till_done()
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "Test")})
+    assert not device
 
 
 async def test_remote_control(
