@@ -16,7 +16,7 @@ Adax-local==0.1.5
 DoorBirdPy==3.0.8
 
 # homeassistant.components.homekit
-HAP-python==4.9.2
+HAP-python==5.0.0
 
 # homeassistant.components.tasmota
 HATasmota==0.10.0
@@ -84,7 +84,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.68.4
+PySwitchbot==0.69.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -100,7 +100,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.8.0
 
 # homeassistant.components.vicare
-PyViCare==2.50.0
+PyViCare==2.51.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -1140,7 +1140,7 @@ hass-splunk==0.1.1
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
-hassil==3.1.0
+hassil==3.2.0
 
 # homeassistant.components.jewish_calendar
 hdate[astral]==1.1.2
@@ -1307,7 +1307,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.8.21.181525
+knx-frontend==2025.8.24.205840
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -3046,7 +3046,7 @@ vegehub==0.1.24
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2025.5.0
+velbus-aio==2025.8.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.21
