@@ -1,0 +1,7 @@
+{
+  "services": {
+    "get_forecast": {
+      "service": "mdi:clock-plus-outline"
+    }
+  }
+}

@@ -57,6 +57,9 @@
       },
       "sound_level": {
         "name": "Sound level"
+      },
+      "dew_point": {
+        "name": "Dew point"
       }
     }
   }

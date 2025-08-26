@@ -7,26 +7,6 @@
     "stats": {
       "wordle": {
         "legacyStats": {
-          "gamesPlayed": 1,
-          "gamesWon": 1,
-          "guesses": {
-            "1": 0,
-            "2": 0,
-            "3": 0,
-            "4": 0,
-            "5": 1,
-            "6": 0,
-            "fail": 0
-          },
-          "currentStreak": 0,
-          "maxStreak": 1,
-          "lastWonDayOffset": 1118,
-          "hasPlayed": true,
-          "autoOptInTimestamp": 1727357874700,
-          "hasMadeStatsChoice": false,
-          "timestamp": 1727358123
-        },
-        "calculatedStats": {
           "gamesPlayed": 0,
           "gamesWon": 0,
           "guesses": {
@@ -40,10 +20,33 @@
           },
           "currentStreak": 0,
           "maxStreak": 1,
+          "lastWonDayOffset": 1118,
+          "hasPlayed": true,
+          "autoOptInTimestamp": 1727357874700,
+          "hasMadeStatsChoice": false,
+          "timestamp": 1727358123
+        },
+        "calculatedStats": {
+          "currentStreak": 0,
+          "maxStreak": 1,
           "lastWonPrintDate": "",
           "lastCompletedPrintDate": "",
+          "hasPlayed": false
+        },
+        "totalStats": {
+          "gamesPlayed": 1,
+          "gamesWon": 1,
+          "guesses": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 0,
+            "5": 1,
+            "6": 0,
+            "fail": 0
+          },
           "hasPlayed": false,
-          "generation": 1
+          "hasPlayedArchive": false
         }
       }
     }

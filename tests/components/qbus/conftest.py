@@ -1,6 +1,6 @@
 """Test fixtures for qbus."""
 
-from collections.abc import Generator
+from collections.abc import Awaitable, Callable, Generator
 import json
 from unittest.mock import AsyncMock, patch
 
@@ -64,3 +64,22 @@ async def setup_integration(
 
     async_fire_mqtt_message(hass, TOPIC_CONFIG, json.dumps(payload_config))
     await hass.async_block_till_done()
+
+
+@pytest.fixture
+async def setup_integration_deferred(
+    hass: HomeAssistant,
+    mqtt_mock: MqttMockHAClient,
+    mock_config_entry: MockConfigEntry,
+    payload_config: JsonObjectType,
+) -> Callable[[], Awaitable]:
+    """Set up the integration."""
+
+    async def run() -> None:
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        async_fire_mqtt_message(hass, TOPIC_CONFIG, json.dumps(payload_config))
+        await hass.async_block_till_done()
+
+    return run

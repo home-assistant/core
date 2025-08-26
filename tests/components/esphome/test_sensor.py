@@ -54,7 +54,6 @@ async def test_generic_numeric_sensor(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
         )
     ]
     states = [SensorState(key=1, state=50)]
@@ -110,7 +109,6 @@ async def test_generic_numeric_sensor_with_entity_category_and_icon(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
             entity_category=ESPHomeEntityCategory.DIAGNOSTIC,
             icon="mdi:leaf",
         )
@@ -147,7 +145,6 @@ async def test_generic_numeric_sensor_state_class_measurement(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
             state_class=ESPHomeSensorStateClass.MEASUREMENT,
             device_class="power",
             unit_of_measurement="W",
@@ -184,7 +181,6 @@ async def test_generic_numeric_sensor_device_class_timestamp(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
             device_class="timestamp",
         )
     ]
@@ -212,7 +208,6 @@ async def test_generic_numeric_sensor_legacy_last_reset_convert(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
             legacy_last_reset_type=LastResetType.AUTO,
             state_class=ESPHomeSensorStateClass.MEASUREMENT,
         )
@@ -242,7 +237,6 @@ async def test_generic_numeric_sensor_no_state(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
         )
     ]
     states = []
@@ -269,7 +263,6 @@ async def test_generic_numeric_sensor_nan_state(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
         )
     ]
     states = [SensorState(key=1, state=math.nan, missing_state=False)]
@@ -296,7 +289,6 @@ async def test_generic_numeric_sensor_missing_state(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
         )
     ]
     states = [SensorState(key=1, state=True, missing_state=True)]
@@ -323,7 +315,6 @@ async def test_generic_text_sensor(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
         )
     ]
     states = [TextSensorState(key=1, state="i am a teapot")]
@@ -350,7 +341,6 @@ async def test_generic_text_sensor_missing_state(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
         )
     ]
     states = [TextSensorState(key=1, state=True, missing_state=True)]
@@ -377,7 +367,6 @@ async def test_generic_text_sensor_device_class_timestamp(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
             device_class=SensorDeviceClass.TIMESTAMP,
         )
     ]
@@ -406,7 +395,6 @@ async def test_generic_text_sensor_device_class_date(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
             device_class=SensorDeviceClass.DATE,
         )
     ]
@@ -435,7 +423,6 @@ async def test_generic_numeric_sensor_empty_string_uom(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
             unit_of_measurement="",
         )
     ]
@@ -493,7 +480,6 @@ async def test_suggested_display_precision_by_device_class(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
             accuracy_decimals=expected_precision,
             device_class=device_class.value,
             unit_of_measurement=unit_of_measurement,
