@@ -678,11 +678,102 @@ class AmcrestCoordinatedCamera(CoordinatorEntity, AmcrestCam):
         self,
         name: str,
         device: AmcrestConfiguredDevice,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DataUpdateCoordinator[dict[str, Any]],
         ffmpeg: FFmpegManager,
     ) -> None:
         """Initialize an Amcrest camera with a coordinator."""
         CoordinatorEntity.__init__(self, coordinator)
         AmcrestCam.__init__(self, name, device, ffmpeg)
         self._attr_device_info = device.device_info
-        self._attr_unique_id = f"{device.name}_{name}"
+        # Use serial number for unique ID if available, otherwise fall back to device name
+        identifier = device.serial_number if device.serial_number else device.name
+        self._attr_unique_id = f"{identifier}_{name}"
+        self._device = device
+
+    async def async_update(self) -> None:
+        """Update entity status using coordinator data."""
+        if not self.available or not self.coordinator.data:
+            return
+
+        _LOGGER.debug("Updating %s camera from coordinator", self.name)
+
+        # Get data from coordinator instead of making individual API calls
+        data = self.coordinator.data
+
+        # Update camera attributes from coordinator data
+        if self._brand is None:
+            self._brand = str(data.get("brand", "unknown"))
+            _LOGGER.debug("Assigned brand=%s", self._brand)
+
+        if self._model is None:
+            self._model = str(data.get("model", "unknown"))
+            _LOGGER.debug("Assigned model=%s", self._model)
+
+        if self._attr_unique_id is None:
+            serial = str(data.get("serial", "")).strip()
+            if serial:
+                self._attr_unique_id = f"{serial}-{self._resolution}-{self._channel}"
+                _LOGGER.debug("Assigned unique_id=%s", self._attr_unique_id)
+
+        if self._rtsp_url is None:
+            self._rtsp_url = data.get("rtsp_url")
+
+        # Update camera states from coordinator data
+        self._attr_is_streaming = bool(data.get("is_streaming", False))
+        self._is_recording = str(data.get("is_recording", False)) == "Manual"
+        self._motion_detection_enabled = bool(
+            data.get("motion_detection_enabled", False)
+        )
+        self._audio_enabled = bool(data.get("audio_enabled", False))
+        self._motion_recording_enabled = bool(
+            data.get("motion_recording_enabled", False)
+        )
+        color_bw_index = int(data.get("color_bw", 0))
+        self._color_bw = (
+            _CBW[color_bw_index] if 0 <= color_bw_index < len(_CBW) else "unknown"
+        )
+
+    # Override methods that would normally make API calls to use coordinator data instead
+    async def _async_get_video(self) -> bool:
+        """Get video enabled status from coordinator data."""
+        if not self.coordinator.data:
+            return False
+        data = self.coordinator.data
+        return bool(data.get("is_streaming", False))
+
+    async def _async_get_recording(self) -> bool:
+        """Get recording status from coordinator data."""
+        if not self.coordinator.data:
+            return False
+        data = self.coordinator.data
+        is_recording = str(data.get("is_recording", False))
+        return is_recording == "Manual"
+
+    async def _async_get_motion_detection(self) -> bool:
+        """Get motion detection status from coordinator data."""
+        if not self.coordinator.data:
+            return False
+        data = self.coordinator.data
+        return bool(data.get("motion_detection_enabled", False))
+
+    async def _async_get_audio(self) -> bool:
+        """Get audio enabled status from coordinator data."""
+        if not self.coordinator.data:
+            return False
+        data = self.coordinator.data
+        return bool(data.get("audio_enabled", False))
+
+    async def _async_get_motion_recording(self) -> bool:
+        """Get motion recording status from coordinator data."""
+        if not self.coordinator.data:
+            return False
+        data = self.coordinator.data
+        return bool(data.get("motion_recording_enabled", False))
+
+    async def _async_get_color_mode(self) -> str:
+        """Get color mode from coordinator data."""
+        if not self.coordinator.data:
+            return "unknown"
+        data = self.coordinator.data
+        color_bw_index = int(data.get("color_bw", 0))
+        return _CBW[color_bw_index] if 0 <= color_bw_index < len(_CBW) else "unknown"

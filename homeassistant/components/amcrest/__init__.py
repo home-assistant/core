@@ -31,10 +31,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import (
-    config_validation as cv,
-    discovery,
-)
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -514,81 +511,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         control_light,
     )
 
-    async def async_update_data() -> None:
-        """Fetch data from the device."""
-        try:
-            return await device.async_get_data()
-        except Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
-
-    await async_update_data()
-
-    # manual device registration
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, entry.entry_id)}, # Add serial??
-        manufacturer="Amcrest",
-        name=name,
-    )
-
-    data_coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=name,
+    data_coordinator = AmcrestDataCoordinator(
+        hass=hass,
         config_entry=entry,
-        update_method=async_update_data,
+        device=device,
         update_interval=SCAN_INTERVAL,
     )
 
-    hass.data[DOMAIN][DEVICES][entry.entry_id] = {
+    # Fetch initial data so we have device info when entities subscribe
+    # This will populate device.serial_number before entities are created
+    await data_coordinator.async_config_entry_first_refresh()
+
+    hass.data[DOMAIN][DEVICES][entry.entry_id] = {  # TODO remove DEVICES, uneeded
         "device": device,
         "coordinator": data_coordinator,
     }
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    # event_codes = set()
-    # # TODO make switch for polling vs streaming
-    # # todo load only polling?
-    # hass.async_create_task(
-    #     discovery.async_load_platform(
-    #         hass,
-    #         Platform.BINARY_SENSOR,
-    #         DOMAIN,
-    #         {CONF_NAME: name, CONF_BINARY_SENSORS: binary_sensors},
-    #         {},
-    #     )
-    # )
-    # event_codes = {
-    #     event_code
-    #     for sensor in BINARY_SENSORS
-    #     if not sensor.should_poll and sensor.event_codes is not None
-    #     for event_code in sensor.event_codes
-    # }
-
-    # _start_event_monitor(hass, name, api, event_codes)
-
-    # sensors = {"sdcard", "ptz_preset"}
-    # hass.async_create_task(
-    #     discovery.async_load_platform(
-    #         hass,
-    #         Platform.SENSOR,
-    #         DOMAIN,
-    #         {CONF_NAME: name, CONF_SENSORS: sensors},
-    #         {},
-    #     )
-    # )
-
-    # hass.async_create_task(
-    #     discovery.async_load_platform(
-    #         hass,
-    #         Platform.SWITCH,
-    #         DOMAIN,
-    #         {CONF_NAME: name, CONF_SWITCHES: ["privacy_mode"]},
-    #         {},
-    #     )
-    # )
 
     # Setup services if this is the first device
     if len(hass.data[DATA_AMCREST][DEVICES]) == 1:
