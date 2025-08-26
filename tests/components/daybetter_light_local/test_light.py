@@ -85,7 +85,11 @@ async def test_light_unknown_device(
     """Test adding an unknown device."""
 
     device = create_mock_device(
-        mock_DayBetter_api, ip="192.168.1.201", fingerprint="unknown_device", sku="XYZK"
+        mock_DayBetter_api,
+        ip="192.168.1.201",
+        fingerprint="unknown_device",
+        sku="XYZK",
+        capabilities=DEFAULT_CAPABILITIES,
     )
     mock_DayBetter_api.devices = [device]
 
@@ -99,8 +103,14 @@ async def test_light_unknown_device(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
+        assert len(hass.states.async_all()) == 1
+
         light = hass.states.get("light.XYZK")
         assert light is not None
+        assert set(light.attributes[ATTR_SUPPORTED_COLOR_MODES]) == {
+            ColorMode.COLOR_TEMP,
+            ColorMode.RGB,
+        }
         assert light.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
 
 
@@ -154,6 +164,7 @@ async def test_light_setup_retry(
 
         with pytest.raises(ConfigEntryNotReady, match="No DayBetter devices found"):
             await hass.config_entries.async_setup(entry.entry_id)
+        assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_light_setup_retry_eaddrinuse(
@@ -191,7 +202,7 @@ async def test_light_setup_error(
         entry.add_to_hass(hass)
 
         await hass.config_entries.async_setup(entry.entry_id)
-        assert entry.state == ConfigEntryState.SETUP_ERROR
+        assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_light_on_off(hass: HomeAssistant, mock_DayBetter_api: MagicMock) -> None:
@@ -584,18 +595,18 @@ async def test_scene_restore_rgb(
 
 
 async def test_scene_restore_temperature(
-    hass: HomeAssistant, mock_daybetter_api: MagicMock
+    hass: HomeAssistant, mock_DayBetter_api: MagicMock
 ) -> None:
     """Test restoring previous color temperature after scene ends."""
-    device = create_mock_device(mock_daybetter_api, capabilities=SCENE_CAPABILITIES)
-    mock_daybetter_api.devices = [device]
+    device = create_mock_device(mock_DayBetter_api, capabilities=SCENE_CAPABILITIES)
+    mock_DayBetter_api.devices = [device]
 
-    mock_daybetter_api.start = AsyncMock()
-    mock_daybetter_api.set_scene = AsyncMock()
-    mock_daybetter_api.turn_on_off = AsyncMock()
-    mock_daybetter_api.set_color = AsyncMock()
+    mock_DayBetter_api.start = AsyncMock()
+    mock_DayBetter_api.set_scene = AsyncMock()
+    mock_DayBetter_api.turn_on_off = AsyncMock()
+    mock_DayBetter_api.set_color = AsyncMock()
 
-    with patch(CONTROLLER_PATH, return_value=mock_daybetter_api):
+    with patch(CONTROLLER_PATH, return_value=mock_DayBetter_api):
         entry = MockConfigEntry(domain=DOMAIN, data={"host": "192.168.1.100"})
 
     assert await hass.config_entries.async_setup(entry.entry_id)
@@ -621,8 +632,8 @@ async def test_scene_restore_temperature(
     assert light is not None
     assert light.state == "on"
     assert light.attributes["color_temp_kelvin"] == initial_color
-    mock_daybetter_api.turn_on_off.assert_awaited_with(
-        mock_daybetter_api.devices[0], True
+    mock_DayBetter_api.turn_on_off.assert_awaited_with(
+        mock_DayBetter_api.devices[0], True
     )
 
     # Activate scene
@@ -638,8 +649,8 @@ async def test_scene_restore_temperature(
     assert light is not None
     assert light.state == "on"
     assert light.attributes[ATTR_EFFECT] == "christmas"
-    mock_daybetter_api.set_scene.assert_awaited_with(
-        mock_daybetter_api.devices[0], "christmas"
+    mock_DayBetter_api.set_scene.assert_awaited_with(
+        mock_DayBetter_api.devices[0], "christmas"
     )
 
     # Deactivate scene
