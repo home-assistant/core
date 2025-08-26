@@ -179,7 +179,7 @@ aioacaia==0.1.14
 aioairq==0.4.6
 
 # homeassistant.components.airzone_cloud
-aioairzone-cloud==0.7.1
+aioairzone-cloud==0.7.2
 
 # homeassistant.components.airzone
 aioairzone==1.0.0
@@ -241,7 +241,7 @@ aioeagle==1.1.0
 aioecowitt==2025.3.1
 
 # homeassistant.components.co2signal
-aioelectricitymaps==0.4.0
+aioelectricitymaps==1.1.1
 
 # homeassistant.components.emonitor
 aioemonitor==1.0.5
@@ -265,10 +265,10 @@ aioguardian==2022.07.0
 aioharmony==0.5.2
 
 # homeassistant.components.hassio
-aiohasupervisor==0.3.2b0
+aiohasupervisor==0.3.2
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.18.1
+aiohomeconnect==0.19.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.15
@@ -1112,7 +1112,7 @@ gstreamer-player==1.1.2
 guppy3==3.1.5
 
 # homeassistant.components.iaqualink
-h2==4.2.0
+h2==4.3.0
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==3.2.2
@@ -1180,7 +1180,7 @@ home-assistant-frontend==20250811.1
 home-assistant-intents==2025.7.30
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.2.0
+homematicip==2.3.0
 
 # homeassistant.components.horizon
 horimote==0.4.1
@@ -1201,7 +1201,7 @@ hyperion-py==0.7.6
 iammeter==0.2.1
 
 # homeassistant.components.iaqualink
-iaqualink==0.5.3
+iaqualink==0.6.0
 
 # homeassistant.components.ibeacon
 ibeacon-ble==1.2.0
@@ -1625,7 +1625,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.15.2
+opower==0.15.3
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2440,7 +2440,7 @@ python-google-drive-api==0.1.0
 python-homeassistant-analytics==0.9.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==9.2.0
+python-homewizard-energy==9.3.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
@@ -2543,7 +2543,7 @@ pytomorrowio==0.3.6
 pytouchline_extended==0.4.5
 
 # homeassistant.components.touchline_sl
-pytouchlinesl==0.4.0
+pytouchlinesl==0.5.0
 
 # homeassistant.components.traccar
 # homeassistant.components.traccar_server
@@ -2628,7 +2628,7 @@ qbittorrent-api==2024.9.67
 qbusmqttapi==1.4.2
 
 # homeassistant.components.qingping
-qingping-ble==0.10.0
+qingping-ble==1.0.1
 
 # homeassistant.components.qnap
 qnapstats==0.4.0
@@ -2664,7 +2664,7 @@ renault-api==0.4.0
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.14.6
+reolink-aio==0.14.7
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -3201,7 +3201,7 @@ zeroconf==0.147.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.69
+zha==0.0.70
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
