@@ -33,6 +33,11 @@ from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import conversation
+from homeassistant.components.anthropic.const import (
+    CONF_CHAT_MODEL,
+    CONF_WEB_SEARCH,
+    CONF_WEB_SEARCH_MAX_USES,
+)
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -966,3 +971,158 @@ async def test_history_conversion(
         )
 
         assert mock_create.mock_calls[0][2]["messages"] == snapshot
+
+
+async def test_web_search_tool_added_when_enabled(
+    hass: HomeAssistant,
+    mock_config_entry_with_web_search: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test that web search tool is added when enabled with supported model."""
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        new_callable=AsyncMock,
+        return_value=stream_generator(
+            create_messages(
+                create_content_block(0, ["Hello, I can search the web for you!"]),
+            ),
+        ),
+    ) as mock_create:
+        await conversation.async_converse(
+            hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
+        )
+
+    # Check that the web search tool was included
+    tools = mock_create.mock_calls[0][2]["tools"]
+    web_search_tool = next(
+        (tool for tool in tools if tool["name"] == "web_search"), None
+    )
+    assert web_search_tool is not None
+    assert web_search_tool["type"] == "web_search_20250305"
+    assert web_search_tool["max_uses"] == 5
+
+
+async def test_web_search_tool_not_added_when_disabled(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test that web search tool is not added when disabled."""
+    # Ensure web search is disabled (default behavior)
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            CONF_CHAT_MODEL: "claude-3-5-sonnet-latest",
+            CONF_WEB_SEARCH: False,
+            CONF_WEB_SEARCH_MAX_USES: 5,
+        },
+    )
+    with patch("anthropic.resources.models.AsyncModels.retrieve"):
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        new_callable=AsyncMock,
+        return_value=stream_generator(
+            create_messages(
+                create_content_block(0, ["Hello, how can I help you?"]),
+            ),
+        ),
+    ) as mock_create:
+        await conversation.async_converse(
+            hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
+        )
+
+    # Check that no web search tool was included
+    tools = mock_create.mock_calls[0][2].get("tools")
+    if tools:
+        web_search_tool = next(
+            (tool for tool in tools if tool.get("name") == "web_search"), None
+        )
+        assert web_search_tool is None
+
+
+async def test_web_search_tool_not_added_with_unsupported_model(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test that web search tool is not added with unsupported model."""
+    # Set unsupported model with web search enabled
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            CONF_CHAT_MODEL: "claude-3-haiku-20240307",  # Unsupported model
+            CONF_WEB_SEARCH: True,
+            CONF_WEB_SEARCH_MAX_USES: 5,
+        },
+    )
+    with patch("anthropic.resources.models.AsyncModels.retrieve"):
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        new_callable=AsyncMock,
+        return_value=stream_generator(
+            create_messages(
+                create_content_block(0, ["Hello, how can I help you?"]),
+            ),
+        ),
+    ) as mock_create:
+        await conversation.async_converse(
+            hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
+        )
+
+    # Check that no web search tool was included
+    tools = mock_create.mock_calls[0][2].get("tools")
+    if tools:
+        web_search_tool = next(
+            (tool for tool in tools if tool.get("name") == "web_search"), None
+        )
+        assert web_search_tool is None
+
+
+async def test_web_search_custom_max_uses(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test that web search tool respects custom max_uses setting."""
+    # Set custom max_uses value
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            CONF_CHAT_MODEL: "claude-3-5-sonnet-latest",
+            CONF_WEB_SEARCH: True,
+            CONF_WEB_SEARCH_MAX_USES: 15,  # Custom value
+        },
+    )
+    with patch("anthropic.resources.models.AsyncModels.retrieve"):
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        new_callable=AsyncMock,
+        return_value=stream_generator(
+            create_messages(
+                create_content_block(0, ["I can search extensively for you!"]),
+            ),
+        ),
+    ) as mock_create:
+        await conversation.async_converse(
+            hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
+        )
+
+    # Check that the web search tool has the correct max_uses
+    tools = mock_create.mock_calls[0][2]["tools"]
+    web_search_tool = next(
+        (tool for tool in tools if tool["name"] == "web_search"), None
+    )
+    assert web_search_tool is not None
+    assert web_search_tool["max_uses"] == 15

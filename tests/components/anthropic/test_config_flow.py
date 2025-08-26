@@ -22,11 +22,14 @@ from homeassistant.components.anthropic.const import (
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
+    CONF_WEB_SEARCH,
+    CONF_WEB_SEARCH_MAX_USES,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_THINKING_BUDGET,
+    RECOMMENDED_WEB_SEARCH_MAX_USES,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
 from homeassistant.core import HomeAssistant
@@ -184,6 +187,88 @@ async def test_subentry_options_thinking_budget_more_than_max(
     assert options["errors"] == {"thinking_budget": "thinking_budget_too_large"}
 
 
+async def test_subentry_web_search_unsupported_model(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test error when enabling web search with unsupported model."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    options = await hass.config_entries.subentries.async_configure(
+        options_flow["flow_id"],
+        {
+            "prompt": "You are helpful",
+            "max_tokens": 8192,
+            "chat_model": "claude-3-haiku-20240307",  # Unsupported for web search
+            "temperature": 1,
+            "thinking_budget": 0,
+            "recommended": False,
+            "web_search": True,
+            "web_search_max_uses": 5,
+        },
+    )
+    await hass.async_block_till_done()
+    assert options["type"] is FlowResultType.FORM
+    assert options["errors"] == {"web_search": "web_search_unsupported_model"}
+
+
+async def test_subentry_web_search_supported_model(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test web search configuration works with supported model."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    options = await hass.config_entries.subentries.async_configure(
+        options_flow["flow_id"],
+        {
+            "prompt": "You are helpful",
+            "max_tokens": 8192,
+            "chat_model": "claude-3-5-sonnet-latest",  # Supported for web search
+            "temperature": 1,
+            "thinking_budget": 0,
+            "recommended": False,
+            "web_search": True,
+            "web_search_max_uses": 10,
+        },
+    )
+    await hass.async_block_till_done()
+    assert options["type"] is FlowResultType.ABORT
+    assert options["reason"] == "reconfigure_successful"
+    assert subentry.data[CONF_WEB_SEARCH] is True
+    assert subentry.data[CONF_WEB_SEARCH_MAX_USES] == 10
+
+
+async def test_subentry_web_search_disabled(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test web search configuration when disabled."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    options_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    options = await hass.config_entries.subentries.async_configure(
+        options_flow["flow_id"],
+        {
+            "prompt": "You are helpful",
+            "max_tokens": 8192,
+            "chat_model": "claude-3-haiku-20240307",  # Unsupported for web search
+            "temperature": 1,
+            "thinking_budget": 0,
+            "recommended": False,
+            "web_search": False,  # Disabled
+            "web_search_max_uses": 5,
+        },
+    )
+    await hass.async_block_till_done()
+    assert options["type"] is FlowResultType.ABORT
+    assert options["reason"] == "reconfigure_successful"
+    assert subentry.data[CONF_WEB_SEARCH] is False
+    assert subentry.data[CONF_WEB_SEARCH_MAX_USES] == 5
+
+
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
@@ -277,6 +362,8 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
                 CONF_THINKING_BUDGET: RECOMMENDED_THINKING_BUDGET,
+                CONF_WEB_SEARCH: False,
+                CONF_WEB_SEARCH_MAX_USES: 5.0,
             },
         ),
         (
