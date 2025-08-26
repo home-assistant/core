@@ -3,6 +3,7 @@
 import asyncio
 from contextlib import suppress
 
+import aiohttp
 from sharkiq import (
     AylaApi,
     SharkIqAuthError,
@@ -37,7 +38,6 @@ async def async_connect_or_timeout(ayla_api: AylaApi) -> bool:
     try:
         async with asyncio.timeout(API_TIMEOUT):
             LOGGER.debug("Initialize connection to Ayla networks API")
-            await ayla_api.async_set_cookie()
             await ayla_api.async_sign_in()
     except SharkIqAuthError:
         LOGGER.error("Authentication error connecting to Shark IQ api")
@@ -57,10 +57,15 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             data={**config_entry.data, CONF_REGION: SHARKIQ_REGION_DEFAULT},
         )
 
+    new_websession = async_create_clientsession(
+        hass,
+        cookie_jar=aiohttp.CookieJar(unsafe=True, quote_cookie=False),
+    )
+
     ayla_api = get_ayla_api(
         username=config_entry.data[CONF_USERNAME],
         password=config_entry.data[CONF_PASSWORD],
-        websession=async_create_clientsession(hass),
+        websession=new_websession,
         europe=(config_entry.data[CONF_REGION] == SHARKIQ_REGION_EUROPE),
     )
 

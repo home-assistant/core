@@ -44,17 +44,20 @@ async def _validate_input(
     hass: HomeAssistant, data: Mapping[str, Any]
 ) -> dict[str, str]:
     """Validate the user input allows us to connect."""
+    new_websession = async_create_clientsession(
+        hass,
+        cookie_jar=aiohttp.CookieJar(unsafe=True, quote_cookie=False),
+    )
     ayla_api = get_ayla_api(
         username=data[CONF_USERNAME],
         password=data[CONF_PASSWORD],
-        websession=async_create_clientsession(hass),
+        websession=new_websession,
         europe=(data[CONF_REGION] == SHARKIQ_REGION_EUROPE),
     )
 
     try:
         async with asyncio.timeout(15):
             LOGGER.debug("Initialize connection to Ayla networks API")
-            await ayla_api.async_set_cookie()
             await ayla_api.async_sign_in()
     except (TimeoutError, aiohttp.ClientError, TypeError) as error:
         LOGGER.error(error)
