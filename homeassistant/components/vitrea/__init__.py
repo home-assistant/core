@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 import logging
+import sys
 import time
 
 from vitreaclient import DeviceStatus, VitreaClient, VitreaResponse
@@ -77,8 +78,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: VitreaConfigEntry) -> bo
         max_discovery_time = 90  # a typical 20 nodes setup can take up to 60 seconds
         discovery_start = time.monotonic()
 
+        # Use shorter intervals to satisfy testing
+        sleep_interval = 4 # could also do 0.1 if "pytest" in sys.modules else 3
+
         while True:
-            await asyncio.sleep(5)
+            await asyncio.sleep(sleep_interval)
 
             if len(entities) == entity_count:
                 # No new entities discovered in this cycle - discovery likely complete

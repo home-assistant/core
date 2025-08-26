@@ -20,10 +20,10 @@ def mock_config_entry() -> MockConfigEntry:
         title="Vitrea Integration",
         domain=DOMAIN,
         data={
-            CONF_HOST: "192.168.1.136",
+            CONF_HOST: "192.168.1.100",
             CONF_PORT: 11502,
         },
-        unique_id="vitrea_192.168.1.136_11502",
+        unique_id="vitrea_192.168.1.100_11502",
     )
 
 
