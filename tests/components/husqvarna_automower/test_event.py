@@ -33,7 +33,7 @@ async def test_event(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     values: dict[str, MowerAttributes],
-    automower_ws_ready,
+    automower_ws_ready: list[Callable[[], None]],
 ) -> None:
     """Test that a new message arriving over the websocket creates and updates the sensor."""
     callbacks: list[Callable[[SingleMessageData], None]] = []
@@ -171,7 +171,7 @@ async def test_event_snapshot(
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    automower_ws_ready,
+    automower_ws_ready: list[Callable[[], None]],
 ) -> None:
     """Test that a new message arriving over the websocket updates the sensor."""
     with patch(
