@@ -71,19 +71,6 @@ def _fetch_and_process_data(session: Session, user_id: str) -> dict[str, list[st
     # Keep track of contexts that we processed so that we will only process
     # the first service call in a context, and not subsequent calls.
     context_processed: set[bytes] = set()
-
-    # Build the query to get call_service events
-    # First, get the event_type_id for 'call_service'
-    event_type_query = select(EventTypes.event_type_id).where(
-        EventTypes.event_type == "call_service"
-    )
-    event_type_result = session.execute(event_type_query).first()
-
-    if not event_type_result:
-        _LOGGER.warning("No call_service events found in database")
-        return {time_cat: [] for time_cat in TIME_CATEGORIES}
-
-    call_service_type_id = event_type_result[0]
     thirty_days_ago_ts = (dt_util.utcnow() - timedelta(days=30)).timestamp()
     user_id_bytes = uuid_hex_to_bytes_or_none(user_id)
     if not user_id_bytes:
@@ -98,9 +85,10 @@ def _fetch_and_process_data(session: Session, user_id: str) -> dict[str, list[st
         )
         .select_from(Events)
         .outerjoin(EventData, Events.data_id == EventData.data_id)
-        .where(Events.event_type_id == call_service_type_id)
+        .outerjoin(EventTypes, Events.event_type_id == EventTypes.event_type_id)
         .where(Events.time_fired_ts >= thirty_days_ago_ts)
         .where(Events.context_user_id_bin == user_id_bytes)
+        .where(EventTypes.event_type == "call_service")
         .order_by(Events.time_fired_ts)
     )
 
