@@ -172,7 +172,22 @@
       "floodlight_brightness": {
         "default": "mdi:spotlight-beam"
       },
+      "ir_brightness": {
+        "default": "mdi:led-off"
+      },
       "volume": {
+        "default": "mdi:volume-high",
+        "state": {
+          "0": "mdi:volume-off"
+        }
+      },
+      "volume_speak": {
+        "default": "mdi:volume-high",
+        "state": {
+          "0": "mdi:volume-off"
+        }
+      },
+      "volume_doorbell": {
         "default": "mdi:volume-high",
         "state": {
           "0": "mdi:volume-off"
@@ -217,6 +232,24 @@
       "ai_animal_sensitivity": {
         "default": "mdi:paw"
       },
+      "cry_sensitivity": {
+        "default": "mdi:emoticon-cry-outline"
+      },
+      "crossline_sensitivity": {
+        "default": "mdi:fence"
+      },
+      "intrusion_sensitivity": {
+        "default": "mdi:location-enter"
+      },
+      "linger_sensitivity": {
+        "default": "mdi:account-switch"
+      },
+      "forgotten_item_sensitivity": {
+        "default": "mdi:package-variant-closed-plus"
+      },
+      "taken_item_sensitivity": {
+        "default": "mdi:package-variant-closed-minus"
+      },
       "ai_face_delay": {
         "default": "mdi:face-recognition"
       },
@@ -234,6 +267,18 @@
       },
       "ai_animal_delay": {
         "default": "mdi:paw"
+      },
+      "intrusion_delay": {
+        "default": "mdi:location-enter"
+      },
+      "linger_delay": {
+        "default": "mdi:account-switch"
+      },
+      "forgotten_item_delay": {
+        "default": "mdi:package-variant-closed-plus"
+      },
+      "taken_item_delay": {
+        "default": "mdi:package-variant-closed-minus"
       },
       "auto_quick_reply_time": {
         "default": "mdi:message-reply-text-outline"
@@ -267,6 +312,15 @@
       },
       "image_hue": {
         "default": "mdi:image-edit"
+      },
+      "pre_record_time": {
+        "default": "mdi:history"
+      },
+      "pre_record_battery_stop": {
+        "default": "mdi:history"
+      },
+      "silent_time": {
+        "default": "mdi:volume-off"
       }
     },
     "select": {
@@ -353,6 +407,15 @@
       },
       "scene_mode": {
         "default": "mdi:view-list"
+      },
+      "packing_time": {
+        "default": "mdi:record-rec"
+      },
+      "pre_record_fps": {
+        "default": "mdi:history"
+      },
+      "post_rec_time": {
+        "default": "mdi:record-rec"
       }
     },
     "sensor": {
@@ -366,7 +429,12 @@
         "default": "mdi:thermometer"
       },
       "battery_state": {
-        "default": "mdi:battery-charging"
+        "default": "mdi:battery-unknown",
+        "state": {
+          "discharging": "mdi:battery-minus-variant",
+          "charging": "mdi:battery-charging",
+          "chargecomplete": "mdi:battery-check"
+        }
       },
       "day_night_state": {
         "default": "mdi:theme-light-dark"
@@ -426,11 +494,20 @@
       "manual_record": {
         "default": "mdi:record-rec"
       },
+      "pre_record": {
+        "default": "mdi:history"
+      },
       "hub_ringtone_on_event": {
         "default": "mdi:music-note"
       },
       "doorbell_button_sound": {
         "default": "mdi:volume-high"
+      },
+      "hardwired_chime_enabled": {
+        "default": "mdi:bell",
+        "state": {
+          "off": "mdi:bell-off"
+        }
       },
       "hdr": {
         "default": "mdi:hdr"
@@ -445,6 +522,12 @@
         "default": "mdi:lightning-bolt-circle"
       },
       "privacy_mode": {
+        "default": "mdi:eye",
+        "state": {
+          "on": "mdi:eye-off"
+        }
+      },
+      "privacy_mask": {
         "default": "mdi:eye",
         "state": {
           "on": "mdi:eye-off"

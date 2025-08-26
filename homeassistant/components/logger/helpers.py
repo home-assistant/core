@@ -9,13 +9,14 @@ from dataclasses import asdict, dataclass
 from enum import StrEnum
 from functools import lru_cache
 import logging
-from typing import Any, cast
+from typing import Any
 
 from homeassistant.const import EVENT_LOGGING_CHANGED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
+from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     DOMAIN,
@@ -27,6 +28,8 @@ from .const import (
     STORAGE_LOG_KEY,
     STORAGE_VERSION,
 )
+
+DATA_LOGGER: HassKey[LoggerDomainConfig] = HassKey(DOMAIN)
 
 SAVE_DELAY = 15.0
 # At startup, we want to save after a long delay to avoid
@@ -40,12 +43,6 @@ SAVE_DELAY_LONG = 180.0
 
 
 @callback
-def async_get_domain_config(hass: HomeAssistant) -> LoggerDomainConfig:
-    """Return the domain config."""
-    return cast(LoggerDomainConfig, hass.data[DOMAIN])
-
-
-@callback
 def set_default_log_level(hass: HomeAssistant, level: int) -> None:
     """Set the default log level for components."""
     _set_log_level(logging.getLogger(""), level)
@@ -55,7 +52,7 @@ def set_default_log_level(hass: HomeAssistant, level: int) -> None:
 @callback
 def set_log_levels(hass: HomeAssistant, logpoints: Mapping[str, int]) -> None:
     """Set the specified log levels."""
-    async_get_domain_config(hass).overrides.update(logpoints)
+    hass.data[DATA_LOGGER].overrides.update(logpoints)
     for key, value in logpoints.items():
         _set_log_level(logging.getLogger(key), value)
     hass.bus.async_fire(EVENT_LOGGING_CHANGED)
@@ -76,6 +73,12 @@ def _chattiest_log_level(level1: int, level2: int) -> int:
     if level2 == logging.NOTSET:
         return level1
     return min(level1, level2)
+
+
+@callback
+def _clear_logger_overwrites(hass: HomeAssistant) -> None:
+    """Clear logger overwrites. Used for testing."""
+    hass.data[DATA_LOGGER].overrides.clear()
 
 
 async def get_integration_loggers(hass: HomeAssistant, domain: str) -> set[str]:

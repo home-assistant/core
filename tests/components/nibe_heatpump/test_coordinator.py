@@ -7,7 +7,7 @@ from unittest.mock import patch
 from nibe.coil import Coil, CoilData
 from nibe.heatpump import Model
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant

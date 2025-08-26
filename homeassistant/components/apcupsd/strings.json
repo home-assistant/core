@@ -1,7 +1,9 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "wrong_apcupsd_daemon": "The reconfigured APC UPS Daemon is not the same as the one already configured.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
@@ -12,7 +14,22 @@
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
         },
+        "data_description": {
+          "host": "The hostname or IP address of the APC UPS Daemon",
+          "port": "The port the APC UPS Daemon is listening on"
+        },
         "description": "Enter the host and port on which the apcupsd NIS is being served."
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "[%key:component::apcupsd::config::step::user::data_description::host%]",
+          "port": "[%key:component::apcupsd::config::step::user::data_description::port%]"
+        },
+        "description": "[%key:component::apcupsd::config::step::user::description%]"
       }
     }
   },
@@ -57,7 +74,7 @@
         "name": "Status date"
       },
       "dip_switch_settings": {
-        "name": "Dip switch settings"
+        "name": "DIP switch settings"
       },
       "low_battery_signal": {
         "name": "Low battery signal"
@@ -93,7 +110,7 @@
         "name": "Internal temperature"
       },
       "last_self_test": {
-        "name": "Last self test"
+        "name": "Last self-test"
       },
       "last_transfer": {
         "name": "Last transfer"
@@ -177,7 +194,7 @@
         "name": "Restore requirement"
       },
       "self_test_result": {
-        "name": "Self test result"
+        "name": "Self-test result"
       },
       "sensitivity": {
         "name": "Sensitivity"
@@ -195,7 +212,7 @@
         "name": "Status"
       },
       "self_test_interval": {
-        "name": "Self test interval"
+        "name": "Self-test interval"
       },
       "time_left": {
         "name": "Time left"
@@ -218,6 +235,11 @@
       "transfer_to_battery": {
         "name": "Transfer to battery"
       }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Cannot connect to APC UPS Daemon."
     }
   }
 }

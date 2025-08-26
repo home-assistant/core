@@ -1,23 +1,95 @@
 # serializer version: 1
+# name: test_code_interpreter
+  list([
+    dict({
+      'content': 'Please use the python tool to calculate square root of 55555',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'arguments': '{"code": "import math\\nmath.sqrt(55555)", "container": "cntr_A"}',
+      'call_id': 'ci_A',
+      'name': 'code_interpreter',
+      'type': 'function_call',
+    }),
+    dict({
+      'call_id': 'ci_A',
+      'output': '{"output": [{"logs": "235.70108188126758\\n", "type": "logs"}]}',
+      'type': 'function_call_output',
+    }),
+    dict({
+      'content': 'I’ve calculated it with Python: the square root of 55555 is approximately 235.70108188126758.',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'Thank you!',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'You are welcome!',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+  ])
+# ---
 # name: test_function_call
   list([
     dict({
+      'attachments': None,
       'content': 'Please call the test function',
       'role': 'user',
     }),
     dict({
-      'agent_id': 'conversation.openai',
+      'agent_id': 'conversation.openai_conversation',
       'content': None,
+      'native': None,
       'role': 'assistant',
+      'thinking_content': 'Thinking',
+      'tool_calls': None,
+    }),
+    dict({
+      'agent_id': 'conversation.openai_conversation',
+      'content': None,
+      'native': ResponseReasoningItem(id='rs_A', summary=[], type='reasoning', content=None, encrypted_content='AAABBB', status=None),
+      'role': 'assistant',
+      'thinking_content': 'Thinking more',
+      'tool_calls': None,
+    }),
+    dict({
+      'agent_id': 'conversation.openai_conversation',
+      'content': None,
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
       'tool_calls': list([
         dict({
+          'external': False,
           'id': 'call_call_1',
           'tool_args': dict({
             'param1': 'call1',
           }),
           'tool_name': 'test_tool',
         }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.openai_conversation',
+      'role': 'tool_result',
+      'tool_call_id': 'call_call_1',
+      'tool_name': 'test_tool',
+      'tool_result': 'value1',
+    }),
+    dict({
+      'agent_id': 'conversation.openai_conversation',
+      'content': None,
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': list([
         dict({
+          'external': False,
           'id': 'call_call_2',
           'tool_args': dict({
             'param1': 'call2',
@@ -27,24 +99,144 @@
       ]),
     }),
     dict({
-      'agent_id': 'conversation.openai',
-      'role': 'tool_result',
-      'tool_call_id': 'call_call_1',
-      'tool_name': 'test_tool',
-      'tool_result': 'value1',
-    }),
-    dict({
-      'agent_id': 'conversation.openai',
+      'agent_id': 'conversation.openai_conversation',
       'role': 'tool_result',
       'tool_call_id': 'call_call_2',
       'tool_name': 'test_tool',
       'tool_result': 'value2',
     }),
     dict({
-      'agent_id': 'conversation.openai',
+      'agent_id': 'conversation.openai_conversation',
+      'content': 'Cool',
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_function_call.1
+  list([
+    dict({
+      'content': 'Please call the test function',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'encrypted_content': 'AAABBB',
+      'id': 'rs_A',
+      'summary': list([
+        dict({
+          'text': 'Thinking',
+          'type': 'summary_text',
+        }),
+        dict({
+          'text': 'Thinking more',
+          'type': 'summary_text',
+        }),
+      ]),
+      'type': 'reasoning',
+    }),
+    dict({
+      'arguments': '{"param1": "call1"}',
+      'call_id': 'call_call_1',
+      'name': 'test_tool',
+      'type': 'function_call',
+    }),
+    dict({
+      'call_id': 'call_call_1',
+      'output': '"value1"',
+      'type': 'function_call_output',
+    }),
+    dict({
+      'arguments': '{"param1": "call2"}',
+      'call_id': 'call_call_2',
+      'name': 'test_tool',
+      'type': 'function_call',
+    }),
+    dict({
+      'call_id': 'call_call_2',
+      'output': '"value2"',
+      'type': 'function_call_output',
+    }),
+    dict({
       'content': 'Cool',
       'role': 'assistant',
+      'type': 'message',
+    }),
+  ])
+# ---
+# name: test_function_call_without_reasoning
+  list([
+    dict({
+      'attachments': None,
+      'content': 'Please call the test function',
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.openai_conversation',
+      'content': None,
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
+      'tool_calls': list([
+        dict({
+          'external': False,
+          'id': 'call_call_1',
+          'tool_args': dict({
+            'param1': 'call1',
+          }),
+          'tool_name': 'test_tool',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'conversation.openai_conversation',
+      'role': 'tool_result',
+      'tool_call_id': 'call_call_1',
+      'tool_name': 'test_tool',
+      'tool_result': 'value1',
+    }),
+    dict({
+      'agent_id': 'conversation.openai_conversation',
+      'content': 'Cool',
+      'native': None,
+      'role': 'assistant',
+      'thinking_content': None,
       'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_web_search
+  list([
+    dict({
+      'content': "What's on the latest news?",
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'action': dict({
+        'query': 'query',
+        'type': 'search',
+      }),
+      'id': 'ws_A',
+      'status': 'completed',
+      'type': 'web_search_call',
+    }),
+    dict({
+      'content': 'Home Assistant now supports ChatGPT Search in Assist',
+      'role': 'assistant',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'Thank you!',
+      'role': 'user',
+      'type': 'message',
+    }),
+    dict({
+      'content': 'You are welcome!',
+      'role': 'assistant',
+      'type': 'message',
     }),
   ])
 # ---

@@ -22,7 +22,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 
 from .const import STATELESS_LLM_API
-from .llm_api import StatelessAssistAPI
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,22 +42,21 @@ def _format_tool(
 
 
 async def create_server(
-    hass: HomeAssistant, llm_api_id: str, llm_context: llm.LLMContext
+    hass: HomeAssistant, llm_api_id: str | list[str], llm_context: llm.LLMContext
 ) -> Server:
     """Create a new Model Context Protocol Server.
 
     A Model Context Protocol Server object is associated with a single session.
     The MCP SDK handles the details of the protocol.
     """
+    if llm_api_id == STATELESS_LLM_API:
+        llm_api_id = llm.LLM_API_ASSIST
 
-    server = Server("home-assistant")
+    server = Server[Any]("home-assistant")
 
     async def get_api_instance() -> llm.APIInstance:
-        """Substitute the StatelessAssistAPI for the Assist API if selected."""
-        if llm_api_id in (STATELESS_LLM_API, llm.LLM_API_ASSIST):
-            api = StatelessAssistAPI(hass)
-            return await api.async_get_api_instance(llm_context)
-
+        """Get the LLM API selected."""
+        # Backwards compatibility with old MCP Server config
         return await llm.async_get_api(hass, llm_api_id, llm_context)
 
     @server.list_prompts()  # type: ignore[no-untyped-call, misc]

@@ -7,26 +7,23 @@ from typing import Any
 from aio_georss_client.status_update import StatusUpdate
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
-from . import GdacsFeedEntityManager
-from .const import DOMAIN, FEED
+from . import GdacsConfigEntry
 
 TO_REDACT = {CONF_LATITUDE, CONF_LONGITUDE}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: GdacsConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     data: dict[str, Any] = {
         "info": async_redact_data(config_entry.data, TO_REDACT),
     }
 
-    manager: GdacsFeedEntityManager = hass.data[DOMAIN][FEED][config_entry.entry_id]
-    status_info: StatusUpdate = manager.status_info()
+    status_info: StatusUpdate = config_entry.runtime_data.status_info()
     if status_info:
         data["service"] = {
             "status": status_info.status,

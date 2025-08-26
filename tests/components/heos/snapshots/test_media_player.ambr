@@ -3,10 +3,12 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': False,
         'can_play': True,
+        'can_search': False,
         'children_media_class': None,
         'media_class': 'track',
         'media_content_id': 'heos://media/1/station?name=Today%27s+Hits+Radio&image_url=&playable=True&browsable=False&media_id=123456789',
@@ -28,6 +30,7 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': list([
     ]),
     'children_media_class': None,
@@ -43,10 +46,12 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': False,
         'can_play': True,
+        'can_search': False,
         'children_media_class': None,
         'media_class': 'music',
         'media_content_id': 'media-source://media_source/local/test.mp3',
@@ -68,10 +73,12 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': True,
         'can_play': False,
+        'can_search': False,
         'children_media_class': None,
         'media_class': 'directory',
         'media_content_id': 'heos://media/1/music_service?name=Pandora&image_url=&available=True&service_username=user',
@@ -82,6 +89,18 @@
       dict({
         'can_expand': True,
         'can_play': False,
+        'can_search': False,
+        'children_media_class': None,
+        'media_class': 'directory',
+        'media_content_id': 'heos://media/3/music_service?name=TuneIn&image_url=&available=False',
+        'media_content_type': '',
+        'thumbnail': '',
+        'title': 'TuneIn',
+      }),
+      dict({
+        'can_expand': True,
+        'can_play': False,
+        'can_search': False,
         'children_media_class': 'music',
         'media_class': 'directory',
         'media_content_id': 'media-source://media_source/local/.',
@@ -103,16 +122,29 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': list([
       dict({
         'can_expand': True,
         'can_play': False,
+        'can_search': False,
         'children_media_class': None,
         'media_class': 'directory',
         'media_content_id': 'heos://media/1/music_service?name=Pandora&image_url=&available=True&service_username=user',
         'media_content_type': '',
         'thumbnail': '',
         'title': 'Pandora',
+      }),
+      dict({
+        'can_expand': True,
+        'can_play': False,
+        'can_search': False,
+        'children_media_class': None,
+        'media_class': 'directory',
+        'media_content_id': 'heos://media/3/music_service?name=TuneIn&image_url=&available=False',
+        'media_content_type': '',
+        'thumbnail': '',
+        'title': 'TuneIn',
       }),
     ]),
     'children_media_class': 'directory',
@@ -128,6 +160,7 @@
   dict({
     'can_expand': True,
     'can_play': False,
+    'can_search': False,
     'children': list([
     ]),
     'children_media_class': 'directory',
@@ -137,6 +170,32 @@
     'not_shown': 0,
     'thumbnail': None,
     'title': 'Music Sources',
+  })
+# ---
+# name: test_get_queue
+  dict({
+    'media_player.test_player': dict({
+      'queue': list([
+        dict({
+          'album': 'Espresso',
+          'album_id': '356276481',
+          'artist': 'Sabrina Carpenter',
+          'image_url': 'http://resources.wimpmusic.com/images/e4f2d75f/a69e/4b8a/b800/e18546b1ad4c/640x640.jpg',
+          'media_id': '356276483',
+          'queue_id': 1,
+          'song': 'Espresso',
+        }),
+        dict({
+          'album': 'A Bar Song (Tipsy)',
+          'album_id': '354365596',
+          'artist': 'Shaboozey',
+          'image_url': 'http://resources.wimpmusic.com/images/d05b8da3/4fae/45ff/ac1b/7ab7caab3523/640x640.jpg',
+          'media_id': '354365598',
+          'queue_id': 2,
+          'song': 'A Bar Song (Tipsy)',
+        }),
+      ]),
+    }),
   })
 # ---
 # name: test_state_attributes

@@ -48,6 +48,7 @@ from tests.common import (
     MockEntity,
     MockEntityPlatform,
     MockPlatform,
+    RegistryEntryWithDefaults,
     async_fire_time_changed,
     mock_platform,
     mock_registry,
@@ -55,7 +56,6 @@ from tests.common import (
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
-PLATFORM = "test_platform"
 
 
 async def test_polling_only_updates_entities_it_should_poll(
@@ -752,7 +752,7 @@ async def test_overriding_name_from_registry(hass: HomeAssistant) -> None:
     mock_registry(
         hass,
         {
-            "test_domain.world": er.RegistryEntry(
+            "test_domain.world": RegistryEntryWithDefaults(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
@@ -785,7 +785,7 @@ async def test_registry_respect_entity_disabled(hass: HomeAssistant) -> None:
     mock_registry(
         hass,
         {
-            "test_domain.world": er.RegistryEntry(
+            "test_domain.world": RegistryEntryWithDefaults(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
@@ -832,7 +832,7 @@ async def test_entity_registry_updates_name(hass: HomeAssistant) -> None:
     registry = mock_registry(
         hass,
         {
-            "test_domain.world": er.RegistryEntry(
+            "test_domain.world": RegistryEntryWithDefaults(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
@@ -1065,7 +1065,7 @@ async def test_entity_registry_updates_entity_id(hass: HomeAssistant) -> None:
     registry = mock_registry(
         hass,
         {
-            "test_domain.world": er.RegistryEntry(
+            "test_domain.world": RegistryEntryWithDefaults(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
@@ -1097,14 +1097,14 @@ async def test_entity_registry_updates_invalid_entity_id(hass: HomeAssistant) ->
     registry = mock_registry(
         hass,
         {
-            "test_domain.world": er.RegistryEntry(
+            "test_domain.world": RegistryEntryWithDefaults(
                 entity_id="test_domain.world",
                 unique_id="1234",
                 # Using component.async_add_entities is equal to platform "domain"
                 platform="test_platform",
                 name="Some name",
             ),
-            "test_domain.existing": er.RegistryEntry(
+            "test_domain.existing": RegistryEntryWithDefaults(
                 entity_id="test_domain.existing",
                 unique_id="5678",
                 platform="test_platform",
@@ -1529,14 +1529,19 @@ async def test_entity_info_added_to_entity_registry(
 
     entry_default = entity_registry.async_get_or_create(DOMAIN, DOMAIN, "default")
     assert entry_default == er.RegistryEntry(
-        "test_domain.best_name",
-        "default",
-        "test_domain",
+        entity_id="test_domain.best_name",
+        unique_id="default",
+        platform="test_domain",
         capabilities={"max": 100},
+        config_entry_id=None,
+        config_subentry_id=None,
         created_at=dt_util.utcnow(),
         device_class=None,
+        device_id=None,
+        disabled_by=None,
         entity_category=EntityCategory.CONFIG,
         has_entity_name=True,
+        hidden_by=None,
         icon=None,
         id=ANY,
         modified_at=dt_util.utcnow(),
@@ -1544,6 +1549,8 @@ async def test_entity_info_added_to_entity_registry(
         original_device_class="mock-device-class",
         original_icon="nice:icon",
         original_name="best name",
+        options=None,
+        suggested_object_id=None,
         supported_features=5,
         translation_key="my_translation_key",
         unit_of_measurement=PERCENTAGE,
@@ -2440,3 +2447,56 @@ async def test_add_entity_unknown_subentry(
         "Can't add entities to unknown subentry unknown-subentry "
         "of config entry super-mock-id"
     ) in caplog.text
+
+
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
+@pytest.mark.usefixtures("mock_integration_frame")
+@pytest.mark.parametrize(
+    "deprecated_attribute",
+    [
+        "component_translations",
+        "platform_translations",
+        "object_id_component_translations",
+        "object_id_platform_translations",
+        "default_language_platform_translations",
+    ],
+)
+async def test_deprecated_attributes(
+    hass: HomeAssistant,
+    deprecated_attribute: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setting the device name based on input info."""
+
+    platform = MockPlatform()
+    entity_platform = MockEntityPlatform(hass, platform_name="test", platform=platform)
+
+    assert getattr(entity_platform, deprecated_attribute) is getattr(
+        entity_platform.platform_data, deprecated_attribute
+    )
+    assert (
+        f"The deprecated function {deprecated_attribute} was called from "
+        "my_integration. It will be removed in HA Core 2026.8. Use platform_data."
+        f"{deprecated_attribute} instead, please report it to the author of the "
+        "'my_integration' custom integration" in caplog.text
+    )
+
+
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_deprecated_async_load_translations(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setting the device name based on input info."""
+
+    platform = MockPlatform()
+    entity_platform = MockEntityPlatform(hass, platform_name="test", platform=platform)
+
+    await entity_platform.async_load_translations()
+    assert (
+        "The deprecated function async_load_translations was called from "
+        "my_integration. It will be removed in HA Core 2026.8. Use platform_data."
+        "async_load_translations instead, please report it to the author of the "
+        "'my_integration' custom integration" in caplog.text
+    )

@@ -103,7 +103,7 @@
         },
         "date": {
           "name": "Date",
-          "description": "Only dates two months in the past and one day in the future is allowed."
+          "description": "Only dates in the range from two months in the past to one day in the future are allowed."
         },
         "areas": {
           "name": "Areas",
@@ -112,6 +112,32 @@
         "currency": {
           "name": "Currency",
           "description": "Currency to get prices in. If left empty it will use the currency already configured."
+        }
+      }
+    },
+    "get_price_indices_for_date": {
+      "name": "Get price indices for date",
+      "description": "Retrieves the price indices for a specific date.",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::nordpool::services::get_prices_for_date::fields::config_entry::name%]",
+          "description": "[%key:component::nordpool::services::get_prices_for_date::fields::config_entry::description%]"
+        },
+        "date": {
+          "name": "[%key:component::nordpool::services::get_prices_for_date::fields::date::name%]",
+          "description": "[%key:component::nordpool::services::get_prices_for_date::fields::date::description%]"
+        },
+        "areas": {
+          "name": "[%key:component::nordpool::services::get_prices_for_date::fields::areas::name%]",
+          "description": "[%key:component::nordpool::services::get_prices_for_date::fields::areas::description%]"
+        },
+        "currency": {
+          "name": "[%key:component::nordpool::services::get_prices_for_date::fields::currency::name%]",
+          "description": "[%key:component::nordpool::services::get_prices_for_date::fields::currency::description%]"
+        },
+        "resolution": {
+          "name": "Resolution",
+          "description": "Resolution time for the prices, can be any of 15, 30 and 60 minutes."
         }
       }
     }
@@ -128,9 +154,6 @@
     },
     "authentication_error": {
       "message": "There was an authentication error as you tried to retrieve data too far in the past."
-    },
-    "empty_response": {
-      "message": "Nord Pool has not posted market prices for the provided date."
     },
     "connection_error": {
       "message": "There was a connection error connecting to the API. Try again later."

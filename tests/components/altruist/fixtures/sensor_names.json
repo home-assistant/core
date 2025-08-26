@@ -1,0 +1,11 @@
+[
+  "signal",
+  "SDS_P1",
+  "SDS_P2",
+  "BME280_humidity",
+  "BME280_temperature",
+  "BME280_pressure",
+  "PCBA_noiseMax",
+  "PCBA_noiseAvg",
+  "GC"
+]

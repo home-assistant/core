@@ -43,93 +43,104 @@ def unique_field_validator(fields: Any) -> Any:
     return fields
 
 
-CORE_INTEGRATION_FIELD_SCHEMA = vol.Schema(
-    {
-        vol.Optional("example"): exists,
-        vol.Optional("default"): exists,
-        vol.Optional("required"): bool,
-        vol.Optional("advanced"): bool,
-        vol.Optional(CONF_SELECTOR): selector.validate_selector,
-        vol.Optional("filter"): {
-            vol.Exclusive("attribute", "field_filter"): {
-                vol.Required(str): [vol.All(str, service.validate_attribute_option)],
-            },
-            vol.Exclusive("supported_features", "field_filter"): [
-                vol.All(str, service.validate_supported_feature)
-            ],
+CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT = {
+    vol.Optional("description"): str,
+    vol.Optional("name"): str,
+}
+
+
+CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA_DICT = {
+    vol.Optional("example"): exists,
+    vol.Optional("default"): exists,
+    vol.Optional("required"): bool,
+    vol.Optional("advanced"): bool,
+    vol.Optional(CONF_SELECTOR): selector.validate_selector,
+}
+
+FIELD_FILTER_SCHEMA_DICT = {
+    vol.Optional("filter"): {
+        vol.Exclusive("attribute", "field_filter"): {
+            vol.Required(str): [vol.All(str, service.validate_attribute_option)],
         },
+        vol.Exclusive("supported_features", "field_filter"): [
+            vol.All(str, service.validate_supported_feature)
+        ],
     }
-)
+}
 
-CORE_INTEGRATION_SECTION_SCHEMA = vol.Schema(
-    {
+
+def _field_schema(targeted: bool, custom: bool) -> vol.Schema:
+    """Return the field schema."""
+    schema_dict = CORE_INTEGRATION_NOT_TARGETED_FIELD_SCHEMA_DICT.copy()
+
+    # Filters are only allowed for targeted services because they rely on the presence
+    # of a `target` field to determine the scope of the service call. Non-targeted
+    # services do not have a `target` field, making filters inapplicable.
+    if targeted:
+        schema_dict |= FIELD_FILTER_SCHEMA_DICT
+
+    if custom:
+        schema_dict |= CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT
+
+    return vol.Schema(schema_dict)
+
+
+def _section_schema(targeted: bool, custom: bool) -> vol.Schema:
+    """Return the section schema."""
+    schema_dict = {
         vol.Optional("collapsed"): bool,
-        vol.Required("fields"): vol.Schema({str: CORE_INTEGRATION_FIELD_SCHEMA}),
+        vol.Required("fields"): vol.Schema(
+            {
+                str: _field_schema(targeted, custom),
+            }
+        ),
     }
-)
 
-CUSTOM_INTEGRATION_FIELD_SCHEMA = CORE_INTEGRATION_FIELD_SCHEMA.extend(
-    {
-        vol.Optional("description"): str,
-        vol.Optional("name"): str,
-    }
-)
+    if custom:
+        schema_dict |= CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT
 
-CUSTOM_INTEGRATION_SECTION_SCHEMA = vol.Schema(
-    {
-        vol.Optional("description"): str,
-        vol.Optional("name"): str,
-        vol.Optional("collapsed"): bool,
-        vol.Required("fields"): vol.Schema({str: CUSTOM_INTEGRATION_FIELD_SCHEMA}),
+    return vol.Schema(schema_dict)
+
+
+def _service_schema(targeted: bool, custom: bool) -> vol.Schema:
+    """Return the service schema."""
+    schema_dict = {
+        vol.Optional("fields"): vol.All(
+            vol.Schema(
+                {
+                    str: vol.Any(
+                        _field_schema(targeted, custom),
+                        _section_schema(targeted, custom),
+                    ),
+                }
+            ),
+            unique_field_validator,
+        )
     }
-)
+
+    if targeted:
+        schema_dict[vol.Required("target")] = vol.Any(
+            selector.TargetSelector.CONFIG_SCHEMA, None
+        )
+
+    if custom:
+        schema_dict |= CUSTOM_INTEGRATION_EXTRA_SCHEMA_DICT
+
+    return vol.Schema(schema_dict)
 
 
 CORE_INTEGRATION_SERVICE_SCHEMA = vol.Any(
-    vol.Schema(
-        {
-            vol.Optional("target"): vol.Any(
-                selector.TargetSelector.CONFIG_SCHEMA, None
-            ),
-            vol.Optional("fields"): vol.All(
-                vol.Schema(
-                    {
-                        str: vol.Any(
-                            CORE_INTEGRATION_FIELD_SCHEMA,
-                            CORE_INTEGRATION_SECTION_SCHEMA,
-                        )
-                    }
-                ),
-                unique_field_validator,
-            ),
-        }
-    ),
+    _service_schema(targeted=True, custom=False),
+    _service_schema(targeted=False, custom=False),
     None,
 )
 
 CUSTOM_INTEGRATION_SERVICE_SCHEMA = vol.Any(
-    vol.Schema(
-        {
-            vol.Optional("description"): str,
-            vol.Optional("name"): str,
-            vol.Optional("target"): vol.Any(
-                selector.TargetSelector.CONFIG_SCHEMA, None
-            ),
-            vol.Optional("fields"): vol.All(
-                vol.Schema(
-                    {
-                        str: vol.Any(
-                            CUSTOM_INTEGRATION_FIELD_SCHEMA,
-                            CUSTOM_INTEGRATION_SECTION_SCHEMA,
-                        )
-                    }
-                ),
-                unique_field_validator,
-            ),
-        }
-    ),
+    _service_schema(targeted=True, custom=True),
+    _service_schema(targeted=False, custom=True),
     None,
 )
+
 
 CORE_INTEGRATION_SERVICES_SCHEMA = vol.Schema(
     {
@@ -137,9 +148,11 @@ CORE_INTEGRATION_SERVICES_SCHEMA = vol.Schema(
         cv.slug: CORE_INTEGRATION_SERVICE_SCHEMA,
     }
 )
+
 CUSTOM_INTEGRATION_SERVICES_SCHEMA = vol.Schema(
     {cv.slug: CUSTOM_INTEGRATION_SERVICE_SCHEMA}
 )
+
 
 VALIDATE_AS_CUSTOM_INTEGRATION = {
     # Adding translations would be a breaking change
@@ -233,7 +246,7 @@ def validate_services(config: Config, integration: Integration) -> None:  # noqa
             )
         if service_schema is None:
             continue
-        if "name" not in service_schema:
+        if "name" not in service_schema and integration.core:
             try:
                 strings["services"][service_name]["name"]
             except KeyError:
@@ -242,7 +255,7 @@ def validate_services(config: Config, integration: Integration) -> None:  # noqa
                     f"Service {service_name} has no name {error_msg_suffix}",
                 )
 
-        if "description" not in service_schema:
+        if "description" not in service_schema and integration.core:
             try:
                 strings["services"][service_name]["description"]
             except KeyError:
@@ -257,7 +270,7 @@ def validate_services(config: Config, integration: Integration) -> None:  # noqa
             if "fields" in field_schema:
                 # This is a section
                 continue
-            if "name" not in field_schema:
+            if "name" not in field_schema and integration.core:
                 try:
                     strings["services"][service_name]["fields"][field_name]["name"]
                 except KeyError:
@@ -266,7 +279,7 @@ def validate_services(config: Config, integration: Integration) -> None:  # noqa
                         f"Service {service_name} has a field {field_name} with no name {error_msg_suffix}",
                     )
 
-            if "description" not in field_schema:
+            if "description" not in field_schema and integration.core:
                 try:
                     strings["services"][service_name]["fields"][field_name][
                         "description"
@@ -296,13 +309,14 @@ def validate_services(config: Config, integration: Integration) -> None:  # noqa
             if "fields" not in section_schema:
                 # This is not a section
                 continue
-            try:
-                strings["services"][service_name]["sections"][section_name]["name"]
-            except KeyError:
-                integration.add_error(
-                    "services",
-                    f"Service {service_name} has a section {section_name} with no name {error_msg_suffix}",
-                )
+            if "name" not in section_schema and integration.core:
+                try:
+                    strings["services"][service_name]["sections"][section_name]["name"]
+                except KeyError:
+                    integration.add_error(
+                        "services",
+                        f"Service {service_name} has a section {section_name} with no name {error_msg_suffix}",
+                    )
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:

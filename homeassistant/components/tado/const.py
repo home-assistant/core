@@ -37,6 +37,7 @@ TADO_HVAC_ACTION_TO_HA_HVAC_ACTION = {
 # Configuration
 CONF_FALLBACK = "fallback"
 CONF_HOME_ID = "home_id"
+CONF_REFRESH_TOKEN = "refresh_token"
 DATA = "data"
 
 # Weather

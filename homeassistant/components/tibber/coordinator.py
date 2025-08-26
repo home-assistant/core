@@ -9,7 +9,11 @@ from typing import cast
 import tibber
 
 from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
+from homeassistant.components.recorder.models import (
+    StatisticData,
+    StatisticMeanType,
+    StatisticMetaData,
+)
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
@@ -21,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN as TIBBER_DOMAIN
+from .const import DOMAIN
 
 FIVE_YEARS = 5 * 365 * 24
 
@@ -76,7 +80,7 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
 
             for sensor_type, is_production, unit in sensors:
                 statistic_id = (
-                    f"{TIBBER_DOMAIN}:energy_"
+                    f"{DOMAIN}:energy_"
                     f"{sensor_type.lower()}_"
                     f"{home.home_id.replace('-', '')}"
                 )
@@ -159,10 +163,10 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                     )
 
                 metadata = StatisticMetaData(
-                    has_mean=False,
+                    mean_type=StatisticMeanType.NONE,
                     has_sum=True,
                     name=f"{home.name} {sensor_type}",
-                    source=TIBBER_DOMAIN,
+                    source=DOMAIN,
                     statistic_id=statistic_id,
                     unit_of_measurement=unit,
                 )

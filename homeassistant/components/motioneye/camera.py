@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from contextlib import suppress
-from types import MappingProxyType
 from typing import Any
 
 import aiohttp
@@ -154,7 +154,7 @@ class MotionEyeMjpegCamera(MotionEyeEntity, MjpegCamera):
         camera: dict[str, Any],
         client: MotionEyeClient,
         coordinator: DataUpdateCoordinator,
-        options: MappingProxyType[str, str],
+        options: Mapping[str, str],
     ) -> None:
         """Initialize a MJPEG camera."""
         self._surveillance_username = username

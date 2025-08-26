@@ -177,7 +177,7 @@ async def _test_downloading_encrypted_backup(
         enc_metadata = json.loads(outer_tar.extractfile("./backup.json").read())
         assert enc_metadata["protected"] is True
         with (
-            outer_tar.extractfile("core.tar.gz") as inner_tar_file,
+            outer_tar.extractfile("homeassistant.tar.gz") as inner_tar_file,
             pytest.raises(tarfile.ReadError, match="file could not be opened"),
         ):
             # pylint: disable-next=consider-using-with
@@ -209,7 +209,7 @@ async def _test_downloading_encrypted_backup(
         dec_metadata = json.loads(outer_tar.extractfile("./backup.json").read())
         assert dec_metadata == enc_metadata | {"protected": False}
         with (
-            outer_tar.extractfile("core.tar.gz") as inner_tar_file,
+            outer_tar.extractfile("homeassistant.tar.gz") as inner_tar_file,
             tarfile.open(fileobj=inner_tar_file, mode="r") as inner_tar,
         ):
             assert inner_tar.getnames() == [

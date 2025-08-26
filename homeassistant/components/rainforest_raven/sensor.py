@@ -101,7 +101,7 @@ async def async_setup_entry(
                     coordinator,
                     RAVEnSensorEntityDescription(
                         message_key="PriceCluster",
-                        translation_key="meter_price",
+                        translation_key="energy_price",
                         key="price",
                         native_unit_of_measurement=f"{meter_data['PriceCluster']['currency'].value}/{UnitOfEnergy.KILO_WATT_HOUR}",
                         state_class=SensorStateClass.MEASUREMENT,

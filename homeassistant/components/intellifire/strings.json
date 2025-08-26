@@ -7,7 +7,7 @@
         "description": "Select fireplace by serial number:"
       },
       "cloud_api": {
-        "description": "Authenticate against IntelliFire Cloud",
+        "description": "Authenticate against IntelliFire cloud",
         "data_description": {
           "username": "Your IntelliFire app username",
           "password": "Your IntelliFire app password"
@@ -45,7 +45,7 @@
         "name": "Pilot flame error"
       },
       "flame_error": {
-        "name": "Flame Error"
+        "name": "Flame error"
       },
       "fan_delay_error": {
         "name": "Fan delay error"
@@ -104,7 +104,7 @@
         "name": "Target temperature"
       },
       "fan_speed": {
-        "name": "Fan Speed"
+        "name": "Fan speed"
       },
       "timer_end_timestamp": {
         "name": "Timer end"

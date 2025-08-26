@@ -76,10 +76,10 @@
     },
     "switch": {
       "auto_charge": {
-        "name": "Auto charge"
+        "name": "Auto-charge"
       },
       "session_active": {
-        "name": "Charging Enabled"
+        "name": "Charging enabled"
       }
     }
   },

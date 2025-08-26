@@ -11,6 +11,7 @@ from here_routing import (
     Return,
     RoutingMode,
     Spans,
+    TrafficMode,
     TransportMode,
 )
 from here_transit import (
@@ -21,7 +22,10 @@ from here_transit import (
 )
 import pytest
 
-from homeassistant.components.here_travel_time.config_flow import DEFAULT_OPTIONS
+from homeassistant.components.here_travel_time.config_flow import (
+    DEFAULT_OPTIONS,
+    HERETravelTimeConfigFlow,
+)
 from homeassistant.components.here_travel_time.const import (
     CONF_ARRIVAL_TIME,
     CONF_DEPARTURE_TIME,
@@ -32,6 +36,7 @@ from homeassistant.components.here_travel_time.const import (
     CONF_ORIGIN_LATITUDE,
     CONF_ORIGIN_LONGITUDE,
     CONF_ROUTE_MODE,
+    CONF_TRAFFIC_MODE,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     ICON_BICYCLE,
@@ -85,29 +90,33 @@ from tests.common import (
 
 
 @pytest.mark.parametrize(
-    ("mode", "icon", "arrival_time", "departure_time"),
+    ("mode", "icon", "traffic_mode", "arrival_time", "departure_time"),
     [
         (
             TRAVEL_MODE_CAR,
             ICON_CAR,
+            False,
             None,
             None,
         ),
         (
             TRAVEL_MODE_BICYCLE,
             ICON_BICYCLE,
+            True,
             None,
             None,
         ),
         (
             TRAVEL_MODE_PEDESTRIAN,
             ICON_PEDESTRIAN,
+            True,
             None,
             "08:00:00",
         ),
         (
             TRAVEL_MODE_TRUCK,
             ICON_TRUCK,
+            True,
             None,
             "08:00:00",
         ),
@@ -118,6 +127,7 @@ async def test_sensor(
     hass: HomeAssistant,
     mode,
     icon,
+    traffic_mode,
     arrival_time,
     departure_time,
 ) -> None:
@@ -137,9 +147,12 @@ async def test_sensor(
         },
         options={
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
+            CONF_TRAFFIC_MODE: traffic_mode,
             CONF_ARRIVAL_TIME: arrival_time,
             CONF_DEPARTURE_TIME: departure_time,
         },
+        version=HERETravelTimeConfigFlow.VERSION,
+        minor_version=HERETravelTimeConfigFlow.MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -150,10 +163,10 @@ async def test_sensor(
     duration = hass.states.get("sensor.test_duration")
     assert duration.attributes.get("unit_of_measurement") == UnitOfTime.MINUTES
     assert duration.attributes.get(ATTR_ICON) == icon
-    assert duration.state == "26"
+    assert duration.state == "26.1833333333333"
 
     assert float(hass.states.get("sensor.test_distance").state) == pytest.approx(13.682)
-    assert hass.states.get("sensor.test_duration_in_traffic").state == "30"
+    assert hass.states.get("sensor.test_duration_in_traffic").state == "29.6"
     assert hass.states.get("sensor.test_origin").state == "22nd St NW"
     assert (
         hass.states.get("sensor.test_origin").attributes.get(ATTR_LATITUDE)
@@ -197,6 +210,8 @@ async def test_circular_ref(
             CONF_NAME: "test",
         },
         options=DEFAULT_OPTIONS,
+        version=HERETravelTimeConfigFlow.VERSION,
+        minor_version=HERETravelTimeConfigFlow.MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -228,7 +243,10 @@ async def test_public_transport(hass: HomeAssistant) -> None:
             CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
             CONF_ARRIVAL_TIME: "08:00:00",
             CONF_DEPARTURE_TIME: None,
+            CONF_TRAFFIC_MODE: True,
         },
+        version=HERETravelTimeConfigFlow.VERSION,
+        minor_version=HERETravelTimeConfigFlow.MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -260,6 +278,8 @@ async def test_no_attribution_response(hass: HomeAssistant) -> None:
             CONF_NAME: "test",
         },
         options=DEFAULT_OPTIONS,
+        version=HERETravelTimeConfigFlow.VERSION,
+        minor_version=HERETravelTimeConfigFlow.MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -307,6 +327,8 @@ async def test_entity_ids(hass: HomeAssistant, valid_response: MagicMock) -> Non
             CONF_NAME: "test",
         },
         options=DEFAULT_OPTIONS,
+        version=HERETravelTimeConfigFlow.VERSION,
+        minor_version=HERETravelTimeConfigFlow.MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -319,11 +341,12 @@ async def test_entity_ids(hass: HomeAssistant, valid_response: MagicMock) -> Non
 
     valid_response.assert_called_with(
         transport_mode=TransportMode.TRUCK,
-        origin=Place(ORIGIN_LATITUDE, ORIGIN_LONGITUDE),
-        destination=Place(DESTINATION_LATITUDE, DESTINATION_LONGITUDE),
+        origin=Place(float(ORIGIN_LATITUDE), float(ORIGIN_LONGITUDE)),
+        destination=Place(float(DESTINATION_LATITUDE), float(DESTINATION_LONGITUDE)),
         routing_mode=RoutingMode.FAST,
         arrival_time=None,
         departure_time=None,
+        traffic_mode=TrafficMode.DEFAULT,
         return_values=[Return.POLYINE, Return.SUMMARY],
         spans=[Spans.NAMES],
     )
@@ -346,6 +369,8 @@ async def test_destination_entity_not_found(
             CONF_NAME: "test",
         },
         options=DEFAULT_OPTIONS,
+        version=HERETravelTimeConfigFlow.VERSION,
+        minor_version=HERETravelTimeConfigFlow.MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -374,6 +399,8 @@ async def test_origin_entity_not_found(
             CONF_NAME: "test",
         },
         options=DEFAULT_OPTIONS,
+        version=HERETravelTimeConfigFlow.VERSION,
+        minor_version=HERETravelTimeConfigFlow.MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -406,6 +433,8 @@ async def test_invalid_destination_entity_state(
             CONF_NAME: "test",
         },
         options=DEFAULT_OPTIONS,
+        version=HERETravelTimeConfigFlow.VERSION,
+        minor_version=HERETravelTimeConfigFlow.MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -440,6 +469,8 @@ async def test_invalid_origin_entity_state(
             CONF_NAME: "test",
         },
         options=DEFAULT_OPTIONS,
+        version=HERETravelTimeConfigFlow.VERSION,
+        minor_version=HERETravelTimeConfigFlow.MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -476,6 +507,8 @@ async def test_route_not_found(
                 CONF_NAME: "test",
             },
             options=DEFAULT_OPTIONS,
+            version=HERETravelTimeConfigFlow.VERSION,
+            minor_version=HERETravelTimeConfigFlow.MINOR_VERSION,
         )
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
@@ -501,13 +534,13 @@ async def test_restore_state(hass: HomeAssistant) -> None:
                     "1234",
                     attributes={
                         ATTR_LAST_RESET: last_reset,
-                        ATTR_UNIT_OF_MEASUREMENT: UnitOfTime.MINUTES,
+                        ATTR_UNIT_OF_MEASUREMENT: UnitOfTime.SECONDS,
                         ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                     },
                 ),
                 {
                     "native_value": 1234,
-                    "native_unit_of_measurement": UnitOfTime.MINUTES,
+                    "native_unit_of_measurement": UnitOfTime.SECONDS,
                     "icon": "mdi:car",
                     "last_reset": last_reset,
                 },
@@ -518,13 +551,13 @@ async def test_restore_state(hass: HomeAssistant) -> None:
                     "5678",
                     attributes={
                         ATTR_LAST_RESET: last_reset,
-                        ATTR_UNIT_OF_MEASUREMENT: UnitOfTime.MINUTES,
+                        ATTR_UNIT_OF_MEASUREMENT: UnitOfTime.SECONDS,
                         ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
                     },
                 ),
                 {
                     "native_value": 5678,
-                    "native_unit_of_measurement": UnitOfTime.MINUTES,
+                    "native_unit_of_measurement": UnitOfTime.SECONDS,
                     "icon": "mdi:car",
                     "last_reset": last_reset,
                 },
@@ -587,7 +620,12 @@ async def test_restore_state(hass: HomeAssistant) -> None:
 
     # create and add entry
     mock_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=DOMAIN, data=DEFAULT_CONFIG, options=DEFAULT_OPTIONS
+        domain=DOMAIN,
+        unique_id=DOMAIN,
+        data=DEFAULT_CONFIG,
+        options=DEFAULT_OPTIONS,
+        version=HERETravelTimeConfigFlow.VERSION,
+        minor_version=HERETravelTimeConfigFlow.MINOR_VERSION,
     )
     mock_entry.add_to_hass(hass)
 
@@ -596,12 +634,12 @@ async def test_restore_state(hass: HomeAssistant) -> None:
 
     # restore from cache
     state = hass.states.get("sensor.test_duration")
-    assert state.state == "1234"
+    assert state.state == "20.5666666666667"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.MINUTES
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
     state = hass.states.get("sensor.test_duration_in_traffic")
-    assert state.state == "5678"
+    assert state.state == "94.6333333333333"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.MINUTES
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
 
@@ -656,6 +694,8 @@ async def test_transit_errors(
                 CONF_NAME: "test",
             },
             options=DEFAULT_OPTIONS,
+            version=HERETravelTimeConfigFlow.VERSION,
+            minor_version=HERETravelTimeConfigFlow.MINOR_VERSION,
         )
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
@@ -682,6 +722,8 @@ async def test_routing_rate_limit(
             unique_id="0123456789",
             data=DEFAULT_CONFIG,
             options=DEFAULT_OPTIONS,
+            version=HERETravelTimeConfigFlow.VERSION,
+            minor_version=HERETravelTimeConfigFlow.MINOR_VERSION,
         )
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
@@ -739,6 +781,8 @@ async def test_transit_rate_limit(
                 CONF_NAME: "test",
             },
             options=DEFAULT_OPTIONS,
+            version=HERETravelTimeConfigFlow.VERSION,
+            minor_version=HERETravelTimeConfigFlow.MINOR_VERSION,
         )
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
@@ -791,6 +835,8 @@ async def test_multiple_sections(
             CONF_NAME: "test",
         },
         options=DEFAULT_OPTIONS,
+        version=HERETravelTimeConfigFlow.VERSION,
+        minor_version=HERETravelTimeConfigFlow.MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -799,10 +845,12 @@ async def test_multiple_sections(
     await hass.async_block_till_done()
 
     duration = hass.states.get("sensor.test_duration")
-    assert duration.state == "18"
+    assert duration.state == "18.4833333333333"
 
     assert float(hass.states.get("sensor.test_distance").state) == pytest.approx(3.583)
-    assert hass.states.get("sensor.test_duration_in_traffic").state == "18"
+    assert (
+        hass.states.get("sensor.test_duration_in_traffic").state == "18.4833333333333"
+    )
     assert hass.states.get("sensor.test_origin").state == "Chemin de Halage"
     assert (
         hass.states.get("sensor.test_origin").attributes.get(ATTR_LATITUDE)

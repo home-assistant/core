@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pysmlight import Api2, Info, Radio
+from pysmlight import Api2
 
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
@@ -50,9 +50,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-def get_radio(info: Info, idx: int) -> Radio:
-    """Get the radio object from the info."""
-    assert info.radios is not None
-    return info.radios[idx]

@@ -3,20 +3,20 @@
     "flow_title": "{short_mac} ({ip_address})",
     "step": {
       "user": {
-        "description": "Connect to your Motion Gateway, if the IP address is not set, auto-discovery is used",
+        "description": "Connect to your Motionblinds gateway. If the IP address is not set, auto-discovery is used",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]"
         }
       },
       "connect": {
-        "description": "You will need the 16 character API Key, see https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key for instructions",
+        "description": "You will need the 16 character API key, see https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-api-key for instructions",
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       },
       "select": {
-        "title": "Select the Motion Gateway that you wish to connect",
-        "description": "Run the setup again if you want to connect additional Motion Gateways",
+        "title": "Select the Motionblinds gateway that you wish to connect",
+        "description": "Run the setup again if you want to connect additional Motionblinds gateways",
         "data": {
           "select_ip": "[%key:common::config_flow::data::ip%]"
         }
@@ -29,7 +29,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "connection_error": "[%key:common::config_flow::error::cannot_connect%]",
-      "not_motionblinds": "Discovered device is not a Motion gateway"
+      "not_motionblinds": "Discovered device is not a Motionblinds gateway"
     }
   },
   "options": {

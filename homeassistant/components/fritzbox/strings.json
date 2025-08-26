@@ -55,7 +55,10 @@
     "binary_sensor": {
       "alarm": { "name": "Alarm" },
       "device_lock": { "name": "Button lock via UI" },
-      "lock": { "name": "Button lock on device" }
+      "holiday_active": { "name": "Holiday mode" },
+      "lock": { "name": "Button lock on device" },
+      "summer_active": { "name": "Summer mode" },
+      "window_open": { "name": "Open window detected" }
     },
     "climate": {
       "thermostat": {
@@ -85,11 +88,11 @@
     "manual_switching_disabled": {
       "message": "Can't toggle switch while manual switching is disabled for the device."
     },
-    "change_preset_while_active_mode": {
-      "message": "Can't change preset while holiday or summer mode is active on the device."
+    "change_settings_while_lock_enabled": {
+      "message": "Can't change settings while manual access for telephone, app, or user interface is disabled on the device"
     },
-    "change_hvac_while_active_mode": {
-      "message": "Can't change HVAC mode while holiday or summer mode is active on the device."
+    "change_settings_while_active_mode": {
+      "message": "Can't change settings while holiday or summer mode is active on the device."
     }
   }
 }

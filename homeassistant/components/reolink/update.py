@@ -31,7 +31,7 @@ from .entity import (
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
-from .util import ReolinkConfigEntry, ReolinkData
+from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
 
 PARALLEL_UPDATES = 0
 RESUME_AFTER_INSTALL = 15
@@ -184,6 +184,7 @@ class ReolinkUpdateBaseEntity(
             f"## Release notes\n\n{new_firmware.release_notes}"
         )
 
+    @raise_translated_error
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -196,6 +197,8 @@ class ReolinkUpdateBaseEntity(
         try:
             await self._host.api.update_firmware(self._channel)
         except ReolinkError as err:
+            if err.translation_key:
+                raise
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="firmware_install_error",

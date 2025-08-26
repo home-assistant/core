@@ -10,7 +10,7 @@ from homeassistant.exceptions import HomeAssistantError
 from .const import DOMAIN
 
 BOARD_NAME = "Home Assistant Yellow"
-DOCUMENTATION_URL = "https://yellow.home-assistant.io/documentation/"
+DOCUMENTATION_URL = "https://support.nabucasa.com/hc/en-us/categories/24734575925149-Home-Assistant-Yellow"
 MANUFACTURER = "homeassistant"
 MODEL = "yellow"
 

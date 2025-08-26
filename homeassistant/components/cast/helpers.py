@@ -81,7 +81,7 @@ class ChromecastInfo:
                     "+label%3A%22integration%3A+cast%22"
                 )
 
-                _LOGGER.debug(
+                _LOGGER.info(
                     (
                         "Fetched cast details for unknown model '%s' manufacturer:"
                         " '%s', type: '%s'. Please %s"
