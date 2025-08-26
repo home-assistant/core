@@ -1,4 +1,9 @@
 {
+  "entity_component": {
+    "_": {
+      "default": "mdi:star-four-points"
+    }
+  },
   "services": {
     "generate_data": {
       "service": "mdi:file-star-four-points-outline"

@@ -381,7 +381,6 @@ async def async_setup_entry(
         for entity_description in CHIME_SWITCH_ENTITIES
         for chime in reolink_data.host.api.chime_list
         if chime.channel is not None
-    )
     entities.extend(
         ReolinkHostChimeSwitchEntity(reolink_data, chime, entity_description)
         for entity_description in CHIME_SWITCH_ENTITIES
