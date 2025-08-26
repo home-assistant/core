@@ -58,6 +58,7 @@ from .const import (
     ATTR_FILE,
     ATTR_FROM_FIRST,
     ATTR_FROM_LAST,
+    ATTR_INLINE_MESSAGE_ID,
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
     ATTR_MESSAGE,
@@ -305,7 +306,7 @@ class TelegramNotificationService:
             ):
                 message_id = self._last_message_id[chat_id]
         else:
-            inline_message_id = msg_data["inline_message_id"]
+            inline_message_id = msg_data[ATTR_INLINE_MESSAGE_ID]
         return message_id, inline_message_id
 
     def get_target_chat_ids(self, target: int | list[int] | None) -> list[int]:

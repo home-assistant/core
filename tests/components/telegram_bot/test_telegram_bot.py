@@ -7,7 +7,14 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 import pytest
-from telegram import Chat, InlineKeyboardButton, InlineKeyboardMarkup, Message, Update
+from telegram import (
+    Chat,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    InputMediaAnimation,
+    Message,
+    Update,
+)
 from telegram.constants import ChatType, ParseMode
 from telegram.error import (
     InvalidToken,
@@ -32,6 +39,7 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_FILE,
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
+    ATTR_MEDIA_TYPE,
     ATTR_MESSAGE,
     ATTR_MESSAGE_TAG,
     ATTR_MESSAGE_THREAD_ID,
@@ -57,6 +65,7 @@ from homeassistant.components.telegram_bot.const import (
     SERVICE_DELETE_MESSAGE,
     SERVICE_EDIT_CAPTION,
     SERVICE_EDIT_MESSAGE,
+    SERVICE_EDIT_MESSAGE_MEDIA,
     SERVICE_EDIT_REPLYMARKUP,
     SERVICE_LEAVE_CHAT,
     SERVICE_SEND_ANIMATION,
@@ -852,6 +861,52 @@ async def test_delete_message(
 
     await hass.async_block_till_done()
     mock.assert_called_once()
+
+
+async def test_edit_message_media(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test edit message media."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.config.allowlist_external_dirs.add("/tmp/")  # noqa: S108
+    write_utf8_file("/tmp/mock", "mock file contents")  # noqa: S108
+
+    # test: edit message media with animation
+
+    with patch(
+        "homeassistant.components.telegram_bot.bot.Bot.edit_message_media",
+        AsyncMock(return_value=True),
+    ) as mock:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_EDIT_MESSAGE_MEDIA,
+            {
+                ATTR_CAPTION: "mock caption",
+                ATTR_FILE: "/tmp/mock",  # noqa: S108
+                ATTR_MEDIA_TYPE: "animation",
+                ATTR_MESSAGEID: 12345,
+                ATTR_CHAT_ID: 123456,
+                ATTR_TIMEOUT: 10,
+                ATTR_KEYBOARD_INLINE: "/mock",
+            },
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+    mock.assert_called_once()
+    assert isinstance(mock.call_args[1]["media"], InputMediaAnimation)
+    assert mock.call_args[1]["media"].caption == "mock caption"
+    assert mock.call_args[1]["chat_id"] == 123456
+    assert mock.call_args[1]["message_id"] == 12345
+    assert mock.call_args[1]["reply_markup"] == InlineKeyboardMarkup(
+        [[InlineKeyboardButton(callback_data="/mock", text="MOCK")]]
+    )
+    assert mock.call_args[1]["read_timeout"] == 10
 
 
 async def test_edit_message(
