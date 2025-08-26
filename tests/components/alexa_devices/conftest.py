@@ -85,4 +85,6 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_LOGIN_DATA: {"session": "test-session"},
         },
         unique_id=TEST_USERNAME,
+        version=1,
+        minor_version=2,
     )
