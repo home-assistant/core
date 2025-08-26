@@ -1,6 +1,6 @@
 """Test binary sensors of APCUPSd integration."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -10,47 +10,57 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
 
-from . import MOCK_STATUS, async_init_integration
+from . import MOCK_STATUS
 
-from tests.common import snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
+
+pytestmark = [
+    pytest.mark.parametrize(
+        "init_integration", [Platform.BINARY_SENSOR], indirect=True
+    ),
+    pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration"),
+]
 
 
 async def test_binary_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test states of binary sensors."""
-    with patch("homeassistant.components.apcupsd.PLATFORMS", [Platform.BINARY_SENSOR]):
-        config_entry = await async_init_integration(hass, status=MOCK_STATUS)
-    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
+    """Test states of binary sensor entities."""
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_no_binary_sensor(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "mock_request_status",
+    [{k: v for k, v in MOCK_STATUS.items() if k != "STATFLAG"}],
+    indirect=True,
+)
+async def test_no_binary_sensor(
+    hass: HomeAssistant,
+    mock_request_status: AsyncMock,
+) -> None:
     """Test binary sensor when STATFLAG is not available."""
-    status = MOCK_STATUS.copy()
-    status.pop("STATFLAG")
-    await async_init_integration(hass, status=status)
-
-    device_slug = slugify(MOCK_STATUS["UPSNAME"])
+    device_slug = slugify(mock_request_status.return_value["UPSNAME"])
     state = hass.states.get(f"binary_sensor.{device_slug}_online_status")
     assert state is None
 
 
 @pytest.mark.parametrize(
-    ("override", "expected"),
+    ("mock_request_status", "expected"),
     [
-        ("0x008", "on"),
-        ("0x02040010 Status Flag", "off"),
+        (MOCK_STATUS | {"STATFLAG": "0x008"}, "on"),
+        (MOCK_STATUS | {"STATFLAG": "0x02040010 Status Flag"}, "off"),
     ],
+    indirect=["mock_request_status"],
 )
-async def test_statflag(hass: HomeAssistant, override: str, expected: str) -> None:
+async def test_statflag(
+    hass: HomeAssistant,
+    mock_request_status: AsyncMock,
+    expected: str,
+) -> None:
     """Test binary sensor for different STATFLAG values."""
-    status = MOCK_STATUS.copy()
-    status["STATFLAG"] = override
-    await async_init_integration(hass, status=status)
-
-    device_slug = slugify(MOCK_STATUS["UPSNAME"])
-    assert (
-        hass.states.get(f"binary_sensor.{device_slug}_online_status").state == expected
-    )
+    device_slug = slugify(mock_request_status.return_value["UPSNAME"])
+    state = hass.states.get(f"binary_sensor.{device_slug}_online_status")
+    assert state.state == expected
