@@ -215,10 +215,6 @@ def add_minutes_to_time(time_str, minutes_str):
 
 
 def get_next_friday():
-    """Return the date of the next Friday from today.
-
-    If today is Friday, return the next Friday.
-
     """Return the date of the next Friday after today.
 
     This function always returns the Friday of the following week if today is Friday,
