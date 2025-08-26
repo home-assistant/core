@@ -1,7 +1,8 @@
 """Test usage_prediction WebSocket API."""
 
 from collections.abc import Generator
-from datetime import timedelta
+from copy import deepcopy
+from datetime import datetime, timedelta
 from unittest.mock import Mock, patch
 
 from freezegun import freeze_time
@@ -66,40 +67,45 @@ async def test_caching_behavior(
     assert await async_setup_component(hass, "usage_prediction", {})
 
     client = await hass_ws_client(hass)
-    now = dt_util.utcnow()
+    now = datetime(2026, 8, 26, 9, 0, 0, tzinfo=dt_util.DEFAULT_TIME_ZONE)
 
     # First call should fetch from database
     with freeze_time(now):
         await client.send_json({"id": 1, "type": "usage_prediction/common_control"})
         msg = await client.receive_json()
-        assert msg["success"] is True
-        assert msg["result"] == {
-            "entities": [
-                "light.kitchen",
-            ]
-        }
-        assert mock_predict_common_control.call_count == 1
 
-    mock_predict_common_control.return_value["morning"].append("light.bla")
+    assert msg["success"] is True
+    assert msg["result"] == {
+        "entities": [
+            "light.kitchen",
+        ]
+    }
+    assert mock_predict_common_control.call_count == 1
+
+    new_result = deepcopy(mock_predict_common_control.return_value)
+    new_result["morning"].append("light.bla")
+    mock_predict_common_control.return_value = new_result
 
     # Second call within 24 hours should use cache
     with freeze_time(now + timedelta(hours=23)):
         await client.send_json({"id": 2, "type": "usage_prediction/common_control"})
         msg = await client.receive_json()
-        assert msg["success"] is True
-        assert msg["result"] == {
-            "entities": [
-                "light.kitchen",
-            ]
-        }
-        # Should still be 1 (no new database call)
-        assert mock_predict_common_control.call_count == 1
+
+    assert msg["success"] is True
+    assert msg["result"] == {
+        "entities": [
+            "light.kitchen",
+        ]
+    }
+    # Should still be 1 (no new database call)
+    assert mock_predict_common_control.call_count == 1
 
     # Third call after 24 hours should fetch from database again
     with freeze_time(now + timedelta(hours=25)):
         await client.send_json({"id": 3, "type": "usage_prediction/common_control"})
         msg = await client.receive_json()
-        assert msg["success"] is True
-        assert msg["result"] == {"entities": ["light.kitchen", "light.bla"]}
-        # Should now be 2 (new database call)
-        assert mock_predict_common_control.call_count == 2
+
+    assert msg["success"] is True
+    assert msg["result"] == {"entities": ["light.kitchen", "light.bla"]}
+    # Should now be 2 (new database call)
+    assert mock_predict_common_control.call_count == 2
