@@ -437,11 +437,6 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
-    "aps": {
-      "name": "Arizona Public Service (APS)",
-      "integration_type": "virtual",
-      "supported_by": "opower"
-    },
     "apsystems": {
       "name": "APsystems",
       "integration_type": "device",
@@ -5993,6 +5988,12 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_push"
+    },
+    "sleep_as_android": {
+      "name": "Sleep as Android",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "sleepiq": {
       "name": "SleepIQ",

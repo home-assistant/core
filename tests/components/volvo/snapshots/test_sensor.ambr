@@ -128,7 +128,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.volvo_ex30_car_connection',
     'has_entity_name': True,
     'hidden_by': None,
@@ -230,6 +230,62 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'connected',
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_charging_power-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_ex30_charging_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Charging power',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'charging_power',
+    'unique_id': 'yv1abcdefg1234567_charging_power',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensor[ex30_2024][sensor.volvo_ex30_charging_power-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Volvo EX30 Charging power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_ex30_charging_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
   })
 # ---
 # name: test_sensor[ex30_2024][sensor.volvo_ex30_charging_power_status-entry]
@@ -1163,7 +1219,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.volvo_s90_car_connection',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1951,7 +2007,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.volvo_xc40_car_connection',
     'has_entity_name': True,
     'hidden_by': None,
@@ -2164,7 +2220,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0',
+    'state': '1386',
   })
 # ---
 # name: test_sensor[xc40_electric_2024][sensor.volvo_xc40_charging_power_status-entry]
@@ -3151,7 +3207,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.volvo_xc60_car_connection',
     'has_entity_name': True,
     'hidden_by': None,
@@ -3601,6 +3657,58 @@
     'state': '30000',
   })
 # ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_target_battery_charge_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.volvo_xc60_target_battery_charge_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Target battery charge level',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'target_battery_charge_level',
+    'unique_id': 'yv1abcdefg1234567_target_battery_charge_level',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_target_battery_charge_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Volvo XC60 Target battery charge level',
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.volvo_xc60_target_battery_charge_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '80',
+  })
+# ---
 # name: test_sensor[xc60_phev_2020][sensor.volvo_xc60_time_to_engine_service-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4012,7 +4120,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.volvo_xc90_car_connection',
     'has_entity_name': True,
     'hidden_by': None,
