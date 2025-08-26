@@ -7,9 +7,14 @@ from typing import Any, Final, Literal
 
 import voluptuous as vol
 from xknx import XKNX
-from xknx.exceptions.exception import InvalidSecureConfiguration, XKNXException
+from xknx.exceptions.exception import (
+    CommunicationError,
+    InvalidSecureConfiguration,
+    XKNXException,
+)
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.io.gateway_scanner import GatewayDescriptor, GatewayScanner
+from xknx.io.self_description import request_description
 from xknx.io.util import validate_ip as xknx_validate_ip
 from xknx.secure.keyring import Keyring, XMLInterface
 
@@ -447,9 +452,28 @@ class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors[CONF_KNX_LOCAL_IP] = "invalid_ip_address"
 
             selected_tunneling_type = user_input[CONF_KNX_TUNNELING_TYPE]
-            # Do not check for gateway capabilities as the protocol for this
-            # check might not be available. Just apply directly what is asked by
-            # the user.
+            if not errors:
+                try:
+                    self._selected_tunnel = await request_description(
+                        gateway_ip=_host_ip,
+                        gateway_port=user_input[CONF_PORT],
+                        local_ip=_local_ip,
+                        route_back=user_input[CONF_KNX_ROUTE_BACK],
+                    )
+                except CommunicationError:
+                    # If we cannot get the gateway capabilities, just go on with
+                    # what the user asked, since this request_description might
+                    # not be possible because of some network configuration.
+                    pass
+                else:
+                    if bool(self._selected_tunnel.tunnelling_requires_secure) is not (
+                        selected_tunneling_type == CONF_KNX_TUNNELING_TCP_SECURE
+                    ) or (
+                        selected_tunneling_type == CONF_KNX_TUNNELING_TCP
+                        and not self._selected_tunnel.supports_tunnelling_tcp
+                    ):
+                        errors[CONF_KNX_TUNNELING_TYPE] = "unsupported_tunnel_type"
+
             if not errors:
                 self.new_entry_data = KNXConfigEntryData(
                     connection_type=selected_tunneling_type,
