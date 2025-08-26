@@ -300,32 +300,32 @@ async def test_turn_on_call_order(
     with patch(CONTROLLER_PATH, return_value=mock_DayBetter_api):
         entry = MockConfigEntry(domain=DOMAIN, data={"host": "192.168.1.100"})
         entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 1
+        assert len(hass.states.async_all()) == 1
 
-    light = hass.states.get("light.P076")
-    assert light is not None
-    assert light.state == "off"
+        light = hass.states.get("light.P076")
+        assert light is not None
+        assert light.state == "off"
 
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {"entity_id": light.entity_id, ATTR_BRIGHTNESS_PCT: 50, attribute: value},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {"entity_id": light.entity_id, ATTR_BRIGHTNESS_PCT: 50, attribute: value},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
-    mock_DayBetter_api.assert_has_calls(
-        [
-            call.set_brightness(mock_DayBetter_api.devices[0], 50),
-            getattr(call, mock_call)(
-                mock_DayBetter_api.devices[0], *mock_call_args, **mock_call_kwargs
-            ),
-            call.turn_on_off(mock_DayBetter_api.devices[0], True),
-        ]
-    )
+        mock_DayBetter_api.assert_has_calls(
+            [
+                call.set_brightness(mock_DayBetter_api.devices[0], 50),
+                getattr(call, mock_call)(
+                    mock_DayBetter_api.devices[0], *mock_call_args, **mock_call_kwargs
+                ),
+                call.turn_on_off(mock_DayBetter_api.devices[0], True),
+            ]
+        )
 
 
 # ----------------------------- Brightness Tests -----------------------------
@@ -604,6 +604,7 @@ async def test_scene_restore_temperature(
 
     with patch(CONTROLLER_PATH, return_value=mock_DayBetter_api):
         entry = MockConfigEntry(domain=DOMAIN, data={"host": "192.168.1.100"})
+        entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
