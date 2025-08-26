@@ -1029,7 +1029,7 @@ home-assistant-frontend==20250811.1
 home-assistant-intents==2025.7.30
 
 # homeassistant.components.homematicip_cloud
-homematicip==2.2.0
+homematicip==2.3.0
 
 # homeassistant.components.remember_the_milk
 httplib2==0.20.4
