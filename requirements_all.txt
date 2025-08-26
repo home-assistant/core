@@ -2442,7 +2442,7 @@ python-google-drive-api==0.1.0
 python-homeassistant-analytics==0.9.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==9.2.0
+python-homewizard-energy==9.3.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.4.3
