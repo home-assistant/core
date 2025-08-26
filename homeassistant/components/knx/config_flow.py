@@ -7,14 +7,9 @@ from typing import Any, Final, Literal
 
 import voluptuous as vol
 from xknx import XKNX
-from xknx.exceptions.exception import (
-    CommunicationError,
-    InvalidSecureConfiguration,
-    XKNXException,
-)
+from xknx.exceptions.exception import InvalidSecureConfiguration, XKNXException
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
 from xknx.io.gateway_scanner import GatewayDescriptor, GatewayScanner
-from xknx.io.self_description import request_description
 from xknx.io.util import validate_ip as xknx_validate_ip
 from xknx.secure.keyring import Keyring, XMLInterface
 
