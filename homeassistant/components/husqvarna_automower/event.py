@@ -87,7 +87,7 @@ class AutomowerMessageEventEntity(AutomowerBaseEntity, EventEntity):
     @property
     def available(self) -> bool:
         """Return True if the entity is available."""
-        return self.websocket_alive
+        return self.websocket_alive and self.mower_id in self.coordinator.data
 
     @callback
     def _handle(self, msg: SingleMessageData) -> None:
