@@ -47,7 +47,7 @@ async def ws_common_control(
 ) -> None:
     """Handle usage prediction common control WebSocket API."""
     result = await get_cached_common_control(hass, connection.user.id)
-    time_category = common_control.time_category(dt_util.now())
+    time_category = common_control.time_category(dt_util.now().hour)
     connection.send_result(
         msg["id"],
         {
