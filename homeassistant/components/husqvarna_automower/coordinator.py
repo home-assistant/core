@@ -30,9 +30,8 @@ _LOGGER = logging.getLogger(__name__)
 MAX_WS_RECONNECT_TIME = 600
 SCAN_INTERVAL = timedelta(minutes=8)
 DEFAULT_RECONNECT_TIME = 2  # Define a default reconnect time
-PONG_TIMEOUT = timedelta(seconds=90)
-PING_INTERVAL = timedelta(seconds=10)
-PING_TIMEOUT = timedelta(seconds=5)
+PING_INTERVAL = 60
+
 type AutomowerConfigEntry = ConfigEntry[AutomowerDataUpdateCoordinator]
 
 
@@ -206,7 +205,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
                 self.websocket_alive = await self.api.send_empty_message()
                 _LOGGER.debug("Ping result: %s", self.websocket_alive)
 
-                await asyncio.sleep(60)
+                await asyncio.sleep(PING_INTERVAL)
                 _LOGGER.debug("Websocket alive %s", self.websocket_alive)
                 if not self.websocket_alive:
                     _LOGGER.debug("No pong received → restart polling")
