@@ -36,7 +36,7 @@
         },
         "instructions": {
           "name": "Instructions",
-          "description": "Instructions that explais the image to be generated."
+          "description": "Instructions that explains the image to be generated."
         },
         "entity_id": {
           "name": "Entity ID",
