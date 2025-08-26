@@ -25,7 +25,7 @@ from homeassistant.helpers.update_coordinator import (
 from .const import DATA_AMCREST, DEVICES
 
 if TYPE_CHECKING:
-    from . import AmcrestDevice
+    from .models import AmcrestDevice
 
 PRIVACY_MODE_KEY = "privacy_mode"
 

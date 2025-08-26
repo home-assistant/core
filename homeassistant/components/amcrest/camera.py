@@ -49,7 +49,7 @@ from .const import (
 from .helpers import log_update_error, service_signal
 
 if TYPE_CHECKING:
-    from . import AmcrestConfiguredDevice, AmcrestDevice
+    from .models import AmcrestConfiguredDevice, AmcrestDevice
 
 _LOGGER = logging.getLogger(__name__)
 
