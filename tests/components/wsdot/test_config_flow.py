@@ -17,6 +17,8 @@ from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME, CONF_SOURCE, C
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 CONF_STEP_ID = "step_id"
 CONF_REASON = "reason"
 
@@ -24,11 +26,39 @@ VALID_USER_CONFIG = {
     CONF_API_KEY: "abcd-1234",
 }
 
+VALID_USER_TRAVEL_TIME_CONFIG = {
+    CONF_NAME: "Seattle-Bellevue via I-90 (EB AM)",
+}
+
 
 async def test_show_form(hass: HomeAssistant) -> None:
     """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: SOURCE_USER}
+    )
+
+    assert result[CONF_TYPE] is FlowResultType.FORM
+    assert result[CONF_STEP_ID] == SOURCE_USER
+
+
+@pytest.mark.parametrize(
+    "subentries",
+    [
+        [],
+    ],
+    ids=[""],
+)
+async def test_show_travel_time_form(
+    hass: HomeAssistant,
+    mock_travel_time: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test that the Travel Time form is served with no input."""
+    entry = next(iter(hass.config_entries.async_entries(DOMAIN)), None)
+    assert entry
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, SUBENTRY_TRAVEL_TIMES), context={CONF_SOURCE: SOURCE_USER}
     )
 
     assert result[CONF_TYPE] is FlowResultType.FORM
@@ -46,8 +76,35 @@ async def test_create_user_entry(
     )
 
     assert result[CONF_TYPE] is FlowResultType.CREATE_ENTRY
-    assert result[CONF_TITLE] == "wsdot"
+    assert result[CONF_TITLE] == DOMAIN
     assert result[CONF_DATA][CONF_API_KEY] == "abcd-1234"
+
+
+@pytest.mark.parametrize(
+    "subentries",
+    [
+        [],
+    ],
+    ids=[""],
+)
+async def test_create_travel_time_subentry(
+    hass: HomeAssistant,
+    mock_travel_time: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test that the user step for Travel Time works."""
+    entry = next(iter(hass.config_entries.async_entries(DOMAIN)), None)
+    assert entry
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, SUBENTRY_TRAVEL_TIMES),
+        context={CONF_SOURCE: SOURCE_USER},
+        data=VALID_USER_TRAVEL_TIME_CONFIG,
+    )
+
+    assert result[CONF_TYPE] is FlowResultType.CREATE_ENTRY
+    assert result[CONF_DATA][CONF_NAME] == "Seattle-Bellevue via I-90 (EB AM)"
+    assert result[CONF_DATA][CONF_ID] == 96
 
 
 @pytest.mark.parametrize(

@@ -18,7 +18,9 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_ID,
     CONF_NAME,
+    CONF_PLATFORM,
     CONF_SOURCE,
+    Platform,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
@@ -60,7 +62,11 @@ async def async_setup_platform(
     entries = hass.config_entries.async_entries(DOMAIN)
     if entries:
         for entry in entries:
-            if entry.data[CONF_API_KEY] == config[CONF_API_KEY]:
+            if entry.data[CONF_API_KEY] in [
+                config_entry[CONF_API_KEY]
+                for config_entry in config[Platform.SENSOR]
+                if config_entry[CONF_PLATFORM] == DOMAIN
+            ]:
                 ir.async_create_issue(
                     hass,
                     DOMAIN,
@@ -100,7 +106,7 @@ async def async_setup_entry(
     wsdot_travel_times = wsdot_api.WsdotTravelTimes(api_key=api_key, session=session)
     try:
         await wsdot_travel_times.get_all_travel_times()
-    except wsdot_api.WsdotError as api_error:
+    except wsdot_api.WsdotTravelError as api_error:
         raise ConfigEntryAuthFailed from api_error
     entry.runtime_data = WsdotRuntimeData(wsdot_travel_times=wsdot_travel_times)
     for subentry_id, subentry in entry.subentries.items():

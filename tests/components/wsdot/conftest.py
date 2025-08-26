@@ -37,6 +37,7 @@ def mock_config_data() -> dict[str, Any]:
 def mock_config_entry(mock_config_data) -> MockConfigEntry:
     """Mock a wsdot config entry."""
     return MockConfigEntry(
+        unique_id="test wsdot",
         domain=DOMAIN,
         data=mock_config_data,
     )
@@ -50,6 +51,7 @@ async def init_integration(
 ) -> MockConfigEntry:
     """Set up wsdot integration with subentries for testing."""
     mock_config_entry = MockConfigEntry(
+        unique_id="test wsdot",
         domain=DOMAIN,
         data=mock_config_data,
         subentries_data=subentries,
