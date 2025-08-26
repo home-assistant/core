@@ -33,7 +33,6 @@ async def test_browsing(
     assert item.children[0].media_content_type == "image/png"
     assert item.children[0].identifier == image_id
     assert item.children[0].title == "Mock Image"
-    assert item.children[0].thumbnail == f"/api/ai_task/thumbnails/{image_id}"
 
     with pytest.raises(
         media_source.BrowseError,

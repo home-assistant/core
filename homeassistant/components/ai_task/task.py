@@ -356,9 +356,6 @@ class ImageData:
     title: str
     """Title of the image, usually the prompt used to generate it."""
 
-    thumbnail: bytes | None = None
-    """Optional raw thumbnail data for the image."""
-
     def __str__(self) -> str:
         """Return image data as a string."""
         return f"<ImageData {self.title}: {id(self)}>"

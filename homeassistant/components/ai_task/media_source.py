@@ -62,7 +62,6 @@ class ImageMediaSource(MediaSource):
                 media_class=MediaClass.IMAGE,
                 media_content_type=image.mime_type,
                 title=image.title or filename,
-                thumbnail=f"/api/{DOMAIN}/thumbnails/{filename}",
                 can_play=True,
                 can_expand=False,
             )

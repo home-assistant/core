@@ -1,11 +1,9 @@
 """Integration to offer AI tasks to Home Assistant."""
 
-from io import BytesIO
 import logging
 from typing import Any
 
 from aiohttp import web
-from PIL import Image
 import voluptuous as vol
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
@@ -100,7 +98,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await hass.data[DATA_PREFERENCES].async_load()
     async_setup_http(hass)
     hass.http.register_view(ImageView)
-    hass.http.register_view(ThumbnailView)
     hass.services.async_register(
         DOMAIN,
         SERVICE_GENERATE_DATA,
@@ -231,38 +228,5 @@ class ImageView(HomeAssistantView):
 
         return web.Response(
             body=image_data.data,
-            content_type=image_data.mime_type,
-        )
-
-
-class ThumbnailView(HomeAssistantView):
-    """View to generated images."""
-
-    url = f"/api/{DOMAIN}/thumbnails/{{filename}}"
-    name = f"api:{DOMAIN}/thumbnails"
-    requires_auth = False
-
-    async def get(
-        self,
-        request: web.Request,
-        filename: str,
-    ) -> web.Response:
-        """Serve image."""
-        hass = request.app[KEY_HASS]
-        image_storage = hass.data[DATA_IMAGES]
-        image_data = image_storage.get(filename)
-
-        if image_data is None:
-            raise web.HTTPNotFound
-
-        if image_data.thumbnail is None:
-            image = Image.open(BytesIO(image_data.data))
-            image.thumbnail((256, 256))
-            image_bytes = BytesIO()
-            image.save(image_bytes, format=image_data.mime_type.split("/")[-1].upper())
-            image_data.thumbnail = image_bytes.getvalue()
-
-        return web.Response(
-            body=image_data.thumbnail,
             content_type=image_data.mime_type,
         )

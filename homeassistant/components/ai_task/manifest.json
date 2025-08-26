@@ -6,6 +6,5 @@
   "dependencies": ["conversation", "media_source"],
   "documentation": "https://www.home-assistant.io/integrations/ai_task",
   "integration_type": "entity",
-  "quality_scale": "internal",
-  "requirements": ["Pillow==11.3.0"]
+  "quality_scale": "internal"
 }
