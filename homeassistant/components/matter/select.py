@@ -524,5 +524,6 @@ DISCOVERY_SCHEMAS = [
         required_attributes=(
             clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,
         ),
+        featuremap_contains=clusters.BooleanStateConfiguration.Bitmaps.Feature.kSensitivityLevel,
     ),
 ]
