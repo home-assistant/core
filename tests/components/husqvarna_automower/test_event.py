@@ -33,10 +33,10 @@ async def test_event(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     values: dict[str, MowerAttributes],
+    automower_ws_ready,
 ) -> None:
     """Test that a new message arriving over the websocket creates and updates the sensor."""
     callbacks: list[Callable[[SingleMessageData], None]] = []
-    ws_ready_callbacks: list[Callable[[], None]] = []
 
     @callback
     def fake_register_websocket_response(
@@ -44,15 +44,8 @@ async def test_event(
     ) -> None:
         callbacks.append(cb)
 
-    @callback
-    def fake_register_ws_ready_callback(cb: Callable[[], None]) -> None:
-        ws_ready_callbacks.append(cb)
-
     mock_automower_client.register_single_message_callback.side_effect = (
         fake_register_websocket_response
-    )
-    mock_automower_client.register_ws_ready_callback.side_effect = (
-        fake_register_ws_ready_callback
     )
     mock_automower_client.send_empty_message.return_value = True
 
@@ -61,11 +54,8 @@ async def test_event(
     await hass.async_block_till_done()
 
     # Start the watchdog and let it run once to set websocket_alive=True
-    for cb in ws_ready_callbacks:
+    for cb in automower_ws_ready:
         cb()
-    await hass.async_block_till_done()
-    freezer.tick(1)
-    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     # Ensure callback was registered for the test mower
@@ -99,17 +89,13 @@ async def test_event(
     assert state.attributes[ATTR_EVENT_TYPE] == "wheel_motor_overloaded_rear_left"
 
     # Reload the config entry to ensure the entity is created again
-    ws_ready_callbacks.clear()
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # Start the new watchdog and let it run
-    for cb in ws_ready_callbacks:
+    for cb in automower_ws_ready:
         cb()
-    await hass.async_block_till_done()
-    freezer.tick(1)
-    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get("event.test_mower_1_message")
@@ -185,6 +171,7 @@ async def test_event_snapshot(
     mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
+    automower_ws_ready,
 ) -> None:
     """Test that a new message arriving over the websocket updates the sensor."""
     with patch(
@@ -192,7 +179,6 @@ async def test_event_snapshot(
         [Platform.EVENT],
     ):
         callbacks: list[Callable[[SingleMessageData], None]] = []
-        ws_ready_callbacks: list[Callable[[], None]] = []
 
         @callback
         def fake_register_websocket_response(
@@ -200,24 +186,16 @@ async def test_event_snapshot(
         ) -> None:
             callbacks.append(cb)
 
-        @callback
-        def fake_register_ws_ready_callback(cb: Callable[[], None]) -> None:
-            ws_ready_callbacks.append(cb)
-
         mock_automower_client.register_single_message_callback.side_effect = (
             fake_register_websocket_response
         )
-        mock_automower_client.register_ws_ready_callback.side_effect = (
-            fake_register_ws_ready_callback
-        )
-        mock_automower_client.send_empty_message.return_value = True
 
         # Set up integration
         await setup_integration(hass, mock_config_entry)
         await hass.async_block_till_done()
 
         # Start the watchdog and let it run once
-        for cb in ws_ready_callbacks:
+        for cb in automower_ws_ready:
             cb()
         await hass.async_block_till_done()
 
