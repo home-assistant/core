@@ -312,7 +312,7 @@ PROGRAM_ENUM_OPTIONS = {
     )
     for option_key, options in (
         (
-            OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_PERCENTAGE,
+            OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
             FAN_SPEED_MODE_OPTIONS,
         ),
         (
