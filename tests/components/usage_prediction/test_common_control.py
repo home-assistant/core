@@ -38,15 +38,8 @@ async def test_empty_database(hass: HomeAssistant) -> None:
 async def test_invalid_user_id(hass: HomeAssistant) -> None:
     """Test function with invalid user ID returns empty results."""
     # Invalid user ID format (not a valid UUID)
-    results = await async_predict_common_control(hass, "invalid-user-id")
-
-    # Should return empty lists for all time categories due to invalid user ID
-    assert results == {
-        "morning": [],
-        "afternoon": [],
-        "evening": [],
-        "night": [],
-    }
+    with pytest.raises(ValueError, match=r"Invalid user_id format"):
+        await async_predict_common_control(hass, "invalid-user-id")
 
 
 @pytest.mark.usefixtures("recorder_mock")
