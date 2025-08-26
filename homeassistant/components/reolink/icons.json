@@ -318,6 +318,9 @@
       },
       "pre_record_battery_stop": {
         "default": "mdi:history"
+      },
+      "silent_time": {
+        "default": "mdi:volume-off"
       }
     },
     "select": {

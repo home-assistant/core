@@ -804,6 +804,19 @@ CHIME_NUMBER_ENTITIES = (
         value=lambda chime: chime.volume,
         method=lambda chime, value: chime.set_option(volume=int(value)),
     ),
+    ReolinkChimeNumberEntityDescription(
+        key="silent_time",
+        cmd_key="609",
+        translation_key="silent_time",
+        entity_category=EntityCategory.CONFIG,
+        device_class=NumberDeviceClass.DURATION,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=720,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        value=lambda chime: int(chime.silent_time / 60),
+        method=lambda chime, value: chime.set_silent_time(time=int(value * 60)),
+    ),
 )
 
 
