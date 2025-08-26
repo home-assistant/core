@@ -87,6 +87,7 @@ FLOWS = {
         "baf",
         "balboa",
         "bang_olufsen",
+        "bayesian",
         "blebox",
         "blink",
         "blue_current",
