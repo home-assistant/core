@@ -222,8 +222,8 @@ class ImageView(HomeAssistantView):
     ) -> web.Response:
         """Serve image."""
         hass = request.app[KEY_HASS]
-        IMAGE_STORAGE = hass.data.setdefault(DATA_IMAGES, {})
-        image_data = IMAGE_STORAGE.get(filename)
+        image_storage = hass.data.setdefault(DATA_IMAGES, {})
+        image_data = image_storage.get(filename)
 
         if image_data is None:
             raise web.HTTPNotFound
@@ -248,8 +248,8 @@ class ThumbnailView(HomeAssistantView):
     ) -> web.Response:
         """Serve image."""
         hass = request.app[KEY_HASS]
-        IMAGE_STORAGE = hass.data.setdefault(DATA_IMAGES, {})
-        image_data = IMAGE_STORAGE.get(filename)
+        image_storage = hass.data.setdefault(DATA_IMAGES, {})
+        image_data = image_storage.get(filename)
 
         if image_data is None:
             raise web.HTTPNotFound

@@ -10,9 +10,9 @@ from homeassistant.core import HomeAssistant
 @pytest.fixture(name="image_id")
 async def mock_image_generate(hass: HomeAssistant) -> str:
     """Mock image generation and return the image_id."""
-    IMAGE_STORAGE = hass.data.setdefault("ai_task_images", {})
+    image_storage = hass.data.setdefault("ai_task_images", {})
     filename = "2025-06-15_150640_test_task.png"
-    IMAGE_STORAGE[filename] = ImageData(
+    image_storage[filename] = ImageData(
         data=b"A",
         timestamp=1750000000,
         mime_type="image/png",

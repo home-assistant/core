@@ -214,10 +214,10 @@ async def async_generate_image(
     if service_result.get("revised_prompt") is None:
         service_result["revised_prompt"] = instructions
 
-    IMAGE_STORAGE = hass.data.setdefault(DATA_IMAGES, {})
+    image_storage = hass.data.setdefault(DATA_IMAGES, {})
 
-    if len(IMAGE_STORAGE) + 1 > MAX_IMAGES:
-        _cleanup_images(IMAGE_STORAGE, len(IMAGE_STORAGE) + 1 - MAX_IMAGES)
+    if len(image_storage) + 1 > MAX_IMAGES:
+        _cleanup_images(image_storage, len(image_storage) + 1 - MAX_IMAGES)
 
     current_time = datetime.now()
     ext = (
@@ -227,7 +227,7 @@ async def async_generate_image(
     sanitized_task_name = RE_SANITIZE_FILENAME.sub("", slugify(task_name))
     filename = f"{current_time.strftime('%Y-%m-%d_%H%M%S')}_{sanitized_task_name}{ext}"
 
-    IMAGE_STORAGE[filename] = ImageData(
+    image_storage[filename] = ImageData(
         data=image_data,
         timestamp=int(current_time.timestamp()),
         mime_type=service_result.get("mime_type", "image/png"),
@@ -236,7 +236,7 @@ async def async_generate_image(
 
     def _purge_image(filename: str, now: datetime) -> None:
         """Remove image from storage."""
-        IMAGE_STORAGE.pop(filename, None)
+        image_storage.pop(filename, None)
 
     if IMAGE_EXPIRY_TIME > 0:
         async_call_later(hass, IMAGE_EXPIRY_TIME, partial(_purge_image, filename))

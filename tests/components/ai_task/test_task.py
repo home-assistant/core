@@ -311,9 +311,9 @@ async def test_image_cleanup(
     mock_ai_task_entity: MockAITaskEntity,
 ) -> None:
     """Test image cache cleanup."""
-    IMAGE_STORAGE = hass.data.setdefault("ai_task_images", {})
-    IMAGE_STORAGE.clear()
-    IMAGE_STORAGE.update(
+    image_storage = hass.data.setdefault("ai_task_images", {})
+    image_storage.clear()
+    image_storage.update(
         {
             str(idx): ImageData(
                 data=b"mock_image_data",
@@ -324,7 +324,7 @@ async def test_image_cleanup(
             for idx in range(20)
         }
     )
-    assert len(IMAGE_STORAGE) == 20
+    assert len(image_storage) == 20
 
     result = await async_generate_image(
         hass,
@@ -333,10 +333,10 @@ async def test_image_cleanup(
         instructions="Test prompt",
     )
 
-    assert result["url"].split("/")[-1] in IMAGE_STORAGE
-    assert len(IMAGE_STORAGE) == 20
+    assert result["url"].split("/")[-1] in image_storage
+    assert len(image_storage) == 20
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
     await hass.async_block_till_done()
 
-    assert len(IMAGE_STORAGE) == 19
+    assert len(image_storage) == 19
