@@ -1,0 +1,17 @@
+{
+  "device_id": "2930000002",
+  "name": "Office",
+  "is_active": true,
+  "device_type": "WAVE_PLUS",
+  "product_name": "Wave Plus",
+  "location_name": "Home",
+  "sensors": {
+    "battery": 1.1,
+    "co2": 2.2,
+    "humidity": 3.3,
+    "pressure": 4.4,
+    "radonShortTermAvg": 5.5,
+    "temp": 6.6,
+    "voc": 7.7
+  }
+}

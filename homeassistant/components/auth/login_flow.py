@@ -199,23 +199,19 @@ class AuthProvidersView(HomeAssistantView):
         )
 
 
-def _prepare_result_json(
-    result: AuthFlowResult,
-) -> AuthFlowResult:
-    """Convert result to JSON."""
+def _prepare_result_json(result: AuthFlowResult) -> dict[str, Any]:
+    """Convert result to JSON serializable dict."""
     if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
-        data = result.copy()
-        data.pop("result")
-        data.pop("data")
-        return data
+        return {
+            key: val for key, val in result.items() if key not in ("result", "data")
+        }
 
     if result["type"] != data_entry_flow.FlowResultType.FORM:
-        return result
+        return result  # type: ignore[return-value]
 
-    data = result.copy()
-
-    if (schema := data["data_schema"]) is None:
-        data["data_schema"] = []  # type: ignore[typeddict-item]  # json result type
+    data = dict(result)
+    if (schema := result["data_schema"]) is None:
+        data["data_schema"] = []
     else:
         data["data_schema"] = voluptuous_serialize.convert(schema)
 
@@ -268,7 +264,7 @@ class LoginFlowBaseView(HomeAssistantView):
         result.pop("data")
         result.pop("context")
 
-        result_obj: Credentials = result.pop("result")
+        result_obj = result.pop("result")
 
         # Result can be None if credential was never linked to a user before.
         user = await hass.auth.async_get_user_by_credentials(result_obj)
@@ -281,7 +277,8 @@ class LoginFlowBaseView(HomeAssistantView):
             )
 
         process_success_login(request)
-        result["result"] = self._store_result(client_id, result_obj)
+        # We overwrite the Credentials object with the string code to retrieve it.
+        result["result"] = self._store_result(client_id, result_obj)  # type: ignore[typeddict-item]
 
         return self.json(result)
 

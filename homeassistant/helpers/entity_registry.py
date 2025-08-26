@@ -959,6 +959,15 @@ class EntityRegistry(BaseRegistry):
             created_at = deleted_entity.created_at
             device_class = deleted_entity.device_class
             disabled_by = deleted_entity.disabled_by
+            # Adjust disabled_by based on config entry state
+            if config_entry and config_entry is not UNDEFINED:
+                if config_entry.disabled_by:
+                    if disabled_by is None:
+                        disabled_by = RegistryEntryDisabler.CONFIG_ENTRY
+                elif disabled_by == RegistryEntryDisabler.CONFIG_ENTRY:
+                    disabled_by = None
+            elif disabled_by == RegistryEntryDisabler.CONFIG_ENTRY:
+                disabled_by = None
             # Restore entity_id if it's available
             if self._entity_id_available(deleted_entity.entity_id):
                 entity_id = deleted_entity.entity_id
@@ -1103,13 +1112,13 @@ class EntityRegistry(BaseRegistry):
             entities = async_entries_for_device(
                 self, event.data["device_id"], include_disabled_entities=True
             )
-            removed_device = event.data["device"]
+            removed_device_dict = event.data["device"]
             for entity in entities:
                 config_entry_id = entity.config_entry_id
                 if (
-                    config_entry_id in removed_device.config_entries
+                    config_entry_id in removed_device_dict["config_entries"]
                     and entity.config_subentry_id
-                    in removed_device.config_entries_subentries[config_entry_id]
+                    in removed_device_dict["config_entries_subentries"][config_entry_id]
                 ):
                     self.async_remove(entity.entity_id)
                 else:
@@ -1270,6 +1279,20 @@ class EntityRegistry(BaseRegistry):
                 old_config_subentry_id=old.config_subentry_id,
                 unique_id=new_unique_id,
             )
+
+        if disabled_by is UNDEFINED and config_entry_id is not UNDEFINED:
+            if config_entry_id:
+                config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
+                if TYPE_CHECKING:
+                    # We've checked the config_entry exists in _validate_item
+                    assert config_entry is not None
+                if config_entry.disabled_by:
+                    if old.disabled_by is None:
+                        new_values["disabled_by"] = RegistryEntryDisabler.CONFIG_ENTRY
+                elif old.disabled_by == RegistryEntryDisabler.CONFIG_ENTRY:
+                    new_values["disabled_by"] = None
+            elif old.disabled_by == RegistryEntryDisabler.CONFIG_ENTRY:
+                new_values["disabled_by"] = None
 
         if new_entity_id is not UNDEFINED and new_entity_id != old.entity_id:
             if not self._entity_id_available(new_entity_id):

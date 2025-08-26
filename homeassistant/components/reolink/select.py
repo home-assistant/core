@@ -251,6 +251,20 @@ SELECT_ENTITIES = (
         method=lambda api, ch, value: api.set_bit_rate(ch, int(value), "sub"),
     ),
     ReolinkSelectEntityDescription(
+        key="pre_record_fps",
+        cmd_key="594",
+        translation_key="pre_record_fps",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        unit_of_measurement=UnitOfFrequency.HERTZ,
+        get_options=["1", "2", "5"],
+        supported=lambda api, ch: api.supported(ch, "pre_record"),
+        value=lambda api, ch: str(api.baichuan.pre_record_fps(ch)),
+        method=lambda api, ch, value: api.baichuan.set_pre_recording(
+            ch, fps=int(value)
+        ),
+    ),
+    ReolinkSelectEntityDescription(
         key="post_rec_time",
         cmd_key="GetRec",
         translation_key="post_rec_time",
@@ -367,6 +381,7 @@ async def async_setup_entry(
         for entity_description in CHIME_SELECT_ENTITIES
         for chime in reolink_data.host.api.chime_list
         if entity_description.supported(chime)
+        if entity_description.supported(chime) and chime.channel is not None
     )
     async_add_entities(entities)
 

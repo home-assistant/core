@@ -70,6 +70,9 @@
       },
       "display_light": {
         "name": "Lighting"
+      },
+      "air_clean_operation_mode": {
+        "name": "[%key:component::lg_thinq::entity::climate::climate_air_conditioner::state_attributes::preset_mode::state::air_clean%]"
       }
     },
     "binary_sensor": {
@@ -120,7 +123,7 @@
             "state": {
               "slow": "Slow",
               "low": "[%key:common::state::low%]",
-              "mid": "[%key:common::state::medium%]",
+              "medium": "[%key:common::state::medium%]",
               "high": "[%key:common::state::high%]",
               "power": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::high%]",
               "auto": "[%key:common::state::auto%]"
@@ -178,7 +181,7 @@
               "no_battery_error": "Robot cleaner's battery is low",
               "no_dust_bin_error": "Dust bin is not installed",
               "no_filter_error": "[%key:component::lg_thinq::entity::event::error::state_attributes::event_type::state::filter_clogging_error%]",
-              "out_of_balance_error": "Out of balance load",
+              "out_of_balance_error": "Out-of-balance load",
               "overfill_error": "Overfill error",
               "part_malfunction_error": "AIE error",
               "power_code_connection_error": "Power cord connection error",
@@ -220,7 +223,7 @@
               "error_during_cleaning": "Cleaning stopped due to an error",
               "error_during_washing": "An error has occurred in the washing machine",
               "error_has_occurred": "An error has occurred",
-              "frozen_is_complete": "Ice plus is done",
+              "frozen_is_complete": "Ice Plus is done",
               "homeguard_is_stopped": "Home Guard has stopped",
               "lack_of_water": "There is no water in the water tank",
               "motion_is_detected": "Photograph is sent as movement is detected during Home Guard",
@@ -331,6 +334,19 @@
           "normal": "Moderate",
           "bad": "Unhealthy",
           "very_bad": "Poor"
+        }
+      },
+      "carbon_dioxide": {
+        "name": "[%key:component::sensor::entity_component::carbon_dioxide::name%]",
+        "state": {
+          "invalid": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::invalid%]",
+          "good": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::good%]",
+          "normal": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::normal%]",
+          "moderate": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::normal%]",
+          "bad": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::bad%]",
+          "unhealthy": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::bad%]",
+          "very_bad": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::very_bad%]",
+          "poor": "[%key:component::lg_thinq::entity::sensor::total_pollution_level::state::very_bad%]"
         }
       },
       "monitoring_enabled": {
@@ -771,8 +787,46 @@
       "hop_oil_info": {
         "name": "Hops"
       },
+      "hop_oil_capsule_1": {
+        "name": "First hop",
+        "state": {
+          "cascade": "Cascade",
+          "chinook": "Chinook",
+          "goldings": "Goldings",
+          "fuggles": "Fuggles",
+          "hallertau": "Hallertau",
+          "citrussy": "Citrussy"
+        }
+      },
+      "hop_oil_capsule_2": {
+        "name": "Second hop",
+        "state": {
+          "cascade": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule_1::state::cascade%]",
+          "chinook": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule_1::state::chinook%]",
+          "goldings": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule_1::state::goldings%]",
+          "fuggles": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule_1::state::fuggles%]",
+          "hallertau": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule_1::state::hallertau%]",
+          "citrussy": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule_1::state::citrussy%]"
+        }
+      },
       "flavor_info": {
         "name": "Flavor"
+      },
+      "flavor_capsule_1": {
+        "name": "First flavor",
+        "state": {
+          "coriander": "Coriander",
+          "coriander_seed": "[%key:component::lg_thinq::entity::sensor::flavor_capsule_1::state::coriander%]",
+          "orange": "Orange"
+        }
+      },
+      "flavor_capsule_2": {
+        "name": "Second flavor",
+        "state": {
+          "coriander": "[%key:component::lg_thinq::entity::sensor::flavor_capsule_1::state::coriander%]",
+          "coriander_seed": "[%key:component::lg_thinq::entity::sensor::flavor_capsule_1::state::coriander%]",
+          "orange": "[%key:component::lg_thinq::entity::sensor::flavor_capsule_1::state::orange%]"
+        }
       },
       "beer_remain": {
         "name": "Recipe progress"

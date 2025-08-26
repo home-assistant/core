@@ -29,7 +29,8 @@ from .const import (
     DEFAULT_LANGUAGE,
     DOMAIN,
 )
-from .entity import JewishCalendarConfigEntry, JewishCalendarData
+from .coordinator import JewishCalendarData, JewishCalendarUpdateCoordinator
+from .entity import JewishCalendarConfigEntry
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,7 +70,7 @@ async def async_setup_entry(
         )
     )
 
-    config_entry.runtime_data = JewishCalendarData(
+    data = JewishCalendarData(
         language,
         diaspora,
         location,
@@ -77,8 +78,11 @@ async def async_setup_entry(
         havdalah_offset,
     )
 
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    coordinator = JewishCalendarUpdateCoordinator(hass, config_entry, data)
+    await coordinator.async_config_entry_first_refresh()
 
+    config_entry.runtime_data = coordinator
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
 
 
@@ -86,7 +90,13 @@ async def async_unload_entry(
     hass: HomeAssistant, config_entry: JewishCalendarConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(
+        config_entry, PLATFORMS
+    ):
+        coordinator = config_entry.runtime_data
+        if coordinator.event_unsub:
+            coordinator.event_unsub()
+    return unload_ok
 
 
 async def async_migrate_entry(
