@@ -11,7 +11,7 @@ from amcrest import AmcrestError
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_SENSORS, PERCENTAGE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -74,6 +74,7 @@ async def async_setup_platform(
         ],
         True,
     )
+
 
 # Platform setup for config flow
 async def async_setup_entry(
@@ -147,9 +148,36 @@ class AmcrestSensor(SensorEntity):
                         f"{storage['used'][0]} {storage['used'][1]}"
                     )
                 try:
-                    self._attr_native_value = f"{storage['used_percent']:.2f}"
-                except ValueError:
-                    self._attr_native_value = storage["used_percent"]
+                    # Handle case where used_percent might be "N/A" string
+                    _LOGGER.debug(
+                        "Processing storage used_percent: %s (type: %s)",
+                        storage.get("used_percent"),
+                        type(storage.get("used_percent")),
+                    )
+                    if (
+                        storage["used_percent"] == "N/A"
+                        or storage["used_percent"] is None
+                    ):
+                        _LOGGER.debug(
+                            "Setting native_value to None due to N/A or None value"
+                        )
+                        self._attr_native_value = None
+                    else:
+                        value = round(float(storage["used_percent"]), 2)
+                        _LOGGER.debug(
+                            "Setting native_value to: %s (type: %s)", value, type(value)
+                        )
+                        self._attr_native_value = value
+                except (ValueError, TypeError):
+                    _LOGGER.debug("Exception occurred, setting native_value to None")
+                    self._attr_native_value = None
+
+            _LOGGER.debug(
+                "Final native_value for %s: %s (type: %s)",
+                self.name,
+                self._attr_native_value,
+                type(self._attr_native_value),
+            )
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "sensor", error)
 
@@ -162,6 +190,7 @@ class AmcrestSensor(SensorEntity):
                 self.async_write_ha_state,
             )
         )
+
 
 class AmcrestCoordinatedSensor(CoordinatorEntity, AmcrestSensor):
     """Representation of an Amcrest Camera Sensor tied to DataUpdateCoordinator."""
@@ -177,4 +206,104 @@ class AmcrestCoordinatedSensor(CoordinatorEntity, AmcrestSensor):
         CoordinatorEntity.__init__(self, coordinator)
         AmcrestSensor.__init__(self, name, device, entity_description)
         self._attr_device_info = device.device_info
-        self._attr_unique_id = f"{device.name}_{entity_description.key}"
+        # Use serial number for unique ID if available, otherwise fall back to device name
+        identifier = device.serial_number if device.serial_number else device.name
+        self._attr_unique_id = f"{identifier}_{entity_description.key}"
+
+    async def async_update(self) -> None:
+        """Update the entity using coordinator data."""
+        if not self.coordinator.last_update_success:
+            return
+
+        sensor_type = self.entity_description.key
+        coordinator_data = self.coordinator.data
+
+        try:
+            if sensor_type == SENSOR_PTZ_PRESET:
+                self._attr_native_value = coordinator_data.get("ptz_presets_count")
+
+            elif sensor_type == SENSOR_SDCARD:
+                storage = coordinator_data.get("storage_info")
+                if storage is not None:
+                    try:
+                        self._attr_extra_state_attributes["Total"] = (
+                            f"{storage['total'][0]:.2f} {storage['total'][1]}"
+                        )
+                    except (ValueError, KeyError, IndexError):
+                        self._attr_extra_state_attributes["Total"] = (
+                            f"{storage.get('total', ['N/A', 'N/A'])[0]} {storage.get('total', ['N/A', 'N/A'])[1]}"
+                        )
+                    try:
+                        self._attr_extra_state_attributes["Used"] = (
+                            f"{storage['used'][0]:.2f} {storage['used'][1]}"
+                        )
+                    except (ValueError, KeyError, IndexError):
+                        self._attr_extra_state_attributes["Used"] = (
+                            f"{storage.get('used', ['N/A', 'N/A'])[0]} {storage.get('used', ['N/A', 'N/A'])[1]}"
+                        )
+                    try:
+                        self._attr_native_value = f"{storage['used_percent']:.2f}"
+                    except (ValueError, KeyError):
+                        # For numeric sensors, use None instead of "N/A" when data is unavailable
+                        self._attr_native_value = None
+                else:
+                    # No storage data available - use None for numeric value
+                    self._attr_extra_state_attributes["Total"] = "N/A"
+                    self._attr_extra_state_attributes["Used"] = "N/A"
+                    self._attr_native_value = None
+        except (KeyError, TypeError, ValueError) as error:
+            log_update_error(_LOGGER, "coordinator update", self.name, "sensor", error)
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        # Update sensor data based on coordinator data
+        sensor_type = self.entity_description.key
+        coordinator_data = self.coordinator.data
+
+        try:
+            if sensor_type == SENSOR_PTZ_PRESET:
+                self._attr_native_value = coordinator_data.get("ptz_presets_count")
+
+            elif sensor_type == SENSOR_SDCARD:
+                storage = coordinator_data.get("storage_info")
+                if storage is not None:
+                    try:
+                        self._attr_extra_state_attributes["Total"] = (
+                            f"{storage['total'][0]:.2f} {storage['total'][1]}"
+                        )
+                    except (ValueError, KeyError, IndexError):
+                        self._attr_extra_state_attributes["Total"] = (
+                            f"{storage.get('total', ['N/A', 'N/A'])[0]} {storage.get('total', ['N/A', 'N/A'])[1]}"
+                        )
+                    try:
+                        self._attr_extra_state_attributes["Used"] = (
+                            f"{storage['used'][0]:.2f} {storage['used'][1]}"
+                        )
+                    except (ValueError, KeyError, IndexError):
+                        self._attr_extra_state_attributes["Used"] = (
+                            f"{storage.get('used', ['N/A', 'N/A'])[0]} {storage.get('used', ['N/A', 'N/A'])[1]}"
+                        )
+                    try:
+                        # Handle case where used_percent might be "N/A" string
+                        if (
+                            storage["used_percent"] == "N/A"
+                            or storage["used_percent"] is None
+                        ):
+                            self._attr_native_value = None
+                        else:
+                            self._attr_native_value = round(
+                                float(storage["used_percent"]), 2
+                            )
+                    except (ValueError, KeyError, TypeError):
+                        # For numeric sensors, use None instead of "N/A" when data is unavailable
+                        self._attr_native_value = None
+                else:
+                    # No storage data available - use None for numeric value
+                    self._attr_extra_state_attributes["Total"] = "N/A"
+                    self._attr_extra_state_attributes["Used"] = "N/A"
+                    self._attr_native_value = None
+        except (KeyError, TypeError, ValueError) as error:
+            log_update_error(_LOGGER, "coordinator update", self.name, "sensor", error)
+
+        super()._handle_coordinator_update()

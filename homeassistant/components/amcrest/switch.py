@@ -34,7 +34,7 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
         key=PRIVACY_MODE_KEY,
         name="Privacy Mode",
         icon="mdi:eye-off",
-        device_class=SwitchDeviceClass.SWITCH
+        device_class=SwitchDeviceClass.SWITCH,
     ),
 )
 
@@ -63,6 +63,7 @@ async def async_setup_platform(
         True,
     )
 
+
 # Platform setup for config flow
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -73,9 +74,9 @@ async def async_setup_entry(
     device = hass.data[DATA_AMCREST][DEVICES][config_entry.entry_id]["device"]
     coordinator = hass.data[DATA_AMCREST][DEVICES][config_entry.entry_id]["coordinator"]
     entities = [
-            AmcrestCoordinatedSwitch(device.name, device, coordinator, description)
-            for description in SWITCH_TYPES
-        ]
+        AmcrestCoordinatedSwitch(device.name, device, coordinator, description)
+        for description in SWITCH_TYPES
+    ]
     async_add_entities(entities, True)
 
 
@@ -118,6 +119,7 @@ class AmcrestSwitch(SwitchEntity):
         io_res = (await self._api.async_privacy_config()).splitlines()[0].split("=")[1]
         self._attr_is_on = io_res == "true"
 
+
 class AmcrestCoordinatedSwitch(CoordinatorEntity, AmcrestSwitch):
     """Representation of an Amcrest Camera Switch tied to DataUpdateCoordinator."""
 
@@ -132,4 +134,26 @@ class AmcrestCoordinatedSwitch(CoordinatorEntity, AmcrestSwitch):
         CoordinatorEntity.__init__(self, coordinator)
         AmcrestSwitch.__init__(self, name, device, entity_description)
         self._attr_device_info = device.device_info
-        self._attr_unique_id = f"{device.name}_{entity_description.key}"
+        # Use serial number for unique ID if available, otherwise fall back to device name
+        identifier = device.serial_number if device.serial_number else device.name
+        self._attr_unique_id = f"{identifier}_{entity_description.key}"
+
+    async def async_update(self) -> None:
+        """Update the switch state using coordinator data."""
+        # Don't call parent async_update, use coordinator data instead
+        if self.coordinator.data and "privacy_mode" in self.coordinator.data:
+            privacy_mode = self.coordinator.data["privacy_mode"]
+            if privacy_mode is not None:
+                self._attr_is_on = privacy_mode
+            else:
+                # Fall back to direct API call if coordinator data is unavailable
+                await super().async_update()
+        else:
+            # Fall back to direct API call if coordinator data is unavailable
+            await super().async_update()
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        # Use coordinator availability plus API availability
+        return super().available and self.coordinator.data is not None
