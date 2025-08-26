@@ -221,17 +221,14 @@ async def async_generate_image(
         _cleanup_images(image_storage, len(image_storage) + 1 - MAX_IMAGES)
 
     current_time = datetime.now()
-    ext = (
-        mimetypes.guess_extension(service_result.get("mime_type", "image/png"), False)
-        or ".png"
-    )
+    ext = mimetypes.guess_extension(task_result.mime_type, False) or ".png"
     sanitized_task_name = RE_SANITIZE_FILENAME.sub("", slugify(task_name))
     filename = f"{current_time.strftime('%Y-%m-%d_%H%M%S')}_{sanitized_task_name}{ext}"
 
     image_storage[filename] = ImageData(
         data=image_data,
         timestamp=int(current_time.timestamp()),
-        mime_type=service_result.get("mime_type", "image/png"),
+        mime_type=task_result.mime_type,
         title=service_result["revised_prompt"],
     )
 
