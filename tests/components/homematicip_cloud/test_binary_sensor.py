@@ -587,6 +587,14 @@ async def test_hmip_multi_contact_interface(
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_UNKNOWN
 
+    # Test channel 32 of device
+    entity_id = "binary_sensor.wired_eingangsmodul_32_fach_channel32"
+    entity_name = "Wired Eingangsmodul – 32-fach Channel32"
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+    assert ha_state.state == STATE_OFF
+
     ha_state, hmip_device = get_and_check_entity_basics(
         hass,
         mock_hap,

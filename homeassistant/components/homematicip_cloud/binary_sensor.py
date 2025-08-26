@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from homematicip.base.enums import SmokeDetectorAlarmType, WindowState
+from homematicip.base.functionalChannels import MultiModeInputChannel
 from homematicip.device import (
     AccelerationSensor,
     ContactInterface,
@@ -87,8 +88,11 @@ async def async_setup_entry(
             entities.append(HomematicipTiltVibrationSensor(hap, device))
         if isinstance(device, WiredInput32):
             entities.extend(
-                HomematicipMultiContactInterface(hap, device, channel=channel)
-                for channel in range(1, 33)
+                HomematicipMultiContactInterface(
+                    hap, device, device.functionalChannels.index(channel)
+                )
+                for channel in device.functionalChannels
+                if isinstance(channel, MultiModeInputChannel)
             )
         elif isinstance(device, FullFlushContactInterface6):
             entities.extend(
