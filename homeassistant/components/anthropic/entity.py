@@ -48,6 +48,8 @@ from .const import (
     CONF_MAX_TOKENS,
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
+    CONF_WEB_SEARCH,
+    CONF_WEB_SEARCH_MAX_USES,
     DOMAIN,
     LOGGER,
     MIN_THINKING_BUDGET,
@@ -55,7 +57,9 @@ from .const import (
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_THINKING_BUDGET,
+    RECOMMENDED_WEB_SEARCH_MAX_USES,
     THINKING_MODELS,
+    WEB_SEARCH_MODELS,
 )
 
 # Max number of back and forth with the LLM to generate a response
@@ -210,7 +214,7 @@ async def _transform_stream(
         raise TypeError("Expected a stream of messages")
 
     current_tool_block: ToolUseBlockParam | None = None
-    current_tool_args: str
+    current_tool_args: str = ""
     input_usage: Usage | None = None
     has_content = False
     has_native = False
@@ -343,6 +347,23 @@ class AnthropicBaseLLMEntity(Entity):
                 _format_tool(tool, chat_log.llm_api.custom_serializer)
                 for tool in chat_log.llm_api.tools
             ]
+
+        # Add web search tool if enabled and model supports it
+        if options.get(CONF_WEB_SEARCH, False):
+            model = options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+            if model in WEB_SEARCH_MODELS:
+                web_search_tool = {
+                    "type": "web_search_20250305",
+                    "name": "web_search",
+                    "max_uses": int(
+                        options.get(
+                            CONF_WEB_SEARCH_MAX_USES, RECOMMENDED_WEB_SEARCH_MAX_USES
+                        )
+                     ),
+                }
+                if tools is None:
+                    tools = []
+                tools.append(web_search_tool)
 
         system = chat_log.content[0]
         if not isinstance(system, conversation.SystemContent):

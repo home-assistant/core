@@ -18,8 +18,20 @@ RECOMMENDED_TEMPERATURE = 1.0
 CONF_THINKING_BUDGET = "thinking_budget"
 RECOMMENDED_THINKING_BUDGET = 0
 MIN_THINKING_BUDGET = 1024
+CONF_WEB_SEARCH = "web_search"
+CONF_WEB_SEARCH_MAX_USES = "web_search_max_uses"
+RECOMMENDED_WEB_SEARCH_MAX_USES = 5
 
 THINKING_MODELS = [
+    "claude-3-7-sonnet",
+    "claude-sonnet-4-0",
+    "claude-opus-4-0",
+    "claude-opus-4-1",
+]
+
+WEB_SEARCH_MODELS = [
+    "claude-3-5-haiku-latest",
+    "claude-3-5-sonnet-latest", 
     "claude-3-7-sonnet",
     "claude-sonnet-4-0",
     "claude-opus-4-0",

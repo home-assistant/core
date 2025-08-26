@@ -37,12 +37,16 @@ from .const import (
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_THINKING_BUDGET,
+    CONF_WEB_SEARCH,
+    CONF_WEB_SEARCH_MAX_USES,
     DEFAULT_CONVERSATION_NAME,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_THINKING_BUDGET,
+    RECOMMENDED_WEB_SEARCH_MAX_USES,
+    WEB_SEARCH_MODELS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -169,6 +173,12 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
             ) >= user_input.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS):
                 errors[CONF_THINKING_BUDGET] = "thinking_budget_too_large"
 
+            # Validate web search configuration
+            if user_input.get(CONF_WEB_SEARCH, False):
+                model = user_input.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+                if model not in WEB_SEARCH_MODELS:
+                    errors[CONF_WEB_SEARCH] = "web_search_unsupported_model"
+
             if not errors:
                 if self._is_new:
                     return self.async_create_entry(
@@ -192,6 +202,8 @@ class ConversationSubentryFlowHandler(ConfigSubentryFlow):
                 CONF_RECOMMENDED: user_input[CONF_RECOMMENDED],
                 CONF_PROMPT: user_input[CONF_PROMPT],
                 CONF_LLM_HASS_API: user_input.get(CONF_LLM_HASS_API),
+                CONF_WEB_SEARCH: user_input.get(CONF_WEB_SEARCH, False),
+                CONF_WEB_SEARCH_MAX_USES: user_input.get(CONF_WEB_SEARCH_MAX_USES, RECOMMENDED_WEB_SEARCH_MAX_USES),
             }
 
         suggested_values = options.copy()
@@ -273,6 +285,14 @@ def anthropic_config_option_schema(
                 CONF_THINKING_BUDGET,
                 default=RECOMMENDED_THINKING_BUDGET,
             ): int,
+            vol.Optional(
+                CONF_WEB_SEARCH,
+                default=False,
+            ): bool,
+            vol.Optional(
+                CONF_WEB_SEARCH_MAX_USES,
+                default=RECOMMENDED_WEB_SEARCH_MAX_USES,
+            ): NumberSelector(NumberSelectorConfig(min=1, max=20, mode="box")),
         }
     )
     return schema

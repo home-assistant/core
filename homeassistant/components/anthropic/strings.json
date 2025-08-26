@@ -35,11 +35,15 @@
             "temperature": "Temperature",
             "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
             "recommended": "Recommended model settings",
-            "thinking_budget_tokens": "Thinking budget"
+            "thinking_budget_tokens": "Thinking budget",
+            "web_search": "Enable web search",
+            "web_search_max_uses": "Maximum web searches per conversation"
           },
           "data_description": {
             "prompt": "Instruct how the LLM should respond. This can be a template.",
-            "thinking_budget_tokens": "The number of tokens the model can use to think about the response out of the total maximum number of tokens. Set to 1024 or greater to enable extended thinking."
+            "thinking_budget_tokens": "The number of tokens the model can use to think about the response out of the total maximum number of tokens. Set to 1024 or greater to enable extended thinking.",
+            "web_search": "Allow Claude to search the web for up-to-date information. Requires a compatible model and may incur additional costs.",
+            "web_search_max_uses": "Limit the number of web searches Claude can perform per conversation to control costs."
           }
         }
       },
@@ -48,7 +52,8 @@
         "entry_not_loaded": "Cannot add things while the configuration is disabled."
       },
       "error": {
-        "thinking_budget_too_large": "Maximum tokens must be greater than the thinking budget."
+        "thinking_budget_too_large": "Maximum tokens must be greater than the thinking budget.",
+        "web_search_unsupported_model": "Web search is not supported by the selected model. Please choose a compatible model or disable web search."
       }
     }
   }
