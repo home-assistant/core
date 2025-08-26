@@ -3,7 +3,15 @@
     "step": {
       "user": {
         "title": "Set up Västtrafik",
-        "description": "Configure Västtrafik integration or add a departure board."
+        "description": "Enter your Västtrafik API credentials",
+        "data": {
+          "key": "[%key:common::config_flow::data::api_key%]",
+          "secret": "API secret"
+        },
+        "data_description": {
+          "key": "Your Västtrafik API key",
+          "secret": "Your Västtrafik API secret"
+        }
       },
       "reconfigure": {
         "title": "Reconfigure Västtrafik API",
