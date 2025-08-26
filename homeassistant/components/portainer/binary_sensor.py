@@ -30,7 +30,7 @@ from .entity import (
 class PortainerBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Class to hold Portainer binary sensor description."""
 
-    state_fn: Callable[[Any], bool | None]
+    state_fn: Callable[[Any], bool]
 
 
 CONTAINER_SENSORS: tuple[PortainerBinarySensorEntityDescription, ...] = (
