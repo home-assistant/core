@@ -4,11 +4,13 @@
       "user": {
         "data": {
           "url": "[%key:common::config_flow::data::url%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "url": "URL to connect to the Paperless-ngx instance",
-          "api_key": "API key to connect to the Paperless-ngx API"
+          "api_key": "API key to connect to the Paperless-ngx API",
+          "verify_ssl": "Verify the SSL certificate of the Paperless-ngx instance. Disable this option if you’re using a self-signed certificate."
         },
         "title": "Add Paperless-ngx instance"
       },
@@ -24,11 +26,13 @@
       "reconfigure": {
         "data": {
           "url": "[%key:common::config_flow::data::url%]",
-          "api_key": "[%key:common::config_flow::data::api_key%]"
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "url": "[%key:component::paperless_ngx::config::step::user::data_description::url%]",
-          "api_key": "[%key:component::paperless_ngx::config::step::user::data_description::api_key%]"
+          "api_key": "[%key:component::paperless_ngx::config::step::user::data_description::api_key%]",
+          "verify_ssl": "[%key:component::paperless_ngx::config::step::user::data_description::verify_ssl%]"
         },
         "title": "Reconfigure Paperless-ngx instance"
       }
@@ -125,6 +129,11 @@
           "warning": "[%key:component::paperless_ngx::entity::sensor::database_status::state::warning%]",
           "error": "[%key:common::state::error%]"
         }
+      }
+    },
+    "update": {
+      "paperless_update": {
+        "name": "Software"
       }
     }
   },

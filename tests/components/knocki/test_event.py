@@ -14,7 +14,11 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, load_json_array_fixture, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_load_json_array_fixture,
+    snapshot_platform,
+)
 
 
 async def test_entities(
@@ -91,7 +95,8 @@ async def test_adding_runtime_entities(
     add_trigger_function: Callable[[Event], None] = (
         mock_knocki_client.register_listener.call_args_list[0][0][1]
     )
-    trigger = Trigger.from_dict(load_json_array_fixture("triggers.json", DOMAIN)[0])
+    triggers = await async_load_json_array_fixture(hass, "triggers.json", DOMAIN)
+    trigger = Trigger.from_dict(triggers[0])
 
     add_trigger_function(Event(EventType.CREATED, trigger))
 
@@ -106,7 +111,9 @@ async def test_removing_runtime_entities(
     """Test we can create devices on runtime."""
     mock_knocki_client.get_triggers.return_value = [
         Trigger.from_dict(trigger)
-        for trigger in load_json_array_fixture("more_triggers.json", DOMAIN)
+        for trigger in await async_load_json_array_fixture(
+            hass, "more_triggers.json", DOMAIN
+        )
     ]
 
     await setup_integration(hass, mock_config_entry)
@@ -117,7 +124,8 @@ async def test_removing_runtime_entities(
     remove_trigger_function: Callable[[Event], Awaitable[None]] = (
         mock_knocki_client.register_listener.call_args_list[1][0][1]
     )
-    trigger = Trigger.from_dict(load_json_array_fixture("triggers.json", DOMAIN)[0])
+    triggers = await async_load_json_array_fixture(hass, "triggers.json", DOMAIN)
+    trigger = Trigger.from_dict(triggers[0])
 
     mock_knocki_client.get_triggers.return_value = [trigger]
 

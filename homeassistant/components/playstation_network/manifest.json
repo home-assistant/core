@@ -1,0 +1,85 @@
+{
+  "domain": "playstation_network",
+  "name": "PlayStation Network",
+  "codeowners": ["@jackjpowell", "@tr4nt0r"],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "macaddress": "AC8995*"
+    },
+    {
+      "macaddress": "1C98C1*"
+    },
+    {
+      "macaddress": "5C843C*"
+    },
+    {
+      "macaddress": "605BB4*"
+    },
+    {
+      "macaddress": "8060B7*"
+    },
+    {
+      "macaddress": "78C881*"
+    },
+    {
+      "macaddress": "00D9D1*"
+    },
+    {
+      "macaddress": "00E421*"
+    },
+    {
+      "macaddress": "0CFE45*"
+    },
+    {
+      "macaddress": "2CCC44*"
+    },
+    {
+      "macaddress": "BC60A7*"
+    },
+    {
+      "macaddress": "C863F1*"
+    },
+    {
+      "macaddress": "F8461C*"
+    },
+    {
+      "macaddress": "70662A*"
+    },
+    {
+      "macaddress": "09E29*"
+    },
+    {
+      "macaddress": "B40AD8*"
+    },
+    {
+      "macaddress": "A8474A*"
+    },
+    {
+      "macaddress": "280DFC*"
+    },
+    {
+      "macaddress": "D44B5E*"
+    },
+    {
+      "macaddress": "F8D0AC*"
+    },
+    {
+      "macaddress": "E86E3A*"
+    },
+    {
+      "macaddress": "FC0FE6*"
+    },
+    {
+      "macaddress": "9C37CB*"
+    },
+    {
+      "macaddress": "84E657*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/playstation_network",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["PSNAWP==3.0.0", "pyrate-limiter==3.7.0"]
+}

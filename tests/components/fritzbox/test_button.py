@@ -6,7 +6,7 @@ from unittest.mock import Mock, patch
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.fritzbox.const import DOMAIN as FB_DOMAIN
+from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, CONF_DEVICES, Platform
 from homeassistant.core import HomeAssistant
@@ -32,7 +32,7 @@ async def test_setup(
     with patch("homeassistant.components.fritzbox.PLATFORMS", [Platform.BUTTON]):
         entry = await setup_config_entry(
             hass,
-            MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0],
+            MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
             fritz=fritz,
             template=template,
         )
@@ -45,7 +45,7 @@ async def test_apply_template(hass: HomeAssistant, fritz: Mock) -> None:
     """Test if applies works."""
     template = FritzEntityBaseMock()
     await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], fritz=fritz, template=template
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], fritz=fritz, template=template
     )
 
     await hass.services.async_call(
@@ -58,7 +58,7 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
     """Test adding new discovered devices during runtime."""
     template = FritzEntityBaseMock()
     await setup_config_entry(
-        hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], fritz=fritz, template=template
+        hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], fritz=fritz, template=template
     )
 
     state = hass.states.get(ENTITY_ID)

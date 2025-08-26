@@ -51,6 +51,5 @@ MANUFACTURER_MAXIM = "Maxim Integrated"
 MANUFACTURER_HOBBYBOARDS = "Hobby Boards"
 MANUFACTURER_EDS = "Embedded Data Systems"
 
-READ_MODE_BOOL = "bool"
 READ_MODE_FLOAT = "float"
 READ_MODE_INT = "int"

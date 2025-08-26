@@ -27,8 +27,8 @@
         "data": {
           "units": "Units",
           "vehicle_type": "Vehicle type",
-          "incl_filter": "Exact streetname which must be part of the selected route",
-          "excl_filter": "Exact streetname which must NOT be part of the selected route",
+          "incl_filter": "Exact street name which must be part of the selected route",
+          "excl_filter": "Exact street name which must NOT be part of the selected route",
           "realtime": "Realtime travel time?",
           "avoid_toll_roads": "Avoid toll roads?",
           "avoid_ferries": "Avoid ferries?",
@@ -103,12 +103,12 @@
           "description": "Whether to avoid subscription roads."
         },
         "incl_filter": {
-          "name": "[%key:component::waze_travel_time::options::step::init::data::incl_filter%]",
-          "description": "Exact streetname which must be part of the selected route."
+          "name": "Streets to include",
+          "description": "[%key:component::waze_travel_time::options::step::init::data::incl_filter%]"
         },
         "excl_filter": {
-          "name": "[%key:component::waze_travel_time::options::step::init::data::excl_filter%]",
-          "description": "Exact streetname which must NOT be part of the selected route."
+          "name": "Streets to exclude",
+          "description": "[%key:component::waze_travel_time::options::step::init::data::excl_filter%]"
         }
       }
     }

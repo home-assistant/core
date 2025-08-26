@@ -44,6 +44,7 @@ async def test_exception_handling_for_device_initialization(
         side_effect=exception,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
     assert error_message in caplog.text
 
 
@@ -59,6 +60,7 @@ async def test_setup_entry_without_ble_device(
 
     with patch_async_ble_device_from_address(None):
         await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     assert (
         "Could not find Switchbot hygrometer_co2 with address aa:bb:cc:dd:ee:ff"
@@ -87,5 +89,6 @@ async def test_coordinator_wait_ready_timeout(
         return_value=timeout_mock,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     assert "aa:bb:cc:dd:ee:ff is not advertising state" in caplog.text

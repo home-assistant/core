@@ -1,6 +1,7 @@
 """The Goodwe inverter component."""
 
 from goodwe import InverterError, connect
+from goodwe.const import GOODWE_TCP_PORT, GOODWE_UDP_PORT
 
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -20,11 +21,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bo
     try:
         inverter = await connect(
             host=host,
+            port=GOODWE_UDP_PORT,
             family=model_family,
             retries=10,
         )
-    except InverterError as err:
-        raise ConfigEntryNotReady from err
+    except InverterError as err_udp:
+        # First try with UDP failed, trying with the TCP port
+        try:
+            inverter = await connect(
+                host=host,
+                port=GOODWE_TCP_PORT,
+                family=model_family,
+                retries=10,
+            )
+        except InverterError:
+            # Both ports are unavailable
+            raise ConfigEntryNotReady from err_udp
 
     device_info = DeviceInfo(
         configuration_url="https://www.semsportal.com",

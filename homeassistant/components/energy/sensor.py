@@ -41,13 +41,8 @@ SUPPORTED_STATE_CLASSES = {
     SensorStateClass.TOTAL,
     SensorStateClass.TOTAL_INCREASING,
 }
-VALID_ENERGY_UNITS: set[str] = {
-    UnitOfEnergy.GIGA_JOULE,
-    UnitOfEnergy.KILO_WATT_HOUR,
-    UnitOfEnergy.MEGA_JOULE,
-    UnitOfEnergy.MEGA_WATT_HOUR,
-    UnitOfEnergy.WATT_HOUR,
-}
+VALID_ENERGY_UNITS: set[str] = set(UnitOfEnergy)
+
 VALID_ENERGY_UNITS_GAS = {
     UnitOfVolume.CENTUM_CUBIC_FEET,
     UnitOfVolume.CUBIC_FEET,
