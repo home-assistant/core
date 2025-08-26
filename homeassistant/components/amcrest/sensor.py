@@ -27,7 +27,7 @@ from .const import DATA_AMCREST, DEVICES, SENSOR_SCAN_INTERVAL_SECS, SERVICE_UPD
 from .helpers import log_update_error, service_signal
 
 if TYPE_CHECKING:
-    from . import AmcrestDevice
+    from .models import AmcrestDevice
 
 _LOGGER = logging.getLogger(__name__)
 

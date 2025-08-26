@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager, suppress
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 import threading
@@ -34,14 +33,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
-    device_registry as dr,
     discovery,
 )
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .binary_sensor import BINARY_SENSOR_KEYS, BINARY_SENSORS, check_binary_sensors
 from .camera import STREAM_SOURCE_LIST
@@ -57,7 +53,9 @@ from .const import (
     SERVICE_EVENT,
     SERVICE_UPDATE,
 )
+from .coordinator import AmcrestDataCoordinator
 from .helpers import service_signal
+from .models import AmcrestConfiguredDevice, AmcrestDevice
 from .sensor import SENSOR_KEYS
 from .services import async_setup_services
 from .switch import SWITCH_KEYS
@@ -612,61 +610,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DATA_AMCREST][CAMERAS].remove(device_name)
 
     return True
-
-
-@dataclass
-class AmcrestDevice:
-    """Representation of a base Amcrest discovery device configured via YAML."""
-
-    api: AmcrestChecker
-    authentication: aiohttp.BasicAuth | None
-    ffmpeg_arguments: list[str]
-    stream_source: str
-    resolution: int
-    control_light: bool
-    channel: int = 0
-
-
-class AmcrestConfiguredDevice(AmcrestDevice):
-    """Representation of a base Amcrest device."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        name: str,
-        api: AmcrestChecker,
-        authentication: aiohttp.BasicAuth | None,
-        ffmpeg_arguments: list[str],
-        stream_source: str,
-        resolution: int,
-        control_light: bool,
-        channel: int = 0,
-    ) -> None:
-        """Initialize Amcrest device."""
-        super().__init__(
-            api,
-            authentication,
-            ffmpeg_arguments,
-            stream_source,
-            resolution,
-            control_light,
-            channel,
-        )
-        self.hass = hass
-        self.config_entry = config_entry
-        self.name = name
-        self.serial_number = ""
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info for device registration."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.config_entry.entry_id)},
-            name=self.name,
-            manufacturer="Amcrest",
-        )
-
-    async def async_get_data(self) -> None:
-        """Get data from the device."""
-        self.serial_number = self.api.serial_number
