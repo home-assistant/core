@@ -25,6 +25,7 @@ from homeassistant.helpers.update_coordinator import (
 
 from .const import DATA_AMCREST, DEVICES, SENSOR_SCAN_INTERVAL_SECS, SERVICE_UPDATE
 from .helpers import log_update_error, service_signal
+from .models import AmcrestConfiguredDevice
 
 if TYPE_CHECKING:
     from .models import AmcrestDevice
@@ -198,7 +199,7 @@ class AmcrestCoordinatedSensor(CoordinatorEntity, AmcrestSensor):
     def __init__(
         self,
         name: str,
-        device: AmcrestDevice,
+        device: AmcrestConfiguredDevice,
         coordinator: DataUpdateCoordinator,
         entity_description: SensorEntityDescription,
     ) -> None:

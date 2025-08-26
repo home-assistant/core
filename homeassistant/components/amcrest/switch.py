@@ -23,6 +23,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from .const import DATA_AMCREST, DEVICES
+from .models import AmcrestConfiguredDevice
 
 if TYPE_CHECKING:
     from .models import AmcrestDevice
@@ -126,7 +127,7 @@ class AmcrestCoordinatedSwitch(CoordinatorEntity, AmcrestSwitch):
     def __init__(
         self,
         name: str,
-        device: AmcrestDevice,
+        device: AmcrestConfiguredDevice,
         coordinator: DataUpdateCoordinator,
         entity_description: SwitchEntityDescription,
     ) -> None:
