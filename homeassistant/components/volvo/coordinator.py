@@ -269,8 +269,12 @@ class VolvoMediumIntervalCoordinator(VolvoBaseCoordinator):
             capabilities = await self.api.async_get_energy_capabilities()
 
             if capabilities.get("isSupported", False):
+
+                def _normalize_key(key: str) -> str:
+                    return "chargingStatus" if key == "chargingSystemStatus" else key
+
                 self._supported_capabilities = [
-                    key
+                    _normalize_key(key)
                     for key, value in capabilities.items()
                     if isinstance(value, dict) and value.get("isSupported", False)
                 ]
