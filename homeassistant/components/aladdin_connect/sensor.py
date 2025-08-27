@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from genie_partner_sdk.model import GarageDoor
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -17,7 +19,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import AladdinConnectConfigEntry, AladdinConnectCoordinator
 from .entity import AladdinConnectEntity
-from .model import GarageDoor
 
 
 @dataclass(frozen=True, kw_only=True)

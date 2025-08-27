@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from genie_partner_sdk.client import AladdinConnectClient
+from genie_partner_sdk.model import GarageDoor
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -15,7 +16,6 @@ from homeassistant.helpers import (
 from . import api
 from .const import CONFIG_FLOW_MINOR_VERSION, CONFIG_FLOW_VERSION, DOMAIN
 from .coordinator import AladdinConnectConfigEntry, AladdinConnectCoordinator
-from .model import GarageDoor
 
 PLATFORMS: list[Platform] = [Platform.COVER, Platform.SENSOR]
 
