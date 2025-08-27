@@ -76,7 +76,7 @@ class MatterLock(MatterEntity, LockEntity):
     def _on_matter_node_event(
         self,
         event: EventType,
-        nodeEvent: MatterNodeEvent,
+        node_event: MatterNodeEvent,
     ) -> None:
         """Call on NodeEvent."""
         if (nodeEvent.endpoint_id != self._endpoint.endpoint_id) or (
