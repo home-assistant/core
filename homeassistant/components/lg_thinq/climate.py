@@ -24,6 +24,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ThinqConfigEntry
@@ -241,8 +242,11 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
 
         # If device is off, turn on first.
         if not self.data.is_on:
-            await self.async_turn_on()
-            await asyncio.sleep(2)
+            try:
+                await self.async_turn_on()
+                await asyncio.sleep(2)
+            except ServiceValidationError as exc:
+                _LOGGER.debug("%s", exc)
 
         _LOGGER.debug(
             "[%s:%s] async_set_hvac_mode: %s",
@@ -325,12 +329,18 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
 
         # If device is off, turn on first.
         if not self.data.is_on:
-            await self.async_turn_on()
-            await asyncio.sleep(2)
+            try:
+                await self.async_turn_on()
+                await asyncio.sleep(2)
+            except ServiceValidationError as exc:
+                _LOGGER.debug("%s", exc)
 
         if hvac_mode and hvac_mode != self.hvac_mode:
-            await self.async_set_hvac_mode(HVACMode(hvac_mode))
-            await asyncio.sleep(2)
+            try:
+                await self.async_set_hvac_mode(HVACMode(hvac_mode))
+                await asyncio.sleep(2)
+            except ServiceValidationError as exc:
+                _LOGGER.debug("%s", exc)
 
         _LOGGER.debug(
             "[%s:%s] async_set_temperature: %s",
