@@ -508,22 +508,21 @@ DISCOVERY_SCHEMAS = [
             key="BooleanStateConfigurationCurrentSensitivityLevel",
             entity_category=EntityCategory.CONFIG,
             translation_key="sensitivity_level",
-            options=["high", "standard", "low"],
+            options=["low", "standard", "high"],
             device_to_ha={
-                0: "high",
+                0: "low",
                 1: "standard",
-                2: "low",
+                2: "high",
             }.get,
             ha_to_device={
-                "high": 0,
+                "low": 0,
                 "standard": 1,
-                "low": 2,
+                "high": 2,
             }.get,
         ),
         entity_class=MatterAttributeSelectEntity,
         required_attributes=(
             clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,
         ),
-        featuremap_contains=clusters.BooleanStateConfiguration.Bitmaps.Feature.kSensitivityLevel,
     ),
 ]
