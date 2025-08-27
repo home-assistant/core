@@ -6,16 +6,17 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
+from redgtech_api.api import RedgtechAPI, RedgtechAuthError, RedgtechConnectionError
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from redgtech_api.api import RedgtechAPI, RedgtechAuthError, RedgtechConnectionError
 
 from .const import DOMAIN
 
-UPDATE_INTERVAL = timedelta(minutes=1)
+UPDATE_INTERVAL = timedelta(seconds=10)
 _LOGGER = logging.getLogger(__name__)
 
 
