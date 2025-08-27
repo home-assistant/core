@@ -105,7 +105,10 @@ def setup_mastodon(
         entry.data[CONF_ACCESS_TOKEN],
     )
 
-    instance = client.instance()
+    if client.mastodon_api_version == 1:
+        instance = client.instance_v1()
+    else:
+        instance = client.instance_v2()
     account = client.account_verify_credentials()
 
     return client, instance, account
