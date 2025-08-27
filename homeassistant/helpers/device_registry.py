@@ -988,7 +988,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             via_device_id=via_device_id,
         )
 
-        # This is safe because _async_update_device will always return a device
+        # This is safe because async_update_device will always return a device
         # in this use case.
         assert device
         return device

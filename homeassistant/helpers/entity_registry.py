@@ -1187,7 +1187,7 @@ class EntityRegistry(BaseRegistry):
             return
 
         # Ignore device disabled by config entry, this is handled by
-        # async_config_entry_disabled
+        # async_config_entry_disabled_by_changed
         if device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY:
             return
 
