@@ -29,12 +29,19 @@ if TYPE_CHECKING:
     from .models import AmcrestDevice
 
 PRIVACY_MODE_KEY = "privacy_mode"
+MOTION_RECORDING_ENABLED_KEY = "motion_recording_enabled"
 
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key=PRIVACY_MODE_KEY,
         name="Privacy Mode",
         icon="mdi:eye-off",
+        device_class=SwitchDeviceClass.SWITCH,
+    ),
+    SwitchEntityDescription(
+        key=MOTION_RECORDING_ENABLED_KEY,
+        name="Record on Motion",
+        icon="mdi:record",
         device_class=SwitchDeviceClass.SWITCH,
     ),
 )
@@ -110,10 +117,17 @@ class AmcrestSwitch(SwitchEntity):
 
     async def _async_turn_switch(self, mode: bool) -> None:
         """Set privacy mode."""
-        lower_str = str(mode).lower()
-        await self._api.async_command(
-            f"configManager.cgi?action=setConfig&LeLensMask[0].Enable={lower_str}"
-        )
+        key = self.entity_description.key
+        if key == PRIVACY_MODE_KEY:
+            lower_str = str(mode).lower()
+            await self._api.async_command(
+                f"configManager.cgi?action=setConfig&LeLensMask[0].Enable={lower_str}"
+            )
+        if key == MOTION_RECORDING_ENABLED_KEY:
+            lower_str = str(mode).lower()
+            await self._api.async_command(
+                f"configManager.cgi?action=setConfig&MotionDetect[0].EventHandler.RecordEnable={lower_str}"
+            )
 
     async def async_update(self) -> None:
         """Update switch."""
@@ -141,9 +155,10 @@ class AmcrestCoordinatedSwitch(CoordinatorEntity, AmcrestSwitch):
 
     async def async_update(self) -> None:
         """Update the switch state using coordinator data."""
-        privacy_mode = self.coordinator.data["privacy_mode"]
-        if privacy_mode is not None:
-            self._attr_is_on = privacy_mode
+
+        on_value = self.coordinator.data[self.entity_description.key]
+        if on_value is not None:
+            self._attr_is_on = on_value
 
     @property
     def available(self) -> bool:
