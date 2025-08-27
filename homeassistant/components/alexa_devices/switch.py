@@ -8,10 +8,16 @@ from typing import TYPE_CHECKING, Any, Final
 
 from aioamazondevices.api import AmazonDevice
 
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+import homeassistant.helpers.entity_registry as er
 
+from .const import _LOGGER, DOMAIN
 from .coordinator import AmazonConfigEntry
 from .entity import AmazonEntity
 from .utils import alexa_api_call
@@ -24,16 +30,14 @@ class AmazonSwitchEntityDescription(SwitchEntityDescription):
     """Alexa Devices switch entity description."""
 
     is_on_fn: Callable[[AmazonDevice], bool]
-    subkey: str
     method: str
 
 
 SWITCHES: Final = (
     AmazonSwitchEntityDescription(
-        key="do_not_disturb",
-        subkey="AUDIO_PLAYER",
+        key="dnd",
         translation_key="do_not_disturb",
-        is_on_fn=lambda _device: _device.do_not_disturb,
+        is_on_fn=lambda _device: bool(_device.sensors["dnd"].value),
         method="set_do_not_disturb",
     ),
 )
@@ -48,11 +52,24 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
 
+    # Replace unique id for "DND" switch
+    entity_registry = er.async_get(hass)
+    for serial_num in coordinator.data:
+        unique_id = f"{serial_num}-do_not_disturb"
+        if entity_id := entity_registry.async_get_entity_id(
+            SWITCH_DOMAIN, DOMAIN, unique_id
+        ):
+            _LOGGER.debug("Updating unique_id for %s", entity_id)
+
+            # Update the registry with the new unique_id
+            new_unique_id = entity_id.replace("do_not_disturb", "dnd")
+            entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
+
     async_add_entities(
         AmazonSwitchEntity(coordinator, serial_num, switch_desc)
         for switch_desc in SWITCHES
         for serial_num in coordinator.data
-        if switch_desc.subkey in coordinator.data[serial_num].capabilities
+        if switch_desc.key in coordinator.data[serial_num].sensors
     )
 
 
