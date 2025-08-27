@@ -313,3 +313,100 @@ def find_next_prayer(current_time, prayer_calendar, timezone):
         )
 
     return next_prayer_index, next_prayer_datetime
+
+
+def get_regular_prayer_time(prayer_data: dict, prayer_name: str) -> datetime | None:
+    """Get regular prayer time (Fajr, Dhuhr, Asr, Maghrib, Isha)."""
+    calendar = prayer_data.get("calendar")
+    timezone = prayer_data.get("timezone")
+
+    if not calendar or not timezone:
+        _LOGGER.warning("Missing calendar or timezone data for %s", prayer_name)
+        return None
+
+    # Get today's date
+    day = dt_util.now().date()
+    prayer_time = extract_time_from_calendar(calendar, prayer_name, day, timezone)
+
+    if not prayer_time:
+        return None
+
+    localized_prayer_time = time_with_timezone(timezone, day, prayer_time)
+    if localized_prayer_time:
+        return localized_prayer_time.astimezone(dt_util.UTC)
+    return None
+
+
+def get_shuruq_time(prayer_data: dict) -> datetime | None:
+    """Get Shuruq prayer time."""
+    timezone = prayer_data.get("timezone")
+    shuruq_time = prayer_data.get("shuruq")
+
+    if not timezone:
+        _LOGGER.warning("Missing timezone data")
+        return None
+
+    if not shuruq_time:
+        return None
+
+    day = dt_util.now().date()
+    localized_prayer_time = time_with_timezone(timezone, day, shuruq_time)
+    if localized_prayer_time:
+        return localized_prayer_time.astimezone(dt_util.UTC)
+    return None
+
+
+def get_jumua_time(prayer_data: dict, jumua_name: str) -> datetime | None:
+    """Get Jumua prayer time."""
+    jumua_time = prayer_data.get(jumua_name)
+    timezone = prayer_data.get("timezone")
+
+    if not timezone:
+        _LOGGER.warning("Missing timezone data")
+        return None
+
+    if not jumua_time:
+        return None
+
+    day = get_next_friday()
+    localized_prayer_time = time_with_timezone(timezone, day, jumua_time)
+    if localized_prayer_time:
+        return localized_prayer_time.astimezone(dt_util.UTC)
+    return None
+
+
+def get_iqama_time(prayer_data: dict, prayer_name: str) -> datetime | None:
+    # """Get Iqama prayer time."""
+    # calendar = prayer_data.get("calendar")
+    """Get Iqama prayer time."""
+    calendar = prayer_data.get("calendar")
+    iqama_calendar = prayer_data.get("iqamaCalendar")
+    timezone = prayer_data.get("timezone")
+
+    if not calendar or not iqama_calendar or not timezone:
+        _LOGGER.warning("Missing calendar data for %s Iqama", prayer_name)
+        return None
+
+    day = dt_util.now().date()
+
+    # Get base prayer time
+    prayer_time = extract_time_from_calendar(calendar, prayer_name, day, timezone)
+    if not prayer_time:
+        return None
+
+    # Get iqama offset
+    iqama_offset = extract_time_from_calendar(
+        iqama_calendar, prayer_name, day, timezone, mode_iqama=True
+    )
+    if not iqama_offset:
+        return None
+
+    # Add offset to base prayer time
+    iqama_time = add_minutes_to_time(prayer_time, iqama_offset)
+    if not iqama_time:
+        return None
+
+    localized_prayer_time = time_with_timezone(timezone, day, iqama_time)
+    if localized_prayer_time:
+        return localized_prayer_time.astimezone(dt_util.UTC)
+    return None

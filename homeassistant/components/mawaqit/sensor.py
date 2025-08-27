@@ -19,6 +19,8 @@ Functions:
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
 import logging
 from typing import Any
@@ -48,90 +50,111 @@ MOSQUE_SENSOR_DESCRIPTION = SensorEntityDescription(
     icon="mdi:mosque",
 )
 
+
+@dataclass(frozen=True, kw_only=True)
+class MawaqitPrayerTimeSensorEntityDescription(SensorEntityDescription):
+    """Describes Mawaqit prayer time sensor entity."""
+
+    get_value: Callable[[dict], datetime | None]
+
+
 PRAYER_TIME_SENSOR_DESCRIPTIONS = [
-    SensorEntityDescription(
+    MawaqitPrayerTimeSensorEntityDescription(
         key="Fajr",
         translation_key="prayer_fajr",
         icon="mdi:weather-sunset-up",
         device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_regular_prayer_time(data, "Fajr"),
     ),
-    SensorEntityDescription(
+    MawaqitPrayerTimeSensorEntityDescription(
         key="shuruq",
         translation_key="prayer_shuruq",
         icon="mdi:weather-sunset",
         device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=utils.get_shuruq_time,
     ),
-    SensorEntityDescription(
+    MawaqitPrayerTimeSensorEntityDescription(
         key="Dhuhr",
         translation_key="prayer_dhuhr",
         icon="mdi:weather-sunny",
         device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_regular_prayer_time(data, "Dhuhr"),
     ),
-    SensorEntityDescription(
+    MawaqitPrayerTimeSensorEntityDescription(
         key="Asr",
         translation_key="prayer_asr",
         icon="mdi:weather-sunny",
         device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_regular_prayer_time(data, "Asr"),
     ),
-    SensorEntityDescription(
+    MawaqitPrayerTimeSensorEntityDescription(
         key="Maghrib",
         translation_key="prayer_maghrib",
         icon="mdi:weather-sunset-down",
         device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_regular_prayer_time(data, "Maghrib"),
     ),
-    SensorEntityDescription(
+    MawaqitPrayerTimeSensorEntityDescription(
         key="Isha",
         translation_key="prayer_isha",
         icon="mdi:weather-night",
         device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_regular_prayer_time(data, "Isha"),
     ),
 ]
 
 JUMUA_PRAYER_TIME_SENSOR_DESCRIPTIONS = [
-    SensorEntityDescription(
+    MawaqitPrayerTimeSensorEntityDescription(
         key="Jumua",
         translation_key="prayer_jumua",
         icon="mdi:calendar-star",
         device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_jumua_time(data, "jumua"),
     ),
-    SensorEntityDescription(
+    MawaqitPrayerTimeSensorEntityDescription(
         key="Jumua 2",
         translation_key="prayer_jumua_2",
         icon="mdi:calendar-star",
         device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_jumua_time(data, "jumua2"),
     ),
 ]
 
 IQAMA_PRAYER_TIME_SENSOR_DESCRIPTIONS = [
-    SensorEntityDescription(
+    MawaqitPrayerTimeSensorEntityDescription(
         key="Fajr_Iqama",
         translation_key="iqama_fajr",
         icon="mdi:weather-sunset-up",
         device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_iqama_time(data, "Fajr"),
     ),
-    SensorEntityDescription(
+    MawaqitPrayerTimeSensorEntityDescription(
         key="Dhuhr_Iqama",
         translation_key="iqama_dhuhr",
         icon="mdi:weather-sunny",
         device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_iqama_time(data, "Dhuhr"),
     ),
-    SensorEntityDescription(
+    MawaqitPrayerTimeSensorEntityDescription(
         key="Asr_Iqama",
         translation_key="iqama_asr",
         icon="mdi:weather-sunny",
         device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_iqama_time(data, "Asr"),
     ),
-    SensorEntityDescription(
+    MawaqitPrayerTimeSensorEntityDescription(
         key="Maghrib_Iqama",
         translation_key="iqama_maghrib",
         icon="mdi:weather-sunset-down",
         device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_iqama_time(data, "Maghrib"),
     ),
-    SensorEntityDescription(
+    MawaqitPrayerTimeSensorEntityDescription(
         key="Isha_Iqama",
         translation_key="iqama_isha",
         icon="mdi:weather-night",
         device_class=SensorDeviceClass.TIMESTAMP,
+        get_value=lambda data: utils.get_iqama_time(data, "Isha"),
     ),
 ]
 
@@ -280,9 +303,7 @@ class MawaqitPrayerTimeSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordina
 
     @property
     def native_value(self) -> datetime | None:
-        """Return the prayer time, ensuring correct timezone handling."""
-
-        # Get prayer data from coordinator
+        """Return the prayer time using the get_value function."""
         prayer_data = self.coordinator.data
 
         if not prayer_data:
@@ -291,83 +312,20 @@ class MawaqitPrayerTimeSensor(SensorEntity, CoordinatorEntity[PrayerTimeCoordina
             )
             return None
 
-        # Extract the required parameters
-        calendar = prayer_data.get("calendar")
-        timezone = prayer_data.get("timezone")
-
-        if not calendar or not timezone:
-            _LOGGER.warning(
-                "Missing calendar or timezone data for %s",
-                self.entity_description.key,
+        if (
+            not hasattr(self.entity_description, "get_value")
+            or self.entity_description.get_value is None
+        ):
+            _LOGGER.error(
+                "No get_value function defined for %s", self.entity_description.key
             )
             return None
 
-        # Get today's date
-        day = dt_util.now().date()
-
-        # Extract the requested prayer time
-        prayer_time = None
-        prayer_name: str = ""
-        if not isinstance(self.entity_description.key, str):
-            raise TypeError(f"name must be a string for {self.entity_description.key}")
-        prayer_name = self.entity_description.key
         try:
-            if prayer_name.lower() == "shuruq":
-                prayer_time = prayer_data.get("shuruq")
-            elif prayer_name.lower() == "jumua":
-                if not (prayer_data.get("jumua")):
-                    return None
-                prayer_time = prayer_data.get("jumua")
-                day = utils.get_next_friday()
-            elif prayer_name.lower() == "jumua 2":
-                if not (prayer_data.get("jumua2")):
-                    return None
-                prayer_time = prayer_data.get("jumua2")
-                day = utils.get_next_friday()
-            else:
-                name = self.entity_description.key
-                iqama_prayer_time = None
-
-                if "iqama" in self.entity_description.key.lower():
-                    name = self.entity_description.key.split("_")[0]
-                    iqama_calendar = prayer_data.get("iqamaCalendar")
-                    iqama_prayer_time = utils.extract_time_from_calendar(
-                        iqama_calendar, name, day, timezone, mode_iqama=True
-                    )
-                prayer_time = utils.extract_time_from_calendar(
-                    calendar, name, day, timezone
-                )
-                if "iqama" in self.entity_description.key.lower():
-                    prayer_time = utils.add_minutes_to_time(
-                        prayer_time, iqama_prayer_time
-                    )  # here the prayer_time represent the iqama time
-
-            localized_prayer_time = utils.time_with_timezone(timezone, day, prayer_time)
-            if not localized_prayer_time:
-                _LOGGER.warning(
-                    "Could not determine prayer time for %s",
-                    self.entity_description.key,
-                )
-                return None
-
-            return localized_prayer_time.astimezone(dt_util.UTC)
-        except KeyError as e:
+            return self.entity_description.get_value(prayer_data)
+        except (KeyError, ValueError, TypeError) as e:
             _LOGGER.error(
-                "Key error retrieving prayer time for %s: %s",
-                self.entity_description.key,
-                e,
-            )
-            return None
-        except ValueError as e:
-            _LOGGER.error(
-                "Value error retrieving prayer time for %s: %s",
-                self.entity_description.key,
-                e,
-            )
-            return None
-        except TypeError as e:
-            _LOGGER.error(
-                "Type error retrieving prayer time for %s: %s",
+                "Error retrieving prayer time for %s: %s",
                 self.entity_description.key,
                 e,
             )
