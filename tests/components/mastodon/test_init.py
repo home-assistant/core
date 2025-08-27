@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from mastodon.Mastodon import MastodonError
+from mastodon.Mastodon import MastodonNotFoundError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mastodon.config_flow import MastodonConfigFlow
@@ -39,8 +39,8 @@ async def test_initialization_failure(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test initialization failure."""
-    mock_mastodon_client.instance_v1.side_effect = MastodonError
-    mock_mastodon_client.instance_v2.side_effect = MastodonError
+    mock_mastodon_client.instance_v1.side_effect = MastodonNotFoundError
+    mock_mastodon_client.instance_v2.side_effect = MastodonNotFoundError
 
     await setup_integration(hass, mock_config_entry)
 
