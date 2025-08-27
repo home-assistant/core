@@ -58,4 +58,7 @@ async def test_migrate_entry(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.minor_version == 2
-    assert config_entry.data["site"] == f"https://www.amazon.{TEST_COUNTRY}"
+    assert (
+        config_entry.data[CONF_LOGIN_DATA]["site"]
+        == f"https://www.amazon.{TEST_COUNTRY}"
+    )
