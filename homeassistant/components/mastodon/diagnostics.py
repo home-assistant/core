@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from mastodon.Mastodon import Account, Instance, InstanceV2
+from mastodon.Mastodon import Account, Instance, InstanceV2, MastodonNotFoundError
 
 from homeassistant.core import HomeAssistant
 
@@ -33,10 +33,10 @@ def get_diagnostics(
     """Get mastodon diagnostics."""
     client = config_entry.runtime_data.client
 
-    if client.mastodon_api_version == 1:
-        instance = client.instance_v1()
-    else:
+    try:
         instance = client.instance_v2()
+    except MastodonNotFoundError:
+        instance = client.instance_v1()
     account = client.account_verify_credentials()
 
     return instance, account

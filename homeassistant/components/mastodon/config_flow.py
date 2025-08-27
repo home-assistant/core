@@ -9,6 +9,7 @@ from mastodon.Mastodon import (
     Instance,
     InstanceV2,
     MastodonNetworkError,
+    MastodonNotFoundError,
     MastodonUnauthorizedError,
 )
 import voluptuous as vol
@@ -74,10 +75,10 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
                 client_secret,
                 access_token,
             )
-            if client.mastodon_api_version == 1:
-                instance = client.instance_v1()
-            else:
+            try:
                 instance = client.instance_v2()
+            except MastodonNotFoundError:
+                instance = client.instance_v1()
             account = client.account_verify_credentials()
 
         except MastodonNetworkError:
