@@ -2,7 +2,6 @@
 # name: test_device_diagnostics
   dict({
     'account name': 'Echo Test',
-    'bluetooth state': True,
     'capabilities': list([
       'AUDIO_PLAYER',
       'MICROPHONE',
@@ -12,9 +11,7 @@
     ]),
     'device family': 'mine',
     'device type': 'echo',
-    'do not disturb': False,
     'online': True,
-    'response style': None,
     'serial number': 'echo_test_serial_number',
     'software version': 'echo_test_software_version',
   })
@@ -25,7 +22,6 @@
       'devices': list([
         dict({
           'account name': 'Echo Test',
-          'bluetooth state': True,
           'capabilities': list([
             'AUDIO_PLAYER',
             'MICROPHONE',
@@ -35,9 +31,7 @@
           ]),
           'device family': 'mine',
           'device type': 'echo',
-          'do not disturb': False,
           'online': True,
-          'response style': None,
           'serial number': 'echo_test_serial_number',
           'software version': 'echo_test_software_version',
         }),

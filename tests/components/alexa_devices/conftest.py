@@ -53,15 +53,13 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
                 online=True,
                 serial_number=TEST_SERIAL_NUMBER,
                 software_version="echo_test_software_version",
-                do_not_disturb=False,
-                response_style=None,
-                bluetooth_state=True,
                 entity_id="11111111-2222-3333-4444-555555555555",
-                appliance_id="G1234567890123456789012345678A",
+                endpoint_id="G1234567890123456789012345678A",
                 sensors={
+                    "dnd": AmazonDeviceSensor(name="dnd", value=False, scale=None),
                     "temperature": AmazonDeviceSensor(
                         name="temperature", value="22.5", scale="CELSIUS"
-                    )
+                    ),
                 },
             )
         }
