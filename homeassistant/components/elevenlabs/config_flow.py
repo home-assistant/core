@@ -23,14 +23,12 @@ from . import ElevenLabsConfigEntry
 from .const import (
     CONF_CONFIGURE_VOICE,
     CONF_MODEL,
-    CONF_OPTIMIZE_LATENCY,
     CONF_SIMILARITY,
     CONF_STABILITY,
     CONF_STYLE,
     CONF_USE_SPEAKER_BOOST,
     CONF_VOICE,
     DEFAULT_MODEL,
-    DEFAULT_OPTIMIZE_LATENCY,
     DEFAULT_SIMILARITY,
     DEFAULT_STABILITY,
     DEFAULT_STYLE,
@@ -51,7 +49,8 @@ async def get_voices_models(
     httpx_client = get_async_client(hass)
     client = AsyncElevenLabs(api_key=api_key, httpx_client=httpx_client)
     voices = (await client.voices.get_all()).voices
-    models = await client.models.get_all()
+    models = await client.models.list()
+
     voices_dict = {
         voice.voice_id: voice.name
         for voice in sorted(voices, key=lambda v: v.name or "")
@@ -78,8 +77,13 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 voices, _ = await get_voices_models(self.hass, user_input[CONF_API_KEY])
-            except ApiError:
-                errors["base"] = "invalid_api_key"
+            except ApiError as exc:
+                errors["base"] = "unknown"
+                details = getattr(exc, "body", {}).get("detail", {})
+                if details:
+                    status = details.get("status")
+                    if status == "invalid_api_key":
+                        errors["base"] = "invalid_api_key"
             else:
                 return self.async_create_entry(
                     title="ElevenLabs",
@@ -206,12 +210,6 @@ class ElevenLabsOptionsFlow(OptionsFlow):
                     vol.Coerce(float),
                     vol.Range(min=0, max=1),
                 ),
-                vol.Optional(
-                    CONF_OPTIMIZE_LATENCY,
-                    default=self.config_entry.options.get(
-                        CONF_OPTIMIZE_LATENCY, DEFAULT_OPTIMIZE_LATENCY
-                    ),
-                ): vol.All(int, vol.Range(min=0, max=4)),
                 vol.Optional(
                     CONF_STYLE,
                     default=self.config_entry.options.get(CONF_STYLE, DEFAULT_STYLE),

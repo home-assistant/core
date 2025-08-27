@@ -336,7 +336,8 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                     if self._run_pipeline_task is not None:
                         _LOGGER.debug("Cancelling running pipeline")
                         self._run_pipeline_task.cancel()
-                    self._call_end_future.set_result(None)
+                    if not self._call_end_future.done():
+                        self._call_end_future.set_result(None)
                     self.disconnect()
                     break
 
@@ -363,6 +364,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         if self._check_hangup_task is not None:
             self._check_hangup_task.cancel()
             self._check_hangup_task = None
+        self._rtp_port = None
 
     def connection_made(self, transport):
         """Server is ready."""

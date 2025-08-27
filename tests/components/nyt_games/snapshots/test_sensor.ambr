@@ -23,12 +23,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Current streak',
     'platform': 'nyt_games',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'streak',
     'unique_id': '218886794-connections-connections_streak',
@@ -75,12 +79,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Highest streak',
     'platform': 'nyt_games',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_streak',
     'unique_id': '218886794-connections-connections_max_streak',
@@ -131,6 +139,7 @@
     'original_name': 'Last played',
     'platform': 'nyt_games',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_played',
     'unique_id': '218886794-connections-connections_last_played',
@@ -181,6 +190,7 @@
     'original_name': 'Played',
     'platform': 'nyt_games',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'connections_played',
     'unique_id': '218886794-connections-connections_played',
@@ -232,6 +242,7 @@
     'original_name': 'Won',
     'platform': 'nyt_games',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'won',
     'unique_id': '218886794-connections-connections_won',
@@ -283,6 +294,7 @@
     'original_name': 'Played',
     'platform': 'nyt_games',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'spelling_bees_played',
     'unique_id': '218886794-spelling_bee-spelling_bees_played',
@@ -334,6 +346,7 @@
     'original_name': 'Total pangrams found',
     'platform': 'nyt_games',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_pangrams',
     'unique_id': '218886794-spelling_bee-spelling_bees_total_pangrams',
@@ -385,6 +398,7 @@
     'original_name': 'Total words found',
     'platform': 'nyt_games',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_words',
     'unique_id': '218886794-spelling_bee-spelling_bees_total_words',
@@ -430,12 +444,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Current streak',
     'platform': 'nyt_games',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'streak',
     'unique_id': '218886794-wordle-wordles_streak',
@@ -455,7 +473,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1',
+    'state': '237',
   })
 # ---
 # name: test_all_entities[sensor.wordle_highest_streak-entry]
@@ -482,12 +500,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Highest streak',
     'platform': 'nyt_games',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'max_streak',
     'unique_id': '218886794-wordle-wordles_max_streak',
@@ -507,7 +529,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5',
+    'state': '241',
   })
 # ---
 # name: test_all_entities[sensor.wordle_played-entry]
@@ -540,6 +562,7 @@
     'original_name': 'Played',
     'platform': 'nyt_games',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wordles_played',
     'unique_id': '218886794-wordle-wordles_played',
@@ -558,7 +581,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '70',
+    'state': '1119',
   })
 # ---
 # name: test_all_entities[sensor.wordle_won-entry]
@@ -591,6 +614,7 @@
     'original_name': 'Won',
     'platform': 'nyt_games',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'won',
     'unique_id': '218886794-wordle-wordles_won',
@@ -609,6 +633,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '51',
+    'state': '1077',
   })
 # ---

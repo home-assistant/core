@@ -3,13 +3,21 @@
 from functools import partial
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.media_player import BrowseMedia, MediaClass, MediaType
+from homeassistant.components.media_player import (
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
+    BrowseMedia,
+    MediaClass,
+    MediaType,
+)
+from homeassistant.components.sonos.const import MEDIA_TYPE_DIRECTORY
 from homeassistant.components.sonos.media_browser import (
     build_item_response,
     get_thumbnail_url_full,
 )
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from .conftest import SoCoMockFactory
@@ -217,3 +225,37 @@ async def test_browse_media_favorites(
     response = await client.receive_json()
     assert response["success"]
     assert response["result"] == snapshot
+
+
+@pytest.mark.parametrize(
+    "media_content_id",
+    [
+        ("S:"),
+        ("S://192.168.1.1/music"),
+    ],
+)
+async def test_browse_media_library_folders(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+    media_content_id: str,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the async_browse_media method."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "media_player/browse_media",
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_ID: media_content_id,
+            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_DIRECTORY,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == snapshot
+    assert soco_mock.music_library.browse_by_idstring.call_count == 1

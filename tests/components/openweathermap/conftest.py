@@ -5,6 +5,8 @@ from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
 from pyopenweathermap import (
+    AirPollutionReport,
+    CurrentAirPollution,
     CurrentWeather,
     DailyTemperature,
     DailyWeatherForecast,
@@ -75,8 +77,8 @@ def owm_client_mock() -> Generator[AsyncMock]:
         cloud_coverage=75,
         visibility=10000,
         wind_speed=9.83,
+        wind_gust=11.81,
         wind_bearing=199,
-        wind_gust=None,
         rain={"1h": 1.21},
         snow=None,
         condition=WeatherCondition(
@@ -131,6 +133,21 @@ def owm_client_mock() -> Generator[AsyncMock]:
     ]
     client.get_weather.return_value = WeatherReport(
         current_weather, minutely_weather_forecast, [], [daily_weather_forecast]
+    )
+    current_air_pollution = CurrentAirPollution(
+        date_time=datetime.fromtimestamp(1714063537, tz=UTC),
+        aqi=3,
+        co=125.55,
+        no=0.11,
+        no2=0.78,
+        o3=101.98,
+        so2=0.59,
+        pm2_5=4.48,
+        pm10=4.77,
+        nh3=4.62,
+    )
+    client.get_air_pollution.return_value = AirPollutionReport(
+        current_air_pollution, []
     )
     client.validate_key.return_value = True
     with (

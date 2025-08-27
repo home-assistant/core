@@ -16,7 +16,7 @@ from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.setup import async_setup_component
 from homeassistant.util.uuid import random_uuid_hex
 
-from tests.common import load_fixture
+from tests.common import async_load_fixture
 from tests.typing import WebSocketGenerator
 
 
@@ -449,7 +449,9 @@ async def test_restore_traces(
         msg_id += 1
         return msg_id
 
-    saved_traces = json.loads(load_fixture(f"trace/{domain}_saved_traces.json"))
+    saved_traces = json.loads(
+        await async_load_fixture(hass, f"{domain}_saved_traces.json", "trace")
+    )
     hass_storage["trace.saved_traces"] = saved_traces
     await _setup_automation_or_script(hass, domain, [])
     await hass.async_start()
@@ -628,7 +630,9 @@ async def test_restore_traces_overflow(
         msg_id += 1
         return msg_id
 
-    saved_traces = json.loads(load_fixture(f"trace/{domain}_saved_traces.json"))
+    saved_traces = json.loads(
+        await async_load_fixture(hass, f"{domain}_saved_traces.json", "trace")
+    )
     hass_storage["trace.saved_traces"] = saved_traces
     sun_config = {
         "id": "sun",
@@ -709,7 +713,9 @@ async def test_restore_traces_late_overflow(
         msg_id += 1
         return msg_id
 
-    saved_traces = json.loads(load_fixture(f"trace/{domain}_saved_traces.json"))
+    saved_traces = json.loads(
+        await async_load_fixture(hass, f"{domain}_saved_traces.json", "trace")
+    )
     hass_storage["trace.saved_traces"] = saved_traces
     sun_config = {
         "id": "sun",

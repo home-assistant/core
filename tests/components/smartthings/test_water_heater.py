@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, call
 from pysmartthings import Attribute, Capability, Command
 from pysmartthings.models import HealthStatus
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.smartthings import MAIN
 from homeassistant.components.water_heater import (
@@ -20,6 +20,9 @@ from homeassistant.components.water_heater import (
     SERVICE_SET_OPERATION_MODE,
     SERVICE_SET_TEMPERATURE,
     STATE_ECO,
+    STATE_HEAT_PUMP,
+    STATE_HIGH_DEMAND,
+    STATE_PERFORMANCE,
     WaterHeaterEntityFeature,
 )
 from homeassistant.const import (
@@ -66,9 +69,9 @@ async def test_all_entities(
     ("operation_mode", "argument"),
     [
         (STATE_ECO, "eco"),
-        ("standard", "std"),
-        ("force", "force"),
-        ("power", "power"),
+        (STATE_HEAT_PUMP, "std"),
+        (STATE_HIGH_DEMAND, "force"),
+        (STATE_PERFORMANCE, "power"),
     ],
 )
 async def test_set_operation_mode(
@@ -299,9 +302,9 @@ async def test_operation_list_update(
     ] == [
         STATE_OFF,
         STATE_ECO,
-        "standard",
-        "power",
-        "force",
+        STATE_HEAT_PUMP,
+        STATE_PERFORMANCE,
+        STATE_HIGH_DEMAND,
     ]
 
     await trigger_update(
@@ -318,8 +321,8 @@ async def test_operation_list_update(
     ] == [
         STATE_OFF,
         STATE_ECO,
-        "force",
-        "power",
+        STATE_HIGH_DEMAND,
+        STATE_PERFORMANCE,
     ]
 
 
@@ -332,7 +335,7 @@ async def test_current_operation_update(
     """Test state update."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("water_heater.warmepumpe").state == "standard"
+    assert hass.states.get("water_heater.warmepumpe").state == STATE_HEAT_PUMP
 
     await trigger_update(
         hass,
@@ -356,7 +359,7 @@ async def test_switch_update(
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("water_heater.warmepumpe")
-    assert state.state == "standard"
+    assert state.state == STATE_HEAT_PUMP
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
         == WaterHeaterEntityFeature.ON_OFF
@@ -516,7 +519,7 @@ async def test_availability(
     """Test availability."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("water_heater.warmepumpe").state == "standard"
+    assert hass.states.get("water_heater.warmepumpe").state == STATE_HEAT_PUMP
 
     await trigger_health_update(
         hass, devices, "3810e5ad-5351-d9f9-12ff-000001200000", HealthStatus.OFFLINE
@@ -528,7 +531,7 @@ async def test_availability(
         hass, devices, "3810e5ad-5351-d9f9-12ff-000001200000", HealthStatus.ONLINE
     )
 
-    assert hass.states.get("water_heater.warmepumpe").state == "standard"
+    assert hass.states.get("water_heater.warmepumpe").state == STATE_HEAT_PUMP
 
 
 @pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])

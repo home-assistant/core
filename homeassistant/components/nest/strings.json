@@ -23,7 +23,13 @@
         }
       },
       "pick_implementation": {
-        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        }
       },
       "pubsub_topic": {
         "title": "Configure Cloud Pub/Sub topic",
@@ -47,6 +53,9 @@
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The Nest integration needs to re-authenticate your account"
+      },
+      "oauth_discovery": {
+        "description": "Home Assistant has found a Google Nest device on your network. Be aware that the setup of Google Nest is more complicated than most other integrations and requires setting up a Nest Device Access project which **requires paying Google a US $5 fee**. Press **Submit** to continue setting up Google Nest."
       }
     },
     "error": {

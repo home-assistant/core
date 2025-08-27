@@ -29,32 +29,67 @@ DHCP_DISCOVERY = (
     DhcpServiceInfo(
         ip="1.1.1.1",
         hostname="balay-dishwasher-000000000000000000",
-        macaddress="C8:D7:78:00:00:00",
+        macaddress="c8d778000000",
     ),
     DhcpServiceInfo(
         ip="1.1.1.1",
         hostname="BOSCH-ABCDE1234-68A40E000000",
-        macaddress="68:A4:0E:00:00:00",
+        macaddress="68a40e000000",
+    ),
+    DhcpServiceInfo(
+        ip="1.1.1.1",
+        hostname="BOSCH-ABCDE1234-68A40E000000",
+        macaddress="38b4d3000000",
+    ),
+    DhcpServiceInfo(
+        ip="1.1.1.1",
+        hostname="bosch-dishwasher-000000000000000000",
+        macaddress="68a40e000000",
+    ),
+    DhcpServiceInfo(
+        ip="1.1.1.1",
+        hostname="bosch-dishwasher-000000000000000000",
+        macaddress="38b4d3000000",
     ),
     DhcpServiceInfo(
         ip="1.1.1.1",
         hostname="SIEMENS-ABCDE1234-68A40E000000",
-        macaddress="68:A4:0E:00:00:00",
+        macaddress="68a40e000000",
     ),
     DhcpServiceInfo(
         ip="1.1.1.1",
         hostname="SIEMENS-ABCDE1234-38B4D3000000",
-        macaddress="38:B4:D3:00:00:00",
+        macaddress="38b4d3000000",
     ),
     DhcpServiceInfo(
         ip="1.1.1.1",
         hostname="siemens-dishwasher-000000000000000000",
-        macaddress="68:A4:0E:00:00:00",
+        macaddress="68a40e000000",
     ),
     DhcpServiceInfo(
         ip="1.1.1.1",
         hostname="siemens-dishwasher-000000000000000000",
-        macaddress="38:B4:D3:00:00:00",
+        macaddress="38b4d3000000",
+    ),
+    DhcpServiceInfo(
+        ip="1.1.1.1",
+        hostname="NEFF-ABCDE1234-68A40E000000",
+        macaddress="68a40e000000",
+    ),
+    DhcpServiceInfo(
+        ip="1.1.1.1",
+        hostname="NEFF-ABCDE1234-38B4D3000000",
+        macaddress="38b4d3000000",
+    ),
+    DhcpServiceInfo(
+        ip="1.1.1.1",
+        hostname="neff-dishwasher-000000000000000000",
+        macaddress="68a40e000000",
+    ),
+    DhcpServiceInfo(
+        ip="1.1.1.1",
+        hostname="neff-dishwasher-000000000000000000",
+        macaddress="38b4d3000000",
     ),
 )
 
@@ -279,6 +314,15 @@ async def test_zeroconf_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}
     )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "oauth_discovery"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -351,6 +395,15 @@ async def test_dhcp_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=dhcp_discovery
     )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "oauth_discovery"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -413,7 +466,7 @@ async def test_dhcp_flow_already_setup(
             DhcpServiceInfo(
                 ip="1.1.1.1",
                 hostname="bosch-cookprocessor-123456789012345678",
-                macaddress="c8:d7:78:00:00:00",
+                macaddress="c8d778000000",
             ),
             "CookProcessor",
         ),
@@ -421,7 +474,7 @@ async def test_dhcp_flow_already_setup(
             DhcpServiceInfo(
                 ip="1.1.1.1",
                 hostname="BOSCH-HCS000000-68A40E000000",
-                macaddress="68:a4:0e:00:00:00",
+                macaddress="68a40e000000",
             ),
             "Hob",
         ),
@@ -454,5 +507,5 @@ async def test_dhcp_flow_complete_device_information(
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     assert device
     assert device.connections == {
-        (dr.CONNECTION_NETWORK_MAC, dhcp_discovery.macaddress)
+        (dr.CONNECTION_NETWORK_MAC, dr.format_mac(dhcp_discovery.macaddress))
     }

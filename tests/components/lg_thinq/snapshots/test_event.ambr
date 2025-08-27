@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[event.test_air_conditioner_notification-entry]
+# name: test_event_entities[air_conditioner][event.test_air_conditioner_notification-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -31,13 +31,14 @@
     'original_name': 'Notification',
     'platform': 'lg_thinq',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <ThinQPropertyEx.NOTIFICATION: 'notification'>,
     'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_notification',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[event.test_air_conditioner_notification-state]
+# name: test_event_entities[air_conditioner][event.test_air_conditioner_notification-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'event_type': None,
