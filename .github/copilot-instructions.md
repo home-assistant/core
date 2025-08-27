@@ -1073,7 +1073,11 @@ async def test_flow_connection_error(hass, mock_api_error):
 
 ### Entity Testing Patterns
 ```python
-@pytest.mark.parametrize("init_integration", [Platform.SENSOR], indirect=True)
+@pytest.fixture 
+def platforms() -> list[Platform]: 
+    """Overridden fixture to specify platforms to test.""" 
+    return [Platform.SENSOR]  # Or another specific platform as needed.
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_entities(
     hass: HomeAssistant,
@@ -1120,20 +1124,22 @@ def mock_device_api() -> Generator[MagicMock]:
         )
         yield api
 
+@pytest.fixture 
+def platforms() -> list[Platform]: 
+    """Fixture to specify platforms to test.""" 
+    return PLATFORMS
+
 @pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_device_api: MagicMock,
+    platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the integration for testing."""
     mock_config_entry.add_to_hass(hass)
     
-    context = nullcontext()
-    if platform := getattr(request, "param", None):
-        context = patch("homeassistant.components.my_integration.PLATFORMS", [platform])
-
-    with context:
+    with patch("homeassistant.components.my_integration.PLATFORMS", platforms):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
