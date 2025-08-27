@@ -531,7 +531,11 @@ class Person(
 
         if latest_non_gps_home:
             latest = latest_non_gps_home
-            if home_zone := self.hass.states.get(ENTITY_ID_HOME):
+            if (
+                latest_non_gps_home.attributes.get(ATTR_LATITUDE) is None
+                and latest_non_gps_home.attributes.get(ATTR_LONGITUDE) is None
+                and (home_zone := self.hass.states.get(ENTITY_ID_HOME))
+            ):
                 coordinates = home_zone
             else:
                 coordinates = latest_non_gps_home
