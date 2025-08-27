@@ -508,21 +508,21 @@ DISCOVERY_SCHEMAS = [
             key="BooleanStateConfigurationCurrentSensitivityLevel",
             entity_category=EntityCategory.CONFIG,
             translation_key="sensitivity_level",
-            options=["low", "standard", "high"],
+            options=["10 mm", "20 mm", "30 mm"],
             device_to_ha={
-                0: "low",
-                1: "standard",
-                2: "high",
+                0:  "10 mm",  # 10 mm => CurrentSensitivityLevel=0 / highest sensitivity level
+                1:  "20 mm",  # 20 mm => CurrentSensitivityLevel=1 / medium sensitivity level
+                2:  "30 mm",  # 30 mm => CurrentSensitivityLevel=2 / lowest sensitivity level
             }.get,
             ha_to_device={
-                "low": 0,
-                "standard": 1,
-                "high": 2,
+                "10 mm": 0,
+                "20 mm": 1,
+                "30 mm": 2,
             }.get,
         ),
         entity_class=MatterAttributeSelectEntity,
-        required_attributes=(
-            clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,
-        ),
+        required_attributes=(clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,),
+        vendor_id=(4447,),
+        product_id=(8194,),
     ),
 ]
