@@ -101,7 +101,7 @@ from .helpers import (
 )
 
 if TYPE_CHECKING:
-    from .model import ZwaveJSConfigEntry
+    from .models import ZwaveJSConfigEntry
 
 
 DATA_UNSUBSCRIBE = "unsubs"

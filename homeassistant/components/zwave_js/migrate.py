@@ -16,7 +16,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
 from .helpers import get_unique_id, get_valueless_base_unique_id
-from .model import PlatformZwaveDiscoveryInfo
+from .models import PlatformZwaveDiscoveryInfo
 
 _LOGGER = logging.getLogger(__name__)
 

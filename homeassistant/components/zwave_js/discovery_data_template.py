@@ -157,7 +157,7 @@ from .const import (
     ENTITY_DESC_KEY_UV_INDEX,
     ENTITY_DESC_KEY_VOLTAGE,
 )
-from .model import BaseDiscoverySchemaDataTemplate, ZwaveValueID
+from .models import BaseDiscoverySchemaDataTemplate, ZwaveValueID
 
 ENERGY_PRODUCTION_DEVICE_CLASS_MAP: dict[str, list[EnergyProductionParameter]] = {
     ENTITY_DESC_KEY_ENERGY_PRODUCTION_TIME: [EnergyProductionParameter.TOTAL_TIME],

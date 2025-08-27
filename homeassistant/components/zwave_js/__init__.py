@@ -127,7 +127,7 @@ from .helpers import (
     get_valueless_base_unique_id,
 )
 from .migrate import async_migrate_discovered_value
-from .model import PlatformZwaveDiscoveryInfo, ZwaveJSConfigEntry, ZwaveJSData
+from .models import PlatformZwaveDiscoveryInfo, ZwaveJSConfigEntry, ZwaveJSData
 from .services import async_setup_services
 
 CONNECT_TIMEOUT = 10

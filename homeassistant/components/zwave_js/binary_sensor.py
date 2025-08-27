@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import NewZwaveDiscoveryInfo, ZWaveBaseEntity
-from .model import (
+from .models import (
     NewZWaveDiscoverySchema,
     ValueType,
     ZwaveDiscoveryInfo,

@@ -40,7 +40,7 @@ from .const import (
 )
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
-from .model import ZwaveJSConfigEntry
+from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 

@@ -41,7 +41,7 @@ from .const import COVER_POSITION_PROPERTY_KEYS, COVER_TILT_PROPERTY_KEYS, DOMAI
 from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import CoverTiltDataTemplate
 from .entity import ZWaveBaseEntity
-from .model import ZwaveJSConfigEntry
+from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 

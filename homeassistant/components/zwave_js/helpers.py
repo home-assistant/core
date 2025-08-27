@@ -54,7 +54,7 @@ from .const import (
     LIB_LOGGER,
     LOGGER,
 )
-from .model import ZwaveJSConfigEntry
+from .models import ZwaveJSConfigEntry
 
 DRIVER_READY_EVENT_TIMEOUT = 60
 SERVER_VERSION_TIMEOUT = 10

@@ -66,7 +66,7 @@ from .discovery_data_template import (
     NumericSensorDataTemplate,
 )
 from .entity import NewZwaveDiscoveryInfo
-from .model import (
+from .models import (
     FirmwareVersionRange,
     NewZWaveDiscoverySchema,
     ValueType,

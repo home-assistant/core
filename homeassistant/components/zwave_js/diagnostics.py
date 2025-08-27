@@ -26,7 +26,7 @@ from .helpers import (
     get_value_id_from_unique_id,
     value_matches_matcher,
 )
-from .model import ZwaveJSConfigEntry
+from .models import ZwaveJSConfigEntry
 
 KEYS_TO_REDACT = {"homeId", "location"}
 

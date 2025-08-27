@@ -25,7 +25,7 @@ from homeassistant.helpers.typing import UNDEFINED
 from .const import DOMAIN, EVENT_VALUE_UPDATED, LOGGER
 from .discovery_data_template import BaseDiscoverySchemaDataTemplate
 from .helpers import get_device_id, get_unique_id, get_valueless_base_unique_id
-from .model import PlatformZwaveDiscoveryInfo, ZwaveDiscoveryInfo
+from .models import PlatformZwaveDiscoveryInfo, ZwaveDiscoveryInfo
 
 EVENT_VALUE_REMOVED = "value removed"
 

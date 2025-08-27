@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import ATTR_VALUE, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .entity import ZWaveBaseEntity
-from .model import ZwaveJSConfigEntry
+from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 

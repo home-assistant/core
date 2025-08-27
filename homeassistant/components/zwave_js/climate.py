@@ -41,7 +41,7 @@ from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import DynamicCurrentTempClimateDataTemplate
 from .entity import ZWaveBaseEntity
 from .helpers import get_value_of_zwave_value
-from .model import ZwaveJSConfigEntry
+from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 0
 

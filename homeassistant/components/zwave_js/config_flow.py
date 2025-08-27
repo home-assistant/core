@@ -69,7 +69,7 @@ from .helpers import (
     async_get_version_info,
     async_wait_for_driver_ready_event,
 )
-from .model import ZwaveJSConfigEntry
+from .models import ZwaveJSConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
