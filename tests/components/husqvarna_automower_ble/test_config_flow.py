@@ -13,9 +13,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
+    AUTOMOWER_MISSING_MANUFACTURER_DATA_SERVICE_INFO,
     AUTOMOWER_SERVICE_INFO,
     AUTOMOWER_UNNAMED_SERVICE_INFO,
-    AUTOMOWER_UNSUPPORTED_GROUP_SERVICE_INFO,
 )
 
 from tests.common import MockConfigEntry
@@ -277,13 +277,15 @@ async def test_bluetooth_not_paired(
 async def test_bluetooth_invalid(hass: HomeAssistant) -> None:
     """Test bluetooth device discovery with invalid data."""
 
-    inject_bluetooth_service_info(hass, AUTOMOWER_UNSUPPORTED_GROUP_SERVICE_INFO)
+    inject_bluetooth_service_info(
+        hass, AUTOMOWER_MISSING_MANUFACTURER_DATA_SERVICE_INFO
+    )
     await hass.async_block_till_done(wait_background_tasks=True)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_BLUETOOTH},
-        data=AUTOMOWER_UNSUPPORTED_GROUP_SERVICE_INFO,
+        data=AUTOMOWER_MISSING_MANUFACTURER_DATA_SERVICE_INFO,
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
