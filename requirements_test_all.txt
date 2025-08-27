@@ -192,7 +192,7 @@ aioaseko==1.0.0
 aioasuswrt==1.4.0
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2.1.2
+aioautomower==2.2.0
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
@@ -562,7 +562,7 @@ bimmer-connected[china]==0.17.2
 bleak-esphome==3.1.0
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==4.3.0
+bleak-retry-connector==4.4.1
 
 # homeassistant.components.bluetooth
 bleak==1.0.1
@@ -1477,9 +1477,6 @@ py-aosmith==1.0.12
 # homeassistant.components.canary
 py-canary==0.5.4
 
-# homeassistant.components.ccm15
-py-ccm15==0.0.9
-
 # homeassistant.components.cpuspeed
 py-cpuinfo==9.0.0
 
@@ -1533,6 +1530,9 @@ pyTibber==0.31.6
 
 # homeassistant.components.dlink
 pyW215==0.8.0
+
+# homeassistant.components.ccm15
+py_ccm15==0.1.2
 
 # homeassistant.components.hisense_aehw4a1
 pyaehw4a1==0.3.9
@@ -2618,7 +2618,7 @@ yalexs-ble==3.1.2
 
 # homeassistant.components.august
 # homeassistant.components.yale
-yalexs==8.12.0
+yalexs==9.0.1
 
 # homeassistant.components.yeelight
 yeelight==0.7.16
