@@ -5,6 +5,7 @@ from __future__ import annotations
 import base64
 from json import JSONDecodeError
 import logging
+from typing import TYPE_CHECKING
 
 from openai.types.responses.response_output_item import ImageGenerationCall
 
@@ -15,7 +16,13 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads
 
+from .const import CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL, UNSUPPORTED_IMAGE_MODELS
 from .entity import OpenAIBaseLLMEntity
+
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigSubentry
+
+    from . import OpenAIConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,11 +49,16 @@ class OpenAITaskEntity(
 ):
     """OpenAI AI Task entity."""
 
-    _attr_supported_features = (
-        ai_task.AITaskEntityFeature.GENERATE_DATA
-        | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
-        | ai_task.AITaskEntityFeature.GENERATE_IMAGE
-    )
+    def __init__(self, entry: OpenAIConfigEntry, subentry: ConfigSubentry) -> None:
+        """Initialize the entity."""
+        super().__init__(entry, subentry)
+        self._attr_supported_features = (
+            ai_task.AITaskEntityFeature.GENERATE_DATA
+            | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
+        )
+        model = self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+        if not model.startswith(tuple(UNSUPPORTED_IMAGE_MODELS)):
+            self._attr_supported_features |= ai_task.AITaskEntityFeature.GENERATE_IMAGE
 
     async def _async_generate_data(
         self,
