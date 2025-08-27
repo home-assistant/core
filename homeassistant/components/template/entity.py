@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from homeassistant.const import CONF_DEVICE_ID, CONF_OPTIMISTIC, CONF_STATE
-from homeassistant.core import Context, HomeAssistant, callback, valid_entity_id
+from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.script import Script, _VarsType
@@ -53,20 +53,7 @@ class AbstractTemplateEntity(Entity):
             )
 
         if (default_entity_id := config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
-            # Legacy template entities use the slug as the object_id where
-            # modern template entities use a full domain.object_id as the input.
-            if valid_entity_id(default_entity_id):
-                domain, object_id = default_entity_id.split(".")
-                if domain + ".{}" != self._entity_id_format:
-                    _LOGGER.warning(
-                        "Default entity_id: %s does not match the entity domain: %s, update the default_entity_id to: %s",
-                        default_entity_id,
-                        self._entity_id_format.split(".")[0],
-                        self._entity_id_format.format(object_id),
-                    )
-            else:
-                object_id = default_entity_id
-
+            _, object_id = default_entity_id.split(".")
             self.entity_id = async_generate_entity_id(
                 self._entity_id_format, object_id, hass=self.hass
             )

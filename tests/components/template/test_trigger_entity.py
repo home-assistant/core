@@ -144,14 +144,8 @@ async def test_default_entity_id(hass: HomeAssistant) -> None:
     assert entity.entity_id == "test.test"
 
 
-async def test_bad_default_entity_id(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_bad_default_entity_id(hass: HomeAssistant) -> None:
     """Test template entity creates suggested entity_id from the default_entity_id."""
     coordinator = TriggerUpdateCoordinator(hass, {})
     entity = TestEntity(hass, coordinator, {"default_entity_id": "bad.test"})
     assert entity.entity_id == "test.test"
-    assert (
-        "Default entity_id: bad.test does not match the entity domain: test, update the default_entity_id to: test.test"
-        in caplog.text
-    )
