@@ -14,7 +14,7 @@
       "manual": {
         "data": {
           "host": "Host IP address",
-          "device": "Host IP Address"
+          "device": "Device IP address"
         },
         "data_description": {
           "host": "Select a DayBetter device to add or enter IP address manually.",
