@@ -71,17 +71,3 @@ async def async_update_unique_id(
 
             # Update the registry with the new unique_id
             entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
-
-
-# async def async_cleanup_deprecated_entity()-> None
-#     """123."""
-
-#     # Clean up deprecated sensors
-#     for sensor_desc in DEPRECATED_BINARY_SENSORS:
-#         for serial_num in coordinator.data:
-#             unique_id = f"{serial_num}-{sensor_desc.key}"
-#             if entity_id := entity_registry.async_get_entity_id(
-#                 BINARY_SENSOR_DOMAIN, DOMAIN, unique_id
-#             ):
-#                 _LOGGER.debug("Removing deprecated entity %s", entity_id)
-#                 entity_registry.async_remove(entity_id)
