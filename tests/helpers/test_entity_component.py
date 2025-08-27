@@ -564,7 +564,6 @@ async def test_register_entity_service_non_entity_service_schema(
 ) -> None:
     """Test attempting to register a service with a non entity service schema."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
-    expected_message = "The schema is not an entity service schema"
 
     for idx, schema in enumerate(
         (
@@ -573,6 +572,7 @@ async def test_register_entity_service_non_entity_service_schema(
             vol.Any(vol.Schema({"some": str})),
         )
     ):
+        expected_message = f"The test_domain.hello_{idx} service registers an entity service with a non entity service schema"
         with pytest.raises(HomeAssistantError, match=expected_message):
             component.async_register_entity_service(f"hello_{idx}", schema, Mock())
 
@@ -583,6 +583,7 @@ async def test_register_entity_service_non_entity_service_schema(
             vol.All(cv.make_entity_service_schema({"some": str})),
         )
     ):
+        expected_message = f"The test_domain.hello_{idx} service registers an entity service with a non entity service schema"
         component.async_register_entity_service(f"test_service_{idx}", schema, Mock())
 
 

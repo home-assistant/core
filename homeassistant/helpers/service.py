@@ -1134,7 +1134,9 @@ def async_register_entity_service(
     if schema is None or isinstance(schema, dict):
         schema = cv.make_entity_service_schema(schema)
     elif not cv.is_entity_service_schema(schema):
-        raise HomeAssistantError("The schema is not an entity service schema")
+        raise HomeAssistantError(
+            f"The {domain}.{name} service registers an entity service with a non entity service schema"
+        )
 
     service_func: str | HassJob[..., Any]
     service_func = func if isinstance(func, str) else HassJob(func)
