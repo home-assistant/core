@@ -260,9 +260,9 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
                 entity_disabled_by is er.RegistryEntryDisabler.CONFIG_ENTRY
                 and not all_disabled
             ):
-                # Device and entity registries don't update the disabled_by flag
-                # when moving a device or entity from one config entry to another,
-                # so we need to do it manually.
+                # Device and entity registries will set the disabled_by flag to None
+                # when moving a device or entity disabled by CONFIG_ENTRY to an enabled
+                # config entry, but we want to set it to DEVICE or USER instead,
                 entity_disabled_by = (
                     er.RegistryEntryDisabler.DEVICE
                     if device
@@ -277,9 +277,9 @@ async def async_migrate_integration(hass: HomeAssistant) -> None:
             )
 
         if device is not None:
-            # Device and entity registries don't update the disabled_by flag when
-            # moving a device or entity from one config entry to another, so we
-            # need to do it manually.
+            # Device and entity registries will set the disabled_by flag to None
+            # when moving a device or entity disabled by CONFIG_ENTRY to an enabled
+            # config entry, but we want to set it to USER instead,
             device_disabled_by = device.disabled_by
             if (
                 device.disabled_by is dr.DeviceEntryDisabler.CONFIG_ENTRY
