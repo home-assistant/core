@@ -75,9 +75,7 @@ def make_template_entity_base_schema(domain: str, default_name: str) -> vol.Sche
     """Return a schema with default name."""
     return vol.Schema(
         {
-            vol.Optional(CONF_DEFAULT_ENTITY_ID): vol.All(
-                cv.entity_id, cv.entity_domain(domain)
-            ),
+            vol.Optional(CONF_DEFAULT_ENTITY_ID): cv.entity_domain(domain),
             vol.Optional(CONF_ICON): cv.template,
             vol.Optional(CONF_NAME, default=default_name): cv.template,
             vol.Optional(CONF_PICTURE): cv.template,
