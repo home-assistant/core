@@ -564,6 +564,15 @@
           "168h": "168h",
           "cancel": "Cancel"
         }
+      },
+      "alarm_state": {
+        "name": "Alarm state",
+        "state": {
+          "normal": "[%key:common::state::normal%]",
+          "alarm_light": "Light",
+          "alarm_sound": "Sound",
+          "alarm_sound_light": "Sound & light"
+        }
       }
     },
     "sensor": {
