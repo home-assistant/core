@@ -21,7 +21,6 @@ from pymammotion.utility.device_config import DeviceConfig
 from Tea.exceptions import UnretryableException
 
 from homeassistant.components import bluetooth
-from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
@@ -35,7 +34,6 @@ from .const import (
     CONF_BLE_DEVICES,
     CONF_CONNECT_DATA,
     CONF_DEVICE_DATA,
-    CONF_DEVICE_NAME,
     CONF_MAMMOTION_DATA,
     CONF_REGION_DATA,
     CONF_SESSION_DATA,
@@ -44,7 +42,6 @@ from .const import (
     DEVICE_SUPPORT,
     DOMAIN,
     EXPIRED_CREDENTIAL_EXCEPTIONS,
-    LOGGER,
 )
 from .coordinator import (
     MammotionDeviceErrorUpdateCoordinator,
@@ -98,12 +95,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
                     cloud_client.set_http(mammotion_http)
                 await mammotion.initiate_cloud_connection(account, cloud_client)
         except ClientConnectorError as err:
-            raise ConfigEntryNotReady(err)
-        except EXPIRED_CREDENTIAL_EXCEPTIONS as exc:
-            LOGGER.debug(exc)
+            raise ConfigEntryNotReady(err) from err
+        except EXPIRED_CREDENTIAL_EXCEPTIONS:
             await mammotion.login_and_initiate_cloud(account, password, True)
         except UnretryableException as err:
-            raise ConfigEntryError(err)
+            raise ConfigEntryError(err) from err
 
         if mqtt_client := mammotion.mqtt_list.get(account):
             store_cloud_credentials(hass, entry, mqtt_client.cloud_client)
@@ -123,10 +119,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
                         hass, device_ble_address.upper(), True
                     )
                     if ble_device:
-                        mammotion_device.add_ble(ble_device)
-                        mammotion_device.ble().set_disconnect_strategy(
-                            not stay_connected_ble
-                        )
+                        ble = mammotion_device.add_ble(ble_device)
+                        ble.set_disconnect_strategy(disconnect=not stay_connected_ble)
 
                 maintenance_coordinator = MammotionMaintenanceUpdateCoordinator(
                     hass, entry, device, mammotion
@@ -164,10 +158,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
 
                 if not use_wifi:
                     mammotion_device.preference = ConnectionPreference.BLUETOOTH
-                    await mammotion_device.cloud().stop()
-                    mammotion_device.cloud().mqtt.disconnect() if mammotion_device.cloud().mqtt.is_connected() else None
-                    # not entirely sure this is a good idea
-                    mammotion_device.remove_cloud()
+                    if cloud := mammotion_device.cloud():
+                        await cloud.stop()
+                        cloud.mqtt.disconnect() if cloud.mqtt.is_connected() else None
+                        mammotion_device.remove_cloud()
 
                 mammotion_devices.append(
                     MammotionMowerData(
@@ -182,10 +176,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
                         error_coordinator=error_coordinator,
                     )
                 )
-                try:
-                    await map_coordinator.async_request_refresh()
-                except:
-                    """Do nothing for now."""
+                await map_coordinator.async_request_refresh()
 
     entry.runtime_data = mammotion_devices
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -223,13 +214,13 @@ async def check_and_restore_cloud(
 ) -> CloudIOTGateway | None:
     """Check and restore previous cloud connection."""
 
-    auth_data = entry.data.get(CONF_AUTH_DATA)
-    region_data = entry.data.get(CONF_REGION_DATA)
-    aep_data = entry.data.get(CONF_AEP_DATA)
-    session_data = entry.data.get(CONF_SESSION_DATA)
-    device_data = entry.data.get(CONF_DEVICE_DATA)
-    connect_data = entry.data.get(CONF_CONNECT_DATA)
-    mammotion_data = entry.data.get(CONF_MAMMOTION_DATA)
+    auth_data = entry.data[CONF_AUTH_DATA]
+    region_data = entry.data[CONF_REGION_DATA]
+    aep_data = entry.data[CONF_AEP_DATA]
+    session_data = entry.data[CONF_SESSION_DATA]
+    device_data = entry.data[CONF_DEVICE_DATA]
+    connect_data = entry.data[CONF_CONNECT_DATA]
+    mammotion_data = entry.data[CONF_MAMMOTION_DATA]
 
     if any(
         data is None
