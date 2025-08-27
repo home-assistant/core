@@ -41,6 +41,7 @@ from .common import (
     MOCK_COVER_SUBENTRY_DATA_SINGLE,
     MOCK_FAN_SUBENTRY_DATA_SINGLE,
     MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE,
+    MOCK_LOCK_SUBENTRY_DATA_SINGLE,
     MOCK_NOTIFY_SUBENTRY_DATA_MULTI,
     MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME,
     MOCK_NOTIFY_SUBENTRY_DATA_SINGLE,
@@ -3347,6 +3348,55 @@ async def test_migrate_of_incompatible_config_entry(
             ),
             "Milk notifier Basic light",
         ),
+        (
+            MOCK_LOCK_SUBENTRY_DATA_SINGLE,
+            {"name": "Milk notifier", "mqtt_settings": {"qos": 0}},
+            {"name": "Lock"},
+            {},
+            (),
+            {
+                "command_topic": "test-topic",
+                "command_template": "{{ value }}",
+                "state_topic": "test-topic",
+                "value_template": "{{ value_json.value }}",
+                "code_format": "^\\d{4}$",
+                "optimistic": True,
+                "retain": False,
+                "lock_payload_settings": {
+                    "payload_open": "OPEN",
+                    "payload_lock": "LOCK",
+                    "payload_unlock": "UNLOCK",
+                    "payload_reset": "None",
+                    "state_jammed": "JAMMED",
+                    "state_locked": "LOCKED",
+                    "state_locking": "LOCKING",
+                    "state_unlocked": "UNLOCKED",
+                    "state_unlocking": "UNLOCKING",
+                },
+            },
+            (
+                (
+                    {"command_topic": "test-topic#invalid"},
+                    {"command_topic": "invalid_publish_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "state_topic": "test-topic#invalid",
+                    },
+                    {"state_topic": "invalid_subscribe_topic"},
+                ),
+                (
+                    {
+                        "command_topic": "test-topic",
+                        "code_format": "(",
+                    },
+                    {"code_format": "invalid_regular_expression"},
+                ),
+            ),
+            "Milk notifier Lock",
+        ),
+        # MOCK_LOCK_SUBENTRY_DATA_SINGLE
     ],
     ids=[
         "binary_sensor",
@@ -3362,6 +3412,7 @@ async def test_migrate_of_incompatible_config_entry(
         "sensor_total",
         "switch",
         "light_basic_kelvin",
+        "lock",
     ],
 )
 async def test_subentry_configflow(
