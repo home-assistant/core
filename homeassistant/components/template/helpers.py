@@ -38,7 +38,7 @@ from .const import (
     CONF_ATTRIBUTES,
     CONF_AVAILABILITY,
     CONF_AVAILABILITY_TEMPLATE,
-    CONF_OBJECT_ID,
+    CONF_DEFAULT_ENTITY_ID,
     CONF_PICTURE,
     DOMAIN,
 )
@@ -147,7 +147,7 @@ def rewrite_legacy_to_modern_configs(
     """Rewrite legacy configuration definitions to modern ones."""
     entities = []
     for object_id, entity_conf in entity_cfg.items():
-        entity_conf = {**entity_conf, CONF_OBJECT_ID: object_id}
+        entity_conf = {**entity_conf, CONF_DEFAULT_ENTITY_ID: object_id}
 
         entity_conf = rewrite_legacy_to_modern_config(
             hass, entity_conf, extra_legacy_fields

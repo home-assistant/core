@@ -283,7 +283,7 @@ async def test_legacy_to_modern_configs(
             "availability": Template("{{ 1 == 1 }}", hass),
             "icon": Template("{{ 'mdi.abc' }}", hass),
             "name": Template("foo bar", hass),
-            "object_id": "foo",
+            "default_entity_id": "foo",
             "picture": Template("{{ 'mypicture.jpg' }}", hass),
             "unique_id": "foo-bar-entity",
             new_attr: Template(attr_template, hass),
@@ -320,7 +320,7 @@ async def test_friendly_name_template_legacy_to_modern_configs(
         {
             "availability": Template("{{ 1 == 1 }}", hass),
             "icon": Template("{{ 'mdi.abc' }}", hass),
-            "object_id": "foo",
+            "default_entity_id": "foo",
             "picture": Template("{{ 'mypicture.jpg' }}", hass),
             "unique_id": "foo-bar-entity",
             "name": Template("{{ 'foo bar' }}", hass),

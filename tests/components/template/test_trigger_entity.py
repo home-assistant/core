@@ -138,7 +138,7 @@ async def test_script_variables_from_coordinator(hass: HomeAssistant) -> None:
 
 
 async def test_object_id(hass: HomeAssistant) -> None:
-    """Test template entity creates suggested entity_id from the object_id."""
+    """Test template entity creates suggested entity_id from the default_entity_id."""
     coordinator = TriggerUpdateCoordinator(hass, {})
-    entity = TestEntity(hass, coordinator, {"object_id": "test"})
+    entity = TestEntity(hass, coordinator, {"default_entity_id": "test"})
     assert entity.entity_id == "test.test"

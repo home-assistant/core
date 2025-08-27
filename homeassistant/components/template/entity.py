@@ -12,7 +12,7 @@ from homeassistant.helpers.script import Script, _VarsType
 from homeassistant.helpers.template import Template, TemplateStateFromEntityId
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_OBJECT_ID
+from .const import CONF_DEFAULT_ENTITY_ID
 
 
 class AbstractTemplateEntity(Entity):
@@ -49,9 +49,9 @@ class AbstractTemplateEntity(Entity):
                 optimistic is None and assumed_optimistic
             )
 
-        if (object_id := config.get(CONF_OBJECT_ID)) is not None:
+        if (default_entity_id := config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
             self.entity_id = async_generate_entity_id(
-                self._entity_id_format, object_id, hass=self.hass
+                self._entity_id_format, default_entity_id, hass=self.hass
             )
 
         device_registry = dr.async_get(hass)
