@@ -6,8 +6,8 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.switchbot_cloud.config_flow import (
-    CannotConnect,
-    InvalidAuth,
+    SwitchBotAuthenticationError,
+    SwitchBotConnectionError,
 )
 from homeassistant.components.switchbot_cloud.const import DOMAIN, ENTRY_TITLE
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN
@@ -57,8 +57,8 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 @pytest.mark.parametrize(
     ("error", "message"),
     [
-        (InvalidAuth, "invalid_auth"),
-        (CannotConnect, "cannot_connect"),
+        (SwitchBotAuthenticationError, "invalid_auth"),
+        (SwitchBotConnectionError, "cannot_connect"),
         (Exception, "unknown"),
     ],
 )

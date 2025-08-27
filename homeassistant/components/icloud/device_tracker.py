@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -69,18 +69,24 @@ class IcloudTrackerEntity(TrackerEntity):
         self._attr_unique_id = device.unique_id
 
     @property
-    def location_accuracy(self):
+    def location_accuracy(self) -> float:
         """Return the location accuracy of the device."""
+        if TYPE_CHECKING:
+            assert self._device.location is not None
         return self._device.location[DEVICE_LOCATION_HORIZONTAL_ACCURACY]
 
     @property
-    def latitude(self):
+    def latitude(self) -> float:
         """Return latitude value of the device."""
+        if TYPE_CHECKING:
+            assert self._device.location is not None
         return self._device.location[DEVICE_LOCATION_LATITUDE]
 
     @property
-    def longitude(self):
+    def longitude(self) -> float:
         """Return longitude value of the device."""
+        if TYPE_CHECKING:
+            assert self._device.location is not None
         return self._device.location[DEVICE_LOCATION_LONGITUDE]
 
     @property

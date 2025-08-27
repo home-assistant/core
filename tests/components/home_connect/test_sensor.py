@@ -1,7 +1,6 @@
 """Tests for home_connect sensor entities."""
 
 from collections.abc import Awaitable, Callable
-import logging
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
@@ -140,29 +139,6 @@ async def test_paired_depaired_devices_flow(
     for entity_entry in entity_entries:
         assert entity_registry.async_get(entity_entry.entity_id)
 
-    await client.add_events(
-        [
-            EventMessage(
-                appliance.ha_id,
-                EventType.EVENT,
-                ArrayOfEvents(
-                    [
-                        Event(
-                            key=EventKey.LAUNDRY_CARE_WASHER_EVENT_I_DOS_1_FILL_LEVEL_POOR,
-                            raw_key=EventKey.LAUNDRY_CARE_WASHER_EVENT_I_DOS_1_FILL_LEVEL_POOR.value,
-                            timestamp=0,
-                            level="",
-                            handling="",
-                            value=BSH_EVENT_PRESENT_STATE_PRESENT,
-                        )
-                    ],
-                ),
-            ),
-        ]
-    )
-    await hass.async_block_till_done()
-    assert hass.states.is_state("sensor.washer_poor_i_dos_1_fill_level", "present")
-
 
 @pytest.mark.parametrize(
     ("appliance", "keys_to_check"),
@@ -231,6 +207,7 @@ async def test_connected_devices(
         )
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize("appliance", [TEST_HC_APP], indirect=True)
 async def test_sensor_entity_availability(
     hass: HomeAssistant,
@@ -246,28 +223,6 @@ async def test_sensor_entity_availability(
     ]
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
-
-    await client.add_events(
-        [
-            EventMessage(
-                appliance.ha_id,
-                EventType.EVENT,
-                ArrayOfEvents(
-                    [
-                        Event(
-                            key=EventKey.DISHCARE_DISHWASHER_EVENT_SALT_NEARLY_EMPTY,
-                            raw_key=EventKey.DISHCARE_DISHWASHER_EVENT_SALT_NEARLY_EMPTY.value,
-                            timestamp=0,
-                            level="",
-                            handling="",
-                            value=BSH_EVENT_PRESENT_STATE_OFF,
-                        )
-                    ],
-                ),
-            ),
-        ]
-    )
-    await hass.async_block_till_done()
 
     for entity_id in entity_ids:
         state = hass.states.get(entity_id)
@@ -545,32 +500,104 @@ async def test_remaining_prog_time_edge_cases(
         assert hass.states.is_state(entity_id, expected_state)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.parametrize(
     (
         "entity_id",
         "event_key",
-        "value_expected_state",
+        "event_type",
+        "event_value_update",
+        "expected",
         "appliance",
     ),
     [
         (
             "sensor.dishwasher_door",
             EventKey.BSH_COMMON_STATUS_DOOR_STATE,
-            [
-                (
-                    BSH_DOOR_STATE_LOCKED,
-                    "locked",
-                ),
-                (
-                    BSH_DOOR_STATE_CLOSED,
-                    "closed",
-                ),
-                (
-                    BSH_DOOR_STATE_OPEN,
-                    "open",
-                ),
-            ],
+            EventType.STATUS,
+            BSH_DOOR_STATE_LOCKED,
+            "locked",
             "Dishwasher",
+        ),
+        (
+            "sensor.dishwasher_door",
+            EventKey.BSH_COMMON_STATUS_DOOR_STATE,
+            EventType.STATUS,
+            BSH_DOOR_STATE_CLOSED,
+            "closed",
+            "Dishwasher",
+        ),
+        (
+            "sensor.dishwasher_door",
+            EventKey.BSH_COMMON_STATUS_DOOR_STATE,
+            EventType.STATUS,
+            BSH_DOOR_STATE_OPEN,
+            "open",
+            "Dishwasher",
+        ),
+        (
+            "sensor.fridgefreezer_freezer_door_alarm",
+            "EVENT_NOT_IN_STATUS_YET_SO_SET_TO_OFF",
+            EventType.EVENT,
+            "",
+            "off",
+            "FridgeFreezer",
+        ),
+        (
+            "sensor.fridgefreezer_freezer_door_alarm",
+            EventKey.REFRIGERATION_FRIDGE_FREEZER_EVENT_DOOR_ALARM_FREEZER,
+            EventType.EVENT,
+            BSH_EVENT_PRESENT_STATE_OFF,
+            "off",
+            "FridgeFreezer",
+        ),
+        (
+            "sensor.fridgefreezer_freezer_door_alarm",
+            EventKey.REFRIGERATION_FRIDGE_FREEZER_EVENT_DOOR_ALARM_FREEZER,
+            EventType.EVENT,
+            BSH_EVENT_PRESENT_STATE_PRESENT,
+            "present",
+            "FridgeFreezer",
+        ),
+        (
+            "sensor.fridgefreezer_freezer_door_alarm",
+            EventKey.REFRIGERATION_FRIDGE_FREEZER_EVENT_DOOR_ALARM_FREEZER,
+            EventType.EVENT,
+            BSH_EVENT_PRESENT_STATE_CONFIRMED,
+            "confirmed",
+            "FridgeFreezer",
+        ),
+        (
+            "sensor.coffeemaker_bean_container_empty",
+            EventType.EVENT,
+            "EVENT_NOT_IN_STATUS_YET_SO_SET_TO_OFF",
+            "",
+            "off",
+            "CoffeeMaker",
+        ),
+        (
+            "sensor.coffeemaker_bean_container_empty",
+            EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_BEAN_CONTAINER_EMPTY,
+            EventType.EVENT,
+            BSH_EVENT_PRESENT_STATE_OFF,
+            "off",
+            "CoffeeMaker",
+        ),
+        (
+            "sensor.coffeemaker_bean_container_empty",
+            EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_BEAN_CONTAINER_EMPTY,
+            EventType.EVENT,
+            BSH_EVENT_PRESENT_STATE_PRESENT,
+            "present",
+            "CoffeeMaker",
+        ),
+        (
+            "sensor.coffeemaker_bean_container_empty",
+            EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_BEAN_CONTAINER_EMPTY,
+            EventType.EVENT,
+            BSH_EVENT_PRESENT_STATE_CONFIRMED,
+            "confirmed",
+            "CoffeeMaker",
         ),
     ],
     indirect=["appliance"],
@@ -582,111 +609,37 @@ async def test_sensors_states(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     entity_id: str,
     event_key: EventKey,
-    value_expected_state: list[tuple[str, str]],
+    event_type: EventType,
+    event_value_update: str,
     appliance: HomeAppliance,
+    expected: str,
 ) -> None:
-    """Tests for appliance sensors."""
+    """Tests for appliance alarm sensors."""
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    for value, expected_state in value_expected_state:
-        await client.add_events(
-            [
-                EventMessage(
-                    appliance.ha_id,
-                    EventType.STATUS,
-                    ArrayOfEvents(
-                        [
-                            Event(
-                                key=event_key,
-                                raw_key=str(event_key),
-                                timestamp=0,
-                                level="",
-                                handling="",
-                                value=value,
-                            )
-                        ],
-                    ),
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                event_type,
+                ArrayOfEvents(
+                    [
+                        Event(
+                            key=event_key,
+                            raw_key=str(event_key),
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=event_value_update,
+                        )
+                    ],
                 ),
-            ]
-        )
-        await hass.async_block_till_done()
-        assert hass.states.is_state(entity_id, expected_state)
-
-
-@pytest.mark.parametrize(
-    (
-        "entity_id",
-        "event_key",
-        "appliance",
-    ),
-    [
-        (
-            "sensor.fridgefreezer_freezer_door_alarm",
-            EventKey.REFRIGERATION_FRIDGE_FREEZER_EVENT_DOOR_ALARM_FREEZER,
-            "FridgeFreezer",
-        ),
-        (
-            "sensor.coffeemaker_bean_container_empty",
-            EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_BEAN_CONTAINER_EMPTY,
-            "CoffeeMaker",
-        ),
-    ],
-    indirect=["appliance"],
-)
-async def test_event_sensors_states(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    entity_registry: er.EntityRegistry,
-    client: MagicMock,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    entity_id: str,
-    event_key: EventKey,
-    appliance: HomeAppliance,
-) -> None:
-    """Tests for appliance event sensors."""
-    caplog.set_level(logging.ERROR)
-    assert await integration_setup(client)
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    assert not hass.states.get(entity_id)
-
-    for value, expected_state in (
-        (BSH_EVENT_PRESENT_STATE_OFF, "off"),
-        (BSH_EVENT_PRESENT_STATE_PRESENT, "present"),
-        (BSH_EVENT_PRESENT_STATE_CONFIRMED, "confirmed"),
-    ):
-        await client.add_events(
-            [
-                EventMessage(
-                    appliance.ha_id,
-                    EventType.EVENT,
-                    ArrayOfEvents(
-                        [
-                            Event(
-                                key=event_key,
-                                raw_key=str(event_key),
-                                timestamp=0,
-                                level="",
-                                handling="",
-                                value=value,
-                            )
-                        ],
-                    ),
-                ),
-            ]
-        )
-        await hass.async_block_till_done()
-        assert hass.states.is_state(entity_id, expected_state)
-
-    # Verify that the integration doesn't attempt to add the event sensors more than once
-    # If that happens, the EntityPlatform logs an error with the entity's unique ID.
-    assert "exists" not in caplog.text
-    assert entity_id not in caplog.text
-    entity_entry = entity_registry.async_get(entity_id)
-    assert entity_entry
-    assert entity_entry.unique_id not in caplog.text
+            ),
+        ]
+    )
+    await hass.async_block_till_done()
+    assert hass.states.is_state(entity_id, expected)
 
 
 @pytest.mark.parametrize(

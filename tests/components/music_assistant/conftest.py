@@ -53,6 +53,7 @@ async def music_assistant_client_fixture() -> AsyncGenerator[MagicMock]:
 
         client.connect = AsyncMock(side_effect=connect)
         client.start_listening = AsyncMock(side_effect=listen)
+        client.send_command = AsyncMock(return_value=None)
         client.server_info = ServerInfoMessage(
             server_id=MOCK_SERVER_ID,
             server_version="0.0.0",

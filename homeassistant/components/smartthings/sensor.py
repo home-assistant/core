@@ -151,6 +151,7 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
     exists_fn: Callable[[Status], bool] | None = None
     use_temperature_unit: bool = False
     deprecated: Callable[[ComponentStatus], tuple[str, str] | None] | None = None
+    component_translation_key: dict[str, str] | None = None
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -324,6 +325,16 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
+    Capability.CUSTOM_WATER_FILTER: {
+        Attribute.WATER_FILTER_USAGE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.WATER_FILTER_USAGE,
+                translation_key="water_filter_usage",
+                native_unit_of_measurement=PERCENTAGE,
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
     Capability.DISHWASHER_OPERATING_STATE: {
         Attribute.MACHINE_STATE: [
             SmartThingsSensorEntityDescription(
@@ -433,6 +444,16 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ],
     },
+    Capability.SAMSUNG_CE_EHS_DIVERTER_VALVE: {
+        Attribute.POSITION: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.POSITION,
+                translation_key="diverter_valve_position",
+                device_class=SensorDeviceClass.ENUM,
+                options=["room", "tank"],
+            )
+        ]
+    },
     Capability.ENERGY_METER: {
         Attribute.ENERGY: [
             SmartThingsSensorEntityDescription(
@@ -452,6 +473,16 @@ CAPABILITY_TO_SENSORS: dict[
                 native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
                 device_class=SensorDeviceClass.CO2,
                 state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
+    Capability.FINE_DUST_SENSOR: {
+        Attribute.FINE_DUST_LEVEL: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.FINE_DUST_LEVEL,
+                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+                state_class=SensorStateClass.MEASUREMENT,
+                device_class=SensorDeviceClass.PM25,
             )
         ]
     },
@@ -852,6 +883,11 @@ CAPABILITY_TO_SENSORS: dict[
                     if Capability.CUSTOM_OUTING_MODE in status
                     else None
                 ),
+                component_fn=lambda component: component in {"freezer", "cooler"},
+                component_translation_key={
+                    "freezer": "freezer_temperature",
+                    "cooler": "cooler_temperature",
+                },
             )
         ]
     },
@@ -1196,6 +1232,10 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         if self.entity_description.translation_placeholders_fn:
             self._attr_translation_placeholders = (
                 self.entity_description.translation_placeholders_fn(component)
+            )
+        if self.entity_description.component_translation_key and component != MAIN:
+            self._attr_translation_key = (
+                self.entity_description.component_translation_key[component]
             )
 
     @property

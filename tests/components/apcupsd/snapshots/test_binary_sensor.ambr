@@ -27,6 +27,7 @@
     'original_name': 'Online status',
     'platform': 'apcupsd',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'online_status',
     'unique_id': 'XXXXXXXXXXXX_statflag',

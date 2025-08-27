@@ -15,6 +15,7 @@ from homeassistant.config_entries import (
     SOURCE_DHCP,
     SOURCE_RECONFIGURE,
     SOURCE_USER,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
 )
@@ -152,7 +153,7 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="already_in_progress")
 
         for entry in self.hass.config_entries.async_entries(DOMAIN):
-            if entry.data[CONF_MAC] == self.mac:
+            if entry.data.get(CONF_MAC) == self.mac:
                 result = self.hass.config_entries.async_update_entry(
                     entry,
                     data={
@@ -162,6 +163,21 @@ class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 if result:
                     self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                return self.async_abort(reason="already_configured")
+            if entry.data[CONF_HOST] == discovery_info.ip:
+                if (
+                    not entry.data.get(CONF_MAC)
+                    and entry.state is ConfigEntryState.LOADED
+                ):
+                    result = self.hass.config_entries.async_update_entry(
+                        entry,
+                        data={
+                            **entry.data,
+                            CONF_MAC: self.mac,
+                        },
+                    )
+                    if result:
+                        self.hass.config_entries.async_schedule_reload(entry.entry_id)
                 return self.async_abort(reason="already_configured")
         try:
             # Use load_selector = 0 to fetch the panel model without authentication.

@@ -110,8 +110,10 @@ CONFIG_DIR_DIRS = {
 def mock_create_backup() -> Generator[AsyncMock]:
     """Mock manager create backup."""
     mock_written_backup = MagicMock(spec_set=WrittenBackup)
+    mock_written_backup.addon_errors = {}
     mock_written_backup.backup.backup_id = "abc123"
     mock_written_backup.backup.protected = False
+    mock_written_backup.folder_errors = {}
     mock_written_backup.open_stream = AsyncMock()
     mock_written_backup.release_stream = AsyncMock()
     fut: Future[MagicMock] = Future()
@@ -164,8 +166,7 @@ def mock_backup_generation_fixture(
 @pytest.fixture
 def mock_backups() -> Generator[None]:
     """Fixture to setup test backups."""
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.backup import backup as core_backup
+    from homeassistant.components.backup import backup as core_backup  # noqa: PLC0415
 
     class CoreLocalBackupAgent(core_backup.CoreLocalBackupAgent):
         def __init__(self, hass: HomeAssistant) -> None:

@@ -41,6 +41,7 @@
     'original_name': None,
     'platform': 'uptime',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unit_of_measurement': None,
@@ -58,7 +59,6 @@
     'entry_type': <DeviceEntryType.SERVICE: 'service'>,
     'hw_version': None,
     'id': <ANY>,
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -68,7 +68,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })

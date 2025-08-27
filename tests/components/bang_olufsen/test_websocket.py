@@ -23,15 +23,12 @@ from tests.common import MockConfigEntry
 async def test_connection(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    mock_config_entry: MockConfigEntry,
+    integration: None,
     mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test on_connection and on_connection_lost logs and calls correctly."""
-
     mock_mozart_client.websocket_connected = True
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     connection_callback = mock_mozart_client.get_on_connection.call_args[0][0]
 
@@ -56,14 +53,11 @@ async def test_connection(
 async def test_connection_lost(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    mock_config_entry: MockConfigEntry,
+    integration: None,
     mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test on_connection_lost logs and calls correctly."""
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
     connection_lost_callback = mock_mozart_client.get_on_connection_lost.call_args[0][0]
 
     mock_connection_lost_callback = Mock()
@@ -84,14 +78,11 @@ async def test_connection_lost(
 async def test_on_software_update_state(
     hass: HomeAssistant,
     device_registry: DeviceRegistry,
-    mock_config_entry: MockConfigEntry,
+    integration: None,
     mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test software version is updated through on_software_update_state."""
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
     software_update_state_callback = (
         mock_mozart_client.get_software_update_state_notifications.call_args[0][0]
     )
@@ -114,14 +105,11 @@ async def test_on_all_notifications_raw(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     device_registry: DeviceRegistry,
-    mock_config_entry: MockConfigEntry,
+    integration: None,
     mock_mozart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test on_all_notifications_raw logs and fires as expected."""
-
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
     all_notifications_raw_callback = (
         mock_mozart_client.get_all_notifications_raw.call_args[0][0]
     )

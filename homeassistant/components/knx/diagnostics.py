@@ -1,4 +1,4 @@
-"""Diagnostics support for KNX."""
+"""Diagnostics support for the KNX integration."""
 
 from __future__ import annotations
 
