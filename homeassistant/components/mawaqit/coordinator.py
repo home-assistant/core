@@ -3,6 +3,8 @@
 from datetime import datetime, timedelta
 import logging
 
+from mawaqit.consts import BadCredentialsException, NoMosqueAround, NoMosqueFound
+
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -31,25 +33,26 @@ class MosqueCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(days=1),  # Updated every day
         )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict:
         """Fetch mosque details from local storage."""
         try:
             mosque_data = await mawaqit_wrapper.fetch_mosque_by_id(
                 self.mosque_uuid, token=self.token
             )
 
-        except mawaqit_wrapper.BadCredentialsException as err:
+        except BadCredentialsException as err:
             _LOGGER.error("Bad credentials: %s", err)
             # Handle re-authentication if needed
-        except mawaqit_wrapper.NoMosqueAround as err:
+        except NoMosqueAround as err:
             _LOGGER.error("No mosque found in the area: %s", err)
-        except mawaqit_wrapper.NoMosqueFound as err:
+        except NoMosqueFound as err:
             _LOGGER.error("No mosque found: %s", err)
         except (ConnectionError, TimeoutError) as err:
             _LOGGER.error("Network-related error: %s", err)
 
         if not mosque_data:
-            raise UpdateFailed("No mosque data found")
+            _LOGGER.error("No mosque data found from the API")
+            raise UpdateFailed("No mosque data found from the API")
 
         return mosque_data
 
@@ -64,7 +67,7 @@ class PrayerTimeCoordinator(DataUpdateCoordinator):
         self.mosque_uuid = config_entry.data.get(CONF_UUID)
         self.token = config_entry.data.get(CONF_API_KEY)
         self.last_fetch: datetime | None = None
-        self.prayer_times = None
+        self.prayer_times: dict | None = None
 
         super().__init__(
             hass,
@@ -74,8 +77,8 @@ class PrayerTimeCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(minutes=1),
         )
 
-    async def _async_update_data(self):
-        """Fetch prayer times from API, update store, and notify sensors."""
+    async def _async_update_data(self) -> dict:
+        """Fetch prayer times from API, and notify sensors."""
 
         now = dt_util.utcnow()
 
@@ -92,20 +95,20 @@ class PrayerTimeCoordinator(DataUpdateCoordinator):
                     mosque=self.mosque_uuid, token=self.token
                 )
 
-                if not self.prayer_times:
-                    _LOGGER.error("No prayer times received from API")
-                    raise UpdateFailed("No data received from API")
-
                 self.last_fetch = now
 
-            except mawaqit_wrapper.BadCredentialsException as err:
+            except BadCredentialsException as err:
                 _LOGGER.error("Bad credentials: %s", err)
                 # Handle re-authentication if needed
-            except mawaqit_wrapper.NoMosqueAround as err:
+            except NoMosqueAround as err:
                 _LOGGER.error("No mosque found in the area: %s", err)
-            except mawaqit_wrapper.NoMosqueFound as err:
+            except NoMosqueFound as err:
                 _LOGGER.error("No mosque found: %s", err)
             except (ConnectionError, TimeoutError) as err:
                 _LOGGER.error("Network-related error: %s", err)
+
+        if not self.prayer_times:
+            _LOGGER.error("No prayer times received from API")
+            raise UpdateFailed("No data received from API")
 
         return self.prayer_times

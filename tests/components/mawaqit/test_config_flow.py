@@ -161,7 +161,7 @@ async def test_async_step_user_connection_error(hass: HomeAssistant) -> None:
     # Patching the methods used in the flow to simulate external interactions
     with (
         patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper.test_credentials",
+            "homeassistant.components.mawaqit.mawaqit_wrapper.validate_credentials",
             side_effect=connection_error_instance,
         ),
     ):
@@ -188,7 +188,7 @@ async def test_async_step_user_invalid_credentials(hass: HomeAssistant) -> None:
 
     # Patch the credentials test to simulate a login failure
     with patch(
-        "homeassistant.components.mawaqit.mawaqit_wrapper.test_credentials",
+        "homeassistant.components.mawaqit.mawaqit_wrapper.validate_credentials",
         return_value=False,
     ):
         # Simulate user input with incorrect credentials
@@ -214,7 +214,7 @@ async def test_async_step_user_valid_credentials(hass: HomeAssistant) -> None:
     # Patch the credentials test to simulate a login success
     with (
         patch(
-            "homeassistant.components.mawaqit.mawaqit_wrapper.test_credentials",
+            "homeassistant.components.mawaqit.mawaqit_wrapper.validate_credentials",
             return_value=True,
         ),
         patch(

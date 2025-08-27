@@ -38,8 +38,8 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize."""
         self.previous_keyword_search: str = ""
-        self.mosques: list[Any] = []
-        self.token = None
+        self.mosques: list[dict] = []
+        self.token: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -66,7 +66,7 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         # check if the user credentials are correct (valid = True) :
         try:
-            valid = await mawaqit_wrapper.test_credentials(username, password)
+            valid = await mawaqit_wrapper.validate_credentials(username, password)
         # if we have an error connecting to the server :
         except ClientConnectorError:
             errors["base"] = CANNOT_CONNECT_TO_SERVER
@@ -112,9 +112,11 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return self.async_create_entry(title=title, data=data_entry)
 
-        self.mosques = await mawaqit_wrapper.all_mosques_neighborhood(
+        neighborhood_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
             lat, longi, token=self.token
         )
+        if neighborhood_mosques:
+            self.mosques = neighborhood_mosques
 
         name_servers, uuid_servers, CALC_METHODS = utils.parse_mosque_data(self.mosques)
 
@@ -164,9 +166,12 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             self.mosques = []
             try:
-                self.mosques = await mawaqit_wrapper.all_mosques_neighborhood(
+                neighborhood_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
                     lat, longi, token=self.token
                 )
+                if neighborhood_mosques:
+                    self.mosques = neighborhood_mosques
+
             except NoMosqueAround:
                 return self.async_abort(reason="no_mosque")
 
@@ -213,9 +218,15 @@ class MawaqitPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     self.previous_keyword_search = keyword
 
                 try:
-                    self.mosques = await mawaqit_wrapper.all_mosques_by_keyword(
-                        search_keyword=keyword, token=self.token
+                    mosques_found_keyword = (
+                        await mawaqit_wrapper.all_mosques_by_keyword(
+                            search_keyword=keyword, token=self.token
+                        )
                     )
+
+                    if mosques_found_keyword:
+                        self.mosques = mosques_found_keyword
+
                 except NoMosqueFound:
                     errors["base"] = NO_MOSQUE_FOUND_KEYWORD
                     return self.async_show_form(
@@ -271,7 +282,7 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
 
     def __init__(self) -> None:
         """Initialize the options flow handler."""
-        self.mosques: list[Any] = []
+        self.mosques: list[dict] = []
 
     async def async_step_init(self, user_input=None) -> config_entries.ConfigFlowResult:
         """Manage options."""
@@ -296,9 +307,11 @@ class MawaqitPrayerOptionsFlowHandler(config_entries.OptionsFlow):
 
         # Attempt to fetch nearby mosques, handle the NoMosqueAround exception
         try:
-            self.mosques = await mawaqit_wrapper.all_mosques_neighborhood(
+            neighborhood_mosques = await mawaqit_wrapper.all_mosques_neighborhood(
                 lat, longi, token=mawaqit_token
             )
+            if neighborhood_mosques:
+                self.mosques = neighborhood_mosques
 
             name_servers, uuid_servers, CALC_METHODS = utils.parse_mosque_data(
                 self.mosques

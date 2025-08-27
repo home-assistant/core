@@ -12,7 +12,7 @@ from mawaqit.consts import BadCredentialsException
 _LOGGER = logging.getLogger(__name__)
 
 
-async def test_credentials(
+async def validate_credentials(
     username: str | None = None,
     password: str | None = None,
     client_instance: AsyncMawaqitClient | None = None,
@@ -28,6 +28,7 @@ async def test_credentials(
         return False
     except (ConnectionError, TimeoutError) as e:
         _LOGGER.error("Network-related error: %s", e)
+        return False
     finally:
         if client is not None:
             await client.close()
@@ -164,13 +165,13 @@ async def fetch_mosque_by_id(
     client_instance: AsyncMawaqitClient | None = None,
 ) -> dict | None:
     """Get Mosque data by ID from the MAWAQIT API. Returns a dict."""
-    dict_calendar = None
+    dict_mosque = None
     try:
         client = client_instance
         if client is None:
             client = AsyncMawaqitClient(token=token)
         await client.get_api_token()
-        dict_calendar = await client.fetch_mosque_by_id(mosque)
+        dict_mosque = await client.fetch_mosque_by_id(mosque)
 
     except BadCredentialsException as e:
         _LOGGER.error("Error while retrieving mosque data: %s", e)
@@ -180,4 +181,4 @@ async def fetch_mosque_by_id(
         if client is not None:
             await client.close()
 
-    return dict_calendar
+    return dict_mosque
