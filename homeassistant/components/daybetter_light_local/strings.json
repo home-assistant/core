@@ -7,15 +7,18 @@
           "device": "Select device"
         },
         "data_description": {
-          "host": "Select a DayBetter device to add or enter IP address manually."
+          "host": "Select a DayBetter device to add or enter IP address manually.",
+          "device": "Select a DayBetter device to add or enter IP address manually."
         }
       },
       "manual": {
         "data": {
-          "host": "Host IP Address"
+          "host": "Host IP Address",
+          "device": "Host IP Address"
         },
         "data_description": {
-          "host": "Select a DayBetter device to add or enter IP address manually."
+          "host": "Select a DayBetter device to add or enter IP address manually.",
+          "device": "Select a DayBetter device to add or enter IP address manually."
         }
       }
     },
