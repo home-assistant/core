@@ -14,7 +14,8 @@
       "dependsOn": ["Compile English translations"]
     },
     {
-      "label": "Pytest",
+      "label": "Run tests",
+      "detail": "Run all tests.",
       "type": "shell",
       "command": "${command:python.interpreterPath} -m pytest --timeout=10 tests",
       "dependsOn": ["Install all Test Requirements"],
@@ -29,9 +30,29 @@
       "problemMatcher": []
     },
     {
-      "label": "Pytest (changed tests only)",
+      "label": "Run tests for changed files",
+      "detail": "Run tests for changed files.",
       "type": "shell",
       "command": "${command:python.interpreterPath} -m pytest --timeout=10 --picked",
+      "group": {
+        "kind": "test",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Run tests for integration",
+      "detail": "Run tests for a given integration.",
+      "type": "shell",
+      "command": "${command:python.interpreterPath} -m pytest --timeout=10 ./tests/components/${input:integrationName}/",
+      "dependsOn": [
+        "Install integration requirements",
+        "Install all Test Requirements"
+      ],
       "group": {
         "kind": "test",
         "isDefault": true
