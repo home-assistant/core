@@ -21,7 +21,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ZONES = "zones"
