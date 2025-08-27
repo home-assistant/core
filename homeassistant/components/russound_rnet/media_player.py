@@ -81,7 +81,7 @@ class RussoundRNETDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
     )
 
-    def __init__(self , _, russ, sources, zone_id, extra) -> None:
+    def __init__(self, _, russ, sources, zone_id, extra) -> None:
         """Initialise the Russound RNET device."""
         self._attr_name = extra["name"]
         self._russ = russ
