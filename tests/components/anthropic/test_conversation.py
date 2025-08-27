@@ -1126,3 +1126,257 @@ async def test_web_search_custom_max_uses(
     )
     assert web_search_tool is not None
     assert web_search_tool["max_uses"] == 15
+
+
+async def test_web_search_tool_marked_as_external(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test that web search tools are marked as external for chat log support."""
+    # Enable web search
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            CONF_CHAT_MODEL: "claude-3-5-sonnet-latest",
+            CONF_WEB_SEARCH: True,
+            CONF_WEB_SEARCH_MAX_USES: 5,
+        },
+    )
+    with patch("anthropic.resources.models.AsyncModels.retrieve"):
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        new_callable=AsyncMock,
+        return_value=stream_generator(
+            create_messages(
+                [
+                    *create_content_block(0, ["I'll search for that information."]),
+                    *create_tool_use_block(
+                        1,
+                        "toolu_web_search_123",
+                        "web_search",
+                        ['{"query": "test search"}'],
+                    ),
+                ],
+                stop_reason="tool_use",
+            )
+        ),
+    ) as mock_create:
+        result = await conversation.async_converse(
+            hass,
+            "Search for information",
+            None,
+            Context(),
+            agent_id="conversation.claude_conversation",
+        )
+
+    # Verify the web search tool call was marked as external
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+    assert chat_log is not None
+
+    # Find the assistant content with tool calls
+    assistant_content = None
+    for content in chat_log.content:
+        if isinstance(content, conversation.AssistantContent) and content.tool_calls:
+            assistant_content = content
+            break
+
+    assert assistant_content is not None
+    assert len(assistant_content.tool_calls) == 1
+
+    tool_call = assistant_content.tool_calls[0]
+    assert tool_call.tool_name == "web_search"
+    assert tool_call.external is True  # This is the key assertion for chat log support
+
+
+async def test_web_search_chat_log_persistence(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test that external web search tool calls persist across conversation turns."""
+    # Enable web search
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            CONF_CHAT_MODEL: "claude-3-5-sonnet-latest",
+            CONF_WEB_SEARCH: True,
+            CONF_WEB_SEARCH_MAX_USES: 5,
+        },
+    )
+    with patch("anthropic.resources.models.AsyncModels.retrieve"):
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+
+    # First conversation turn with web search
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        new_callable=AsyncMock,
+        return_value=stream_generator(
+            create_messages(
+                [
+                    *create_content_block(0, ["I found some information for you."]),
+                    *create_tool_use_block(
+                        1,
+                        "toolu_web_search_123",
+                        "web_search",
+                        ['{"query": "weather today"}'],
+                    ),
+                ],
+                stop_reason="tool_use",
+            )
+        ),
+    ):
+        result1 = await conversation.async_converse(
+            hass,
+            "What's the weather today?",
+            None,
+            Context(),
+            agent_id="conversation.claude_conversation",
+        )
+
+    conversation_id = result1.conversation_id
+
+    # Second conversation turn - should include the previous web search in context
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        new_callable=AsyncMock,
+        return_value=stream_generator(
+            create_messages(
+                create_content_block(0, ["Based on my previous search, it's sunny."]),
+            )
+        ),
+    ) as mock_create:
+        result2 = await conversation.async_converse(
+            hass,
+            "What did you find?",
+            conversation_id,
+            Context(),
+            agent_id="conversation.claude_conversation",
+        )
+
+    # Verify that the second call included the web search from the first turn
+    messages = mock_create.call_args.kwargs["messages"]
+
+    # Look for the assistant message with tool use from the first turn
+    found_web_search = False
+    for message in messages:
+        if message["role"] == "assistant":
+            for content_block in message["content"]:
+                if (
+                    isinstance(content_block, dict)
+                    and content_block.get("type") == "tool_use"
+                    and content_block.get("name") == "web_search"
+                ):
+                    found_web_search = True
+                    assert content_block["input"]["query"] == "weather today"
+                    break
+
+    assert found_web_search, (
+        "Web search tool call from previous turn should be included in conversation history"
+    )
+
+
+async def test_web_search_multi_turn_with_snapshot(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test comprehensive web search behavior across multiple turns using snapshots."""
+    # Enable web search
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            CONF_CHAT_MODEL: "claude-3-5-sonnet-latest",
+            CONF_WEB_SEARCH: True,
+            CONF_WEB_SEARCH_MAX_USES: 10,
+        },
+    )
+    with patch("anthropic.resources.models.AsyncModels.retrieve"):
+        await hass.config_entries.async_reload(mock_config_entry.entry_id)
+
+    # First turn: User asks a question that triggers web search
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        new_callable=AsyncMock,
+        return_value=stream_generator(
+            create_messages(
+                [
+                    *create_content_block(
+                        0, ["I'll search for current weather information."]
+                    ),
+                    *create_tool_use_block(
+                        1,
+                        "toolu_web_search_001",
+                        "web_search",
+                        ['{"query": "current weather forecast today"}'],
+                    ),
+                ],
+                stop_reason="tool_use",
+            )
+        ),
+    ) as mock_create:
+        result1 = await conversation.async_converse(
+            hass,
+            "What's the weather like today?",
+            None,
+            Context(),
+            agent_id="conversation.claude_conversation",
+        )
+
+    conversation_id = result1.conversation_id
+
+    # Verify the chat log contains the external tool call
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(conversation_id)
+    assert chat_log is not None
+
+    # Find the assistant content with external tool calls
+    external_tool_content = None
+    for content in chat_log.content:
+        if isinstance(content, conversation.AssistantContent) and content.tool_calls:
+            if any(tool_call.external for tool_call in content.tool_calls):
+                external_tool_content = content
+                break
+
+    assert external_tool_content is not None
+    assert len(external_tool_content.tool_calls) == 1
+    assert external_tool_content.tool_calls[0].external is True
+    assert external_tool_content.tool_calls[0].tool_name == "web_search"
+
+    # Test the chat log content matches expected structure
+    # Skip the system message for snapshot comparison
+    assert chat_log.content[1:] == snapshot
+
+    # Second turn: Follow up question should include previous search context
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        new_callable=AsyncMock,
+        return_value=stream_generator(
+            create_messages(
+                create_content_block(
+                    0, ["Based on my previous search, it looks sunny with 75°F."]
+                ),
+            )
+        ),
+    ) as mock_create_2:
+        result2 = await conversation.async_converse(
+            hass,
+            "What temperature will it be?",
+            conversation_id,
+            Context(),
+            agent_id="conversation.claude_conversation",
+        )
+
+    # Verify the second API call included the external tool from first turn
+    messages_sent = mock_create_2.call_args.kwargs["messages"]
+    assert messages_sent == snapshot

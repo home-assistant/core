@@ -279,12 +279,16 @@ async def _transform_stream(
             if current_tool_block is not None:
                 tool_args = json.loads(current_tool_args) if current_tool_args else {}
                 current_tool_block["input"] = tool_args
+                # Check if this is a web search tool (external tool)
+                is_external_tool = current_tool_block["name"] == "web_search"
+
                 yield {
                     "tool_calls": [
                         llm.ToolInput(
                             id=current_tool_block["id"],
                             tool_name=current_tool_block["name"],
                             tool_args=tool_args,
+                            external=is_external_tool,
                         )
                     ]
                 }
