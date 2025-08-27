@@ -154,8 +154,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
     device_registry = dr.async_get(hass)
     for device in manager.device_map.values():
         LOGGER.debug(
-            "Register device %s: %s (function: %s, status range: %s)",
+            "Register device %s (online: %s): %s (function: %s, status range: %s)",
             device.id,
+            device.online,
             device.status,
             device.function,
             device.status_range,
@@ -231,8 +232,9 @@ class DeviceListener(SharingDeviceListener):
     ) -> None:
         """Update device status."""
         LOGGER.debug(
-            "Received update for device %s: %s (updated properties: %s)",
+            "Received update for device %s (online: %s): %s (updated properties: %s)",
             device.id,
+            self.manager.device_map[device.id].online,
             self.manager.device_map[device.id].status,
             updated_status_properties,
         )
