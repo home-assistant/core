@@ -13,6 +13,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
+from .const import DISCOVERY_TIMEOUT
 from .coordinator import DayBetterLocalApiCoordinator, DayBetterLocalConfigEntry
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
@@ -26,35 +27,30 @@ async def async_setup_entry(
     """Set up DayBetter light local from a config entry."""
     coordinator = DayBetterLocalApiCoordinator(hass, entry)
 
-    # 首次刷新（必要：建立初始数据）
-    await coordinator.async_config_entry_first_refresh()
+    async def await_cleanup():
+        cleanup_complete: asyncio.Event = coordinator.cleanup()
+        with suppress(TimeoutError):
+            await asyncio.wait_for(cleanup_complete.wait(), 1)
 
-    # 没有设备 -> 重试
-    if not coordinator.devices:
-        raise ConfigEntryNotReady("No DayBetter devices found")
+    entry.async_on_unload(await_cleanup)
 
     try:
         await coordinator.start()
     except OSError as ex:
-        if ex.errno == EADDRINUSE:
-            _LOGGER.error("Port %s already in use", LISTENING_PORT)
-            raise ConfigEntryNotReady("Port already in use") from ex
-        _LOGGER.error("Failed to start coordinator, errno=%d", ex.errno)
-        raise ConfigEntryNotReady(f"Start failed: {ex}") from ex
+        if ex.errno != EADDRINUSE:
+            _LOGGER.error("Start failed, errno: %d", ex.errno)
+            return False
+        _LOGGER.error("Port %s already in use", LISTENING_PORT)
+        raise ConfigEntryNotReady from ex
+
+    await coordinator.async_config_entry_first_refresh()
 
     try:
-        await coordinator.async_refresh()
-    except Exception as ex:
-        await _async_cleanup(coordinator)
-        raise ConfigEntryNotReady(f"Failed to refresh data: {ex}") from ex
-
-    # 确认刷新后仍有设备，否则重试
-    if not coordinator.data:
-        await _async_cleanup(coordinator)
-        raise ConfigEntryNotReady("No DayBetter devices found")
-
-    # 注册清理逻辑
-    entry.async_on_unload(lambda: _async_cleanup(coordinator))
+        async with asyncio.timeout(delay=DISCOVERY_TIMEOUT):
+            while not coordinator.devices:
+                await asyncio.sleep(delay=1)
+    except TimeoutError as ex:
+        raise ConfigEntryNotReady from ex
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -66,10 +62,3 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def _async_cleanup(coordinator: DayBetterLocalApiCoordinator) -> None:
-    """Ensure coordinator cleanup completes safely."""
-    cleanup_complete: asyncio.Event = coordinator.cleanup()
-    with suppress(TimeoutError):
-        await asyncio.wait_for(cleanup_complete.wait(), 1)
