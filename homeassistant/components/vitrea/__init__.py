@@ -14,11 +14,10 @@ from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
+from .const import MAX_DISCOVERY_TIME, SLEEP_INTERVAL
+
 # Import entity classes - only cover for simplified integration
 from .cover import VitreaCover
-
-SLEEP_INTERVAL: int = 4
-MAX_DISCOVERY_TIME: int = 90
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -97,10 +97,3 @@ def mock_cover_event():
     event.status = DeviceStatus.BLIND
     event.data = "050"  # 50% position
     return event
-
-
-@pytest.fixture(autouse=True)
-def patch_asyncio_sleep():
-    """Patch asyncio.sleep for all tests in this module."""
-    with patch("asyncio.sleep", return_value=None):
-        yield

@@ -15,7 +15,10 @@ async def test_setup_entry(
 ) -> None:
     """Test successful setup of config entry."""
     mock_config_entry.add_to_hass(hass)
-    with patch("vitreaclient.client.VitreaClient", return_value=mock_vitrea_client):
+    with (
+        patch("vitreaclient.client.VitreaClient", return_value=mock_vitrea_client),
+        patch("homeassistant.components.vitrea.SLEEP_INTERVAL", 0),
+    ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
@@ -55,7 +58,8 @@ async def test_reload_entry(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test successful reloading of config entry."""
-    assert init_integration.state is ConfigEntryState.LOADED
-    assert await hass.config_entries.async_reload(init_integration.entry_id)
-    await hass.async_block_till_done()
-    assert init_integration.state is ConfigEntryState.LOADED
+    with patch("homeassistant.components.vitrea.SLEEP_INTERVAL", 0):
+        assert init_integration.state is ConfigEntryState.LOADED
+        assert await hass.config_entries.async_reload(init_integration.entry_id)
+        await hass.async_block_till_done()
+        assert init_integration.state is ConfigEntryState.LOADED
