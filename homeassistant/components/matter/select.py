@@ -510,9 +510,9 @@ DISCOVERY_SCHEMAS = [
             translation_key="sensitivity_level",
             options=["10 mm", "20 mm", "30 mm"],
             device_to_ha={
-                0:  "10 mm",  # 10 mm => CurrentSensitivityLevel=0 / highest sensitivity level
-                1:  "20 mm",  # 20 mm => CurrentSensitivityLevel=1 / medium sensitivity level
-                2:  "30 mm",  # 30 mm => CurrentSensitivityLevel=2 / lowest sensitivity level
+                0: "10 mm",  # 10 mm => CurrentSensitivityLevel=0 / highest sensitivity level
+                1: "20 mm",  # 20 mm => CurrentSensitivityLevel=1 / medium sensitivity level
+                2: "30 mm",  # 30 mm => CurrentSensitivityLevel=2 / lowest sensitivity level
             }.get,
             ha_to_device={
                 "10 mm": 0,
@@ -521,7 +521,9 @@ DISCOVERY_SCHEMAS = [
             }.get,
         ),
         entity_class=MatterAttributeSelectEntity,
-        required_attributes=(clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,),
+        required_attributes=(
+            clusters.BooleanStateConfiguration.Attributes.CurrentSensitivityLevel,
+        ),
         vendor_id=(4447,),
         product_name=("Aqara Door and Window Sensor P2",),
     ),
