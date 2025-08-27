@@ -288,7 +288,7 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
             )
             definitions.extend(
                 rewrite_legacy_to_modern_configs(
-                    hass, template_config[old_key], legacy_fields
+                    hass, new_key, template_config[old_key], legacy_fields
                 )
             )
             template_config = TemplateConfig({**template_config, new_key: definitions})
