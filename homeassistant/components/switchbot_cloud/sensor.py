@@ -42,7 +42,7 @@ SENSOR_TYPE_USED_ELECTRICITY = "usedElectricity"
 
 @dataclass(frozen=True)
 class PlugMiniEuUsedElectricitySensorEntityDescription(SensorEntityDescription):
-    """Plug Mini Eu UsedElectricity sensor."""
+    """Plug Mini Eu UsedElectricity Sensor EntityDescription."""
 
     value_fn: Callable[[dict[str, Any]], float] | None = None
 
@@ -53,7 +53,7 @@ USED_ELECTRICITY_DESCRIPTION = PlugMiniEuUsedElectricitySensorEntityDescription(
     state_class=SensorStateClass.TOTAL_INCREASING,
     native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
     suggested_display_precision=2,
-    value_fn=lambda data: (data.get("usedElectricity") or 0) / 60000,
+    value_fn=lambda data: (data.get(SENSOR_TYPE_USED_ELECTRICITY) or 0) / 60000,
 )
 
 
