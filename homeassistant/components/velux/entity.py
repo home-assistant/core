@@ -27,7 +27,7 @@ class VeluxEntity(Entity):
             identifiers={
                 (
                     DOMAIN,
-                    self.node.serial_number
+                    node.serial_number
                     if node.serial_number
                     else f"{config_entry_id}_{node.node_id}",
                 )
