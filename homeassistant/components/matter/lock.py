@@ -79,27 +79,27 @@ class MatterLock(MatterEntity, LockEntity):
         node_event: MatterNodeEvent,
     ) -> None:
         """Call on NodeEvent."""
-        if (nodeEvent.endpoint_id != self._endpoint.endpoint_id) or (
-            nodeEvent.cluster_id != clusters.DoorLock.id
+        if (node_event.endpoint_id != self._endpoint.endpoint_id) or (
+            node_event.cluster_id != clusters.DoorLock.id
         ):
             return
 
         LOGGER.debug(
-            "Received node event: event type %s, event id %s for %s with data %s",
+            "Received node_event: event type %s, event id %s for %s with data %s",
             event,
-            nodeEvent.event_id,
+            node_event.event_id,
             self.entity_id,
-            nodeEvent.data,
+            node_event.data,
         )
 
         # handle the DoorLock events
-        nodeEventData: dict[str, int] = nodeEvent.data or {}
-        match nodeEvent.event_id:
+        node_event_data: dict[str, int] = node_event.data or {}
+        match node_event.event_id:
             case (
                 clusters.DoorLock.Events.LockOperation.event_id
             ):  # Lock cluster event 2
                 # update the changed_by attribute to indicate lock operation source
-                operation_source: int = nodeEventData.get("operationSource", -1)
+                operation_source: int = node_event_data.get("operationSource", -1)
                 self._attr_changed_by = DOOR_LOCK_OPERATION_SOURCE.get(
                     operation_source, "Unknown"
                 )
