@@ -13,7 +13,7 @@
       },
       "manual": {
         "data": {
-          "host": "Host IP Address",
+          "host": "Host IP address",
           "device": "Host IP Address"
         },
         "data_description": {
