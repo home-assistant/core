@@ -41,11 +41,11 @@ from .helpers import (
     async_setup_template_platform,
     async_setup_template_preview,
 )
-from .template_entity import (
+from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    TemplateEntity,
     make_template_entity_common_modern_schema,
 )
+from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,7 +83,7 @@ UPDATE_COMMON_SCHEMA = vol.Schema(
 )
 
 UPDATE_YAML_SCHEMA = UPDATE_COMMON_SCHEMA.extend(
-    make_template_entity_common_modern_schema(DEFAULT_NAME).schema
+    make_template_entity_common_modern_schema(UPDATE_DOMAIN, DEFAULT_NAME).schema
 )
 
 UPDATE_CONFIG_ENTRY_SCHEMA = UPDATE_COMMON_SCHEMA.extend(
