@@ -48,6 +48,9 @@ async def test_load_unload_config_entry(
     hass: HomeAssistant, mock_config_entry, mock_api
 ) -> None:
     """Test loading and unloading the config entry."""
+    # Add the config entry to hass first
+    mock_config_entry.add_to_hass(hass)
+
     # Mock the API creation (patch at coordinator import path)
     with (
         patch(
@@ -55,49 +58,45 @@ async def test_load_unload_config_entry(
             return_value=mock_api,
         ),
         patch(
-            "homeassistant.components.airpatrol.coordinator.AirPatrolDataUpdateCoordinator"
-        ) as mock_coordinator_class,
+            "homeassistant.components.airpatrol.coordinator.AirPatrolAPI.authenticate",
+            new_callable=AsyncMock,
+            return_value=mock_api,
+        ),
+        patch.object(hass.config_entries, "async_forward_entry_setups") as mock_forward,
     ):
-        mock_coordinator = MagicMock()
-        mock_coordinator.async_config_entry_first_refresh = AsyncMock()
-        mock_coordinator_class.return_value = mock_coordinator
+        mock_forward.return_value = True
 
-        # Mock platform setup
-        with patch.object(
-            hass.config_entries, "async_forward_entry_setups"
-        ) as mock_forward:
-            mock_forward.return_value = True
+        # Load the config entry
+        result = await async_setup_entry(
+            hass, cast(AirPatrolConfigEntry, mock_config_entry)
+        )
 
-            # Load the config entry
-            result = await async_setup_entry(
+        assert result is True
+        assert isinstance(
+            mock_config_entry.runtime_data, AirPatrolDataUpdateCoordinator
+        )
+        mock_forward.assert_called_once()
+
+        # Mock platform unload
+        with patch.object(hass.config_entries, "async_unload_platforms") as mock_unload:
+            mock_unload.return_value = True
+
+            # Unload the config entry
+            result = await async_unload_entry(
                 hass, cast(AirPatrolConfigEntry, mock_config_entry)
             )
 
             assert result is True
-            assert isinstance(
-                mock_config_entry.runtime_data, AirPatrolDataUpdateCoordinator
-            )
-            mock_forward.assert_called_once()
-
-            # Mock platform unload
-            with patch.object(
-                hass.config_entries, "async_unload_platforms"
-            ) as mock_unload:
-                mock_unload.return_value = True
-
-                # Unload the config entry
-                result = await async_unload_entry(
-                    hass, cast(AirPatrolConfigEntry, mock_config_entry)
-                )
-
-                assert result is True
-                mock_unload.assert_called_once()
+            mock_unload.assert_called_once()
 
 
 async def test_setup_entry_with_access_token(
     hass: HomeAssistant, mock_config_entry, mock_api
 ) -> None:
     """Test setup entry with stored access token."""
+    # Add the config entry to hass first
+    mock_config_entry.add_to_hass(hass)
+
     # Mock the API creation
     with (
         patch(
@@ -105,28 +104,23 @@ async def test_setup_entry_with_access_token(
             return_value=mock_api,
         ),
         patch(
-            "homeassistant.components.airpatrol.coordinator.AirPatrolDataUpdateCoordinator"
-        ) as mock_coordinator_class,
+            "homeassistant.components.airpatrol.coordinator.AirPatrolAPI.authenticate",
+            new_callable=AsyncMock,
+            return_value=mock_api,
+        ),
+        patch.object(hass.config_entries, "async_forward_entry_setups") as mock_forward,
     ):
-        mock_coordinator = MagicMock()
-        mock_coordinator.async_config_entry_first_refresh = AsyncMock()
-        mock_coordinator_class.return_value = mock_coordinator
+        mock_forward.return_value = True
 
-        # Mock platform setup
-        with patch.object(
-            hass.config_entries, "async_forward_entry_setups"
-        ) as mock_forward:
-            mock_forward.return_value = True
+        # Load the config entry
+        result = await async_setup_entry(
+            hass, cast(AirPatrolConfigEntry, mock_config_entry)
+        )
 
-            # Load the config entry
-            result = await async_setup_entry(
-                hass, cast(AirPatrolConfigEntry, mock_config_entry)
-            )
-
-            assert result is True
-            assert isinstance(
-                mock_config_entry.runtime_data, AirPatrolDataUpdateCoordinator
-            )
+        assert result is True
+        assert isinstance(
+            mock_config_entry.runtime_data, AirPatrolDataUpdateCoordinator
+        )
 
 
 async def test_setup_entry_without_access_token(hass: HomeAssistant) -> None:
@@ -139,57 +133,45 @@ async def test_setup_entry_without_access_token(hass: HomeAssistant) -> None:
     )
 
     # Mock the API creation
-    with patch(
-        "homeassistant.components.airpatrol.coordinator.AirPatrolAPI"
-    ) as mock_api_class:
-        mock_api = MagicMock()
-        mock_api.get_unique_id.return_value = "test_unique_id"
-        mock_api.get_access_token.return_value = "new_access_token"
-        mock_api.get_data = AsyncMock(return_value={"status": "online"})
-        # Patch authenticate as AsyncMock
-        mock_api_class.authenticate = AsyncMock(return_value=mock_api)
+    mock_api = MagicMock()
+    mock_api.get_unique_id.return_value = "test_unique_id"
+    mock_api.get_access_token.return_value = "new_access_token"
+    mock_api.get_data = AsyncMock(return_value=[])  # Return list, not dict
 
-        # Mock the coordinator
-        with patch(
-            "homeassistant.components.airpatrol.coordinator.AirPatrolDataUpdateCoordinator"
-        ) as mock_coordinator_class:
-            mock_coordinator = MagicMock()
-            mock_coordinator.async_config_entry_first_refresh = AsyncMock()
-            mock_coordinator_class.return_value = mock_coordinator
+    with (
+        patch(
+            "homeassistant.components.airpatrol.coordinator.AirPatrolAPI",
+            return_value=mock_api,
+        ),
+        patch(
+            "homeassistant.components.airpatrol.coordinator.AirPatrolAPI.authenticate",
+            new_callable=AsyncMock,
+            return_value=mock_api,
+        ) as mock_authenticate,
+        patch.object(hass.config_entries, "async_forward_entry_setups") as mock_forward,
+        patch.object(hass.config_entries, "async_update_entry") as mock_update,
+    ):
+        mock_forward.return_value = True
 
-            # Mock platform setup
-            with patch.object(
-                hass.config_entries, "async_forward_entry_setups"
-            ) as mock_forward:
-                mock_forward.return_value = True
+        # Load the config entry
+        result = await async_setup_entry(hass, cast(AirPatrolConfigEntry, config_entry))
 
-                # Mock the config entry update
-                with patch.object(
-                    hass.config_entries, "async_update_entry"
-                ) as mock_update:
-                    # Load the config entry
-                    result = await async_setup_entry(
-                        hass, cast(AirPatrolConfigEntry, config_entry)
-                    )
+        assert result is True
+        assert isinstance(config_entry.runtime_data, AirPatrolDataUpdateCoordinator)
 
-                    assert result is True
-                    assert isinstance(
-                        config_entry.runtime_data, AirPatrolDataUpdateCoordinator
-                    )
-
-                    # Verify authentication was called and access token was stored
-                    mock_api_class.authenticate.assert_called_once()
-                    call_args = mock_api_class.authenticate.call_args
-                    assert call_args[0][1] == "test@example.com"  # email
-                    assert call_args[0][2] == "test_password"  # password
-                    mock_update.assert_called_once_with(
-                        config_entry,
-                        data={
-                            "email": "test@example.com",
-                            "password": "test_password",
-                            "access_token": "new_access_token",
-                        },
-                    )
+        # Verify authentication was called and access token was stored
+        mock_authenticate.assert_called_once()
+        call_args = mock_authenticate.call_args
+        assert call_args[0][1] == "test@example.com"  # email
+        assert call_args[0][2] == "test_password"  # password
+        mock_update.assert_called_once_with(
+            config_entry,
+            data={
+                "email": "test@example.com",
+                "password": "test_password",
+                "access_token": "new_access_token",
+            },
+        )
 
 
 @pytest.mark.asyncio
@@ -228,6 +210,9 @@ async def test_setup_entry_success(
     hass: HomeAssistant, mock_config_entry, mock_api
 ) -> None:
     """Test successful setup entry."""
+    # Add the config entry to hass first
+    mock_config_entry.add_to_hass(hass)
+
     # Mock the API creation
     with (
         patch(
@@ -235,30 +220,23 @@ async def test_setup_entry_success(
             return_value=mock_api,
         ),
         patch(
-            "homeassistant.components.airpatrol.coordinator.AirPatrolDataUpdateCoordinator"
-        ) as mock_coordinator_class,
+            "homeassistant.components.airpatrol.coordinator.AirPatrolAPI.authenticate",
+            new_callable=AsyncMock,
+            return_value=mock_api,
+        ),
+        patch.object(hass.config_entries, "async_forward_entry_setups") as mock_forward,
     ):
-        mock_coordinator = MagicMock()
-        mock_coordinator.async_config_entry_first_refresh = AsyncMock()
-        mock_coordinator_class.return_value = mock_coordinator
+        mock_forward.return_value = True
 
-        # Mock platform setup
-        with patch.object(
-            hass.config_entries, "async_forward_entry_setups"
-        ) as mock_forward:
-            mock_forward.return_value = True
+        # Load the config entry
+        result = await async_setup_entry(
+            hass, cast(AirPatrolConfigEntry, mock_config_entry)
+        )
 
-            # Load the config entry
-            result = await async_setup_entry(
-                hass, cast(AirPatrolConfigEntry, mock_config_entry)
-            )
-
-            assert result is True
-            assert isinstance(
-                mock_config_entry.runtime_data, AirPatrolDataUpdateCoordinator
-            )
-
-            # Verify API was created with correct parameters
+        assert result is True
+        assert isinstance(
+            mock_config_entry.runtime_data, AirPatrolDataUpdateCoordinator
+        )
 
 
 async def test_unload_entry_failure(hass: HomeAssistant, mock_config_entry) -> None:

@@ -25,24 +25,30 @@ from .entity import AirPatrolEntity
 PARALLEL_UPDATES = 0
 
 # HVAC modes supported by AirPatrol
-HVAC_MODES = {
+AP_TO_HA_HVAC_MODES = {
     "heat": HVACMode.HEAT,
     "cool": HVACMode.COOL,
     "off": HVACMode.OFF,
 }
 
+HA_TO_AP_HVAC_MODES = {value: key for key, value in AP_TO_HA_HVAC_MODES.items()}
+
 # Fan speeds supported by AirPatrol
-FAN_MODES = {
+AP_TO_HA_FAN_MODES = {
     "min": FAN_LOW,
     "max": FAN_HIGH,
     "auto": FAN_AUTO,
 }
 
+HA_TO_AP_FAN_MODES = {value: key for key, value in AP_TO_HA_FAN_MODES.items()}
+
 # Swing modes supported by AirPatrol
-SWING_MODES = {
+AP_TO_HA_SWING_MODES = {
     "on": SWING_ON,
     "off": SWING_OFF,
 }
+
+HA_TO_AP_SWING_MODES = {value: key for key, value in AP_TO_HA_SWING_MODES.items()}
 
 
 async def async_setup_entry(
@@ -53,12 +59,12 @@ async def async_setup_entry(
     """Set up AirPatrol climate entities."""
     coordinator = config_entry.runtime_data
     # Create climate entities for each unit
-    units = coordinator.data or []
+    units = coordinator.data
 
     async_add_entities(
         [
-            AirPatrolClimate(coordinator, unit, unit["unit_id"])
-            for unit in units
+            AirPatrolClimate(coordinator, unit_id)
+            for unit_id, unit in units.items()
             if "climate" in unit
         ]
     )
@@ -67,6 +73,7 @@ async def async_setup_entry(
 class AirPatrolClimate(AirPatrolEntity, ClimateEntity):
     """AirPatrol climate entity."""
 
+    _attr_name = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
@@ -84,82 +91,68 @@ class AirPatrolClimate(AirPatrolEntity, ClimateEntity):
     def __init__(
         self,
         coordinator: AirPatrolDataUpdateCoordinator,
-        unit: dict[str, Any],
         unit_id: str,
     ) -> None:
         """Initialize the climate entity."""
-        super().__init__(coordinator, unit, unit_id)
-        unique_id = getattr(coordinator.config_entry, "unique_id", None)
-        self._attr_unique_id = (
-            f"{unique_id}_{unit_id}_climate"
-            if unique_id is not None
-            else f"{unit_id}_climate"
-        )
-        self._attr_translation_key = "climate"
-        self._unavailable_logged = False
+        super().__init__(coordinator, unit_id)
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}-{unit_id}-climate"
+
+    @property
+    def climate_data(self) -> dict[str, Any]:
+        """Return the climate data."""
+        return self.device_data.get("climate", {})
 
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        is_available = super().available and "climate" in self._unit
-        if not is_available and not self._unavailable_logged:
-            self._unavailable_logged = True
-        elif self._unavailable_logged:
-            self._unavailable_logged = False
-        return is_available
+        return super().available and "climate" in self.device_data
 
     @property
     def current_humidity(self) -> float | None:
         """Return the current humidity."""
-        climate_data = self._unit.get("climate", {})
-        if humidity := climate_data.get("RoomHumidity"):
+        if humidity := self.climate_data.get("RoomHumidity"):
             return float(humidity)
         return None
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        climate_data = self._unit.get("climate", {})
-        if temp := climate_data.get("RoomTemp"):
+        if temp := self.climate_data.get("RoomTemp"):
             return float(temp)
         return None
 
     @property
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
-        climate_data = self._unit.get("climate", {})
-        params = climate_data.get("ParametersData", {})
+        params = self.climate_data.get("ParametersData", {})
         if temp := params.get("PumpTemp"):
             return float(temp)
         return None
 
     @property
-    def hvac_mode(self) -> HVACMode:
+    def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode."""
-        climate_data = self._unit.get("climate", {})
-        params = climate_data.get("ParametersData", {})
-        pump_power = params.get("PumpPower", "off")
-        pump_mode = params.get("PumpMode", "heat")
+        params = self.climate_data.get("ParametersData", {})
+        pump_power = params.get("PumpPower")
+        pump_mode = params.get("PumpMode")
 
         if pump_power == "off":
             return HVACMode.OFF
-        return HVAC_MODES.get(pump_mode, HVACMode.HEAT)
+        return AP_TO_HA_HVAC_MODES.get(pump_mode)
 
     @property
     def fan_mode(self) -> str | None:
         """Return the current fan mode."""
-        climate_data = self._unit.get("climate", {})
-        params = climate_data.get("ParametersData", {})
-        fan_speed = params.get("FanSpeed", "max")
-        return FAN_MODES.get(fan_speed, FAN_HIGH)
+        params = self.climate_data.get("ParametersData", {})
+        fan_speed = params.get("FanSpeed")
+        return AP_TO_HA_FAN_MODES.get(fan_speed)
 
     @property
     def swing_mode(self) -> str | None:
         """Return the current swing mode."""
-        climate_data = self._unit.get("climate", {})
-        params = climate_data.get("ParametersData", {})
-        swing = params.get("Swing", "off")
-        return SWING_MODES.get(swing, SWING_OFF)
+        params = self.climate_data.get("ParametersData", {})
+        swing = params.get("Swing")
+        return AP_TO_HA_SWING_MODES.get(swing)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -182,10 +175,7 @@ class AirPatrolClimate(AirPatrolEntity, ClimateEntity):
         else:
             params["PumpPower"] = "on"
             # Map HVAC mode to pump mode
-            if hvac_mode == HVACMode.HEAT:
-                params["PumpMode"] = "heat"
-            elif hvac_mode == HVACMode.COOL:
-                params["PumpMode"] = "cool"
+            params["PumpMode"] = HA_TO_AP_HVAC_MODES.get(hvac_mode)
 
         # Update the climate data
         await self._async_set_params(params)
@@ -195,12 +185,7 @@ class AirPatrolClimate(AirPatrolEntity, ClimateEntity):
         params = self.params().copy()
 
         # Map fan mode to AirPatrol fan speed
-        if fan_mode == FAN_LOW:
-            params["FanSpeed"] = "min"
-        elif fan_mode == FAN_HIGH:
-            params["FanSpeed"] = "max"
-        elif fan_mode == FAN_AUTO:
-            params["FanSpeed"] = "auto"
+        params["FanSpeed"] = HA_TO_AP_FAN_MODES.get(fan_mode)
 
         # Update the climate data
         await self._async_set_params(params)
@@ -208,10 +193,7 @@ class AirPatrolClimate(AirPatrolEntity, ClimateEntity):
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing mode."""
         params = self.params().copy()
-
-        # Map swing mode to AirPatrol swing setting
-        if swing_mode in [SWING_ON, SWING_OFF]:
-            params["Swing"] = swing_mode
+        params["Swing"] = HA_TO_AP_SWING_MODES.get(swing_mode)
 
         # Update the climate data
         await self._async_set_params(params)
@@ -226,20 +208,15 @@ class AirPatrolClimate(AirPatrolEntity, ClimateEntity):
 
     async def _async_set_params(self, params: dict[str, Any]) -> None:
         """Set the unit to dry mode."""
-        new_climate_data = self.climate_data().copy()
+        new_climate_data = self.climate_data.copy()
         new_climate_data["ParametersData"] = params
 
-        response_data = await self.coordinator.api.set_unit_climate_data(
+        await self.coordinator.api.set_unit_climate_data(
             self._unit_id, new_climate_data
         )
-        # Update local data with the response data
-        self._unit["climate"] = response_data
-        self.async_write_ha_state()
+
+        await self.coordinator.async_request_refresh()
 
     def params(self) -> dict[str, Any]:
         """Return the current parameters for the climate entity."""
-        return self.climate_data().get("ParametersData", {})
-
-    def climate_data(self) -> dict[str, Any]:
-        """Return the current climate data for the entity."""
-        return self._unit.get("climate", {})
+        return self.climate_data.get("ParametersData", {})
