@@ -23,10 +23,15 @@ from . import MOCK_MINIMAL_STATUS, MOCK_STATUS
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
-pytestmark = [
-    pytest.mark.parametrize("init_integration", [Platform.SENSOR], indirect=True),
-    pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration"),
-]
+pytestmark = pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "init_integration"
+)
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Overridden fixture to specify platforms to test."""
+    return [Platform.SENSOR]
 
 
 async def test_sensor(

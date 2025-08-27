@@ -14,12 +14,15 @@ from . import MOCK_STATUS
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-pytestmark = [
-    pytest.mark.parametrize(
-        "init_integration", [Platform.BINARY_SENSOR], indirect=True
-    ),
-    pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration"),
-]
+pytestmark = pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "init_integration"
+)
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Overridden fixture to specify platforms to test."""
+    return [Platform.BINARY_SENSOR]
 
 
 async def test_binary_sensor(

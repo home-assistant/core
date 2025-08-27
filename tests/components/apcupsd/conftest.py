@@ -1,14 +1,15 @@
 """Common fixtures for the APC UPS Daemon (APCUPSD) tests."""
 
 from collections.abc import AsyncGenerator, Generator
-from contextlib import nullcontext
 from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.apcupsd import PLATFORMS
 from homeassistant.components.apcupsd.const import DOMAIN
 from homeassistant.components.apcupsd.coordinator import APCUPSdData
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from . import CONF_DATA, MOCK_STATUS
@@ -57,20 +58,23 @@ def mock_config_entry(
 
 
 @pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return PLATFORMS
+
+
+@pytest.fixture
 async def init_integration(
     request: pytest.FixtureRequest,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_request_status: AsyncMock,
+    platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up APC UPS Daemon integration for testing."""
     mock_config_entry.add_to_hass(hass)
 
-    context = nullcontext()
-    if platform := getattr(request, "param", None):
-        context = patch("homeassistant.components.apcupsd.PLATFORMS", [platform])
-
-    with context:
+    with patch("homeassistant.components.apcupsd.PLATFORMS", platforms):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
