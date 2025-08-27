@@ -104,11 +104,6 @@ class MatterLock(MatterEntity, LockEntity):
                     operation_source, "Unknown"
                 )
                 self.async_write_ha_state()
-            case (
-                clusters.DoorLock.Events.LockOperationError.event_id
-            ):  # Lock cluster event 3
-                # if an operation error occurs, clear the optimistic state
-                self._reset_optimistic_state()
 
     @property
     def code_format(self) -> str | None:
