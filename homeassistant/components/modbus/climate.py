@@ -467,9 +467,6 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
     async def _async_update(self) -> None:
         """Update Target & Current Temperature."""
-        # remark "now" is a dummy parameter to avoid problems with
-        # async_track_time_interval
-
         self._attr_target_temperature = await self._async_read_register(
             CALL_TYPE_REGISTER_HOLDING,
             self._target_temperature_register[
@@ -493,6 +490,11 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                     if hvac_mode == value:
                         self._attr_hvac_mode = mode
                         break
+        else:
+            # since there are no hvac_mode_register, this
+            # integration should not touch the attr.
+            # However it lacks in the climate component.
+            self._attr_hvac_mode = HVACMode.AUTO
 
         # Read the HVAC action register if defined
         if self._hvac_action_register is not None:
