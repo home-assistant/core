@@ -28,12 +28,12 @@ class VeluxEntity(Entity):
                 (
                     DOMAIN,
                     self.node.serial_number
-                    if self.node.serial_number
+                    if node.serial_number
                     else f"{config_entry_id}_{node.node_id}",
                 )
             },
-            name=self.node.name if self.node.name else f"#{self.node.node_id}",
-            serial_number=self.node.serial_number,
+            name=node.name if node.name else f"#{node.node_id}",
+            serial_number=node.serial_number,
         )
 
     @callback
