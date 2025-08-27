@@ -910,7 +910,7 @@
           "title": "[%key:component::update::entity_component::_::state_attributes::title::name%]",
           "backup": "[%key:component::template::config::step::update::data::backup%]",
           "specific_version": "[%key:component::template::config::step::update::data::specific_version%]",
-          "update_percent": "[%key:component::template::config::step::update::data::update_percent%]"
+          "update_percent": "[%key:component::template::config::step::update::data::update_percentage%]"
         },
         "data_description": {
           "device_id": "[%key:component::template::common::device_id_description%]",
@@ -923,7 +923,7 @@
           "title": "[%key:component::template::config::step::update::data_description::title%]",
           "backup": "[%key:component::template::config::step::update::data_description::backup%]",
           "specific_version": "[%key:component::template::config::step::update::data_description::specific_version%]",
-          "update_percent": "[%key:component::template::config::step::update::data_description::update_percent%]"
+          "update_percent": "[%key:component::template::config::step::update::data_description::update_percentage%]"
         },
         "sections": {
           "advanced_options": {
