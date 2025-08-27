@@ -940,6 +940,11 @@ class MieleConsumptionSensor(MieleRestorableSensor):
         """Update the last value of the sensor."""
         current_value = self.entity_description.value_fn(self.device)
         current_status = StateStatus(self.device.state_status)
+        last_value = (
+            float(cast(str, self._last_value))
+            if self._last_value is not None and self._last_value != STATE_UNKNOWN
+            else 0
+        )
 
         # force unknown when appliance is not able to report consumption
         if current_status in (
@@ -954,12 +959,21 @@ class MieleConsumptionSensor(MieleRestorableSensor):
             self._last_value = None
 
         # appliance might report the last value for consumption of previous cycle and it will report 0
-        # only after a while, so it is necessary to force 0 until we see the 0 value coming from API
+        # only after a while, so it is necessary to force 0 until we see the 0 value coming from API, unless
+        # we already saw a valid value in this cycle from cache
         elif (
             current_status in (StateStatus.IN_USE, StateStatus.PAUSE)
+            and not self._is_reporting
+            and last_value > 0
+        ):
+            self._last_value = current_value
+            self._is_reporting = True
+
+        elif (
+            current_status in (StateStatus.IN_USE, StateStatus.PAUSE)
+            and not self._is_reporting
             and current_value is not None
             and cast(int, current_value) > 0
-            and not self._is_reporting
         ):
             self._last_value = 0
 
