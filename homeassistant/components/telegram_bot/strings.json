@@ -808,11 +808,11 @@
         },
         "url": {
           "name": "[%key:common::config_flow::data::url%]",
-          "description": "[%key:component::telegram_bot::services::send_photo::fields::url::description%]"
+          "description": "Remote path to the media."
         },
         "file": {
           "name": "[%key:component::telegram_bot::services::send_photo::fields::file::name%]",
-          "description": "Local path to an image."
+          "description": "Local path to the media."
         },
         "caption": {
           "name": "[%key:component::telegram_bot::services::send_photo::fields::caption::name%]",
