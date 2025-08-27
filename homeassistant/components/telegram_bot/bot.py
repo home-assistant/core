@@ -575,15 +575,8 @@ class TelegramNotificationService:
             media = InputMediaDocument(file_content, caption=kwargs.get(ATTR_CAPTION))
         elif media_type == InputMediaType.PHOTO:
             media = InputMediaPhoto(file_content, caption=kwargs.get(ATTR_CAPTION))
-        elif media_type == InputMediaType.VIDEO:
-            media = InputMediaVideo(file_content, caption=kwargs.get(ATTR_CAPTION))
         else:
-            raise ServiceValidationError(
-                "Invalid media type",
-                translation_domain=DOMAIN,
-                translation_key="invalid_media_type",
-                translation_placeholders={"media_type": media_type},
-            )
+            media = InputMediaVideo(file_content, caption=kwargs.get(ATTR_CAPTION))
 
         return await self._send_msg(
             self.bot.edit_message_media,

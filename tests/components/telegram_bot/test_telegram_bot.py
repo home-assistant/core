@@ -7,15 +7,8 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
 import pytest
-from telegram import (
-    Chat,
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    InputMediaAnimation,
-    Message,
-    Update,
-)
-from telegram.constants import ChatType, ParseMode
+from telegram import Chat, InlineKeyboardButton, InlineKeyboardMarkup, Message, Update
+from telegram.constants import ChatType, InputMediaType, ParseMode
 from telegram.error import (
     InvalidToken,
     NetworkError,
@@ -863,10 +856,37 @@ async def test_delete_message(
     mock.assert_called_once()
 
 
+@pytest.mark.parametrize(
+    ("media_type", "expected_media_class"),
+    [
+        (
+            InputMediaType.ANIMATION,
+            "InputMediaAnimation",
+        ),
+        (
+            InputMediaType.AUDIO,
+            "InputMediaAudio",
+        ),
+        (
+            InputMediaType.DOCUMENT,
+            "InputMediaDocument",
+        ),
+        (
+            InputMediaType.PHOTO,
+            "InputMediaPhoto",
+        ),
+        (
+            InputMediaType.VIDEO,
+            "InputMediaVideo",
+        ),
+    ],
+)
 async def test_edit_message_media(
     hass: HomeAssistant,
     mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
+    media_type: str,
+    expected_media_class: str,
 ) -> None:
     """Test edit message media."""
     mock_broadcast_config_entry.add_to_hass(hass)
@@ -875,8 +895,6 @@ async def test_edit_message_media(
 
     hass.config.allowlist_external_dirs.add("/tmp/")  # noqa: S108
     write_utf8_file("/tmp/mock", "mock file contents")  # noqa: S108
-
-    # test: edit message media with animation
 
     with patch(
         "homeassistant.components.telegram_bot.bot.Bot.edit_message_media",
@@ -888,7 +906,7 @@ async def test_edit_message_media(
             {
                 ATTR_CAPTION: "mock caption",
                 ATTR_FILE: "/tmp/mock",  # noqa: S108
-                ATTR_MEDIA_TYPE: "animation",
+                ATTR_MEDIA_TYPE: media_type,
                 ATTR_MESSAGEID: 12345,
                 ATTR_CHAT_ID: 123456,
                 ATTR_TIMEOUT: 10,
@@ -899,7 +917,7 @@ async def test_edit_message_media(
 
     await hass.async_block_till_done()
     mock.assert_called_once()
-    assert isinstance(mock.call_args[1]["media"], InputMediaAnimation)
+    assert mock.call_args[1]["media"].__class__.__name__ == expected_media_class
     assert mock.call_args[1]["media"].caption == "mock caption"
     assert mock.call_args[1]["chat_id"] == 123456
     assert mock.call_args[1]["message_id"] == 12345
