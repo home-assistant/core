@@ -3,7 +3,8 @@
     "step": {
       "user": {
         "data": {
-          "host": "Select device"
+          "host": "Select device",
+          "device": "Select device"
         },
         "data_description": {
           "host": "Select a DayBetter device to add or enter IP address manually."
