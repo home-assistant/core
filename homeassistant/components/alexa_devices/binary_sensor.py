@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Final
 
 from aioamazondevices.api import AmazonDevice
+from aioamazondevices.const import SENSOR_STATE_OFF
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
@@ -42,6 +43,14 @@ BINARY_SENSORS: Final = (
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda device, _: device.online,
     ),
+    AmazonBinarySensorEntityDescription(
+        key="motion",
+        device_class=BinarySensorDeviceClass.MOTION,
+        is_on_fn=lambda device, key: bool(
+            device.sensors[key].value != SENSOR_STATE_OFF
+        ),
+        is_supported=lambda device, key: device.sensors.get(key) is not None,
+    ),
 )
 
 DEPRECATED_BINARY_SENSORS: Final = (
@@ -72,11 +81,6 @@ DEPRECATED_BINARY_SENSORS: Final = (
         is_on_fn=lambda device, key: False,
     ),
     AmazonBinarySensorEntityDescription(
-        key="humanPresenceDetectionState",
-        device_class=BinarySensorDeviceClass.MOTION,
-        is_on_fn=lambda device, key: False,
-    ),
-    AmazonBinarySensorEntityDescription(
         key="waterSoundsDetectionState",
         translation_key="water_sounds_detection",
         is_on_fn=lambda device, key: False,
@@ -93,6 +97,21 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
 
+    entity_registry = er.async_get(hass)
+
+    # Replace unique id for "Motion" switch
+    for serial_num in coordinator.data:
+        unique_id = f"{serial_num}-humanPresenceDetectionState"
+        if entity_id := entity_registry.async_get_entity_id(
+            BINARY_SENSOR_DOMAIN, DOMAIN, unique_id
+        ):
+            _LOGGER.debug("Updating unique_id for %s", entity_id)
+
+            new_unique_id = unique_id.replace("humanPresenceDetectionState", "motion")
+
+            # Update the registry with the new unique_id
+            entity_registry.async_update_entity(entity_id, new_unique_id=new_unique_id)
+
     async_add_entities(
         AmazonBinarySensorEntity(coordinator, serial_num, sensor_desc)
         for sensor_desc in BINARY_SENSORS
@@ -101,7 +120,6 @@ async def async_setup_entry(
     )
 
     # Clean up deprecated sensors
-    entity_registry = er.async_get(hass)
     for sensor_desc in DEPRECATED_BINARY_SENSORS:
         for serial_num in coordinator.data:
             unique_id = f"{serial_num}-{sensor_desc.key}"
