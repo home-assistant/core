@@ -163,5 +163,5 @@ class AmcrestCoordinatedSwitch(CoordinatorEntity, AmcrestSwitch):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        # Use coordinator availability plus API availability
-        return super().available and self.coordinator.data is not None
+        # Use coordinator availability
+        return self.coordinator.data is not None
