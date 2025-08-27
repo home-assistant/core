@@ -34,6 +34,7 @@ class ToGrillSensorEntityDescription(SensorEntityDescription):
     packet_type: int
     packet_extract: Callable[[Packet], StateType]
     entity_supported: Callable[[Mapping[str, Any]], bool] = lambda _: True
+    probe_number: int | None = None
 
 
 def _get_temperature_description(probe_number: int):
@@ -51,8 +52,6 @@ def _get_temperature_description(probe_number: int):
 
     return ToGrillSensorEntityDescription(
         key=f"temperature_{probe_number}",
-        translation_key="temperature",
-        translation_placeholders={"probe_number": f"{probe_number}"},
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -60,6 +59,7 @@ def _get_temperature_description(probe_number: int):
         packet_type=PacketA1Notify.type,
         packet_extract=_get,
         entity_supported=_supported,
+        probe_number=probe_number,
     )
 
 
@@ -109,9 +109,8 @@ class ToGrillSensor(ToGrillEntity, SensorEntity):
     ) -> None:
         """Initialize sensor."""
 
-        super().__init__(coordinator)
+        super().__init__(coordinator, entity_description.probe_number)
         self.entity_description = entity_description
-        self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.address}_{entity_description.key}"
 
     @property

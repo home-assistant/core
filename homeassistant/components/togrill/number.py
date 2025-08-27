@@ -39,6 +39,7 @@ class ToGrillNumberEntityDescription(NumberEntityDescription):
     get_value: Callable[[ToGrillCoordinator], float | None]
     set_packet: Callable[[float], PacketWrite]
     entity_supported: Callable[[Mapping[str, Any]], bool] = lambda _: True
+    probe_number: int | None = None
 
 
 def _get_temperature_target_description(
@@ -58,7 +59,6 @@ def _get_temperature_target_description(
     return ToGrillNumberEntityDescription(
         key=f"temperature_target_{probe_number}",
         translation_key="temperature_target",
-        translation_placeholders={"probe_number": f"{probe_number}"},
         device_class=NumberDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         native_min_value=0,
@@ -67,6 +67,7 @@ def _get_temperature_target_description(
         set_packet=_set_packet,
         get_value=_get_value,
         entity_supported=lambda x: probe_number <= x[CONF_PROBE_COUNT],
+        probe_number=probe_number,
     )
 
 
@@ -122,7 +123,7 @@ class ToGrillNumber(ToGrillEntity, NumberEntity):
     ) -> None:
         """Initialize."""
 
-        super().__init__(coordinator)
+        super().__init__(coordinator, probe_number=entity_description.probe_number)
         self.entity_description = entity_description
         self._attr_unique_id = f"{coordinator.address}_{entity_description.key}"
 

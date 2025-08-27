@@ -1,6 +1,6 @@
 """Test tasks for the AI Task integration."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from pathlib import Path
 from unittest.mock import patch
 
@@ -9,7 +9,12 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import media_source
-from homeassistant.components.ai_task import AITaskEntityFeature, async_generate_data
+from homeassistant.components.ai_task import (
+    AITaskEntityFeature,
+    ImageData,
+    async_generate_data,
+    async_generate_image,
+)
 from homeassistant.components.camera import Image
 from homeassistant.components.conversation import async_get_chat_log
 from homeassistant.const import STATE_UNKNOWN
@@ -232,7 +237,9 @@ async def test_generate_data_mixed_attachments(
         hass,
         dt_util.utcnow() + chat_session.CONVERSATION_TIMEOUT + timedelta(seconds=1),
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done()  # Need several iterations
+    await hass.async_block_till_done()  # because one iteration of the loop
+    await hass.async_block_till_done()  # simply schedules the cleanup
 
     # Verify the temporary file cleaned up
     assert not camera_attachment.path.exists()
@@ -242,3 +249,94 @@ async def test_generate_data_mixed_attachments(
     assert media_attachment.media_content_id == "media-source://media_player/video.mp4"
     assert media_attachment.mime_type == "video/mp4"
     assert media_attachment.path == Path("/media/test.mp4")
+
+
+async def test_generate_image(
+    hass: HomeAssistant,
+    init_components: None,
+    mock_ai_task_entity: MockAITaskEntity,
+) -> None:
+    """Test generating image service."""
+    with pytest.raises(
+        HomeAssistantError, match="AI Task entity ai_task.unknown not found"
+    ):
+        await async_generate_image(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.unknown",
+            instructions="Test prompt",
+        )
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    result = await async_generate_image(
+        hass,
+        task_name="Test Task",
+        entity_id=TEST_ENTITY_ID,
+        instructions="Test prompt",
+    )
+    assert "image_data" not in result
+    assert result["media_source_id"].startswith("media-source://ai_task/images/")
+    assert result["media_source_id"].endswith("_test_task.png")
+    assert result["url"].startswith("http://10.10.10.10:8123/api/ai_task/images/")
+    assert result["url"].endswith("_test_task.png")
+    assert result["mime_type"] == "image/png"
+    assert result["model"] == "mock_model"
+    assert result["revised_prompt"] == "mock_revised_prompt"
+    assert result["height"] == 1024
+    assert result["width"] == 1536
+
+    state = hass.states.get(TEST_ENTITY_ID)
+    assert state is not None
+    assert state.state != STATE_UNKNOWN
+
+    mock_ai_task_entity.supported_features = AITaskEntityFeature(0)
+    with pytest.raises(
+        HomeAssistantError,
+        match="AI Task entity ai_task.test_task_entity does not support generating images",
+    ):
+        await async_generate_image(
+            hass,
+            task_name="Test Task",
+            entity_id=TEST_ENTITY_ID,
+            instructions="Test prompt",
+        )
+
+
+async def test_image_cleanup(
+    hass: HomeAssistant,
+    init_components: None,
+    mock_ai_task_entity: MockAITaskEntity,
+) -> None:
+    """Test image cache cleanup."""
+    image_storage = hass.data.setdefault("ai_task_images", {})
+    image_storage.clear()
+    image_storage.update(
+        {
+            str(idx): ImageData(
+                data=b"mock_image_data",
+                timestamp=int(datetime.now().timestamp()),
+                mime_type="image/png",
+                title="Test Image",
+            )
+            for idx in range(20)
+        }
+    )
+    assert len(image_storage) == 20
+
+    result = await async_generate_image(
+        hass,
+        task_name="Test Task",
+        entity_id=TEST_ENTITY_ID,
+        instructions="Test prompt",
+    )
+
+    assert result["url"].split("/")[-1] in image_storage
+    assert len(image_storage) == 20
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
+    await hass.async_block_till_done()
+
+    assert len(image_storage) == 19

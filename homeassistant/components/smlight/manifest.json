@@ -12,7 +12,7 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "quality_scale": "silver",
-  "requirements": ["pysmlight==0.2.7"],
+  "requirements": ["pysmlight==0.2.8"],
   "zeroconf": [
     {
       "type": "_slzb-06._tcp.local."

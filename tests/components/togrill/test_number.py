@@ -87,7 +87,7 @@ async def test_setup(
                     temperature_1=50.0,
                 ),
             ],
-            "number.pro_05_target_1",
+            "number.probe_1_target_temperature",
             100.0,
             PacketA301Write(probe=1, target=100),
             id="probe",
@@ -100,7 +100,7 @@ async def test_setup(
                     temperature_1=50.0,
                 ),
             ],
-            "number.pro_05_target_1",
+            "number.probe_1_target_temperature",
             0.0,
             PacketA301Write(probe=1, target=None),
             id="probe_clear",
@@ -203,7 +203,7 @@ async def test_set_number_write_error(
                 ATTR_VALUE: 100,
             },
             target={
-                ATTR_ENTITY_ID: "number.pro_05_target_1",
+                ATTR_ENTITY_ID: "number.probe_1_target_temperature",
             },
             blocking=True,
         )
@@ -229,7 +229,7 @@ async def test_set_number_disconnected(
     )
     mock_client.is_connected = False
 
-    with pytest.raises(HomeAssistantError, match=""):
+    with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
@@ -237,7 +237,7 @@ async def test_set_number_disconnected(
                 ATTR_VALUE: 100,
             },
             target={
-                ATTR_ENTITY_ID: "number.pro_05_target_1",
+                ATTR_ENTITY_ID: "number.probe_1_target_temperature",
             },
             blocking=True,
         )

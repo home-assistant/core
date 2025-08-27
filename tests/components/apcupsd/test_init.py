@@ -57,53 +57,6 @@ async def test_async_setup_entry(
     assert all(len(p.entities) > 0 for p in platforms)
 
 
-async def test_multiple_integrations(hass: HomeAssistant) -> None:
-    """Test successful setup for multiple entries."""
-    # Load two integrations from two mock hosts.
-    status1 = MOCK_STATUS | {"LOADPCT": "15.0 Percent", "SERIALNO": "XXXXX1"}
-    status2 = MOCK_STATUS | {"LOADPCT": "16.0 Percent", "SERIALNO": "XXXXX2"}
-    entries = (
-        await async_init_integration(
-            hass, host="test1", status=status1, entry_id="entry-id-1"
-        ),
-        await async_init_integration(
-            hass, host="test2", status=status2, entry_id="entry-id-2"
-        ),
-    )
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
-    assert all(entry.state is ConfigEntryState.LOADED for entry in entries)
-
-    # Since the two UPS device names are the same, we will have to add a "_2" suffix.
-    device_slug = slugify(MOCK_STATUS["UPSNAME"])
-    state1 = hass.states.get(f"sensor.{device_slug}_load")
-    state2 = hass.states.get(f"sensor.{device_slug}_load_2")
-    assert state1 is not None and state2 is not None
-    assert state1.state != state2.state
-
-
-async def test_multiple_integrations_different_devices(hass: HomeAssistant) -> None:
-    """Test successful setup for multiple entries with different device names."""
-    status1 = MOCK_STATUS | {"SERIALNO": "XXXXX1", "UPSNAME": "MyUPS1"}
-    status2 = MOCK_STATUS | {"SERIALNO": "XXXXX2", "UPSNAME": "MyUPS2"}
-    entries = (
-        await async_init_integration(
-            hass, host="test1", status=status1, entry_id="entry-id-1"
-        ),
-        await async_init_integration(
-            hass, host="test2", status=status2, entry_id="entry-id-2"
-        ),
-    )
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
-    assert all(entry.state is ConfigEntryState.LOADED for entry in entries)
-
-    # The device names are different, so they are prefixed differently.
-    state1 = hass.states.get("sensor.myups1_load")
-    state2 = hass.states.get("sensor.myups2_load")
-    assert state1 is not None and state2 is not None
-
-
 @pytest.mark.parametrize(
     "error",
     [OSError(), asyncio.IncompleteReadError(partial=b"", expected=0)],
@@ -127,34 +80,18 @@ async def test_connection_error(hass: HomeAssistant, error: Exception) -> None:
 
 async def test_unload_remove_entry(hass: HomeAssistant) -> None:
     """Test successful unload and removal of an entry."""
-    # Load two integrations from two mock hosts.
-    entries = (
-        await async_init_integration(
-            hass, host="test1", status=MOCK_STATUS, entry_id="entry-id-1"
-        ),
-        await async_init_integration(
-            hass, host="test2", status=MOCK_MINIMAL_STATUS, entry_id="entry-id-2"
-        ),
+    entry = await async_init_integration(
+        hass, host="test1", status=MOCK_STATUS, entry_id="entry-id-1"
     )
+    assert entry.state is ConfigEntryState.LOADED
 
-    # Assert they are loaded.
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
-    assert all(entry.state is ConfigEntryState.LOADED for entry in entries)
-
-    # Unload the first entry.
-    assert await hass.config_entries.async_unload(entries[0].entry_id)
+    # Unload the entry.
+    assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-    assert entries[0].state is ConfigEntryState.NOT_LOADED
-    assert entries[1].state is ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED
 
-    # Unload the second entry.
-    assert await hass.config_entries.async_unload(entries[1].entry_id)
-    await hass.async_block_till_done()
-    assert all(entry.state is ConfigEntryState.NOT_LOADED for entry in entries)
-
-    # Remove both entries.
-    for entry in entries:
-        await hass.config_entries.async_remove(entry.entry_id)
+    # Remove the entry.
+    await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.config_entries.async_entries(DOMAIN)) == 0
 

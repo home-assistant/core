@@ -449,5 +449,6 @@ async def async_devices_payload(hass: HomeAssistant) -> dict:
 
     return {
         "version": "home-assistant:1",
+        "home_assistant": HA_VERSION,
         "devices": devices,
     }
