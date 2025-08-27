@@ -1,15 +1,18 @@
 """Tests Config flow for the Redgtech integration."""
 
-import pytest
+from collections.abc import Callable, Generator
+from typing import Any
 from unittest.mock import AsyncMock, patch
-from tests.common import MockConfigEntry
+
+import pytest
+from redgtech_api.api import RedgtechAuthError, RedgtechConnectionError
+
+from homeassistant.components.redgtech.const import DOMAIN
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.components.redgtech.const import DOMAIN
-from redgtech_api.api import RedgtechAuthError, RedgtechConnectionError
-from typing import Generator, Callable, Any
 
+from tests.common import MockConfigEntry
 
 TEST_EMAIL = "test@example.com"
 TEST_PASSWORD = "123456"
@@ -17,9 +20,12 @@ FAKE_TOKEN = "fake_token"
 
 
 @pytest.fixture
-def mock_redgtech_api() -> Generator[Callable[..., AsyncMock], None, None]:
+def mock_redgtech_api() -> Generator[Callable[..., AsyncMock]]:
     """Mock the Redgtech API."""
-    with patch("homeassistant.components.redgtech.config_flow.RedgtechAPI") as mock_api_class:
+    with patch(
+        "homeassistant.components.redgtech.config_flow.RedgtechAPI"
+    ) as mock_api_class:
+
         def _get_mock(side_effect: Any = None) -> AsyncMock:
             mock_api = AsyncMock()
             if side_effect is not None:
@@ -28,6 +34,7 @@ def mock_redgtech_api() -> Generator[Callable[..., AsyncMock], None, None]:
                 mock_api.login.return_value = FAKE_TOKEN
             mock_api_class.return_value = mock_api
             return mock_api
+
         yield _get_mock
 
 
