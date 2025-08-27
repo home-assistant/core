@@ -539,6 +539,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Amcrest from a config entry."""
     hass.data.setdefault(DATA_AMCREST, {DEVICES: {}, CAMERAS: []})
+    hass.data.setdefault(DOMAIN, {})
 
     # Get config from entry data and options
     config_data = dict(entry.data)
@@ -595,7 +596,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # This will populate device.serial_number before entities are created
     await data_coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][DEVICES][entry.entry_id] = {  # TODO remove DEVICES, unneeded
+    hass.data[DOMAIN][entry.entry_id] = {
         "device": device,
         "coordinator": data_coordinator,
     }
@@ -612,14 +613,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    device_name = entry.data[CONF_NAME]
+    # Unload platforms
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    # Remove the device
-    if device_name in hass.data[DATA_AMCREST][DEVICES]:
-        hass.data[DATA_AMCREST][DEVICES].pop(device_name)
+    if unload_ok:
+        # Remove the config entry data
+        hass.data[DOMAIN].pop(entry.entry_id, None)
 
-    # Remove from cameras list
-    if device_name in hass.data[DATA_AMCREST][CAMERAS]:
-        hass.data[DATA_AMCREST][CAMERAS].remove(device_name)
-
-    return True
+    return unload_ok
