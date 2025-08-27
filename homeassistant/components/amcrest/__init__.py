@@ -7,11 +7,12 @@ from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager, suppress
 from datetime import datetime, timedelta
 import logging
+import re
 import threading
 from typing import Any
 
 import aiohttp
-from amcrest import AmcrestError, ApiWrapper, LoginError
+from amcrest import AmcrestError, ApiWrapper, CommError, LoginError
 import httpx
 import voluptuous as vol
 
@@ -34,6 +35,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType
 
 from .binary_sensor import BINARY_SENSOR_KEYS, BINARY_SENSORS, check_binary_sensors
@@ -322,6 +324,77 @@ class AmcrestChecker(ApiWrapper):
         with suppress(AmcrestError):
             await self.async_current_time
 
+    async def _async_command(
+        self,
+        cmd: str,
+        retries: int | None = None,
+        timeout_cmd: float | None | tuple[float | None, float | None] = None,
+    ) -> httpx.Response:
+        """Override _async_command to use Home Assistant's HTTP client.
+
+        This prevents the blocking SSL load_default_certs() call that would
+        otherwise happen when the parent class creates its own httpx client.
+        """
+        # Get the amcrest logger to maintain compatibility
+        logger = logging.getLogger("amcrest.http")
+
+        url = f"{self._protocol}://{self._host}:{self._port}/cgi-bin/{cmd}"
+        cmd_id = self._cmd_id = self._cmd_id + 1
+        logger.debug("%s Async HTTP query %i: %s", self, cmd_id, url)
+
+        if retries is None:
+            retries = self._retries_default
+
+        timeout = timeout_cmd or self._timeout_default
+        # requests uses (connect timeout, read timeout), and httpx adds (write
+        # timeout, pool timeout), just set the extras to None
+        if isinstance(timeout, tuple):
+            httpx_timeout: (
+                float | tuple[float | None, float | None, float | None, float | None]
+            ) = (*timeout, None, None)
+        else:
+            httpx_timeout = timeout
+
+        # Use Home Assistant's HTTP client to avoid blocking SSL operations
+        client = get_async_client(self._hass, verify_ssl=self._verify)
+
+        for loop in range(1, 2 + retries):
+            logger.debug("%s Running query %i attempt %s", self, cmd_id, loop)
+            try:
+                resp = await client.get(
+                    url,
+                    auth=self._async_token,
+                    timeout=httpx_timeout,
+                    follow_redirects=True,
+                )
+                if resp.status_code == 401:
+                    logger.debug("%s Query %i: Unauthorized (401)", self, cmd_id)
+                    self._async_token = None
+                    raise LoginError
+                resp.raise_for_status()
+            except httpx.HTTPError as error:
+                logger.debug(
+                    "%s Query %i failed due to error: %r",
+                    self,
+                    cmd_id,
+                    error,
+                )
+                if loop > retries:
+                    raise CommError(error) from error
+                msg = re.sub(r"at 0x[0-9a-fA-F]+", "at ADDRESS", repr(error))
+                logger.warning("%s Trying again due to error: %s", self, msg)
+                continue
+            else:
+                break
+
+        logger.debug(
+            "%s Query %i worked. Exit code: <%s>",
+            self,
+            cmd_id,
+            resp.status_code,
+        )
+        return resp
+
 
 def _monitor_events(
     hass: HomeAssistant,
@@ -522,7 +595,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # This will populate device.serial_number before entities are created
     await data_coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][DEVICES][entry.entry_id] = {  # TODO remove DEVICES, uneeded
+    hass.data[DOMAIN][DEVICES][entry.entry_id] = {  # TODO remove DEVICES, unneeded
         "device": device,
         "coordinator": data_coordinator,
     }
